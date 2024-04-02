@@ -14,7 +14,7 @@ export class AzureAuthMiddleware implements NestMiddleware {
 
   constructor() {
     this.credential = new DefaultAzureCredential();
-    this.excludedPaths = ['*', '/public-route', '/another-public-route'];
+    this.excludedPaths = ['*', '/health'];
   }
 
   async use(req: Request, res: Response, next: NextFunction) {

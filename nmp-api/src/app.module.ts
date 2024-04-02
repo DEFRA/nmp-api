@@ -13,6 +13,8 @@ import * as dotven from 'dotenv';
 dotven.config();
 
 import EnvironmentService from '@shared/environment.service';
+import { RB209Controller } from './vendors/rb209/rb209.controller';
+import { RB209Service } from './vendors/rb209/rb209.service';
 
 let connectionSetup: TypeOrmModuleOptions = {};
 if (process.env.NODE_ENV === 'production') {
@@ -44,8 +46,8 @@ if (process.env.NODE_ENV === 'production') {
     TypeOrmModule.forRootAsync({ useFactory: async () => connectionSetup }),
     MasterModule,
   ],
-  controllers: [AppController, MasterController],
-  providers: [AppService, MasterService],
+  controllers: [AppController, MasterController, RB209Controller],
+  providers: [AppService, MasterService, RB209Service],
 })
 export class AppModule {
   //implements NestModule
