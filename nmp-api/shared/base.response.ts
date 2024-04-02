@@ -18,3 +18,7 @@ export interface ApiResponseSettingsType {
 export interface ApiResponseValidationType {
   isValid: boolean;
 }
+
+export interface ApiDataRequestType<T> {
+  payload: T;
+}

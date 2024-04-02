@@ -34,6 +34,7 @@ if (process.env.NODE_ENV === 'production') {
     username: EnvironmentService.DATABASE_USER(),
     password: EnvironmentService.DATABASE_PASSWORD(),
     entities: [CustomerEntity, OrderEntity],
+    logging: true,
   };
 }
 

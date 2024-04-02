@@ -1,10 +1,18 @@
-import { Column, Entity, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToMany,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import OrderEntity from './order.entity';
 // import ICustomerContract from '../../../packages/nmp-contracts/customer.contract';
 // implements ICustomerContract
 @Entity('Customers')
 export default class CustomerEntity {
   @PrimaryGeneratedColumn()
-  @PrimaryColumn()
+  @PrimaryColumn({ name: 'CustomerID' })
   customerID: string;
 
   @Column()
@@ -36,4 +44,8 @@ export default class CustomerEntity {
 
   @Column()
   fax: string;
+
+  @OneToMany(() => OrderEntity, (o) => o.customer)
+  @JoinColumn({ name: 'CustomerID' })
+  orders: OrderEntity[];
 }

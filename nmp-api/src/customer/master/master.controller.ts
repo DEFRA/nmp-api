@@ -75,4 +75,9 @@ export class MasterController {
   ) {
     return await this.service.executeQuery(query, parameters);
   }
+
+  @Get('/join')
+  async getJoinData() {
+    return await this.service.getJoinData();
+  }
 }

@@ -14,3 +14,7 @@ export interface ErrorFormat {
   stack?: any;
   path?: string;
 }
+
+export interface RequestFormat<Entity> {
+  payload: Entity;
+}

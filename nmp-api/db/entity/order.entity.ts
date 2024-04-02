@@ -5,55 +5,55 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import CustomerEntity from './customer.entity';
 // import IOrderContract from '../../../packages/nmp-contracts/order.contract';
 // implements IOrderContract
-import CustomerEntity from './customer.entity';
 
 @Entity('Orders')
 export default class OrderEntity {
   @PrimaryGeneratedColumn()
-  OrderID: number;
+  orderID: number;
+
+  @Column({ name: 'CustomerID' })
+  customerID: string;
 
   @Column()
-  CustomerID: string;
+  employeeID: number;
 
   @Column()
-  EmployeeID: number;
-
-  @Column()
-  OrderDate: string;
+  orderDate: string;
 
   @Column({ default: new Date() })
-  RequiredDate: Date;
+  requiredDate: Date;
 
   @Column({ default: new Date() })
-  ShippedDate: Date;
+  shippedDate: Date;
 
   @Column()
-  ShipVia: number;
+  shipVia: number;
 
   @Column()
-  Freight: string;
+  freight: string;
 
   @Column()
-  ShipName: string;
+  shipName: string;
 
   @Column()
-  ShipAddress: string;
+  shipAddress: string;
 
   @Column()
-  ShipCity: string;
+  shipCity: string;
 
   @Column()
-  ShipRegion: string;
+  shipRegion: string;
 
   @Column()
-  ShipPostalCode: string;
+  shipPostalCode: string;
 
   @Column()
-  ShipCountry: string;
+  shipCountry: string;
 
-  @ManyToOne(() => CustomerEntity)
-  @JoinColumn()
-  Customer: CustomerEntity;
+  @ManyToOne(() => CustomerEntity, (c) => c.orders)
+  @JoinColumn({ name: 'CustomerID' })
+  customer: CustomerEntity;
 }
