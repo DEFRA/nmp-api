@@ -8,21 +8,26 @@ import { AppModule } from './app.module';
 dotenv?.config();
 //require('dotenv').config();
 
-const APPLICATION_PORT = process?.env.APPLICATION_PORT ?? 3000;
-const APPLICATION_VER = process?.env.APPLICATION_VER ?? '1';
-const APPLICATION_URL = process?.env.APPLICATION_URL ?? 'apis/v1';
+import EnvironmentService from '@shared/environment.service';
+
+const APPLICATION_PORT = EnvironmentService.APPLICATION_PORT() ?? 3000;
+const APPLICATION_VER = EnvironmentService.APPLICATION_VER();
+const APPLICATION_URL = EnvironmentService.APPLICATION_URL() ?? 'apis/v1';
+
+const APPLICATION_SWAGGER_PATH =
+  EnvironmentService.APPLICATION_SWAGGER_PATH() ?? 'docs';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const config = new DocumentBuilder()
-    .setTitle('DEFRA Application API')
-    .setDescription('DEFRA')
+    .setTitle('NMP Application API')
+    .setDescription('NMP')
     .setVersion(APPLICATION_VER)
     .addTag('group')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup(APPLICATION_SWAGGER_PATH, app, document);
 
   app.setGlobalPrefix(APPLICATION_URL, {
     exclude: [{ path: 'health', method: RequestMethod.GET }],
