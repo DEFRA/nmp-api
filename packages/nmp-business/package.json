@@ -1,0 +1,10 @@
+{
+  "name": "@nmp/business",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/typescript": "^2.0.0",
+    "@nmp/shared": "^1.0.0"
+  }
+}

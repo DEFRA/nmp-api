@@ -1,0 +1,9 @@
+{
+  "name": "@nmp/contracts",
+  "private": true,
+  "version": "1.0.0",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/typescript": "^2.0.0"
+  }
+}
