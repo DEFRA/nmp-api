@@ -70,4 +70,16 @@ export default class EnvironmentService {
       return this.getEnv('APPLICATION_SWAGGER_PATH');
     }
   }
+
+  static ADDR_LOOKUP_BASE_URL(): string {
+    get: {
+      return this.getEnv('ADDR_LOOKUP_BASE_URL');
+    }
+  }
+
+  static ADDR_LOOKUP_API_KEY(): string {
+    get: {
+      return this.getEnv('ADDR_LOOKUP_API_KEY');
+    }
+  }
 }

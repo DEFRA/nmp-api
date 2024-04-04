@@ -19,6 +19,9 @@ const APPLICATION_SWAGGER_PATH =
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.setGlobalPrefix(APPLICATION_URL, {
+    exclude: [{ path: 'health', method: RequestMethod.GET }],
+  });
   const config = new DocumentBuilder()
     .setTitle('NMP Application API')
     .setDescription('NMP')
@@ -28,9 +31,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(APPLICATION_SWAGGER_PATH, app, document);
 
-  app.setGlobalPrefix(APPLICATION_URL, {
-    exclude: [{ path: 'health', method: RequestMethod.GET }],
-  });
   app.enableCors();
   app.useGlobalInterceptors(new ResponseInterceptor());
   await app.listen(APPLICATION_PORT);

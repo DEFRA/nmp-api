@@ -27,6 +27,7 @@
     "@nestjs/swagger": "^7.3.0",
     "@nestjs/typeorm": "^10.0.2",
     "@nmp/contracts": "../packages/nmp-contracts",
+    "axios": "^1.6.8",
     "dotenv": "^16.4.5",
     "mssql": "^10.0.2",
     "reflect-metadata": "^0.1.13",
