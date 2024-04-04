@@ -4,6 +4,12 @@ import * as dotenv from 'dotenv';
 // Load environment variables from .env file
 dotenv.config();
 
+export enum EnvironmentEnum {
+  DEV,
+  TEST,
+  PROD,
+}
+
 export default class EnvironmentService {
   static getEnv(envName: string): string {
     const envValue = process.env[envName];
@@ -68,6 +74,15 @@ export default class EnvironmentService {
   static APPLICATION_SWAGGER_PATH(): string {
     get: {
       return this.getEnv('APPLICATION_SWAGGER_PATH');
+    }
+  }
+
+  static APPLICATION_ENV(): string {
+    get: {
+      if (!this.getEnv('APPLICATION_ENV')) {
+        return process.env.NODE_ENV == 'production' ? 'PROD' : 'DEV';
+      }
+      return this.getEnv('APPLICATION_ENV');
     }
   }
 }

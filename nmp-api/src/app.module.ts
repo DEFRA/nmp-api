@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import 'dotenv/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -7,47 +7,36 @@ import { MasterController } from './customer/master/master.controller';
 import { MasterModule } from './customer/master/master.module';
 import { MasterService } from './customer/master/master.service';
 
-import CustomerEntity from '@db/entity/customer.entity';
-import OrderEntity from '@db/entity/order.entity';
-import * as dotven from 'dotenv';
-dotven.config();
-
-import EnvironmentService from '@shared/environment.service';
+import OrmConnectionSetup from './app.orm';
 import { RB209Controller } from './vendors/rb209/rb209.controller';
 import { RB209Service } from './vendors/rb209/rb209.service';
 
-let connectionSetup: TypeOrmModuleOptions = {};
-if (process.env.NODE_ENV === 'production') {
-  connectionSetup = {
-    type: 'mssql',
-    host: EnvironmentService.DATABASE_HOST(),
-    port: EnvironmentService.DATABASE_PORT(),
-    database: EnvironmentService.DATABASE_NAME(),
-    username: EnvironmentService.DATABASE_USER(),
-    password: EnvironmentService.DATABASE_PASSWORD(),
-    entities: [CustomerEntity, OrderEntity],
-  };
-} else {
-  connectionSetup = {
-    type: 'mssql',
-    host: EnvironmentService.DATABASE_HOST(),
-    port: EnvironmentService.DATABASE_PORT(),
-    database: EnvironmentService.DATABASE_NAME(),
-    username: EnvironmentService.DATABASE_USER(),
-    password: EnvironmentService.DATABASE_PASSWORD(),
-    entities: [CustomerEntity, OrderEntity],
-    logging: true,
-  };
-}
+import { JwtModule } from '@nestjs/jwt';
+import { JwtAuthGuard } from './auth/jwt.guard';
 
 @Module({
   //imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
   imports: [
-    TypeOrmModule.forRootAsync({ useFactory: async () => connectionSetup }),
+    // PassportModule.register({ defaultStrategy: 'jwt' }),
+    // JwtModule.register({
+    //   secret: 'your_secret_key', // Replace with your actual secret key
+    //   signOptions: { expiresIn: '1h' },
+    // }),
+    // JwtAuthModule,
+    // DevtoolsModule.register({
+    //   http: process.env.NODE_ENV !== 'production',
+    //   port: 7524,
+    // }),
+    JwtModule.register({
+      global: true,
+      secret: 'your_secret_key',
+      signOptions: { expiresIn: '1h' },
+    }),
+    TypeOrmModule.forRootAsync({ useFactory: async () => OrmConnectionSetup }),
     MasterModule,
   ],
   controllers: [AppController, MasterController, RB209Controller],
-  providers: [AppService, MasterService, RB209Service],
+  providers: [JwtAuthGuard, AppService, MasterService, RB209Service],
 })
 export class AppModule {
   //implements NestModule
