@@ -29,7 +29,6 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/swagger": "^7.3.0",
     "@nestjs/typeorm": "^10.0.2",
-    "@nmp/contracts": "../packages/nmp-contracts",
     "dotenv": "^16.4.5",
     "mssql": "^10.0.2",
     "passport": "^0.7.0",

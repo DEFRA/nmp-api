@@ -1,14 +1,13 @@
-import { Controller, Get, HttpException, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpException } from '@nestjs/common';
 import { generateToken } from '@shared/azureTokenGenerationService';
 import { AppService } from './app.service';
-import { JwtAuthGuard } from './auth/jwt.guard';
 
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get('/')
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   health() {
     try {
       return this.appService.health();

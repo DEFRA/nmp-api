@@ -1,5 +1,5 @@
 {
-  "azureAutomation.directory.basePath": ".",
+  "azureAutomation.directory.basePath": "nmp-api/",
   "appService.defaultWebAppToDeploy": "/subscriptions/0914912c-d24b-4055-9e8a-35fb2bf42e51/resourceGroups/rg-defra-nmp-dev/providers/Microsoft.Web/sites/app-nmp-dev-win-dev",
   "appService.deploySubpath": "nmp-api/dist",
   "cSpell.words": ["defra", "dotven", "nmp", "typeorm"],
@@ -9,5 +9,6 @@
   },
   "[ignore]": {
     "editor.defaultFormatter": "foxundermoon.shell-format"
-  }
+  },
+  "appService.showBuildDuringDeployPrompt": false
 }
