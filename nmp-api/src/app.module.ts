@@ -17,6 +17,13 @@ import { RB209Controller } from './vendors/rb209/rb209.controller';
 import { RB209Service } from './vendors/rb209/rb209.service';
 import { AddressLookupController } from './vendors/address-lookup/address-lookup.controller';
 import { AddressLookupService } from './vendors/address-lookup/address-lookup.service';
+import FarmEntity from '@db/entity/farm.entity';
+import UserEntity from '@db/entity/user.entity';
+import RoleEntity from '@db/entity/role.entity';
+import UserFarmsEntity from '@db/entity/user-farms.entity';
+import { FarmController } from './farm/farm.controller';
+import { FarmService } from './farm/farm.service';
+import { FarmModule } from './farm/farm.module';
 
 let connectionSetup: TypeOrmModuleOptions = {};
 if (process.env.NODE_ENV === 'production') {
@@ -27,7 +34,14 @@ if (process.env.NODE_ENV === 'production') {
     database: EnvironmentService.DATABASE_NAME(),
     username: EnvironmentService.DATABASE_USER(),
     password: EnvironmentService.DATABASE_PASSWORD(),
-    entities: [CustomerEntity, OrderEntity],
+    entities: [
+      CustomerEntity,
+      OrderEntity,
+      FarmEntity,
+      UserEntity,
+      RoleEntity,
+      UserFarmsEntity,
+    ],
   };
 } else {
   connectionSetup = {
@@ -37,25 +51,40 @@ if (process.env.NODE_ENV === 'production') {
     database: EnvironmentService.DATABASE_NAME(),
     username: EnvironmentService.DATABASE_USER(),
     password: EnvironmentService.DATABASE_PASSWORD(),
-    entities: [CustomerEntity, OrderEntity],
+    entities: [
+      CustomerEntity,
+      OrderEntity,
+      FarmEntity,
+      UserEntity,
+      RoleEntity,
+      UserFarmsEntity,
+    ],
     options: { trustServerCertificate: true },
     logging: true,
   };
 }
 
 @Module({
-  //imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
+  // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
   imports: [
     TypeOrmModule.forRootAsync({ useFactory: async () => connectionSetup }),
     MasterModule,
+    FarmModule,
   ],
   controllers: [
     AppController,
     MasterController,
     RB209Controller,
     AddressLookupController,
+    FarmController,
   ],
-  providers: [AppService, MasterService, RB209Service, AddressLookupService],
+  providers: [
+    AppService,
+    MasterService,
+    FarmService,
+    RB209Service,
+    AddressLookupService,
+  ],
 })
 export class AppModule {
   //implements NestModule

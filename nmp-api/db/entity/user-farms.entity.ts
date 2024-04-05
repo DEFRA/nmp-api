@@ -1,6 +1,6 @@
-import { Farm } from './farm.entity';
-import { Role } from './role.entity';
-import { User } from './user.entity';
+import FarmEntity from './farm.entity';
+import RoleEntity from './role.entity';
+import UserEntity from './user.entity';
 import {
   Column,
   Entity,
@@ -12,18 +12,18 @@ import {
 
 @Entity({ name: 'UserFarns' })
 @Index('PK_UserFarms', ['UserID', 'FarmID'], { unique: true })
-export class UserFarms {
-  @ManyToOne(() => User, (user) => user.UserFarms)
+export default class UserFarmsEntity {
+  @ManyToOne(() => UserEntity, (user) => user.UserFarms)
   @JoinColumn({ name: 'UserID' })
-  User: User;
+  User: UserEntity;
 
-  @OneToOne(() => Farm)
+  @OneToOne(() => FarmEntity)
   @JoinColumn({ name: 'FarmID' })
-  Farm: Farm;
+  Farm: FarmEntity;
 
-  @ManyToOne(() => Role, (role) => role.UserFarms)
+  @ManyToOne(() => RoleEntity, (role) => role.UserFarms)
   @JoinColumn({ name: 'RoleID' })
-  Role: Role;
+  Role: RoleEntity;
 
   @Column('int')
   UserID: number;

@@ -7,8 +7,6 @@ export class AddressLookupService {
   private readonly request: AxiosInstance;
 
   constructor() {
-    console.log(EnvironmentService.ADDR_LOOKUP_API_KEY());
-
     this.request = axios.create({
       baseURL: EnvironmentService.ADDR_LOOKUP_BASE_URL(),
       headers: {

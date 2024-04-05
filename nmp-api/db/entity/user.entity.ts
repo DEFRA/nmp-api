@@ -1,8 +1,8 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { UserFarms } from './user-farms.entity';
+import UserFarmsEntity from './user-farms.entity';
 
 @Entity({ name: 'Users' })
-export class User {
+export default class UserEntity {
   @PrimaryGeneratedColumn('identity', { generatedIdentity: 'ALWAYS' })
   ID: number;
 
@@ -18,6 +18,6 @@ export class User {
   @Column('nvarchar', { length: 128, unique: true })
   UserName: string;
 
-  @OneToMany(() => UserFarms, (userFarms) => userFarms.User)
-  UserFarms: UserFarms[];
+  @OneToMany(() => UserFarmsEntity, (userFarms) => userFarms.User)
+  UserFarms: UserFarmsEntity[];
 }
