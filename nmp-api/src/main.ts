@@ -33,36 +33,9 @@ async function bootstrap() {
   });
   app.enableCors();
   app.useGlobalInterceptors(new ResponseInterceptor());
+
+  console.log(`YOUR APP IS LISTEN ON PORT ${APPLICATION_PORT}`);
+
   await app.listen(APPLICATION_PORT);
 }
 bootstrap();
-
-// async function bootstrap() {
-//   const app = await NestFactory.create(AppModule);
-
-//   const config = new DocumentBuilder()
-//     .setTitle('UMR Tool Apis')
-//     .setDescription('UMR Tool Apis description')
-//     .setVersion('1.0')
-//     .addTag('group')
-//     .build();
-//   const document = SwaggerModule.createDocument(app, config);
-//   SwaggerModule.setup('apis', app, document);
-
-//   app.setGlobalPrefix('apis/v1', {
-//     exclude: [{ path: 'health', method: RequestMethod.GET }],
-//   });
-//   app.enableCors();
-//   app.useGlobalInterceptors(new CustomResponseInterceptor());
-//   await app.listen(3000);
-// }
-// bootstrap();
-
-// import { NestFactory } from '@nestjs/core';
-// import { AppModule } from './app.module';
-
-// async function bootstrap() {
-//   const app = await NestFactory.create(AppModule);
-//   await app.listen(3000);
-// }
-// bootstrap();
