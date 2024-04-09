@@ -23,6 +23,6 @@
       //"@src/*": ["./src/*"],
       "@filters/*": ["./filters/*"],
       "@interceptors/*": ["./interceptors/*"]
-    }
+    },
   }
 }
