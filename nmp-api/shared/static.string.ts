@@ -1,4 +1,5 @@
 export class StaticStrings {
+  //Other
   public static INFO_RESPONSE_STATUS_SUCCESS: string = 'success';
   public static ERR_RESPONSE_STATUS_FAIL: string = 'fail';
   public static ERR_INTERNAL_SERVER_ERROR: string = 'Internal Server Error!';
@@ -24,4 +25,27 @@ export class StaticStrings {
   public static INFO_PASSWORD_RESET_SUCCESSFUL: string = 'Password reset successful.';
   public static ERR_INVALID_RESET_TOKEN: string = 'Invalid or expired reset token.';
   public static ERR_RESOURCE_ALREADY_EXISTS: string = 'Resource already exists.';
+
+  // Token related messages
+  public static ERR_EXPIRED_TOKEN: string = 'Token has expired!';
+  public static ERR_MISSING_TOKEN: string = 'Missing token!';
+  public static ERR_TOKEN_NOT_PROVIDED: string = 'Token not provided in headers!';
+  public static ERR_TOKEN_REVOKED: string = 'Token has been revoked!';
+
+  // API input related messages
+  public static ERR_INVALID_EMAIL: string = 'Invalid email address!';
+  public static ERR_INVALID_USERNAME: string = 'Invalid username! Must contain only letters, numbers, underscores, or hyphens.';
+  public static ERR_INVALID_PASSWORD: string =
+    'Invalid password! Must be at least 8 characters long with at least one uppercase letter, one lowercase letter, one number, and one special character.';
+
+  // HTTP status messages
+  public static HTTP_STATUS_OK: string = 'OK';
+  public static HTTP_STATUS_CREATED: string = 'Created';
+  public static HTTP_STATUS_BAD_REQUEST: string = 'Bad Request';
+  public static HTTP_STATUS_UNAUTHORIZED: string = 'Unauthorized';
+  public static HTTP_STATUS_FORBIDDEN: string = 'Forbidden';
+  public static HTTP_STATUS_NOT_FOUND: string = 'Not Found';
+  public static HTTP_STATUS_CONFLICT: string = 'Conflict';
+  public static HTTP_STATUS_INTERNAL_SERVER_ERROR: string = 'Internal Server Error';
+  public static HTTP_STATUS_SERVICE_UNAVAILABLE: string = 'Service Unavailable';
 }
