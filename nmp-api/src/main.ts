@@ -10,7 +10,7 @@ dotenv?.config();
 //require('dotenv').config();
 
 const APPLICATION_PORT = process.env.PORT ?? EnvironmentService.APPLICATION_PORT();
-const APPLICATION_VER = EnvironmentService.APPLICATION_VER();
+const APPLICATION_VER = EnvironmentService.APPLICATION_VER() ?? '1.0.0';
 const APPLICATION_URL = EnvironmentService.APPLICATION_URL() ?? 'apis/v1';
 
 const APPLICATION_SWAGGER_PATH = EnvironmentService.APPLICATION_SWAGGER_PATH() ?? 'docs';

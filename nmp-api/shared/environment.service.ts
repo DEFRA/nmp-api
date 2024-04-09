@@ -53,14 +53,12 @@ export default class EnvironmentService {
     }
   }
 
-  @IsEnvironmentRequired('APPLICATION_VER')
   static APPLICATION_VER(): string {
     get: {
       return this.getEnv('APPLICATION_VER');
     }
   }
 
-  @IsEnvironmentRequired('APPLICATION_URL')
   static APPLICATION_URL(): string {
     get: {
       return this.getEnv('APPLICATION_URL');
