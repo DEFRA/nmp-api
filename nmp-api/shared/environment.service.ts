@@ -71,6 +71,12 @@ export default class EnvironmentService {
     }
   }
 
+  static APPLICATION_API_KEY(): string {
+    get: {
+      return this.getEnv('APPLICATION_API_KEY');
+    }
+  }
+
   static ADDR_LOOKUP_BASE_URL(): string {
     get: {
       return this.getEnv('ADDR_LOOKUP_BASE_URL');
@@ -80,6 +86,12 @@ export default class EnvironmentService {
   static ADDR_LOOKUP_API_KEY(): string {
     get: {
       return this.getEnv('ADDR_LOOKUP_API_KEY');
+    }
+  }
+
+  static JWT_SECRET(): string {
+    get: {
+      return this.getEnv('JWT_SECRET');
     }
   }
 }

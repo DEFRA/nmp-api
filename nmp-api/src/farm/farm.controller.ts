@@ -1,13 +1,14 @@
 import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { UserFarmsService } from '@src/user-farms/user-farms.service';
 
 @ApiTags('Farm')
 @Controller('farm')
 export class FarmController {
-  constructor() {}
+  constructor(private readonly userFarmsService: UserFarmsService) {}
 
   @Get('/user-id/:userId')
-  async getFarmByUserId(@Param('userId', ParseIntPipe) userId: number) {
-    return userId;
+  async getFarmsByUserId(@Param('userId', ParseIntPipe) userId: number) {
+    return await this.userFarmsService.getUserFarms(userId);
   }
 }

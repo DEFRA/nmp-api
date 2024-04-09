@@ -8,7 +8,7 @@ export default class FarmEntity {
   })
   ID: number;
 
-  @Column('nvarchar', { length: 50 })
+  @Column('nvarchar', { length: 250 })
   Name: string;
 
   @Column('nvarchar', { length: 50, nullable: true })
@@ -23,7 +23,7 @@ export default class FarmEntity {
   @Column('nvarchar', { length: 50, nullable: true })
   Address4?: string;
 
-  @Column('nvarchar', { length: 50 })
+  @Column('nvarchar', { length: 8 })
   PostCode: string;
 
   @Column('nvarchar', { length: 50, nullable: true })

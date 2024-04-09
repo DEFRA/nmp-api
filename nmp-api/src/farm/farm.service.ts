@@ -18,12 +18,4 @@ export class FarmService extends BaseService<
   ) {
     super(repository, entityManager);
   }
-
-  async get() {
-    try {
-    } catch (error) {
-      console.error('Error while fetching join data:', error);
-      throw error;
-    }
-  }
 }

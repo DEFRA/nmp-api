@@ -3,12 +3,12 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import 'dotenv/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { MasterController } from './customer/master/master.controller';
-import { MasterModule } from './customer/master/master.module';
-import { MasterService } from './customer/master/master.service';
+// import { MasterController } from './customer/master/master.controller';
+// import { MasterModule } from './customer/master/master.module';
+// import { MasterService } from './customer/master/master.service';
 
-import CustomerEntity from '@db/entity/customer.entity';
-import OrderEntity from '@db/entity/order.entity';
+// import CustomerEntity from '@db/entity/customer.entity';
+// import OrderEntity from '@db/entity/order.entity';
 import * as dotven from 'dotenv';
 dotven.config();
 
@@ -24,6 +24,11 @@ import UserFarmsEntity from '@db/entity/user-farms.entity';
 import { FarmController } from './farm/farm.controller';
 import { FarmService } from './farm/farm.service';
 import { FarmModule } from './farm/farm.module';
+import { AuthModule } from './auth/auth.module';
+import { AuthController } from './auth/auth.controller';
+import { AuthService } from './auth/auth.service';
+import { JwtService } from '@nestjs/jwt';
+import { UserFarmsService } from './user-farms/user-farms.service';
 
 let connectionSetup: TypeOrmModuleOptions = {};
 if (process.env.NODE_ENV === 'production') {
@@ -35,8 +40,8 @@ if (process.env.NODE_ENV === 'production') {
     username: EnvironmentService.DATABASE_USER(),
     password: EnvironmentService.DATABASE_PASSWORD(),
     entities: [
-      CustomerEntity,
-      OrderEntity,
+      // CustomerEntity,
+      // OrderEntity,
       FarmEntity,
       UserEntity,
       RoleEntity,
@@ -52,8 +57,8 @@ if (process.env.NODE_ENV === 'production') {
     username: EnvironmentService.DATABASE_USER(),
     password: EnvironmentService.DATABASE_PASSWORD(),
     entities: [
-      CustomerEntity,
-      OrderEntity,
+      // CustomerEntity,
+      // OrderEntity,
       FarmEntity,
       UserEntity,
       RoleEntity,
@@ -68,22 +73,27 @@ if (process.env.NODE_ENV === 'production') {
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
   imports: [
     TypeOrmModule.forRootAsync({ useFactory: async () => connectionSetup }),
-    MasterModule,
+    // MasterModule,
     FarmModule,
+    AuthModule,
   ],
   controllers: [
     AppController,
-    MasterController,
+    // MasterController,
     RB209Controller,
     AddressLookupController,
     FarmController,
+    AuthController,
   ],
   providers: [
     AppService,
-    MasterService,
+    // MasterService,
     FarmService,
+    UserFarmsService,
     RB209Service,
     AddressLookupService,
+    AuthService,
+    JwtService,
   ],
 })
 export class AppModule {
