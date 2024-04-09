@@ -20,6 +20,12 @@ export default class EnvironmentService {
     }
   }
 
+  static AZURE_AD_CONNECTION_TYPE(): string {
+    get: {
+      return this.getEnv('AZURE_AD_CONNECTION_TYPE');
+    }
+  }
+
   @IsEnvironmentRequired('DATABASE_HOST')
   static DATABASE_HOST(): string {
     get: {
