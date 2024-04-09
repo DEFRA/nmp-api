@@ -1,5 +1,5 @@
 {
-  "name": "npm-api",
+  "name": "nmp",
   "private": true,
   "version": "1.0.0",
   "main": "index.js",
@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "cd nmp-api/ && yarn start",
     "start:dev": "cd nmp-api/ && yarn start dev",
+    "start:prod": "cd nmp-api/dist && yarn start",
     "clean": "./scripts/clean.sh && yarn workspaces run clean",
     "clean:all": "./scripts/clean.sh all",
     "next": "yarn --cwd apps/nextapp dev",
@@ -20,7 +21,8 @@
   },
   "workspaces": {
     "packages": [
-      "packages/*"
+      "packages/*",
+      "nmp-api"
     ]
   },
   "author": "nmp",

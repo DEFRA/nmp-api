@@ -1,14 +1,14 @@
 {
-  "name": "npm-api",
+  "name": "nmp-api",
   "version": "0.0.1",
   "description": "",
-  "author": "NPM",
+  "author": "nmp",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
+    "start": "node dist/src/main.js",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main.js",
@@ -79,10 +79,8 @@
     "moduleNameMapper": {
       "^@db/(.*)$": "<rootDir>/db/$1",
       "^@shared/(.*)$": "<rootDir>/shared/$1",
-      "^@src/(.*)$": "<rootDir>/src/$1",
       "^@filters/(.*)$": "<rootDir>/filters/$1",
       "^@interceptors/(.*)$": "<rootDir>/interceptors/$1"
     }
-  },
-  "main": "dist/src/main.js"
+  }
 }

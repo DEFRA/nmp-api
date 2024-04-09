@@ -10,5 +10,6 @@
   "[ignore]": {
     "editor.defaultFormatter": "foxundermoon.shell-format"
   },
-  "appService.showBuildDuringDeployPrompt": false
+  "appService.showBuildDuringDeployPrompt": false,
+  "appService.zipIgnorePattern": ["node_modules{,/**}", ".vscode{,/**}"]
 }

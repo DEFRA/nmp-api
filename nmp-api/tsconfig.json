@@ -20,7 +20,7 @@
     "paths": {
       "@db/*": ["./db/*"],
       "@shared/*": ["./shared/*"],
-      "@src/*": ["./src/*"],
+      //"@src/*": ["./src/*"],
       "@filters/*": ["./filters/*"],
       "@interceptors/*": ["./interceptors/*"]
     }
