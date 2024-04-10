@@ -6,8 +6,6 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import CustomerEntity from './customer.entity';
-// import IOrderContract from '../../../packages/nmp-contracts/order.contract';
-// implements IOrderContract
 
 @Entity('Orders')
 export default class OrderEntity {

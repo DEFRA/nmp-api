@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import 'dotenv/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -7,93 +7,60 @@ import { AppService } from './app.service';
 // import { MasterModule } from './customer/master/master.module';
 // import { MasterService } from './customer/master/master.service';
 
-// import CustomerEntity from '@db/entity/customer.entity';
-// import OrderEntity from '@db/entity/order.entity';
-import * as dotven from 'dotenv';
-dotven.config();
-
-import EnvironmentService from '@shared/environment.service';
+import OrmConnectionSetup from './app.orm';
 import { RB209Controller } from './vendors/rb209/rb209.controller';
 import { RB209Service } from './vendors/rb209/rb209.service';
 import { AddressLookupController } from './vendors/address-lookup/address-lookup.controller';
 import { AddressLookupService } from './vendors/address-lookup/address-lookup.service';
-import FarmEntity from '@db/entity/farm.entity';
-import UserEntity from '@db/entity/user.entity';
-import RoleEntity from '@db/entity/role.entity';
-import UserFarmsEntity from '@db/entity/user-farms.entity';
+
 import { FarmController } from './farm/farm.controller';
 import { FarmService } from './farm/farm.service';
 import { FarmModule } from './farm/farm.module';
-import { AuthModule } from './auth/auth.module';
-import { AuthController } from './auth/auth.controller';
-import { AuthService } from './auth/auth.service';
-import { JwtService } from '@nestjs/jwt';
+// import { AuthModule } from './auth/auth.module';
+// import { AuthController } from './auth/auth.controller';
+// import { AuthService } from './auth/auth.service';
+// import { JwtService } from '@nestjs/jwt';
 import { UserFarmsService } from './user-farms/user-farms.service';
 
-let connectionSetup: TypeOrmModuleOptions = {};
-if (process.env.NODE_ENV === 'production') {
-  connectionSetup = {
-    type: 'mssql',
-    host: EnvironmentService.DATABASE_HOST(),
-    port: EnvironmentService.DATABASE_PORT(),
-    database: EnvironmentService.DATABASE_NAME(),
-    username: EnvironmentService.DATABASE_USER(),
-    password: EnvironmentService.DATABASE_PASSWORD(),
-    entities: [
-      // CustomerEntity,
-      // OrderEntity,
-      FarmEntity,
-      UserEntity,
-      RoleEntity,
-      UserFarmsEntity,
-    ],
-  };
-} else {
-  connectionSetup = {
-    type: 'mssql',
-    host: EnvironmentService.DATABASE_HOST(),
-    port: EnvironmentService.DATABASE_PORT(),
-    database: EnvironmentService.DATABASE_NAME(),
-    username: EnvironmentService.DATABASE_USER(),
-    password: EnvironmentService.DATABASE_PASSWORD(),
-    entities: [
-      // CustomerEntity,
-      // OrderEntity,
-      FarmEntity,
-      UserEntity,
-      RoleEntity,
-      UserFarmsEntity,
-    ],
-    options: { trustServerCertificate: true },
-    logging: true,
-  };
-}
+import { JwtModule } from '@nestjs/jwt';
+import { JwtAuthGuard } from './auth/jwt.guard';
+import { AddressLookupModule } from './vendors/address-lookup/address-lookup.module';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
   imports: [
-    TypeOrmModule.forRootAsync({ useFactory: async () => connectionSetup }),
-    // MasterModule,
+    // PassportModule.register({ defaultStrategy: 'jwt' }),
+    // JwtModule.register({
+    //   secret: 'your_secret_key', // Replace with your actual secret key
+    //   signOptions: { expiresIn: '1h' },
+    // }),
+    // JwtAuthModule,
+    // DevtoolsModule.register({
+    //   http: process.env.NODE_ENV !== 'production',
+    //   port: 7524,
+    // }),
+    JwtModule.register({
+      global: true,
+      secret: 'your_secret_key',
+      signOptions: { expiresIn: '1h' },
+    }),
+    TypeOrmModule.forRootAsync({ useFactory: async () => OrmConnectionSetup }),
+    AddressLookupModule,
     FarmModule,
-    AuthModule,
   ],
   controllers: [
     AppController,
-    // MasterController,
     RB209Controller,
     AddressLookupController,
     FarmController,
-    AuthController,
   ],
   providers: [
+    JwtAuthGuard,
     AppService,
-    // MasterService,
-    FarmService,
-    UserFarmsService,
     RB209Service,
     AddressLookupService,
-    AuthService,
-    JwtService,
+    FarmService,
+    UserFarmsService,
   ],
 })
 export class AppModule {

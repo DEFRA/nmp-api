@@ -1,13 +1,5 @@
 import CustomerEntity from '@db/entity/customer.entity';
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseIntPipe,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { DeepPartial } from 'typeorm';
 import { MasterService } from './master.service';
 
@@ -21,10 +13,7 @@ export class MasterController {
   }
 
   @Get('/get/:columnName/:value')
-  async getBy(
-    @Param('columnName') columnName: string,
-    @Param('value') value: string,
-  ) {
+  async getBy(@Param('columnName') columnName: string, @Param('value') value: string) {
     return await this.service.getBy(columnName, value);
   }
 
@@ -34,12 +23,7 @@ export class MasterController {
   }
 
   @Get('/search/:columns/:value/:page?/:size?')
-  async search(
-    @Param('columns') columns: string,
-    @Param('value') value: string,
-    @Param('page') page: number = 1,
-    @Param('size') size: number = 10,
-  ) {
+  async search(@Param('columns') columns: string, @Param('value') value: string, @Param('page') page: number = 1, @Param('size') size: number = 10) {
     return await this.service.search(columns, value, page, size);
   }
 
@@ -54,25 +38,17 @@ export class MasterController {
   }
 
   @Post('/save-multiple-transaction')
-  async saveMultipleWithTransaction(
-    @Body() entities: DeepPartial<CustomerEntity>[],
-  ) {
+  async saveMultipleWithTransaction(@Body() entities: DeepPartial<CustomerEntity>[]) {
     return await this.service.saveMultipleWithTransaction(entities);
   }
 
   @Get('/record-exists/:column/:value')
-  async recordExists(
-    @Param('column') column: string,
-    @Param('value') value: any,
-  ) {
+  async recordExists(@Param('column') column: string, @Param('value') value: any) {
     return await this.service.recordExists(column, value);
   }
 
   @Post('/execute-query')
-  async executeQuery(
-    @Body('query') query: string,
-    @Body('parameters') parameters?: any[],
-  ) {
+  async executeQuery(@Body('query') query: string, @Body('parameters') parameters?: any[]) {
     return await this.service.executeQuery(query, parameters);
   }
 

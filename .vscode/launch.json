@@ -8,8 +8,21 @@
       "type": "node",
       "request": "launch",
       "name": "NestJS: Launch",
-      "program": "${file}",
-      "outFiles": ["${workspaceFolder}/**/*.js"]
+      "envFile": "${workspaceFolder}/nmp-api/.env",
+      "program": "${workspaceFolder}/nmp-api/src/main.ts",
+      "outFiles": ["${workspaceFolder}/nmp-api/dist/**/*.js"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Nest Framework",
+      "args": ["${workspaceFolder}/nmp-api/src/main.ts"],
+      //"runtimeArgs": ["--nolazy", "-r", "ts-node/register", "-r", "tsconfig-paths/register"],
+      //"sourceMaps": true,
+      "envFile": "${workspaceFolder}/nmp-api/.env"
+      //"cwd": "${workspaceRoot}/nmp-api"
+      //"console": "integratedTerminal",
+      //"protocol": "inspector"
     }
   ]
 }
