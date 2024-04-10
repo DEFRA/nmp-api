@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, ParseIntPipe, Query } from '@nestjs/common';
 import { AddressLookupService } from './address-lookup.service';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -13,7 +13,10 @@ export class AddressLookupController {
   }
 
   @Get('/addresses')
-  async getAddresses(@Query('postcode') postcode: string) {
-    return await this.service.getAddressesByPostCode(postcode);
+  async getAddresses(
+    @Query('postcode') postcode: string,
+    @Query('offset', ParseIntPipe) offset: number,
+  ) {
+    return await this.service.getAddressesByPostCode(postcode, offset);
   }
 }

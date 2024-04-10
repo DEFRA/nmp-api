@@ -28,18 +28,7 @@ export class UserFarmsService extends BaseService<
         .createQueryBuilder('UserFarms')
         .where('UserFarms.UserID = :userId', { userId })
         .leftJoin('UserFarms.Farm', 'Farm')
-        .select([
-          'Farm.Name AS Name',
-          'Farm.Address1 AS Address1',
-          'Farm.Address2 AS Address2',
-          'Farm.Address3 AS Address3',
-          'Farm.Address4 AS Address4',
-          'Farm.PostCode AS PostCode',
-          'Farm.Rainfall AS Rainfall',
-          'Farm.RegistredOrganicProducer AS RegistredOrganicProducer',
-          'Farm.NVZFields AS NVZFields',
-          'Farm.FieldsAbove300SeaLevel AS FieldsAbove300SeaLevel',
-        ])
+        .select('Farm')
         .getRawMany();
 
       return data;

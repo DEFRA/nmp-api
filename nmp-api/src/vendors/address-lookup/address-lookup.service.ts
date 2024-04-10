@@ -19,8 +19,13 @@ export class AddressLookupService {
     return 'Connected!';
   }
 
-  async getAddressesByPostCode(postcode: string): Promise<any> {
-    const response = await this.request.get(`/addresses?postcode=${postcode}`);
+  async getAddressesByPostCode(
+    postcode: string,
+    offset: number = 0,
+  ): Promise<any> {
+    const response = await this.request.get(
+      `/addresses?postcode=${postcode}&offset=${offset}`,
+    );
     return response.data;
   }
 }
