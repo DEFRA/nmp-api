@@ -84,6 +84,24 @@ export default class EnvironmentService {
     }
   }
 
+  static APPLICATION_API_KEY(): string {
+    get: {
+      return this.getEnv('APPLICATION_API_KEY');
+    }
+  }
+
+  static ADDR_LOOKUP_BASE_URL(): string {
+    get: {
+      return this.getEnv('ADDR_LOOKUP_BASE_URL');
+    }
+  }
+
+  static ADDR_LOOKUP_API_KEY(): string {
+    get: {
+      return this.getEnv('ADDR_LOOKUP_API_KEY');
+    }
+  }
+
   static APPLICATION_ENV(): string {
     get: {
       if (!this.getEnv('APPLICATION_ENV')) {
