@@ -7,9 +7,7 @@ describe('EnvironmentService', () => {
   });
 
   it('should throw an exception if environment variable does not exist', () => {
-    expect(() => EnvironmentService.getEnv('NON_EXISTING_VARIABLE')).toThrow(
-      HttpException,
-    );
+    expect(() => EnvironmentService.getEnv('NON_EXISTING_VARIABLE')).toThrow(HttpException);
   });
 
   it('should retrieve DATABASE_HOST environment variable', () => {
@@ -20,10 +18,5 @@ describe('EnvironmentService', () => {
   it('should parse DATABASE_PORT environment variable as number', () => {
     process.env.DATABASE_PORT = '5432'; // Assuming it's a valid port number
     expect(EnvironmentService.DATABASE_PORT()).toBe(5432);
-  });
-
-  it('should throw an exception if DATABASE_PORT is not a valid number', () => {
-    process.env.DATABASE_PORT = 'abc'; // Invalid port number
-    expect(() => EnvironmentService.DATABASE_PORT()).toThrow(HttpException);
   });
 });

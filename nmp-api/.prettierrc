@@ -1,4 +1,9 @@
 {
   "singleQuote": true,
-  "trailingComma": "all"
+  "trailingComma": "all",
+  "arrowParens": "always",
+  "alignObjectProperties": true,
+  "printWidth": 150,
+  "singleAttributePerLine": true,
+  "htmlWhitespaceSensitivity": "ignore"
 }

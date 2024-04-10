@@ -1,13 +1,5 @@
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import CustomerEntity from './customer.entity';
-// import IOrderContract from '../../../packages/nmp-contracts/order.contract';
-// implements IOrderContract
 
 @Entity('Orders')
 export default class OrderEntity {

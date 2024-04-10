@@ -17,3 +17,5 @@ else
 fi
 
 chmod +x scripts/load-env.sh
+
+env
