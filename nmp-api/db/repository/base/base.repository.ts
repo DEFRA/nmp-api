@@ -1,5 +1,11 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { DeepPartial, EntityManager, Like, Repository } from 'typeorm';
+import {
+  DeepPartial,
+  EntityManager,
+  Like,
+  Repository,
+  SaveOptions,
+} from 'typeorm';
 import MutableContract from './mutable.contract';
 import ReadContract from './read.contract';
 
@@ -70,8 +76,11 @@ export default class BaseRepository<Entity, ResponseType>
   }
 
   //----------- Mutation
-  async save(entity: DeepPartial<Entity>): Promise<Entity> {
-    return this.repository.save(entity);
+  async save(
+    entity: DeepPartial<Entity>,
+    options?: SaveOptions,
+  ): Promise<Entity> {
+    return this.repository.save(entity, options);
   }
 
   async delete(id: number): Promise<boolean> {
