@@ -1,5 +1,3 @@
-import CustomerEntity from '@db/entity/customer.entity';
-import OrderEntity from '@db/entity/order.entity';
 import FarmEntity from '@db/entity/farm.entity';
 import UserEntity from '@db/entity/user.entity';
 import RoleEntity from '@db/entity/role.entity';
@@ -20,14 +18,7 @@ if (process.env.NODE_ENV === 'production') {
     database: EnvironmentService.DATABASE_NAME(),
     username: EnvironmentService.DATABASE_USER(),
     password: EnvironmentService.DATABASE_PASSWORD(),
-    entities: [
-      CustomerEntity,
-      OrderEntity,
-      FarmEntity,
-      UserEntity,
-      RoleEntity,
-      UserFarmsEntity,
-    ],
+    entities: [FarmEntity, UserEntity, RoleEntity, UserFarmsEntity],
   };
 } else if (process.env.NODE_ENV === 'hosting') {
   OrmConnectionSetup = {
@@ -53,16 +44,9 @@ if (process.env.NODE_ENV === 'production') {
     username: EnvironmentService.DATABASE_USER(),
     password: EnvironmentService.DATABASE_PASSWORD(),
     options: {
-      trustServerCertificate:true
+      trustServerCertificate: true,
     },
-    entities: [
-      CustomerEntity,
-      OrderEntity,
-      FarmEntity,
-      UserEntity,
-      RoleEntity,
-      UserFarmsEntity,
-    ],
+    entities: [FarmEntity, UserEntity, RoleEntity, UserFarmsEntity],
     synchronize: false,
     logging: true,
   };
