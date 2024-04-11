@@ -4,6 +4,7 @@ import RoleEntity from '@db/entity/role.entity';
 import UserFarmsEntity from '@db/entity/user-farms.entity';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import EnvironmentService from '@shared/environment.service';
+import { ManagedIdentityCredential } from '@azure/identity';
 import * as dotven from 'dotenv';
 import 'dotenv/config';
 
@@ -16,9 +17,20 @@ if (process.env.NODE_ENV === 'production') {
     host: EnvironmentService.DATABASE_HOST(),
     port: EnvironmentService.DATABASE_PORT(),
     database: EnvironmentService.DATABASE_NAME(),
-    username: EnvironmentService.DATABASE_USER(),
-    password: EnvironmentService.DATABASE_PASSWORD(),
-    entities: [FarmEntity, UserEntity, RoleEntity, UserFarmsEntity],
+    options: {
+      encrypt: true,
+    },
+    extra: {
+      authentication: {
+        type: EnvironmentService.AZURE_AD_CONNECTION_TYPE(),        
+      },      
+    },
+    entities: [      
+      FarmEntity,
+      UserEntity,
+      RoleEntity,
+      UserFarmsEntity,
+    ],
   };
 } else if (process.env.NODE_ENV === 'hosting') {
   OrmConnectionSetup = {

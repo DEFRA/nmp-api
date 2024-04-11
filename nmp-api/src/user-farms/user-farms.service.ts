@@ -24,7 +24,7 @@ export class UserFarmsService extends BaseService<
   async getUserFarms(userId: number): Promise<FarmEntity[]> {
     try {
       // service implementation
-      const data = await this.repository
+      const farms = await this.repository
         .createQueryBuilder('UserFarms')
         .where('UserFarms.UserID = :userId', { userId })
         .leftJoin('UserFarms.Farm', 'Farm')
@@ -47,7 +47,7 @@ export class UserFarmsService extends BaseService<
           'Farm.Rainfall AS Rainfall',
           'Farm.TotalFarmArea AS TotalFarmArea',
           'Farm.AverageAltitude AS AverageAltitude',
-          'Farm.RegistredOrganicProducer AS RegistredOrganicProducer',
+          'Farm.RegisteredOrganicProducer AS RegisteredOrganicProducer',
           'Farm.MetricUnits AS MetricUnits',
           'Farm.EnglishRules AS EnglishRules',
           'Farm.NVZFields AS NVZFields',
@@ -55,7 +55,7 @@ export class UserFarmsService extends BaseService<
         ])
         .getRawMany();
 
-      return data;
+      return farms;
     } catch (error) {
       console.error('Error while fetching join data:', error);
       throw error;
