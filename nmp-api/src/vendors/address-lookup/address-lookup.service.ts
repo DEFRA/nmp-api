@@ -10,7 +10,7 @@ export class AddressLookupService {
     this.request = axios.create({
       baseURL: EnvironmentService.ADDR_LOOKUP_BASE_URL(),
       headers: {
-        'Ocp-Apim-Subscription-Key': EnvironmentService.ADDR_LOOKUP_API_KEY(),
+        'Ocp-Apim-Subscription-Key': EnvironmentService.ADDR_LOOKUP_SUBSCRIPTION_KEY(),
       },
     });
   }
