@@ -23,8 +23,8 @@ export class FarmController {
 
   @Get('/user-id/:userId')
   async getFarmsByUserId(@Param('userId', ParseIntPipe) userId: number) {
-    const Farm = await this.userFarmsService.getUserFarms(userId);
-    return { Farm };
+    const Farms = await this.userFarmsService.getUserFarms(userId);
+    return { Farms };
   }
 
   @Post('/')
