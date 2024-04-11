@@ -23,7 +23,8 @@ export class FarmController {
 
   @Get('/user-id/:userId')
   async getFarmsByUserId(@Param('userId', ParseIntPipe) userId: number) {
-    return await this.userFarmsService.getUserFarms(userId);
+    const Farms = await this.userFarmsService.getUserFarms(userId);
+    return { Farms };
   }
 
   @Post('/')
@@ -31,14 +32,14 @@ export class FarmController {
   async createFarm(
     @Body('UserID', ParseIntPipe) UserID: number,
     @Body('RoleID', ParseIntPipe) RoleID: number,
-    @Body() body: DeepPartial<FarmEntity>,
+    @Body('Farm') farmBody: DeepPartial<FarmEntity>,
   ) {
-    const data = await this.farmService.save(body);
+    const data = await this.farmService.save(farmBody);
     await this.userFarmsService.save({
       UserID,
       RoleID,
       FarmID: data.ID,
     });
-    return data;
+    return { Farm: data };
   }
 }

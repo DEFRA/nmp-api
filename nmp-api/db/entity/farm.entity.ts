@@ -80,7 +80,7 @@ export default class FarmEntity {
 
   @Column('bit', { default: 0 })
   @ApiProperty()
-  RegistredOrganicProducer: boolean;
+  RegisteredOrganicProducer: boolean;
 
   @Column('bit', { default: 0 })
   @ApiProperty()
