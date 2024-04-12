@@ -118,16 +118,16 @@ export default class BaseRepository<Entity, ResponseType>
     return count > 0;
   }
 
-  async executeQuery(query: string, parameters?: any[]): Promise<any> {
-    if (query.indexOf('delete') > 0) {
+  async executeQuery(query: string, parameters: any = []): Promise<any> {
+    if (query.toLowerCase().includes('delete')) {
       throw new HttpException(
         {
           status: HttpStatus.FORBIDDEN,
-          error: 'delete query not allowed!',
+          error: 'Delete query not allowed',
         },
         HttpStatus.FORBIDDEN,
         {
-          cause: 'unauthorized',
+          cause: 'Unauthorized',
         },
       );
     }
