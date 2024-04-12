@@ -34,12 +34,11 @@ export class FarmController {
     @Body('RoleID', ParseIntPipe) RoleID: number,
     @Body('Farm') farmBody: DeepPartial<FarmEntity>,
   ) {
-    const data = await this.farmService.save(farmBody);
-    await this.userFarmsService.save({
+    const Farm = await this.userFarmsService.createFarm(
+      farmBody,
       UserID,
       RoleID,
-      FarmID: data.ID,
-    });
-    return { Farm: data };
+    );
+    return { Farm };
   }
 }
