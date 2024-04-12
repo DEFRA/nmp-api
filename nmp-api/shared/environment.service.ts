@@ -90,6 +90,24 @@ export default class EnvironmentService {
     }
   }
 
+  static RB209_BASE_URL(): string {
+    get: {
+      return this.getEnv('RB209_BASE_URL');
+    }
+  }
+
+  static RB209_USER_EMAIL(): string {
+    get: {
+      return this.getEnv('RB209_USER_EMAIL');
+    }
+  }
+
+  static RB209_USER_PASSWORD(): string {
+    get: {
+      return this.getEnv('RB209_USER_PASSWORD');
+    }
+  }
+
   static ADDR_LOOKUP_BASE_URL(): string {
     get: {
       return this.getEnv('ADDR_LOOKUP_BASE_URL');
