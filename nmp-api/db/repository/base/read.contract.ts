@@ -8,5 +8,6 @@ export default interface ReadContract<ResponseType> {
     page: number,
     pageSize: number,
   ): Promise<ResponseType>;
-  recordExists(column: string, value: any): Promise<boolean>;
+  recordExists(whereOptions: any): Promise<boolean>;
+  countRecords(whereOptions: any): Promise<number>;
 }

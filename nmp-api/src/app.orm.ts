@@ -4,9 +4,9 @@ import RoleEntity from '@db/entity/role.entity';
 import UserFarmsEntity from '@db/entity/user-farms.entity';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import EnvironmentService from '@shared/environment.service';
-import { ManagedIdentityCredential } from '@azure/identity';
 import * as dotven from 'dotenv';
 import 'dotenv/config';
+import FieldEntity from '@db/entity/field.entity';
 
 dotven.config();
 
@@ -22,14 +22,15 @@ if (process.env.NODE_ENV === 'production') {
     },
     extra: {
       authentication: {
-        type: EnvironmentService.AZURE_AD_CONNECTION_TYPE(),        
-      },      
+        type: EnvironmentService.AZURE_AD_CONNECTION_TYPE(),
+      },
     },
-    entities: [      
+    entities: [
       FarmEntity,
       UserEntity,
       RoleEntity,
       UserFarmsEntity,
+      FieldEntity,
     ],
   };
 } else if (process.env.NODE_ENV === 'hosting') {
@@ -58,7 +59,13 @@ if (process.env.NODE_ENV === 'production') {
     options: {
       trustServerCertificate: true,
     },
-    entities: [FarmEntity, UserEntity, RoleEntity, UserFarmsEntity],
+    entities: [
+      FarmEntity,
+      UserEntity,
+      RoleEntity,
+      UserFarmsEntity,
+      FieldEntity,
+    ],
     synchronize: false,
     logging: true,
   };

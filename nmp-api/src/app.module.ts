@@ -25,6 +25,9 @@ import { UserFarmsService } from './user-farms/user-farms.service';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtAuthGuard } from './auth/jwt.guard';
 import { AddressLookupModule } from './vendors/address-lookup/address-lookup.module';
+import { FieldService } from './field/field.service';
+import { FieldController } from './field/field.controller';
+import { FieldModule } from './field/field.module';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -47,12 +50,14 @@ import { AddressLookupModule } from './vendors/address-lookup/address-lookup.mod
     TypeOrmModule.forRootAsync({ useFactory: async () => OrmConnectionSetup }),
     AddressLookupModule,
     FarmModule,
+    FieldModule,
   ],
   controllers: [
     AppController,
     RB209Controller,
     AddressLookupController,
     FarmController,
+    FieldController,
   ],
   providers: [
     JwtAuthGuard,
@@ -61,6 +66,7 @@ import { AddressLookupModule } from './vendors/address-lookup/address-lookup.mod
     AddressLookupService,
     FarmService,
     UserFarmsService,
+    FieldService,
   ],
 })
 export class AppModule {
