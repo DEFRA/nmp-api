@@ -5,6 +5,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { UserFarmsService } from '@src/user-farms/user-farms.service';
@@ -41,5 +42,18 @@ export class FarmController {
       FarmID: data.ID,
     });
     return { Farm: data };
+  }
+
+  @Get('/exists')
+  async checkFarmExists(
+    @Query('Name') farmName: string,
+    @Query('PostCode') postcode: string,
+  ) {
+    const exists = await this.farmService.recordExists({
+      Name: farmName,
+      PostCode: postcode,
+    });
+
+    return { exists };
   }
 }

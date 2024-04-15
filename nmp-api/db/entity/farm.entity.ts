@@ -1,5 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Column, Entity, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import FieldEntity from './field.entity';
 
 @Entity({ name: 'Farms' })
 export default class FarmEntity {
@@ -97,4 +104,7 @@ export default class FarmEntity {
   @Column('int', { default: 0 })
   @ApiProperty()
   FieldsAbove300SeaLevel: number;
+
+  @OneToMany(() => FieldEntity, (field) => field.Farm)
+  Fields: FieldEntity[];
 }
