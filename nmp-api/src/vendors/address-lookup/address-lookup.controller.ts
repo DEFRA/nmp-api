@@ -16,7 +16,7 @@ export class AddressLookupController {
   @ApiQuery({ name: 'offset', required: false })
   async getAddresses(
     @Query('postcode') postcode: string,
-    @Query('offset', ParseIntPipe) offset: number = 0,
+    @Query('offset', new ParseIntPipe({ optional: true })) offset: number = 0,
   ) {
     return await this.service.getAddressesByPostCode(postcode, offset);
   }

@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApiDataResponseType } from '@shared/base.response';
 import { BaseService } from '@src/base/base.service';
-import { EntityManager, Repository } from 'typeorm';
+import { DeepPartial, EntityManager, Repository } from 'typeorm';
 
 @Injectable()
 export class UserFarmsService extends BaseService<
@@ -30,5 +30,27 @@ export class UserFarmsService extends BaseService<
       console.error('Error while fetching join data:', error);
       throw error;
     }
+  }
+
+  async createFarm(
+    farmBody: DeepPartial<FarmEntity>,
+    UserID: number,
+    RoleID: number,
+  ) {
+    return this.entityManager.transaction(
+      async (transactionalEntityManager) => {
+        const Farm = await transactionalEntityManager.save(
+          this.repositoryFarm.create(farmBody),
+        );
+        await transactionalEntityManager.save(
+          this.repository.create({
+            UserID,
+            RoleID,
+            FarmID: Farm.ID,
+          }),
+        );
+        return Farm;
+      },
+    );
   }
 }
