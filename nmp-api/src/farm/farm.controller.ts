@@ -27,6 +27,12 @@ export class FarmController {
     return { Farms };
   }
 
+  @Get('/:farmId')
+  async getFarmById(@Param('farmId', ParseIntPipe) farmId: number) {
+    const Farm = await this.farmService.getById(farmId);
+    return { Farm };
+  }
+
   @Post('/')
   @ApiBody({ type: CreateFarmRequest })
   async createFarm(
