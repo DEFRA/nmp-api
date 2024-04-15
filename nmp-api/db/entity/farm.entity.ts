@@ -7,6 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import UserFarmsEntity from './user-farms.entity';
+import FieldEntity from './field.entity';
 
 @Entity({ name: 'Farms' })
 export default class FarmEntity {
@@ -107,4 +108,7 @@ export default class FarmEntity {
 
   @OneToMany(() => UserFarmsEntity, (userFarms) => userFarms.Farm)
   UserFarms: UserFarmsEntity[];
+
+  @OneToMany(() => FieldEntity, (field) => field.Farm)
+  Fields: FieldEntity[];
 }

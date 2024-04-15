@@ -2,6 +2,7 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 import {
   DeepPartial,
   EntityManager,
+  FindOptionsWhere,
   Like,
   Repository,
   SaveOptions,
@@ -22,9 +23,9 @@ export default class BaseRepository<Entity, ResponseType>
     return { records } as ResponseType;
   }
 
-  async getById(ID: number): Promise<ResponseType> {
+  async getById(id: number): Promise<ResponseType> {
     const records = (await this.repository.findOne({
-      where: { ID: ID } as any,
+      where: { ID: id } as any,
     })) as Entity;
     return { records } as ResponseType;
   }
@@ -111,11 +112,15 @@ export default class BaseRepository<Entity, ResponseType>
 
   //----Other
 
-  async recordExists(column: string, value: any): Promise<boolean> {
-    const count = await this.repository.count({
-      where: { [column]: value },
-    } as any);
+  async recordExists(whereOptions: FindOptionsWhere<Entity>): Promise<boolean> {
+    const count = await this.countRecords(whereOptions);
     return count > 0;
+  }
+
+  async countRecords(whereOptions: FindOptionsWhere<Entity>): Promise<number> {
+    return await this.repository.count({
+      where: whereOptions,
+    });
   }
 
   async executeQuery(query: string, parameters: any = []): Promise<any> {
