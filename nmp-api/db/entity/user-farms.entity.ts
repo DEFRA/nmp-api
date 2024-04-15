@@ -7,7 +7,6 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
-  OneToOne,
   PrimaryColumn,
 } from 'typeorm';
 
@@ -21,7 +20,7 @@ export default class UserFarmsEntity {
   @JoinColumn({ name: 'UserID' })
   User: UserEntity;
 
-  @OneToOne(() => FarmEntity)
+  @ManyToOne(() => FarmEntity, (farm) => farm.UserFarms)
   @JoinColumn({ name: 'FarmID' })
   Farm: FarmEntity;
 

@@ -96,9 +96,9 @@ export default class EnvironmentService {
     }
   }
 
-  static ADDR_LOOKUP_API_KEY(): string {
+  static ADDR_LOOKUP_SUBSCRIPTION_KEY(): string {
     get: {
-      return this.getEnv('ADDR_LOOKUP_API_KEY');
+      return this.getEnv('ADDR_LOOKUP_SUBSCRIPTION_KEY');
     }
   }
 

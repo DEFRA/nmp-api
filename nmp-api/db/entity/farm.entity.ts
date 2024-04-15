@@ -6,6 +6,7 @@ import {
   PrimaryColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import UserFarmsEntity from './user-farms.entity';
 import FieldEntity from './field.entity';
 
 @Entity({ name: 'Farms' })
@@ -104,6 +105,9 @@ export default class FarmEntity {
   @Column('int', { default: 0 })
   @ApiProperty()
   FieldsAbove300SeaLevel: number;
+
+  @OneToMany(() => UserFarmsEntity, (userFarms) => userFarms.Farm)
+  UserFarms: UserFarmsEntity[];
 
   @OneToMany(() => FieldEntity, (field) => field.Farm)
   Fields: FieldEntity[];

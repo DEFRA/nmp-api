@@ -25,7 +25,7 @@ export default class BaseRepository<Entity, ResponseType>
 
   async getById(id: number): Promise<ResponseType> {
     const records = (await this.repository.findOne({
-      where: { id: id } as any,
+      where: { ID: id } as any,
     })) as Entity;
     return { records } as ResponseType;
   }
@@ -123,16 +123,16 @@ export default class BaseRepository<Entity, ResponseType>
     });
   }
 
-  async executeQuery(query: string, parameters?: any[]): Promise<any> {
-    if (query.indexOf('delete') > 0) {
+  async executeQuery(query: string, parameters: any = []): Promise<any> {
+    if (query.toLowerCase().includes('delete')) {
       throw new HttpException(
         {
           status: HttpStatus.FORBIDDEN,
-          error: 'delete query not allowed!',
+          error: 'Delete query not allowed',
         },
         HttpStatus.FORBIDDEN,
         {
-          cause: 'unauthorized',
+          cause: 'Unauthorized',
         },
       );
     }

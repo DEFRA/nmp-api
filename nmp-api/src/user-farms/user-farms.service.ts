@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApiDataResponseType } from '@shared/base.response';
 import { BaseService } from '@src/base/base.service';
-import { EntityManager, Repository } from 'typeorm';
+import { DeepPartial, EntityManager, Repository } from 'typeorm';
 
 @Injectable()
 export class UserFarmsService extends BaseService<
@@ -21,44 +21,36 @@ export class UserFarmsService extends BaseService<
     super(repository, entityManager);
   }
 
-  async getUserFarms(userId: number): Promise<FarmEntity[]> {
+  async getUserFarms(userID: number): Promise<FarmEntity[]> {
     try {
-      // service implementation
-      const farms = await this.repository
-        .createQueryBuilder('UserFarms')
-        .where('UserFarms.UserID = :userId', { userId })
-        .leftJoin('UserFarms.Farm', 'Farm')
-        .select([
-          'Farm.ID AS ID',
-          'Farm.Name AS Name',
-          'Farm.Address1 AS Address1',
-          'Farm.Address2 AS Address2',
-          'Farm.Address3 AS Address3',
-          'Farm.Address4 AS Address4',
-          'Farm.PostCode AS PostCode',
-          'Farm.CPH AS CPH',
-          'Farm.FarmerName AS FarmerName',
-          'Farm.BusinessName AS BusinessName',
-          'Farm.SBI AS SBI',
-          'Farm.STD AS STD',
-          'Farm.Telephone AS Telephone',
-          'Farm.Mobile AS Mobile',
-          'Farm.Email AS Email',
-          'Farm.Rainfall AS Rainfall',
-          'Farm.TotalFarmArea AS TotalFarmArea',
-          'Farm.AverageAltitude AS AverageAltitude',
-          'Farm.RegisteredOrganicProducer AS RegisteredOrganicProducer',
-          'Farm.MetricUnits AS MetricUnits',
-          'Farm.EnglishRules AS EnglishRules',
-          'Farm.NVZFields AS NVZFields',
-          'Farm.FieldsAbove300SeaLevel AS FieldsAbove300SeaLevel',
-        ])
-        .getRawMany();
-
+      const storedProcedure = 'EXEC dbo.spFarms_GetUserFarms @userID = @0';
+      const farms = await this.executeQuery(storedProcedure, [userID]);
       return farms;
     } catch (error) {
       console.error('Error while fetching join data:', error);
       throw error;
     }
+  }
+
+  async createFarm(
+    farmBody: DeepPartial<FarmEntity>,
+    UserID: number,
+    RoleID: number,
+  ) {
+    return this.entityManager.transaction(
+      async (transactionalEntityManager) => {
+        const Farm = await transactionalEntityManager.save(
+          this.repositoryFarm.create(farmBody),
+        );
+        await transactionalEntityManager.save(
+          this.repository.create({
+            UserID,
+            RoleID,
+            FarmID: Farm.ID,
+          }),
+        );
+        return Farm;
+      },
+    );
   }
 }

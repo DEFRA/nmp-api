@@ -28,22 +28,6 @@ export class FarmController {
     return { Farms };
   }
 
-  @Post('/')
-  @ApiBody({ type: CreateFarmRequest })
-  async createFarm(
-    @Body('UserID', ParseIntPipe) UserID: number,
-    @Body('RoleID', ParseIntPipe) RoleID: number,
-    @Body('Farm') farmBody: DeepPartial<FarmEntity>,
-  ) {
-    const data = await this.farmService.save(farmBody);
-    await this.userFarmsService.save({
-      UserID,
-      RoleID,
-      FarmID: data.ID,
-    });
-    return { Farm: data };
-  }
-
   @Get('/exists')
   async checkFarmExists(
     @Query('Name') farmName: string,
@@ -55,5 +39,26 @@ export class FarmController {
     });
 
     return { exists };
+  }
+
+  @Get('/:farmId')
+  async getFarmById(@Param('farmId', ParseIntPipe) farmId: number) {
+    const { records } = await this.farmService.getById(farmId);
+    return { Farm: records };
+  }
+
+  @Post('/')
+  @ApiBody({ type: CreateFarmRequest })
+  async createFarm(
+    @Body('UserID', ParseIntPipe) UserID: number,
+    @Body('RoleID', ParseIntPipe) RoleID: number,
+    @Body('Farm') farmBody: DeepPartial<FarmEntity>,
+  ) {
+    const Farm = await this.userFarmsService.createFarm(
+      farmBody,
+      UserID,
+      RoleID,
+    );
+    return { Farm };
   }
 }
