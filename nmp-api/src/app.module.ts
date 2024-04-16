@@ -8,8 +8,8 @@ import { AppService } from './app.service';
 // import { MasterService } from './customer/master/master.service';
 
 import OrmConnectionSetup from './app.orm';
-import { RB209Controller } from './vendors/rb209/rb209.controller';
-import { RB209Service } from './vendors/rb209/rb209.service';
+import { RB209SoilController } from './vendors/rb209/soil/soil.controller';
+import { RB209SoilService } from './vendors/rb209/soil/soil.service';
 import { AddressLookupController } from './vendors/address-lookup/address-lookup.controller';
 import { AddressLookupService } from './vendors/address-lookup/address-lookup.service';
 
@@ -28,6 +28,8 @@ import { AddressLookupModule } from './vendors/address-lookup/address-lookup.mod
 import { FieldService } from './field/field.service';
 import { FieldController } from './field/field.controller';
 import { FieldModule } from './field/field.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import { RB209SoilModule } from './vendors/rb209/soil/soil.module';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -42,6 +44,7 @@ import { FieldModule } from './field/field.module';
     //   http: process.env.NODE_ENV !== 'production',
     //   port: 7524,
     // }),
+    CacheModule.register({ isGlobal: true }),
     JwtModule.register({
       global: true,
       secret: 'your_secret_key',
@@ -51,10 +54,11 @@ import { FieldModule } from './field/field.module';
     AddressLookupModule,
     FarmModule,
     FieldModule,
+    RB209SoilModule,
   ],
   controllers: [
     AppController,
-    RB209Controller,
+    RB209SoilController,
     AddressLookupController,
     FarmController,
     FieldController,
@@ -62,7 +66,7 @@ import { FieldModule } from './field/field.module';
   providers: [
     JwtAuthGuard,
     AppService,
-    RB209Service,
+    RB209SoilService,
     AddressLookupService,
     FarmService,
     UserFarmsService,
