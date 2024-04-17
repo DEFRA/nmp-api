@@ -40,7 +40,11 @@ export class UserFarmsService extends BaseService<
     return this.entityManager.transaction(
       async (transactionalEntityManager) => {
         const Farm = await transactionalEntityManager.save(
-          this.repositoryFarm.create(farmBody),
+          this.repositoryFarm.create({
+            ...farmBody,
+            Name: farmBody.Name.trim(),
+            Postcode: farmBody.Postcode.trim(),
+          }),
         );
         await transactionalEntityManager.save(
           this.repository.create({
