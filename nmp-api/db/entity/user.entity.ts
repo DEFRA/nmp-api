@@ -1,5 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import UserFarmsEntity from './user-farms.entity';
+import FieldEntity from './field.entity';
+import FarmEntity from './farm.entity';
 
 @Entity({ name: 'Users' })
 export default class UserEntity {
@@ -20,4 +22,16 @@ export default class UserEntity {
 
   @OneToMany(() => UserFarmsEntity, (userFarms) => userFarms.User)
   UserFarms: UserFarmsEntity[];
+
+  @OneToMany(() => FieldEntity, (field) => field.CreatedByUser)
+  CreatedFields: FieldEntity[];
+
+  @OneToMany(() => FieldEntity, (field) => field.ModifiedByUser)
+  ModifiedFields: FieldEntity[];
+
+  @OneToMany(() => FarmEntity, (farm) => farm.CreatedByUser)
+  CreatedFarms: FarmEntity[];
+
+  @OneToMany(() => FarmEntity, (farm) => farm.ModifiedByUser)
+  ModifiedFarms: FarmEntity[];
 }

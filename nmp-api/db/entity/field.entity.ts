@@ -7,6 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import FarmEntity from './farm.entity';
+import UserEntity from './user.entity';
 
 @Entity({ name: 'Fields' })
 @Index('UC_Fields_FarmName', ['Name', 'FarmID'], { unique: true })
@@ -63,9 +64,17 @@ export default class FieldEntity {
   @Column('int')
   CreatedByID: number;
 
+  @ManyToOne(() => UserEntity, (user) => user.CreatedFields)
+  @JoinColumn({ name: 'CreatedByID' })
+  CreatedByUser: UserEntity;
+
   @Column('datetime2', { nullable: true })
   ModifiedOn: Date;
 
   @Column('int', { nullable: true })
   ModifiedByID: number;
+
+  @ManyToOne(() => UserEntity, (user) => user.ModifiedFields)
+  @JoinColumn({ name: 'CreatedByID' })
+  ModifiedByUser: UserEntity;
 }
