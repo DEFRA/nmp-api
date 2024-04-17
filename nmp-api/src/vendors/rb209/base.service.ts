@@ -93,7 +93,7 @@ export class RB209BaseService {
   }
 
   async getData(url: string): Promise<any> {
-    const response = await this.request.get(url);
+    const response = await this.request(url);
     return response.data;
   }
 }

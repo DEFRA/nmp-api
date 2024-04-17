@@ -9,9 +9,4 @@ export class RB209SoilService extends RB209BaseService {
   constructor(@Inject(CACHE_MANAGER) protected readonly cacheManager: Cache) {
     super(cacheManager);
   }
-
-  async getSoilTypes(): Promise<any> {
-    const response = await this.request.get('/Soil/SoilTypes');
-    return response.data;
-  }
 }
