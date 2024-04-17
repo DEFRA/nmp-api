@@ -30,6 +30,9 @@ import { FieldController } from './field/field.controller';
 import { FieldModule } from './field/field.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { RB209SoilModule } from './vendors/rb209/soil/soil.module';
+import { RB209ArableModule } from './vendors/rb209/arable/arable.module';
+import { RB209ArableController } from './vendors/rb209/arable/arable.controller';
+import { RB209ArableService } from './vendors/rb209/arable/arable.service';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -55,22 +58,25 @@ import { RB209SoilModule } from './vendors/rb209/soil/soil.module';
     FarmModule,
     FieldModule,
     RB209SoilModule,
+    RB209ArableModule,
   ],
   controllers: [
     AppController,
-    RB209SoilController,
     AddressLookupController,
     FarmController,
     FieldController,
+    RB209SoilController,
+    RB209ArableController,
   ],
   providers: [
     JwtAuthGuard,
     AppService,
-    RB209SoilService,
     AddressLookupService,
     FarmService,
     UserFarmsService,
     FieldService,
+    RB209SoilService,
+    RB209ArableService,
   ],
 })
 export class AppModule {
