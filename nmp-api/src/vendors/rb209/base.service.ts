@@ -92,4 +92,9 @@ export class RB209BaseService {
   async check(): Promise<any> {
     return 'Connected!';
   }
+
+  async getData(url: string): Promise<any> {
+    const response = await this.request(url);
+    return response.data;
+  }
 }

@@ -5,7 +5,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 
 @Injectable()
-export class RB209SoilService extends RB209BaseService {
+export class RB209ArableService extends RB209BaseService {
   constructor(@Inject(CACHE_MANAGER) protected readonly cacheManager: Cache) {
     super(cacheManager);
   }
