@@ -2,14 +2,19 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   Column,
   Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   PrimaryColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import UserFarmsEntity from './user-farms.entity';
 import FieldEntity from './field.entity';
+import UserEntity from './user.entity';
 
 @Entity({ name: 'Farms' })
+@Index('UC_Farms_NamePostcode', ['Name', 'Postcode'], { unique: true })
 export default class FarmEntity {
   @PrimaryGeneratedColumn('identity', {
     generatedIdentity: 'ALWAYS',
@@ -40,7 +45,7 @@ export default class FarmEntity {
 
   @Column('nvarchar', { length: 8 })
   @ApiProperty()
-  PostCode: string;
+  Postcode: string;
 
   @Column('nvarchar', { length: 50, nullable: true })
   @ApiPropertyOptional()
@@ -105,6 +110,26 @@ export default class FarmEntity {
   @Column('int', { default: 0 })
   @ApiProperty()
   FieldsAbove300SeaLevel: number;
+
+  @Column('datetime2', { nullable: true, default: 'GETDATE()' })
+  CreatedOn: Date;
+
+  @Column('int')
+  CreatedByID: number;
+
+  @Column('datetime2', { nullable: true })
+  ModifiedOn: Date;
+
+  @Column('int', { nullable: true })
+  ModifiedByID: number;
+
+  @ManyToOne(() => UserEntity, (user) => user.CreatedFarms)
+  @JoinColumn({ name: 'CreatedByID' })
+  CreatedByUser: UserEntity;
+
+  @ManyToOne(() => UserEntity, (user) => user.ModifiedFarms)
+  @JoinColumn({ name: 'CreatedByID' })
+  ModifiedByUser: UserEntity;
 
   @OneToMany(() => UserFarmsEntity, (userFarms) => userFarms.Farm)
   UserFarms: UserFarmsEntity[];

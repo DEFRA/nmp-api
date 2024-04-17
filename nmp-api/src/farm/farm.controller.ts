@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -31,11 +32,11 @@ export class FarmController {
   @Get('/exists')
   async checkFarmExists(
     @Query('Name') farmName: string,
-    @Query('PostCode') postcode: string,
+    @Query('Postcode') postcode: string,
   ) {
     const exists = await this.farmService.recordExists({
       Name: farmName,
-      PostCode: postcode,
+      Postcode: postcode,
     });
 
     return { exists };
@@ -54,6 +55,14 @@ export class FarmController {
     @Body('RoleID', ParseIntPipe) RoleID: number,
     @Body('Farm') farmBody: DeepPartial<FarmEntity>,
   ) {
+    const exists = this.farmService.recordExists({
+      Name: farmBody.Name,
+      Postcode: farmBody.Postcode,
+    });
+    if (exists)
+      throw new BadRequestException(
+        'Farm already exists with this Name and Postcode',
+      );
     const Farm = await this.userFarmsService.createFarm(
       farmBody,
       UserID,
