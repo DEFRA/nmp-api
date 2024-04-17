@@ -21,7 +21,6 @@ export class RB209BaseService {
           config.url === '/Users/Refresh_Token'
         )
           return config;
-
         let accessToken = await this.cacheManager.get(this.accessTokenKey);
         const refreshToken = await this.cacheManager.get(this.refreshTokenKey);
         let tokens: RB209UsersDto;
@@ -94,7 +93,11 @@ export class RB209BaseService {
   }
 
   async getData(url: string): Promise<any> {
-    const response = await this.request(url);
-    return response.data;
+    try {
+      const response = await this.request(url);
+      return response.data;
+    } catch (error) {
+      return error.response.data;
+    }
   }
 }
