@@ -30,6 +30,12 @@ import { FieldController } from './field/field.controller';
 import { FieldModule } from './field/field.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { RB209SoilModule } from './vendors/rb209/soil/soil.module';
+import { RB209ArableModule } from './vendors/rb209/arable/arable.module';
+import { RB209ArableController } from './vendors/rb209/arable/arable.controller';
+import { RB209ArableService } from './vendors/rb209/arable/arable.service';
+// import { RB209FieldService } from './vendors/rb209/field/field.service';
+// import { RB209FieldController } from './vendors/rb209/field/field.controller';
+// import { RB209FieldModule } from './vendors/rb209/field/field.module';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -55,10 +61,14 @@ import { RB209SoilModule } from './vendors/rb209/soil/soil.module';
     FarmModule,
     FieldModule,
     RB209SoilModule,
+    RB209ArableModule,
+    // RB209FieldModule,
   ],
   controllers: [
     AppController,
     RB209SoilController,
+    RB209ArableController,
+    // RB209FieldController,
     AddressLookupController,
     FarmController,
     FieldController,
@@ -67,6 +77,8 @@ import { RB209SoilModule } from './vendors/rb209/soil/soil.module';
     JwtAuthGuard,
     AppService,
     RB209SoilService,
+    RB209ArableService,
+    // RB209FieldService,
     AddressLookupService,
     FarmService,
     UserFarmsService,

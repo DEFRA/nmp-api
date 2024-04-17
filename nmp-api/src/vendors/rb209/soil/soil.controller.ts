@@ -2,7 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { RB209SoilService } from './soil.service';
 import { ApiTags } from '@nestjs/swagger';
 
-@ApiTags('RB209')
+@ApiTags('RB209 Soil')
 @Controller('vendors/rb209/Soil')
 export class RB209SoilController {
   constructor(private readonly service: RB209SoilService) {}
