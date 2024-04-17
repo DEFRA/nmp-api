@@ -18,4 +18,18 @@ export class FarmService extends BaseService<
   ) {
     super(repository, entityManager);
   }
+
+  async farmExistsByNameAndPostcode(farmName: string, postcode: string) {
+    return (await this.farmCountByNameAndPostcode(farmName, postcode)) > 0;
+  }
+
+  async farmCountByNameAndPostcode(farmName: string, postcode: string) {
+    return await this.repository
+      .createQueryBuilder('Farms')
+      .where('Farms.Name = :name', { name: farmName.trim() })
+      .andWhere("REPLACE(Farms.Postcode, ' ', '') = :postcode", {
+        postcode: postcode.replaceAll(' ', ''),
+      })
+      .getCount();
+  }
 }

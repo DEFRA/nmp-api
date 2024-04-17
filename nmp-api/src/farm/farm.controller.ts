@@ -34,11 +34,10 @@ export class FarmController {
     @Query('Name') farmName: string,
     @Query('Postcode') postcode: string,
   ) {
-    const exists = await this.farmService.recordExists({
-      Name: farmName,
-      Postcode: postcode,
-    });
-
+    const exists = await this.farmService.farmExistsByNameAndPostcode(
+      farmName,
+      postcode,
+    );
     return { exists };
   }
 
@@ -55,10 +54,10 @@ export class FarmController {
     @Body('RoleID', ParseIntPipe) RoleID: number,
     @Body('Farm') farmBody: DeepPartial<FarmEntity>,
   ) {
-    const exists = this.farmService.recordExists({
-      Name: farmBody.Name,
-      Postcode: farmBody.Postcode,
-    });
+    const exists = this.farmService.farmExistsByNameAndPostcode(
+      farmBody.Name,
+      farmBody.Postcode,
+    );
     if (exists)
       throw new BadRequestException(
         'Farm already exists with this Name and Postcode',
