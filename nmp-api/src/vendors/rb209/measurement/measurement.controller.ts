@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { RB209MeasurementService } from './measurement.service';
-import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { CalculateSnsIndexRequest } from './dto/measurement.dto';
 
 @ApiTags('RB209 Measurement')
@@ -54,11 +54,11 @@ export class RB209MeasurementController {
   @ApiOperation({
     summary: 'The get SMN value to be converted from N/kg to kg/ha',
   })
-  @ApiQuery({
+  @ApiParam({
     name: 'smnValue',
     description: 'smn value in N/kg',
   })
-  @ApiQuery({
+  @ApiParam({
     name: 'soilLayer',
     description: 'layer of soil in cm',
   })

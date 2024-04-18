@@ -1,6 +1,6 @@
 import FarmEntity from '@db/entity/farm.entity';
 // import MixedView from '@db/view/mixed.view';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApiDataResponseType } from '@shared/base.response';
 import { EntityManager, Repository } from 'typeorm';
@@ -24,6 +24,8 @@ export class FarmService extends BaseService<
   }
 
   async farmCountByNameAndPostcode(farmName: string, postcode: string) {
+    if (!farmName || !postcode)
+      throw new BadRequestException('Farm Name and Postcode are required');
     return await this.repository
       .createQueryBuilder('Farms')
       .where('Farms.Name = :name', { name: farmName.trim() })
