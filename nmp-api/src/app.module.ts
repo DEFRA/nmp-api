@@ -36,6 +36,9 @@ import { RB209ArableService } from './vendors/rb209/arable/arable.service';
 import { RB209FieldModule } from './vendors/rb209/field/field.module';
 import { RB209FieldController } from './vendors/rb209/field/field.controller';
 import { RB209FieldService } from './vendors/rb209/field/field.service';
+import { RB209RainfallModule } from './vendors/rb209/rainfall/rainfall.module';
+import { RB209RainfallController } from './vendors/rb209/rainfall/rainfall.controller';
+import { RB209RainfallService } from './vendors/rb209/rainfall/rainfall.service';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -63,6 +66,7 @@ import { RB209FieldService } from './vendors/rb209/field/field.service';
     RB209SoilModule,
     RB209ArableModule,
     RB209FieldModule,
+    RB209RainfallModule,
   ],
   controllers: [
     AppController,
@@ -72,6 +76,7 @@ import { RB209FieldService } from './vendors/rb209/field/field.service';
     RB209SoilController,
     RB209ArableController,
     RB209FieldController,
+    RB209RainfallController,
   ],
   providers: [
     JwtAuthGuard,
@@ -83,6 +88,7 @@ import { RB209FieldService } from './vendors/rb209/field/field.service';
     RB209SoilService,
     RB209ArableService,
     RB209FieldService,
+    RB209RainfallService,
   ],
 })
 export class AppModule {
