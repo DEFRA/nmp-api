@@ -94,7 +94,16 @@ export class RB209BaseService {
 
   async getData(url: string): Promise<any> {
     try {
-      const response = await this.request(url);
+      const response = await this.request.get(url);
+      return response.data;
+    } catch (error) {
+      return error.response.data;
+    }
+  }
+
+  async postData(url: string, body: any): Promise<any> {
+    try {
+      const response = await this.request.post(url, body);
       return response.data;
     } catch (error) {
       return error.response.data;

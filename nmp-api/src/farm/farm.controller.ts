@@ -11,7 +11,6 @@ import {
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { UserFarmsService } from '@src/user-farms/user-farms.service';
 import { FarmService } from './farm.service';
-import { DeepPartial } from 'typeorm';
 import FarmEntity from '@db/entity/farm.entity';
 import { CreateFarmRequest } from './dto/farm.dto';
 
@@ -52,9 +51,9 @@ export class FarmController {
   async createFarm(
     @Body('UserID', ParseIntPipe) UserID: number,
     @Body('RoleID', ParseIntPipe) RoleID: number,
-    @Body('Farm') farmBody: DeepPartial<FarmEntity>,
+    @Body('Farm') farmBody: FarmEntity,
   ) {
-    const exists = this.farmService.farmExistsByNameAndPostcode(
+    const exists = await this.farmService.farmExistsByNameAndPostcode(
       farmBody.Name,
       farmBody.Postcode,
     );
