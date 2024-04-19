@@ -42,6 +42,9 @@ import { RB209RainfallService } from './vendors/rb209/rainfall/rainfall.service'
 import { RB209MeasurementModule } from './vendors/rb209/measurement/measurement.module';
 import { RB209MeasurementController } from './vendors/rb209/measurement/measurement.controller';
 import { RB209MeasurementService } from './vendors/rb209/measurement/measurement.service';
+import { RB209RecommendationModule } from './vendors/rb209/recommendation/recommendation.module';
+import { RB209RecommendationController } from './vendors/rb209/recommendation/recommendation.controller';
+import { RB209RecommendationService } from './vendors/rb209/recommendation/recommendation.service';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -71,6 +74,7 @@ import { RB209MeasurementService } from './vendors/rb209/measurement/measurement
     RB209FieldModule,
     RB209RainfallModule,
     RB209MeasurementModule,
+    RB209RecommendationModule,
   ],
   controllers: [
     AppController,
@@ -82,6 +86,7 @@ import { RB209MeasurementService } from './vendors/rb209/measurement/measurement
     RB209FieldController,
     RB209RainfallController,
     RB209MeasurementController,
+    RB209RecommendationController,
   ],
   providers: [
     JwtAuthGuard,
@@ -95,6 +100,7 @@ import { RB209MeasurementService } from './vendors/rb209/measurement/measurement
     RB209FieldService,
     RB209RainfallService,
     RB209MeasurementService,
+    RB209RecommendationService,
   ],
 })
 export class AppModule {
