@@ -51,6 +51,12 @@ import { RB209AdviceNoteService } from './vendors/rb209/adviceNote/adviceNote.se
 import { RB209GrasslandModule } from './vendors/rb209/grassland/grassland.module';
 import { RB209GrasslandController } from './vendors/rb209/grassland/grassland.controller';
 import { RB209GrasslandService } from './vendors/rb209/grassland/grassland.service';
+import { RB209OrganicMateriaModule } from './vendors/rb209/organicMaterial/organicMaterial.module';
+import { RB209OrganicMaterialController } from './vendors/rb209/organicMaterial/organicMaterial.controller';
+import { RB209OrganicMaterialService } from './vendors/rb209/organicMaterial/oraganicMaterial.service';
+import { RB209PreviousCroppingModule } from './vendors/rb209/previousCropping/previousCropping.module';
+import { RB209PreviousCroppingController } from './vendors/rb209/previousCropping/previousCropping.controller';
+import { RB209PreviousCroppingService } from './vendors/rb209/previousCropping/previousCropping.service';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -83,6 +89,8 @@ import { RB209GrasslandService } from './vendors/rb209/grassland/grassland.servi
     RB209RecommendationModule,
     RB209AdviceNoteModule,
     RB209GrasslandModule,
+    RB209OrganicMateriaModule,
+    RB209PreviousCroppingModule,
   ],
   controllers: [
     AppController,
@@ -97,6 +105,8 @@ import { RB209GrasslandService } from './vendors/rb209/grassland/grassland.servi
     RB209RecommendationController,
     RB209AdviceNoteController,
     RB209GrasslandController,
+    RB209OrganicMaterialController,
+    RB209PreviousCroppingController,
   ],
   providers: [
     JwtAuthGuard,
@@ -113,6 +123,8 @@ import { RB209GrasslandService } from './vendors/rb209/grassland/grassland.servi
     RB209RecommendationService,
     RB209AdviceNoteService,
     RB209GrasslandService,
+    RB209OrganicMaterialService,
+    RB209PreviousCroppingService,
   ],
 })
 export class AppModule {
