@@ -43,7 +43,7 @@ export class RB209RecommendationController {
   @ApiOperation({
     summary: 'To get the nutrient deficiency result bases on leaf analysis',
   })
-  async CalculateNutrientDeficiency(
+  async calculateNutrientDeficiency(
     @Param('cropTypeId') cropTypeId: string,
     @Param('leafSamplingPosition') leafSamplingPosition: string,
     @Param('nutrientId') nutrientId: string,
