@@ -79,7 +79,7 @@ export default class FarmEntity {
   @ApiPropertyOptional()
   Email?: string;
 
-  @Column('int', { nullable: true })
+  @Column('decimal', { precision: 18, scale: 5, nullable: true })
   @ApiPropertyOptional()
   Rainfall?: number;
 
