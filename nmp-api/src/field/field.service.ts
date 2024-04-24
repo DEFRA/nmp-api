@@ -25,9 +25,20 @@ export class FieldService extends BaseService<
     super(repository, entityManager);
   }
 
+  async checkFieldExists(farmId: number, name: string) {
+    return await this.recordExists({ FarmID: farmId, Name: name });
+  }
+
   async createFieldWithSoilAnalysesAndCrops(
     body: CreateFeildWithSoilAnalysesAndCropsDto,
   ) {
+    const exists = await this.checkFieldExists(
+      body.Field.FarmID,
+      body.Field.Name,
+    );
+    if (exists)
+      throw new Error('Field already exists with this Farm Id and Name');
+
     return await this.entityManager.transaction(
       async (transactionalManager) => {
         const Field = await transactionalManager.save(
