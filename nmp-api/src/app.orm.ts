@@ -7,6 +7,8 @@ import EnvironmentService from '@shared/environment.service';
 import * as dotven from 'dotenv';
 import 'dotenv/config';
 import FieldEntity from '@db/entity/field.entity';
+import CropEntity from '@db/entity/crop.entity';
+import SoilAnalysesEntity from '@db/entity/soil-analyses.entity';
 
 dotven.config();
 
@@ -31,6 +33,8 @@ if (process.env.NODE_ENV === 'production') {
       RoleEntity,
       UserFarmsEntity,
       FieldEntity,
+      CropEntity,
+      SoilAnalysesEntity,
     ],
   };
 } else if (process.env.NODE_ENV === 'hosting') {
@@ -65,6 +69,8 @@ if (process.env.NODE_ENV === 'production') {
       RoleEntity,
       UserFarmsEntity,
       FieldEntity,
+      CropEntity,
+      SoilAnalysesEntity,
     ],
     synchronize: false,
     logging: true,
