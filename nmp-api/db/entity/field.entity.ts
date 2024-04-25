@@ -29,7 +29,6 @@ export default class FieldEntity {
   Farm: FarmEntity;
 
   @Column('int')
-  @ApiProperty()
   FarmID: number;
 
   @Column('int', { nullable: true })
@@ -51,6 +50,10 @@ export default class FieldEntity {
   @Column('nvarchar', { length: 50, nullable: true })
   @ApiPropertyOptional()
   NationalGridReference: string;
+
+  @Column('nvarchar', { length: 50, nullable: true })
+  @ApiPropertyOptional()
+  OtherReference: string;
 
   @Column('decimal', { precision: 18, scale: 3 })
   @ApiProperty()
@@ -80,19 +83,19 @@ export default class FieldEntity {
   @ApiProperty()
   IsActive: boolean;
 
-  @Column('datetime2', { nullable: true, default: 'GETDATE()' })
+  @Column('datetime2', { nullable: true, precision: 7, default: 'GETDATE()' })
   @ApiPropertyOptional()
   CreatedOn: Date;
 
-  @Column('int')
-  @ApiProperty()
+  @Column('int', { nullable: true })
+  @ApiPropertyOptional()
   CreatedByID: number;
 
   @ManyToOne(() => UserEntity, (user) => user.CreatedFields)
   @JoinColumn({ name: 'CreatedByID' })
   CreatedByUser: UserEntity;
 
-  @Column('datetime2', { nullable: true })
+  @Column('datetime2', { nullable: true, precision: 7 })
   @ApiPropertyOptional()
   ModifiedOn: Date;
 

@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import FieldEntity from './field.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import UserEntity from './user.entity';
 
 @Entity({ name: 'SoilAnalyses' })
 export default class SoilAnalysesEntity {
@@ -43,7 +44,7 @@ export default class SoilAnalysesEntity {
 
   @Column('int', { nullable: true })
   @ApiPropertyOptional()
-  PhosphorusMethodologyId: number;
+  PhosphorusMethodologyID: number;
 
   @Column('int', { nullable: true })
   @ApiPropertyOptional()
@@ -115,5 +116,29 @@ export default class SoilAnalysesEntity {
 
   @Column('int', { nullable: true })
   @ApiPropertyOptional()
-  PreviousId: number;
+  PreviousID: number;
+
+  @Column('datetime2', { nullable: true, precision: 7, default: 'GETDATE()' })
+  @ApiPropertyOptional()
+  CreatedOn: Date;
+
+  @Column('int', { nullable: true })
+  @ApiPropertyOptional()
+  CreatedByID: number;
+
+  @ManyToOne(() => UserEntity, (user) => user.CreatedSoilAnalyses)
+  @JoinColumn({ name: 'CreatedByID' })
+  CreatedByUser: UserEntity;
+
+  @Column('datetime2', { nullable: true, precision: 7 })
+  @ApiPropertyOptional()
+  ModifiedOn: Date;
+
+  @Column('int', { nullable: true })
+  @ApiPropertyOptional()
+  ModifiedByID: number;
+
+  @ManyToOne(() => UserEntity, (user) => user.ModifiedSoilAnalyses)
+  @JoinColumn({ name: 'CreatedByID' })
+  ModifiedByUser: UserEntity;
 }

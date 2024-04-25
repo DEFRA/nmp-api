@@ -2,6 +2,8 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import UserFarmsEntity from './user-farms.entity';
 import FieldEntity from './field.entity';
 import FarmEntity from './farm.entity';
+import CropEntity from './crop.entity';
+import SoilAnalysesEntity from './soil-analyses.entity';
 
 @Entity({ name: 'Users' })
 export default class UserEntity {
@@ -34,4 +36,22 @@ export default class UserEntity {
 
   @OneToMany(() => FarmEntity, (farm) => farm.ModifiedByUser)
   ModifiedFarms: FarmEntity[];
+
+  @OneToMany(() => CropEntity, (crop) => crop.CreatedByUser)
+  CreatedCrops: CropEntity[];
+
+  @OneToMany(() => CropEntity, (crop) => crop.ModifiedByUser)
+  ModifiedCrops: CropEntity[];
+
+  @OneToMany(
+    () => SoilAnalysesEntity,
+    (soilAnalyses) => soilAnalyses.CreatedByUser,
+  )
+  CreatedSoilAnalyses: SoilAnalysesEntity[];
+
+  @OneToMany(
+    () => SoilAnalysesEntity,
+    (soilAnalyses) => soilAnalyses.ModifiedByUser,
+  )
+  ModifiedSoilAnalyses: SoilAnalysesEntity[];
 }

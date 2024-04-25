@@ -30,19 +30,17 @@ export class FieldService extends BaseService<
   }
 
   async createFieldWithSoilAnalysesAndCrops(
+    farmId: number,
     body: CreateFeildWithSoilAnalysesAndCropsDto,
   ) {
-    const exists = await this.checkFieldExists(
-      body.Field.FarmID,
-      body.Field.Name,
-    );
+    const exists = await this.checkFieldExists(farmId, body.Field.Name);
     if (exists)
       throw new Error('Field already exists with this Farm Id and Name');
 
     return await this.entityManager.transaction(
       async (transactionalManager) => {
         const Field = await transactionalManager.save(
-          this.repository.create(body.Field),
+          this.repository.create({ ...body.Field, FarmID: farmId }),
         );
         const SoilAnalyses = await transactionalManager.save(
           this.soilAnalysesRepository.create({
@@ -50,16 +48,22 @@ export class FieldService extends BaseService<
             FieldID: Field.ID,
           }),
         );
-        const Crop = await transactionalManager.save(
-          this.cropRepository.create({
-            ...body.Crop,
-            FieldId: Field.ID,
-          }),
-        );
+
+        const Crops: CropEntity[] = [];
+        for (const cropData of body.Crops) {
+          const savedCrop = await transactionalManager.save(
+            this.cropRepository.create({
+              ...cropData,
+              FieldID: Field.ID,
+            }),
+          );
+          Crops.push(savedCrop);
+        }
+
         return {
           Field,
           SoilAnalyses,
-          Crop,
+          Crops,
         };
       },
     );

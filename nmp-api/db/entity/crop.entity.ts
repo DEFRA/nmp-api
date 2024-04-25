@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import FieldEntity from './field.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import UserEntity from './user.entity';
 
 @Entity({ name: 'Crops' })
 export default class CropEntity {
@@ -19,10 +20,10 @@ export default class CropEntity {
   ID: number;
 
   @Column('int')
-  FieldId: number;
+  FieldID: number;
 
   @ManyToOne(() => FieldEntity, (field) => field.Crops)
-  @JoinColumn({ name: 'FieldId' })
+  @JoinColumn({ name: 'FieldID' })
   Field: FieldEntity;
 
   @Column('int')
@@ -31,7 +32,7 @@ export default class CropEntity {
 
   @Column('int', { nullable: true })
   @ApiPropertyOptional()
-  CropTypeId: number;
+  CropTypeID: number;
 
   @Column('nvarchar', { nullable: true, length: 100 })
   @ApiPropertyOptional()
@@ -99,5 +100,29 @@ export default class CropEntity {
 
   @Column('int', { nullable: true })
   @ApiPropertyOptional()
-  PreviousId: number;
+  PreviousID: number;
+
+  @Column('datetime2', { nullable: true, precision: 7, default: 'GETDATE()' })
+  @ApiPropertyOptional()
+  CreatedOn: Date;
+
+  @Column('int', { nullable: true })
+  @ApiPropertyOptional()
+  CreatedByID: number;
+
+  @ManyToOne(() => UserEntity, (user) => user.CreatedCrops)
+  @JoinColumn({ name: 'CreatedByID' })
+  CreatedByUser: UserEntity;
+
+  @Column('datetime2', { nullable: true, precision: 7 })
+  @ApiPropertyOptional()
+  ModifiedOn: Date;
+
+  @Column('int', { nullable: true })
+  @ApiPropertyOptional()
+  ModifiedByID: number;
+
+  @ManyToOne(() => UserEntity, (user) => user.ModifiedCrops)
+  @JoinColumn({ name: 'CreatedByID' })
+  ModifiedByUser: UserEntity;
 }

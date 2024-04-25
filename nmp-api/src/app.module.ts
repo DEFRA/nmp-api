@@ -57,6 +57,9 @@ import { RB209OrganicMaterialService } from './vendors/rb209/organicMaterial/ora
 import { RB209PreviousCroppingModule } from './vendors/rb209/previousCropping/previousCropping.module';
 import { RB209PreviousCroppingController } from './vendors/rb209/previousCropping/previousCropping.controller';
 import { RB209PreviousCroppingService } from './vendors/rb209/previousCropping/previousCropping.service';
+import { CropModule } from './crop/crop.module';
+import { CropController } from './crop/crop.controller';
+import { CropService } from './crop/crop.service';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -81,6 +84,7 @@ import { RB209PreviousCroppingService } from './vendors/rb209/previousCropping/p
     AddressLookupModule,
     FarmModule,
     FieldModule,
+    CropModule,
     RB209SoilModule,
     RB209ArableModule,
     RB209FieldModule,
@@ -97,6 +101,7 @@ import { RB209PreviousCroppingService } from './vendors/rb209/previousCropping/p
     AddressLookupController,
     FarmController,
     FieldController,
+    CropController,
     RB209SoilController,
     RB209ArableController,
     RB209FieldController,
@@ -115,6 +120,7 @@ import { RB209PreviousCroppingService } from './vendors/rb209/previousCropping/p
     FarmService,
     UserFarmsService,
     FieldService,
+    CropService,
     RB209SoilService,
     RB209ArableService,
     RB209FieldService,
