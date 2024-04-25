@@ -10,6 +10,6 @@ export class CreateFeildWithSoilAnalysesAndCropsDto {
   @ApiProperty()
   SoilAnalyses: SoilAnalysesEntity;
 
-  @ApiProperty()
-  Crop: CropEntity;
+  @ApiProperty({ type: [CropEntity] })
+  Crops: CropEntity[];
 }

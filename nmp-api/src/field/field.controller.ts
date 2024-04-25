@@ -21,12 +21,15 @@ export class FieldController {
     return { count };
   }
 
-  @Post('/soil-analyses/crop')
+  @Post('/farm/:farmId/soil-analyses/crop')
   async createFieldWithSoilAnalysesAndCrops(
+    @Param('farmId', ParseIntPipe) farmId: number,
     @Body() body: CreateFeildWithSoilAnalysesAndCropsDto,
   ) {
-    const data =
-      await this.fieldService.createFieldWithSoilAnalysesAndCrops(body);
+    const data = await this.fieldService.createFieldWithSoilAnalysesAndCrops(
+      farmId,
+      body,
+    );
     return data;
   }
 }
