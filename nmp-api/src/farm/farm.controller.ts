@@ -9,7 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { UserFarmsService } from '@src/user-farms/user-farms.service';
 import { FarmService } from './farm.service';
 import FarmEntity from '@db/entity/farm.entity';
@@ -24,6 +24,7 @@ export class FarmController {
   ) {}
 
   @Get('/user-id/:userId')
+  @ApiOperation({ summary: 'Get Farms by User Id' })
   @ApiQuery({ name: 'shortSummary', required: false })
   async getFarmsByUserId(
     @Param('userId', ParseIntPipe) userId: number,
@@ -38,6 +39,9 @@ export class FarmController {
   }
 
   @Get('/exists')
+  @ApiOperation({
+    summary: 'Api to check Farm exists using Name and Postcode ',
+  })
   async checkFarmExists(
     @Query('Name') farmName: string,
     @Query('Postcode') postcode: string,
@@ -50,12 +54,14 @@ export class FarmController {
   }
 
   @Get('/:farmId')
+  @ApiOperation({ summary: 'Get Farm details by Farm Id' })
   async getFarmById(@Param('farmId', ParseIntPipe) farmId: number) {
     const { records } = await this.farmService.getById(farmId);
     return { Farm: records };
   }
 
   @Post('/')
+  @ApiOperation({ summary: 'Create Farm api' })
   @ApiBody({ type: CreateFarmRequest })
   async createFarm(
     @Body('UserID', ParseIntPipe) UserID: number,
