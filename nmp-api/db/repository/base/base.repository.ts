@@ -11,7 +11,7 @@ import {
 import MutableContract from './mutable.contract';
 import ReadContract from './read.contract';
 
-export default class BaseRepo1sitory<Entity, ResponseType>
+export default class BaseRepository<Entity, ResponseType>
   implements MutableContract<Entity>, ReadContract<ResponseType>
 {
   constructor(
