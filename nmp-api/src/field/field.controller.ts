@@ -5,6 +5,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { FieldService } from './field.service';
@@ -19,6 +20,15 @@ export class FieldController {
   async getFarmFieldsCount(@Param('farmId', ParseIntPipe) farmId: number) {
     const count = await this.fieldService.countRecords({ FarmID: farmId });
     return { count };
+  }
+
+  @Get('/farm/:farmId/exists')
+  async checkFarmFieldExists(
+    @Param('farmId', ParseIntPipe) farmId: number,
+    @Query('Name') name: string,
+  ) {
+    const exists = await this.fieldService.checkFieldExists(farmId, name);
+    return { exists };
   }
 
   @Post('/farm/:farmId/soil-analyses/crop')
