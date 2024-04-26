@@ -21,7 +21,10 @@ export class UserFarmsService extends BaseService<
     super(repository, entityManager);
   }
 
-  async getUserFarms(userID: number): Promise<FarmEntity[]> {
+  async getUserFarms(
+    userID: number,
+    shortSummary: boolean = false,
+  ): Promise<FarmEntity[]> {
     try {
       const storedProcedure = 'EXEC dbo.spFarms_GetUserFarms @userID = @0';
       const farms = await this.executeQuery(storedProcedure, [userID]);
