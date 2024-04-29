@@ -26,8 +26,12 @@ export class UserFarmsService extends BaseService<
     shortSummary: boolean = false,
   ): Promise<FarmEntity[]> {
     try {
-      const storedProcedure = 'EXEC dbo.spFarms_GetUserFarms @userID = @0';
-      const farms = await this.executeQuery(storedProcedure, [userID]);
+      const storedProcedure =
+        'EXEC dbo.spFarms_GetUserFarms @userID = @0, @shortSummary = @1';
+      const farms = await this.executeQuery(storedProcedure, [
+        userID,
+        shortSummary,
+      ]);
       return farms;
     } catch (error) {
       console.error('Error while fetching join data:', error);

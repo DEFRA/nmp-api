@@ -26,7 +26,7 @@ export class FieldController {
     shortSummary: boolean,
   ) {
     let selectOptions = {};
-    if (shortSummary) selectOptions = { ID: true, Name: true };
+    if (shortSummary) selectOptions = { ID: true, Name: true, FarmID: true };
     const records =
       (await this.fieldService.getBy('FarmID', farmId, selectOptions))
         ?.records || [];
