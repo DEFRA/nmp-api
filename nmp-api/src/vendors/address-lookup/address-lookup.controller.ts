@@ -1,6 +1,6 @@
 import { Controller, Get, ParseIntPipe, Query } from '@nestjs/common';
 import { AddressLookupService } from './address-lookup.service';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Address Lookup')
 @Controller('vendors/address-lookup')
@@ -13,6 +13,7 @@ export class AddressLookupController {
   }
 
   @Get('/addresses')
+  @ApiOperation({ summary: 'Get Addresses by Postcode' })
   @ApiQuery({ name: 'offset', required: false })
   async getAddresses(
     @Query('postcode') postcode: string,

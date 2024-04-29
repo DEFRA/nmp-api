@@ -2,6 +2,7 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 import {
   DeepPartial,
   EntityManager,
+  FindOptionsSelect,
   FindOptionsWhere,
   Like,
   Repository,
@@ -30,9 +31,14 @@ export default class BaseRepository<Entity, ResponseType>
     return { records } as ResponseType;
   }
 
-  async getBy(column: string, value: string): Promise<ResponseType> {
+  async getBy(
+    column: string,
+    value: string | number,
+    selectOptions?: FindOptionsSelect<Entity>,
+  ): Promise<ResponseType> {
     const records = (await this.repository.find({
       where: { [column]: value } as any,
+      select: selectOptions,
     })) as Entity[];
     return { records } as ResponseType;
   }
