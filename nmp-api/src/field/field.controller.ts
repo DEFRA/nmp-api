@@ -17,6 +17,13 @@ import { CreateFeildWithSoilAnalysesAndCropsDto } from './dto/field.dto';
 export class FieldController {
   constructor(private readonly fieldService: FieldService) {}
 
+  @Get('/:fieldId')
+  @ApiOperation({ summary: 'Get field by Field Id' })
+  async getFieldById(@Param('fieldId', ParseIntPipe) fieldId: number) {
+    const { records } = await this.fieldService.getById(fieldId);
+    return { Field: records };
+  }
+
   @Get('/farm/:farmId')
   @ApiOperation({ summary: 'Get Fields by Farm Id' })
   @ApiQuery({ name: 'shortSummary', required: false })
