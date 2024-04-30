@@ -60,6 +60,9 @@ import { RB209PreviousCroppingService } from './vendors/rb209/previousCropping/p
 import { CropModule } from './crop/crop.module';
 import { CropController } from './crop/crop.controller';
 import { CropService } from './crop/crop.service';
+import { SoilAnalysesModule } from './soil-analyses/soil-analyses.module';
+import { SoilAnalysesController } from './soil-analyses/soil-analyses.controller';
+import { SoilAnalysesService } from './soil-analyses/soil-analyses.service';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -85,6 +88,7 @@ import { CropService } from './crop/crop.service';
     FarmModule,
     FieldModule,
     CropModule,
+    SoilAnalysesModule,
     RB209SoilModule,
     RB209ArableModule,
     RB209FieldModule,
@@ -102,6 +106,7 @@ import { CropService } from './crop/crop.service';
     FarmController,
     FieldController,
     CropController,
+    SoilAnalysesController,
     RB209SoilController,
     RB209ArableController,
     RB209FieldController,
@@ -121,6 +126,7 @@ import { CropService } from './crop/crop.service';
     UserFarmsService,
     FieldService,
     CropService,
+    SoilAnalysesService,
     RB209SoilService,
     RB209ArableService,
     RB209FieldService,
