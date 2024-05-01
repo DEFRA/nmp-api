@@ -43,7 +43,9 @@ export default class EnvironmentService {
   @IsEnvironmentRequired('DATABASE_NAME')
   static DATABASE_NAME(): string {
     get: {
-      return this.getEnv('DATABASE_NAME');
+      if (process.env.NODE_ENV === 'test')
+        return this.getEnv('TEST_DATABASE_NAME');
+      else return this.getEnv('DATABASE_NAME');
     }
   }
 
