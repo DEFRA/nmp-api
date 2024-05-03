@@ -6,6 +6,7 @@ import { EntityManager, Repository } from 'typeorm';
 import { CreateFeildWithSoilAnalysesAndCropsDto } from './dto/field.dto';
 import SoilAnalysesEntity from '@db/entity/soil-analyses.entity';
 import CropEntity from '@db/entity/crop.entity';
+import ManagementPeriodEntity from '@db/entity/management-period.entity';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -20,6 +21,8 @@ export class FieldService extends BaseService<
     protected readonly soilAnalysesRepository: Repository<SoilAnalysesEntity>,
     @InjectRepository(CropEntity)
     protected readonly cropRepository: Repository<CropEntity>,
+    @InjectRepository(ManagementPeriodEntity)
+    protected readonly managementPeriodRepository: Repository<ManagementPeriodEntity>,
     protected readonly entityManager: EntityManager,
   ) {
     super(repository, entityManager);
@@ -54,20 +57,32 @@ export class FieldService extends BaseService<
         );
 
         const Crops: CropEntity[] = [];
-        for (const cropData of body.Crops) {
-          const savedCrop = await transactionalManager.save(
-            this.cropRepository.create({
-              ...cropData,
-              FieldID: Field.ID,
-            }),
-          );
-          Crops.push(savedCrop);
-        }
+        const ManagementPeriods: ManagementPeriodEntity[] = [];
+
+      for (const cropData of body.Crops) {
+        const savedCrop = await transactionalManager.save(
+          this.cropRepository.create({
+            ...cropData,
+            FieldID: Field.ID,
+          }),
+        );
+        
+        const managementPeriod = await transactionalManager.save(
+          this.managementPeriodRepository.create({
+            ...body.ManagementPeriods,
+            CropId: savedCrop.ID, 
+          }),
+        );
+
+        Crops.push(savedCrop);
+        ManagementPeriods.push(managementPeriod); 
+      }
 
         return {
           Field,
           SoilAnalyses,
           Crops,
+          ManagementPeriods
         };
       },
     );

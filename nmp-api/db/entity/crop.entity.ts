@@ -10,7 +10,7 @@ import {
 import FieldEntity from './field.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import UserEntity from './user.entity';
-import { ManagementPeriodsEntity } from './management-periods.entity';
+import ManagementPeriodEntity from './management-period.entity';
 
 @Entity({ name: 'Crops' })
 export default class CropEntity {
@@ -129,8 +129,8 @@ export default class CropEntity {
   ModifiedByUser: UserEntity;
 
   @OneToMany(
-    () => ManagementPeriodsEntity,
-    (managementPeriod) => managementPeriod.Crop,
+    () => ManagementPeriodEntity,
+    (managementPeriod) => managementPeriod.Crop
   )
-  ManagementPeriods: ManagementPeriodsEntity[];
+  ManagementPeriods: ManagementPeriodEntity[];
 }

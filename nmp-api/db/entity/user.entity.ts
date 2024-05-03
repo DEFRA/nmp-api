@@ -5,7 +5,7 @@ import FieldEntity from './field.entity';
 import FarmEntity from './farm.entity';
 import CropEntity from './crop.entity';
 import SoilAnalysesEntity from './soil-analyses.entity';
-import { ManagementPeriodsEntity } from './management-periods.entity';
+import ManagementPeriodEntity from './management-period.entity';
 
 @Entity({ name: 'Users' })
 export default class UserEntity {
@@ -58,14 +58,14 @@ export default class UserEntity {
   ModifiedSoilAnalyses: SoilAnalysesEntity[];
 
   @OneToMany(
-    () => ManagementPeriodsEntity,
-    (managementPeriod) => managementPeriod.ModifiedByUser,
+    () => ManagementPeriodEntity,
+    (managementPeriod) => managementPeriod.CreatedByUser,
   )
-  CreatedManagementPeriods: ManagementPeriodsEntity[];
+  CreatedManagementPeriods: ManagementPeriodEntity[];
 
   @OneToMany(
-    () => ManagementPeriodsEntity,
+    () => ManagementPeriodEntity,
     (managementPeriod) => managementPeriod.ModifiedByUser,
   )
-  ModifiedManagementPeriods: ManagementPeriodsEntity[];
+  ModifiedManagementPeriods: ManagementPeriodEntity[];
 }

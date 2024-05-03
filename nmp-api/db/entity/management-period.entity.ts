@@ -11,7 +11,7 @@ import CropEntity from './crop.entity';
 import UserEntity from './user.entity';
 
 @Entity({ name: 'ManagementPeriods' })
-export class ManagementPeriodsEntity {
+export default class ManagementPeriodEntity {
   @PrimaryGeneratedColumn('identity', {
     generatedIdentity: 'ALWAYS',
   })
@@ -57,8 +57,12 @@ export class ManagementPeriodsEntity {
   CreatedByUser: UserEntity;
 
   @ManyToOne(() => UserEntity, (user) => user.ModifiedManagementPeriods)
-  @JoinColumn({ name: 'CreatedByID' })
+  @JoinColumn({ name: 'ModifiedByID' })
   ModifiedByUser: UserEntity;
+
+  // @ManyToOne(() => CropEntity, (crop) => crop.ID)
+  // @JoinColumn({ name: 'CropID' })
+  // CropID: CropEntity;
 
   @Column('datetime2', { nullable: true, default: 'GETDATE()' })
   CreatedOn: Date;
