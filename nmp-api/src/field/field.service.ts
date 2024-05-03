@@ -21,8 +21,8 @@ export class FieldService extends BaseService<
     protected readonly soilAnalysesRepository: Repository<SoilAnalysesEntity>,
     @InjectRepository(CropEntity)
     protected readonly cropRepository: Repository<CropEntity>,
-    @InjectRepository(ManagementPeriodEntity)
-    protected readonly managementPeriodRepository: Repository<ManagementPeriodEntity>,
+    // @InjectRepository(ManagementPeriodEntity)
+    // protected readonly managementPeriodRepository: Repository<ManagementPeriodEntity>,
     protected readonly entityManager: EntityManager,
   ) {
     super(repository, entityManager);
@@ -55,10 +55,7 @@ export class FieldService extends BaseService<
             FieldID: Field.ID,
           }),
         );
-
         const Crops: CropEntity[] = [];
-        const ManagementPeriods: ManagementPeriodEntity[] = [];
-
       for (const cropData of body.Crops) {
         const savedCrop = await transactionalManager.save(
           this.cropRepository.create({
@@ -67,22 +64,13 @@ export class FieldService extends BaseService<
           }),
         );
         
-        const managementPeriod = await transactionalManager.save(
-          this.managementPeriodRepository.create({
-            ...body.ManagementPeriods,
-            CropId: savedCrop.ID, 
-          }),
-        );
-
         Crops.push(savedCrop);
-        ManagementPeriods.push(managementPeriod); 
       }
 
         return {
           Field,
           SoilAnalyses,
-          Crops,
-          ManagementPeriods
+          Crops
         };
       },
     );

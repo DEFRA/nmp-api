@@ -14,6 +14,6 @@ export class CreateFeildWithSoilAnalysesAndCropsDto {
   @ApiProperty({ type: [CropEntity] })
   Crops: CropEntity[];
 
-  @ApiProperty({ type: [ManagementPeriodEntity] }) 
-  ManagementPeriods: ManagementPeriodEntity[];
+  // @ApiProperty({ type: [ManagementPeriodEntity] }) 
+  // ManagementPeriod: ManagementPeriodEntity[];
 }

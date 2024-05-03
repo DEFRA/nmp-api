@@ -128,9 +128,15 @@ export default class CropEntity {
   @JoinColumn({ name: 'CreatedByID' })
   ModifiedByUser: UserEntity;
 
-  @OneToMany(
-    () => ManagementPeriodEntity,
-    (managementPeriod) => managementPeriod.Crop
-  )
-  ManagementPeriods: ManagementPeriodEntity[];
+  // @OneToMany(
+  //   () => ManagementPeriodEntity,
+  //   (managementPeriod) => managementPeriod.Crop
+  // )
+  // ManagementPeriods: ManagementPeriodEntity[];
+
+  @ManyToOne(() => ManagementPeriodEntity, (managementPeriod) => managementPeriod.Crop)
+  @JoinColumn({ name: 'ID' })
+  @ApiProperty()
+  ManagementPeriod: ManagementPeriodEntity;
+
 }
