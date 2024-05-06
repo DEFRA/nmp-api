@@ -63,6 +63,9 @@ import { CropService } from './crop/crop.service';
 import { SoilAnalysesModule } from './soil-analyses/soil-analyses.module';
 import { SoilAnalysesController } from './soil-analyses/soil-analyses.controller';
 import { SoilAnalysesService } from './soil-analyses/soil-analyses.service';
+import { ManagementPeriodModule } from './management-period/management-period.module';
+import { ManagementPeriodController } from './management-period/management-period.controller';
+import { ManagementPeriodService } from './management-period/management-period.service';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -89,6 +92,7 @@ import { SoilAnalysesService } from './soil-analyses/soil-analyses.service';
     FieldModule,
     CropModule,
     SoilAnalysesModule,
+    ManagementPeriodModule,
     RB209SoilModule,
     RB209ArableModule,
     RB209FieldModule,
@@ -107,6 +111,7 @@ import { SoilAnalysesService } from './soil-analyses/soil-analyses.service';
     FieldController,
     CropController,
     SoilAnalysesController,
+    ManagementPeriodController,
     RB209SoilController,
     RB209ArableController,
     RB209FieldController,
@@ -127,6 +132,7 @@ import { SoilAnalysesService } from './soil-analyses/soil-analyses.service';
     FieldService,
     CropService,
     SoilAnalysesService,
+    ManagementPeriodService,
     RB209SoilService,
     RB209ArableService,
     RB209FieldService,

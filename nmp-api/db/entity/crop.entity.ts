@@ -3,12 +3,14 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import FieldEntity from './field.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import UserEntity from './user.entity';
+import ManagementPeriodEntity from './management-period.entity';
 
 @Entity({ name: 'Crops' })
 export default class CropEntity {
@@ -37,6 +39,10 @@ export default class CropEntity {
   @Column('nvarchar', { nullable: true, length: 100 })
   @ApiPropertyOptional()
   Variety: string;
+
+  @Column('nvarchar', { nullable: true, length: 128 })
+  @ApiPropertyOptional()
+  OtherCropName: string;
 
   @Column('int', { nullable: true })
   @ApiPropertyOptional()
@@ -125,4 +131,11 @@ export default class CropEntity {
   @ManyToOne(() => UserEntity, (user) => user.ModifiedCrops)
   @JoinColumn({ name: 'CreatedByID' })
   ModifiedByUser: UserEntity;
+
+  @OneToMany(
+    () => ManagementPeriodEntity,
+    (managementPeriod) => managementPeriod.Crops,
+  )
+  @JoinColumn({ name: 'CropID' })
+  ManagementPeriods: ManagementPeriodEntity[];
 }

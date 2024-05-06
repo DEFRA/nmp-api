@@ -1,12 +1,17 @@
-import FieldEntity from '@db/entity/field.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { EntityManager, Repository } from 'typeorm';
+import { Injectable } from '@nestjs/common';
+
+import FieldEntity from '@db/entity/field.entity';
 import { ApiDataResponseType } from '@shared/base.response';
 import { BaseService } from '@src/base/base.service';
-import { EntityManager, Repository } from 'typeorm';
-import { CreateFeildWithSoilAnalysesAndCropsDto } from './dto/field.dto';
+
 import SoilAnalysesEntity from '@db/entity/soil-analyses.entity';
 import CropEntity from '@db/entity/crop.entity';
-import { Injectable } from '@nestjs/common';
+import ManagementPeriodEntity from '@db/entity/management-period.entity';
+
+import { CreateFieldWithSoilAnalysesAndCropsDto } from './dto/field.dto';
+import { CreateCropWithManagementPeriodsDto } from '@src/crop/dto/crop.dto';
 
 @Injectable()
 export class FieldService extends BaseService<
@@ -20,6 +25,8 @@ export class FieldService extends BaseService<
     protected readonly soilAnalysesRepository: Repository<SoilAnalysesEntity>,
     @InjectRepository(CropEntity)
     protected readonly cropRepository: Repository<CropEntity>,
+    @InjectRepository(ManagementPeriodEntity)
+    protected readonly managementPeriodRepository: Repository<ManagementPeriodEntity>,
     protected readonly entityManager: EntityManager,
   ) {
     super(repository, entityManager);
@@ -36,7 +43,7 @@ export class FieldService extends BaseService<
 
   async createFieldWithSoilAnalysesAndCrops(
     farmId: number,
-    body: CreateFeildWithSoilAnalysesAndCropsDto,
+    body: CreateFieldWithSoilAnalysesAndCropsDto,
   ) {
     const exists = await this.checkFieldExists(farmId, body.Field.Name);
     this.throwErrorIfFieldExists(exists);
@@ -52,16 +59,25 @@ export class FieldService extends BaseService<
             FieldID: Field.ID,
           }),
         );
-
-        const Crops: CropEntity[] = [];
+        const Crops: CreateCropWithManagementPeriodsDto[] = [];
         for (const cropData of body.Crops) {
           const savedCrop = await transactionalManager.save(
             this.cropRepository.create({
-              ...cropData,
+              ...cropData.Crop,
               FieldID: Field.ID,
             }),
           );
-          Crops.push(savedCrop);
+          const ManagementPeriods: ManagementPeriodEntity[] = [];
+          for (const managementPeriod of cropData.ManagementPeriods) {
+            const savedManagementPeriod = await transactionalManager.save(
+              this.managementPeriodRepository.create({
+                ...managementPeriod,
+                CropID: savedCrop.ID,
+              }),
+            );
+            ManagementPeriods.push(savedManagementPeriod);
+          }
+          Crops.push({ Crop: savedCrop, ManagementPeriods });
         }
 
         return {
