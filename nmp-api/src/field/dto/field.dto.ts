@@ -1,19 +1,16 @@
-import CropEntity from '@db/entity/crop.entity';
-import FieldEntity from '@db/entity/field.entity';
-import ManagementPeriodEntity from '@db/entity/management-period.entity';
-import SoilAnalysesEntity from '@db/entity/soil-analyses.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateFeildWithSoilAnalysesAndCropsDto {
+import FieldEntity from '@db/entity/field.entity';
+import SoilAnalysesEntity from '@db/entity/soil-analyses.entity';
+import { CreateCropWithManagementPeriodsDto } from '@src/crop/dto/crop.dto';
+
+export class CreateFieldWithSoilAnalysesAndCropsDto {
   @ApiProperty()
   Field: FieldEntity;
 
   @ApiProperty()
   SoilAnalyses: SoilAnalysesEntity;
 
-  @ApiProperty({ type: [CropEntity] })
-  Crops: CropEntity[];
-
-  // @ApiProperty({ type: [ManagementPeriodEntity] }) 
-  // ManagementPeriod: ManagementPeriodEntity[];
+  @ApiProperty({ type: [CreateCropWithManagementPeriodsDto] })
+  Crops: CreateCropWithManagementPeriodsDto[];
 }

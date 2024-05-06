@@ -7,8 +7,9 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+
 import { CropService } from './crop.service';
-import CropEntity from '@db/entity/crop.entity';
+import { CreateCropWithManagementPeriodsDto } from './dto/crop.dto';
 
 @ApiTags('Crop')
 @Controller('crop')
@@ -19,16 +20,20 @@ export class CropController {
   @ApiOperation({ summary: 'Create Crop by Field Id' })
   async createCrop(
     @Param('fieldId', ParseIntPipe) fieldId: number,
-    @Body() body: CropEntity,
+    @Body() body: CreateCropWithManagementPeriodsDto,
   ) {
-    const Crop = await this.cropService.save({ ...body, FieldID: fieldId });
-    return { Crop };
+    const data = await this.cropService.createCropWithManagementPeriods(
+      fieldId,
+      body.Crop,
+      body.ManagementPeriods,
+    );
+    return data;
   }
 
   @Get('/field/:fieldId')
   @ApiOperation({ summary: 'Get Crops by Field Id' })
   async getCropsByFieldId(@Param('fieldId', ParseIntPipe) fieldId: number) {
-    const Crop = await this.cropService.getBy('FieldID', fieldId);
-    return { Crop };
+    const Crops = await this.cropService.getBy('FieldID', fieldId);
+    return { Crops };
   }
 }

@@ -40,6 +40,10 @@ export default class CropEntity {
   @ApiPropertyOptional()
   Variety: string;
 
+  @Column('nvarchar', { nullable: true, length: 128 })
+  @ApiPropertyOptional()
+  OtherCropName: string;
+
   @Column('int', { nullable: true })
   @ApiPropertyOptional()
   CropInfo1: number;
@@ -128,15 +132,10 @@ export default class CropEntity {
   @JoinColumn({ name: 'CreatedByID' })
   ModifiedByUser: UserEntity;
 
-  // @OneToMany(
-  //   () => ManagementPeriodEntity,
-  //   (managementPeriod) => managementPeriod.Crop
-  // )
-  // ManagementPeriods: ManagementPeriodEntity[];
-
-  @ManyToOne(() => ManagementPeriodEntity, (managementPeriod) => managementPeriod.Crop)
-  @JoinColumn({ name: 'ID' })
-  @ApiProperty()
-  ManagementPeriod: ManagementPeriodEntity;
-
+  @OneToMany(
+    () => ManagementPeriodEntity,
+    (managementPeriod) => managementPeriod.Crops,
+  )
+  @JoinColumn({ name: 'CropID' })
+  ManagementPeriods: ManagementPeriodEntity[];
 }

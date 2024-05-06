@@ -9,7 +9,7 @@ import {
 
 import CropEntity from './crop.entity';
 import UserEntity from './user.entity';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 @Entity({ name: 'ManagementPeriods' })
 export default class ManagementPeriodEntity {
@@ -20,11 +20,11 @@ export default class ManagementPeriodEntity {
   ID: number;
 
   @Column('int')
-  CropId: number;
+  CropID: number;
 
-  @ManyToOne(() => CropEntity, (crop) => crop.ManagementPeriod)
+  @ManyToOne(() => CropEntity, (crop) => crop.ManagementPeriods)
   @JoinColumn({ name: 'CropID' })
-  Crop: CropEntity;
+  Crops: CropEntity;
 
   @Column({ default: 1, nullable: true })
   @ApiPropertyOptional()
@@ -59,7 +59,6 @@ export default class ManagementPeriodEntity {
   @ApiPropertyOptional()
   ModifiedByID: number;
 
-
   @ManyToOne(() => UserEntity, (user) => user.CreatedManagementPeriods)
   @JoinColumn({ name: 'CreatedByID' })
   CreatedByUser: UserEntity;
@@ -67,10 +66,6 @@ export default class ManagementPeriodEntity {
   @ManyToOne(() => UserEntity, (user) => user.ModifiedManagementPeriods)
   @JoinColumn({ name: 'ModifiedByID' })
   ModifiedByUser: UserEntity;
-
-  // @ManyToOne(() => CropEntity, (crop) => crop.ID)
-  // @JoinColumn({ name: 'CropID' })
-  // CropID: CropEntity;
 
   @Column('datetime2', { nullable: true, default: 'GETDATE()' })
   @ApiPropertyOptional()

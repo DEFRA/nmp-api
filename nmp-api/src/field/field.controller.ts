@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { FieldService } from './field.service';
-import { CreateFeildWithSoilAnalysesAndCropsDto } from './dto/field.dto';
+import { CreateFieldWithSoilAnalysesAndCropsDto } from './dto/field.dto';
 
 @ApiTags('Field')
 @Controller('field')
@@ -65,7 +65,7 @@ export class FieldController {
   })
   async createFieldWithSoilAnalysesAndCrops(
     @Param('farmId', ParseIntPipe) farmId: number,
-    @Body() body: CreateFeildWithSoilAnalysesAndCropsDto,
+    @Body() body: CreateFieldWithSoilAnalysesAndCropsDto,
   ) {
     const data = await this.fieldService.createFieldWithSoilAnalysesAndCrops(
       farmId,

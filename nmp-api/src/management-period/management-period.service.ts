@@ -7,7 +7,7 @@ import { EntityManager, Repository } from 'typeorm';
 
 @Injectable()
 export class ManagementPeriodService extends BaseService<
-ManagementPeriodEntity,
+  ManagementPeriodEntity,
   ApiDataResponseType<ManagementPeriodEntity>
 > {
   constructor(

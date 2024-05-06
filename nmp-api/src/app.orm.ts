@@ -73,7 +73,7 @@ if (process.env.NODE_ENV === 'production') {
       FieldEntity,
       CropEntity,
       SoilAnalysesEntity,
-      ManagementPeriodEntity
+      ManagementPeriodEntity,
     ],
     synchronize: false,
     logging: true,
