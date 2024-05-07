@@ -63,7 +63,7 @@ export class FieldController {
   @ApiOperation({
     summary: 'Create Field along with Soil Analyses and Crops api',
   })
-  async createFieldWithSoilAnalysesAndCrops(
+  async createFieldWithSoilAnalysisAndCrops(
     @Param('farmId', ParseIntPipe) farmId: number,
     @Body() body: CreateFieldWithSoilAnalysisAndCropsDto,
   ) {

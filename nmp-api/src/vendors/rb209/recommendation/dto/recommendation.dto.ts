@@ -72,7 +72,7 @@ class RecommendationOrganicMaterialDto {
   sulphur: number;
 }
 
-class RecommendationSoilAnalysesDto {
+class RecommendationSoilAnalysisDto {
   @ApiProperty()
   soilAnalysisDate: Date;
 
@@ -131,8 +131,8 @@ class RecommendationSoilDto {
   @ApiProperty()
   psc: number;
 
-  @ApiProperty({ type: [RecommendationSoilAnalysesDto] })
-  soilAnalyses: RecommendationSoilAnalysesDto[];
+  @ApiProperty({ type: [RecommendationSoilAnalysisDto] })
+  soilAnalyses: RecommendationSoilAnalysisDto[];
 }
 
 class RecommendationGrasslandDto {

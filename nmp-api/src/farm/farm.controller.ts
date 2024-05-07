@@ -20,7 +20,7 @@ import { CreateFarmRequest } from './dto/farm.dto';
 export class FarmController {
   constructor(
     private readonly farmService: FarmService,
-    private readonly userFarmsService: UserFarmService,
+    private readonly userFarmService: UserFarmService,
   ) {}
 
   @Get('/users/:userId')
@@ -31,10 +31,7 @@ export class FarmController {
     @Query('shortSummary', new ParseBoolPipe({ optional: true }))
     shortSummary: boolean,
   ) {
-    const Farms = await this.userFarmsService.getUserFarms(
-      userId,
-      shortSummary,
-    );
+    const Farms = await this.userFarmService.getUserFarms(userId, shortSummary);
     return { Farms };
   }
 
@@ -76,7 +73,7 @@ export class FarmController {
       throw new BadRequestException(
         'Farm already exists with this Name and Postcode',
       );
-    const Farm = await this.userFarmsService.createFarm(
+    const Farm = await this.userFarmService.createFarm(
       farmBody,
       UserID,
       RoleID,

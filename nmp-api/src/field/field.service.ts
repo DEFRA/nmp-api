@@ -53,7 +53,7 @@ export class FieldService extends BaseService<
         const Field = await transactionalManager.save(
           this.repository.create({ ...body.Field, FarmID: farmId }),
         );
-        const SoilAnalyses = await transactionalManager.save(
+        const SoilAnalysis = await transactionalManager.save(
           this.soilAnalysisRepository.create({
             ...body.SoilAnalysis,
             FieldID: Field.ID,
@@ -82,7 +82,7 @@ export class FieldService extends BaseService<
 
         return {
           Field,
-          SoilAnalyses,
+          SoilAnalysis,
           Crops,
         };
       },
