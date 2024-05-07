@@ -1,13 +1,13 @@
 import SoilAnalysisEntity from '@db/entity/soil-analysis.entity';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { SoilAnalysesController } from './soil-analyses.controller';
-import { SoilAnalysesService } from './soil-analyses.service';
+import { SoilAnalysisController } from './soil-analysis.controller';
+import { SoilAnalysisService } from './soil-analysis.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([SoilAnalysisEntity])],
-  controllers: [SoilAnalysesController],
-  providers: [SoilAnalysesService],
+  controllers: [SoilAnalysisController],
+  providers: [SoilAnalysisService],
   exports: [TypeOrmModule],
 })
-export class SoilAnalysesModule {}
+export class SoilAnalysisModule {}

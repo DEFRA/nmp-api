@@ -6,7 +6,7 @@ import { BaseService } from '@src/base/base.service';
 import { EntityManager, Repository } from 'typeorm';
 
 @Injectable()
-export class SoilAnalysesService extends BaseService<
+export class SoilAnalysisService extends BaseService<
   SoilAnalysisEntity,
   ApiDataResponseType<SoilAnalysisEntity>
 > {

@@ -10,7 +10,7 @@ import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ManagementPeriodService } from './management-period.service';
 
 @ApiTags('Management Period')
-@Controller('management-period')
+@Controller('management-periods')
 export class ManagementPeriodController {
   constructor(
     private readonly managementPeriodService: ManagementPeriodService,

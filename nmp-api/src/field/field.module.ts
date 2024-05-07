@@ -6,7 +6,7 @@ import { FieldService } from './field.service';
 import CropEntity from '@db/entity/crop.entity';
 import SoilAnalysisEntity from '@db/entity/soil-analysis.entity';
 import { CropService } from '@src/crop/crop.service';
-import { SoilAnalysesService } from '@src/soil-analyses/soil-analyses.service';
+import { SoilAnalysisService } from '@src/soil-analysis/soil-analysis.service';
 import { ManagementPeriodService } from '@src/management-period/management-period.service';
 import ManagementPeriodEntity from '@db/entity/management-period.entity';
 
@@ -23,7 +23,7 @@ import ManagementPeriodEntity from '@db/entity/management-period.entity';
   providers: [
     FieldService,
     CropService,
-    SoilAnalysesService,
+    SoilAnalysisService,
     ManagementPeriodService,
   ],
   exports: [TypeOrmModule],

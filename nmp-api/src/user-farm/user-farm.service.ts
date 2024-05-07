@@ -7,7 +7,7 @@ import { BaseService } from '@src/base/base.service';
 import { DeepPartial, EntityManager, Repository } from 'typeorm';
 
 @Injectable()
-export class UserFarmsService extends BaseService<
+export class UserFarmService extends BaseService<
   UserFarmEntity,
   ApiDataResponseType<UserFarmEntity>
 > {
