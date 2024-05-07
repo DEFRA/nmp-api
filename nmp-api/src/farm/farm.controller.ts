@@ -16,14 +16,14 @@ import FarmEntity from '@db/entity/farm.entity';
 import { CreateFarmRequest } from './dto/farm.dto';
 
 @ApiTags('Farm')
-@Controller('farm')
+@Controller('farms')
 export class FarmController {
   constructor(
     private readonly farmService: FarmService,
     private readonly userFarmsService: UserFarmsService,
   ) {}
 
-  @Get('/user-id/:userId')
+  @Get('/users/:userId')
   @ApiOperation({ summary: 'Get Farms by User Id' })
   @ApiQuery({ name: 'shortSummary', required: false })
   async getFarmsByUserId(

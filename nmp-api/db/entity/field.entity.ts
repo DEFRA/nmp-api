@@ -11,7 +11,7 @@ import {
 import FarmEntity from './farm.entity';
 import UserEntity from './user.entity';
 import CropEntity from './crop.entity';
-import SoilAnalysesEntity from './soil-analyses.entity';
+import SoilAnalysisEntity from './soil-analysis.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 @Entity({ name: 'Fields' })
@@ -110,6 +110,6 @@ export default class FieldEntity {
   @OneToMany(() => CropEntity, (crop) => crop.Field)
   Crops: CropEntity[];
 
-  @OneToMany(() => SoilAnalysesEntity, (SoilAnalyses) => SoilAnalyses.Field)
-  SoilAnalyses: SoilAnalysesEntity[];
+  @OneToMany(() => SoilAnalysisEntity, (SoilAnalysis) => SoilAnalysis.Field)
+  SoilAnalyses: SoilAnalysisEntity[];
 }

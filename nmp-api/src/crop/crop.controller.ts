@@ -12,11 +12,11 @@ import { CropService } from './crop.service';
 import { CreateCropWithManagementPeriodsDto } from './dto/crop.dto';
 
 @ApiTags('Crop')
-@Controller('crop')
+@Controller('crops')
 export class CropController {
   constructor(private readonly cropService: CropService) {}
 
-  @Post('/field/:fieldId')
+  @Post('/fields/:fieldId')
   @ApiOperation({ summary: 'Create Crop by Field Id' })
   async createCrop(
     @Param('fieldId', ParseIntPipe) fieldId: number,
@@ -30,7 +30,7 @@ export class CropController {
     return data;
   }
 
-  @Get('/field/:fieldId')
+  @Get('/fields/:fieldId')
   @ApiOperation({ summary: 'Get Crops by Field Id' })
   async getCropsByFieldId(@Param('fieldId', ParseIntPipe) fieldId: number) {
     const Crops = await this.cropService.getBy('FieldID', fieldId);

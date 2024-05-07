@@ -26,7 +26,7 @@ export class ManagementPeriodController {
     return { ManagementPeriod: records };
   }
 
-  @Get('/crop/:cropId')
+  @Get('/crops/:cropId')
   @ApiOperation({ summary: 'Get Management Period by Crop Id' })
   @ApiQuery({ name: 'shortSummary', required: false })
   async getManagementPeriodByCropId(

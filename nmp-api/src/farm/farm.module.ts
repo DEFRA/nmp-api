@@ -4,10 +4,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { FarmController } from './farm.controller';
 import { FarmService } from './farm.service';
 import { UserFarmsService } from '@src/user-farms/user-farms.service';
-import UserFarmsEntity from '@db/entity/user-farms.entity';
+import UserFarmEntity from '@db/entity/user-farm.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([FarmEntity, UserFarmsEntity])],
+  imports: [TypeOrmModule.forFeature([FarmEntity, UserFarmEntity])],
   controllers: [FarmController],
   providers: [FarmService, UserFarmsService],
   exports: [TypeOrmModule],

@@ -6,11 +6,11 @@ import FieldEntity from '@db/entity/field.entity';
 import { ApiDataResponseType } from '@shared/base.response';
 import { BaseService } from '@src/base/base.service';
 
-import SoilAnalysesEntity from '@db/entity/soil-analyses.entity';
+import SoilAnalysisEntity from '@db/entity/soil-analysis.entity';
 import CropEntity from '@db/entity/crop.entity';
 import ManagementPeriodEntity from '@db/entity/management-period.entity';
 
-import { CreateFieldWithSoilAnalysesAndCropsDto } from './dto/field.dto';
+import { CreateFieldWithSoilAnalysisAndCropsDto } from './dto/field.dto';
 import { CreateCropWithManagementPeriodsDto } from '@src/crop/dto/crop.dto';
 
 @Injectable()
@@ -21,8 +21,8 @@ export class FieldService extends BaseService<
   constructor(
     @InjectRepository(FieldEntity)
     protected readonly repository: Repository<FieldEntity>,
-    @InjectRepository(SoilAnalysesEntity)
-    protected readonly soilAnalysesRepository: Repository<SoilAnalysesEntity>,
+    @InjectRepository(SoilAnalysisEntity)
+    protected readonly soilAnalysisRepository: Repository<SoilAnalysisEntity>,
     @InjectRepository(CropEntity)
     protected readonly cropRepository: Repository<CropEntity>,
     @InjectRepository(ManagementPeriodEntity)
@@ -41,9 +41,9 @@ export class FieldService extends BaseService<
       throw new Error('Field already exists with this Farm Id and Name');
   }
 
-  async createFieldWithSoilAnalysesAndCrops(
+  async createFieldWithSoilAnalysisAndCrops(
     farmId: number,
-    body: CreateFieldWithSoilAnalysesAndCropsDto,
+    body: CreateFieldWithSoilAnalysisAndCropsDto,
   ) {
     const exists = await this.checkFieldExists(farmId, body.Field.Name);
     this.throwErrorIfFieldExists(exists);
@@ -54,8 +54,8 @@ export class FieldService extends BaseService<
           this.repository.create({ ...body.Field, FarmID: farmId }),
         );
         const SoilAnalyses = await transactionalManager.save(
-          this.soilAnalysesRepository.create({
-            ...body.SoilAnalyses,
+          this.soilAnalysisRepository.create({
+            ...body.SoilAnalysis,
             FieldID: Field.ID,
           }),
         );

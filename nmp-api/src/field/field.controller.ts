@@ -10,10 +10,10 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { FieldService } from './field.service';
-import { CreateFieldWithSoilAnalysesAndCropsDto } from './dto/field.dto';
+import { CreateFieldWithSoilAnalysisAndCropsDto } from './dto/field.dto';
 
 @ApiTags('Field')
-@Controller('field')
+@Controller('fields')
 export class FieldController {
   constructor(private readonly fieldService: FieldService) {}
 
@@ -24,7 +24,7 @@ export class FieldController {
     return { Field: records };
   }
 
-  @Get('/farm/:farmId')
+  @Get('/farms/:farmId')
   @ApiOperation({ summary: 'Get Fields by Farm Id' })
   @ApiQuery({ name: 'shortSummary', required: false })
   async getFieldsByFarmId(
@@ -40,14 +40,14 @@ export class FieldController {
     return { Fields: records };
   }
 
-  @Get('/farm/:farmId/count')
+  @Get('/farms/:farmId/count')
   @ApiOperation({ summary: 'Get fields count by Farm Id' })
   async getFarmFieldsCount(@Param('farmId', ParseIntPipe) farmId: number) {
     const count = await this.fieldService.countRecords({ FarmID: farmId });
     return { count };
   }
 
-  @Get('/farm/:farmId/exists')
+  @Get('/farms/:farmId/exists')
   @ApiOperation({
     summary: 'Api to check field exists using Farm Name and Farm Id',
   })
@@ -59,15 +59,15 @@ export class FieldController {
     return { exists };
   }
 
-  @Post('/farm/:farmId/soil-analyses/crop')
+  @Post('/farms/:farmId')
   @ApiOperation({
     summary: 'Create Field along with Soil Analyses and Crops api',
   })
   async createFieldWithSoilAnalysesAndCrops(
     @Param('farmId', ParseIntPipe) farmId: number,
-    @Body() body: CreateFieldWithSoilAnalysesAndCropsDto,
+    @Body() body: CreateFieldWithSoilAnalysisAndCropsDto,
   ) {
-    const data = await this.fieldService.createFieldWithSoilAnalysesAndCrops(
+    const data = await this.fieldService.createFieldWithSoilAnalysisAndCrops(
       farmId,
       body,
     );

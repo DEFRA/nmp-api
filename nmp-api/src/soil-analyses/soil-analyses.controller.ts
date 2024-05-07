@@ -23,7 +23,7 @@ export class SoilAnalysesController {
     return { SoilAnalysis: records };
   }
 
-  @Get('/field/:fieldId')
+  @Get('/fields/:fieldId')
   @ApiOperation({ summary: 'Get Soil Analyses by Field Id' })
   @ApiQuery({ name: 'shortSummary', required: false })
   async getSoilAnalysesByFieldId(
