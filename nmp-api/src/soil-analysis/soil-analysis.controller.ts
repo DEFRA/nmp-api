@@ -7,23 +7,23 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { SoilAnalysesService } from './soil-analyses.service';
+import { SoilAnalysisService } from './soil-analysis.service';
 
-@ApiTags('Soil Analyses')
+@ApiTags('Soil Analysis')
 @Controller('soil-analyses')
-export class SoilAnalysesController {
-  constructor(private readonly soilAnalysesService: SoilAnalysesService) {}
+export class SoilAnalysisController {
+  constructor(private readonly soilAnalysisService: SoilAnalysisService) {}
 
-  @Get('/:soilAnalysesId')
-  @ApiOperation({ summary: 'Get Soil Analyses by Id' })
+  @Get('/:soilAnalysisId')
+  @ApiOperation({ summary: 'Get Soil Analysis by Id' })
   async getSoilAnalysesById(
-    @Param('soilAnalysesId', ParseIntPipe) soilAnalysesId: number,
+    @Param('soilAnalysisId', ParseIntPipe) soilAnalysisId: number,
   ) {
-    const { records } = await this.soilAnalysesService.getById(soilAnalysesId);
+    const { records } = await this.soilAnalysisService.getById(soilAnalysisId);
     return { SoilAnalysis: records };
   }
 
-  @Get('/field/:fieldId')
+  @Get('/fields/:fieldId')
   @ApiOperation({ summary: 'Get Soil Analyses by Field Id' })
   @ApiQuery({ name: 'shortSummary', required: false })
   async getSoilAnalysesByFieldId(
@@ -33,7 +33,7 @@ export class SoilAnalysesController {
   ) {
     let selectOptions = {};
     if (shortSummary) selectOptions = { ID: true, Date: true, FieldID: true };
-    const SoilAnalyses = await this.soilAnalysesService.getBy(
+    const SoilAnalyses = await this.soilAnalysisService.getBy(
       'FieldID',
       fieldId,
       selectOptions,

@@ -1,4 +1,4 @@
-import UserFarmsEntity from './user-farms.entity';
+import UserFarmEntity from './user-farm.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'Roles' })
@@ -9,6 +9,6 @@ export default class RoleEntity {
   @Column('nvarchar', { length: 256, unique: true })
   Name: string;
 
-  @OneToMany(() => UserFarmsEntity, (userFarms) => userFarms.Role)
-  UserFarms: UserFarmsEntity[];
+  @OneToMany(() => UserFarmEntity, (userFarm) => userFarm.Role)
+  UserFarms: UserFarmEntity[];
 }

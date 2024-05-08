@@ -1,5 +1,5 @@
 import FarmEntity from '@db/entity/farm.entity';
-import UserFarmsEntity from '@db/entity/user-farms.entity';
+import UserFarmEntity from '@db/entity/user-farm.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApiDataResponseType } from '@shared/base.response';
@@ -7,13 +7,13 @@ import { BaseService } from '@src/base/base.service';
 import { DeepPartial, EntityManager, Repository } from 'typeorm';
 
 @Injectable()
-export class UserFarmsService extends BaseService<
-  UserFarmsEntity,
-  ApiDataResponseType<UserFarmsEntity>
+export class UserFarmService extends BaseService<
+  UserFarmEntity,
+  ApiDataResponseType<UserFarmEntity>
 > {
   constructor(
-    @InjectRepository(UserFarmsEntity)
-    protected readonly repository: Repository<UserFarmsEntity>,
+    @InjectRepository(UserFarmEntity)
+    protected readonly repository: Repository<UserFarmEntity>,
     @InjectRepository(FarmEntity)
     protected readonly repositoryFarm: Repository<FarmEntity>,
     protected readonly entityManager: EntityManager,

@@ -1,10 +1,10 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
-import UserFarmsEntity from './user-farms.entity';
+import UserFarmEntity from './user-farm.entity';
 import FieldEntity from './field.entity';
 import FarmEntity from './farm.entity';
 import CropEntity from './crop.entity';
-import SoilAnalysesEntity from './soil-analyses.entity';
+import SoilAnalysisEntity from './soil-analysis.entity';
 import ManagementPeriodEntity from './management-period.entity';
 
 @Entity({ name: 'Users' })
@@ -24,8 +24,8 @@ export default class UserEntity {
   @Column('nvarchar', { length: 128, unique: true })
   UserName: string;
 
-  @OneToMany(() => UserFarmsEntity, (userFarms) => userFarms.User)
-  UserFarms: UserFarmsEntity[];
+  @OneToMany(() => UserFarmEntity, (userFarm) => userFarm.User)
+  UserFarms: UserFarmEntity[];
 
   @OneToMany(() => FieldEntity, (field) => field.CreatedByUser)
   CreatedFields: FieldEntity[];
@@ -46,16 +46,16 @@ export default class UserEntity {
   ModifiedCrops: CropEntity[];
 
   @OneToMany(
-    () => SoilAnalysesEntity,
-    (soilAnalyses) => soilAnalyses.CreatedByUser,
+    () => SoilAnalysisEntity,
+    (soilAnalysis) => soilAnalysis.CreatedByUser,
   )
-  CreatedSoilAnalyses: SoilAnalysesEntity[];
+  CreatedSoilAnalyses: SoilAnalysisEntity[];
 
   @OneToMany(
-    () => SoilAnalysesEntity,
-    (soilAnalyses) => soilAnalyses.ModifiedByUser,
+    () => SoilAnalysisEntity,
+    (soilAnalysis) => soilAnalysis.ModifiedByUser,
   )
-  ModifiedSoilAnalyses: SoilAnalysesEntity[];
+  ModifiedSoilAnalyses: SoilAnalysisEntity[];
 
   @OneToMany(
     () => ManagementPeriodEntity,

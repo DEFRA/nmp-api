@@ -11,7 +11,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import UserEntity from './user.entity';
 
 @Entity({ name: 'SoilAnalyses' })
-export default class SoilAnalysesEntity {
+export default class SoilAnalysisEntity {
   @PrimaryGeneratedColumn('identity', {
     generatedIdentity: 'ALWAYS',
     primaryKeyConstraintName: 'PK_SoilAnalyses',

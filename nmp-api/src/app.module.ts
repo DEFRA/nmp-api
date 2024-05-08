@@ -20,7 +20,7 @@ import { FarmModule } from './farm/farm.module';
 // import { AuthController } from './auth/auth.controller';
 // import { AuthService } from './auth/auth.service';
 // import { JwtService } from '@nestjs/jwt';
-import { UserFarmsService } from './user-farms/user-farms.service';
+import { UserFarmService } from './user-farm/user-farm.service';
 
 import { JwtModule } from '@nestjs/jwt';
 import { JwtAuthGuard } from './auth/jwt.guard';
@@ -60,9 +60,9 @@ import { RB209PreviousCroppingService } from './vendors/rb209/previousCropping/p
 import { CropModule } from './crop/crop.module';
 import { CropController } from './crop/crop.controller';
 import { CropService } from './crop/crop.service';
-import { SoilAnalysesModule } from './soil-analyses/soil-analyses.module';
-import { SoilAnalysesController } from './soil-analyses/soil-analyses.controller';
-import { SoilAnalysesService } from './soil-analyses/soil-analyses.service';
+import { SoilAnalysisModule } from './soil-analysis/soil-analysis.module';
+import { SoilAnalysisController } from './soil-analysis/soil-analysis.controller';
+import { SoilAnalysisService } from './soil-analysis/soil-analysis.service';
 import { ManagementPeriodModule } from './management-period/management-period.module';
 import { ManagementPeriodController } from './management-period/management-period.controller';
 import { ManagementPeriodService } from './management-period/management-period.service';
@@ -91,7 +91,7 @@ import { ManagementPeriodService } from './management-period/management-period.s
     FarmModule,
     FieldModule,
     CropModule,
-    SoilAnalysesModule,
+    SoilAnalysisModule,
     ManagementPeriodModule,
     RB209SoilModule,
     RB209ArableModule,
@@ -110,7 +110,7 @@ import { ManagementPeriodService } from './management-period/management-period.s
     FarmController,
     FieldController,
     CropController,
-    SoilAnalysesController,
+    SoilAnalysisController,
     ManagementPeriodController,
     RB209SoilController,
     RB209ArableController,
@@ -128,10 +128,10 @@ import { ManagementPeriodService } from './management-period/management-period.s
     AppService,
     AddressLookupService,
     FarmService,
-    UserFarmsService,
+    UserFarmService,
     FieldService,
     CropService,
-    SoilAnalysesService,
+    SoilAnalysisService,
     ManagementPeriodService,
     RB209SoilService,
     RB209ArableService,

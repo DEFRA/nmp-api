@@ -12,7 +12,7 @@ import {
 
 @Entity({ name: 'UserFarms', synchronize: false })
 @Index('PK_UserFarms', ['UserID', 'FarmID'], { unique: true })
-export default class UserFarmsEntity {
+export default class UserFarmEntity {
   @PrimaryColumn({ type: 'uuid', insert: false, select: false, update: false })
   ID: never;
 

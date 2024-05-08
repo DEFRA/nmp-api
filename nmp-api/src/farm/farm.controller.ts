@@ -10,20 +10,20 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { UserFarmsService } from '@src/user-farms/user-farms.service';
+import { UserFarmService } from '@src/user-farm/user-farm.service';
 import { FarmService } from './farm.service';
 import FarmEntity from '@db/entity/farm.entity';
 import { CreateFarmRequest } from './dto/farm.dto';
 
 @ApiTags('Farm')
-@Controller('farm')
+@Controller('farms')
 export class FarmController {
   constructor(
     private readonly farmService: FarmService,
-    private readonly userFarmsService: UserFarmsService,
+    private readonly userFarmsService: UserFarmService,
   ) {}
 
-  @Get('/user-id/:userId')
+  @Get('/users/:userId')
   @ApiOperation({ summary: 'Get Farms by User Id' })
   @ApiQuery({ name: 'shortSummary', required: false })
   async getFarmsByUserId(

@@ -1,14 +1,14 @@
 import FarmEntity from '@db/entity/farm.entity';
 import UserEntity from '@db/entity/user.entity';
 import RoleEntity from '@db/entity/role.entity';
-import UserFarmsEntity from '@db/entity/user-farms.entity';
+import UserFarmEntity from '@db/entity/user-farm.entity';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import EnvironmentService from '@shared/environment.service';
 import * as dotven from 'dotenv';
 import 'dotenv/config';
 import FieldEntity from '@db/entity/field.entity';
 import CropEntity from '@db/entity/crop.entity';
-import SoilAnalysesEntity from '@db/entity/soil-analyses.entity';
+import SoilAnalysisEntity from '@db/entity/soil-analysis.entity';
 import ManagementPeriodEntity from '@db/entity/management-period.entity';
 
 dotven.config();
@@ -32,10 +32,10 @@ if (process.env.NODE_ENV === 'production') {
       FarmEntity,
       UserEntity,
       RoleEntity,
-      UserFarmsEntity,
+      UserFarmEntity,
       FieldEntity,
       CropEntity,
-      SoilAnalysesEntity,
+      SoilAnalysisEntity,
       ManagementPeriodEntity,
     ],
   };
@@ -69,10 +69,10 @@ if (process.env.NODE_ENV === 'production') {
       FarmEntity,
       UserEntity,
       RoleEntity,
-      UserFarmsEntity,
+      UserFarmEntity,
       FieldEntity,
       CropEntity,
-      SoilAnalysesEntity,
+      SoilAnalysisEntity,
       ManagementPeriodEntity,
     ],
     synchronize: false,

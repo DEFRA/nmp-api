@@ -9,7 +9,7 @@ import {
   PrimaryColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import UserFarmsEntity from './user-farms.entity';
+import UserFarmEntity from './user-farm.entity';
 import FieldEntity from './field.entity';
 import UserEntity from './user.entity';
 
@@ -135,8 +135,8 @@ export default class FarmEntity {
   @JoinColumn({ name: 'CreatedByID' })
   ModifiedByUser: UserEntity;
 
-  @OneToMany(() => UserFarmsEntity, (userFarms) => userFarms.Farm)
-  UserFarms: UserFarmsEntity[];
+  @OneToMany(() => UserFarmEntity, (userFarm) => userFarm.Farm)
+  UserFarms: UserFarmEntity[];
 
   @OneToMany(() => FieldEntity, (field) => field.Farm)
   Fields: FieldEntity[];

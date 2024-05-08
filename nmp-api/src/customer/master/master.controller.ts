@@ -11,7 +11,7 @@ import {
 import { DeepPartial } from 'typeorm';
 import { MasterService } from './master.service';
 
-@Controller('customer/master')
+@Controller('customers/master')
 export class MasterController {
   constructor(private readonly service: MasterService) {}
 
