@@ -35,7 +35,7 @@ export default class FieldEntity {
   @ApiPropertyOptional()
   SoilTypeID: number;
 
-  @Column('nvarchar', { length: 50, nullable: true })
+  @Column('int', { default: 1, nullable: true })
   @ApiPropertyOptional()
   NVZProgrammeID: number;
 

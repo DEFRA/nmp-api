@@ -16,7 +16,7 @@ export class SoilAnalysisController {
 
   @Get('/:soilAnalysisId')
   @ApiOperation({ summary: 'Get Soil Analysis by Id' })
-  async getSoilAnalysesById(
+  async getSoilAnalysisById(
     @Param('soilAnalysisId', ParseIntPipe) soilAnalysisId: number,
   ) {
     const { records } = await this.soilAnalysisService.getById(soilAnalysisId);
