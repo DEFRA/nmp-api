@@ -6,6 +6,8 @@ import FarmEntity from './farm.entity';
 import CropEntity from './crop.entity';
 import SoilAnalysisEntity from './soil-analysis.entity';
 import ManagementPeriodEntity from './management-period.entity';
+import { RecommendationEntity } from './recommendation.entity';
+import { RecommendationCommentEntity } from './recommendation-comment.entity';
 
 @Entity({ name: 'Users' })
 export default class UserEntity {
@@ -68,4 +70,28 @@ export default class UserEntity {
     (managementPeriod) => managementPeriod.ModifiedByUser,
   )
   ModifiedManagementPeriods: ManagementPeriodEntity[];
+
+  @OneToMany(
+    () => RecommendationEntity,
+    (recommendation) => recommendation.CreatedByUser,
+  )
+  CreatedRecommendations: RecommendationEntity[];
+
+  @OneToMany(
+    () => RecommendationEntity,
+    (recommendation) => recommendation.ModifiedByUser,
+  )
+  ModifiedRecommendations: RecommendationEntity[];
+
+  @OneToMany(
+    () => RecommendationCommentEntity,
+    (recommendationComment) => recommendationComment.CreatedByUser,
+  )
+  CreatedRecommendationComments: RecommendationCommentEntity[];
+
+  @OneToMany(
+    () => RecommendationCommentEntity,
+    (recommendationComment) => recommendationComment.ModifiedByUser,
+  )
+  ModifiedRecommendationComments: RecommendationCommentEntity[];
 }
