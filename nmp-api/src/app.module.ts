@@ -66,6 +66,9 @@ import { SoilAnalysisService } from './soil-analysis/soil-analysis.service';
 import { ManagementPeriodModule } from './management-period/management-period.module';
 import { ManagementPeriodController } from './management-period/management-period.controller';
 import { ManagementPeriodService } from './management-period/management-period.service';
+import { RecommendationModule } from './recommendation/recommendation.module';
+import { RecommendationService } from './recommendation/recommendation.service';
+import { RecommendationController } from './recommendation/recommendation.controller';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -103,6 +106,7 @@ import { ManagementPeriodService } from './management-period/management-period.s
     RB209GrasslandModule,
     RB209OrganicMateriaModule,
     RB209PreviousCroppingModule,
+    RecommendationModule,
   ],
   controllers: [
     AppController,
@@ -112,6 +116,7 @@ import { ManagementPeriodService } from './management-period/management-period.s
     CropController,
     SoilAnalysisController,
     ManagementPeriodController,
+    RecommendationController,
     RB209SoilController,
     RB209ArableController,
     RB209FieldController,
@@ -133,6 +138,7 @@ import { ManagementPeriodService } from './management-period/management-period.s
     CropService,
     SoilAnalysisService,
     ManagementPeriodService,
+    RecommendationService,
     RB209SoilService,
     RB209ArableService,
     RB209FieldService,
