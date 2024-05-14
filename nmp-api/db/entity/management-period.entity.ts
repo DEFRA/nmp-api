@@ -70,9 +70,11 @@ export default class ManagementPeriodEntity {
   ModifiedByUser: UserEntity;
 
   @Column('datetime2', { nullable: true, precision: 7, default: 'GETDATE()' })
+  @ApiPropertyOptional()
   CreatedOn: Date;
 
   @Column('datetime2', { nullable: true, precision: 7 })
+  @ApiPropertyOptional()
   ModifiedOn: Date;
 
   @Column({ nullable: true })
