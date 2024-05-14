@@ -5,11 +5,13 @@ import {
   JoinColumn,
   PrimaryGeneratedColumn,
   PrimaryColumn,
+  OneToMany,
 } from 'typeorm';
 
 import CropEntity from './crop.entity';
 import UserEntity from './user.entity';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { RecommendationEntity } from './recommendation.entity';
 
 @Entity({ name: 'ManagementPeriods' })
 export default class ManagementPeriodEntity {
@@ -67,15 +69,22 @@ export default class ManagementPeriodEntity {
   @JoinColumn({ name: 'ModifiedByID' })
   ModifiedByUser: UserEntity;
 
-  @Column('datetime2', { nullable: true, default: 'GETDATE()' })
+  @Column('datetime2', { nullable: true, precision: 7, default: 'GETDATE()' })
   @ApiPropertyOptional()
   CreatedOn: Date;
 
-  @Column('datetime2', { nullable: true })
+  @Column('datetime2', { nullable: true, precision: 7 })
   @ApiPropertyOptional()
   ModifiedOn: Date;
 
   @Column({ nullable: true })
   @ApiPropertyOptional()
   PreviousID: number;
+
+  @OneToMany(
+    () => RecommendationEntity,
+    (recommendation) => recommendation.ManagementPeriods,
+  )
+  @JoinColumn({ name: 'ManagementPeriodID' })
+  Recommendations: RecommendationEntity[];
 }

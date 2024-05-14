@@ -22,7 +22,8 @@
       "@shared/*": ["./shared/*"],
       "@src/*": ["./src/*"],
       "@filters/*": ["./filters/*"],
-      "@interceptors/*": ["./interceptors/*"]
+      "@interceptors/*": ["./interceptors/*"],
+      "@constants/*": ["./constants/*"]
     }
   }
 }

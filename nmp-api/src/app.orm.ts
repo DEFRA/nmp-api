@@ -10,6 +10,8 @@ import FieldEntity from '@db/entity/field.entity';
 import CropEntity from '@db/entity/crop.entity';
 import SoilAnalysisEntity from '@db/entity/soil-analysis.entity';
 import ManagementPeriodEntity from '@db/entity/management-period.entity';
+import { RecommendationEntity } from '@db/entity/recommendation.entity';
+import { RecommendationCommentEntity } from '@db/entity/recommendation-comment.entity';
 
 dotven.config();
 
@@ -37,6 +39,8 @@ if (process.env.NODE_ENV === 'production') {
       CropEntity,
       SoilAnalysisEntity,
       ManagementPeriodEntity,
+      RecommendationEntity,
+      RecommendationCommentEntity,
     ],
   };
 } else if (process.env.NODE_ENV === 'hosting') {
@@ -74,6 +78,8 @@ if (process.env.NODE_ENV === 'production') {
       CropEntity,
       SoilAnalysisEntity,
       ManagementPeriodEntity,
+      RecommendationEntity,
+      RecommendationCommentEntity,
     ],
     synchronize: false,
     logging: true,
