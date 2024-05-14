@@ -10,3 +10,8 @@ export class CreateCropWithManagementPeriodsDto {
   @ApiProperty({ type: [ManagementPeriodEntity] })
   ManagementPeriods: ManagementPeriodEntity[];
 }
+
+export class CreatePlanDto extends CreateCropWithManagementPeriodsDto {
+  @ApiProperty()
+  fieldID: number;
+}

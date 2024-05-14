@@ -69,6 +69,7 @@ import { ManagementPeriodService } from './management-period/management-period.s
 import { RecommendationModule } from './recommendation/recommendation.module';
 import { RecommendationService } from './recommendation/recommendation.service';
 import { RecommendationController } from './recommendation/recommendation.controller';
+import { PlanService } from './plan/plan.service';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -139,6 +140,7 @@ import { RecommendationController } from './recommendation/recommendation.contro
     SoilAnalysisService,
     ManagementPeriodService,
     RecommendationService,
+    PlanService,
     RB209SoilService,
     RB209ArableService,
     RB209FieldService,
