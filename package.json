@@ -13,7 +13,7 @@
     "clean:all": "./scripts/clean.sh all",
     "next": "yarn --cwd apps/nextapp dev",
     "dev": "npm-run-all --parallel start next",
-    "test": "jest",
+    "test": "jest --clear-cache && jest --forceExit --runInBand --detectOpenHandles",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
