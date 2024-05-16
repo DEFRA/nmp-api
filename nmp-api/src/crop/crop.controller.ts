@@ -9,7 +9,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { CropService } from './crop.service';
 import {
@@ -61,7 +61,10 @@ export class CropController {
 
   @Get('plans')
   @ApiOperation({ summary: 'Get Crop plans by farmId' })
-  @ApiParam({ name: 'type', description: '0 for Plan, 1 for Record' })
+  @ApiQuery({
+    name: 'type',
+    description: '0 for Plan, 1 for Record',
+  })
   async getCropsPlansByFarmId(
     @Query('farmId', new ParseIntPipe({ optional: false })) farmId: number,
     @Query('type', new ParseIntPipe({ optional: false })) type: number,
