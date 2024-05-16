@@ -14,6 +14,7 @@ import { RB209ArableService } from '@src/vendors/rb209/arable/arable.service';
 import { RB209RecommendationService } from '@src/vendors/rb209/recommendation/recommendation.service';
 import { RecommendationCommentEntity } from '@db/entity/recommendation-comment.entity';
 import { NutrientsMapper } from '@constants/nutrient-mapper';
+import { CreateCropWithManagementPeriodsDto } from '@src/crop/dto/crop.dto';
 
 @Injectable()
 export class PlanService extends BaseService<
@@ -121,106 +122,108 @@ export class PlanService extends BaseService<
   }
 
   async createNutrientsRecommendationForField(
-    fieldId: number,
-    cropData: CropEntity,
-    managementPeriodData: ManagementPeriodEntity[],
+    crops: CreateCropWithManagementPeriodsDto[],
   ) {
     return await this.entityManager.transaction(
       async (transactionalManager) => {
-        const savedCrop = await transactionalManager.save(
-          this.cropRepository.create({
-            ...cropData,
-            FieldID: fieldId,
-          }),
-        );
-        const ManagementPeriods: ManagementPeriodEntity[] = [];
-        for (const managementPeriod of managementPeriodData) {
-          const savedManagementPeriod = await transactionalManager.save(
-            this.managementPeriodRepository.create({
-              ...managementPeriod,
-              CropID: savedCrop.ID,
+        const Recommendations = [];
+        for (const cropData of crops) {
+          const fieldId = cropData.Crop.FieldID;
+          const savedCrop = await transactionalManager.save(
+            this.cropRepository.create({
+              ...cropData.Crop,
             }),
           );
-          ManagementPeriods.push(savedManagementPeriod);
-        }
+          const ManagementPeriods: ManagementPeriodEntity[] = [];
+          for (const managementPeriod of cropData.ManagementPeriods) {
+            const savedManagementPeriod = await transactionalManager.save(
+              this.managementPeriodRepository.create({
+                ...managementPeriod,
+                CropID: savedCrop.ID,
+              }),
+            );
+            ManagementPeriods.push(savedManagementPeriod);
+          }
 
-        const field = await this.fieldRepository.findOneBy({
-          ID: fieldId,
-        });
+          const field = await this.fieldRepository.findOneBy({
+            ID: fieldId,
+          });
 
-        const farm = await this.farmRepository.findOneBy({
-          ID: field.FarmID,
-        });
+          const farm = await this.farmRepository.findOneBy({
+            ID: field.FarmID,
+          });
 
-        const latestSoilAnalysis = (
-          await this.soilAnalysisRepository.find({
-            where: { FieldID: fieldId },
-            order: { Date: 'DESC' },
-            take: 1,
-          })
-        )[0];
+          const latestSoilAnalysis = (
+            await this.soilAnalysisRepository.find({
+              where: { FieldID: fieldId },
+              order: { Date: 'DESC' },
+              take: 1,
+            })
+          )[0];
 
-        const nutrientRecommendationnReqBody =
-          await this.buildNutrientRecommendationReqBody(
-            field,
-            farm,
-            latestSoilAnalysis,
-            savedCrop,
+          const nutrientRecommendationnReqBody =
+            await this.buildNutrientRecommendationReqBody(
+              field,
+              farm,
+              latestSoilAnalysis,
+              savedCrop,
+            );
+
+          const nutrientRecommendationsData =
+            await this.rB209RecommendationService.postData(
+              'Recommendation/Recommendations',
+              nutrientRecommendationnReqBody,
+            );
+
+          if (
+            !nutrientRecommendationsData.recommendations ||
+            !nutrientRecommendationsData.adviceNotes ||
+            nutrientRecommendationsData.errors
+          ) {
+            throw new HttpException(
+              JSON.stringify(nutrientRecommendationsData),
+              HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+          }
+
+          const cropNutrientsValue: any = {};
+          nutrientRecommendationsData.recommendations.forEach(
+            (recommendation) => {
+              cropNutrientsValue[NutrientsMapper[recommendation.nutrientId]] =
+                recommendation.cropNeedValue;
+            },
           );
 
-        const nutrientRecommendationsData =
-          await this.rB209RecommendationService.postData(
-            'Recommendation/Recommendations',
-            nutrientRecommendationnReqBody,
-          );
-
-        if (
-          !nutrientRecommendationsData.recommendations ||
-          !nutrientRecommendationsData.adviceNotes ||
-          nutrientRecommendationsData.errors
-        ) {
-          throw new HttpException(
-            JSON.stringify(nutrientRecommendationsData),
-            HttpStatus.INTERNAL_SERVER_ERROR,
-          );
-        }
-
-        const cropNutrientsValue: any = {};
-        nutrientRecommendationsData.recommendations.forEach(
-          (recommendation) => {
-            cropNutrientsValue[NutrientsMapper[recommendation.nutrientId]] =
-              recommendation.cropNeedValue;
-          },
-        );
-
-        const savedRecommendation = await transactionalManager.save(
-          this.repository.create({
-            CropN: cropNutrientsValue.N,
-            CropP2O5: cropNutrientsValue.P2O5,
-            CropK2O: cropNutrientsValue.K2O,
-            CropMgO: cropNutrientsValue.MgO,
-            CropSO3: cropNutrientsValue.SO3,
-            CropNa2O: cropNutrientsValue.Na2O,
-            ManagementPeriodID: ManagementPeriods[0].ID,
-            Comments: `Refrence Value: ${nutrientRecommendationsData.referenceValue}\nVersion: ${nutrientRecommendationsData.versionNumber}`,
-          }),
-        );
-
-        const RecommendationComments: RecommendationCommentEntity[] = [];
-        for (const adviceNote of nutrientRecommendationsData.adviceNotes) {
-          const savedRecommendationComment = await transactionalManager.save(
-            this.recommendationCommentEntity.create({
-              Nutrient: adviceNote.nutrientId,
-              Comment: adviceNote.note,
-              RecommendationID: savedRecommendation.ID,
+          const savedRecommendation = await transactionalManager.save(
+            this.repository.create({
+              CropN: cropNutrientsValue.N,
+              CropP2O5: cropNutrientsValue.P2O5,
+              CropK2O: cropNutrientsValue.K2O,
+              CropMgO: cropNutrientsValue.MgO,
+              CropSO3: cropNutrientsValue.SO3,
+              CropNa2O: cropNutrientsValue.Na2O,
+              ManagementPeriodID: ManagementPeriods[0].ID,
+              Comments: `Refrence Value: ${nutrientRecommendationsData.referenceValue}\nVersion: ${nutrientRecommendationsData.versionNumber}`,
             }),
           );
-          RecommendationComments.push(savedRecommendationComment);
+          const RecommendationComments: RecommendationCommentEntity[] = [];
+          for (const adviceNote of nutrientRecommendationsData.adviceNotes) {
+            const savedRecommendationComment = await transactionalManager.save(
+              this.recommendationCommentEntity.create({
+                Nutrient: adviceNote.nutrientId,
+                Comment: adviceNote.note,
+                RecommendationID: savedRecommendation.ID,
+              }),
+            );
+            RecommendationComments.push(savedRecommendationComment);
+          }
+          Recommendations.push({
+            Recommendation: savedRecommendation,
+            RecommendationComments,
+          });
         }
-
         return {
-          recommendation: savedRecommendation,
-          recommendationComments: RecommendationComments,
+          Recommendations,
         };
       },
     );
