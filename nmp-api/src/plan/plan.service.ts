@@ -228,4 +228,16 @@ export class PlanService extends BaseService<
       },
     );
   }
+
+  async getPlans(farmId: number, confirm: boolean) {
+    try {
+      const storedProcedure =
+        'EXEC dbo.spCrops_GetPlans @farmId = @0, @confirm = @1';
+      const farms = await this.executeQuery(storedProcedure, [farmId, confirm]);
+      return farms;
+    } catch (error) {
+      console.error('Error while fetching join data:', error);
+      throw error;
+    }
+  }
 }
