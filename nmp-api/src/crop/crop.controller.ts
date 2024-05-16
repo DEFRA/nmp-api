@@ -50,9 +50,7 @@ export class CropController {
     @Body() body: CreatePlanDto,
   ) {
     const data = await this.planService.createNutrientsRecommendationForField(
-      body.fieldID,
-      body.Crop,
-      body.ManagementPeriods,
+      body.Crops,
     );
     return data;
   }

@@ -11,7 +11,19 @@ export class CreateCropWithManagementPeriodsDto {
   ManagementPeriods: ManagementPeriodEntity[];
 }
 
-export class CreatePlanDto extends CreateCropWithManagementPeriodsDto {
+class CropDto extends CropEntity {
   @ApiProperty()
-  fieldID: number;
+  FieldID: number;
+}
+
+class CreateCropPlansDto {
+  @ApiProperty({ type: CropDto })
+  Crop: CropDto;
+
+  @ApiProperty({ type: [ManagementPeriodEntity] })
+  ManagementPeriods: ManagementPeriodEntity[];
+}
+export class CreatePlanDto {
+  @ApiProperty({ type: [CreateCropPlansDto] })
+  Crops: CreateCropPlansDto[];
 }
