@@ -2,11 +2,14 @@ import {
   Body,
   Controller,
   Get,
+  HttpException,
+  HttpStatus,
   Param,
   ParseIntPipe,
   Post,
+  Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 
 import { CropService } from './crop.service';
 import {
@@ -14,6 +17,7 @@ import {
   CreatePlanDto,
 } from './dto/crop.dto';
 import { PlanService } from '@src/plan/plan.service';
+import { StaticStrings } from '@shared/static.string';
 
 @ApiTags('Crop')
 @Controller('crops')
@@ -53,5 +57,22 @@ export class CropController {
       body.Crops,
     );
     return data;
+  }
+
+  @Get('plans')
+  @ApiOperation({ summary: 'Get Crop plans by farmId' })
+  @ApiParam({ name: 'type', description: '0 for Plan, 1 for Record' })
+  async getCropsPlansByFarmId(
+    @Query('farmId', new ParseIntPipe({ optional: false })) farmId: number,
+    @Query('type', new ParseIntPipe({ optional: false })) type: number,
+  ) {
+    if (!farmId || type === undefined) {
+      throw new HttpException(
+        StaticStrings.ERR_MISSING_PARAMETERS,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const confirm = !!type;
+    return await this.planService.getPlans(farmId, confirm);
   }
 }
