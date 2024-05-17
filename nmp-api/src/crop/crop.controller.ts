@@ -78,4 +78,20 @@ export class CropController {
     const confirm = !!type;
     return await this.planService.getPlans(farmId, confirm);
   }
+
+  @Get('plans/:harvestYear')
+  @ApiOperation({ summary: 'Get Crop plans by harvest year' })
+  async getCropsPlansByHarvestYear(
+    @Param('harvestYear', ParseIntPipe) harvestYear: number,
+    @Query('farmId', new ParseIntPipe({ optional: false })) farmId: number,
+  ) {
+    if (!harvestYear || !farmId) {
+      throw new HttpException(
+        StaticStrings.ERR_MISSING_PARAMETERS,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return await this.planService.getPlansByHarvestYear(farmId, harvestYear);
+  }
 }

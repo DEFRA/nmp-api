@@ -240,4 +240,36 @@ export class PlanService extends BaseService<
       throw error;
     }
   }
+
+  private async mapCropTypeIdWithTheirNames(plans) {
+    const unorderedMap = {};
+    const cropTypesList =
+      await this.rB209ArableService.getData('/Arable/CropTypes');
+    for (const cropType of cropTypesList) {
+      unorderedMap[cropType.cropTypeId] = cropType.cropType;
+    }
+
+    for (const plan of plans) {
+      plan.CropTypeName = unorderedMap[plan.CropTypeID] || null;
+    }
+    return plans;
+  }
+  async getPlansByHarvestYear(farmId: number, harvestYear: number) {
+    try {
+      const storedProcedure =
+        'EXEC dbo.spCrops_GetPlansByHarvestYear @farmId = @0, @harvestYear = @1';
+      const plans = await this.executeQuery(storedProcedure, [
+        farmId,
+        harvestYear,
+      ]);
+
+      return await this.mapCropTypeIdWithTheirNames(plans);
+    } catch (error) {
+      console.error(
+        'Error while fetching plans data join data by farmId and harvest year:',
+        error,
+      );
+      throw error;
+    }
+  }
 }
