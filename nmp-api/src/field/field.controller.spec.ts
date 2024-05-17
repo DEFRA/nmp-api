@@ -10,7 +10,7 @@ import { CropService } from '@src/crop/crop.service';
 import { SoilAnalysisService } from '@src/soil-analysis/soil-analysis.service';
 import { ManagementPeriodService } from '@src/management-period/management-period.service';
 import { FieldController } from './field.controller';
-import { mockedFields } from 'test/mocked-data';
+import { mockedFields } from '../../test/mocked-data';
 
 describe('FieldController', () => {
   let controller: FieldController;

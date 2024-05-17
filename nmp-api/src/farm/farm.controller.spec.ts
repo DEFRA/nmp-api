@@ -5,7 +5,7 @@ import { UserFarmService } from '@src/user-farm/user-farm.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import FarmEntity from '@db/entity/farm.entity';
 import UserFarmEntity from '@db/entity/user-farm.entity';
-import { mockedFarms } from 'test/mocked-data/farm';
+import { mockedFarms } from '../../test/mocked-data';
 
 describe('FarmController', () => {
   let controller: FarmController;
