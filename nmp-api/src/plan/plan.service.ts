@@ -1,4 +1,4 @@
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, Repository, LessThanOrEqual } from 'typeorm';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -54,7 +54,14 @@ export class PlanService extends BaseService<
     const cropType = cropTypesList.find(
       (cropType) => cropType.cropTypeId === crop.CropTypeID,
     );
-    return {
+    const previousCrop = await this.cropRepository.find({
+      where: {
+        Year: crop.Year - 1,
+        Confirm: true,
+      },
+      take: 1,
+    })[0];
+    const nutrientRecommendationnReqBody = {
       field: {
         fieldType: 1,
         multipleCrops: false,
@@ -74,21 +81,7 @@ export class PlanService extends BaseService<
           kReleasingClay: field.SoilReleasingClay,
           nvzActionProgrammeId: field.NVZProgrammeID,
           psc: 0, //TODO:: need to find it
-          soilAnalyses: [
-            {
-              soilAnalysisDate: soilAnalysis.Date,
-              soilpH: soilAnalysis.PH,
-              sulphurDeficient: soilAnalysis.SulphurDeficient,
-              snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
-              pIndexId: soilAnalysis.PhosphorusIndex,
-              kIndexId: soilAnalysis.PotassiumIndex,
-              mgIndexId: soilAnalysis.MagnesiumIndex,
-              snsMethodologyId: 4,
-              pMethodologyId: 0,
-              kMethodologyId: 4,
-              mgMethodologyId: 4,
-            },
-          ],
+          soilAnalyses: [],
         },
         harvestYear: crop.Year,
         area: farm.TotalFarmArea,
@@ -97,15 +90,8 @@ export class PlanService extends BaseService<
         rainfallAverage: farm.Rainfall,
         excessWinterRainfall: 0, //TODO:: need to find it
         organicMaterials: [],
-        previousCropping: {
-          previousGrassId: 0,
-          previousCropGroupId: 0,
-          previousCropTypeId: 0,
-          snsId: 0,
-          smnDepth: 0,
-          measuredSmn: 0,
-        },
-        countryId: 1,
+        previousCropping: {},
+        countryId: farm.EnglishRules ? 1 : 2,
       },
       nutrients: {
         nitrogen: true,
@@ -117,8 +103,35 @@ export class PlanService extends BaseService<
         lime: true,
       },
       totals: true,
-      referenceValue: `${field.ID}-${crop.ID}-${soilAnalysis.ID}-${crop.Year}`,
+      referenceValue: `${field.ID}-${crop.ID}-${crop.Year}`,
     };
+    if (soilAnalysis) {
+      nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
+        soilAnalysisDate: soilAnalysis.Date,
+        soilpH: soilAnalysis.PH,
+        sulphurDeficient: soilAnalysis.SulphurDeficient,
+        snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
+        pIndexId: soilAnalysis.PhosphorusIndex,
+        kIndexId: soilAnalysis.PotassiumIndex,
+        mgIndexId: soilAnalysis.MagnesiumIndex,
+        snsMethodologyId: 4,
+        pMethodologyId: 0,
+        kMethodologyId: 4,
+        mgMethodologyId: 4,
+      });
+      nutrientRecommendationnReqBody.referenceValue = `${field.ID}-${crop.ID}-${soilAnalysis.ID}-${crop.Year}`;
+    }
+
+    if (previousCrop) {
+      const cropType = cropTypesList.find(
+        (cropType) => cropType.cropTypeId === previousCrop.CropTypeID,
+      );
+      nutrientRecommendationnReqBody.field.previousCropping = {
+        previousCropGroupId: cropType.cropGroupId,
+        previousCropTypeId: previousCrop.CropTypeID,
+      };
+    }
+    return nutrientRecommendationnReqBody;
   }
 
   async createNutrientsRecommendationForField(
@@ -155,7 +168,9 @@ export class PlanService extends BaseService<
 
           const latestSoilAnalysis = (
             await this.soilAnalysisRepository.find({
-              where: { FieldID: fieldId },
+              where: {
+                Year: LessThanOrEqual(savedCrop.Year),
+              },
               order: { Date: 'DESC' },
               take: 1,
             })
@@ -202,8 +217,14 @@ export class PlanService extends BaseService<
               CropMgO: cropNutrientsValue.MgO,
               CropSO3: cropNutrientsValue.SO3,
               CropNa2O: cropNutrientsValue.Na2O,
+              PH: latestSoilAnalysis.PH.toString(),
+              SNSIndex: latestSoilAnalysis.SoilNitrogenSupplyIndex.toString(),
+              PIndex: latestSoilAnalysis.PhosphorusIndex.toString(),
+              KIndex: latestSoilAnalysis.PotassiumIndex.toString(),
+              MgIndex: latestSoilAnalysis.MagnesiumIndex.toString(),
               ManagementPeriodID: ManagementPeriods[0].ID,
               Comments: `Refrence Value: ${nutrientRecommendationsData.referenceValue}\nVersion: ${nutrientRecommendationsData.versionNumber}`,
+              CreatedByID: savedCrop.CreatedByID,
             }),
           );
           const RecommendationComments: RecommendationCommentEntity[] = [];
