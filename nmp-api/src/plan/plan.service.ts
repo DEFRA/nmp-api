@@ -144,36 +144,31 @@ export class PlanService extends BaseService<
   }
 
   private async handleFieldValidation(fieldId: number) {
+    const errors: string[] = [];
+
     const field = await this.fieldRepository.findOneBy({
       ID: fieldId,
     });
 
     if (!field) {
-      throw new HttpException(
-        `Please add field data for fieldId ${fieldId}`,
-        HttpStatus.BAD_REQUEST,
-      );
+      errors.push(`Please add field data for fieldId ${fieldId}`);
     }
 
     if (!field.SoilTypeID) {
-      throw new HttpException(
-        `SoilTypeID is required in field ${field.Name}`,
-        HttpStatus.BAD_REQUEST,
-      );
+      errors.push(`SoilTypeID is required in field ${field.Name}`);
     }
-    return field;
+    return { field, errors };
   }
 
   private async handleFarmValidation(farmId: number) {
+    const errors: string[] = [];
+
     const farm = await this.farmRepository.findOneBy({
       ID: farmId,
     });
 
     if (!farm) {
-      throw new HttpException(
-        `Please add farm data data for farmId ${farmId}`,
-        HttpStatus.BAD_REQUEST,
-      );
+      errors.push(`Please add farm data data for farmId ${farmId}`);
     }
 
     const farmRequiredKeys = [
@@ -184,13 +179,10 @@ export class PlanService extends BaseService<
     ];
     farmRequiredKeys.forEach((key) => {
       if (farm[key] === null) {
-        throw new HttpException(
-          `${key} is required in farm ${farm.Name}`,
-          HttpStatus.BAD_REQUEST,
-        );
+        errors.push(`${key} is required in farm ${farm.Name}`);
       }
     });
-    return farm;
+    return { farm, errors };
   }
 
   private async handleSoilAnalysisValidation(
@@ -198,6 +190,7 @@ export class PlanService extends BaseService<
     fieldName: string,
     year: number,
   ) {
+    const errors: string[] = [];
     const latestSoilAnalysis = (
       await this.soilAnalysisRepository.find({
         where: {
@@ -222,39 +215,34 @@ export class PlanService extends BaseService<
     if (latestSoilAnalysis)
       soilRequiredKeys.forEach((key) => {
         if (latestSoilAnalysis[key] === null) {
-          throw new HttpException(
+          errors.push(
             `${key} is required in soil analysis for field ${fieldName}`,
-            HttpStatus.BAD_REQUEST,
           );
         }
       });
-    return latestSoilAnalysis;
+
+    return { latestSoilAnalysis, errors };
   }
 
   private handleCropValidation(crop: CropEntity) {
+    const errors: string[] = [];
+
     if (!crop) {
-      throw new HttpException('Crop is required', HttpStatus.BAD_REQUEST);
+      errors.push('Crop is required');
     }
 
     if (crop.Year === null) {
-      throw new HttpException(
-        'Year is required in crop',
-        HttpStatus.BAD_REQUEST,
-      );
+      errors.push('Year is required in crop');
     }
     if (crop.CropTypeID === null) {
-      throw new HttpException(
-        'CropTypeId is required in crop',
-        HttpStatus.BAD_REQUEST,
-      );
+      errors.push('CropTypeId is required in crop');
     }
 
     if (crop.FieldID === null) {
-      throw new HttpException(
-        'FieldID is required in crop',
-        HttpStatus.BAD_REQUEST,
-      );
+      errors.push('FieldID is required in crop');
     }
+
+    return errors;
   }
 
   async createNutrientsRecommendationForField(
@@ -263,20 +251,34 @@ export class PlanService extends BaseService<
     return await this.entityManager.transaction(
       async (transactionalManager) => {
         const Recommendations = [];
+        const Errors: string[] = [];
         for (const cropData of crops) {
           const crop = cropData?.Crop;
-          this.handleCropValidation(crop);
+          const errors = this.handleCropValidation(crop);
+          Errors.push(...errors);
           const fieldId = crop.FieldID;
 
-          const field = await this.handleFieldValidation(fieldId);
+          const { field, errors: fieldErrors } =
+            await this.handleFieldValidation(fieldId);
+          Errors.push(...fieldErrors);
 
-          const farm = await this.handleFarmValidation(field.FarmID);
-
-          const latestSoilAnalysis = await this.handleSoilAnalysisValidation(
-            fieldId,
-            field.Name,
-            crop?.Year,
+          const { farm, errors: farmErrors } = await this.handleFarmValidation(
+            field.FarmID,
           );
+          Errors.push(...farmErrors);
+
+          const { latestSoilAnalysis, errors: soilAnalysisErrors } =
+            await this.handleSoilAnalysisValidation(
+              fieldId,
+              field.Name,
+              crop?.Year,
+            );
+          Errors.push(...soilAnalysisErrors);
+          if (Errors.length > 0)
+            throw new HttpException(
+              JSON.stringify(Errors),
+              HttpStatus.BAD_REQUEST,
+            );
 
           const nutrientRecommendationnReqBody =
             await this.buildNutrientRecommendationReqBody(
