@@ -132,7 +132,7 @@ export class PlanService extends BaseService<
       };
     }
 
-    console.log(JSON.stringify(nutrientRecommendationnReqBody, null, 2));
+    // console.log(JSON.stringify(nutrientRecommendationnReqBody, null, 2));
 
     return nutrientRecommendationnReqBody;
   }
@@ -188,7 +188,7 @@ export class PlanService extends BaseService<
               savedCrop,
             );
 
-          throw new Error(JSON.stringify(nutrientRecommendationnReqBody));
+          // throw new Error(JSON.stringify(nutrientRecommendationnReqBody));
 
           const nutrientRecommendationsData =
             await this.rB209RecommendationService.postData(
