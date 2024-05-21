@@ -131,6 +131,9 @@ export class PlanService extends BaseService<
         previousCropTypeId: previousCrop.CropTypeID,
       };
     }
+
+    console.log(JSON.stringify(nutrientRecommendationnReqBody, null, 2));
+
     return nutrientRecommendationnReqBody;
   }
 
@@ -169,6 +172,7 @@ export class PlanService extends BaseService<
           const latestSoilAnalysis = (
             await this.soilAnalysisRepository.find({
               where: {
+                FieldID: fieldId,
                 Year: LessThanOrEqual(savedCrop.Year),
               },
               order: { Date: 'DESC' },
@@ -183,6 +187,8 @@ export class PlanService extends BaseService<
               latestSoilAnalysis,
               savedCrop,
             );
+
+          throw new Error(JSON.stringify(nutrientRecommendationnReqBody));
 
           const nutrientRecommendationsData =
             await this.rB209RecommendationService.postData(
