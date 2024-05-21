@@ -54,8 +54,16 @@ export class PlanService extends BaseService<
     const cropType = cropTypesList.find(
       (cropType) => cropType.cropTypeId === crop.CropTypeID,
     );
+
+    if (!cropType || cropType.cropGroupId === null) {
+      throw new HttpException(
+        `Invalid CropTypeId for crop having field name ${field.Name}`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     const previousCrop = await this.cropRepository.find({
       where: {
+        FieldID: field.ID,
         Year: crop.Year - 1,
         Confirm: true,
       },
@@ -132,9 +140,109 @@ export class PlanService extends BaseService<
       };
     }
 
-    // console.log(JSON.stringify(nutrientRecommendationnReqBody, null, 2));
-
     return nutrientRecommendationnReqBody;
+  }
+
+  private async handleFieldValidation(fieldId: number) {
+    const errors: string[] = [];
+
+    const field = await this.fieldRepository.findOneBy({
+      ID: fieldId,
+    });
+
+    if (!field) {
+      errors.push(`Please add field data for fieldId ${fieldId}`);
+    }
+
+    if (!field.SoilTypeID) {
+      errors.push(`SoilTypeID is required in field ${field.Name}`);
+    }
+    return { field, errors };
+  }
+
+  private async handleFarmValidation(farmId: number) {
+    const errors: string[] = [];
+
+    const farm = await this.farmRepository.findOneBy({
+      ID: farmId,
+    });
+
+    if (!farm) {
+      errors.push(`Please add farm data data for farmId ${farmId}`);
+    }
+
+    const farmRequiredKeys = [
+      'TotalFarmArea',
+      'Postcode',
+      'Rainfall',
+      'EnglishRules',
+    ];
+    farmRequiredKeys.forEach((key) => {
+      if (farm[key] === null) {
+        errors.push(`${key} is required in farm ${farm.Name}`);
+      }
+    });
+    return { farm, errors };
+  }
+
+  private async handleSoilAnalysisValidation(
+    fieldId: number,
+    fieldName: string,
+    year: number,
+  ) {
+    const errors: string[] = [];
+    const latestSoilAnalysis = (
+      await this.soilAnalysisRepository.find({
+        where: {
+          FieldID: fieldId,
+          Year: LessThanOrEqual(year),
+        },
+        order: { Date: 'DESC' },
+        take: 1,
+      })
+    )[0];
+
+    const soilRequiredKeys = [
+      'Date',
+      'PH',
+      'SulphurDeficient',
+      'SoilNitrogenSupplyIndex',
+      'PhosphorusIndex',
+      'PotassiumIndex',
+      'MagnesiumIndex',
+    ];
+
+    if (latestSoilAnalysis)
+      soilRequiredKeys.forEach((key) => {
+        if (latestSoilAnalysis[key] === null) {
+          errors.push(
+            `${key} is required in soil analysis for field ${fieldName}`,
+          );
+        }
+      });
+
+    return { latestSoilAnalysis, errors };
+  }
+
+  private handleCropValidation(crop: CropEntity) {
+    const errors: string[] = [];
+
+    if (!crop) {
+      errors.push('Crop is required');
+    }
+
+    if (crop.Year === null) {
+      errors.push('Year is required in crop');
+    }
+    if (crop.CropTypeID === null) {
+      errors.push('CropTypeId is required in crop');
+    }
+
+    if (crop.FieldID === null) {
+      errors.push('FieldID is required in crop');
+    }
+
+    return errors;
   }
 
   async createNutrientsRecommendationForField(
@@ -143,11 +251,64 @@ export class PlanService extends BaseService<
     return await this.entityManager.transaction(
       async (transactionalManager) => {
         const Recommendations = [];
+        const Errors: string[] = [];
         for (const cropData of crops) {
-          const fieldId = cropData.Crop.FieldID;
+          const crop = cropData?.Crop;
+          const errors = this.handleCropValidation(crop);
+          Errors.push(...errors);
+          const fieldId = crop.FieldID;
+
+          const { field, errors: fieldErrors } =
+            await this.handleFieldValidation(fieldId);
+          Errors.push(...fieldErrors);
+
+          const { farm, errors: farmErrors } = await this.handleFarmValidation(
+            field.FarmID,
+          );
+          Errors.push(...farmErrors);
+
+          const { latestSoilAnalysis, errors: soilAnalysisErrors } =
+            await this.handleSoilAnalysisValidation(
+              fieldId,
+              field.Name,
+              crop?.Year,
+            );
+          Errors.push(...soilAnalysisErrors);
+          if (Errors.length > 0)
+            throw new HttpException(
+              JSON.stringify(Errors),
+              HttpStatus.BAD_REQUEST,
+            );
+
+          const nutrientRecommendationnReqBody =
+            await this.buildNutrientRecommendationReqBody(
+              field,
+              farm,
+              latestSoilAnalysis,
+              crop,
+            );
+
+          const nutrientRecommendationsData =
+            await this.rB209RecommendationService.postData(
+              'Recommendation/Recommendations',
+              nutrientRecommendationnReqBody,
+            );
+
+          if (
+            !nutrientRecommendationsData.recommendations ||
+            !nutrientRecommendationsData.adviceNotes ||
+            nutrientRecommendationsData.errors ||
+            nutrientRecommendationsData.error
+          ) {
+            throw new HttpException(
+              JSON.stringify(nutrientRecommendationsData),
+              HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+          }
+
           const savedCrop = await transactionalManager.save(
             this.cropRepository.create({
-              ...cropData.Crop,
+              ...crop,
             }),
           );
           const ManagementPeriods: ManagementPeriodEntity[] = [];
@@ -159,52 +320,6 @@ export class PlanService extends BaseService<
               }),
             );
             ManagementPeriods.push(savedManagementPeriod);
-          }
-
-          const field = await this.fieldRepository.findOneBy({
-            ID: fieldId,
-          });
-
-          const farm = await this.farmRepository.findOneBy({
-            ID: field.FarmID,
-          });
-
-          const latestSoilAnalysis = (
-            await this.soilAnalysisRepository.find({
-              where: {
-                FieldID: fieldId,
-                Year: LessThanOrEqual(savedCrop.Year),
-              },
-              order: { Date: 'DESC' },
-              take: 1,
-            })
-          )[0];
-
-          const nutrientRecommendationnReqBody =
-            await this.buildNutrientRecommendationReqBody(
-              field,
-              farm,
-              latestSoilAnalysis,
-              savedCrop,
-            );
-
-          // throw new Error(JSON.stringify(nutrientRecommendationnReqBody));
-
-          const nutrientRecommendationsData =
-            await this.rB209RecommendationService.postData(
-              'Recommendation/Recommendations',
-              nutrientRecommendationnReqBody,
-            );
-
-          if (
-            !nutrientRecommendationsData.recommendations ||
-            !nutrientRecommendationsData.adviceNotes ||
-            nutrientRecommendationsData.errors
-          ) {
-            throw new HttpException(
-              JSON.stringify(nutrientRecommendationsData),
-              HttpStatus.INTERNAL_SERVER_ERROR,
-            );
           }
 
           const cropNutrientsValue: any = {};
@@ -223,13 +338,13 @@ export class PlanService extends BaseService<
               CropMgO: cropNutrientsValue.MgO,
               CropSO3: cropNutrientsValue.SO3,
               CropNa2O: cropNutrientsValue.Na2O,
-              PH: latestSoilAnalysis.PH?.toString(),
-              SNSIndex: latestSoilAnalysis.SoilNitrogenSupplyIndex?.toString(),
-              PIndex: latestSoilAnalysis.PhosphorusIndex?.toString(),
-              KIndex: latestSoilAnalysis.PotassiumIndex?.toString(),
-              MgIndex: latestSoilAnalysis.MagnesiumIndex?.toString(),
+              PH: latestSoilAnalysis?.PH?.toString(),
+              SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString(),
+              PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString(),
+              KIndex: latestSoilAnalysis?.PotassiumIndex?.toString(),
+              MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString(),
               ManagementPeriodID: ManagementPeriods[0].ID,
-              Comments: `Refrence Value: ${nutrientRecommendationsData.referenceValue}\nVersion: ${nutrientRecommendationsData.versionNumber}`,
+              Comments: `Reference Value: ${nutrientRecommendationsData.referenceValue}\nVersion: ${nutrientRecommendationsData.versionNumber}`,
               CreatedByID: savedCrop.CreatedByID,
             }),
           );
