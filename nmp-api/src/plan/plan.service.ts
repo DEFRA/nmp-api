@@ -154,7 +154,7 @@ export class PlanService extends BaseService<
       errors.push(`Please add field data for fieldId ${fieldId}`);
     }
 
-    if (!field.SoilTypeID) {
+    if (field.SoilTypeID === null) {
       errors.push(`SoilTypeID is required in field ${field.Name}`);
     }
     return { field, errors };
