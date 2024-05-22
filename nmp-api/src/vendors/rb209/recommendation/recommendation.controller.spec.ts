@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { RB209RecommendationController } from './recommendation.controller';
 import { RB209RecommendationService } from './recommendation.service';
 import { CacheModule } from '@nestjs/cache-manager';
+import { createNutrientRecommendationnReqBody } from '../../../../test/mocked-data';
 
 describe('RB209RecommendationController', () => {
   let controller: RB209RecommendationController;
@@ -43,6 +44,22 @@ describe('RB209RecommendationController', () => {
         request,
       );
       expect(result.value).toBeFalsy();
+    });
+  });
+
+  describe('Calculate Nutrient Recommendations', () => {
+    it('should return list of nutrients recommendations', async () => {
+      const request = {
+        url: `vendors/rb209/Recommendation/Recommendations`,
+      } as Request;
+
+      const result = await controller.calculateNutrientRecommendations(
+        createNutrientRecommendationnReqBody as any,
+        request,
+      );
+
+      expect(result.recommendations.length).toBeGreaterThan(0);
+      expect(result.adviceNotes.length).toBeGreaterThan(0);
     });
   });
 });
