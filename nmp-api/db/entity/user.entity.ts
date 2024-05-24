@@ -23,8 +23,8 @@ export default class UserEntity {
   @Column('nvarchar', { length: 256 })
   Email: string;
 
-  @Column('nvarchar', { length: 128, unique: true })
-  UserName: string;
+  @Column('uniqueidentifier', { nullable: true, unique: true })
+  UserIdentifier: string;
 
   @OneToMany(() => UserFarmEntity, (userFarm) => userFarm.User)
   UserFarms: UserFarmEntity[];

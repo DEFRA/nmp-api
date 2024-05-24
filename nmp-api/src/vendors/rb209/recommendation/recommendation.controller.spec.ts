@@ -3,7 +3,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { RB209RecommendationController } from './recommendation.controller';
 import { RB209RecommendationService } from './recommendation.service';
 import { CacheModule } from '@nestjs/cache-manager';
-import { createNutrientRecommendationnReqBody } from '../../../../test/mocked-data';
+import {
+  calculateNutrientOffTakeValueReqBody,
+  createNutrientRecommendationnReqBody,
+} from '../../../../test/mocked-data';
 
 describe('RB209RecommendationController', () => {
   let controller: RB209RecommendationController;
@@ -60,6 +63,21 @@ describe('RB209RecommendationController', () => {
 
       expect(result.recommendations.length).toBeGreaterThan(0);
       expect(result.adviceNotes.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Calculate crop nutrient offtake value', () => {
+    it('should return calculated crop nutrient offtake value', async () => {
+      const request = {
+        url: `vendors/rb209/Recommendation//CalculateNutrientOfftake`,
+      } as Request;
+
+      const result = await controller.calculateNutrientRecommendations(
+        calculateNutrientOffTakeValueReqBody as any,
+        request,
+      );
+
+      expect(result.offtake).toBe(52);
     });
   });
 });
