@@ -44,16 +44,34 @@ export class RecommendationService extends BaseService<
         return data;
       });
 
-      const dataWithComments = await Promise.all(
-        mappedRecommendations.map(async (r) => {
-          const comments = await this.recommendationCommentRepository.find({
-            where: {
-              RecommendationID: r.Recommendation.ID,
-            },
-          });
+      const groupedObj: Record<string, Record<string, any>> = {};
 
-          return { ...r, RecommendationComments: comments };
-        }),
+      mappedRecommendations.forEach((r) => {
+        groupedObj[r.Crop.ID] = {
+          Crop: r.Crop,
+          Recommendations: (
+            groupedObj[r.Crop.ID]?.Recommendations || []
+          ).concat(r.Recommendation),
+        };
+      });
+
+      const dataWithComments: any = await Promise.all(
+        Object.values(groupedObj).map(async (r) => ({
+          ...r,
+          Recommendations: await Promise.all(
+            r.Recommendations.map(async (recData) => {
+              const comments = await this.recommendationCommentRepository.find({
+                where: {
+                  RecommendationID: recData.ID,
+                },
+              });
+              return {
+                Recommendation: recData,
+                RecommendationComments: comments,
+              };
+            }),
+          ),
+        })),
       );
       return dataWithComments;
     } catch (error) {
