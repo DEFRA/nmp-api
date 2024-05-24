@@ -345,6 +345,7 @@ export class PlanService extends BaseService<
               MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString(),
               ManagementPeriodID: ManagementPeriods[0].ID,
               Comments: `Reference Value: ${nutrientRecommendationsData.referenceValue}\nVersion: ${nutrientRecommendationsData.versionNumber}`,
+              CreatedOn: savedCrop.CreatedOn,
               CreatedByID: savedCrop.CreatedByID,
             }),
           );
@@ -355,6 +356,8 @@ export class PlanService extends BaseService<
                 Nutrient: adviceNote.nutrientId,
                 Comment: adviceNote.note,
                 RecommendationID: savedRecommendation.ID,
+                CreatedOn: savedCrop.CreatedOn,
+                CreatedByID: savedCrop.CreatedByID,
               }),
             );
             RecommendationComments.push(savedRecommendationComment);
