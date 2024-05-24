@@ -12,6 +12,7 @@ import {
 import UserFarmEntity from './user-farm.entity';
 import FieldEntity from './field.entity';
 import UserEntity from './user.entity';
+import OrganisationEntity from './organisation.entity';
 
 @Entity({ name: 'Farms' })
 @Index('UC_Farms_NamePostcode', ['Name', 'Postcode'], { unique: true })
@@ -22,6 +23,9 @@ export default class FarmEntity {
   })
   @PrimaryColumn({ type: 'int', insert: false })
   ID: number;
+
+  @Column({ type: 'uniqueidentifier' })
+  OrganisationID: string;
 
   @Column('nvarchar', { length: 250 })
   @ApiProperty()
@@ -140,4 +144,8 @@ export default class FarmEntity {
 
   @OneToMany(() => FieldEntity, (field) => field.Farm)
   Fields: FieldEntity[];
+
+  @ManyToOne(() => OrganisationEntity, (organisation) => organisation.Farms)
+  @JoinColumn({ name: 'OrganisationID' })
+  Organisation: OrganisationEntity;
 }

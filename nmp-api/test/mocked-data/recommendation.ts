@@ -61,3 +61,12 @@ export const createNutrientRecommendationnReqBody: any = {
   totals: true,
   referenceValue: '1-2024',
 };
+
+export const calculateNutrientOffTakeValueReqBody = {
+  cropGroupId: 0,
+  cropTypeId: 1,
+  cropInfo1Id: 1,
+  cropInfo2Id: 3,
+  countryId: 2,
+  nutrientId: 1,
+};
