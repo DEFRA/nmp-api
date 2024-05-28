@@ -34,12 +34,14 @@ export class RecommendationService extends BaseService<
         harvestYear,
       ]);
       const mappedRecommendations = recommendations.map((r) => {
-        const data = { Crop: {}, Recommendation: {} };
+        const data = { Crop: {}, Recommendation: {}, ManagementPeriod: {} };
         Object.keys(r).forEach((recDataKey) => {
           if (recDataKey.startsWith('Crop_'))
             data.Crop[recDataKey.slice(5)] = r[recDataKey];
           else if (recDataKey.startsWith('Recommendation_'))
             data.Recommendation[recDataKey.slice(15)] = r[recDataKey];
+          else if (recDataKey.startsWith('ManagementPeriod_'))
+            data.ManagementPeriod[recDataKey.slice(17)] = r[recDataKey];
         });
         return data;
       });
@@ -51,7 +53,10 @@ export class RecommendationService extends BaseService<
           Crop: r.Crop,
           Recommendations: (
             groupedObj[r.Crop.ID]?.Recommendations || []
-          ).concat(r.Recommendation),
+          ).concat({
+            Recommendation: r.Recommendation,
+            ManagementPeriod: r.ManagementPeriod,
+          }),
         };
       });
 
@@ -62,12 +67,13 @@ export class RecommendationService extends BaseService<
             r.Recommendations.map(async (recData) => {
               const comments = await this.recommendationCommentRepository.find({
                 where: {
-                  RecommendationID: recData.ID,
+                  RecommendationID: recData.Recommendation.ID,
                 },
               });
               return {
-                Recommendation: recData,
+                Recommendation: recData.Recommendation,
                 RecommendationComments: comments,
+                ManagementPeriod: recData.ManagementPeriod,
               };
             }),
           ),
