@@ -25,11 +25,11 @@ export default class UserEntity {
   ID: number;
 
   @Column('nvarchar', { length: 50 })
-  @ApiPropertyOptional()
+  @ApiProperty()
   GivenName: string;
 
   @Column('nvarchar', { length: 50 })
-  @ApiProperty()
+  @ApiPropertyOptional()
   Surname?: string;
 
   @Column('nvarchar', { length: 256 })
