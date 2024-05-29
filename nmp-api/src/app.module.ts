@@ -20,7 +20,7 @@ import { FarmModule } from './farm/farm.module';
 // import { AuthController } from './auth/auth.controller';
 // import { AuthService } from './auth/auth.service';
 // import { JwtService } from '@nestjs/jwt';
-import { UserFarmService } from './user-farm/user-farm.service';
+//import { UserFarmService } from './user-farm/user-farm.service';
 
 import { JwtModule } from '@nestjs/jwt';
 import { JwtAuthGuard } from './auth/jwt.guard';
@@ -140,7 +140,6 @@ import { OrganisationService } from './organisation/organisation.service';
     AppService,
     AddressLookupService,
     FarmService,
-    UserFarmService,
     FieldService,
     CropService,
     SoilAnalysisService,

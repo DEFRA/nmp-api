@@ -3,7 +3,7 @@ import FarmEntity from '@db/entity/farm.entity';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApiDataResponseType } from '@shared/base.response';
-import { EntityManager, Repository } from 'typeorm';
+import { DeepPartial, EntityManager, Repository } from 'typeorm';
 import { BaseService } from '../base/base.service';
 
 @Injectable()
@@ -33,5 +33,25 @@ export class FarmService extends BaseService<
         postcode: postcode.replaceAll(' ', ''),
       })
       .getCount();
+  }
+
+  async createFarm(
+    farmBody: DeepPartial<FarmEntity>,
+    // UserID: number,
+    // RoleID: number,
+  ) {
+    const Farm = await this.repository.save({
+      ...farmBody,
+      Name: farmBody.Name.trim(),
+      Postcode: farmBody.Postcode.trim(),
+    });
+    // await transactionalEntityManager.save(
+    //   this.repository.create({
+    //     UserID,
+    //     RoleID,
+    //     FarmID: Farm.ID,
+    //   }),
+    // );
+    return Farm;
   }
 }

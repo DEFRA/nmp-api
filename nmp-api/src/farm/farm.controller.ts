@@ -4,13 +4,12 @@ import {
   Controller,
   Get,
   Param,
-  ParseBoolPipe,
   ParseIntPipe,
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { UserFarmService } from '@src/user-farm/user-farm.service';
+import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+//import { UserFarmService } from '@src/user-farm/user-farm.service';
 import { FarmService } from './farm.service';
 import FarmEntity from '@db/entity/farm.entity';
 import { CreateFarmRequest } from './dto/farm.dto';
@@ -20,20 +19,20 @@ import { CreateFarmRequest } from './dto/farm.dto';
 export class FarmController {
   constructor(
     private readonly farmService: FarmService,
-    private readonly userFarmService: UserFarmService,
+    //private readonly userFarmService: UserFarmService,
   ) {}
 
-  @Get('/users/:userId')
-  @ApiOperation({ summary: 'Get Farms by User Id' })
-  @ApiQuery({ name: 'shortSummary', required: false })
-  async getFarmsByUserId(
-    @Param('userId', ParseIntPipe) userId: number,
-    @Query('shortSummary', new ParseBoolPipe({ optional: true }))
-    shortSummary: boolean,
-  ) {
-    const Farms = await this.userFarmService.getUserFarms(userId, shortSummary);
-    return { Farms };
-  }
+  // @Get('/users/:userId')
+  // @ApiOperation({ summary: 'Get Farms by User Id' })
+  // @ApiQuery({ name: 'shortSummary', required: false })
+  // async getFarmsByUserId(
+  //   @Param('userId', ParseIntPipe) userId: number,
+  //   @Query('shortSummary', new ParseBoolPipe({ optional: true }))
+  //   shortSummary: boolean,
+  // ) {
+  //   const Farms = await this.userFarmService.getUserFarms(userId, shortSummary);
+  //   return { Farms };
+  // }
 
   @Get('/exists')
   @ApiOperation({
@@ -60,11 +59,7 @@ export class FarmController {
   @Post('/')
   @ApiOperation({ summary: 'Create Farm api' })
   @ApiBody({ type: CreateFarmRequest })
-  async createFarm(
-    @Body('UserID', ParseIntPipe) UserID: number,
-    @Body('RoleID', ParseIntPipe) RoleID: number,
-    @Body('Farm') farmBody: FarmEntity,
-  ) {
+  async createFarm(@Body('Farm') farmBody: FarmEntity) {
     const exists = await this.farmService.farmExistsByNameAndPostcode(
       farmBody.Name,
       farmBody.Postcode,
@@ -73,11 +68,7 @@ export class FarmController {
       throw new BadRequestException(
         'Farm already exists with this Name and Postcode',
       );
-    const Farm = await this.userFarmService.createFarm(
-      farmBody,
-      UserID,
-      RoleID,
-    );
+    const Farm = await this.farmService.createFarm(farmBody);
     return { Farm };
   }
 
