@@ -4,11 +4,12 @@ import {
   Controller,
   Get,
   Param,
+  ParseBoolPipe,
   ParseIntPipe,
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 //import { UserFarmService } from '@src/user-farm/user-farm.service';
 import { FarmService } from './farm.service';
 import FarmEntity from '@db/entity/farm.entity';
@@ -74,12 +75,19 @@ export class FarmController {
 
   @Get('organisations/:organisationId')
   @ApiOperation({ summary: 'Get Farms by Organisation Id' })
+  @ApiQuery({ name: 'shortSummary', required: false })
   async getFarmsByOrganisationId(
     @Param('organisationId') organisationId: string,
+    @Query('shortSummary', new ParseBoolPipe({ optional: true }))
+    shortSummary: boolean = false,
   ) {
+    let selectOptions: any = {};
+    if (shortSummary)
+      selectOptions = { ID: true, Name: true, OrganisationID: true };
     const { records } = await this.farmService.getBy(
       'OrganisationID',
       organisationId,
+      selectOptions,
     );
     return { Farms: records };
   }
