@@ -70,6 +70,10 @@ import { RecommendationModule } from './recommendation/recommendation.module';
 import { RecommendationService } from './recommendation/recommendation.service';
 import { RecommendationController } from './recommendation/recommendation.controller';
 import { PlanService } from './plan/plan.service';
+import { UserModule } from './user/user.module';
+import { UserService } from './user/user.service';
+import { UserController } from './user/user.controller';
+import { OrganisationService } from './organisation/organisation.service';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -108,6 +112,7 @@ import { PlanService } from './plan/plan.service';
     RB209OrganicMateriaModule,
     RB209PreviousCroppingModule,
     RecommendationModule,
+    UserModule,
   ],
   controllers: [
     AppController,
@@ -118,6 +123,7 @@ import { PlanService } from './plan/plan.service';
     SoilAnalysisController,
     ManagementPeriodController,
     RecommendationController,
+    UserController,
     RB209SoilController,
     RB209ArableController,
     RB209FieldController,
@@ -141,6 +147,8 @@ import { PlanService } from './plan/plan.service';
     ManagementPeriodService,
     RecommendationService,
     PlanService,
+    UserService,
+    OrganisationService,
     RB209SoilService,
     RB209ArableService,
     RB209FieldService,

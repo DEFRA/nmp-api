@@ -1,4 +1,10 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 import UserFarmEntity from './user-farm.entity';
 import FieldEntity from './field.entity';
@@ -8,22 +14,30 @@ import SoilAnalysisEntity from './soil-analysis.entity';
 import ManagementPeriodEntity from './management-period.entity';
 import { RecommendationEntity } from './recommendation.entity';
 import { RecommendationCommentEntity } from './recommendation-comment.entity';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 @Entity({ name: 'Users' })
 export default class UserEntity {
-  @PrimaryGeneratedColumn('identity', { generatedIdentity: 'ALWAYS' })
+  @PrimaryGeneratedColumn('identity', {
+    generatedIdentity: 'ALWAYS',
+  })
+  @PrimaryColumn({ type: 'int', insert: false })
   ID: number;
 
   @Column('nvarchar', { length: 50 })
+  @ApiPropertyOptional()
   GivenName: string;
 
   @Column('nvarchar', { length: 50 })
+  @ApiProperty()
   Surname?: string;
 
   @Column('nvarchar', { length: 256 })
+  @ApiProperty()
   Email: string;
 
   @Column('uniqueidentifier', { nullable: true, unique: true })
+  @ApiPropertyOptional()
   UserIdentifier: string;
 
   @OneToMany(() => UserFarmEntity, (userFarm) => userFarm.User)
