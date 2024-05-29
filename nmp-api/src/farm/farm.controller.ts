@@ -80,4 +80,16 @@ export class FarmController {
     );
     return { Farm };
   }
+
+  @Get('organisations/:organisationId')
+  @ApiOperation({ summary: 'Get Farms by Organisation Id' })
+  async getFarmsByOrganisationId(
+    @Param('organisationId') organisationId: string,
+  ) {
+    const { records } = await this.farmService.getBy(
+      'OrganisationID',
+      organisationId,
+    );
+    return { Farms: records };
+  }
 }
