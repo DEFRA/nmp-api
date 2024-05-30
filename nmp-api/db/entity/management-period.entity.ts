@@ -54,11 +54,9 @@ export default class ManagementPeriodEntity {
   PloughedDown: Date;
 
   @Column('int', { nullable: true })
-  @ApiPropertyOptional()
   CreatedByID: number;
 
   @Column('int', { nullable: true })
-  @ApiPropertyOptional()
   ModifiedByID: number;
 
   @ManyToOne(() => UserEntity, (user) => user.CreatedManagementPeriods)
@@ -70,11 +68,9 @@ export default class ManagementPeriodEntity {
   ModifiedByUser: UserEntity;
 
   @Column('datetime2', { nullable: true, precision: 7, default: 'GETDATE()' })
-  @ApiPropertyOptional()
   CreatedOn: Date;
 
   @Column('datetime2', { nullable: true, precision: 7 })
-  @ApiPropertyOptional()
   ModifiedOn: Date;
 
   @Column({ nullable: true })

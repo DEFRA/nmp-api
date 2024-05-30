@@ -8,14 +8,22 @@ import {
   ParseIntPipe,
   Post,
   Query,
+  Req,
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 //import { UserFarmService } from '@src/user-farm/user-farm.service';
 import { FarmService } from './farm.service';
 import FarmEntity from '@db/entity/farm.entity';
 import { CreateFarmRequest } from './dto/farm.dto';
 
 @ApiTags('Farm')
+@ApiBearerAuth('token')
 @Controller('farms')
 export class FarmController {
   constructor(
@@ -60,7 +68,7 @@ export class FarmController {
   @Post('/')
   @ApiOperation({ summary: 'Create Farm api' })
   @ApiBody({ type: CreateFarmRequest })
-  async createFarm(@Body('Farm') farmBody: FarmEntity) {
+  async createFarm(@Body('Farm') farmBody: FarmEntity, @Req() req: Request) {
     const exists = await this.farmService.farmExistsByNameAndPostcode(
       farmBody.Name,
       farmBody.Postcode,
@@ -69,7 +77,8 @@ export class FarmController {
       throw new BadRequestException(
         'Farm already exists with this Name and Postcode',
       );
-    const Farm = await this.farmService.createFarm(farmBody);
+    const userId = req['userId'];
+    const Farm = await this.farmService.createFarm(farmBody, userId);
     return { Farm };
   }
 

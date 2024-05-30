@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import 'dotenv/config';
 import { AppController } from './app.controller';
@@ -70,6 +70,7 @@ import { RecommendationModule } from './recommendation/recommendation.module';
 import { RecommendationService } from './recommendation/recommendation.service';
 import { RecommendationController } from './recommendation/recommendation.controller';
 import { PlanService } from './plan/plan.service';
+import { AzureAuthMiddleware } from 'middleware/azureAuth.middleware';
 import { UserModule } from './user/user.module';
 import { UserService } from './user/user.service';
 import { UserController } from './user/user.controller';
@@ -162,7 +163,7 @@ import { OrganisationService } from './organisation/organisation.service';
 })
 export class AppModule {
   //implements NestModule
-  // configure(consumer: MiddlewareConsumer) {
-  //   consumer.apply(AzureAuthMiddleware).forRoutes('*');
-  // }
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AzureAuthMiddleware).forRoutes('*');
+  }
 }

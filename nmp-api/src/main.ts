@@ -25,6 +25,17 @@ async function bootstrap() {
     .setDescription('NMP')
     .setVersion(APPLICATION_VER)
     .addTag('group')
+    .addBearerAuth(
+      {
+        description: `Please enter token in following format: Bearer <JWT>`,
+        name: 'Authorization',
+        bearerFormat: 'Bearer',
+        scheme: 'Bearer',
+        type: 'http',
+        in: 'Header',
+      },
+      'token',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(APPLICATION_SWAGGER_PATH, app, document);

@@ -130,4 +130,28 @@ export default class EnvironmentService {
       return this.getEnv('APPLICATION_ENV');
     }
   }
+
+  static AZURE_AD_B2C_TENANT_NAME(): string {
+    get: {
+      return this.getEnv('AZURE_AD_B2C_TENANT_NAME');
+    }
+  }
+
+  static AZURE_AD_B2C_POLICY_NAME(): string {
+    get: {
+      return this.getEnv('AZURE_AD_B2C_POLICY_NAME');
+    }
+  }
+
+  static AZURE_AD_B2C_CLIENT_ID(): string {
+    get: {
+      return this.getEnv('AZURE_AD_B2C_CLIENT_ID');
+    }
+  }
+
+  static AZURE_AD_B2C_ISSUER_URL(): string {
+    get: {
+      return this.getEnv('AZURE_AD_B2C_ISSUER_URL');
+    }
+  }
 }

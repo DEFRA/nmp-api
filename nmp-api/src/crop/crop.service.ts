@@ -26,6 +26,7 @@ export class CropService extends BaseService<
     fieldId: number,
     cropData: CropEntity,
     managementPeriodData: ManagementPeriodEntity[],
+    userId: number,
   ) {
     return await this.entityManager.transaction(
       async (transactionalManager) => {
@@ -33,6 +34,7 @@ export class CropService extends BaseService<
           this.repository.create({
             ...cropData,
             FieldID: fieldId,
+            CreatedByID: userId,
           }),
         );
         const ManagementPeriods: ManagementPeriodEntity[] = [];
@@ -41,6 +43,7 @@ export class CropService extends BaseService<
             this.managementPeriodRepository.create({
               ...managementPeriod,
               CropID: savedCrop.ID,
+              CreatedByID: userId,
             }),
           );
           ManagementPeriods.push(savedManagementPeriod);
