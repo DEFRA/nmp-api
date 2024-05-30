@@ -20,7 +20,6 @@ export class OrganisationService extends BaseService<
 
   async updateOrCreateOrganisation(organisationData: OrganisationEntity) {
     try {
-      console.log(organisationData);
       const storedProcedure =
         'EXEC dbo.spOrganisations_MergeOrganisation @organisationId = @0, @organisationName = @1';
       const organisation = await this.executeQuery(storedProcedure, [

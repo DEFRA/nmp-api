@@ -6,7 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import UserFarmEntity from './user-farm.entity';
+//import UserFarmEntity from './user-farm.entity';
 import FieldEntity from './field.entity';
 import FarmEntity from './farm.entity';
 import CropEntity from './crop.entity';
@@ -40,8 +40,8 @@ export default class UserEntity {
   @ApiPropertyOptional()
   UserIdentifier: string;
 
-  @OneToMany(() => UserFarmEntity, (userFarm) => userFarm.User)
-  UserFarms: UserFarmEntity[];
+  // @OneToMany(() => UserFarmEntity, (userFarm) => userFarm.User)
+  // UserFarms: UserFarmEntity[];
 
   @OneToMany(() => FieldEntity, (field) => field.CreatedByUser)
   CreatedFields: FieldEntity[];

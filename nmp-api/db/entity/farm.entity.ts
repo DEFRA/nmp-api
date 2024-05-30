@@ -9,7 +9,7 @@ import {
   PrimaryColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import UserFarmEntity from './user-farm.entity';
+//import UserFarmEntity from './user-farm.entity';
 import FieldEntity from './field.entity';
 import UserEntity from './user.entity';
 import OrganisationEntity from './organisation.entity';
@@ -25,6 +25,7 @@ export default class FarmEntity {
   ID: number;
 
   @Column({ type: 'uniqueidentifier' })
+  @ApiProperty()
   OrganisationID: string;
 
   @Column('nvarchar', { length: 250 })
@@ -139,8 +140,8 @@ export default class FarmEntity {
   @JoinColumn({ name: 'CreatedByID' })
   ModifiedByUser: UserEntity;
 
-  @OneToMany(() => UserFarmEntity, (userFarm) => userFarm.Farm)
-  UserFarms: UserFarmEntity[];
+  // @OneToMany(() => UserFarmEntity, (userFarm) => userFarm.Farm)
+  // UserFarms: UserFarmEntity[];
 
   @OneToMany(() => FieldEntity, (field) => field.Farm)
   Fields: FieldEntity[];

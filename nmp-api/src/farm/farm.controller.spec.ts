@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FarmController } from './farm.controller';
 import { FarmService } from './farm.service';
-import { UserFarmService } from '@src/user-farm/user-farm.service';
+//import { UserFarmService } from '@src/user-farm/user-farm.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import FarmEntity from '@db/entity/farm.entity';
-import UserFarmEntity from '@db/entity/user-farm.entity';
+//import UserFarmEntity from '@db/entity/user-farm.entity';
 import { mockedFarms } from '../../test/mocked-data';
 
 describe('FarmController', () => {
@@ -12,9 +12,9 @@ describe('FarmController', () => {
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
-      imports: [TypeOrmModule.forFeature([FarmEntity, UserFarmEntity])],
+      imports: [TypeOrmModule.forFeature([FarmEntity])],
       controllers: [FarmController],
-      providers: [FarmService, UserFarmService],
+      providers: [FarmService],
     }).compile();
 
     controller = app.get<FarmController>(FarmController);

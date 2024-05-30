@@ -1,7 +1,7 @@
 import FarmEntity from '@db/entity/farm.entity';
 import UserEntity from '@db/entity/user.entity';
 import RoleEntity from '@db/entity/role.entity';
-import UserFarmEntity from '@db/entity/user-farm.entity';
+//import UserFarmEntity from '@db/entity/user-farm.entity';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import EnvironmentService from '@shared/environment.service';
 import * as dotven from 'dotenv';
@@ -35,7 +35,7 @@ if (process.env.NODE_ENV === 'production') {
       FarmEntity,
       UserEntity,
       RoleEntity,
-      UserFarmEntity,
+      //UserFarmEntity,
       FieldEntity,
       CropEntity,
       SoilAnalysisEntity,
@@ -75,7 +75,7 @@ if (process.env.NODE_ENV === 'production') {
       FarmEntity,
       UserEntity,
       RoleEntity,
-      UserFarmEntity,
+      //UserFarmEntity,
       FieldEntity,
       CropEntity,
       SoilAnalysisEntity,
