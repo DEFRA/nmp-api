@@ -1,8 +1,9 @@
 import { Controller, Get, Param, Req } from '@nestjs/common';
 import { RB209OrganicMaterialService } from './oraganicMaterial.service';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('RB209 OrganicMaterial')
+@ApiBearerAuth('token')
 @Controller('vendors/rb209/OrganicMaterial')
 export class RB209OrganicMaterialController {
   constructor(private readonly service: RB209OrganicMaterialService) {}

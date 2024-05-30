@@ -1,9 +1,15 @@
 import { Controller, Get, ParseIntPipe, Query } from '@nestjs/common';
 import { AddressLookupService } from './address-lookup.service';
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('Address Lookup')
 @Controller('vendors/address-lookup')
+@ApiBearerAuth('token')
 export class AddressLookupController {
   constructor(private readonly service: AddressLookupService) {}
 
