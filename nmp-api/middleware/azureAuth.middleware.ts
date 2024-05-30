@@ -11,8 +11,8 @@ import EnvironmentService from '@shared/environment.service';
 import { NextFunction, Request, Response } from 'express';
 import { StaticStrings } from 'shared/static.string';
 import { Repository } from 'typeorm';
-import jwksClient from 'jwks-rsa';
-import jwt from 'jsonwebtoken';
+import * as jwksClient from 'jwks-rsa';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class AzureAuthMiddleware implements NestMiddleware {
@@ -54,7 +54,7 @@ export class AzureAuthMiddleware implements NestMiddleware {
     try {
       const decodedHeader = jwt.decode(token, { complete: true }).header;
       const publicKey: any = await this.getKey(decodedHeader);
-      const decoded = await jwt.verify(token, publicKey, {
+      const decoded = jwt.verify(token, publicKey, {
         audience: this.clientId,
         issuer: this.issuerUrl,
         algorithms: ['RS256'],
@@ -82,7 +82,7 @@ export class AzureAuthMiddleware implements NestMiddleware {
     }
 
     try {
-      const jwtUserData = await this.validateToken(token);
+      const jwtUserData: any = await this.validateToken(token);
       // Token is valid, proceed with the request
 
       const user = await this.userRepository.findOneBy({
