@@ -13,31 +13,31 @@ import { StaticStrings } from 'shared/static.string';
 import { Repository } from 'typeorm';
 import * as jwksClient from 'jwks-rsa';
 import * as jwt from 'jsonwebtoken';
+import { AzureAuthService } from './azureAuth-service';
 
 @Injectable()
 export class AzureAuthMiddleware implements NestMiddleware {
   private excludedPaths: string[];
   private jwksClient: any;
-  private tenantName: string;
   private policyName: string;
   private clientId: string;
-  private issuerUrl: string;
+  private azureIdentityDomain: string;
 
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
+    protected readonly azureAuthService: AzureAuthService,
   ) {
     this.excludedPaths = ['*', '/health'];
-    this.tenantName = EnvironmentService.AZURE_AD_B2C_TENANT_NAME();
     this.policyName = EnvironmentService.AZURE_AD_B2C_POLICY_NAME();
     this.clientId = EnvironmentService.AZURE_AD_B2C_CLIENT_ID();
-    this.issuerUrl = EnvironmentService.AZURE_AD_B2C_ISSUER_URL();
-    this.jwksClient = jwksClient({
-      jwksUri: `https://${this.tenantName}.b2clogin.com/${this.tenantName}.onmicrosoft.com/${this.policyName}/discovery/v2.0/keys`,
-    });
+    this.azureIdentityDomain = EnvironmentService.AZURE_IDENTITY_DOMAIN();
   }
 
-  getKey(header) {
+  getKey(header, jwksUri: string) {
+    this.jwksClient = jwksClient({
+      jwksUri,
+    });
     return new Promise((resolve, reject) => {
       this.jwksClient.getSigningKey(header.kid, (err, key) => {
         if (err) {
@@ -50,13 +50,13 @@ export class AzureAuthMiddleware implements NestMiddleware {
     });
   }
 
-  async validateToken(token) {
+  async validateToken(token: string, issuerUrl: string, jwksUri: string) {
     try {
       const decodedHeader = jwt.decode(token, { complete: true }).header;
-      const publicKey: any = await this.getKey(decodedHeader);
+      const publicKey: any = await this.getKey(decodedHeader, jwksUri);
       const decoded = jwt.verify(token, publicKey, {
         audience: this.clientId,
-        issuer: this.issuerUrl,
+        issuer: issuerUrl,
         algorithms: ['RS256'],
       });
       return decoded;
@@ -82,7 +82,14 @@ export class AzureAuthMiddleware implements NestMiddleware {
     }
 
     try {
-      const jwtUserData: any = await this.validateToken(token);
+      const { issuerUrl, jwksUri } = await this.azureAuthService.getData(
+        `${this.azureIdentityDomain}/${this.policyName}/v2.0/.well-known/openid-configuration`,
+      );
+      const jwtUserData: any = await this.validateToken(
+        token,
+        issuerUrl,
+        jwksUri,
+      );
       // Token is valid, proceed with the request
 
       const user = await this.userRepository.findOneBy({
