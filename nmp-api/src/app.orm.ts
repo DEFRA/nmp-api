@@ -13,6 +13,7 @@ import SoilAnalysisEntity from '@db/entity/soil-analysis.entity';
 import ManagementPeriodEntity from '@db/entity/management-period.entity';
 import { RecommendationEntity } from '@db/entity/recommendation.entity';
 import { RecommendationCommentEntity } from '@db/entity/recommendation-comment.entity';
+import ClimateDataEntity from '@db/entity/climate-date.entity';
 
 dotven.config();
 
@@ -43,6 +44,7 @@ if (process.env.NODE_ENV === 'production') {
       RecommendationEntity,
       RecommendationCommentEntity,
       OrganisationEntity,
+      ClimateDataEntity,
     ],
   };
 } else if (process.env.NODE_ENV === 'hosting') {
@@ -83,6 +85,7 @@ if (process.env.NODE_ENV === 'production') {
       RecommendationEntity,
       RecommendationCommentEntity,
       OrganisationEntity,
+      ClimateDataEntity,
     ],
     synchronize: false,
     logging: true,
