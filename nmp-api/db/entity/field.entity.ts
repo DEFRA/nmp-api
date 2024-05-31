@@ -84,11 +84,9 @@ export default class FieldEntity {
   IsActive: boolean;
 
   @Column('datetime2', { nullable: true, precision: 7, default: 'GETDATE()' })
-  @ApiPropertyOptional()
   CreatedOn: Date;
 
   @Column('int', { nullable: true })
-  @ApiPropertyOptional()
   CreatedByID: number;
 
   @ManyToOne(() => UserEntity, (user) => user.CreatedFields)
@@ -96,11 +94,9 @@ export default class FieldEntity {
   CreatedByUser: UserEntity;
 
   @Column('datetime2', { nullable: true, precision: 7 })
-  @ApiPropertyOptional()
   ModifiedOn: Date;
 
   @Column('int', { nullable: true })
-  @ApiPropertyOptional()
   ModifiedByID: number;
 
   @ManyToOne(() => UserEntity, (user) => user.ModifiedFields)

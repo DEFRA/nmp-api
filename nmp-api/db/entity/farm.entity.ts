@@ -117,19 +117,15 @@ export default class FarmEntity {
   FieldsAbove300SeaLevel: number;
 
   @Column('datetime2', { nullable: true, precision: 7, default: 'GETDATE()' })
-  @ApiPropertyOptional()
   CreatedOn: Date;
 
   @Column('int', { nullable: true })
-  @ApiPropertyOptional()
   CreatedByID: number;
 
   @Column('datetime2', { nullable: true, precision: 7 })
-  @ApiPropertyOptional()
   ModifiedOn: Date;
 
   @Column('int', { nullable: true })
-  @ApiPropertyOptional()
   ModifiedByID: number;
 
   @ManyToOne(() => UserEntity, (user) => user.CreatedFarms)

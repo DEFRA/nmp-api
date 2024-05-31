@@ -1,9 +1,10 @@
 import { Controller, Get, Param, Req } from '@nestjs/common';
 import { RB209ArableService } from './arable.service';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('RB209 Arable')
 @Controller('vendors/rb209/Arable')
+@ApiBearerAuth('token')
 export class RB209ArableController {
   constructor(private readonly service: RB209ArableService) {}
 

@@ -37,6 +37,7 @@ export class FarmService extends BaseService<
 
   async createFarm(
     farmBody: DeepPartial<FarmEntity>,
+    userId: number,
     // UserID: number,
     // RoleID: number,
   ) {
@@ -44,6 +45,7 @@ export class FarmService extends BaseService<
       ...farmBody,
       Name: farmBody.Name.trim(),
       Postcode: farmBody.Postcode.trim(),
+      CreatedByID: userId,
     });
     // await transactionalEntityManager.save(
     //   this.repository.create({

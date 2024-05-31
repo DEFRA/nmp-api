@@ -247,6 +247,7 @@ export class PlanService extends BaseService<
 
   async createNutrientsRecommendationForField(
     crops: CreateCropWithManagementPeriodsDto[],
+    userId: number,
   ) {
     return await this.entityManager.transaction(
       async (transactionalManager) => {
@@ -309,6 +310,7 @@ export class PlanService extends BaseService<
           const savedCrop = await transactionalManager.save(
             this.cropRepository.create({
               ...crop,
+              CreatedByID: userId,
             }),
           );
           const ManagementPeriods: ManagementPeriodEntity[] = [];
@@ -317,6 +319,7 @@ export class PlanService extends BaseService<
               this.managementPeriodRepository.create({
                 ...managementPeriod,
                 CropID: savedCrop.ID,
+                CreatedByID: userId,
               }),
             );
             ManagementPeriods.push(savedManagementPeriod);

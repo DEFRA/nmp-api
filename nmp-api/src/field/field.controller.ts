@@ -7,12 +7,20 @@ import {
   ParseIntPipe,
   Post,
   Query,
+  Req,
 } from '@nestjs/common';
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { FieldService } from './field.service';
 import { CreateFieldWithSoilAnalysisAndCropsDto } from './dto/field.dto';
+import { Request } from 'express';
 
 @ApiTags('Field')
+@ApiBearerAuth('token')
 @Controller('fields')
 export class FieldController {
   constructor(private readonly fieldService: FieldService) {}
@@ -66,10 +74,13 @@ export class FieldController {
   async createFieldWithSoilAnalysisAndCrops(
     @Param('farmId', ParseIntPipe) farmId: number,
     @Body() body: CreateFieldWithSoilAnalysisAndCropsDto,
+    @Req() req: Request,
   ) {
+    const userId = req['userId'];
     const data = await this.fieldService.createFieldWithSoilAnalysisAndCrops(
       farmId,
       body,
+      userId,
     );
     return data;
   }

@@ -8,8 +8,14 @@ import {
   ParseIntPipe,
   Post,
   Query,
+  Req,
 } from '@nestjs/common';
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 
 import { CropService } from './crop.service';
 import {
@@ -21,6 +27,7 @@ import { StaticStrings } from '@shared/static.string';
 
 @ApiTags('Crop')
 @Controller('crops')
+@ApiBearerAuth('token')
 export class CropController {
   constructor(
     private readonly cropService: CropService,
@@ -32,11 +39,14 @@ export class CropController {
   async createCrop(
     @Param('fieldId', ParseIntPipe) fieldId: number,
     @Body() body: CreateCropWithManagementPeriodsDto,
+    @Req() req: Request,
   ) {
+    const userId = req['userId'];
     const data = await this.cropService.createCropWithManagementPeriods(
       fieldId,
       body.Crop,
       body.ManagementPeriods,
+      userId,
     );
     return data;
   }
@@ -52,9 +62,12 @@ export class CropController {
   @ApiOperation({ summary: 'Create Crop Plan' })
   async createNutrientsRecommendationForFieldByFieldId(
     @Body() body: CreatePlanDto,
+    @Req() req: Request,
   ) {
+    const userId = req['userId'];
     const data = await this.planService.createNutrientsRecommendationForField(
       body.Crops,
+      userId,
     );
     return data;
   }
