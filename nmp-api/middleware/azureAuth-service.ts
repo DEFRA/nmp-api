@@ -27,7 +27,7 @@ export class AzureAuthService {
   }
 
   private async setDataInCache(issuerUrl: string, jwksUrl: string) {
-    const cacheTime = 60 * 60 * 24 * 24 * 1000; // 24 days expiry
+    const cacheTime = 24 * 24 * 60 * 60 * 1000; // 24 days
     await this.cacheManager.set(this.issuerUrlKey, issuerUrl, cacheTime);
     await this.cacheManager.set(this.jwksUriKey, jwksUrl, cacheTime);
   }

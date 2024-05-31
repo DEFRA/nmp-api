@@ -76,6 +76,7 @@ import { UserService } from './user/user.service';
 import { UserController } from './user/user.controller';
 import { OrganisationService } from './organisation/organisation.service';
 import { AzureAuthService } from 'middleware/azureAuth-service';
+import { ClimateModule } from './climate/climate.module';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -103,6 +104,7 @@ import { AzureAuthService } from 'middleware/azureAuth-service';
     CropModule,
     SoilAnalysisModule,
     ManagementPeriodModule,
+    ClimateModule,
     RB209SoilModule,
     RB209ArableModule,
     RB209FieldModule,
