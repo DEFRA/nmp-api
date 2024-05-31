@@ -75,6 +75,7 @@ import { UserModule } from './user/user.module';
 import { UserService } from './user/user.service';
 import { UserController } from './user/user.controller';
 import { OrganisationService } from './organisation/organisation.service';
+import { AzureAuthService } from 'middleware/azureAuth-service';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -149,6 +150,7 @@ import { OrganisationService } from './organisation/organisation.service';
     PlanService,
     UserService,
     OrganisationService,
+    AzureAuthService,
     RB209SoilService,
     RB209ArableService,
     RB209FieldService,

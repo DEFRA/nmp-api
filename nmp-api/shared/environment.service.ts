@@ -149,9 +149,15 @@ export default class EnvironmentService {
     }
   }
 
-  static AZURE_AD_B2C_ISSUER_URL(): string {
+  static AZURE_IDENTITY_INSTANCE(): string {
     get: {
-      return this.getEnv('AZURE_AD_B2C_ISSUER_URL');
+      return this.getEnv('AZURE_IDENTITY_INSTANCE');
+    }
+  }
+
+  static AZURE_IDENTITY_DOMAIN(): string {
+    get: {
+      return this.getEnv('AZURE_IDENTITY_DOMAIN');
     }
   }
 }
