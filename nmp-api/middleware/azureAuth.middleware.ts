@@ -71,7 +71,7 @@ export class AzureAuthMiddleware implements NestMiddleware {
 
   async use(req: Request, res: Response, next: NextFunction) {
     const authHeader = req.headers['authorization'];
-    const currentPath = req.path;
+    const currentPath = req.baseUrl;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new UnauthorizedException(StaticStrings.ERR_TOKEN_NOT_PROVIDED);
