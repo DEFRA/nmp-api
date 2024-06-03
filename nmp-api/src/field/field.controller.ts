@@ -9,18 +9,13 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiQuery,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiSecurity, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { FieldService } from './field.service';
 import { CreateFieldWithSoilAnalysisAndCropsDto } from './dto/field.dto';
 import { Request } from 'express';
 
 @ApiTags('Field')
-@ApiBearerAuth('token')
+@ApiSecurity('Bearer')
 @Controller('fields')
 export class FieldController {
   constructor(private readonly fieldService: FieldService) {}

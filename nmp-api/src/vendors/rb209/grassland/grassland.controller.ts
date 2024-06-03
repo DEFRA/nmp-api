@@ -1,10 +1,10 @@
 import { Controller, Get, Param, Req } from '@nestjs/common';
 import { RB209GrasslandService } from './grassland.service';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiSecurity, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('RB209 Grassland')
 @Controller('vendors/rb209/Grassland')
-@ApiBearerAuth('token')
+@ApiSecurity('Bearer')
 export class RB209GrasslandController {
   constructor(private readonly service: RB209GrasslandService) {}
 

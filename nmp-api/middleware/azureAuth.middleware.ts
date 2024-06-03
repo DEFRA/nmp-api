@@ -1,7 +1,5 @@
 import UserEntity from '@db/entity/user.entity';
 import {
-  HttpException,
-  HttpStatus,
   Injectable,
   NestMiddleware,
   UnauthorizedException,
@@ -18,6 +16,7 @@ import { AzureAuthService } from './azureAuth-service';
 @Injectable()
 export class AzureAuthMiddleware implements NestMiddleware {
   private excludedPaths: string[];
+  private optionalUserPresentPath: string[];
   private jwksClient: any;
   private policyName: string;
   private clientId: string;
@@ -29,6 +28,7 @@ export class AzureAuthMiddleware implements NestMiddleware {
     protected readonly azureAuthService: AzureAuthService,
   ) {
     this.excludedPaths = ['*', '/health'];
+    this.optionalUserPresentPath = ['/users'];
     this.policyName = EnvironmentService.AZURE_AD_B2C_POLICY_NAME();
     this.clientId = EnvironmentService.AZURE_AD_B2C_CLIENT_ID();
     this.azureIdentityDomain = EnvironmentService.AZURE_IDENTITY_DOMAIN();
@@ -61,7 +61,11 @@ export class AzureAuthMiddleware implements NestMiddleware {
       });
       return decoded;
     } catch (e) {
-      throw new HttpException(e?.message, HttpStatus.UNAUTHORIZED);
+      if (e instanceof jwt.TokenExpiredError) {
+        throw new UnauthorizedException(StaticStrings.ERR_EXPIRED_TOKEN);
+      } else {
+        throw new UnauthorizedException(StaticStrings.ERR_INVALID_TOKEN);
+      }
     }
   }
 
@@ -70,7 +74,7 @@ export class AzureAuthMiddleware implements NestMiddleware {
     const currentPath = req.path;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Bearer token not provided');
+      throw new UnauthorizedException(StaticStrings.ERR_TOKEN_NOT_PROVIDED);
     }
 
     const token = authHeader.split(' ')[1];
@@ -93,13 +97,15 @@ export class AzureAuthMiddleware implements NestMiddleware {
       // Token is valid, proceed with the request
 
       const user = await this.userRepository.findOneBy({
-        UserIdentifier: jwtUserData.currentRelationshipId,
+        UserIdentifier: jwtUserData.sub,
       });
-      if (!user) {
-        console.log('No user found');
-        throw new HttpException('No user found', HttpStatus.UNAUTHORIZED);
+      if (this.optionalUserPresentPath.includes(currentPath)) {
+        next();
+        return;
       }
-      console.log('Token is valid, proceed with the request');
+      if (!user) {
+        throw new UnauthorizedException(StaticStrings.ERR_INVALID_EMAIL);
+      }
       req['userId'] = user.ID;
       next();
     } catch (e) {
