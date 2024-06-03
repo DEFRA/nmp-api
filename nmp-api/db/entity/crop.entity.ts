@@ -52,7 +52,7 @@ export default class CropEntity {
   @ApiPropertyOptional()
   CropInfo2: number;
 
-  @Column('datetime', { nullable: true })
+  @Column('datetime2', { nullable: true })
   @ApiPropertyOptional()
   SowingDate: Date;
 
