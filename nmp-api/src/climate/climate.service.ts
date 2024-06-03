@@ -19,19 +19,22 @@ export class ClimateService extends BaseService<
   }
 
   private calculateRainfallAverage(climateData: ClimateDataEntity) {
-    const rainfallAverage =
-      climateData?.RainFallMeanJan +
-      climateData?.RainFallMeanFeb +
-      climateData?.RainFallMeanMar +
-      climateData?.RainFallMeanApr +
-      climateData?.RainFallMeanMay +
-      climateData?.RainFallMeanJun +
-      climateData?.RainFallMeanJul +
-      climateData?.RainFallMeanAug +
-      climateData?.RainFallMeanSep +
-      climateData?.RainFallMeanOct +
-      climateData?.RainFallMeanNov +
-      climateData?.RainFallMeanDec;
+    const rainfallAverage = Number(
+      (
+        climateData?.RainFallMeanJan +
+        climateData?.RainFallMeanFeb +
+        climateData?.RainFallMeanMar +
+        climateData?.RainFallMeanApr +
+        climateData?.RainFallMeanMay +
+        climateData?.RainFallMeanJun +
+        climateData?.RainFallMeanJul +
+        climateData?.RainFallMeanAug +
+        climateData?.RainFallMeanSep +
+        climateData?.RainFallMeanOct +
+        climateData?.RainFallMeanNov +
+        climateData?.RainFallMeanDec
+      ).toFixed(5),
+    );
 
     return {
       rainfallAverage,
