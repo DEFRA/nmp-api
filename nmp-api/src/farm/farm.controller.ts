@@ -11,10 +11,10 @@ import {
   Req,
 } from '@nestjs/common';
 import {
-  ApiBearerAuth,
   ApiBody,
   ApiOperation,
   ApiQuery,
+  ApiSecurity,
   ApiTags,
 } from '@nestjs/swagger';
 //import { UserFarmService } from '@src/user-farm/user-farm.service';
@@ -23,7 +23,7 @@ import FarmEntity from '@db/entity/farm.entity';
 import { CreateFarmRequest } from './dto/farm.dto';
 
 @ApiTags('Farm')
-@ApiBearerAuth('token')
+@ApiSecurity('Bearer')
 @Controller('farms')
 export class FarmController {
   constructor(

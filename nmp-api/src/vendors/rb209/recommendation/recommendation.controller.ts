@@ -1,13 +1,13 @@
 import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { RB209RecommendationService } from './recommendation.service';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiSecurity, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   CalculateNutrientOfftakeDto,
   CalculateNutrientRecommendationsDto,
 } from './dto/recommendation.dto';
 
 @ApiTags('RB209 Recommendation')
-@ApiBearerAuth('token')
+@ApiSecurity('Bearer')
 @Controller('vendors/rb209/Recommendation')
 export class RB209RecommendationController {
   constructor(private readonly service: RB209RecommendationService) {}

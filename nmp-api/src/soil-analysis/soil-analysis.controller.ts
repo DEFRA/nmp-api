@@ -6,17 +6,12 @@ import {
   ParseIntPipe,
   Query,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiQuery,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiSecurity, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { SoilAnalysisService } from './soil-analysis.service';
 
 @ApiTags('Soil Analysis')
 @Controller('soil-analyses')
-@ApiBearerAuth('token')
+@ApiSecurity('Bearer')
 export class SoilAnalysisController {
   constructor(private readonly soilAnalysisService: SoilAnalysisService) {}
 

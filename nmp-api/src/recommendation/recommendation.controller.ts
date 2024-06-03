@@ -7,12 +7,12 @@ import {
   Query,
 } from '@nestjs/common';
 
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiSecurity, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RecommendationService } from './recommendation.service';
 import { StaticStrings } from '@shared/static.string';
 
 @ApiTags('Recommendations')
-@ApiBearerAuth('token')
+@ApiSecurity('Bearer')
 @Controller('recommendations')
 export class RecommendationController {
   constructor(private recommendationService: RecommendationService) {}

@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { RB209MeasurementService } from './measurement.service';
 import {
-  ApiBearerAuth,
+  ApiSecurity,
   ApiBody,
   ApiOperation,
   ApiParam,
@@ -11,7 +11,7 @@ import { CalculateSnsIndexRequest } from './dto/measurement.dto';
 
 @ApiTags('RB209 Measurement')
 @Controller('vendors/rb209/Measurement')
-@ApiBearerAuth('token')
+@ApiSecurity('Bearer')
 export class RB209MeasurementController {
   constructor(private readonly service: RB209MeasurementService) {}
 

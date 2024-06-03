@@ -2,11 +2,11 @@ import { Controller, Get, Param, Req } from '@nestjs/common';
 import { Request } from 'express';
 
 import { RB209AdviceNoteService } from './adviceNote.service';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiSecurity, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('RB209 AdviceNote')
 @Controller('vendors/rb209/AdviceNote')
-@ApiBearerAuth('token')
+@ApiSecurity('Bearer')
 export class RB209AdviceNoteController {
   constructor(private readonly service: RB209AdviceNoteService) {}
 

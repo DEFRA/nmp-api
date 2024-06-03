@@ -10,12 +10,7 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiQuery,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiSecurity, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 import { CropService } from './crop.service';
 import {
@@ -27,7 +22,7 @@ import { StaticStrings } from '@shared/static.string';
 
 @ApiTags('Crop')
 @Controller('crops')
-@ApiBearerAuth('token')
+@ApiSecurity('Bearer')
 export class CropController {
   constructor(
     private readonly cropService: CropService,

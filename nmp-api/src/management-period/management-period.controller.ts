@@ -6,17 +6,12 @@ import {
   ParseIntPipe,
   Query,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiQuery,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiSecurity, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ManagementPeriodService } from './management-period.service';
 
 @ApiTags('Management Period')
 @Controller('management-periods')
-@ApiBearerAuth('token')
+@ApiSecurity('Bearer')
 export class ManagementPeriodController {
   constructor(
     private readonly managementPeriodService: ManagementPeriodService,
