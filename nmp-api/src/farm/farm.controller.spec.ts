@@ -1,77 +1,73 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FarmController } from './farm.controller';
 import { FarmService } from './farm.service';
-//import { UserFarmService } from '@src/user-farm/user-farm.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import FarmEntity from '@db/entity/farm.entity';
-//import UserFarmEntity from '@db/entity/user-farm.entity';
-import { mockedFarms } from '../../test/mocked-data';
+import {
+  createFarmReqBody,
+  createOrganisationReqBody3,
+} from '../../test/mocked-data';
+import { EntityManager } from 'typeorm';
+import { truncateAllTables } from '../../test/utils';
+import { HttpStatus } from '@nestjs/common';
+import { ormConfig } from '../../test/ormConfig';
+import OrganisationEntity from '@db/entity/organisation.entity';
 
 describe('FarmController', () => {
+  let app: TestingModule;
   let controller: FarmController;
+  let entityManager: EntityManager;
+  let createdFarm: FarmEntity;
+  let organisationRepository: any;
 
-  beforeEach(async () => {
-    const app: TestingModule = await Test.createTestingModule({
-      imports: [TypeOrmModule.forFeature([FarmEntity])],
+  beforeAll(async () => {
+    app = await Test.createTestingModule({
+      imports: [
+        TypeOrmModule.forRoot(ormConfig),
+        TypeOrmModule.forFeature([FarmEntity]),
+      ],
       controllers: [FarmController],
       providers: [FarmService],
+      exports: [TypeOrmModule],
     }).compile();
 
     controller = app.get<FarmController>(FarmController);
+    entityManager = app.get<EntityManager>(EntityManager);
+    organisationRepository = entityManager.getRepository(OrganisationEntity);
+    await truncateAllTables(entityManager);
   });
 
-  describe('get farms by user id', () => {
-    it('should return farms short summary', async () => {
-      const { Farms } = await controller.getFarmsByUserId(1, false);
-      expect(Farms.length).toEqual(2);
-      for (const idx in Farms) {
-        expect(Farms[idx].ID).toEqual(mockedFarms[idx].ID);
-        expect(Farms[idx].Name).toEqual(mockedFarms[idx].Name);
-        expect(Farms[idx].Address1).toEqual(mockedFarms[idx].Address1);
-        expect(Farms[idx].Address2).toEqual(mockedFarms[idx].Address2);
-        expect(Farms[idx].Address3).toEqual(mockedFarms[idx].Address3);
-        expect(Farms[idx].Address4).toEqual(mockedFarms[idx].Address4);
-        expect(Farms[idx].Postcode).toEqual(mockedFarms[idx].Postcode);
-        expect(Farms[idx].CPH).toEqual(mockedFarms[idx].CPH);
-        expect(Farms[idx].FarmerName).toEqual(mockedFarms[idx].FarmerName);
-        expect(Farms[idx].BusinessName).toEqual(mockedFarms[idx].BusinessName);
-        expect(Farms[idx].SBI).toEqual(mockedFarms[idx].SBI);
-        expect(Farms[idx].STD).toEqual(mockedFarms[idx].STD);
-        expect(Farms[idx].Telephone).toEqual(mockedFarms[idx].Telephone);
-        expect(Farms[idx].Mobile).toEqual(mockedFarms[idx].Mobile);
-        expect(Farms[idx].Email).toEqual(mockedFarms[idx].Email);
-        expect(Farms[idx].Rainfall).toEqual(mockedFarms[idx].Rainfall);
-        expect(Farms[idx].TotalFarmArea).toEqual(
-          mockedFarms[idx].TotalFarmArea,
-        );
-        expect(Farms[idx].AverageAltitude).toEqual(
-          mockedFarms[idx].AverageAltitude,
-        );
-        expect(Farms[idx].RegisteredOrganicProducer).toEqual(
-          mockedFarms[idx].RegisteredOrganicProducer,
-        );
-        expect(Farms[idx].MetricUnits).toEqual(mockedFarms[idx].MetricUnits);
-        expect(Farms[idx].EnglishRules).toEqual(mockedFarms[idx].EnglishRules);
-        expect(Farms[idx].NVZFields).toEqual(mockedFarms[idx].NVZFields);
-        expect(Farms[idx].FieldsAbove300SeaLevel).toEqual(
-          mockedFarms[idx].FieldsAbove300SeaLevel,
-        );
+  afterAll(async () => {
+    await app.close();
+  });
+
+  describe('Create Farm', () => {
+    const req: any = {
+      userId: 1,
+    };
+    it('should create a farm', async () => {
+      await truncateAllTables(entityManager);
+      const organisation = await organisationRepository.save(
+        createOrganisationReqBody3,
+      );
+      createFarmReqBody.OrganisationID = organisation.ID;
+      const result = await controller.createFarm(createFarmReqBody, req);
+      createdFarm = result.Farm;
+      expect(createdFarm).toHaveProperty('ID');
+    });
+
+    it('should throw bad request exception, bcoz farm alread exists with given postcode and name', async () => {
+      const req: any = {
+        userId: 1,
+      };
+      try {
+        await controller.createFarm(createFarmReqBody, req);
+      } catch (error) {
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
       }
     });
-    it('should return farms list details', async () => {
-      const { Farms } = await controller.getFarmsByUserId(1, true);
-      expect(Farms.length).toEqual(3);
-      expect(Farms[0].ID).toEqual(1);
-      expect(Farms[0].Name).toEqual('FarmName1');
-      expect(Farms[1].ID).toEqual(30);
-      expect(Farms[1].Name).toEqual('FarmName10');
-    });
-
-    it('should return empty list for user with no farms', async () => {
-      const { Farms } = await controller.getFarmsByUserId(3, true);
-      expect(Farms.length).toEqual(0);
-    });
   });
+
   describe('Check farm exists using Name and Postcode', () => {
     it('should return true if farm exists', async () => {
       const farmName = 'FarmName1';
@@ -91,14 +87,17 @@ describe('FarmController', () => {
 
   describe('Get Farm details by Farm Id', () => {
     it('should return farm details by farmId', async () => {
-      const farmId = 1;
+      const farmId = createdFarm.ID;
       const { Farm } = await controller.getFarmById(farmId);
-      expect(Farm.ID).toEqual(1);
+      expect(Farm.ID).toEqual(createdFarm.ID);
       expect(Farm.Name).toEqual('FarmName1');
       expect(Farm.Address1).toEqual('Cambridge University Farm');
       expect(Farm.Address2).toEqual('Park Farm');
       expect(Farm.Address3).toEqual(null);
-      expect(Farm.Address4).toEqual(null);
+      expect(Farm.OrganisationID).toEqual(
+        'A91B3C86-959A-43EB-8A97-AC402390C59A',
+      ),
+        expect(Farm.Address4).toEqual(null);
       expect(Farm.Postcode).toEqual('CB23 8YW');
       expect(Farm.CPH).toEqual(null);
       expect(Farm.FarmerName).toEqual(null);
@@ -116,10 +115,6 @@ describe('FarmController', () => {
       expect(Farm.EnglishRules).toEqual(true);
       expect(Farm.NVZFields).toEqual(0);
       expect(Farm.FieldsAbove300SeaLevel).toEqual(0);
-      expect(Farm.CreatedOn).toEqual(null);
-      expect(Farm.CreatedByID).toEqual(null);
-      expect(Farm.ModifiedOn).toEqual(null);
-      expect(Farm.ModifiedByID).toEqual(null);
     });
 
     it('should return 404 error if farm with specified farmId is not found', async () => {
@@ -135,6 +130,28 @@ describe('FarmController', () => {
       } catch (error) {
         expect(error.status).toBeFalsy();
       }
+    });
+  });
+
+  describe('Get Farms By OrganisationId', () => {
+    it('should return farms by OrganisationId, when short summary is true', async () => {
+      const organisationId = 'b5cf0d74-344a-4106-ab3e-1a97cce6b886';
+
+      const { Farms } = await controller.getFarmsByOrganisationId(
+        organisationId,
+        false,
+      );
+      expect(Farms).toBeTruthy();
+    });
+
+    it('should return farms by organisation id with short summary true', async () => {
+      const organisationId = 'b5cf0d74-344a-4106-ab3e-1a97cce6b886';
+
+      const { Farms } = await controller.getFarmsByOrganisationId(
+        organisationId,
+        true,
+      );
+      expect(Farms).toBeTruthy();
     });
   });
 });
