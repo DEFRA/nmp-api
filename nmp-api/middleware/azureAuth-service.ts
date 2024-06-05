@@ -1,5 +1,5 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject } from '@nestjs/common';
+import { Inject, InternalServerErrorException } from '@nestjs/common';
 import EnvironmentService from '@shared/environment.service';
 import axios, { AxiosInstance } from 'axios';
 import { Cache } from 'cache-manager';
@@ -46,7 +46,9 @@ export class AzureAuthService {
         jwksUri: response?.data?.jwks_uri,
       };
     } catch (error) {
-      return error.response.data;
+      throw new InternalServerErrorException(
+        `Failed to get configuration - ${error?.message}`,
+      );
     }
   }
 }
