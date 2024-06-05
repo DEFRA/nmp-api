@@ -34,7 +34,7 @@ export default class SoilAnalysisEntity {
   @ApiProperty()
   SulphurDeficient: boolean;
 
-  @Column('datetime2', { nullable: true })
+  @Column('datetime2', { nullable: true, precision: 7 })
   @ApiPropertyOptional()
   Date: Date;
 

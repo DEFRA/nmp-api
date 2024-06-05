@@ -49,7 +49,7 @@ export default class ManagementPeriodEntity {
   })
   Yield: number;
 
-  @Column({ type: 'datetime2', nullable: true })
+  @Column('datetime2', { nullable: true, precision: 7 })
   @ApiPropertyOptional()
   PloughedDown: Date;
 
