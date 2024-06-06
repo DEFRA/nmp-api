@@ -6,9 +6,7 @@ import ManagementPeriodEntity from '@db/entity/management-period.entity';
 import OrganisationEntity from '@db/entity/organisation.entity';
 import { RecommendationCommentEntity } from '@db/entity/recommendation-comment.entity';
 import { RecommendationEntity } from '@db/entity/recommendation.entity';
-import RoleEntity from '@db/entity/role.entity';
 import SoilAnalysisEntity from '@db/entity/soil-analysis.entity';
-//import UserFarmEntity from '@db/entity/user-farm.entity';
 import UserEntity from '@db/entity/user.entity';
 import EnvironmentService from '@shared/environment.service';
 
@@ -22,7 +20,6 @@ export const ormConfig: any = {
   entities: [
     FarmEntity,
     UserEntity,
-    RoleEntity,
     FieldEntity,
     CropEntity,
     OrganisationEntity,
