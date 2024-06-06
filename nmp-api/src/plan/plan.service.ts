@@ -420,4 +420,49 @@ export class PlanService extends BaseService<
       throw error;
     }
   }
+
+  async getCropsPlansCropTypesByHarvestYear(
+    farmId: number,
+    harvestYear: number,
+  ) {
+    try {
+      const storedProcedure =
+        'EXEC dbo.spCrops_GetCropPlansCropTypesByHarvestYear @farmId = @0, @harvestYear = @1';
+      const plans = await this.executeQuery(storedProcedure, [
+        farmId,
+        harvestYear,
+      ]);
+
+      return await this.mapCropTypeIdWithTheirNames(plans);
+    } catch (error) {
+      console.error(
+        'Error while fetching crop plans croptypes join data by farmId and harvest year:',
+        error,
+      );
+      throw error;
+    }
+  }
+
+  async getCropsPlanFields(
+    farmId: number,
+    harvestYear: number,
+    cropTypeId: number,
+  ) {
+    try {
+      const storedProcedure =
+        'EXEC dbo.spCrops_GetCropPlansFieldsByHarvestYear @farmId = @0, @harvestYear = @1, @cropTypeId = @2';
+      const plans = await this.executeQuery(storedProcedure, [
+        farmId,
+        harvestYear,
+        cropTypeId,
+      ]);
+      return plans;
+    } catch (error) {
+      console.error(
+        'Error while fetching crop plans fields join data using farmId, harvest year and crop typeId:',
+        error,
+      );
+      throw error;
+    }
+  }
 }

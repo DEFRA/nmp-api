@@ -102,4 +102,47 @@ export class CropController {
 
     return await this.planService.getPlansByHarvestYear(farmId, harvestYear);
   }
+
+  @Get('/plans/fields/:harvestYear')
+  @ApiOperation({
+    summary: 'Get crops plans field by harvest year and cropTypeID',
+  })
+  async getCropsPlansFieldsByHarvestYearAndCropTypeId(
+    @Param('harvestYear', ParseIntPipe) harvestYear: number,
+    @Query('cropTypeId', new ParseIntPipe({ optional: false }))
+    cropTypeId: number,
+    @Query('farmId', new ParseIntPipe({ optional: false })) farmId: number,
+  ) {
+    if (!harvestYear || !farmId || !cropTypeId) {
+      throw new HttpException(
+        StaticStrings.ERR_MISSING_PARAMETERS,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return await this.planService.getCropsPlanFields(
+      farmId,
+      harvestYear,
+      cropTypeId,
+    );
+  }
+
+  @Get('/plans/crop-types/:harvestYear')
+  @ApiOperation({ summary: 'Get crops plans CropTypes by harvest year' })
+  async getCropsPlansCropTypesByHarvestYear(
+    @Param('harvestYear', ParseIntPipe) harvestYear: number,
+    @Query('farmId', new ParseIntPipe({ optional: false })) farmId: number,
+  ) {
+    if (!harvestYear || !farmId) {
+      throw new HttpException(
+        StaticStrings.ERR_MISSING_PARAMETERS,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return await this.planService.getCropsPlansCropTypesByHarvestYear(
+      farmId,
+      harvestYear,
+    );
+  }
 }
