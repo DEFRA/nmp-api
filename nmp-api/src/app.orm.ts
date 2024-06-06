@@ -1,7 +1,5 @@
 import FarmEntity from '@db/entity/farm.entity';
 import UserEntity from '@db/entity/user.entity';
-import RoleEntity from '@db/entity/role.entity';
-//import UserFarmEntity from '@db/entity/user-farm.entity';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import EnvironmentService from '@shared/environment.service';
 import * as dotven from 'dotenv';
@@ -14,6 +12,19 @@ import ManagementPeriodEntity from '@db/entity/management-period.entity';
 import { RecommendationEntity } from '@db/entity/recommendation.entity';
 import { RecommendationCommentEntity } from '@db/entity/recommendation-comment.entity';
 import ClimateDataEntity from '@db/entity/climate-date.entity';
+import { ApplicationMethodsIncorpMethodEntity } from '@db/entity/application-method-incorp-method.entity';
+import { ApplicationMethodEntity } from '@db/entity/application-method.entity';
+import { CountryEntity } from '@db/entity/country.entity';
+import { IncorpMethodsIncorpDelayEntity } from '@db/entity/incorp-method-incorp-delay.entity';
+import { IncorporationDelayEntity } from '@db/entity/incorporation-delay.entity';
+import { IncorporationMethodEntity } from '@db/entity/incorporation-method.entity';
+import { ManureGroupEntity } from '@db/entity/manure-group.entity';
+import { ManureTypesApplicationMethodEntity } from '@db/entity/manure-type-application-method.entity';
+import { ManureTypeEntity } from '@db/entity/manure-type.entity';
+import { MoistureTypeEntity } from '@db/entity/moisture-type.entity';
+import { OrganicManureEntity } from '@db/entity/organic-manure.entity';
+import { RainTypeEntity } from '@db/entity/rain-type.entity';
+import { WindspeedEntity } from '@db/entity/wind-speed.entity';
 
 dotven.config();
 
@@ -35,8 +46,6 @@ if (process.env.NODE_ENV === 'production') {
     entities: [
       FarmEntity,
       UserEntity,
-      RoleEntity,
-      //UserFarmEntity,
       FieldEntity,
       CropEntity,
       SoilAnalysisEntity,
@@ -45,6 +54,19 @@ if (process.env.NODE_ENV === 'production') {
       RecommendationCommentEntity,
       OrganisationEntity,
       ClimateDataEntity,
+      ApplicationMethodsIncorpMethodEntity,
+      ApplicationMethodEntity,
+      CountryEntity,
+      IncorpMethodsIncorpDelayEntity,
+      IncorporationDelayEntity,
+      IncorporationMethodEntity,
+      ManureGroupEntity,
+      ManureTypesApplicationMethodEntity,
+      ManureTypeEntity,
+      MoistureTypeEntity,
+      OrganicManureEntity,
+      RainTypeEntity,
+      WindspeedEntity,
     ],
   };
 } else if (process.env.NODE_ENV === 'hosting') {
@@ -76,8 +98,6 @@ if (process.env.NODE_ENV === 'production') {
     entities: [
       FarmEntity,
       UserEntity,
-      RoleEntity,
-      //UserFarmEntity,
       FieldEntity,
       CropEntity,
       SoilAnalysisEntity,
@@ -86,6 +106,19 @@ if (process.env.NODE_ENV === 'production') {
       RecommendationCommentEntity,
       OrganisationEntity,
       ClimateDataEntity,
+      ApplicationMethodsIncorpMethodEntity,
+      ApplicationMethodEntity,
+      CountryEntity,
+      IncorpMethodsIncorpDelayEntity,
+      IncorporationDelayEntity,
+      IncorporationMethodEntity,
+      ManureGroupEntity,
+      ManureTypesApplicationMethodEntity,
+      ManureTypeEntity,
+      MoistureTypeEntity,
+      OrganicManureEntity,
+      RainTypeEntity,
+      WindspeedEntity,
     ],
     synchronize: false,
     logging: true,

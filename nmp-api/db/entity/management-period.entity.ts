@@ -12,6 +12,7 @@ import CropEntity from './crop.entity';
 import UserEntity from './user.entity';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { RecommendationEntity } from './recommendation.entity';
+import { OrganicManureEntity } from './organic-manure.entity';
 
 @Entity({ name: 'ManagementPeriods' })
 export default class ManagementPeriodEntity {
@@ -83,4 +84,10 @@ export default class ManagementPeriodEntity {
   )
   @JoinColumn({ name: 'ManagementPeriodID' })
   Recommendations: RecommendationEntity[];
+
+  @OneToMany(
+    () => OrganicManureEntity,
+    (organicManure) => organicManure.ManagementPeriods,
+  )
+  OrganicManures: OrganicManureEntity[];
 }

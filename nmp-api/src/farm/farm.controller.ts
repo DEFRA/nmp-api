@@ -17,7 +17,6 @@ import {
   ApiSecurity,
   ApiTags,
 } from '@nestjs/swagger';
-//import { UserFarmService } from '@src/user-farm/user-farm.service';
 import { FarmService } from './farm.service';
 import FarmEntity from '@db/entity/farm.entity';
 import { CreateFarmRequest } from './dto/farm.dto';
@@ -26,22 +25,7 @@ import { CreateFarmRequest } from './dto/farm.dto';
 @ApiSecurity('Bearer')
 @Controller('farms')
 export class FarmController {
-  constructor(
-    private readonly farmService: FarmService,
-    //private readonly userFarmService: UserFarmService,
-  ) {}
-
-  // @Get('/users/:userId')
-  // @ApiOperation({ summary: 'Get Farms by User Id' })
-  // @ApiQuery({ name: 'shortSummary', required: false })
-  // async getFarmsByUserId(
-  //   @Param('userId', ParseIntPipe) userId: number,
-  //   @Query('shortSummary', new ParseBoolPipe({ optional: true }))
-  //   shortSummary: boolean,
-  // ) {
-  //   const Farms = await this.userFarmService.getUserFarms(userId, shortSummary);
-  //   return { Farms };
-  // }
+  constructor(private readonly farmService: FarmService) {}
 
   @Get('/exists')
   @ApiOperation({
