@@ -55,9 +55,6 @@ describe('CropController', () => {
           RecommendationCommentEntity,
         ]),
         CacheModule.register(),
-        // RB209ArableModule,
-        //RB209FieldModule,
-        // RB209RecommendationModule,
       ],
       controllers: [CropController],
       providers: [
@@ -157,6 +154,102 @@ describe('CropController', () => {
 
       try {
         await controller.getCropsPlansByHarvestYear(harvestYear, farmId);
+      } catch (error) {
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+      }
+    });
+  });
+
+  describe('Get Crops Plans Fields By Harvest Year And CropTypeId', () => {
+    it('should return crops plans field by harvest year and cropTypeID', async () => {
+      const harvestYear = 2024;
+      const cropTypeId = 110;
+      const farmId = createdFarm.ID;
+
+      const result =
+        await controller.getCropsPlansFieldsByHarvestYearAndCropTypeId(
+          harvestYear,
+          cropTypeId,
+          farmId,
+        );
+      expect(result.length).toBeGreaterThan(0);
+      expect(result[0]).toHaveProperty('ID');
+      expect(result[0]).toHaveProperty('Name');
+    });
+
+    it('should throw bad req error error if required parameters are missing', async () => {
+      const harvestYear = null;
+      const cropTypeId = null;
+      const farmId = null;
+
+      try {
+        await controller.getCropsPlansFieldsByHarvestYearAndCropTypeId(
+          harvestYear,
+          cropTypeId,
+          farmId,
+        );
+      } catch (error) {
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+      }
+    });
+  });
+
+  describe('Get Crops Plans CropTypes By HarvestYear', () => {
+    it('should return crops plans CropTypes by harvest year', async () => {
+      const harvestYear = 2024;
+      const farmId = createdFarm.ID;
+
+      const result = await controller.getCropsPlansCropTypesByHarvestYear(
+        harvestYear,
+        farmId,
+      );
+      expect(result.length).toBeGreaterThan(0);
+      expect(result[0]).toHaveProperty('CropTypeID');
+      expect(result[0]).toHaveProperty('CropTypeName');
+    });
+
+    it('should throw bad request error if required parameters are missing', async () => {
+      const harvestYear = null;
+      const farmId = null;
+
+      try {
+        await controller.getCropsPlansCropTypesByHarvestYear(
+          harvestYear,
+          farmId,
+        );
+      } catch (error) {
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+      }
+    });
+  });
+
+  describe('Get Crops Plans Management PeriodIds By HarvestYear', () => {
+    it('should return management periods ids when valid parameters fieldIds, harvestYear and cropTypeId are provided', async () => {
+      const fieldIds = createdField.ID;
+      const harvestYear = 2024;
+      const cropTypeId = 110;
+
+      const result =
+        await controller.getCropsPlansManagementPeriodIdsByHarvestYear(
+          harvestYear,
+          cropTypeId,
+          fieldIds,
+        );
+      expect(result.length).toBeGreaterThan(0);
+      expect(result[0]).toHaveProperty('ID');
+    });
+
+    it('should throw BadRequest exception when harvestYear or fieldIds is missing', async () => {
+      const harvestYear = null;
+      const fieldIds = '14';
+      const cropTypeId = null;
+
+      try {
+        await controller.getCropsPlansManagementPeriodIdsByHarvestYear(
+          harvestYear,
+          cropTypeId,
+          fieldIds,
+        );
       } catch (error) {
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
       }

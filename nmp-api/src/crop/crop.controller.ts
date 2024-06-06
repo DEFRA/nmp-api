@@ -107,13 +107,14 @@ export class CropController {
   @ApiOperation({
     summary: 'Get crops plans field by harvest year and cropTypeID',
   })
+  @ApiQuery({ name: 'cropTypeId', required: false })
   async getCropsPlansFieldsByHarvestYearAndCropTypeId(
     @Param('harvestYear', ParseIntPipe) harvestYear: number,
-    @Query('cropTypeId', new ParseIntPipe({ optional: false }))
+    @Query('cropTypeId', new ParseIntPipe({ optional: true }))
     cropTypeId: number,
     @Query('farmId', new ParseIntPipe({ optional: false })) farmId: number,
   ) {
-    if (!harvestYear || !farmId || !cropTypeId) {
+    if (!harvestYear || !farmId) {
       throw new HttpException(
         StaticStrings.ERR_MISSING_PARAMETERS,
         HttpStatus.BAD_REQUEST,
@@ -143,6 +144,35 @@ export class CropController {
     return await this.planService.getCropsPlansCropTypesByHarvestYear(
       farmId,
       harvestYear,
+    );
+  }
+
+  @Get('/plans/management-periods/:harvestYear')
+  @ApiOperation({
+    summary: 'Get crops plans management periods ids by harvest year',
+  })
+  @ApiQuery({ name: 'cropTypeId', required: false })
+  @ApiQuery({
+    name: 'fieldIds',
+    description: 'Comma separated Field Ids, e.g. 1,2,3',
+  })
+  async getCropsPlansManagementPeriodIdsByHarvestYear(
+    @Param('harvestYear', ParseIntPipe) harvestYear: number,
+    @Query('cropTypeId', new ParseIntPipe({ optional: true }))
+    cropTypeId: number,
+    @Query('fieldIds') fieldIds: string,
+  ) {
+    if (!harvestYear || !fieldIds) {
+      throw new HttpException(
+        StaticStrings.ERR_MISSING_PARAMETERS,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return await this.planService.getCropsPlansManagementPeriodIds(
+      fieldIds,
+      harvestYear,
+      cropTypeId,
     );
   }
 }

@@ -34,7 +34,7 @@ export const createPlanReqBody: any = {
         CropInfo2: null,
         SowingDate: null,
         Yield: null,
-        Confirm: true,
+        Confirm: false,
         PreviousGrass: null,
         GrassHistory: null,
         Comments: null,
