@@ -465,4 +465,27 @@ export class PlanService extends BaseService<
       throw error;
     }
   }
+
+  async getCropsPlansManagementPeriodIds(
+    fieldIds: string,
+    harvestYear: number,
+    cropTypeId: number,
+  ) {
+    try {
+      const storedProcedure =
+        'EXEC dbo.spCrops_GetCropPlansManagementPeriodByHarvestYear @fieldIds = @0, @harvestYear = @1, @cropTypeId = @2';
+      const plans = await this.executeQuery(storedProcedure, [
+        fieldIds,
+        harvestYear,
+        cropTypeId,
+      ]);
+      return { ManagementPeriods: plans };
+    } catch (error) {
+      console.error(
+        'Error while fetching crop plans management period ids using fieldIds,  harvest year and crop typeId:',
+        error,
+      );
+      throw error;
+    }
+  }
 }
