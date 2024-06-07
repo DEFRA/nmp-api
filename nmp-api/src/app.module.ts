@@ -30,6 +30,7 @@ import { UserModule } from './user/user.module';
 import { AzureAuthService } from 'middleware/azureAuth-service';
 import { ClimateModule } from './climate/climate.module';
 import { ManureTypeModule } from './manure-type/manure-type.module';
+import { ManureGroupModule } from './manure-group/manure-group.module';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -71,6 +72,7 @@ import { ManureTypeModule } from './manure-type/manure-type.module';
     RecommendationModule,
     UserModule,
     ManureTypeModule,
+    ManureGroupModule,
   ],
   providers: [AzureAuthService],
 })
