@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import 'dotenv/config';
 // import { MasterModule } from './customer/master/master.module';
@@ -81,9 +81,9 @@ import { ManureGroupModule } from './manure-group/manure-group.module';
   ],
   providers: [AzureAuthService],
 })
-export class AppModule {
-  //implements NestModule
-  // configure(consumer: MiddlewareConsumer) {
-  //   consumer.apply(AzureAuthMiddleware).forRoutes('*');
-  // }
+export class AppModule 
+  implements NestModule{
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AzureAuthMiddleware).forRoutes('*');
+  }
 }
