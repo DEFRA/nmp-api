@@ -76,6 +76,7 @@ import { UserController } from './user/user.controller';
 import { OrganisationService } from './organisation/organisation.service';
 import { AzureAuthService } from 'middleware/azureAuth-service';
 import { ClimateModule } from './climate/climate.module';
+import { ManureGroupModule } from './manure-group/manure-group.module';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -116,6 +117,7 @@ import { ClimateModule } from './climate/climate.module';
     RB209PreviousCroppingModule,
     RecommendationModule,
     UserModule,
+    ManureGroupModule,
   ],
   controllers: [
     AppController,
