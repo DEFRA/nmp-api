@@ -29,6 +29,9 @@ import { AzureAuthMiddleware } from 'middleware/azureAuth.middleware';
 import { UserModule } from './user/user.module';
 import { AzureAuthService } from 'middleware/azureAuth-service';
 import { ClimateModule } from './climate/climate.module';
+import { IncorporationMethodModule } from './incorporation-method/incorporation-method.module';
+
+
 import { ManureTypeModule } from './manure-type/manure-type.module';
 import { ManureGroupModule } from './manure-group/manure-group.module';
 
@@ -71,14 +74,16 @@ import { ManureGroupModule } from './manure-group/manure-group.module';
     RB209PreviousCroppingModule,
     RecommendationModule,
     UserModule,
+    IncorporationMethodModule,
     ManureTypeModule,
     ManureGroupModule,
+    
   ],
   providers: [AzureAuthService],
 })
 export class AppModule {
   //implements NestModule
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AzureAuthMiddleware).forRoutes('*');
-  }
+  // configure(consumer: MiddlewareConsumer) {
+  //   consumer.apply(AzureAuthMiddleware).forRoutes('*');
+  // }
 }

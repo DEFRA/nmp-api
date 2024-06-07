@@ -1,17 +1,13 @@
-import { Entity, PrimaryColumn, ManyToOne, JoinColumn, Column } from 'typeorm';
-
+import { Entity, ManyToOne, JoinColumn, Column, PrimaryColumn } from 'typeorm';
 import { ApplicationMethodEntity } from './application-method.entity';
 import { IncorporationMethodEntity } from './incorporation-method.entity';
 
 @Entity({ name: 'ApplicationMethodsIncorpMethods' })
 export class ApplicationMethodsIncorpMethodEntity {
-  @PrimaryColumn({ type: 'uuid', insert: false, select: false, update: false })
-  ID: never;
-
-  @Column('int')
+  @PrimaryColumn({ type: 'int' })
   ApplicationMethodID: number;
 
-  @Column('int')
+  @PrimaryColumn({ type: 'int' })
   IncorporationMethodID: number;
 
   @ManyToOne(
