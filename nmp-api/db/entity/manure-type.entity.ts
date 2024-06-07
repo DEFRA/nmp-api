@@ -25,7 +25,7 @@ export class ManureTypeEntity {
   Name: string;
 
   @Column('int')
-  ManureID: number;
+  ManureGroupID: number;
 
   @Column('int')
   CountryID: number;
@@ -73,7 +73,7 @@ export class ManureTypeEntity {
   ManureTypesApplicationMethods: ManureTypesApplicationMethodEntity[];
 
   @ManyToOne(() => ManureGroupEntity, (manureGroup) => manureGroup.ManureTypes)
-  @JoinColumn({ name: 'ManureID' })
+  @JoinColumn({ name: 'ManureGroupID' })
   ManureGroups: ManureGroupEntity;
 
   @ManyToOne(() => CountryEntity, (country) => country.ManureTypes)
