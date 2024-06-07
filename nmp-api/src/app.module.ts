@@ -166,7 +166,7 @@ import { ClimateModule } from './climate/climate.module';
 })
 export class AppModule {
   //implements NestModule
-  // configure(consumer: MiddlewareConsumer) {
-  //   consumer.apply(AzureAuthMiddleware).forRoutes('*');
-  // }
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AzureAuthMiddleware).forRoutes('*');
+  }
 }
