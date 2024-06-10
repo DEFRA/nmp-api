@@ -17,12 +17,12 @@ export class IncorporationDelaysController {
   async getDelaysByMethodId(@Param('methodId') methodId: number) {
     const delays =
       await this.incorporationDelaysService.getDelaysByMethodId(methodId);
-    // return delays?.map((delay) => ({
-    //   ID: delay.ID,
-    //   Name: delay.Name,
-    //   FromHours: delay.FromHours,
-    //   ToHours: delay.ToHours,
-    // }));
-    return { IncorporationDelays: delays };
+    return delays?.map((delay) => ({
+      ID: delay.ID,
+      Name: delay.Name,
+      FromHours: delay.FromHours,
+      ToHours: delay.ToHours,
+    }));
+  
   }
 }
