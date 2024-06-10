@@ -21,8 +21,12 @@ describe('IncorporationMethodController', () => {
       ],
     }).compile();
 
-    controller = module.get<IncorporationMethodController>(IncorporationMethodController);
-    service = module.get<IncorporationMethodService>(IncorporationMethodService);
+    controller = module.get<IncorporationMethodController>(
+      IncorporationMethodController,
+    );
+    service = module.get<IncorporationMethodService>(
+      IncorporationMethodService,
+    );
   });
 
   it('should be defined', () => {
@@ -34,31 +38,37 @@ describe('IncorporationMethodController', () => {
       const appId = 1;
       const expectedResult: IncorporationMethodEntity[] = [
         {
-          ID: 1, Name: 'Method 1',
+          ID: 1, Name: 'Method 1' /* Add other properties as needed */,
           ApplicationMethodsIncorpMethods: [],
           IncorpMethodsIncorpDelays: [],
           OrganicManures: []
         },
         {
-          ID: 2, Name: 'Method 2',
+          ID: 2, Name: 'Method 2' /* Add other properties as needed */,
           ApplicationMethodsIncorpMethods: [],
           IncorpMethodsIncorpDelays: [],
           OrganicManures: []
         },
       ];
 
-      jest.spyOn(service, 'getIncorporationMethodsByAppId').mockResolvedValue(expectedResult);
+      jest
+        .spyOn(service, 'getIncorporationMethodsByAppId')
+        .mockResolvedValue(expectedResult);
 
-      expect(await controller.getIncorporationMethods(appId)).toBe(expectedResult);
+      const result = await controller.getIncorporationMethods(appId);
+      expect(result).toEqual({ IncorporationMethods: expectedResult });
     });
 
     it('should return an empty array if no methods are found', async () => {
       const appId = 1;
       const expectedResult: IncorporationMethodEntity[] = [];
 
-      jest.spyOn(service, 'getIncorporationMethodsByAppId').mockResolvedValue(expectedResult);
+      jest
+        .spyOn(service, 'getIncorporationMethodsByAppId')
+        .mockResolvedValue(expectedResult);
 
-      expect(await controller.getIncorporationMethods(appId)).toEqual(expectedResult);
+      const result = await controller.getIncorporationMethods(appId);
+      expect(result).toEqual({ IncorporationMethods: expectedResult });
     });
   });
 });
