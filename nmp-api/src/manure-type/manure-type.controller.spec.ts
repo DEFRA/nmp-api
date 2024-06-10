@@ -45,4 +45,13 @@ describe('ManureTypeController', () => {
       }
     });
   });
+
+  describe('Get Manure Type', () => {
+    it('should return manure type for given manureTypeId', async () => {
+      const manureTypeId = 1;
+      const result = await controller.getManureTypeByManureTypeId(manureTypeId);
+      expect(result.ManureType).toBeDefined();
+      expect(result.ManureType).toHaveProperty('ID');
+    });
+  });
 });

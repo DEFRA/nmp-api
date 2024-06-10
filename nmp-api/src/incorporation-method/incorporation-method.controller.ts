@@ -11,7 +11,9 @@ export class IncorporationMethodController {
   ) {}
 
   @Get(':appId')
-  @ApiOperation({ summary: 'Get list of Incorporation Methods by Application Id' })
+  @ApiOperation({
+    summary: 'Get list of Incorporation Methods by Application Id',
+  })
   async getIncorporationMethods(@Param('appId') appId: number) {
     const data =
       await this.incorporationMethodService.getIncorporationMethodsByAppId(
