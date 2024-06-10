@@ -8,8 +8,7 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class IncorporationDelaysService {
   constructor(
-    @InjectRepository(IncorporationDelayEntity)
-    private readonly incorporationDelayRepository: Repository<IncorporationDelayEntity>,
+  
     @InjectRepository(IncorpMethodsIncorpDelayEntity)
     private readonly incorpMethodsIncorpDelayRepository: Repository<IncorpMethodsIncorpDelayEntity>,
   ) {}
