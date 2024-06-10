@@ -33,6 +33,7 @@ import { IncorporationMethodModule } from './incorporation-method/incorporation-
 
 import { ManureTypeModule } from './manure-type/manure-type.module';
 import { ManureGroupModule } from './manure-group/manure-group.module';
+import { ApplicationMethodModule } from './application-method/application-method.module';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -76,6 +77,7 @@ import { ManureGroupModule } from './manure-group/manure-group.module';
     IncorporationMethodModule,
     ManureTypeModule,
     ManureGroupModule,
+    ApplicationMethodModule,
   ],
   providers: [AzureAuthService],
 })
