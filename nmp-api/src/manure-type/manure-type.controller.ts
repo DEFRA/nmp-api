@@ -18,7 +18,7 @@ import { StaticStrings } from '@shared/static.string';
 export class ManureTypeController {
   constructor(private readonly manureTypeService: ManureTypeService) {}
 
-  @Get('/:manureGroupId')
+  @Get('/manure-groups/:manureGroupId')
   @ApiOperation({ summary: 'Get manure types by manureGroupId and countryId' })
   async getManureTypes(
     @Param('manureGroupId', ParseIntPipe) manureGroupId: number,
@@ -36,5 +36,14 @@ export class ManureTypeController {
       countryId,
     );
     return data;
+  }
+
+  @Get(':manureTypeId')
+  @ApiOperation({ summary: 'Get Manure Type by ManureTypeId' })
+  async getManureTypeByManureTypeId(
+    @Param('manureTypeId', ParseIntPipe) manureTypeId: number,
+  ) {
+    const { records } = await this.manureTypeService.getById(manureTypeId);
+    return { ManureType: records };
   }
 }

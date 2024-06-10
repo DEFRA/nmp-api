@@ -4,7 +4,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-
 @Injectable()
 export class IncorporationMethodService {
   constructor(
@@ -14,12 +13,15 @@ export class IncorporationMethodService {
     private readonly appMethodIncorpMethodRepository: Repository<ApplicationMethodsIncorpMethodEntity>,
   ) {}
 
-  async getIncorporationMethodsByAppId(appId: number): Promise<IncorporationMethodEntity[]> {
-    const appMethodsIncorpMethods = await this.appMethodIncorpMethodRepository.find({
-      where: { ApplicationMethodID: appId },
-      relations: ['IncorporationMethods'],
-    });
+  async getIncorporationMethodsByAppId(
+    appId: number,
+  ): Promise<IncorporationMethodEntity[]> {
+    const appMethodsIncorpMethods =
+      await this.appMethodIncorpMethodRepository.find({
+        where: { ApplicationMethodID: appId },
+        relations: ['IncorporationMethods'],
+      });
 
-    return appMethodsIncorpMethods.map(amim => amim.IncorporationMethods);
+    return appMethodsIncorpMethods.map((amim) => amim.IncorporationMethods);
   }
 }

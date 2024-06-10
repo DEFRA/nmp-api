@@ -7,7 +7,10 @@ import { ApplicationMethodsIncorpMethodEntity } from '@db/entity/application-met
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([IncorporationMethodEntity, ApplicationMethodsIncorpMethodEntity]),
+    TypeOrmModule.forFeature([
+      IncorporationMethodEntity,
+      ApplicationMethodsIncorpMethodEntity,
+    ]),
   ],
   providers: [IncorporationMethodService],
   controllers: [IncorporationMethodController],

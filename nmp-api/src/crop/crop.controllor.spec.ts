@@ -235,8 +235,8 @@ describe('CropController', () => {
           cropTypeId,
           fieldIds,
         );
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0]).toHaveProperty('ID');
+      expect(result.ManagementPeriods.length).toBeGreaterThan(0);
+      expect(result.ManagementPeriods[0]).toHaveProperty('ID');
     });
 
     it('should throw BadRequest exception when harvestYear or fieldIds is missing', async () => {

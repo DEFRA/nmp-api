@@ -17,7 +17,7 @@ export const truncateAllTables = async (entityManager: EntityManager) => {
     try {
       await entityManager.query(`DELETE FROM ${tableName}`);
     } catch (error) {
-      console.error(`Error deleting data from table ${tableName}:`, error);
+      // console.error(`Error deleting data from table ${tableName}:`, error);
     }
   }
 };
