@@ -6,7 +6,7 @@ import 'dotenv/config';
 import OrmConnectionSetup from './app.orm';
 
 import { FarmModule } from './farm/farm.module';
-// import { AuthModule } from './auth/auth.module';
+import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { AddressLookupModule } from './vendors/address-lookup/address-lookup.module';
 import { FieldModule } from './field/field.module';
@@ -27,22 +27,19 @@ import { ManagementPeriodModule } from './management-period/management-period.mo
 import { RecommendationModule } from './recommendation/recommendation.module';
 import { AzureAuthMiddleware } from 'middleware/azureAuth.middleware';
 import { UserModule } from './user/user.module';
-import { AzureAuthService } from 'middleware/azureAuth-service';
+import { AzureAuthService } from '@shared/azure-auth-service';
 import { ClimateModule } from './climate/climate.module';
 import { IncorporationMethodModule } from './incorporation-method/incorporation-method.module';
 
 import { ManureTypeModule } from './manure-type/manure-type.module';
 import { ManureGroupModule } from './manure-group/manure-group.module';
+import EnvironmentService from '@shared/environment.service';
+import { AzureTokenValidationService } from '@shared/azure-token-validation-service';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
   imports: [
     // PassportModule.register({ defaultStrategy: 'jwt' }),
-    // JwtModule.register({
-    //   secret: 'your_secret_key', // Replace with your actual secret key
-    //   signOptions: { expiresIn: '1h' },
-    // }),
-    // JwtAuthModule,
     // DevtoolsModule.register({
     //   http: process.env.NODE_ENV !== 'production',
     //   port: 7524,
@@ -51,7 +48,7 @@ import { ManureGroupModule } from './manure-group/manure-group.module';
     JwtModule.register({
       global: true,
       secret: 'your_secret_key',
-      signOptions: { expiresIn: '1h' },
+      signOptions: { expiresIn: EnvironmentService.JWT_ACCESS_TOKEN_EXPIRY() },
     }),
     TypeOrmModule.forRootAsync({ useFactory: async () => OrmConnectionSetup }),
     AddressLookupModule,
@@ -76,8 +73,9 @@ import { ManureGroupModule } from './manure-group/manure-group.module';
     IncorporationMethodModule,
     ManureTypeModule,
     ManureGroupModule,
+    AuthModule,
   ],
-  providers: [AzureAuthService],
+  providers: [AzureAuthService, AzureTokenValidationService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

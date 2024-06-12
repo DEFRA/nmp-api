@@ -1,14 +1,14 @@
-// jwt.module.ts
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { AzureTokenValidationService } from '@shared/azure-token-validation-service';
+import { AzureAuthService } from '@shared/azure-auth-service';
+import UserEntity from '@db/entity/user.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
-  imports: [
-    JwtModule.register({
-      secret: 'your_secret_key', // Replace with your actual secret key
-      signOptions: { expiresIn: '1h' }, // Set token expiration time
-    }),
-  ],
-  exports: [JwtModule],
+  imports: [TypeOrmModule.forFeature([UserEntity])],
+  controllers: [AuthController],
+  providers: [AuthService, AzureTokenValidationService, AzureAuthService],
 })
-export class JwtAuthModule {}
+export class AuthModule {}

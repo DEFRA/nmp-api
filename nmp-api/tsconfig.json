@@ -23,7 +23,10 @@
       "@src/*": ["./src/*"],
       "@filters/*": ["./filters/*"],
       "@interceptors/*": ["./interceptors/*"],
-      "@constants/*": ["./constants/*"]
+      "@constants/*": ["./constants/*"],
+      "@interfaces/*": ["./interfaces/*"],
+      "@middleware/*": ["./middleware/*"],
+      "@guards/*": ["./guards/*"]
     }
   }
 }

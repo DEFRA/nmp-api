@@ -89,7 +89,8 @@
       "^@shared/(.*)$": "<rootDir>/shared/$1",
       "^@filters/(.*)$": "<rootDir>/filters/$1",
       "^@interceptors/(.*)$": "<rootDir>/interceptors/$1",
-      "^@constants/(.*)$": "<rootDir>/constants/$1"
+      "^@constants/(.*)$": "<rootDir>/constants/$1",
+      "^@guards/(.*)$": "<rootDir>/guards/$1"
     }
   }
 }

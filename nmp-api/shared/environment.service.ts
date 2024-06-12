@@ -160,4 +160,16 @@ export default class EnvironmentService {
       return this.getEnv('AZURE_IDENTITY_DOMAIN');
     }
   }
+
+  static JWT_REFRESH_TOKEN_EXPIRY(): string {
+    get: {
+      return this.getEnv('JWT_REFRESH_TOKEN_EXPIRY');
+    }
+  }
+
+  static JWT_ACCESS_TOKEN_EXPIRY(): string {
+    get: {
+      return this.getEnv('JWT_ACCESS_TOKEN_EXPIRY');
+    }
+  }
 }
