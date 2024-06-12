@@ -21,6 +21,9 @@ export class ApplicationMethodEntity {
   @Column('nvarchar', { length: 100 })
   Name: string;
 
+  @Column('nvarchar', { length: 1, nullable: false })
+  ApplicableFor: string;
+
   @OneToMany(
     () => ApplicationMethodsIncorpMethodEntity,
     (applicationMethodsIncorpMethod) =>
