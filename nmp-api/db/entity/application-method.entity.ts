@@ -1,13 +1,12 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
   Column,
   OneToMany,
   PrimaryColumn,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { ApplicationMethodsIncorpMethodEntity } from './application-method-incorp-method.entity';
 import { OrganicManureEntity } from './organic-manure.entity';
-import { ManureTypesApplicationMethodEntity } from './manure-type-application-method.entity';
 
 @Entity({ name: 'ApplicationMethods' })
 export class ApplicationMethodEntity {
@@ -15,7 +14,10 @@ export class ApplicationMethodEntity {
     generatedIdentity: 'ALWAYS',
     primaryKeyConstraintName: 'PK_ApplicationMethods',
   })
-  @PrimaryColumn({ type: 'int', insert: false })
+  @PrimaryColumn({
+    type: 'int',
+    insert: false,
+  })
   ID: number;
 
   @Column('nvarchar', { length: 100 })
@@ -36,11 +38,4 @@ export class ApplicationMethodEntity {
     (organicManure) => organicManure.ApplicationMethods,
   )
   OrganicManures: OrganicManureEntity[];
-
-  @OneToMany(
-    () => ManureTypesApplicationMethodEntity,
-    (manureTypesApplicationMethod) =>
-      manureTypesApplicationMethod.ApplicationMethods,
-  )
-  ManureTypesApplicationMethods: ManureTypesApplicationMethodEntity[];
 }

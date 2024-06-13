@@ -14,7 +14,7 @@ describe('ApplicationMethodController', () => {
         {
           provide: ApplicationMethodService,
           useValue: {
-            getApplicationMethodsBasedOnManureTypeId: jest.fn(),
+            getApplicationMethods: jest.fn(),
           },
         },
       ],
@@ -32,44 +32,44 @@ describe('ApplicationMethodController', () => {
 
   describe('getApplicationMethods', () => {
     it('should return an array of application methods', async () => {
-      const manureTypeId = 1;
+      const applicableFor = 'L';
       const expectedResult: ApplicationMethodEntity[] = [
         {
           ID: 1,
           Name: 'Method 1',
+          ApplicableFor: 'L',
           ApplicationMethodsIncorpMethods: [],
-          ManureTypesApplicationMethods: [],
           OrganicManures: [],
         },
         {
           ID: 2,
           Name: 'Method 2',
+          ApplicableFor: 'S',
           ApplicationMethodsIncorpMethods: [],
-          ManureTypesApplicationMethods: [],
           OrganicManures: [],
         },
       ];
 
       jest
-        .spyOn(service, 'getApplicationMethodsBasedOnManureTypeId')
+        .spyOn(service, 'getApplicationMethods')
         .mockResolvedValue(expectedResult);
 
       expect(
-        await controller.getApplicationMethodsBasedOnManureTypeId(manureTypeId),
+        await controller.getApplicationMethods(applicableFor),
       ).toStrictEqual({ ApplicationMethods: expectedResult });
     });
 
     it('should return an empty array if no methods are found', async () => {
-      const manureTypeId = 1;
+      const applicableFor = 'L';
       const expectedResult: ApplicationMethodEntity[] = [];
 
       jest
-        .spyOn(service, 'getApplicationMethodsBasedOnManureTypeId')
+        .spyOn(service, 'getApplicationMethods')
         .mockResolvedValue(expectedResult);
 
-      expect(
-        await controller.getApplicationMethodsBasedOnManureTypeId(manureTypeId),
-      ).toEqual({ ApplicationMethods: expectedResult });
+      expect(await controller.getApplicationMethods(applicableFor)).toEqual({
+        ApplicationMethods: expectedResult,
+      });
     });
   });
 });
