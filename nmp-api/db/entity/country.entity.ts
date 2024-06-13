@@ -12,7 +12,7 @@ import { ManureTypeEntity } from './manure-type.entity';
 export class CountryEntity {
   @PrimaryGeneratedColumn()
   @PrimaryColumn({ type: 'int', insert: false })
-  Id: number;
+  ID: number;
 
   @Column('nvarchar', { length: 50 })
   Name: string;

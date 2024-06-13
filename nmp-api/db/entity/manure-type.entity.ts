@@ -14,14 +14,14 @@ import { CountryEntity } from './country.entity';
 
 @Entity({ name: 'ManureTypes' })
 export class ManureTypeEntity {
-  @PrimaryGeneratedColumn('identity', {
-    generatedIdentity: 'ALWAYS',
+  @PrimaryColumn({
+    type: 'int',
+    insert: false,
     primaryKeyConstraintName: 'PK_ManureTypes',
   })
-  @PrimaryColumn({ type: 'int', insert: false })
   ID: number;
 
-  @Column('nvarchar', { length: 50 })
+  @Column('nvarchar', { length: 100 })
   Name: string;
 
   @Column('int')
@@ -29,6 +29,9 @@ export class ManureTypeEntity {
 
   @Column('int')
   CountryID: number;
+
+  @Column({ type: 'bit' })
+  HighReadilyAvailableNitrogen: boolean;
 
   @Column('bit')
   IsLiquid: boolean;
@@ -59,6 +62,21 @@ export class ManureTypeEntity {
 
   @Column('decimal', { precision: 18, scale: 2, nullable: true })
   MgO: number;
+
+  @Column({ type: 'int', nullable: true })
+  P2O5Available: number;
+
+  @Column({ type: 'int', nullable: true })
+  K2OAvailable: number;
+
+  @Column({ type: 'decimal', precision: 18, scale: 2, nullable: true })
+  NMaxConstant: number;
+
+  @Column({ type: 'int', nullable: true })
+  ApplicationRateArable: number;
+
+  @Column({ type: 'int', nullable: true })
+  ApplicationRateGrass: number;
 
   @OneToMany(
     () => OrganicManureEntity,

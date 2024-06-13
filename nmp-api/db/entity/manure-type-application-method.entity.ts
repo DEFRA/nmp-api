@@ -4,13 +4,10 @@ import { ApplicationMethodEntity } from './application-method.entity';
 
 @Entity({ name: 'ManureTypesApplicationMethods' })
 export class ManureTypesApplicationMethodEntity {
-  @PrimaryColumn({ type: 'uuid', insert: false, select: false, update: false })
-  ID: never;
-
-  @Column('int')
+  @PrimaryColumn('int')
   ManureTypeID: number;
 
-  @Column('int')
+  @PrimaryColumn('int')
   ApplicationMethodID: number;
 
   @ManyToOne(

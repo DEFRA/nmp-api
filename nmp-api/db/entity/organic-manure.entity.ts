@@ -30,8 +30,8 @@ export class OrganicManureEntity {
   @Column('int')
   ManureTypeID: number;
 
-  @Column('datetime2', { nullable: true })
-  AppDate: Date;
+  @Column('datetime', { nullable: true })
+  ApplicationDate: Date;
 
   @Column('bit', { nullable: true })
   Confirm: boolean;
@@ -55,15 +55,15 @@ export class OrganicManureEntity {
   AvailableN: number;
 
   @Column('int')
-  AppRate: number;
+  ApplicationRate: number;
 
-  @Column('int')
+  @Column('decimal', { precision: 18, scale: 2, nullable: false })
   DryMatterPercent: number;
 
-  @Column('int')
+  @Column('decimal', { precision: 18, scale: 2, nullable: false })
   UricAcid: number;
 
-  @Column('datetime2', { nullable: true })
+  @Column('datetime', { nullable: true })
   EndOfDrain: Date;
 
   @Column('int')
@@ -100,7 +100,7 @@ export class OrganicManureEntity {
   WindspeedID: number;
 
   @Column('int', { nullable: true })
-  RainfallWithin6HoursID: number;
+  RainfallWithinSixHoursID: number;
 
   @Column('int', { nullable: true })
   MoistureID: number;
@@ -142,7 +142,7 @@ export class OrganicManureEntity {
   Windspeeds: WindspeedEntity;
 
   @ManyToOne(() => RainTypeEntity, (rainType) => rainType.OrganicManures)
-  @JoinColumn({ name: 'RainfallWithin6HoursID' })
+  @JoinColumn({ name: 'RainfallWithinSixHoursID' })
   RainTypes: RainTypeEntity;
 
   @ManyToOne(

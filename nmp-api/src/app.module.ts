@@ -35,6 +35,8 @@ import { ManureTypeModule } from './manure-type/manure-type.module';
 import { ManureGroupModule } from './manure-group/manure-group.module';
 import EnvironmentService from '@shared/environment.service';
 import { AzureTokenValidationService } from '@shared/azure-token-validation-service';
+import { IncorporationDelaysModule } from './incorporation-delay/incorporation-delay.module';
+import { ApplicationMethodModule } from './application-method/application-method.module';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -74,6 +76,8 @@ import { AzureTokenValidationService } from '@shared/azure-token-validation-serv
     ManureTypeModule,
     ManureGroupModule,
     AuthModule,
+    IncorporationDelaysModule,
+    ApplicationMethodModule,
   ],
   providers: [AzureAuthService, AzureTokenValidationService],
 })

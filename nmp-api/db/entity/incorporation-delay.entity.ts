@@ -1,20 +1,10 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  OneToMany,
-  PrimaryColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { IncorpMethodsIncorpDelayEntity } from './incorp-method-incorp-delay.entity';
 import { OrganicManureEntity } from './organic-manure.entity';
 
 @Entity({ name: 'IncorporationDelays' })
 export class IncorporationDelayEntity {
-  @PrimaryGeneratedColumn('identity', {
-    generatedIdentity: 'ALWAYS',
-    primaryKeyConstraintName: 'PK_IncorporationDelays',
-  })
-  @PrimaryColumn({ type: 'int', insert: false })
+  @PrimaryGeneratedColumn({ name: 'ID' })
   ID: number;
 
   @Column('nvarchar', { length: 100 })

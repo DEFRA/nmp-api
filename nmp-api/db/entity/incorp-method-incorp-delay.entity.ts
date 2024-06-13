@@ -1,17 +1,13 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
-
 import { IncorporationMethodEntity } from './incorporation-method.entity';
 import { IncorporationDelayEntity } from './incorporation-delay.entity';
 
 @Entity({ name: 'IncorpMethodsIncorpDelays' })
 export class IncorpMethodsIncorpDelayEntity {
-  @PrimaryColumn({ type: 'uuid', insert: false, select: false, update: false })
-  ID: never;
-
-  @Column('int')
+  @PrimaryColumn({ name: 'IncorporationMethodID', type: 'int' })
   IncorporationMethodID: number;
 
-  @Column('int')
+  @PrimaryColumn({ name: 'IncorporationDelayID', type: 'int' })
   IncorporationDelayID: number;
 
   @ManyToOne(
