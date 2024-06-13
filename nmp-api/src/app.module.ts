@@ -75,9 +75,9 @@ import { ApplicationMethodModule } from './application-method/application-method
     IncorporationMethodModule,
     ManureTypeModule,
     ManureGroupModule,
-    AuthModule,
     IncorporationDelaysModule,
     ApplicationMethodModule,
+    AuthModule,
   ],
   providers: [AzureAuthService, AzureTokenValidationService],
 })
