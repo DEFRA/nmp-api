@@ -22,6 +22,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Refresh access token' })
   async refreshToken(@Req() req: Request) {
     const payload = req['jwtPayload'];
-    return this.authService.refreshToken(payload);
+    const userId = req['userId'];
+    return this.authService.refreshToken(payload, userId);
   }
 }

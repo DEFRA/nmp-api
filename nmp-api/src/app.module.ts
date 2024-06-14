@@ -49,7 +49,7 @@ import { ApplicationMethodModule } from './application-method/application-method
     CacheModule.register({ isGlobal: true }),
     JwtModule.register({
       global: true,
-      secret: 'your_secret_key',
+      secret: EnvironmentService.JWT_ACCESS_TOKEN_SECRET_KEY(),
       signOptions: { expiresIn: EnvironmentService.JWT_ACCESS_TOKEN_EXPIRY() },
     }),
     TypeOrmModule.forRootAsync({ useFactory: async () => OrmConnectionSetup }),

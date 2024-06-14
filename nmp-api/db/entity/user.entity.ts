@@ -35,6 +35,15 @@ export default class UserEntity {
   @ApiProperty()
   Email: string;
 
+  @Column('nvarchar', { length: 40, nullable: true })
+  RefreshToken: string;
+
+  @Column('datetime2', { nullable: true, precision: 7 })
+  RefreshTokenExpiresOn: Date;
+
+  @Column('nvarchar', { nullable: true })
+  EncryptedClaimsToken: string;
+
   @Column('uniqueidentifier', { nullable: true, unique: true })
   @ApiPropertyOptional()
   UserIdentifier: string;

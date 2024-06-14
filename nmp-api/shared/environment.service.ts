@@ -172,4 +172,10 @@ export default class EnvironmentService {
       return this.getEnv('JWT_ACCESS_TOKEN_EXPIRY');
     }
   }
+
+  static JWT_ACCESS_TOKEN_SECRET_KEY(): string {
+    get: {
+      return this.getEnv('JWT_ACCESS_TOKEN_SECRET_KEY');
+    }
+  }
 }

@@ -75,7 +75,7 @@ export class AzureTokenValidationService {
       UserIdentifier: jwtUserData.sub,
     });
     if (!user) {
-      throw new UnauthorizedException(StaticStrings.ERR_INVALID_EMAIL);
+      throw new UnauthorizedException(StaticStrings.ERR_INVALID_TOKEN);
     }
     return { jwtUserData, user };
   }
