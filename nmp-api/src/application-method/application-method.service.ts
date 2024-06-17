@@ -1,26 +1,19 @@
-import { ManureTypesApplicationMethodEntity } from '@db/entity/manure-type-application-method.entity';
+import { ApplicationMethodEntity } from '@db/entity/application-method.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 @Injectable()
 export class ApplicationMethodService {
   constructor(
-    @InjectRepository(ManureTypesApplicationMethodEntity)
-    private readonly manureTypesApplicationMethodRepository: Repository<ManureTypesApplicationMethodEntity>,
+    @InjectRepository(ApplicationMethodEntity)
+    private readonly applicationMethodRepository: Repository<ApplicationMethodEntity>,
   ) {}
 
-  async getApplicationMethodsBasedOnManureTypeId(manureTypeId: number) {
-    const manureTypesApplicationMethods =
-      await this.manureTypesApplicationMethodRepository.find({
-        where: { ManureTypeID: manureTypeId },
-        relations: ['ApplicationMethods'],
-      });
-
-    const applicationMethods = manureTypesApplicationMethods.map(
-      (manureTypesApplicationMethod) =>
-        manureTypesApplicationMethod.ApplicationMethods,
-    );
+  async getApplicationMethods(applicableFor: string) {
+    const applicationMethods = await this.applicationMethodRepository.find({
+      where: { ApplicableFor: In([applicableFor, 'B']) },
+    });
 
     return applicationMethods;
   }

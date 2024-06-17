@@ -1,19 +1,31 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import {
+  Entity,
+  Column,
+  OneToMany,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { IncorpMethodsIncorpDelayEntity } from './incorp-method-incorp-delay.entity';
 import { OrganicManureEntity } from './organic-manure.entity';
 
 @Entity({ name: 'IncorporationDelays' })
 export class IncorporationDelayEntity {
-  @PrimaryGeneratedColumn({ name: 'ID' })
+  @PrimaryGeneratedColumn('identity', {
+    generatedIdentity: 'ALWAYS',
+    primaryKeyConstraintName: 'PK_IncorporationDelays',
+  })
+  @PrimaryColumn({
+    name: 'ID',
+  })
   ID: number;
 
   @Column('nvarchar', { length: 100 })
   Name: string;
 
-  @Column('int')
+  @Column('int', { nullable: true })
   FromHours: number;
 
-  @Column('int')
+  @Column('int', { nullable: true })
   ToHours: number;
 
   @OneToMany(

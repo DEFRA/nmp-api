@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { ApplicationMethodService } from './application-method.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApplicationMethodController } from './application-method.controller';
-import { ManureTypesApplicationMethodEntity } from '@db/entity/manure-type-application-method.entity';
+import { ApplicationMethodEntity } from '@db/entity/application-method.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ManureTypesApplicationMethodEntity])],
+  imports: [TypeOrmModule.forFeature([ApplicationMethodEntity])],
   providers: [ApplicationMethodService],
   controllers: [ApplicationMethodController],
   exports: [TypeOrmModule],

@@ -19,7 +19,6 @@ import { IncorpMethodsIncorpDelayEntity } from '@db/entity/incorp-method-incorp-
 import { IncorporationDelayEntity } from '@db/entity/incorporation-delay.entity';
 import { IncorporationMethodEntity } from '@db/entity/incorporation-method.entity';
 import { ManureGroupEntity } from '@db/entity/manure-group.entity';
-import { ManureTypesApplicationMethodEntity } from '@db/entity/manure-type-application-method.entity';
 import { ManureTypeEntity } from '@db/entity/manure-type.entity';
 import { MoistureTypeEntity } from '@db/entity/moisture-type.entity';
 import { OrganicManureEntity } from '@db/entity/organic-manure.entity';
@@ -61,7 +60,6 @@ if (process.env.NODE_ENV === 'production') {
       IncorporationDelayEntity,
       IncorporationMethodEntity,
       ManureGroupEntity,
-      ManureTypesApplicationMethodEntity,
       ManureTypeEntity,
       MoistureTypeEntity,
       OrganicManureEntity,
@@ -113,7 +111,6 @@ if (process.env.NODE_ENV === 'production') {
       IncorporationDelayEntity,
       IncorporationMethodEntity,
       ManureGroupEntity,
-      ManureTypesApplicationMethodEntity,
       ManureTypeEntity,
       MoistureTypeEntity,
       OrganicManureEntity,

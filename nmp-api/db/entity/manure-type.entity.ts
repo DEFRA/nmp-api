@@ -1,23 +1,25 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
   Column,
   OneToMany,
   ManyToOne,
   JoinColumn,
   PrimaryColumn,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { OrganicManureEntity } from './organic-manure.entity';
-import { ManureTypesApplicationMethodEntity } from './manure-type-application-method.entity';
 import { ManureGroupEntity } from './manure-group.entity';
 import { CountryEntity } from './country.entity';
 
 @Entity({ name: 'ManureTypes' })
 export class ManureTypeEntity {
+  @PrimaryGeneratedColumn('identity', {
+    generatedIdentity: 'ALWAYS',
+    primaryKeyConstraintName: 'PK_ManureTypes',
+  })
   @PrimaryColumn({
     type: 'int',
     insert: false,
-    primaryKeyConstraintName: 'PK_ManureTypes',
   })
   ID: number;
 
@@ -83,12 +85,6 @@ export class ManureTypeEntity {
     (organicManure) => organicManure.ManureTypes,
   )
   OrganicManures: OrganicManureEntity[];
-
-  @OneToMany(
-    () => ManureTypesApplicationMethodEntity,
-    (manureTypesApplicationMethod) => manureTypesApplicationMethod.ManureTypes,
-  )
-  ManureTypesApplicationMethods: ManureTypesApplicationMethodEntity[];
 
   @ManyToOne(() => ManureGroupEntity, (manureGroup) => manureGroup.ManureTypes)
   @JoinColumn({ name: 'ManureGroupID' })

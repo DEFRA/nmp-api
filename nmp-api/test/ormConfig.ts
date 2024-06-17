@@ -10,7 +10,6 @@ import { IncorporationDelayEntity } from '@db/entity/incorporation-delay.entity'
 import { IncorporationMethodEntity } from '@db/entity/incorporation-method.entity';
 import ManagementPeriodEntity from '@db/entity/management-period.entity';
 import { ManureGroupEntity } from '@db/entity/manure-group.entity';
-import { ManureTypesApplicationMethodEntity } from '@db/entity/manure-type-application-method.entity';
 import { ManureTypeEntity } from '@db/entity/manure-type.entity';
 import { MoistureTypeEntity } from '@db/entity/moisture-type.entity';
 import { OrganicManureEntity } from '@db/entity/organic-manure.entity';
@@ -48,7 +47,6 @@ export const ormConfig: any = {
     IncorporationDelayEntity,
     IncorporationMethodEntity,
     ManureGroupEntity,
-    ManureTypesApplicationMethodEntity,
     ManureTypeEntity,
     MoistureTypeEntity,
     OrganicManureEntity,

@@ -10,7 +10,10 @@ import { ManureTypeEntity } from './manure-type.entity';
 
 @Entity({ name: 'Countries' })
 export class CountryEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('identity', {
+    generatedIdentity: 'ALWAYS',
+    primaryKeyConstraintName: 'PK_Countries',
+  })
   @PrimaryColumn({ type: 'int', insert: false })
   ID: number;
 

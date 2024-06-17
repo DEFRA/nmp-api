@@ -10,15 +10,11 @@ export class ApplicationMethodController {
     private readonly applicationMethodService: ApplicationMethodService,
   ) {}
 
-  @Get('/:manureTypeId')
-  @ApiOperation({ summary: 'Get Application Methods by manureTypeId' })
-  async getApplicationMethodsBasedOnManureTypeId(
-    @Param('manureTypeId') manureTypeId: number,
-  ) {
+  @Get('/:applicableFor')
+  @ApiOperation({ summary: 'Get Application Methods' })
+  async getApplicationMethods(@Param('applicableFor') applicableFor: string) {
     const records =
-      await this.applicationMethodService.getApplicationMethodsBasedOnManureTypeId(
-        manureTypeId,
-      );
+      await this.applicationMethodService.getApplicationMethods(applicableFor);
     return { ApplicationMethods: records };
   }
 }
