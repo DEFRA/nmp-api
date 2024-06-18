@@ -28,6 +28,9 @@ export class IncorporationDelayEntity {
   @Column('int', { nullable: true })
   ToHours: number;
 
+  @Column({ type: 'nvarchar', length: 1, nullable: true })
+  ApplicableFor: string;
+
   @OneToMany(
     () => IncorpMethodsIncorpDelayEntity,
     (incorpMethodsIncorpDelay) => incorpMethodsIncorpDelay.IncorporationDelay,

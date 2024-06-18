@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ApplicationMethodController } from './application-method.controller';
 import { ApplicationMethodService } from './application-method.service';
-import { ApplicationMethodEntity } from '@db/entity/application-method.entity';
 
 describe('ApplicationMethodController', () => {
   let controller: ApplicationMethodController;
@@ -31,45 +30,57 @@ describe('ApplicationMethodController', () => {
   });
 
   describe('getApplicationMethods', () => {
-    it('should return an array of application methods', async () => {
-      const applicableFor = 'L';
-      const expectedResult: ApplicationMethodEntity[] = [
+    it('should return application methods', async () => {
+      const result = [
         {
           ID: 1,
           Name: 'Method 1',
-          ApplicableFor: 'L',
-          ApplicationMethodsIncorpMethods: [],
-          OrganicManures: [],
-        },
-        {
-          ID: 2,
-          Name: 'Method 2',
-          ApplicableFor: 'S',
+          ApplicableForGrass: 'L',
+          ApplicableForArableAndHorticulture: 'S',
           ApplicationMethodsIncorpMethods: [],
           OrganicManures: [],
         },
       ];
+      jest.spyOn(service, 'getApplicationMethods').mockResolvedValue(result);
 
-      jest
-        .spyOn(service, 'getApplicationMethods')
-        .mockResolvedValue(expectedResult);
-
-      expect(
-        await controller.getApplicationMethods(applicableFor),
-      ).toStrictEqual({ ApplicationMethods: expectedResult });
+      expect(await controller.getApplicationMethods(1, 'someValue')).toEqual({
+        ApplicationMethods: result,
+      });
     });
 
-    it('should return an empty array if no methods are found', async () => {
-      const applicableFor = 'L';
-      const expectedResult: ApplicationMethodEntity[] = [];
+    it('should call getApplicationMethods with correct parameters', async () => {
+      const fieldType = 1;
+      const applicableFor = 'someValue';
+      const result = [
+        {
+          ID: 1,
+          Name: 'Method 1',
+          ApplicableForGrass: 'L',
+          ApplicableForArableAndHorticulture: 'S',
+          ApplicationMethodsIncorpMethods: [],
+          OrganicManures: [],
+        },
+      ];
+      jest.spyOn(service, 'getApplicationMethods').mockResolvedValue(result);
 
+      await controller.getApplicationMethods(fieldType, applicableFor);
+
+      expect(service.getApplicationMethods).toHaveBeenCalledWith(
+        fieldType,
+        applicableFor,
+      );
+    });
+
+    it('should handle errors', async () => {
+      const fieldType = 1;
+      const applicableFor = 'someValue';
       jest
         .spyOn(service, 'getApplicationMethods')
-        .mockResolvedValue(expectedResult);
+        .mockRejectedValue(new Error('test error'));
 
-      expect(await controller.getApplicationMethods(applicableFor)).toEqual({
-        ApplicationMethods: expectedResult,
-      });
+      await expect(
+        controller.getApplicationMethods(fieldType, applicableFor),
+      ).rejects.toThrow('test error');
     });
   });
 });

@@ -36,6 +36,9 @@ export default class CropEntity {
   @ApiPropertyOptional()
   CropTypeID: number;
 
+  @Column({ type: 'int', default: 1 })
+  FieldType: number;
+
   @Column('nvarchar', { nullable: true, length: 100 })
   @ApiPropertyOptional()
   Variety: string;

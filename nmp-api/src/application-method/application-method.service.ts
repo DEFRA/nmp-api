@@ -1,5 +1,5 @@
 import { ApplicationMethodEntity } from '@db/entity/application-method.entity';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 
@@ -10,11 +10,24 @@ export class ApplicationMethodService {
     private readonly applicationMethodRepository: Repository<ApplicationMethodEntity>,
   ) {}
 
-  async getApplicationMethods(applicableFor: string) {
-    const applicationMethods = await this.applicationMethodRepository.find({
-      where: { ApplicableFor: In([applicableFor, 'B']) },
-    });
+  async getApplicationMethods(fieldType: number, applicableFor: string) {
+    let whereCondition = {};
 
+    if (fieldType == 1) {
+      whereCondition = { ApplicableForGrass: In([applicableFor, 'B']) };
+    } else if (fieldType == 2) {
+      whereCondition = {
+        ApplicableForArableAndHorticulture: In([applicableFor, 'B']),
+      };
+    } else {
+      throw new BadRequestException(
+        'Invalid fieldType. It must be either 1 or 2.',
+      );
+    }
+
+    const applicationMethods = await this.applicationMethodRepository.find({
+      where: whereCondition,
+    });
     return applicationMethods;
   }
 }
