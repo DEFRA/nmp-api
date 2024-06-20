@@ -1,12 +1,38 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { IncorporationDelaysController } from './incorporation-delay.controller';
 import { IncorporationDelaysService } from './incorporation-delay.service';
-import { IncorporationDelayEntity } from '@db/entity/incorporation-delay.entity';
-
+import { IncorporationDelaysController } from './incorporation-delay.controller';
 
 describe('IncorporationDelaysController', () => {
   let controller: IncorporationDelaysController;
   let service: IncorporationDelaysService;
+
+  const mockIncorporationDelaysService = {
+    getIncorporationDelays: jest.fn((methodId, applicableFor) => {
+      if (methodId === 1 && applicableFor === 'L') {
+        return [
+          {
+            ID: 1,
+            Name: 'Delay 1',
+            FromHours: 2,
+            ToHours: 6,
+            ApplicableFor: 'L',
+          },
+        ];
+      } else if (methodId === 2 && applicableFor === 'S') {
+        return [
+          {
+            ID: 2,
+            Name: 'Delay 2',
+            FromHours: 2,
+            ToHours: 6,
+            ApplicableFor: 'S',
+          },
+        ];
+      } else {
+        return [];
+      }
+    }),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -14,9 +40,7 @@ describe('IncorporationDelaysController', () => {
       providers: [
         {
           provide: IncorporationDelaysService,
-          useValue: {
-            getDelaysByMethodId: jest.fn(),
-          },
+          useValue: mockIncorporationDelaysService,
         },
       ],
     }).compile();
@@ -33,32 +57,27 @@ describe('IncorporationDelaysController', () => {
     expect(controller).toBeDefined();
   });
 
-  describe('getDelaysByMethodId', () => {
-    it('should return an object with IncorporationDelays array', async () => {
-      const result: IncorporationDelayEntity[] = [
-        {
-          ID: 1, Name: 'Delay Type 1', FromHours: 1, ToHours: 24,
-          IncorpMethodsIncorpDelays: [],
-          OrganicManures: []
-        },
-        {
-          ID: 2, Name: 'Delay Type 2', FromHours: 25, ToHours: 48,
-          IncorpMethodsIncorpDelays: [],
-          OrganicManures: []
-        },
-      ];
-
-      jest.spyOn(service, 'getDelaysByMethodId').mockResolvedValue(result);
-
-      expect(await controller.getDelaysByMethodId(1)).toEqual({
-        IncorporationDelays: result,
+  describe('getIncorporationDelays', () => {
+    it('should return a list of incorporation delays for valid methodId and applicableFor', async () => {
+      const result = await controller.getIncorporationDelays(1, 'L');
+      expect(result).toEqual({
+        IncorporationDelays: [
+          {
+            ID: 1,
+            Name: 'Delay 1',
+            FromHours: 2,
+            ToHours: 6,
+            ApplicableFor: 'L',
+          },
+        ],
       });
+      expect(service.getIncorporationDelays).toHaveBeenCalledWith(1, 'L');
     });
 
-    it('should call the service with the correct methodId', async () => {
-      const methodId = 1;
-      await controller.getDelaysByMethodId(methodId);
-      expect(service.getDelaysByMethodId).toHaveBeenCalledWith(methodId);
+    it('should return an empty list for invalid methodId and applicableFor', async () => {
+      const result = await controller.getIncorporationDelays(0, 'L');
+      expect(result).toEqual({ IncorporationDelays: [] });
+      expect(service.getIncorporationDelays).toHaveBeenCalledWith(0, 'L');
     });
   });
 });

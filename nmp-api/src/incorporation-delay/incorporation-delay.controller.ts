@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { IncorporationDelaysService } from './incorporation-delay.service';
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
 
@@ -10,19 +10,19 @@ export class IncorporationDelaysController {
     private readonly incorporationDelaysService: IncorporationDelaysService,
   ) {}
 
-  @Get(':methodId')
+  @Get('/:methodId')
   @ApiOperation({
-    summary: 'Get list of Incorporation Delays by Incorp Method Id',
+    summary: 'Get list of Incorporation Delays',
   })
-  async getDelaysByMethodId(@Param('methodId') methodId: number) {
-    const delays =
-      await this.incorporationDelaysService.getDelaysByMethodId(methodId);
-    // return delays?.map((delay) => ({
-    //   ID: delay.ID,
-    //   Name: delay.Name,
-    //   FromHours: delay.FromHours,
-    //   ToHours: delay.ToHours,
-    // }));
+  async getIncorporationDelays(
+    @Param('methodId') methodId: number,
+    @Query('applicableFor') applicableFor: string,
+  ) {
+    const delays = await this.incorporationDelaysService.getIncorporationDelays(
+      methodId,
+      applicableFor,
+    );
+
     return { IncorporationDelays: delays };
   }
 }

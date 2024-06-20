@@ -24,6 +24,12 @@ export class IncorporationMethodEntity {
   @Column('nvarchar', { length: 100 })
   Name: string;
 
+  @Column({ type: 'nvarchar', length: 1, nullable: true })
+  ApplicableForGrass: string;
+
+  @Column({ type: 'nvarchar', length: 1, nullable: true })
+  ApplicableForArableAndHorticulture: string;
+
   @OneToMany(
     () => ApplicationMethodsIncorpMethodEntity,
     (applicationMethodsIncorpMethod) =>
