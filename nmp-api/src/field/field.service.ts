@@ -12,6 +12,7 @@ import ManagementPeriodEntity from '@db/entity/management-period.entity';
 
 import { CreateFieldWithSoilAnalysisAndCropsDto } from './dto/field.dto';
 import { CreateCropWithManagementPeriodsDto } from '@src/crop/dto/crop.dto';
+import { RB209SoilService } from '@src/vendors/rb209/soil/soil.service';
 
 @Injectable()
 export class FieldService extends BaseService<
@@ -28,8 +29,34 @@ export class FieldService extends BaseService<
     @InjectRepository(ManagementPeriodEntity)
     protected readonly managementPeriodRepository: Repository<ManagementPeriodEntity>,
     protected readonly entityManager: EntityManager,
+    protected readonly rB209SoilService: RB209SoilService,
   ) {
     super(repository, entityManager);
+  }
+
+  async getFieldCropAndSoilDetails(
+    fieldId: number,
+    year: number,
+    confirm: boolean,
+  ) {
+    const crop = await this.cropRepository.findOneBy({
+      FieldID: fieldId,
+      Year: year,
+      Confirm: confirm,
+    });
+
+    const soilTypeId = (await this.getById(fieldId)).records.SoilTypeID;
+
+    const soil: any = await this.rB209SoilService.getData(
+      `Soil/SoilType/${soilTypeId}`,
+    );
+
+    return {
+      FieldType: crop.FieldType,
+      SoilTypeID: soilTypeId,
+      SoilTypeName: soil.soilType,
+      SowingDate: crop.SowingDate,
+    };
   }
 
   async checkFieldExists(farmId: number, name: string) {

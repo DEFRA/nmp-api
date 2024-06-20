@@ -9,6 +9,7 @@ import { CropService } from '@src/crop/crop.service';
 import { SoilAnalysisService } from '@src/soil-analysis/soil-analysis.service';
 import { ManagementPeriodService } from '@src/management-period/management-period.service';
 import ManagementPeriodEntity from '@db/entity/management-period.entity';
+import { RB209SoilService } from '@src/vendors/rb209/soil/soil.service';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import ManagementPeriodEntity from '@db/entity/management-period.entity';
     CropService,
     SoilAnalysisService,
     ManagementPeriodService,
+    RB209SoilService,
   ],
   exports: [TypeOrmModule],
 })
