@@ -27,6 +27,21 @@ export class FieldController {
     return { Field: records };
   }
 
+  @Get('/info/:fieldId')
+  @ApiOperation({ summary: 'Get Field Crop and Soil details by Field Id' })
+  async getFieldCropAndSoilDetails(
+    @Param('fieldId', ParseIntPipe) fieldId: number,
+    @Query('year', ParseIntPipe) year: number,
+    @Query('confirm', ParseBoolPipe) confirm: boolean,
+  ) {
+    const records = await this.fieldService.getFieldCropAndSoilDetails(
+      fieldId,
+      year,
+      confirm,
+    );
+    return { FieldDetails: records };
+  }
+
   @Get('/farms/:farmId')
   @ApiOperation({ summary: 'Get Fields by Farm Id' })
   @ApiQuery({ name: 'shortSummary', required: false })

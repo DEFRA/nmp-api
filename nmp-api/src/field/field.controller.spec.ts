@@ -19,6 +19,7 @@ import FarmEntity from '@db/entity/farm.entity';
 import { truncateAllTables } from '../../test/utils';
 import { EntityManager } from 'typeorm';
 import OrganisationEntity from '@db/entity/organisation.entity';
+import { RB209SoilService } from '@src/vendors/rb209/soil/soil.service';
 
 describe('FieldController', () => {
   let controller: FieldController;
@@ -43,6 +44,7 @@ describe('FieldController', () => {
         CropService,
         SoilAnalysisService,
         ManagementPeriodService,
+        RB209SoilService,
       ],
     }).compile();
 
@@ -108,6 +110,29 @@ describe('FieldController', () => {
       const fieldId = 2;
       const result = await controller.getFieldById(fieldId);
       expect(result.Field).toBeNull();
+    });
+  });
+
+  describe('getFieldCropAndSoilDetails', () => {
+    it('should return field details', async () => {
+      const fieldId = 1;
+      const year = 2024;
+      const confirm = false;
+
+      const result = await controller.getFieldCropAndSoilDetails(
+        fieldId,
+        year,
+        confirm,
+      );
+
+      expect(result).toEqual({
+        FieldDetails: {
+          FieldType: 1,
+          SoilTypeID: 2,
+          SoilTypeName: 'Medium',
+          SowingDate: '2023-01-08T18:30:00.000Z',
+        },
+      });
     });
   });
 
