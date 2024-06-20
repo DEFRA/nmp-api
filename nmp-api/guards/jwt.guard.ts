@@ -29,21 +29,12 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     try {
-      const user = await this.userRepository.findOneBy({
-        RefreshToken: token,
-      });
-      if (!user) {
-        throw new UnauthorizedException(StaticStrings.ERR_INVALID_RESET_TOKEN);
-      }
-      const payload: JwtPayload = this.jwtService.verify(
-        user.EncryptedClaimsToken,
-      );
+      const payload: JwtPayload = this.jwtService.verify(token);
       if (!payload) {
         throw new UnauthorizedException(StaticStrings.ERR_INVALID_TOKEN);
       }
 
-      request['jwtPayload'] = payload;
-      request['userId'] = user.ID;
+      request['userId'] = payload.userId;
       return true;
     } catch (e) {
       throw new UnauthorizedException(HttpStatus.UNAUTHORIZED, e?.message);

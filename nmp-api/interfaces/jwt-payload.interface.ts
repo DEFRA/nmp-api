@@ -16,4 +16,5 @@ export class JwtPayload {
   uniqueReference: string;
   relationships: string[];
   roles: string[];
+  userId: number;
 }

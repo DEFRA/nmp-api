@@ -41,7 +41,7 @@ export default class UserEntity {
   @Column('datetime2', { nullable: true, precision: 7 })
   RefreshTokenExpiresOn: Date;
 
-  @Column('nvarchar', { nullable: true })
+  @Column('nvarchar', { length: 2000, nullable: true })
   EncryptedClaimsToken: string;
 
   @Column('uniqueidentifier', { nullable: true, unique: true })
