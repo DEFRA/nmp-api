@@ -15,6 +15,7 @@ import { WindspeedEntity } from './wind-speed.entity';
 import { RainTypeEntity } from './rain-type.entity';
 import { MoistureTypeEntity } from './moisture-type.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import UserEntity from './user.entity';
 
 @Entity({ name: 'OrganicManures' })
 export class OrganicManureEntity {
@@ -132,6 +133,26 @@ export class OrganicManureEntity {
   @Column('int', { nullable: true })
   @ApiPropertyOptional()
   MoistureID: number;
+
+  @Column('datetime2', { nullable: true, precision: 7, default: 'GETDATE()' })
+  CreatedOn: Date;
+
+  @Column('int', { nullable: true })
+  CreatedByID: number;
+
+  @ManyToOne(() => UserEntity, (user) => user.CreatedOrganicManures)
+  @JoinColumn({ name: 'CreatedByID' })
+  CreatedByUser: UserEntity;
+
+  @Column('datetime2', { nullable: true, precision: 7 })
+  ModifiedOn: Date;
+
+  @Column('int', { nullable: true })
+  ModifiedByID: number;
+
+  @ManyToOne(() => UserEntity, (user) => user.ModifiedOrganicManures)
+  @JoinColumn({ name: 'CreatedByID' })
+  ModifiedByUser: UserEntity;
 
   @ManyToOne(
     () => ManagementPeriodEntity,

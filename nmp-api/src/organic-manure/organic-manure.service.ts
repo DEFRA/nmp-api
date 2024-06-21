@@ -18,8 +18,11 @@ export class OrganicManureService extends BaseService<
     super(repository, entityManager);
   }
 
-  async createOrganicManures(body: OrganicManureEntity) {
-    const organicManure = await this.repository.save(body);
+  async createOrganicManures(body: OrganicManureEntity, userId: number) {
+    const organicManure = await this.repository.save({
+      ...body,
+      CreatedByID: userId,
+    });
 
     return organicManure;
   }
