@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { IncorporationMethodEntity } from './incorporation-method.entity';
 import { IncorporationDelayEntity } from './incorporation-delay.entity';
 

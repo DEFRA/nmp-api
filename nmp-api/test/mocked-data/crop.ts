@@ -20,6 +20,7 @@ export const createCropReqBody = {
   DefoliationSequence: null,
   GrazingIntensity: 0,
   PreviousID: null,
+  FieldType: 1,
 };
 
 export const createPlanReqBody: any = {
@@ -47,6 +48,7 @@ export const createPlanReqBody: any = {
         GrazingIntensity: 0,
         PreviousID: null,
         FieldID: null,
+        FieldType: 1,
       },
       ManagementPeriods: [
         {
@@ -83,6 +85,7 @@ export const createCropWithManagementPeriodReqBody: any = {
     DefoliationSequence: 0,
     GrazingIntensity: 0,
     PreviousID: 0,
+    FieldType: 1,
   },
   ManagementPeriods: [
     {

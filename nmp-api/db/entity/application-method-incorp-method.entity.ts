@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, JoinColumn, Column, PrimaryColumn } from 'typeorm';
+import { Entity, ManyToOne, JoinColumn, PrimaryColumn } from 'typeorm';
 import { ApplicationMethodEntity } from './application-method.entity';
 import { IncorporationMethodEntity } from './incorporation-method.entity';
 

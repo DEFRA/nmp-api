@@ -68,6 +68,7 @@ export const createFieldWithSoilAnalysisAndCropsReqBody: any = {
         PreviousID: 0,
         CreatedByID: 2,
         ModifiedByID: 2,
+        FieldType: 1,
       },
       ManagementPeriods: [
         {

@@ -39,7 +39,7 @@ export class IncorporationDelayEntity {
 
   @OneToMany(
     () => OrganicManureEntity,
-    (organicManure) => organicManure.IncroporationDelays,
+    (organicManure) => organicManure.IncorporationDelays,
   )
   OrganicManures: OrganicManureEntity[];
 }

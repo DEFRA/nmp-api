@@ -14,6 +14,7 @@ import { IncorporationDelayEntity } from './incorporation-delay.entity';
 import { WindspeedEntity } from './wind-speed.entity';
 import { RainTypeEntity } from './rain-type.entity';
 import { MoistureTypeEntity } from './moisture-type.entity';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 @Entity({ name: 'OrganicManures' })
 export class OrganicManureEntity {
@@ -25,84 +26,111 @@ export class OrganicManureEntity {
   ID: number;
 
   @Column('int')
+  @ApiPropertyOptional()
   ManagementPeriodID: number;
 
   @Column('int')
+  @ApiPropertyOptional()
   ManureTypeID: number;
 
   @Column('datetime', { nullable: true })
+  @ApiPropertyOptional()
   ApplicationDate: Date;
 
   @Column('bit', { nullable: true })
+  @ApiPropertyOptional()
   Confirm: boolean;
 
   @Column('decimal', { precision: 18, scale: 3 })
+  @ApiProperty()
   N: number;
 
   @Column('decimal', { precision: 18, scale: 3 })
+  @ApiProperty()
   P2O5: number;
 
   @Column('decimal', { precision: 18, scale: 3 })
+  @ApiProperty()
   K2O: number;
 
   @Column('decimal', { precision: 18, scale: 3 })
+  @ApiProperty()
   MgO: number;
 
   @Column('decimal', { precision: 18, scale: 3 })
+  @ApiProperty()
   SO3: number;
 
   @Column('decimal', { precision: 18, scale: 3 })
+  @ApiProperty()
   AvailableN: number;
 
   @Column('int')
+  @ApiProperty()
   ApplicationRate: number;
 
   @Column('decimal', { precision: 18, scale: 2, nullable: false })
+  @ApiProperty()
   DryMatterPercent: number;
 
   @Column('decimal', { precision: 18, scale: 2, nullable: false })
+  @ApiProperty()
   UricAcid: number;
 
   @Column('datetime', { nullable: true })
+  @ApiPropertyOptional()
   EndOfDrain: Date;
 
   @Column('int')
+  @ApiProperty()
   Rainfall: number;
 
   @Column('decimal', { precision: 18, scale: 3, nullable: true })
+  @ApiPropertyOptional()
   AreaSpread: number;
 
   @Column('decimal', { precision: 18, scale: 3, nullable: true })
+  @ApiPropertyOptional()
   ManureQuantity: number;
 
   @Column('int')
+  @ApiPropertyOptional()
   ApplicationMethodID: number;
 
   @Column('int')
-  IncroporationMethodID: number;
+  @ApiPropertyOptional()
+  IncorporationMethodID: number;
 
   @Column('int')
-  IncroporationDelayID: number;
+  @ApiPropertyOptional()
+  IncorporationDelayID: number;
 
   @Column('decimal', { precision: 18, scale: 3 })
+  @ApiProperty()
   NH4N: number;
 
   @Column('decimal', { precision: 18, scale: 3 })
+  @ApiProperty()
   NO3N: number;
 
   @Column('decimal', { precision: 18, scale: 3, nullable: true })
+  @ApiPropertyOptional()
   AvailableP2O5: number;
 
   @Column('decimal', { precision: 18, scale: 3, nullable: true })
+  @ApiPropertyOptional()
   AvailableK2O: number;
 
   @Column('int', { nullable: true })
+  @ApiPropertyOptional()
   WindspeedID: number;
 
   @Column('int', { nullable: true })
+  @ApiPropertyOptional()
   RainfallWithinSixHoursID: number;
 
   @Column('int', { nullable: true })
+  @ApiPropertyOptional()
   MoistureID: number;
 
   @ManyToOne(
@@ -127,15 +155,15 @@ export class OrganicManureEntity {
     () => IncorporationMethodEntity,
     (incorporationMethod) => incorporationMethod.OrganicManures,
   )
-  @JoinColumn({ name: 'IncroporationMethodID' })
+  @JoinColumn({ name: 'IncorporationMethodID' })
   IncorporationMethods: IncorporationMethodEntity;
 
   @ManyToOne(
     () => IncorporationDelayEntity,
     (incorporationDelay) => incorporationDelay.OrganicManures,
   )
-  @JoinColumn({ name: 'IncroporationDelayID' })
-  IncroporationDelays: IncorporationDelayEntity;
+  @JoinColumn({ name: 'IncorporationDelayID' })
+  IncorporationDelays: IncorporationDelayEntity;
 
   @ManyToOne(() => WindspeedEntity, (windspeed) => windspeed.OrganicManures)
   @JoinColumn({ name: 'WindspeedID' })
