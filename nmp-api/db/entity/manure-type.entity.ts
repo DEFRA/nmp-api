@@ -38,46 +38,46 @@ export class ManureTypeEntity {
   @Column('bit')
   IsLiquid: boolean;
 
-  @Column('decimal', { precision: 18, scale: 2, nullable: true })
+  @Column('decimal', { precision: 18, scale: 2, nullable: false })
   DryMatter: number;
 
-  @Column('decimal', { precision: 18, scale: 2, nullable: true })
+  @Column('decimal', { precision: 18, scale: 2, nullable: false })
   TotalN: number;
 
-  @Column('decimal', { precision: 18, scale: 2, nullable: true })
+  @Column('decimal', { precision: 18, scale: 2, nullable: false })
   NH4N: number;
 
-  @Column('decimal', { precision: 18, scale: 2, nullable: true })
+  @Column('decimal', { precision: 18, scale: 2, nullable: false })
   Uric: number;
 
-  @Column('decimal', { precision: 18, scale: 2, nullable: true })
+  @Column('decimal', { precision: 18, scale: 2, nullable: false })
   NO3N: number;
 
-  @Column('decimal', { precision: 18, scale: 2, nullable: true })
+  @Column('decimal', { precision: 18, scale: 2, nullable: false })
   P2O5: number;
 
-  @Column('decimal', { precision: 18, scale: 2, nullable: true })
+  @Column('decimal', { precision: 18, scale: 2, nullable: false })
   K2O: number;
 
-  @Column('decimal', { precision: 18, scale: 2, nullable: true })
+  @Column('decimal', { precision: 18, scale: 2, nullable: false })
   SO3: number;
 
-  @Column('decimal', { precision: 18, scale: 2, nullable: true })
+  @Column('decimal', { precision: 18, scale: 2, nullable: false })
   MgO: number;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'int', nullable: false })
   P2O5Available: number;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'int', nullable: false })
   K2OAvailable: number;
 
-  @Column({ type: 'decimal', precision: 18, scale: 2, nullable: true })
+  @Column({ type: 'decimal', precision: 18, scale: 2, nullable: false })
   NMaxConstant: number;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'int', nullable: false })
   ApplicationRateArable: number;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'int', nullable: false })
   ApplicationRateGrass: number;
 
   @OneToMany(

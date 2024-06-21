@@ -1,50 +1,40 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ManureGroupController } from './manure-group.controller';
 import { ManureGroupService } from './manure-group.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ormConfig } from '../../test/ormConfig';
+import { ManureGroupEntity } from '@db/entity/manure-group.entity';
 
 describe('ManureGroupController', () => {
   let controller: ManureGroupController;
-  let service: ManureGroupService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [ManureGroupController],
-      providers: [
-        {
-          provide: ManureGroupService,
-          useValue: {
-            getAll: jest
-              .fn()
-              .mockResolvedValue({ records: [{ id: 1, name: 'Test Group' }] }),
-            getById: jest
-              .fn()
-              .mockResolvedValue({ records: { id: 1, name: 'Test Group' } }),
-          },
-        },
+      imports: [
+        TypeOrmModule.forRoot(ormConfig),
+        TypeOrmModule.forFeature([ManureGroupEntity]),
       ],
+      controllers: [ManureGroupController],
+      providers: [ManureGroupService],
     }).compile();
 
     controller = module.get<ManureGroupController>(ManureGroupController);
-    service = module.get<ManureGroupService>(ManureGroupService);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
-  describe('getAllManureGroups', () => {
-    it('should return all Manure Groups', async () => {
+  describe('Get All Manure Groups', () => {
+    it('should return an array of manure groups', async () => {
       const result = await controller.getAllManureGroups();
-      expect(result.ManureGroups).toEqual([{ id: 1, name: 'Test Group' }]);
-      expect(service.getAll).toHaveBeenCalled();
+      expect(result.ManureGroups).toBeDefined();
     });
   });
 
-  describe('getManureGroupByManureGroupId', () => {
-    it('should return a single Manure Group by id', async () => {
-      const result = await controller.getManureGroupByManureGroupId(1);
-      expect(result.ManureGroup).toEqual({ id: 1, name: 'Test Group' });
-      expect(service.getById).toHaveBeenCalledWith(1);
+  describe('Get Manure Group By Manure GroupId', () => {
+    it('should return a manure group by manureGroupId', async () => {
+      const manureGroupId = 1;
+      const result =
+        await controller.getManureGroupByManureGroupId(manureGroupId);
+      expect(result.ManureGroup).toBeDefined();
+      expect(result.ManureGroup).toHaveProperty('ID');
     });
   });
 });

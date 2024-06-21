@@ -14,6 +14,7 @@ import ManagementPeriodEntity from './management-period.entity';
 import { RecommendationEntity } from './recommendation.entity';
 import { RecommendationCommentEntity } from './recommendation-comment.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { OrganicManureEntity } from './organic-manure.entity';
 
 @Entity({ name: 'Users' })
 export default class UserEntity {
@@ -56,6 +57,12 @@ export default class UserEntity {
 
   @OneToMany(() => CropEntity, (crop) => crop.ModifiedByUser)
   ModifiedCrops: CropEntity[];
+
+  @OneToMany(() => OrganicManureEntity, (crop) => crop.CreatedByUser)
+  CreatedOrganicManures: OrganicManureEntity[];
+
+  @OneToMany(() => OrganicManureEntity, (crop) => crop.ModifiedByUser)
+  ModifiedOrganicManures: OrganicManureEntity[];
 
   @OneToMany(
     () => SoilAnalysisEntity,
