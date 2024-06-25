@@ -24,6 +24,7 @@ import { MoistureTypeEntity } from '@db/entity/moisture-type.entity';
 import { OrganicManureEntity } from '@db/entity/organic-manure.entity';
 import { RainTypeEntity } from '@db/entity/rain-type.entity';
 import { WindspeedEntity } from '@db/entity/wind-speed.entity';
+import FarmManureTypeEntity from '@db/entity/farm-manure-type.entity';
 
 dotven.config();
 
@@ -65,6 +66,7 @@ if (process.env.NODE_ENV === 'production') {
       OrganicManureEntity,
       RainTypeEntity,
       WindspeedEntity,
+      FarmManureTypeEntity,
     ],
   };
 } else if (process.env.NODE_ENV === 'hosting') {
@@ -116,6 +118,7 @@ if (process.env.NODE_ENV === 'production') {
       OrganicManureEntity,
       RainTypeEntity,
       WindspeedEntity,
+      FarmManureTypeEntity,
     ],
     synchronize: false,
     logging: true,

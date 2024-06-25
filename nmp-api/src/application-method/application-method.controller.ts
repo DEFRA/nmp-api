@@ -14,8 +14,7 @@ export class ApplicationMethodController {
   @ApiOperation({ summary: 'Get Application Methods' })
   @ApiQuery({
     name: 'fieldType',
-    description:
-      '1 for ApplicableForGrass, 2 for ApplicableForArableAndHorticulture',
+    description: '1 for Arable & Horticulture, 2 for Grassland',
   })
   async getApplicationMethods(
     @Query('fieldType', new ParseIntPipe({ optional: false }))
