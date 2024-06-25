@@ -16,8 +16,7 @@ export class IncorporationMethodController {
   })
   @ApiQuery({
     name: 'fieldType',
-    description:
-      '1 for ApplicableForGrass, 2 for ApplicableForArableAndHorticulture',
+    description: '1 for Arable & Horticulture, 2 for Grassland',
   })
   async getIncorporationMethods(
     @Query('fieldType', new ParseIntPipe({ optional: false }))

@@ -14,10 +14,12 @@ export class ApplicationMethodService {
     let whereCondition = {};
 
     if (fieldType == 1) {
-      whereCondition = { ApplicableForGrass: In([applicableFor, 'B']) };
-    } else if (fieldType == 2) {
       whereCondition = {
         ApplicableForArableAndHorticulture: In([applicableFor, 'B']),
+      };
+    } else if (fieldType == 2) {
+      whereCondition = {
+        ApplicableForGrass: In([applicableFor, 'B']),
       };
     } else {
       throw new BadRequestException(

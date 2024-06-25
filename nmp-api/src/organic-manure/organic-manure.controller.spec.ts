@@ -10,7 +10,7 @@ import {
   createManagementPeriodReqBody,
   createOrganisationReqBody2,
 } from '../../test/mocked-data';
-import { orgranicManureReqBody } from '../../test/mocked-data/organic-manure';
+import { organicManureReqBody } from '../../test/mocked-data/organic-manure';
 import { OrganicManureController } from './organic-manure.controller';
 import { OrganicManureService } from './organic-manure.service';
 import { OrganicManureEntity } from '@db/entity/organic-manure.entity';
@@ -26,6 +26,7 @@ import CropEntity from '@db/entity/crop.entity';
 import FarmEntity from '@db/entity/farm.entity';
 import FieldEntity from '@db/entity/field.entity';
 import OrganisationEntity from '@db/entity/organisation.entity';
+import FarmManureTypeEntity from '@db/entity/farm-manure-type.entity';
 
 describe('OrganicManureController', () => {
   let controller: OrganicManureController;
@@ -47,7 +48,7 @@ describe('OrganicManureController', () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         TypeOrmModule.forRoot(ormConfig),
-        TypeOrmModule.forFeature([OrganicManureEntity]),
+        TypeOrmModule.forFeature([OrganicManureEntity, FarmManureTypeEntity]),
       ],
       controllers: [OrganicManureController],
       providers: [OrganicManureService],
@@ -78,7 +79,7 @@ describe('OrganicManureController', () => {
     await truncateAllTables(entityManager);
   });
 
-  describe('Create Organic Manure', () => {
+  describe('Create Organic Manure When Save default for farm is false', () => {
     it('should create organic manure', async () => {
       const organisation = await organisationRepository.save(
         createOrganisationReqBody2,
@@ -104,19 +105,87 @@ describe('OrganicManureController', () => {
       const windSpeed = await windSpeedRepository.find({});
       const moisture = await moistureRepository.find({});
       const rainType = await rainTypeRepository.find({});
-      orgranicManureReqBody.ManagementPeriodID = managementPeriod.ID;
-      orgranicManureReqBody.ManureTypeID = manureType[0].ID;
-      orgranicManureReqBody.ApplicationMethodID = applicationMethod[0].ID;
-      orgranicManureReqBody.IncorporationMethodID = incorporationMethod[0].ID;
-      orgranicManureReqBody.IncorporationDelayID = incorporationDelay[0].ID;
-      orgranicManureReqBody.WindspeedID = windSpeed[0].ID;
-      orgranicManureReqBody.RainfallWithinSixHoursID = rainType[0].ID;
-      orgranicManureReqBody.MoistureID = moisture[0].ID;
+      organicManureReqBody.OrganicManures[0].OrganicManure.ManagementPeriodID =
+        managementPeriod.ID;
+      organicManureReqBody.OrganicManures[0].OrganicManure.ManureTypeID =
+        manureType[0].ID;
+      organicManureReqBody.OrganicManures[0].OrganicManure.ApplicationMethodID =
+        applicationMethod[0].ID;
+      organicManureReqBody.OrganicManures[0].OrganicManure.IncorporationMethodID =
+        incorporationMethod[0].ID;
+      organicManureReqBody.OrganicManures[0].OrganicManure.IncorporationDelayID =
+        incorporationDelay[0].ID;
+      organicManureReqBody.OrganicManures[0].OrganicManure.WindspeedID =
+        windSpeed[0].ID;
+      organicManureReqBody.OrganicManures[0].OrganicManure.RainfallWithinSixHoursID =
+        rainType[0].ID;
+      organicManureReqBody.OrganicManures[0].OrganicManure.MoistureID =
+        moisture[0].ID;
       const result = await controller.createOrganicManures(
-        orgranicManureReqBody,
+        organicManureReqBody,
         req,
       );
-      expect(result).toHaveProperty('ID');
+      expect(result.OrganicManures).toBeGreaterThan(0);
+      expect(result.FarmManureType).toBeUndefined();
+    });
+  });
+
+  describe('Create Organic Manure When Save default for farm is true', () => {
+    it('should create organic manure with save/update farm manure type', async () => {
+      const organisation = await organisationRepository.save(
+        createOrganisationReqBody2,
+      );
+      createFarmReqBody2.OrganisationID = organisation.ID;
+      const createdFarm = await farmRepository.save(createFarmReqBody2);
+      createFieldReqBody.FarmID = createdFarm.ID;
+      const createdField = await fieldRepository.save(createFieldReqBody);
+      createCropReqBody.FieldID = createdField.ID;
+      const createdCrop = await cropRepository.save(createCropReqBody);
+      createManagementPeriodReqBody.CropID = createdCrop.ID;
+      const managementPeriod = await managementPeriodRepository.save(
+        createManagementPeriodReqBody,
+      );
+      const req: any = {
+        userId: 1,
+      };
+      const manureType = await manureTypeRepository.find({});
+      const farm = await farmRepository.find({});
+
+      const applicationMethod = await applicationMethodRepository.find({});
+      const incorporationMethod = await incorporationMethodRepository.find({});
+      const incorporationDelay = await incorporationDelayRepository.find({});
+      const windSpeed = await windSpeedRepository.find({});
+      const moisture = await moistureRepository.find({});
+      const rainType = await rainTypeRepository.find({});
+
+      organicManureReqBody.OrganicManures[0].OrganicManure.ManagementPeriodID =
+        managementPeriod.ID;
+      organicManureReqBody.OrganicManures[0].OrganicManure.ManureTypeID =
+        manureType[0].ID;
+      organicManureReqBody.OrganicManures[0].OrganicManure.ApplicationMethodID =
+        applicationMethod[0].ID;
+      organicManureReqBody.OrganicManures[0].OrganicManure.IncorporationMethodID =
+        incorporationMethod[0].ID;
+      organicManureReqBody.OrganicManures[0].OrganicManure.IncorporationDelayID =
+        incorporationDelay[0].ID;
+      organicManureReqBody.OrganicManures[0].OrganicManure.WindspeedID =
+        windSpeed[0].ID;
+      organicManureReqBody.OrganicManures[0].OrganicManure.RainfallWithinSixHoursID =
+        rainType[0].ID;
+      organicManureReqBody.OrganicManures[0].OrganicManure.MoistureID =
+        moisture[0].ID;
+
+      organicManureReqBody.OrganicManures[0].FarmID = farm[0].ID;
+      organicManureReqBody.OrganicManures[0].OrganicManure.ManureTypeID =
+        manureType[0].ID;
+      organicManureReqBody.OrganicManures[0].FieldTypeID = 1;
+
+      const result = await controller.createOrganicManures(
+        { ...organicManureReqBody, SaveDefaultForFarm: true },
+        req,
+      );
+      expect(result.OrganicManures).toBeGreaterThan(0);
+      expect(result.FarmManureType).toHaveProperty('ID');
     });
   });
 });

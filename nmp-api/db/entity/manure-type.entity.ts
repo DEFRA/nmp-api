@@ -10,6 +10,7 @@ import {
 import { OrganicManureEntity } from './organic-manure.entity';
 import { ManureGroupEntity } from './manure-group.entity';
 import { CountryEntity } from './country.entity';
+import FarmManureTypeEntity from './farm-manure-type.entity';
 
 @Entity({ name: 'ManureTypes' })
 export class ManureTypeEntity {
@@ -93,4 +94,10 @@ export class ManureTypeEntity {
   @ManyToOne(() => CountryEntity, (country) => country.ManureTypes)
   @JoinColumn({ name: 'CountryID' })
   Countries: CountryEntity;
+
+  @OneToMany(
+    () => FarmManureTypeEntity,
+    (farmManureType) => farmManureType.manureType,
+  )
+  farmManureTypes: FarmManureTypeEntity[];
 }

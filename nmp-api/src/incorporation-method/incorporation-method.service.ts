@@ -33,19 +33,22 @@ export class IncorporationMethodService {
       whereCondition = [
         {
           ID: In(incorporationMethodIds),
-          ApplicableForGrass: In([applicableFor, 'B']),
-        },
-        { ID: In(incorporationMethodIds), ApplicableForGrass: IsNull() },
-      ];
-    } else if (fieldType === 2) {
-      whereCondition = [
-        {
-          ID: In(incorporationMethodIds),
           ApplicableForArableAndHorticulture: In([applicableFor, 'B']),
         },
         {
           ID: In(incorporationMethodIds),
           ApplicableForArableAndHorticulture: IsNull(),
+        },
+      ];
+    } else if (fieldType === 2) {
+      whereCondition = [
+        {
+          ID: In(incorporationMethodIds),
+          ApplicableForGrass: In([applicableFor, 'B']),
+        },
+        {
+          ID: In(incorporationMethodIds),
+          ApplicableForGrass: IsNull(),
         },
       ];
     } else {

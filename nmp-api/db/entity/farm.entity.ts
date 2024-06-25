@@ -12,6 +12,7 @@ import {
 import FieldEntity from './field.entity';
 import UserEntity from './user.entity';
 import OrganisationEntity from './organisation.entity';
+import FarmManureTypeEntity from './farm-manure-type.entity';
 
 @Entity({ name: 'Farms' })
 @Index('UC_Farms_NamePostcode', ['Name', 'Postcode'], { unique: true })
@@ -141,4 +142,10 @@ export default class FarmEntity {
   @ManyToOne(() => OrganisationEntity, (organisation) => organisation.Farms)
   @JoinColumn({ name: 'OrganisationID' })
   Organisation: OrganisationEntity;
+
+  @OneToMany(
+    () => FarmManureTypeEntity,
+    (farmManureType) => farmManureType.farm,
+  )
+  farmManureTypes: FarmManureTypeEntity[];
 }
