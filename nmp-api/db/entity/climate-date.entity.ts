@@ -3,7 +3,7 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity({ name: 'ClimateDatabase' })
-export default class ClimateDataEntity {
+export default class ClimateDatabaseEntity {
   @PrimaryGeneratedColumn()
   ID: number;
 

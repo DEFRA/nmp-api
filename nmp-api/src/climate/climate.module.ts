@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { ClimateController } from './climate.controller';
 import { ClimateService } from './climate.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import ClimateDataEntity from '@db/entity/climate-date.entity';
+import ClimateDatabaseEntity from '@db/entity/climate-date.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ClimateDataEntity])],
+  imports: [TypeOrmModule.forFeature([ClimateDatabaseEntity])],
   controllers: [ClimateController],
   providers: [ClimateService],
   exports: [TypeOrmModule],

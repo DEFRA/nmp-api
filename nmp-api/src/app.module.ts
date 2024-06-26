@@ -87,6 +87,6 @@ import { OrganicManureModule } from './organic-manure/organic-manure.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AzureAuthMiddleware).forRoutes('*');
+    // consumer.apply(AzureAuthMiddleware).forRoutes('*');
   }
 }

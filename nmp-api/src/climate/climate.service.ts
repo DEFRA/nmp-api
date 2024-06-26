@@ -1,27 +1,26 @@
 // src/climate/climate.service.ts
 
-import ClimateDataEntity from '@db/entity/climate-date.entity';
+import ClimateDatabaseEntity from '@db/entity/climate-date.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApiDataResponseType } from '@shared/base.response';
 import { BaseService } from '@src/base/base.service';
 import { EntityManager, Repository } from 'typeorm';
 
-
 @Injectable()
 export class ClimateService extends BaseService<
-  ClimateDataEntity,
-  ApiDataResponseType<ClimateDataEntity>
+  ClimateDatabaseEntity,
+  ApiDataResponseType<ClimateDatabaseEntity>
 > {
   constructor(
-    @InjectRepository(ClimateDataEntity)
-    protected readonly repository: Repository<ClimateDataEntity>,
+    @InjectRepository(ClimateDatabaseEntity)
+    protected readonly repository: Repository<ClimateDatabaseEntity>,
     protected readonly entityManager: EntityManager,
   ) {
     super(repository, entityManager);
   }
-  private calculateRainfallAverage(climateData: ClimateDataEntity) {
-    const rainfallAverage = Number(
+  private calculateRainfallAverage(climateData: ClimateDatabaseEntity) {
+    const rainfallMeanSum = Number(
       (
         climateData?.MeanTotalRainFallJan +
         climateData?.MeanTotalRainFallFeb +
@@ -37,7 +36,7 @@ export class ClimateService extends BaseService<
         climateData?.MeanTotalRainFallDec
       ).toFixed(5),
     );
-
+    const rainfallAverage = Math.round(rainfallMeanSum);
     return {
       rainfallAverage,
     };
