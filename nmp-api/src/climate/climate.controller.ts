@@ -1,7 +1,8 @@
+// src/climate/climate.controller.ts
+
 import { Controller, Get, Param } from '@nestjs/common';
 import { ClimateService } from './climate.service';
-import { ApiSecurity, ApiOperation, ApiTags, ApiParam } from '@nestjs/swagger';
-
+import { ApiOperation, ApiParam, ApiSecurity, ApiTags } from '@nestjs/swagger';
 @ApiTags('Climates')
 @Controller('climates')
 @ApiSecurity('Bearer')
