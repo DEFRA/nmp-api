@@ -1,9 +1,12 @@
+// src/climate/climate.service.ts
+
 import ClimateDataEntity from '@db/entity/climate-date.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApiDataResponseType } from '@shared/base.response';
 import { BaseService } from '@src/base/base.service';
 import { EntityManager, Repository } from 'typeorm';
+
 
 @Injectable()
 export class ClimateService extends BaseService<
@@ -17,22 +20,21 @@ export class ClimateService extends BaseService<
   ) {
     super(repository, entityManager);
   }
-
   private calculateRainfallAverage(climateData: ClimateDataEntity) {
     const rainfallAverage = Number(
       (
-        climateData?.RainFallMeanJan +
-        climateData?.RainFallMeanFeb +
-        climateData?.RainFallMeanMar +
-        climateData?.RainFallMeanApr +
-        climateData?.RainFallMeanMay +
-        climateData?.RainFallMeanJun +
-        climateData?.RainFallMeanJul +
-        climateData?.RainFallMeanAug +
-        climateData?.RainFallMeanSep +
-        climateData?.RainFallMeanOct +
-        climateData?.RainFallMeanNov +
-        climateData?.RainFallMeanDec
+        climateData?.MeanTotalRainFallJan +
+        climateData?.MeanTotalRainFallFeb +
+        climateData?.MeanTotalRainFallMar +
+        climateData?.MeanTotalRainFallApr +
+        climateData?.MeanTotalRainFallMay +
+        climateData?.MeanTotalRainFallJun +
+        climateData?.MeanTotalRainFallJul +
+        climateData?.MeanTotalRainFallAug +
+        climateData?.MeanTotalRainFallSep +
+        climateData?.MeanTotalRainFallOct +
+        climateData?.MeanTotalRainFallNov +
+        climateData?.MeanTotalRainFallDec
       ).toFixed(5),
     );
 
@@ -42,9 +44,14 @@ export class ClimateService extends BaseService<
   }
 
   async getRainfallAverageByPostcode(postCode: string) {
-    const climateData = await this.repository.findOneBy({
-      PostCode: postCode,
+    const climateData = await this.repository.findOne({
+      where: { PostCode: postCode },
     });
+
+    if (!climateData) {
+      throw new Error('Climate data not found');
+    }
+
     return this.calculateRainfallAverage(climateData);
   }
 }

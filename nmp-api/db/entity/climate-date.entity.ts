@@ -1,6 +1,8 @@
+// src/db/entity/climate-data.entity.ts
+
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-@Entity({ name: 'ClimateDatas' })
+@Entity({ name: 'ClimateDatabase' })
 export default class ClimateDataEntity {
   @PrimaryGeneratedColumn()
   ID: number;
@@ -11,222 +13,228 @@ export default class ClimateDataEntity {
   @Column()
   PostCode: string;
 
+  @Column('int')
+  East: number;
+
+  @Column('int')
+  North: number;
+
   @Column('decimal', { precision: 18, scale: 9 })
   Altitude: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainDaysMeanJan: number;
+  MeanMinJan: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainDaysMeanFeb: number;
+  MeanMinFeb: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainDaysMeanMar: number;
+  MeanMinMar: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainDaysMeanApr: number;
+  MeanMinApr: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainDaysMeanMay: number;
+  MeanMinMay: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainDaysMeanJun: number;
+  MeanMinJun: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainDaysMeanJul: number;
+  MeanMinJul: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainDaysMeanAug: number;
+  MeanMinAug: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainDaysMeanSep: number;
+  MeanMinSep: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainDaysMeanOct: number;
+  MeanMinOct: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainDaysMeanNov: number;
+  MeanMinNov: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainDaysMeanDec: number;
+  MeanMinDec: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  WindSpeedMeanJan: number;
+  MeanMaxJan: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  WindSpeedMeanFeb: number;
+  MeanMaxFeb: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  WindSpeedMeanMar: number;
+  MeanMaxMar: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  WindSpeedMeanApr: number;
+  MeanMaxApr: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  WindSpeedMeanMay: number;
+  MeanMaxMay: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  WindSpeedMeanJun: number;
+  MeanMaxJun: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  WindSpeedMeanJul: number;
+  MeanMaxJul: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  WindSpeedMeanAug: number;
+  MeanMaxAug: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  WindSpeedMeanSep: number;
+  MeanMaxSep: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  WindSpeedMeanOct: number;
+  MeanMaxOct: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  WindSpeedMeanNov: number;
+  MeanMaxNov: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  WindSpeedMeanDec: number;
+  MeanMaxDec: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainFallMeanJan: number;
+  MeanTotalRainFallJan: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainFallMeanFeb: number;
+  MeanTotalRainFallFeb: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainFallMeanMar: number;
+  MeanTotalRainFallMar: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainFallMeanApr: number;
+  MeanTotalRainFallApr: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainFallMeanMay: number;
+  MeanTotalRainFallMay: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainFallMeanJun: number;
+  MeanTotalRainFallJun: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainFallMeanJul: number;
+  MeanTotalRainFallJul: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainFallMeanAug: number;
+  MeanTotalRainFallAug: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainFallMeanSep: number;
+  MeanTotalRainFallSep: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainFallMeanOct: number;
+  MeanTotalRainFallOct: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainFallMeanNov: number;
+  MeanTotalRainFallNov: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  RainFallMeanDec: number;
+  MeanTotalRainFallDec: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MaxMeanJan: number;
+  MeanSunHoursJan: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MaxMeanFeb: number;
+  MeanSunHoursFeb: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MaxMeanMar: number;
+  MeanSunHoursMar: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MaxMeanApr: number;
+  MeanSunHoursApr: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MaxMeanMay: number;
+  MeanSunHoursMay: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MaxMeanJun: number;
+  MeanSunHoursJun: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MaxMeanJul: number;
+  MeanSunHoursJul: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MaxMeanAug: number;
+  MeanSunHoursAug: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MaxMeanSep: number;
+  MeanSunHoursSep: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MaxMeanOct: number;
+  MeanSunHoursOct: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MaxMeanNov: number;
+  MeanSunHoursNov: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MaxMeanDec: number;
+  MeanSunHoursDec: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  SunHoursMeanJan: number;
+  MeanRainDaysJan: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  SunHoursMeanFeb: number;
+  MeanRainDaysFeb: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  SunHoursMeanMar: number;
+  MeanRainDaysMar: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  SunHoursMeanApr: number;
+  MeanRainDaysApr: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  SunHoursMeanMay: number;
+  MeanRainDaysMay: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  SunHoursMeanJun: number;
+  MeanRainDaysJun: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  SunHoursMeanJul: number;
+  MeanRainDaysJul: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  SunHoursMeanAug: number;
+  MeanRainDaysAug: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  SunHoursMeanSep: number;
+  MeanRainDaysSep: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  SunHoursMeanOct: number;
+  MeanRainDaysOct: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  SunHoursMeanNov: number;
+  MeanRainDaysNov: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  SunHoursMeanDec: number;
+  MeanRainDaysDec: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MinTempMeanJan: number;
+  MeanWindSpeedJan: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MinTempMeanFeb: number;
+  MeanWindSpeedFeb: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MinTempMeanMar: number;
+  MeanWindSpeedMar: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MinTempMeanApr: number;
+  MeanWindSpeedApr: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MinTempMeanMay: number;
+  MeanWindSpeedMay: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MinTempMeanJun: number;
+  MeanWindSpeedJun: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MinTempMeanJul: number;
+  MeanWindSpeedJul: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MinTempMeanAug: number;
+  MeanWindSpeedAug: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MinTempMeanSep: number;
+  MeanWindSpeedSep: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MinTempMeanOct: number;
+  MeanWindSpeedOct: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MinTempMeanNov: number;
+  MeanWindSpeedNov: number;
 
   @Column('decimal', { precision: 18, scale: 9 })
-  MinTempMeanDec: number;
+  MeanWindSpeedDec: number;
 }
