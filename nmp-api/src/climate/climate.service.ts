@@ -1,4 +1,6 @@
-import ClimateDataEntity from '@db/entity/climate-date.entity';
+// src/climate/climate.service.ts
+
+import ClimateDatabaseEntity from '@db/entity/climate-date.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApiDataResponseType } from '@shared/base.response';
@@ -7,44 +9,48 @@ import { EntityManager, Repository } from 'typeorm';
 
 @Injectable()
 export class ClimateService extends BaseService<
-  ClimateDataEntity,
-  ApiDataResponseType<ClimateDataEntity>
+  ClimateDatabaseEntity,
+  ApiDataResponseType<ClimateDatabaseEntity>
 > {
   constructor(
-    @InjectRepository(ClimateDataEntity)
-    protected readonly repository: Repository<ClimateDataEntity>,
+    @InjectRepository(ClimateDatabaseEntity)
+    protected readonly repository: Repository<ClimateDatabaseEntity>,
     protected readonly entityManager: EntityManager,
   ) {
     super(repository, entityManager);
   }
-
-  private calculateRainfallAverage(climateData: ClimateDataEntity) {
-    const rainfallAverage = Number(
+  private calculateRainfallAverage(climateData: ClimateDatabaseEntity) {
+    const rainfallMeanSum = Number(
       (
-        climateData?.RainFallMeanJan +
-        climateData?.RainFallMeanFeb +
-        climateData?.RainFallMeanMar +
-        climateData?.RainFallMeanApr +
-        climateData?.RainFallMeanMay +
-        climateData?.RainFallMeanJun +
-        climateData?.RainFallMeanJul +
-        climateData?.RainFallMeanAug +
-        climateData?.RainFallMeanSep +
-        climateData?.RainFallMeanOct +
-        climateData?.RainFallMeanNov +
-        climateData?.RainFallMeanDec
+        climateData?.MeanTotalRainFallJan +
+        climateData?.MeanTotalRainFallFeb +
+        climateData?.MeanTotalRainFallMar +
+        climateData?.MeanTotalRainFallApr +
+        climateData?.MeanTotalRainFallMay +
+        climateData?.MeanTotalRainFallJun +
+        climateData?.MeanTotalRainFallJul +
+        climateData?.MeanTotalRainFallAug +
+        climateData?.MeanTotalRainFallSep +
+        climateData?.MeanTotalRainFallOct +
+        climateData?.MeanTotalRainFallNov +
+        climateData?.MeanTotalRainFallDec
       ).toFixed(5),
     );
-
+    const rainfallAverage = Math.round(rainfallMeanSum);
     return {
       rainfallAverage,
     };
   }
 
   async getRainfallAverageByPostcode(postCode: string) {
-    const climateData = await this.repository.findOneBy({
-      PostCode: postCode,
+    const climateData = await this.repository.findOne({
+      where: { PostCode: postCode },
     });
+
+    if (!climateData) {
+      throw new Error('Climate data not found');
+    }
+
     return this.calculateRainfallAverage(climateData);
   }
 }
