@@ -46,7 +46,7 @@ export const createFieldWithSoilAnalysisAndCropsReqBody: any = {
   Crops: [
     {
       Crop: {
-        Year: 0,
+        Year: 2024,
         CropTypeID: 0,
         Variety: null,
         OtherCropName: null,

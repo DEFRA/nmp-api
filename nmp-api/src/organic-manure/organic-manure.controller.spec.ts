@@ -81,6 +81,7 @@ describe('OrganicManureController', () => {
 
   describe('Create Organic Manure When Save default for farm is false', () => {
     it('should create organic manure', async () => {
+      await truncateAllTables(entityManager);
       const organisation = await organisationRepository.save(
         createOrganisationReqBody2,
       );
@@ -125,13 +126,14 @@ describe('OrganicManureController', () => {
         organicManureReqBody,
         req,
       );
-      expect(result.OrganicManures).toBeGreaterThan(0);
+      expect(result.OrganicManures.length).toBeGreaterThan(0);
       expect(result.FarmManureType).toBeUndefined();
     });
   });
 
   describe('Create Organic Manure When Save default for farm is true', () => {
     it('should create organic manure with save/update farm manure type', async () => {
+      await truncateAllTables(entityManager);
       const organisation = await organisationRepository.save(
         createOrganisationReqBody2,
       );
@@ -179,12 +181,12 @@ describe('OrganicManureController', () => {
       organicManureReqBody.OrganicManures[0].OrganicManure.ManureTypeID =
         manureType[0].ID;
       organicManureReqBody.OrganicManures[0].FieldTypeID = 1;
-
+      organicManureReqBody.OrganicManures[0].SaveDefaultForFarm = true;
       const result = await controller.createOrganicManures(
-        { ...organicManureReqBody, SaveDefaultForFarm: true },
+        organicManureReqBody,
         req,
       );
-      expect(result.OrganicManures).toBeGreaterThan(0);
+      expect(result.OrganicManures.length).toBeGreaterThan(0);
       expect(result.FarmManureType).toHaveProperty('ID');
     });
   });

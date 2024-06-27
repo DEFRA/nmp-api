@@ -37,10 +37,6 @@ describe('FarmController', () => {
     await truncateAllTables(entityManager);
   });
 
-  afterAll(async () => {
-    await app.close();
-  });
-
   describe('Create Farm', () => {
     const req: any = {
       userId: 1,
