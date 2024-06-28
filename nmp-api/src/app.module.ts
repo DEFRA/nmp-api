@@ -36,6 +36,7 @@ import { ManureGroupModule } from './manure-group/manure-group.module';
 import { IncorporationDelaysModule } from './incorporation-delay/incorporation-delay.module';
 import { ApplicationMethodModule } from './application-method/application-method.module';
 import { OrganicManureModule } from './organic-manure/organic-manure.module';
+import { MoistureTypeModule } from './moisture-type/moisture-type.module';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -82,6 +83,7 @@ import { OrganicManureModule } from './organic-manure/organic-manure.module';
     IncorporationDelaysModule,
     ApplicationMethodModule,
     OrganicManureModule,
+    MoistureTypeModule,
   ],
   providers: [AzureAuthService],
 })
