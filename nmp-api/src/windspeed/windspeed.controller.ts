@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { WindspeedService } from './windspeed.service';
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
 
