@@ -21,15 +21,17 @@ import { PlanService } from '@src/plan/plan.service';
 import { CacheModule } from '@nestjs/cache-manager';
 import {
   createCropWithManagementPeriodReqBody,
-  createFarmReqBody2,
+  createFarmReqBody,
   createFieldReqBody,
   createOrganisationReqBody3,
   createPlanReqBody,
   createSoilAnalysisReqBody2,
+  userData,
 } from '../../test/mocked-data';
 import { EntityManager } from 'typeorm';
 import OrganisationEntity from '@db/entity/organisation.entity';
 import { truncateAllTables } from '../../test/utils';
+import UserEntity from '@db/entity/user.entity';
 
 describe('CropController', () => {
   let controller: CropController;
@@ -40,6 +42,8 @@ describe('CropController', () => {
   let createdFarm: any;
   let organisationRepository: any;
   let soilAnalysisRepository: any;
+  let userRepository: any;
+  let user: UserEntity;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -75,6 +79,7 @@ describe('CropController', () => {
     fieldRepository = entityManager.getRepository(FieldEntity);
     organisationRepository = entityManager.getRepository(OrganisationEntity);
     soilAnalysisRepository = entityManager.getRepository(SoilAnalysisEntity);
+    userRepository = entityManager.getRepository(UserEntity);
     await truncateAllTables(entityManager);
   });
 
@@ -88,9 +93,12 @@ describe('CropController', () => {
       const organisation = await organisationRepository.save(
         createOrganisationReqBody3,
       );
-      createFarmReqBody2.OrganisationID = organisation.ID;
-      createdFarm = await farmRepository.save(createFarmReqBody2);
+      user = await userRepository.save(userData);
+      createFarmReqBody.OrganisationID = organisation.ID;
+      createFarmReqBody.CreatedByID = user.ID;
+      createdFarm = await farmRepository.save(createFarmReqBody);
       createFieldReqBody.FarmID = createdFarm.ID;
+      createFieldReqBody.CreatedByID = user.ID;
       createdField = await fieldRepository.save(createFieldReqBody);
       createPlanReqBody.Crops[0].Crop.FieldID = createdField.ID;
       createSoilAnalysisReqBody2.FieldID = createdField.ID;
@@ -99,7 +107,7 @@ describe('CropController', () => {
         await controller.createNutrientsRecommendationForFieldByFieldId(
           createPlanReqBody,
           {
-            userId: 1,
+            userId: user.ID,
           } as any,
         );
       expect(result.Recommendations.length).toBeGreaterThan(0);
@@ -112,7 +120,7 @@ describe('CropController', () => {
         createdField.ID,
         createCropWithManagementPeriodReqBody,
         {
-          userId: 1,
+          userId: user.ID,
         } as any,
       );
       expect(result.Crop).toHaveProperty('ID');

@@ -1,8 +1,9 @@
 import { ApplicationMethodsIncorpMethodEntity } from '@db/entity/application-method-incorp-method.entity';
 import { ApplicationMethodEntity } from '@db/entity/application-method.entity';
-import ClimateDatabaseEntity from '@db/entity/climate-date.entity';
+import ClimateDatabaseEntity from '@db/entity/climate-data.entity';
 import { CountryEntity } from '@db/entity/country.entity';
 import CropEntity from '@db/entity/crop.entity';
+import FarmManureTypeEntity from '@db/entity/farm-manure-type.entity';
 import FarmEntity from '@db/entity/farm.entity';
 import FieldEntity from '@db/entity/field.entity';
 import { IncorpMethodsIncorpDelayEntity } from '@db/entity/incorp-method-incorp-delay.entity';
@@ -50,6 +51,7 @@ export const ormConfig: any = {
     ManureTypeEntity,
     MoistureTypeEntity,
     OrganicManureEntity,
+    FarmManureTypeEntity,
     RainTypeEntity,
     WindspeedEntity,
   ],

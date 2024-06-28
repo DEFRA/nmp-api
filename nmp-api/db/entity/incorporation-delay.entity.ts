@@ -16,6 +16,7 @@ export class IncorporationDelayEntity {
   })
   @PrimaryColumn({
     name: 'ID',
+    insert: false,
   })
   ID: number;
 

@@ -21,6 +21,7 @@ export const createCropReqBody = {
   GrazingIntensity: 0,
   PreviousID: null,
   FieldType: 1,
+  CreatedByID: null,
 };
 
 export const createPlanReqBody: any = {

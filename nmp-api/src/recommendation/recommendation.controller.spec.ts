@@ -18,9 +18,11 @@ import {
   createOrganisationReqBody,
   createRecommendationCommentReqBody,
   createRecommendationReqBody,
+  userData,
 } from '../../test/mocked-data';
 import CropEntity from '@db/entity/crop.entity';
 import ManagementPeriodEntity from '@db/entity/management-period.entity';
+import UserEntity from '@db/entity/user.entity';
 
 describe('RecommendationsController', () => {
   let controller: RecommendationController;
@@ -32,6 +34,8 @@ describe('RecommendationsController', () => {
   let managementPeriodRepository: any;
   let recommendationRepository: any;
   let recommendationCommentRepository: any;
+  let userRepository: any;
+  let user: UserEntity;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -61,6 +65,7 @@ describe('RecommendationsController', () => {
     recommendationCommentRepository = entityManager.getRepository(
       RecommendationCommentEntity,
     );
+    userRepository = entityManager.getRepository(UserEntity);
     await truncateAllTables(entityManager);
   });
 
@@ -74,13 +79,18 @@ describe('RecommendationsController', () => {
       const organisation = await organisationRepository.save(
         createOrganisationReqBody,
       );
+      user = await userRepository.save(userData);
       createFarmReqBody2.OrganisationID = organisation.ID;
+      createFarmReqBody2.CreatedByID = user.ID;
       const createdFarm = await farmRepository.save(createFarmReqBody2);
       createFieldReqBody.FarmID = createdFarm.ID;
+      createFieldReqBody.CreatedByID = user.ID;
       const createdField = await fieldRepository.save(createFieldReqBody);
       createCropReqBody.FieldID = createdField.ID;
+      createCropReqBody.CreatedByID = user.ID;
       const createdCrop = await cropRepository.save(createCropReqBody);
       createManagementPeriodReqBody.CropID = createdCrop.ID;
+      createManagementPeriodReqBody.CreatedByID = user.ID;
       const managementPeriod = await managementPeriodRepository.save(
         createManagementPeriodReqBody,
       );

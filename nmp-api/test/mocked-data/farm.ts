@@ -47,6 +47,6 @@ export const createFarmReqBody2: any = {
   EnglishRules: true,
   NVZFields: 0,
   FieldsAbove300SeaLevel: 0,
-  CreatedByID: 2,
-  ModifiedByID: 2,
+  CreatedByID: null,
+  ModifiedByID: null,
 };

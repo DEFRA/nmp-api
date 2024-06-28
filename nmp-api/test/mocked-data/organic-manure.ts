@@ -28,3 +28,63 @@ export const organicManureReqBody: any = {
     },
   ],
 };
+
+export const manureTypeData = {
+  Name: 'Cattle FYM - Fresh',
+  ManureGroupID: null,
+  CountryID: null,
+  HighReadilyAvailableNitrogen: false,
+  IsLiquid: false,
+  DryMatter: 25,
+  TotalN: 6,
+  NH4N: 1.2,
+  Uric: 0,
+  NO3N: 0,
+  P2O5: 3.2,
+  K2O: 9.4,
+  SO3: 2.4,
+  MgO: 1.8,
+  P2O5Available: 60,
+  K2OAvailable: 90,
+  NMaxConstant: 68.3,
+  ApplicationRateArable: 30,
+  ApplicationRateGrass: 20
+};
+
+export const applicationMethodData = {
+  Name: 'BroadCast spreader',
+  ApplicableForGrass: 'B',
+  ApplicableForArableAndHorticulture: 'B'
+};
+
+export const incorporationMethodData = {
+  Name: 'Shallow injection',
+  ApplicableForGrass: null,
+  ApplicableForArableAndHorticulture: null
+};
+
+export const incorporationDelayData = {
+  Name: 'Less than 2 hours',
+  FromHours: 0,
+  ToHours: 2,
+  ApplicableFor: 'A'
+};
+
+export const windSpeedData = {
+  Name: 'Calm/gentle (0-3 Beaufort scale)',
+  FromScale: 0,
+  ToScale: 3
+};
+
+export const moistureTypeData = {
+  Name: 'Dry'
+};
+
+export const rainTypeData = {
+  Name: 'No rainfall within 6 hours of spreading',
+  RainInMM: 0
+};
+
+export const countryData = {
+  Name: 'England/Wales',
+}

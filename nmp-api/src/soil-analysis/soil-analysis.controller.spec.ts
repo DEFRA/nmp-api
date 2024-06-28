@@ -11,10 +11,12 @@ import {
   createFarmReqBody2,
   createFieldReqBody,
   createOrganisationReqBody,
+  userData,
 } from '../../test/mocked-data';
 import FarmEntity from '@db/entity/farm.entity';
 import FieldEntity from '@db/entity/field.entity';
 import OrganisationEntity from '@db/entity/organisation.entity';
+import UserEntity from '@db/entity/user.entity';
 
 describe('SoilAnalysisController', () => {
   let controller: SoilAnalysisController;
@@ -24,6 +26,8 @@ describe('SoilAnalysisController', () => {
   let farmRepository: any;
   let fieldRepository: any;
   let organisationRepository: any;
+  let userRepository: any;
+  let user: UserEntity;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -41,6 +45,7 @@ describe('SoilAnalysisController', () => {
     farmRepository = entityManager.getRepository(FarmEntity);
     fieldRepository = entityManager.getRepository(FieldEntity);
     organisationRepository = entityManager.getRepository(OrganisationEntity);
+    userRepository = entityManager.getRepository(UserEntity);
     await truncateAllTables(entityManager);
   });
 
@@ -54,11 +59,15 @@ describe('SoilAnalysisController', () => {
       const organisation = await organisationRepository.save(
         createOrganisationReqBody,
       );
+      user = await userRepository.save(userData);
       createFarmReqBody2.OrganisationID = organisation.ID;
+      createFarmReqBody2.CreatedByID = user.ID;
       const createdFarm = await farmRepository.save(createFarmReqBody2);
       createFieldReqBody.FarmID = createdFarm.ID;
+      createFieldReqBody.CreatedByID = user.ID;
       createdField = await fieldRepository.save(createFieldReqBody);
       createSoilAnalysisReqBody.FieldID = createdField.ID;
+      createSoilAnalysisReqBody.CreatedByID = user.ID;
       const soilAnalysisData = await soilAnalysisRepository.save(
         createSoilAnalysisReqBody,
       );

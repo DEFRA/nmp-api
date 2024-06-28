@@ -11,7 +11,7 @@ import SoilAnalysisEntity from '@db/entity/soil-analysis.entity';
 import ManagementPeriodEntity from '@db/entity/management-period.entity';
 import { RecommendationEntity } from '@db/entity/recommendation.entity';
 import { RecommendationCommentEntity } from '@db/entity/recommendation-comment.entity';
-import ClimateDatabaseEntity from '@db/entity/climate-date.entity';
+import ClimateDatabaseEntity from '@db/entity/climate-data.entity';
 import { ApplicationMethodsIncorpMethodEntity } from '@db/entity/application-method-incorp-method.entity';
 import { ApplicationMethodEntity } from '@db/entity/application-method.entity';
 import { CountryEntity } from '@db/entity/country.entity';
