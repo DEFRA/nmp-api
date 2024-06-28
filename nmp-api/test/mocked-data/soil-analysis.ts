@@ -23,7 +23,7 @@ export const createSoilAnalysisReqBody = {
   NitrogenResidueGroup: null,
   Comments: null,
   PreviousID: 0,
-  CreatedByID: 2,
+  CreatedByID: null,
   ModifiedOn: null,
   ModifiedByID: null,
 };

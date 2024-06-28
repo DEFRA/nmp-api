@@ -12,11 +12,13 @@ import {
   createFieldReqBody,
   createManagementPeriodReqBody,
   createOrganisationReqBody2,
+  userData,
 } from '../../test/mocked-data';
 import FarmEntity from '@db/entity/farm.entity';
 import FieldEntity from '@db/entity/field.entity';
 import OrganisationEntity from '@db/entity/organisation.entity';
 import { truncateAllTables } from '../../test/utils';
+import UserEntity from '@db/entity/user.entity';
 
 describe('ManagementPeriodController', () => {
   let controller: ManagementPeriodController;
@@ -27,6 +29,8 @@ describe('ManagementPeriodController', () => {
   let fieldRepository: any;
   let organisationRepository: any;
   let createdCrop: any;
+  let userRepository: any;
+  let user: UserEntity;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -49,6 +53,7 @@ describe('ManagementPeriodController', () => {
     farmRepository = entityManager.getRepository(FarmEntity);
     fieldRepository = entityManager.getRepository(FieldEntity);
     organisationRepository = entityManager.getRepository(OrganisationEntity);
+    userRepository = entityManager.getRepository(UserEntity);
     await truncateAllTables(entityManager);
   });
 
@@ -58,13 +63,18 @@ describe('ManagementPeriodController', () => {
       const organisation = await organisationRepository.save(
         createOrganisationReqBody2,
       );
+      user = await userRepository.save(userData);
       createFarmReqBody2.OrganisationID = organisation.ID;
+      createFarmReqBody2.CreatedByID = user.ID;
       const createdFarm = await farmRepository.save(createFarmReqBody2);
       createFieldReqBody.FarmID = createdFarm.ID;
+      createFieldReqBody.CreatedByID = user.ID;
       const createdField = await fieldRepository.save(createFieldReqBody);
       createCropReqBody.FieldID = createdField.ID;
+      createCropReqBody.CreatedByID = user.ID;
       createdCrop = await cropRepository.save(createCropReqBody);
       createManagementPeriodReqBody.CropID = createdCrop.ID;
+      createManagementPeriodReqBody.CreatedByID = user.ID;
       const managementPeriod = await managementPeriodRepository.save(
         createManagementPeriodReqBody,
       );

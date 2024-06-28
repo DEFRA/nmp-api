@@ -6,3 +6,4 @@ export * from './user';
 export * from './organisation';
 export * from './management-period';
 export * from './crop';
+export * from './climateDatabase';

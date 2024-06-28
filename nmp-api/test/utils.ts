@@ -12,7 +12,20 @@ export const truncateAllTables = async (entityManager: EntityManager) => {
     'Farms',
     'Organisations',
     'Crops',
-    'OrganicManures'
+    'OrganicManures',
+    'ClimateDatabase',
+    'ApplicationMethods',
+    'IncorporationDelays',
+    'IncorporationMethods',
+    'ManureGroups',
+    'ManureTypes',
+    'MoistureTypes',
+    'RainTypes',
+    'WindSpeeds',
+    'users',
+    'ApplicationMethodsIncorpMethods',
+    'Countries',
+    'IncorpMethodsIncorpDelays',
   ];
 
   for (const tableName of tableOrder) {

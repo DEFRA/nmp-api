@@ -13,8 +13,8 @@ export const createFieldWithSoilAnalysisAndCropsReqBody: any = {
     IsWithinNVZ: false,
     IsAbove300SeaLevel: false,
     IsActive: true,
-    CreatedByID: 2,
-    ModifiedByID: 2,
+    CreatedByID: null,
+    ModifiedByID: null,
   },
   SoilAnalysis: {
     Year: 0,
@@ -40,8 +40,8 @@ export const createFieldWithSoilAnalysisAndCropsReqBody: any = {
     NitrogenResidueGroup: null,
     Comments: null,
     PreviousID: 0,
-    CreatedByID: 2,
-    ModifiedByID: 2,
+    CreatedByID: null,
+    ModifiedByID: null,
   },
   Crops: [
     {
@@ -66,8 +66,8 @@ export const createFieldWithSoilAnalysisAndCropsReqBody: any = {
         DefoliationSequence: 0,
         GrazingIntensity: 0,
         PreviousID: 0,
-        CreatedByID: 2,
-        ModifiedByID: 2,
+        CreatedByID: null,
+        ModifiedByID: null,
         FieldType: 1,
       },
       ManagementPeriods: [
@@ -76,8 +76,8 @@ export const createFieldWithSoilAnalysisAndCropsReqBody: any = {
           Utilisation1ID: 0,
           Utilisation2ID: 0,
           PloughedDown: new Date(),
-          CreatedByID: 2,
-          ModifiedByID: 2,
+          CreatedByID: null,
+          ModifiedByID: null,
           CreatedOn: new Date(),
           ModifiedOn: new Date(),
           PreviousID: 0,
@@ -103,7 +103,7 @@ export const createFieldReqBody = {
   IsAbove300SeaLevel: false,
   IsActive: true,
   CreatedOn: '2024-04-24T07:03:29.840Z',
-  CreatedByID: 2,
+  CreatedByID: null,
   ModifiedOn: null,
   ModifiedByID: null,
 };

@@ -13,6 +13,7 @@ import { FieldController } from './field.controller';
 import {
   createFarmReqBody2,
   createFieldWithSoilAnalysisAndCropsReqBody,
+  userData,
 } from '../../test/mocked-data';
 import { ormConfig } from '../../test/ormConfig';
 import FarmEntity from '@db/entity/farm.entity';
@@ -21,12 +22,14 @@ import { EntityManager } from 'typeorm';
 import OrganisationEntity from '@db/entity/organisation.entity';
 import { RB209SoilService } from '@src/vendors/rb209/soil/soil.service';
 import { CacheModule } from '@nestjs/cache-manager';
+import UserEntity from '@db/entity/user.entity';
 
 describe('FieldController', () => {
   let controller: FieldController;
   let entityManager: EntityManager;
   let createdField: FieldEntity;
   let createdFarm: FarmEntity;
+  let userRepository: any;
 
   beforeAll(async () => {
     const app: TestingModule = await Test.createTestingModule({
@@ -52,6 +55,7 @@ describe('FieldController', () => {
 
     controller = app.get<FieldController>(FieldController);
     entityManager = app.get<EntityManager>(EntityManager);
+    userRepository = entityManager.getRepository(UserEntity);
     await truncateAllTables(entityManager);
   });
 
@@ -69,14 +73,16 @@ describe('FieldController', () => {
         ID: '323b76cd-2d89-4331-854c-656c72a65b79',
         Name: 'My organisation4',
       });
+      const user = await userRepository.save(userData);
       createFarmReqBody2.OrganisationID = organisation.ID;
+      createFarmReqBody2.CreatedByID = user.ID;
       const farm = await farmRepository.save(createFarmReqBody2);
 
       const result = await controller.createFieldWithSoilAnalysisAndCrops(
         farm.ID,
         createFieldWithSoilAnalysisAndCropsReqBody,
         {
-          userId: 1,
+          userId: user.ID,
         } as any,
       );
       createdField = result.Field;
@@ -109,7 +115,7 @@ describe('FieldController', () => {
     });
 
     it('should return Field value as NULL if field with specified fieldId is not found', async () => {
-      const fieldId = 2;
+      const fieldId = 0;
       const result = await controller.getFieldById(fieldId);
       expect(result.Field).toBeNull();
     });

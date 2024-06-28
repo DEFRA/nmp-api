@@ -6,12 +6,14 @@ import FarmEntity from '@db/entity/farm.entity';
 import {
   createFarmReqBody,
   createOrganisationReqBody3,
+  userData,
 } from '../../test/mocked-data';
 import { EntityManager } from 'typeorm';
 import { truncateAllTables } from '../../test/utils';
 import { HttpStatus } from '@nestjs/common';
 import { ormConfig } from '../../test/ormConfig';
 import OrganisationEntity from '@db/entity/organisation.entity';
+import UserEntity from '@db/entity/user.entity';
 
 describe('FarmController', () => {
   let app: TestingModule;
@@ -19,6 +21,9 @@ describe('FarmController', () => {
   let entityManager: EntityManager;
   let createdFarm: FarmEntity;
   let organisationRepository: any;
+  let userRepository: any;
+  let user: UserEntity;
+  let organisation: OrganisationEntity;
 
   beforeAll(async () => {
     app = await Test.createTestingModule({
@@ -34,27 +39,28 @@ describe('FarmController', () => {
     controller = app.get<FarmController>(FarmController);
     entityManager = app.get<EntityManager>(EntityManager);
     organisationRepository = entityManager.getRepository(OrganisationEntity);
+    userRepository = entityManager.getRepository(UserEntity);
     await truncateAllTables(entityManager);
   });
 
   describe('Create Farm', () => {
-    const req: any = {
-      userId: 1,
-    };
     it('should create a farm', async () => {
       await truncateAllTables(entityManager);
-      const organisation = await organisationRepository.save(
+      user = await userRepository.save(userData);
+      organisation = await organisationRepository.save(
         createOrganisationReqBody3,
       );
       createFarmReqBody.OrganisationID = organisation.ID;
-      const result = await controller.createFarm(createFarmReqBody, req);
+      const result = await controller.createFarm(createFarmReqBody, {
+        userId: user.ID,
+      } as any);
       createdFarm = result.Farm;
       expect(createdFarm).toHaveProperty('ID');
     });
 
     it('should throw bad request exception, bcoz farm alread exists with given postcode and name', async () => {
       const req: any = {
-        userId: 1,
+        userId: user.ID,
       };
       try {
         await controller.createFarm(createFarmReqBody, req);
@@ -91,7 +97,7 @@ describe('FarmController', () => {
       expect(Farm.Address2).toEqual('Park Farm');
       expect(Farm.Address3).toEqual(null);
       expect(Farm.OrganisationID).toEqual(
-        'A91B3C86-959A-43EB-8A97-AC402390C59A',
+        organisation.ID.toUpperCase(),
       ),
         expect(Farm.Address4).toEqual(null);
       expect(Farm.Postcode).toEqual('CB23 8YW');
@@ -131,23 +137,23 @@ describe('FarmController', () => {
 
   describe('Get Farms By OrganisationId', () => {
     it('should return farms by OrganisationId, when short summary is true', async () => {
-      const organisationId = 'b5cf0d74-344a-4106-ab3e-1a97cce6b886';
+      const organisationId = organisation.ID;
 
-      const { Farms } = await controller.getFarmsByOrganisationId(
+      const result: any = await controller.getFarmsByOrganisationId(
         organisationId,
         false,
       );
-      expect(Farms).toBeTruthy();
+      expect(result.Farms.length).toBeGreaterThan(0);
     });
 
     it('should return farms by organisation id with short summary true', async () => {
-      const organisationId = 'b5cf0d74-344a-4106-ab3e-1a97cce6b886';
+      const organisationId = organisation.ID;
 
-      const { Farms } = await controller.getFarmsByOrganisationId(
+      const result: any = await controller.getFarmsByOrganisationId(
         organisationId,
         true,
       );
-      expect(Farms).toBeTruthy();
+      expect(result.Farms.length).toBeGreaterThan(0);
     });
   });
 });

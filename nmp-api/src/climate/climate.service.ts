@@ -1,6 +1,6 @@
 // src/climate/climate.service.ts
 
-import ClimateDatabaseEntity from '@db/entity/climate-date.entity';
+import ClimateDatabaseEntity from '@db/entity/climate-data.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApiDataResponseType } from '@shared/base.response';
