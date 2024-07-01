@@ -1,17 +1,25 @@
 import { ApplicationMethodsIncorpMethodEntity } from '@db/entity/application-method-incorp-method.entity';
 import { IncorporationMethodEntity } from '@db/entity/incorporation-method.entity';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import BaseRepository from '@db/repository/base/base.repository';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, IsNull, Repository } from 'typeorm';
+import { ApiDataResponseType } from '@shared/base.response';
+import { In, IsNull,  EntityManager, Repository } from 'typeorm';
 
 @Injectable()
-export class IncorporationMethodService {
+export class IncorporationMethodService extends BaseRepository<
+  IncorporationMethodEntity,
+  ApiDataResponseType<IncorporationMethodEntity>
+> {
   constructor(
     @InjectRepository(IncorporationMethodEntity)
     private readonly incorporationMethodRepository: Repository<IncorporationMethodEntity>,
+    protected readonly entityManager: EntityManager,
     @InjectRepository(ApplicationMethodsIncorpMethodEntity)
     private readonly appMethodIncorpMethodRepository: Repository<ApplicationMethodsIncorpMethodEntity>,
-  ) {}
+  ) {
+    super(incorporationMethodRepository, entityManager);
+  }
 
   async getIncorporationMethods(
     fieldType: number,
@@ -63,4 +71,16 @@ export class IncorporationMethodService {
 
     return incorporationMethods;
   }
+
+  // async findIncorporationMethodById(
+  //   id: number,
+  // ): Promise<IncorporationMethodEntity> {
+  //   const { records } = await this.getById(id);
+  //     if (!records) {
+  //       throw new NotFoundException(
+  //         `Incorporation Method with ID ${id} not found`,
+  //       );
+  //     }
+  //     return records;
+  // }
 }

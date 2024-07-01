@@ -1,3 +1,4 @@
+// incorporation-delay.controller.ts
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { IncorporationDelaysService } from './incorporation-delay.service';
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
@@ -24,5 +25,15 @@ export class IncorporationDelaysController {
     );
 
     return { IncorporationDelays: delays };
+  }
+
+  @Get('/by-id/:id')
+  @ApiOperation({
+    summary: 'Get Incorporation Delay by ID',
+  })
+  async getIncorporationDelayById(@Param('id') id: number) {
+    const delay =
+      await this.incorporationDelaysService.findIncorporationDelayById(id);
+    return { IncorporationDelay: delay };
   }
 }

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ApplicationMethodController } from './application-method.controller';
 import { ApplicationMethodService } from './application-method.service';
+import { NotFoundException } from '@nestjs/common';
 
 describe('ApplicationMethodController', () => {
   let controller: ApplicationMethodController;
@@ -14,15 +15,16 @@ describe('ApplicationMethodController', () => {
           provide: ApplicationMethodService,
           useValue: {
             getApplicationMethods: jest.fn(),
+            getApplicationMethodById: jest.fn(), 
           },
         },
       ],
     }).compile();
 
-    controller = module.get<ApplicationMethodController>(
-      ApplicationMethodController,
-    );
-    service = module.get<ApplicationMethodService>(ApplicationMethodService);
+   controller = module.get<ApplicationMethodController>(
+     ApplicationMethodController,
+   );
+   service = module.get<ApplicationMethodService>(ApplicationMethodService);
   });
 
   it('should be defined', () => {
@@ -81,6 +83,44 @@ describe('ApplicationMethodController', () => {
       await expect(
         controller.getApplicationMethods(fieldType, applicableFor),
       ).rejects.toThrow('test error');
+    });
+  });
+
+  describe('getApplicationMethodById', () => {
+
+    it('should return the application method for a valid ID', async () => {
+      const id = 1; // Example ID from your mock data
+      const expectedResult = {
+        ID: 1,
+        Name: 'Method 1',
+        ApplicableForGrass: 'L',
+        ApplicableForArableAndHorticulture: 'S',
+        ApplicationMethodsIncorpMethods: [],
+        OrganicManures: [],
+      };
+      // Mock the service method to return the expected result
+      jest
+        .spyOn(service, 'getApplicationMethodById')
+        .mockResolvedValue(expectedResult);
+      // Call the controller method
+      const response = await controller.getApplicationMethodById(id);
+      // Assert that the service method was called with the correct ID
+      expect(service.getApplicationMethodById).toHaveBeenCalledWith(id);
+    });
+
+    
+     
+
+    it('should throw NotFoundException for an invalid ID', async () => {
+      const invalidId = 999; // Assuming this ID does not exist
+      jest
+        .spyOn(service, 'getApplicationMethodById')
+        .mockRejectedValue(new NotFoundException());
+
+      await expect(
+        controller.getApplicationMethodById(invalidId),
+      ).rejects.toThrow(NotFoundException);
+      expect(service.getApplicationMethodById).toHaveBeenCalledWith(invalidId);
     });
   });
 });

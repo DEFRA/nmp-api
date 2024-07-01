@@ -1,6 +1,7 @@
-import { Controller, Get, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { ApplicationMethodService } from './application-method.service';
-import { ApiTags, ApiSecurity, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiSecurity, ApiOperation, ApiQuery, ApiParam } from '@nestjs/swagger';
+import { ApplicationMethodEntity } from '@db/entity/application-method.entity';
 
 @ApiTags('Application Methods')
 @Controller('application-method')
@@ -26,5 +27,14 @@ export class ApplicationMethodController {
       applicableFor,
     );
     return { ApplicationMethods: records };
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get Application Method by ID' })
+  @ApiParam({ name: 'id', type: Number })
+  async getApplicationMethodById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<ApplicationMethodEntity> {
+    return this.applicationMethodService.getApplicationMethodById(id);
   }
 }

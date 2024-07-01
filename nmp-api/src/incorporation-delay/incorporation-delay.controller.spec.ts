@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { IncorporationDelaysService } from './incorporation-delay.service';
 import { IncorporationDelaysController } from './incorporation-delay.controller';
+import { NotFoundException } from '@nestjs/common';
 
 describe('IncorporationDelaysController', () => {
   let controller: IncorporationDelaysController;
@@ -30,6 +31,21 @@ describe('IncorporationDelaysController', () => {
         ];
       } else {
         return [];
+      }
+    }),
+    findIncorporationDelayById: jest.fn((id) => {
+      if (id === 1) {
+        return {
+          ID: 1,
+          Name: 'Delay 1',
+          FromHours: 2,
+          ToHours: 6,
+          ApplicableFor: 'L',
+        };
+      } else {
+        throw new NotFoundException(
+          `Incorporation Delay with ID ${id} not found`,
+        );
       }
     }),
   };
@@ -78,6 +94,33 @@ describe('IncorporationDelaysController', () => {
       const result = await controller.getIncorporationDelays(0, 'L');
       expect(result).toEqual({ IncorporationDelays: [] });
       expect(service.getIncorporationDelays).toHaveBeenCalledWith(0, 'L');
+    });
+  });
+
+  describe('getIncorporationDelayById', () => {
+    it('should return the incorporation delay for a valid ID', async () => {
+      const result = await controller.getIncorporationDelayById(1);
+      expect(result).toEqual({
+        IncorporationDelay:
+          mockIncorporationDelaysService.findIncorporationDelayById(1),
+      });
+      expect(
+        mockIncorporationDelaysService.findIncorporationDelayById,
+      ).toHaveBeenCalledWith(1);
+    });
+
+    it('should throw NotFoundException for an invalid ID', async () => {
+      const invalidId = 0;
+      jest
+        .spyOn(service, 'findIncorporationDelayById')
+        .mockRejectedValue(new NotFoundException());
+
+      await expect(
+        controller.getIncorporationDelayById(invalidId),
+      ).rejects.toThrowError(NotFoundException);
+      expect(service.findIncorporationDelayById).toHaveBeenCalledWith(
+        invalidId,
+      );
     });
   });
 });
