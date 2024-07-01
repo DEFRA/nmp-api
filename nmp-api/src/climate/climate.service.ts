@@ -1,14 +1,26 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import ClimateDatabaseEntity from '@db/entity/climate-data.entity';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ApiDataResponseType } from '@shared/base.response';
+import { BaseService } from '@src/base/base.service';
+import { Repository, EntityManager } from 'typeorm';
 
 @Injectable()
-export class ClimateService {
+export class ClimateService extends BaseService<
+  ClimateDatabaseEntity,
+  ApiDataResponseType<ClimateDatabaseEntity>
+> {
   constructor(
     @InjectRepository(ClimateDatabaseEntity)
-    private readonly repository: Repository<ClimateDatabaseEntity>,
-  ) {}
+    protected readonly repository: Repository<ClimateDatabaseEntity>,
+    protected readonly entityManager: EntityManager,
+  ) {
+    super(repository, entityManager);
+  }
 
   private calculateTotalRainfall(
     climateData: ClimateDatabaseEntity,
@@ -37,11 +49,13 @@ export class ClimateService {
     ];
 
     let totalRainfall = 0;
-    if(startYear > endYear){
-      throw new BadRequestException('Start year should not be greater than end year')
+    if (startYear > endYear) {
+      throw new BadRequestException(
+        'Start year should not be greater than end year',
+      );
     }
-        
-    if ( startMonth > endMonth) {
+
+    if (startMonth > endMonth) {
       const firstPart = months
         .slice(startMonth - 1, 12)
         .reduce((acc, month) => acc + month, 0);
@@ -58,6 +72,42 @@ export class ClimateService {
     return {
       totalRainfall: Number(totalRainfall.toFixed(2)),
     };
+  }
+
+  private calculateRainfallAverage(climateData: ClimateDatabaseEntity) {
+    const rainfallMeanSum = Number(
+      (
+        climateData?.MeanTotalRainFallJan +
+        climateData?.MeanTotalRainFallFeb +
+        climateData?.MeanTotalRainFallMar +
+        climateData?.MeanTotalRainFallApr +
+        climateData?.MeanTotalRainFallMay +
+        climateData?.MeanTotalRainFallJun +
+        climateData?.MeanTotalRainFallJul +
+        climateData?.MeanTotalRainFallAug +
+        climateData?.MeanTotalRainFallSep +
+        climateData?.MeanTotalRainFallOct +
+        climateData?.MeanTotalRainFallNov +
+        climateData?.MeanTotalRainFallDec
+      ).toFixed(5),
+    );
+    const rainfallAverage = Math.round(rainfallMeanSum);
+
+    return {
+      rainfallAverage,
+    };
+  }
+
+  async getRainfallAverageByPostcode(postCode: string) {
+    const climateData = await this.repository.findOne({
+      where: { PostCode: postCode },
+    });
+
+    if (!climateData) {
+      throw new NotFoundException('Postcode not found');
+    }
+
+    return this.calculateRainfallAverage(climateData);
   }
 
   async getTotalRainfallByPostcodeAndDate(

@@ -30,7 +30,6 @@ describe('ClimateController', () => {
     climateRepository = entityManager.getRepository(ClimateDatabaseEntity);
     await truncateAllTables(entityManager);
   });
-
   afterEach(async () => {
     await truncateAllTables(entityManager);
   });
@@ -80,6 +79,13 @@ describe('ClimateController', () => {
       expect(result.totalRainfall).toBeCloseTo(expectedTotalRainfall, 2);
     });
 
+    it('should return rainfall average by postcode', async () => {
+      await climateRepository.save(ClimateDatabaseData);
+      const postcode = 'AL1';
+       const result = await controller.getRainfallAverageByPostcode(postcode);
+      expect(result.rainfallAverage).toBeTruthy();
+    });
+    
     it('should return an error if the postcode is not found', async () => {
       try {
         await controller.getTotalRainfallByPostcodeAndDate(
@@ -93,4 +99,5 @@ describe('ClimateController', () => {
       }
     });
   });
+
 });
