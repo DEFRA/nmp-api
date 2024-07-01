@@ -191,7 +191,7 @@ describe('FieldController', () => {
     });
 
     it('should return zero count if no fields found for farmId', async () => {
-      const farmId = 12;
+      const farmId = 0;
       const result = await controller.getFarmFieldsCount(farmId);
       expect(result.count).toEqual(0);
     });
