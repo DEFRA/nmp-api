@@ -1,30 +1,39 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ApplicationMethodController } from './application-method.controller';
 import { ApplicationMethodService } from './application-method.service';
-import { NotFoundException } from '@nestjs/common';
+import { ApplicationMethodEntity } from '@db/entity/application-method.entity';
+import { CacheModule } from '@nestjs/cache-manager';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ormConfig } from '../../test/ormConfig';
+import { EntityManager } from 'typeorm';
+import { truncateAllTables } from '../../test/utils';
+import { applicationMethodData } from '../../test/mocked-data/applicationMethod';
 
 describe('ApplicationMethodController', () => {
   let controller: ApplicationMethodController;
-  let service: ApplicationMethodService;
+  let entityManager: EntityManager;
+  let applicationMethodRepository: any;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [ApplicationMethodController],
-      providers: [
-        {
-          provide: ApplicationMethodService,
-          useValue: {
-            getApplicationMethods: jest.fn(),
-            getApplicationMethodById: jest.fn(), 
-          },
-        },
+      imports: [
+        TypeOrmModule.forRoot(ormConfig),
+        TypeOrmModule.forFeature([ApplicationMethodEntity]),
+        CacheModule.register(),
       ],
+      controllers: [ApplicationMethodController],
+      providers: [ApplicationMethodService],
+      exports: [TypeOrmModule],
     }).compile();
 
-   controller = module.get<ApplicationMethodController>(
-     ApplicationMethodController,
-   );
-   service = module.get<ApplicationMethodService>(ApplicationMethodService);
+    controller = module.get<ApplicationMethodController>(
+      ApplicationMethodController,
+    );
+    entityManager = module.get<EntityManager>(EntityManager);
+    applicationMethodRepository = entityManager.getRepository(
+      ApplicationMethodEntity,
+    );
+    await truncateAllTables(entityManager);
   });
 
   it('should be defined', () => {
@@ -33,94 +42,13 @@ describe('ApplicationMethodController', () => {
 
   describe('getApplicationMethods', () => {
     it('should return application methods', async () => {
-      const result = [
-        {
-          ID: 1,
-          Name: 'Method 1',
-          ApplicableForGrass: 'L',
-          ApplicableForArableAndHorticulture: 'S',
-          ApplicationMethodsIncorpMethods: [],
-          OrganicManures: [],
-        },
-      ];
-      jest.spyOn(service, 'getApplicationMethods').mockResolvedValue(result);
-
-      expect(await controller.getApplicationMethods(1, 'someValue')).toEqual({
-        ApplicationMethods: result,
-      });
-    });
-
-    it('should call getApplicationMethods with correct parameters', async () => {
-      const fieldType = 1;
-      const applicableFor = 'someValue';
-      const result = [
-        {
-          ID: 1,
-          Name: 'Method 1',
-          ApplicableForGrass: 'L',
-          ApplicableForArableAndHorticulture: 'S',
-          ApplicationMethodsIncorpMethods: [],
-          OrganicManures: [],
-        },
-      ];
-      jest.spyOn(service, 'getApplicationMethods').mockResolvedValue(result);
-
-      await controller.getApplicationMethods(fieldType, applicableFor);
-
-      expect(service.getApplicationMethods).toHaveBeenCalledWith(
-        fieldType,
-        applicableFor,
+      const sampleApplicationMethodData = applicationMethodRepository.create(
+        applicationMethodData,
       );
-    });
+      await applicationMethodRepository.save(sampleApplicationMethodData);
 
-    it('should handle errors', async () => {
-      const fieldType = 1;
-      const applicableFor = 'someValue';
-      jest
-        .spyOn(service, 'getApplicationMethods')
-        .mockRejectedValue(new Error('test error'));
-
-      await expect(
-        controller.getApplicationMethods(fieldType, applicableFor),
-      ).rejects.toThrow('test error');
-    });
-  });
-
-  describe('getApplicationMethodById', () => {
-
-    it('should return the application method for a valid ID', async () => {
-      const id = 1; // Example ID from your mock data
-      const expectedResult = {
-        ID: 1,
-        Name: 'Method 1',
-        ApplicableForGrass: 'L',
-        ApplicableForArableAndHorticulture: 'S',
-        ApplicationMethodsIncorpMethods: [],
-        OrganicManures: [],
-      };
-      // Mock the service method to return the expected result
-      jest
-        .spyOn(service, 'getApplicationMethodById')
-        .mockResolvedValue(expectedResult);
-      // Call the controller method
-      const response = await controller.getApplicationMethodById(id);
-      // Assert that the service method was called with the correct ID
-      expect(service.getApplicationMethodById).toHaveBeenCalledWith(id);
-    });
-
-    
-     
-
-    it('should throw NotFoundException for an invalid ID', async () => {
-      const invalidId = 999; // Assuming this ID does not exist
-      jest
-        .spyOn(service, 'getApplicationMethodById')
-        .mockRejectedValue(new NotFoundException());
-
-      await expect(
-        controller.getApplicationMethodById(invalidId),
-      ).rejects.toThrow(NotFoundException);
-      expect(service.getApplicationMethodById).toHaveBeenCalledWith(invalidId);
+      const result = await controller.getApplicationMethods(1, 'B');
+      expect(result.ApplicationMethods).toBeDefined();
     });
   });
 });

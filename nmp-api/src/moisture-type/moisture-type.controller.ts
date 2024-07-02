@@ -11,7 +11,7 @@ export class MoistureTypeController {
   @Get()
   @ApiOperation({ summary: 'Get list of Moisture Types' })
   async getSoilMoistureTypes() {
-    const records = (await this.moistureTypeService.getAll()).records;
+    const records = await this.moistureTypeService.getAll();
 
     return { MoistureTypes: records };
   }
