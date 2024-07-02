@@ -1,23 +1,22 @@
 import { IncorpMethodsIncorpDelayEntity } from '@db/entity/incorp-method-incorp-delay.entity';
 import { IncorporationDelayEntity } from '@db/entity/incorporation-delay.entity';
-import { IncorporationMethodEntity } from '@db/entity/incorporation-method.entity';
-import BaseRepository from '@db/repository/base/base.repository';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApiDataResponseType } from '@shared/base.response';
+import { BaseService } from '@src/base/base.service';
 import { EntityManager, In, Repository } from 'typeorm';
 
 @Injectable()
-export class IncorporationDelaysService extends BaseRepository<
+export class IncorporationDelaysService extends BaseService<
   IncorporationDelayEntity,
   ApiDataResponseType<IncorporationDelayEntity>
 > {
   constructor(
     @InjectRepository(IncorporationDelayEntity)
     private readonly incorporationDelayRepository: Repository<IncorporationDelayEntity>,
-    protected readonly entityManager: EntityManager,
     @InjectRepository(IncorpMethodsIncorpDelayEntity)
     private readonly incorpMethodsIncorpDelayRepository: Repository<IncorpMethodsIncorpDelayEntity>,
+    protected readonly entityManager: EntityManager,
   ) {
     super(incorporationDelayRepository, entityManager);
   }
@@ -41,19 +40,5 @@ export class IncorporationDelaysService extends BaseRepository<
     });
 
     return incorporationDelays;
-  }
-
-  async findIncorporationDelayById(
-    id: number,
-  ) {
-    // return await this.getById(id);
-    const { records } = await this.getById(id);
-    if (!records) {
-      throw new NotFoundException(
-        `Incorporation Delay with ID ${id} not found`,
-      );
-    }
-    return records;
-
   }
 }

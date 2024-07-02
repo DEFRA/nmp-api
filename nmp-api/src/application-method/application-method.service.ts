@@ -1,12 +1,12 @@
 import { ApplicationMethodEntity } from '@db/entity/application-method.entity';
-import BaseRepository from '@db/repository/base/base.repository';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApiDataResponseType } from '@shared/base.response';
+import { BaseService } from '@src/base/base.service';
 import { EntityManager, In, Repository } from 'typeorm';
 
 @Injectable()
-export class ApplicationMethodService extends BaseRepository<
+export class ApplicationMethodService extends BaseService<
   ApplicationMethodEntity,
   ApiDataResponseType<ApplicationMethodEntity>
 > {
@@ -39,13 +39,5 @@ export class ApplicationMethodService extends BaseRepository<
       where: whereCondition,
     });
     return applicationMethods;
-  }
-
-  async getApplicationMethodById(id: number): Promise<ApplicationMethodEntity> {
-    const {records} = await this.getById(id);
-    if (!records) {
-      throw new NotFoundException(`Application Method with ID ${id} not found`);
-    }
-    return records;
   }
 }

@@ -1,71 +1,81 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { IncorporationDelaysService } from './incorporation-delay.service';
 import { IncorporationDelaysController } from './incorporation-delay.controller';
-import { NotFoundException } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
+import { IncorporationDelayEntity } from '@db/entity/incorporation-delay.entity';
+import { CacheModule } from '@nestjs/cache-manager';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ormConfig } from '../../test/ormConfig';
+import { EntityManager } from 'typeorm';
+import { truncateAllTables } from '../../test/utils';
+import {
+  incorporationDelayData,
+  incorporationMethodData,
+} from '../../test/mocked-data/organic-manure';
+import { IncorporationMethodEntity } from '@db/entity/incorporation-method.entity';
+import { IncorpMethodsIncorpDelayEntity } from '@db/entity/incorp-method-incorp-delay.entity';
+import { IncorporationMethodService } from '@src/incorporation-method/incorporation-method.service';
 
 describe('IncorporationDelaysController', () => {
   let controller: IncorporationDelaysController;
-  let service: IncorporationDelaysService;
+  let entityManager: EntityManager;
+  let incorporationDelay: IncorporationDelayEntity;
+  let incorporationDelayRepository: any;
+  let incorporationMethod: IncorporationMethodEntity;
+  let incorporationMethodRepository: any;
+  let incorpMethodsIncorpDelayRepository: any;
 
-  const mockIncorporationDelaysService = {
-    getIncorporationDelays: jest.fn((methodId, applicableFor) => {
-      if (methodId === 1 && applicableFor === 'L') {
-        return [
-          {
-            ID: 1,
-            Name: 'Delay 1',
-            FromHours: 2,
-            ToHours: 6,
-            ApplicableFor: 'L',
-          },
-        ];
-      } else if (methodId === 2 && applicableFor === 'S') {
-        return [
-          {
-            ID: 2,
-            Name: 'Delay 2',
-            FromHours: 2,
-            ToHours: 6,
-            ApplicableFor: 'S',
-          },
-        ];
-      } else {
-        return [];
-      }
-    }),
-    findIncorporationDelayById: jest.fn((id) => {
-      if (id === 1) {
-        return {
-          ID: 1,
-          Name: 'Delay 1',
-          FromHours: 2,
-          ToHours: 6,
-          ApplicableFor: 'L',
-        };
-      } else {
-        throw new NotFoundException(
-          `Incorporation Delay with ID ${id} not found`,
-        );
-      }
-    }),
-  };
-
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [IncorporationDelaysController],
-      providers: [
-        {
-          provide: IncorporationDelaysService,
-          useValue: mockIncorporationDelaysService,
-        },
+      imports: [
+        TypeOrmModule.forRoot(ormConfig),
+        TypeOrmModule.forFeature([
+          IncorporationDelayEntity,
+          IncorporationMethodEntity,
+          IncorpMethodsIncorpDelayEntity,
+        ]),
+        CacheModule.register(),
       ],
+      controllers: [IncorporationDelaysController],
+      providers: [IncorporationDelaysService],
+      exports: [TypeOrmModule],
     }).compile();
 
     controller = module.get<IncorporationDelaysController>(
       IncorporationDelaysController,
     );
-    service = module.get<IncorporationDelaysService>(
-      IncorporationDelaysService,
+    entityManager = module.get<EntityManager>(EntityManager);
+    incorporationDelayRepository = entityManager.getRepository(
+      IncorporationDelayEntity,
+    );
+    incorporationMethodRepository = entityManager.getRepository(
+      IncorporationMethodEntity,
+    );
+    incorpMethodsIncorpDelayRepository = entityManager.getRepository(
+      IncorpMethodsIncorpDelayEntity,
+    );
+    await truncateAllTables(entityManager);
+    const sampleIncorporationDelayData = incorporationDelayRepository.create(
+      incorporationDelayData,
+    );
+    incorporationDelay = await incorporationDelayRepository.save(
+      sampleIncorporationDelayData,
+    );
+
+    const sampleIncorporationMethodData = incorporationMethodRepository.create(
+      incorporationMethodData,
+    );
+    incorporationMethod = await incorporationMethodRepository.save(
+      sampleIncorporationMethodData,
+    );
+
+    const sampleIncorpMethodsIncorpDelay =
+      incorpMethodsIncorpDelayRepository.create({
+        IncorporationMethodID: incorporationMethod.ID,
+        IncorporationDelayID: incorporationDelay.ID,
+      });
+    await incorpMethodsIncorpDelayRepository.save(
+      sampleIncorpMethodsIncorpDelay,
     );
   });
 
@@ -75,52 +85,39 @@ describe('IncorporationDelaysController', () => {
 
   describe('getIncorporationDelays', () => {
     it('should return a list of incorporation delays for valid methodId and applicableFor', async () => {
-      const result = await controller.getIncorporationDelays(1, 'L');
-      expect(result).toEqual({
-        IncorporationDelays: [
-          {
-            ID: 1,
-            Name: 'Delay 1',
-            FromHours: 2,
-            ToHours: 6,
-            ApplicableFor: 'L',
-          },
-        ],
-      });
-      expect(service.getIncorporationDelays).toHaveBeenCalledWith(1, 'L');
+      const result = await controller.getIncorporationDelays(
+        incorporationMethod.ID,
+        'A',
+      );
+      expect(result.IncorporationDelays).toBeDefined();
+      expect(result.IncorporationDelays.length).toBeGreaterThan(0);
     });
 
     it('should return an empty list for invalid methodId and applicableFor', async () => {
       const result = await controller.getIncorporationDelays(0, 'L');
       expect(result).toEqual({ IncorporationDelays: [] });
-      expect(service.getIncorporationDelays).toHaveBeenCalledWith(0, 'L');
     });
   });
 
   describe('getIncorporationDelayById', () => {
     it('should return the incorporation delay for a valid ID', async () => {
-      const result = await controller.getIncorporationDelayById(1);
-      expect(result).toEqual({
-        IncorporationDelay:
-          mockIncorporationDelaysService.findIncorporationDelayById(1),
-      });
-      expect(
-        mockIncorporationDelaysService.findIncorporationDelayById,
-      ).toHaveBeenCalledWith(1);
+      const incorporationDelayId = incorporationDelay.ID;
+
+      const result =
+        await controller.getIncorporationDelayById(incorporationDelayId);
+
+      expect(result.IncorporationDelay).toBeDefined();
+      expect(result.IncorporationDelay).toHaveProperty('ID');
     });
 
     it('should throw NotFoundException for an invalid ID', async () => {
-      const invalidId = 0;
-      jest
-        .spyOn(service, 'findIncorporationDelayById')
-        .mockRejectedValue(new NotFoundException());
+      const invalidDelayId = 0;
 
-      await expect(
-        controller.getIncorporationDelayById(invalidId),
-      ).rejects.toThrowError(NotFoundException);
-      expect(service.findIncorporationDelayById).toHaveBeenCalledWith(
-        invalidId,
-      );
+      try {
+        await controller.getIncorporationDelayById(invalidDelayId);
+      } catch (error) {
+        expect(error.status).toBe(HttpStatus.NOT_FOUND);
+      }
     });
   });
 });

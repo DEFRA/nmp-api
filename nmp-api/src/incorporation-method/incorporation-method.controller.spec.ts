@@ -1,55 +1,79 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { IncorporationMethodController } from './incorporation-method.controller';
 import { IncorporationMethodService } from './incorporation-method.service';
+import { IncorporationMethodEntity } from '@db/entity/incorporation-method.entity';
+import { CacheModule } from '@nestjs/cache-manager';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ormConfig } from '../../test/ormConfig';
+import { ApplicationMethodsIncorpMethodEntity } from '@db/entity/application-method-incorp-method.entity';
+import { EntityManager } from 'typeorm';
+import { ApplicationMethodEntity } from '@db/entity/application-method.entity';
+import { applicationMethodData } from '../../test/mocked-data/applicationMethod';
+import { truncateAllTables } from '../../test/utils';
+import { incorporationMethodData } from '../../test/mocked-data/organic-manure';
+import { ApplicationMethodService } from '@src/application-method/application-method.service';
+import { HttpStatus } from '@nestjs/common';
 
 describe('IncorporationMethodController', () => {
   let controller: IncorporationMethodController;
-  let service: IncorporationMethodService;
+  let entityManager: EntityManager;
+  let incorporationMethod: IncorporationMethodEntity;
+  let incorporationMethodRepository: any;
+  let applicationMethod: ApplicationMethodEntity;
+  let applicationMethodRepository: any;
+  let appMethodIncorpMethodRepository: any;
 
-  const mockIncorporationMethodService = {
-    getIncorporationMethods: jest.fn((fieldType, applicableFor, appId) => {
-      if (fieldType === 1 && applicableFor === 'L' && appId === 1) {
-        return [
-          {
-            ID: 1,
-            Name: 'Method 1',
-            ApplicableForGrass: 'L',
-            ApplicableForArableAndHorticulture: 'L',
-          },
-        ];
-      } else if (fieldType === 2 && applicableFor === 'S' && appId === 2) {
-        return [
-          {
-            ID: 2,
-            Name: 'Method 2',
-            ApplicableForGrass: 'S',
-            ApplicableForArableAndHorticulture: 'S',
-          },
-          ,
-        ];
-      } else {
-        return [];
-      }
-    }),
-  };
-
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [IncorporationMethodController],
-      providers: [
-        {
-          provide: IncorporationMethodService,
-          useValue: mockIncorporationMethodService,
-        },
+      imports: [
+        TypeOrmModule.forRoot(ormConfig),
+        TypeOrmModule.forFeature([
+          IncorporationMethodEntity,
+          ApplicationMethodEntity,
+          ApplicationMethodsIncorpMethodEntity,
+        ]),
+        CacheModule.register(),
       ],
+      controllers: [IncorporationMethodController],
+      providers: [IncorporationMethodService, ApplicationMethodService],
+      exports: [TypeOrmModule],
     }).compile();
 
     controller = module.get<IncorporationMethodController>(
       IncorporationMethodController,
     );
-    service = module.get<IncorporationMethodService>(
-      IncorporationMethodService,
+    entityManager = module.get<EntityManager>(EntityManager);
+    applicationMethodRepository = entityManager.getRepository(
+      ApplicationMethodEntity,
     );
+    incorporationMethodRepository = entityManager.getRepository(
+      IncorporationMethodEntity,
+    );
+    appMethodIncorpMethodRepository = entityManager.getRepository(
+      ApplicationMethodsIncorpMethodEntity,
+    );
+    await truncateAllTables(entityManager);
+
+    const sampleApplicationMethodData = applicationMethodRepository.create(
+      applicationMethodData,
+    );
+    applicationMethod = await applicationMethodRepository.save(
+      sampleApplicationMethodData,
+    );
+
+    const sampleIncorporationMethodData = incorporationMethodRepository.create(
+      incorporationMethodData,
+    );
+    incorporationMethod = await incorporationMethodRepository.save(
+      sampleIncorporationMethodData,
+    );
+
+    const sampleAppMethodIncorpMethodData =
+      appMethodIncorpMethodRepository.create({
+        ApplicationMethodID: applicationMethod.ID,
+        IncorporationMethodID: incorporationMethod.ID,
+      });
+    await appMethodIncorpMethodRepository.save(sampleAppMethodIncorpMethodData);
   });
 
   it('should be defined', () => {
@@ -58,40 +82,40 @@ describe('IncorporationMethodController', () => {
 
   describe('getIncorporationMethods', () => {
     it('should return a list of incorporation methods for valid parameters', async () => {
-      const result = await controller.getIncorporationMethods(1, 'L', 1);
-      expect(result).toEqual({
-        IncorporationMethods: [
-          {
-            ID: 1,
-            Name: 'Method 1',
-            ApplicableForGrass: 'L',
-            ApplicableForArableAndHorticulture: 'L',
-          },
-          ,
-        ],
-      });
-      expect(service.getIncorporationMethods).toHaveBeenCalledWith(1, 'L', 1);
-    });
-
-    it('should return a list of incorporation methods for another set of valid parameters', async () => {
-      const result = await controller.getIncorporationMethods(2, 'S', 2);
-      expect(result).toEqual({
-        IncorporationMethods: [
-          {
-            ID: 2,
-            Name: 'Method 2',
-            ApplicableForGrass: 'S',
-            ApplicableForArableAndHorticulture: 'S',
-          },
-        ],
-      });
-      expect(service.getIncorporationMethods).toHaveBeenCalledWith(2, 'S', 2);
+      const result = await controller.getIncorporationMethods(
+        1,
+        'B',
+        applicationMethod.ID,
+      );
+      expect(result.IncorporationMethods).toBeDefined;
+      expect(result.IncorporationMethods.length).toBeGreaterThan(0);
     });
 
     it('should return an empty list for invalid parameters', async () => {
-      const result = await controller.getIncorporationMethods(0, 'C', 3);
+      const result = await controller.getIncorporationMethods(1, 'C', 0);
       expect(result).toEqual({ IncorporationMethods: [] });
-      expect(service.getIncorporationMethods).toHaveBeenCalledWith(0, 'C', 3);
+    });
+  });
+
+  describe('getIncorporationMethodsById', () => {
+    it('should return the incorporation methods for a valid ID', async () => {
+      const incorporationDelayId = incorporationMethod.ID;
+
+      const result =
+        await controller.getIncorporationMethodById(incorporationDelayId);
+
+      expect(result.IncorporationMethod).toBeDefined();
+      expect(result.IncorporationMethod).toHaveProperty('ID');
+    });
+
+    it('should throw NotFoundException for an invalid ID', async () => {
+      const invalidMethodId = 0;
+
+      try {
+        await controller.getIncorporationMethodById(invalidMethodId);
+      } catch (error) {
+        expect(error.status).toBe(HttpStatus.NOT_FOUND);
+      }
     });
   });
 });

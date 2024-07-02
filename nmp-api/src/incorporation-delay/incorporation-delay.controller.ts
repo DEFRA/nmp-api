@@ -1,7 +1,13 @@
-// incorporation-delay.controller.ts
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  ParseIntPipe,
+  Query,
+} from '@nestjs/common';
 import { IncorporationDelaysService } from './incorporation-delay.service';
-import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiSecurity, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Incorporation Delays')
 @Controller('incorporation-delays')
@@ -11,9 +17,9 @@ export class IncorporationDelaysController {
     private readonly incorporationDelaysService: IncorporationDelaysService,
   ) {}
 
-  @Get('/:methodId')
+  @Get('incorporation-methods/:methodId')
   @ApiOperation({
-    summary: 'Get list of Incorporation Delays',
+    summary: 'Get list of Incorporation Delays by Incorporation Method Id',
   })
   async getIncorporationDelays(
     @Param('methodId') methodId: number,
@@ -27,13 +33,19 @@ export class IncorporationDelaysController {
     return { IncorporationDelays: delays };
   }
 
-  @Get('/by-id/:id')
+  @Get(':id')
   @ApiOperation({
     summary: 'Get Incorporation Delay by ID',
   })
-  async getIncorporationDelayById(@Param('id') id: number) {
-    const delay =
-      await this.incorporationDelaysService.findIncorporationDelayById(id);
-    return { IncorporationDelay: delay };
+  @ApiParam({ name: 'id', description: 'Incorporation Delay ID' })
+  async getIncorporationDelayById(@Param('id', ParseIntPipe) id: number) {
+    const { records } = await this.incorporationDelaysService.getById(id);
+
+    if (!records) {
+      throw new NotFoundException(
+        `Incorporation Delay with ID ${id} not found`,
+      );
+    }
+    return { IncorporationDelay: records };
   }
 }
