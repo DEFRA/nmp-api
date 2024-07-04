@@ -107,3 +107,19 @@ export const createFieldReqBody = {
   ModifiedOn: null,
   ModifiedByID: null,
 };
+
+export const createFieldReqBody2 = {
+  SoilTypeID: 2,
+  NVZProgrammeID: null,
+  Name: 'Test Field',
+  LPIDNumber: null,
+  NationalGridReference: null,
+  OtherReference: null,
+  TotalArea: 500,
+  CroppedArea: null,
+  ManureNonSpreadingArea: null,
+  SoilReleasingClay: false,
+  IsWithinNVZ: false,
+  IsAbove300SeaLevel: false,
+  IsActive: true,
+};

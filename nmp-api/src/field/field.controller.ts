@@ -6,13 +6,24 @@ import {
   ParseBoolPipe,
   ParseIntPipe,
   Post,
+  Put,
   Query,
   Req,
 } from '@nestjs/common';
-import { ApiSecurity, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiSecurity,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+  ApiBody,
+} from '@nestjs/swagger';
 import { FieldService } from './field.service';
-import { CreateFieldWithSoilAnalysisAndCropsDto } from './dto/field.dto';
+import {
+  CreateFieldWithSoilAnalysisAndCropsDto,
+  UpdateFieldDto,
+} from './dto/field.dto';
 import { Request } from 'express';
+import FieldEntity from '@db/entity/field.entity';
 
 @ApiTags('Field')
 @ApiSecurity('Bearer')
@@ -93,5 +104,18 @@ export class FieldController {
       userId,
     );
     return data;
+  }
+
+  @Put('/:fieldId')
+  @ApiOperation({ summary: 'Update Field by FieldId' })
+  @ApiBody({ type: UpdateFieldDto })
+  async updateField(
+    @Param('fieldId', ParseIntPipe) fieldId: number,
+    @Body('Field') body: FieldEntity,
+    @Req() req: Request,
+  ) {
+    const userId = req['userId'];
+    const Field = await this.fieldService.updateField(body, userId, fieldId);
+    return { Field };
   }
 }
