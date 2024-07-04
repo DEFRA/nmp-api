@@ -1,25 +1,35 @@
-import ClimateDatabaseEntity from '@db/entity/climate-data.entity';
 import {
   Injectable,
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ApiDataResponseType } from '@shared/base.response';
-import { BaseService } from '@src/base/base.service';
 import { Repository, EntityManager } from 'typeorm';
+import ClimateDatabaseEntity from '@db/entity/climate-data.entity';
 
 @Injectable()
-export class ClimateService extends BaseService<
-  ClimateDatabaseEntity,
-  ApiDataResponseType<ClimateDatabaseEntity>
-> {
+export class ClimateService {
   constructor(
     @InjectRepository(ClimateDatabaseEntity)
-    protected readonly repository: Repository<ClimateDatabaseEntity>,
-    protected readonly entityManager: EntityManager,
-  ) {
-    super(repository, entityManager);
+    private readonly repository: Repository<ClimateDatabaseEntity>,
+    private readonly entityManager: EntityManager,
+  ) {}
+
+  private validateDateFormat(dateString: string): Date {
+    const parts = dateString.split(/[\s-]/);
+    if (parts.length !== 3) {
+      throw new BadRequestException('Invalid date format. Use "dd-mm-yyyy".');
+    }
+    const [day, month, year] = parts.map(Number);
+    const date = new Date(year, month - 1, day);
+    if (
+      date.getFullYear() !== year ||
+      date.getMonth() + 1 !== month ||
+      date.getDate() !== day
+    ) {
+      throw new BadRequestException('Invalid date.');
+    }
+    return date;
   }
 
   private calculateTotalRainfall(
@@ -70,7 +80,7 @@ export class ClimateService extends BaseService<
     }
 
     return {
-      totalRainfall: Number(totalRainfall.toFixed(2)),
+      totalRainfall: Math.round(Number(totalRainfall.toFixed(2))),
     };
   }
 
@@ -115,8 +125,8 @@ export class ClimateService extends BaseService<
     startDate: string,
     endDate: string,
   ) {
-    const startDateObj = new Date(startDate);
-    const endDateObj = new Date(endDate);
+    const startDateObj = this.validateDateFormat(startDate);
+    const endDateObj = this.validateDateFormat(endDate);
 
     const startMonth = startDateObj.getMonth() + 1;
     const endMonth = endDateObj.getMonth() + 1;

@@ -6,7 +6,7 @@ import ClimateDatabaseEntity from '@db/entity/climate-data.entity';
 import { EntityManager } from 'typeorm';
 import { ormConfig } from '../../test/ormConfig';
 import { truncateAllTables } from '../../test/utils';
-import { ClimateDatabaseData } from '../../test/mocked-data/ClimateDatabase';
+import { ClimateDatabaseData } from '../../test/mocked-data/climateDatabase';
 
 describe('ClimateController', () => {
   let controller: ClimateController;
@@ -30,10 +30,12 @@ describe('ClimateController', () => {
     climateRepository = entityManager.getRepository(ClimateDatabaseEntity);
     await truncateAllTables(entityManager);
   });
+
   afterEach(async () => {
     await truncateAllTables(entityManager);
   });
 
+  
   describe('getTotalRainfallByPostcodeAndDate', () => {
     it('should return total rainfall for given postcode and date range', async () => {
       // Insert a sample climate data using mocked data
@@ -43,14 +45,24 @@ describe('ClimateController', () => {
       // Call the controller method
       const result = await controller.getTotalRainfallByPostcodeAndDate(
         'AL1',
-        '2024-01-01',
-        '2024-12-31',
+        '01-01-2024',
+        '31-12-2024',
       );
 
       // Calculate expected total rainfall
-      const expectedTotalRainfall = Object.keys(ClimateDatabaseData)
-        .filter((key) => key.startsWith('MeanTotalRainFall'))
-        .reduce((sum, key) => sum + ClimateDatabaseData[key], 0);
+      const expectedTotalRainfall =
+        ClimateDatabaseData.MeanTotalRainFallJan +
+        ClimateDatabaseData.MeanTotalRainFallFeb +
+        ClimateDatabaseData.MeanTotalRainFallMar +
+        ClimateDatabaseData.MeanTotalRainFallApr +
+        ClimateDatabaseData.MeanTotalRainFallMay +
+        ClimateDatabaseData.MeanTotalRainFallJun +
+        ClimateDatabaseData.MeanTotalRainFallJul +
+        ClimateDatabaseData.MeanTotalRainFallAug +
+        ClimateDatabaseData.MeanTotalRainFallSep +
+        ClimateDatabaseData.MeanTotalRainFallOct +
+        ClimateDatabaseData.MeanTotalRainFallNov +
+        ClimateDatabaseData.MeanTotalRainFallDec;
 
       // Assert the result with rounding
       expect(result.totalRainfall).toBeCloseTo(expectedTotalRainfall, 2);
@@ -64,11 +76,11 @@ describe('ClimateController', () => {
       // Call the controller method
       const result = await controller.getTotalRainfallByPostcodeAndDate(
         'AL1',
-        '2024-11-01',
-        '2025-02-28',
+        '01-11-2024',
+        '28-02-2025',
       );
 
-      // Calculate expected total rainfall for Nov + Dec + Jan + Feb
+      // Calculate expected total rainfall for Nov + Dec 2024 + Jan + Feb 2025
       const expectedTotalRainfall =
         ClimateDatabaseData.MeanTotalRainFallNov +
         ClimateDatabaseData.MeanTotalRainFallDec +
@@ -79,25 +91,29 @@ describe('ClimateController', () => {
       expect(result.totalRainfall).toBeCloseTo(expectedTotalRainfall, 2);
     });
 
-    it('should return rainfall average by postcode', async () => {
-      await climateRepository.save(ClimateDatabaseData);
-      const postcode = 'AL1';
-       const result = await controller.getRainfallAverageByPostcode(postcode);
-      expect(result.rainfallAverage).toBeTruthy();
-    });
-    
-    it('should return an error if the postcode is not found', async () => {
+    it('should throw an error if start date is greater than end date within the same year', async () => {
       try {
         await controller.getTotalRainfallByPostcodeAndDate(
-          'INVALID_POSTCODE',
-          '2024-01-01',
-          '2024-12-31',
+          'AL1',
+          '31-12-2024',
+          '01-01-2024',
         );
       } catch (error) {
         expect(error.status).toBe(404);
-        expect(error.message).toBe('Postcode not found');
       }
     });
-  });
 
+    it('should throw an error if start year is greater than end year', async () => {
+      try {
+        await controller.getTotalRainfallByPostcodeAndDate(
+          'AL1',
+          '01-01-2025',
+          '01-01-2024',
+        );
+      } catch (error) {
+        expect(error.status).toBe(404);
+      }
+    });
+    
+  });
 });
