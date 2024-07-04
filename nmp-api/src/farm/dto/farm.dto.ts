@@ -5,3 +5,5 @@ export class CreateFarmRequest {
   @ApiProperty()
   Farm: FarmEntity;
 }
+
+export class UpdateFarmRequest extends CreateFarmRequest {}

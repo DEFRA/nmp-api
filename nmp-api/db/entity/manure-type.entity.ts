@@ -83,7 +83,7 @@ export class ManureTypeEntity {
 
   @OneToMany(
     () => OrganicManureEntity,
-    (organicManure) => organicManure.ManureTypes,
+    (organicManure) => organicManure.ManureType,
   )
   OrganicManures: OrganicManureEntity[];
 

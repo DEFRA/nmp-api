@@ -48,43 +48,73 @@ export const manureTypeData = {
   K2OAvailable: 90,
   NMaxConstant: 68.3,
   ApplicationRateArable: 30,
-  ApplicationRateGrass: 20
+  ApplicationRateGrass: 20,
 };
 
 export const applicationMethodData = {
   Name: 'BroadCast spreader',
   ApplicableForGrass: 'B',
-  ApplicableForArableAndHorticulture: 'B'
+  ApplicableForArableAndHorticulture: 'B',
 };
 
 export const incorporationMethodData = {
   Name: 'Shallow injection',
   ApplicableForGrass: null,
-  ApplicableForArableAndHorticulture: null
+  ApplicableForArableAndHorticulture: null,
 };
 
 export const incorporationDelayData = {
   Name: 'Less than 2 hours',
   FromHours: 0,
   ToHours: 2,
-  ApplicableFor: 'A'
+  ApplicableFor: 'A',
 };
 
 export const windSpeedData = {
   Name: 'Calm/gentle (0-3 Beaufort scale)',
   FromScale: 0,
-  ToScale: 3
+  ToScale: 3,
 };
 
 export const moistureTypeData = {
-  Name: 'Dry'
+  Name: 'Dry',
 };
 
 export const rainTypeData = {
   Name: 'No rainfall within 6 hours of spreading',
-  RainInMM: 0
+  RainInMM: 0,
 };
 
 export const countryData = {
   Name: 'England/Wales',
-}
+};
+
+export const organicManureReqBody2 = {
+  ManagementPeriodID: null,
+  ManureTypeID: null,
+  ApplicationDate: '2024-07-01T00:00:00',
+  Confirm: '1',
+  N: 50.0,
+  P2O5: 25.0,
+  K2O: 75.0,
+  MgO: 10.0,
+  SO3: 5.0,
+  AvailableN: 40.0,
+  ApplicationRate: 20,
+  DryMatterPercent: 80.0,
+  UricAcid: 15.0,
+  EndOfDrain: '2024-07-01T00:00:00',
+  Rainfall: 20,
+  AreaSpread: 1000.0,
+  ManureQuantity: 500.0,
+  ApplicationMethodID: null,
+  IncorporationMethodID: null,
+  IncorporationDelayID: null,
+  NH4N: 30.0,
+  NO3N: 10.0,
+  AvailableP2O5: 30.0,
+  AvailableK2O: 40.0,
+  WindspeedID: null,
+  RainfallWithinSixHoursID: null,
+  MoistureID: null,
+};

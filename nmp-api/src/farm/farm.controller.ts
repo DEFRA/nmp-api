@@ -7,6 +7,7 @@ import {
   ParseBoolPipe,
   ParseIntPipe,
   Post,
+  Put,
   Query,
   Req,
 } from '@nestjs/common';
@@ -19,7 +20,7 @@ import {
 } from '@nestjs/swagger';
 import { FarmService } from './farm.service';
 import FarmEntity from '@db/entity/farm.entity';
-import { CreateFarmRequest } from './dto/farm.dto';
+import { CreateFarmRequest, UpdateFarmRequest } from './dto/farm.dto';
 
 @ApiTags('Farm')
 @ApiSecurity('Bearer')
@@ -63,6 +64,27 @@ export class FarmController {
       );
     const userId = req['userId'];
     const Farm = await this.farmService.createFarm(farmBody, userId);
+    return { Farm };
+  }
+
+  @Put('/:farmId')
+  @ApiOperation({ summary: 'Update Farm by FarmId' })
+  @ApiBody({ type: UpdateFarmRequest })
+  async updateFarm(
+    @Body('Farm') farmBody: FarmEntity,
+    @Param('farmId', ParseIntPipe) farmId: number,
+    @Req() req: Request,
+  ) {
+    const farm = await this.farmService.getFarm(
+      farmBody.Name,
+      farmBody.Postcode,
+    );
+    if (farm && farm.ID !== farmId)
+      throw new BadRequestException(
+        'Other farms also exists with this Name and Postcode',
+      );
+    const userId = req['userId'];
+    const Farm = await this.farmService.updateFarm(farmBody, userId, farmId);
     return { Farm };
   }
 
