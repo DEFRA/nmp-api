@@ -1,6 +1,6 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
-import { Injectable } from '@nestjs/common';
+import { DeepPartial, EntityManager, Repository } from 'typeorm';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import FieldEntity from '@db/entity/field.entity';
 import { ApiDataResponseType } from '@shared/base.response';
@@ -122,5 +122,26 @@ export class FieldService extends BaseService<
         };
       },
     );
+  }
+
+  async updateField(
+    updatedFieldData: DeepPartial<FieldEntity>,
+    userId: number,
+    fieldId: number,
+  ) {
+    const result = await this.repository.update(fieldId, {
+      ...updatedFieldData,
+      ModifiedByID: userId,
+      ModifiedOn: new Date(),
+    });
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Field with ID ${fieldId} not found`);
+    }
+
+    const updatedField = await this.repository.findOne({
+      where: { ID: fieldId },
+    });
+    return updatedField;
   }
 }

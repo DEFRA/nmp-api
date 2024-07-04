@@ -12,6 +12,7 @@ import { ManagementPeriodService } from '@src/management-period/management-perio
 import { FieldController } from './field.controller';
 import {
   createFarmReqBody2,
+  createFieldReqBody2,
   createFieldWithSoilAnalysisAndCropsReqBody,
   userData,
 } from '../../test/mocked-data';
@@ -29,7 +30,9 @@ describe('FieldController', () => {
   let entityManager: EntityManager;
   let createdField: FieldEntity;
   let createdFarm: FarmEntity;
+  let user: UserEntity;
   let userRepository: any;
+  let fieldRepository: any;
 
   beforeAll(async () => {
     const app: TestingModule = await Test.createTestingModule({
@@ -56,6 +59,7 @@ describe('FieldController', () => {
     controller = app.get<FieldController>(FieldController);
     entityManager = app.get<EntityManager>(EntityManager);
     userRepository = entityManager.getRepository(UserEntity);
+    fieldRepository = entityManager.getRepository(FieldEntity);
     await truncateAllTables(entityManager);
   });
 
@@ -73,7 +77,7 @@ describe('FieldController', () => {
         ID: '323b76cd-2d89-4331-854c-656c72a65b79',
         Name: 'My organisation4',
       });
-      const user = await userRepository.save(userData);
+      user = await userRepository.save(userData);
       createFarmReqBody2.OrganisationID = organisation.ID;
       createFarmReqBody2.CreatedByID = user.ID;
       const farm = await farmRepository.save(createFarmReqBody2);
@@ -212,6 +216,44 @@ describe('FieldController', () => {
 
       const result = await controller.checkFarmFieldExists(farmId, name);
       expect(result.exists).toEqual(false);
+    });
+  });
+
+  describe('Update Field', () => {
+    it('should update a field successfully', async () => {
+      const newField = await fieldRepository.save({
+        ...createFieldReqBody2,
+        FarmID: createdFarm.ID,
+      });
+
+      const fieldId = newField.ID;
+
+      const updatedFieldData: any = {
+        Name: 'Updated Field Name',
+      };
+
+      const result = await controller.updateField(fieldId, updatedFieldData, {
+        userId: user.ID,
+      } as any);
+
+      expect(result.Field.ModifiedByID).toBeDefined();
+      expect(result.Field.ModifiedOn).toBeDefined();
+      expect(result.Field.Name).toEqual('Updated Field Name');
+    });
+
+    it('should throw an error if field is not found', async () => {
+      const fieldId = 0;
+      const updatedFieldData: any = {
+        Name: 'Updated Field Name',
+      };
+
+      try {
+        await controller.updateField(fieldId, updatedFieldData, {
+          userId: user.ID,
+        } as any);
+      } catch (error) {
+        expect(error.status).toBe(404);
+      }
     });
   });
 });

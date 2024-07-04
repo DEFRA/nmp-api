@@ -14,3 +14,8 @@ export class CreateFieldWithSoilAnalysisAndCropsDto {
   @ApiProperty({ type: [CreateCropWithManagementPeriodsDto] })
   Crops: CreateCropWithManagementPeriodsDto[];
 }
+
+export class UpdateFieldDto {
+  @ApiProperty()
+  Field: FieldEntity;
+}

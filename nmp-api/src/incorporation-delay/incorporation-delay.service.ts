@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApiDataResponseType } from '@shared/base.response';
 import { BaseService } from '@src/base/base.service';
-import { EntityManager, In, Repository } from 'typeorm';
+import { EntityManager, In, IsNull, Repository } from 'typeorm';
 
 @Injectable()
 export class IncorporationDelaysService extends BaseService<
@@ -33,10 +33,16 @@ export class IncorporationDelaysService extends BaseService<
       (md) => md.IncorporationDelayID,
     );
     const incorporationDelays = await this.incorporationDelayRepository.find({
-      where: {
-        ID: In(incorporationDelaysId),
-        ApplicableFor: In([applicableFor, 'A']),
-      },
+      where: [
+        {
+          ID: In(incorporationDelaysId),
+          ApplicableFor: In([applicableFor, 'A']),
+        },
+        {
+          ID: In(incorporationDelaysId),
+          ApplicableFor: IsNull(),
+        },
+      ],
     });
 
     return incorporationDelays;
