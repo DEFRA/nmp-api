@@ -2,16 +2,24 @@ import { IncorpMethodsIncorpDelayEntity } from '@db/entity/incorp-method-incorp-
 import { IncorporationDelayEntity } from '@db/entity/incorporation-delay.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { ApiDataResponseType } from '@shared/base.response';
+import { BaseService } from '@src/base/base.service';
+import { EntityManager, In, Repository } from 'typeorm';
 
 @Injectable()
-export class IncorporationDelaysService {
+export class IncorporationDelaysService extends BaseService<
+  IncorporationDelayEntity,
+  ApiDataResponseType<IncorporationDelayEntity>
+> {
   constructor(
     @InjectRepository(IncorporationDelayEntity)
     private readonly incorporationDelayRepository: Repository<IncorporationDelayEntity>,
     @InjectRepository(IncorpMethodsIncorpDelayEntity)
     private readonly incorpMethodsIncorpDelayRepository: Repository<IncorpMethodsIncorpDelayEntity>,
-  ) {}
+    protected readonly entityManager: EntityManager,
+  ) {
+    super(incorporationDelayRepository, entityManager);
+  }
 
   async getIncorporationDelays(
     methodId: number,

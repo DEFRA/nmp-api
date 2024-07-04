@@ -2,16 +2,24 @@ import { ApplicationMethodsIncorpMethodEntity } from '@db/entity/application-met
 import { IncorporationMethodEntity } from '@db/entity/incorporation-method.entity';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, IsNull, Repository } from 'typeorm';
+import { ApiDataResponseType } from '@shared/base.response';
+import { BaseService } from '@src/base/base.service';
+import { In, IsNull, EntityManager, Repository } from 'typeorm';
 
 @Injectable()
-export class IncorporationMethodService {
+export class IncorporationMethodService extends BaseService<
+  IncorporationMethodEntity,
+  ApiDataResponseType<IncorporationMethodEntity>
+> {
   constructor(
     @InjectRepository(IncorporationMethodEntity)
     private readonly incorporationMethodRepository: Repository<IncorporationMethodEntity>,
+    protected readonly entityManager: EntityManager,
     @InjectRepository(ApplicationMethodsIncorpMethodEntity)
     private readonly appMethodIncorpMethodRepository: Repository<ApplicationMethodsIncorpMethodEntity>,
-  ) {}
+  ) {
+    super(incorporationMethodRepository, entityManager);
+  }
 
   async getIncorporationMethods(
     fieldType: number,

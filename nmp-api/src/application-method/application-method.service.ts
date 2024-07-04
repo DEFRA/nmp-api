@@ -1,14 +1,22 @@
 import { ApplicationMethodEntity } from '@db/entity/application-method.entity';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { ApiDataResponseType } from '@shared/base.response';
+import { BaseService } from '@src/base/base.service';
+import { EntityManager, In, Repository } from 'typeorm';
 
 @Injectable()
-export class ApplicationMethodService {
+export class ApplicationMethodService extends BaseService<
+  ApplicationMethodEntity,
+  ApiDataResponseType<ApplicationMethodEntity>
+> {
   constructor(
     @InjectRepository(ApplicationMethodEntity)
     private readonly applicationMethodRepository: Repository<ApplicationMethodEntity>,
-  ) {}
+    protected readonly entityManager: EntityManager,
+  ) {
+    super(applicationMethodRepository, entityManager);
+  }
 
   async getApplicationMethods(fieldType: number, applicableFor: string) {
     let whereCondition = {};
