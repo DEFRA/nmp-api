@@ -89,6 +89,6 @@ import { WindspeedModule } from './windspeed/windspeed.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    // consumer.apply(AzureAuthMiddleware).forRoutes('*');
+    consumer.apply(AzureAuthMiddleware).forRoutes('*');
   }
 }
