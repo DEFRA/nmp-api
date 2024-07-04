@@ -38,7 +38,7 @@ export class ApplicationMethodEntity {
 
   @OneToMany(
     () => OrganicManureEntity,
-    (organicManure) => organicManure.ApplicationMethods,
+    (organicManure) => organicManure.ApplicationMethod,
   )
   OrganicManures: OrganicManureEntity[];
 }

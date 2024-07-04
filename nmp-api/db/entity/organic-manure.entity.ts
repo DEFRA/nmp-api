@@ -163,14 +163,14 @@ export class OrganicManureEntity {
 
   @ManyToOne(() => ManureTypeEntity, (manureType) => manureType.OrganicManures)
   @JoinColumn({ name: 'ManureTypeID' })
-  ManureTypes: ManureTypeEntity;
+  ManureType: ManureTypeEntity;
 
   @ManyToOne(
     () => ApplicationMethodEntity,
     (applicationMethod) => applicationMethod.OrganicManures,
   )
   @JoinColumn({ name: 'ApplicationMethodID' })
-  ApplicationMethods: ApplicationMethodEntity;
+  ApplicationMethod: ApplicationMethodEntity;
 
   @ManyToOne(
     () => IncorporationMethodEntity,

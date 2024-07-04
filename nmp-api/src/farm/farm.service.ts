@@ -1,6 +1,10 @@
 import FarmEntity from '@db/entity/farm.entity';
 // import MixedView from '@db/view/mixed.view';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApiDataResponseType } from '@shared/base.response';
 import { DeepPartial, EntityManager, Repository } from 'typeorm';
@@ -55,5 +59,38 @@ export class FarmService extends BaseService<
     //   }),
     // );
     return Farm;
+  }
+
+  async updateFarm(
+    updatedFarmData: DeepPartial<FarmEntity>,
+    userId: number,
+    farmId: number,
+  ) {
+    const result = await this.repository.update(farmId, {
+      ...updatedFarmData,
+      Name: updatedFarmData.Name.trim(),
+      Postcode: updatedFarmData.Postcode.trim(),
+      ModifiedByID: userId,
+      ModifiedOn: new Date(),
+    });
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Farm with ID ${farmId} not found`);
+    }
+
+    const updatedFarm = await this.repository.findOne({
+      where: { ID: farmId },
+    });
+    return updatedFarm;
+  }
+
+  async getFarm(name: string, postcode: string) {
+    const farm = await this.repository.findOne({
+      where: {
+        Name: name.trim(),
+        Postcode: postcode.trim(),
+      },
+    });
+    return farm;
   }
 }

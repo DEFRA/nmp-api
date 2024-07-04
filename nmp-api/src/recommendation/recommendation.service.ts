@@ -6,6 +6,7 @@ import { RecommendationEntity } from '@db/entity/recommendation.entity';
 import { ApiDataResponseType } from '@shared/base.response';
 import { BaseService } from '@src/base/base.service';
 import { RecommendationCommentEntity } from '@db/entity/recommendation-comment.entity';
+import { OrganicManureEntity } from '@db/entity/organic-manure.entity';
 
 @Injectable()
 export class RecommendationService extends BaseService<
@@ -17,6 +18,8 @@ export class RecommendationService extends BaseService<
     protected readonly repository: Repository<RecommendationEntity>,
     @InjectRepository(RecommendationCommentEntity)
     protected readonly recommendationCommentRepository: Repository<RecommendationCommentEntity>,
+    @InjectRepository(OrganicManureEntity)
+    protected readonly organicManureRepository: Repository<OrganicManureEntity>,
     protected readonly entityManager: EntityManager,
   ) {
     super(repository, entityManager);
@@ -70,10 +73,32 @@ export class RecommendationService extends BaseService<
                   RecommendationID: recData.Recommendation.ID,
                 },
               });
+              const organicManures = await this.organicManureRepository.find({
+                where: {
+                  ManagementPeriodID: recData.ManagementPeriod.ID,
+                },
+                select: {
+                  ID: true,
+                  ManureTypeID: true,
+                  ApplicationDate: true,
+                  ApplicationRate: true,
+                  ApplicationMethodID: true,
+                  ManureType: {
+                    ID: true,
+                    Name: true,
+                  },
+                  ApplicationMethod: {
+                    ID: true,
+                    Name: true,
+                  },
+                },
+                relations: ['ManureType', 'ApplicationMethod'],
+              });
               return {
                 Recommendation: recData.Recommendation,
                 RecommendationComments: comments,
                 ManagementPeriod: recData.ManagementPeriod,
+                OrganicManures: organicManures,
               };
             }),
           ),

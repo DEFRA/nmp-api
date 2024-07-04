@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import FarmEntity from '@db/entity/farm.entity';
 import {
   createFarmReqBody,
+  createFarmReqBody4,
   createOrganisationReqBody3,
   userData,
 } from '../../test/mocked-data';
@@ -24,6 +25,7 @@ describe('FarmController', () => {
   let userRepository: any;
   let user: UserEntity;
   let organisation: OrganisationEntity;
+  let farmRepository: any;
 
   beforeAll(async () => {
     app = await Test.createTestingModule({
@@ -40,6 +42,7 @@ describe('FarmController', () => {
     entityManager = app.get<EntityManager>(EntityManager);
     organisationRepository = entityManager.getRepository(OrganisationEntity);
     userRepository = entityManager.getRepository(UserEntity);
+    farmRepository = entityManager.getRepository(FarmEntity);
     await truncateAllTables(entityManager);
   });
 
@@ -96,9 +99,7 @@ describe('FarmController', () => {
       expect(Farm.Address1).toEqual('Cambridge University Farm');
       expect(Farm.Address2).toEqual('Park Farm');
       expect(Farm.Address3).toEqual(null);
-      expect(Farm.OrganisationID).toEqual(
-        organisation.ID.toUpperCase(),
-      ),
+      expect(Farm.OrganisationID).toEqual(organisation.ID.toUpperCase()),
         expect(Farm.Address4).toEqual(null);
       expect(Farm.Postcode).toEqual('CB23 8YW');
       expect(Farm.CPH).toEqual(null);
@@ -154,6 +155,56 @@ describe('FarmController', () => {
         true,
       );
       expect(result.Farms.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Update Farm', () => {
+    it('should throw an error if farm is with the updated data already exists ', async () => {
+      createFarmReqBody4.OrganisationID = organisation.ID;
+      const newFam = await farmRepository.save(createFarmReqBody4);
+      const farmId = newFam.ID;
+      const updatedFarmData: any = {
+        Name: 'FarmName1',
+        Postcode: 'CB23 8YW',
+      };
+
+      try {
+        await controller.updateFarm(updatedFarmData, farmId, {
+          userId: user.ID,
+        } as any);
+      } catch (error) {
+        expect(error.status).toBe(400);
+      }
+    });
+    it('should update a farm successfully', async () => {
+      const farmId = createdFarm.ID;
+      createFarmReqBody.Address1 = 'Updated Cambridge University Farm';
+      createFarmReqBody.Address2 = 'Updated Park Farm Address';
+      createFarmReqBody.Name = 'Updated Farm Name';
+
+      const result = await controller.updateFarm(createFarmReqBody, farmId, {
+        userId: user.ID,
+      } as any);
+
+      expect(result.Farm.ModifiedByID).toBeDefined();
+      expect(result.Farm.ModifiedOn).toBeDefined();
+      expect(result.Farm.Name).toEqual('Updated Farm Name');
+    });
+
+    it('should throw an error if farm is not found', async () => {
+      const farmId = 0;
+      const updatedFarmData: any = {
+        Name: 'Updated Farm Name',
+        Postcode: '12345',
+      };
+
+      try {
+        await controller.updateFarm(updatedFarmData, farmId, {
+          userId: user.ID,
+        } as any);
+      } catch (error) {
+        expect(error.status).toBe(404);
+      }
     });
   });
 });

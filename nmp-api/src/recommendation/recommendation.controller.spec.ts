@@ -11,6 +11,8 @@ import FarmEntity from '@db/entity/farm.entity';
 import FieldEntity from '@db/entity/field.entity';
 import OrganisationEntity from '@db/entity/organisation.entity';
 import {
+  applicationMethodData,
+  countryData,
   createCropReqBody,
   createFarmReqBody2,
   createFieldReqBody,
@@ -18,11 +20,22 @@ import {
   createOrganisationReqBody,
   createRecommendationCommentReqBody,
   createRecommendationReqBody,
+  incorporationDelayData,
+  incorporationMethodData,
+  manureTypeData,
+  organicManureReqBody2,
   userData,
 } from '../../test/mocked-data';
 import CropEntity from '@db/entity/crop.entity';
 import ManagementPeriodEntity from '@db/entity/management-period.entity';
 import UserEntity from '@db/entity/user.entity';
+import { OrganicManureEntity } from '@db/entity/organic-manure.entity';
+import { ManureTypeEntity } from '@db/entity/manure-type.entity';
+import { ApplicationMethodEntity } from '@db/entity/application-method.entity';
+import { IncorporationMethodEntity } from '@db/entity/incorporation-method.entity';
+import { IncorporationDelayEntity } from '@db/entity/incorporation-delay.entity';
+import { CountryEntity } from '@db/entity/country.entity';
+import { ManureGroupEntity } from '@db/entity/manure-group.entity';
 
 describe('RecommendationsController', () => {
   let controller: RecommendationController;
@@ -36,6 +49,13 @@ describe('RecommendationsController', () => {
   let recommendationCommentRepository: any;
   let userRepository: any;
   let user: UserEntity;
+  let organicManureRepository: any;
+  let manureTypeRepository: any;
+  let applicationMethodRepository: any;
+  let incorporationMethodRepository: any;
+  let incorporationDelayRepository: any;
+  let countryRepository: any;
+  let manureGroupRepository: any;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -44,6 +64,7 @@ describe('RecommendationsController', () => {
         TypeOrmModule.forFeature([
           RecommendationEntity,
           RecommendationCommentEntity,
+          OrganicManureEntity,
         ]),
       ],
       controllers: [RecommendationController],
@@ -66,6 +87,19 @@ describe('RecommendationsController', () => {
       RecommendationCommentEntity,
     );
     userRepository = entityManager.getRepository(UserEntity);
+    organicManureRepository = entityManager.getRepository(OrganicManureEntity);
+    manureTypeRepository = entityManager.getRepository(ManureTypeEntity);
+    applicationMethodRepository = entityManager.getRepository(
+      ApplicationMethodEntity,
+    );
+    incorporationMethodRepository = entityManager.getRepository(
+      IncorporationMethodEntity,
+    );
+    incorporationDelayRepository = entityManager.getRepository(
+      IncorporationDelayEntity,
+    );
+    countryRepository = entityManager.getRepository(CountryEntity);
+    manureGroupRepository = entityManager.getRepository(ManureGroupEntity);
     await truncateAllTables(entityManager);
   });
 
@@ -102,6 +136,28 @@ describe('RecommendationsController', () => {
         recommendationComment.RecommendationID = recommendation.ID;
         await recommendationCommentRepository.save(recommendationComment);
       }
+      const country = await countryRepository.save(countryData);
+      const manureGroup = await manureGroupRepository.save({
+        Name: 'Livestock manure',
+      });
+      manureTypeData.CountryID = country.ID;
+      manureTypeData.ManureGroupID = manureGroup.ID;
+      const manureType = await manureTypeRepository.save(manureTypeData);
+      const applicationMethod = await applicationMethodRepository.save(
+        applicationMethodData,
+      );
+      const incorporationMethod = await incorporationMethodRepository.save(
+        incorporationMethodData,
+      );
+      const incorporationDelay = await incorporationDelayRepository.save(
+        incorporationDelayData,
+      );
+      organicManureReqBody2.ManagementPeriodID = managementPeriod.ID;
+      organicManureReqBody2.ManureTypeID = manureType.ID;
+      organicManureReqBody2.ApplicationMethodID = applicationMethod.ID;
+      organicManureReqBody2.IncorporationMethodID = incorporationMethod.ID;
+      organicManureReqBody2.IncorporationDelayID = incorporationDelay.ID;
+      await organicManureRepository.save(organicManureReqBody2);
       const fieldId = createdField.ID;
       const harvestYear = 2023;
       const result: any =
@@ -120,6 +176,9 @@ describe('RecommendationsController', () => {
       expect(
         result.Recommendations[0].Recommendations[0].Recommendation,
       ).toBeTruthy();
+      expect(
+        result.Recommendations[0].Recommendations[0].OrganicManures.length,
+      ).toBeGreaterThan(0);
     });
   });
 });
