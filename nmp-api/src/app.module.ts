@@ -38,6 +38,7 @@ import { ApplicationMethodModule } from './application-method/application-method
 import { OrganicManureModule } from './organic-manure/organic-manure.module';
 import { WindspeedModule } from './windspeed/windspeed.module';
 import { MoistureTypeModule } from './moisture-type/moisture-type.module';
+import { RainTypeModule } from './rain-type/rain-type.module';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -86,11 +87,12 @@ import { MoistureTypeModule } from './moisture-type/moisture-type.module';
     OrganicManureModule,
     WindspeedModule,
     MoistureTypeModule,
+    RainTypeModule,
   ],
   providers: [AzureAuthService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AzureAuthMiddleware).forRoutes('*');
+   consumer.apply(AzureAuthMiddleware).forRoutes('*');
   }
 }
