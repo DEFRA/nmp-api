@@ -25,11 +25,11 @@ export class ClimateController {
   })
   @ApiQuery({
     name: 'startDate',
-    description: 'Start date, e.g., 2024-01-01',
+    description: 'Start date, e.g., 01-01-2024',
   })
   @ApiQuery({
     name: 'endDate',
-    description: 'End date, e.g., 2024-12-31',
+    description: 'End date, e.g., 31-12-2024',
   })
   @ApiOperation({ summary: 'Get total rainfall by postcode and date range' })
   async getTotalRainfallByPostcodeAndDate(
