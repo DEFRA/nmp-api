@@ -1,6 +1,12 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ClimateService } from './climate.service';
-import { ApiSecurity, ApiOperation, ApiTags, ApiQuery, ApiParam } from '@nestjs/swagger';
+import {
+  ApiSecurity,
+  ApiOperation,
+  ApiTags,
+  ApiQuery,
+  ApiParam,
+} from '@nestjs/swagger';
 
 @ApiTags('Climates')
 @Controller('climates')
@@ -22,14 +28,6 @@ export class ClimateController {
   @ApiQuery({
     name: 'postcode',
     description: 'First Half of Postcode, e.g., AB12',
-  })
-  @ApiQuery({
-    name: 'startDate',
-    description: 'Start date, e.g., 01-01-2024',
-  })
-  @ApiQuery({
-    name: 'endDate',
-    description: 'End date, e.g., 31-12-2024',
   })
   @ApiOperation({ summary: 'Get total rainfall by postcode and date range' })
   async getTotalRainfallByPostcodeAndDate(

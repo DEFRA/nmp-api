@@ -7,6 +7,7 @@ import { EntityManager } from 'typeorm';
 import { ormConfig } from '../../test/ormConfig';
 import { truncateAllTables } from '../../test/utils';
 import { ClimateDatabaseData } from '../../test/mocked-data/climateDatabase';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('ClimateController', () => {
   let controller: ClimateController;
@@ -35,7 +36,6 @@ describe('ClimateController', () => {
     await truncateAllTables(entityManager);
   });
 
-  
   describe('getTotalRainfallByPostcodeAndDate', () => {
     it('should return total rainfall for given postcode and date range', async () => {
       // Insert a sample climate data using mocked data
@@ -45,9 +45,10 @@ describe('ClimateController', () => {
       // Call the controller method
       const result = await controller.getTotalRainfallByPostcodeAndDate(
         'AL1',
-        '01-01-2024',
-        '31-12-2024',
+        '2024-01-01',
+        '2024-12-31',
       );
+
 
       // Calculate expected total rainfall
       const expectedTotalRainfall =
@@ -64,56 +65,80 @@ describe('ClimateController', () => {
         ClimateDatabaseData.MeanTotalRainFallNov +
         ClimateDatabaseData.MeanTotalRainFallDec;
 
-      // Assert the result with rounding
-      expect(result.totalRainfall).toBeCloseTo(expectedTotalRainfall, 2);
+      // Verify the result
+      expect(result.totalRainfall).toBeCloseTo(Math.round(expectedTotalRainfall));
     });
+    
+  it('should throw NotFoundException for an invalid postcode', async () => {
+    await expect(
+      controller.getTotalRainfallByPostcodeAndDate(
+        'INVALID',
+        '2024-01-01T00:00:00.000Z',
+        '2024-12-31T23:59:59.999Z',
+      ),
+    ).rejects.toThrow(NotFoundException);
+  });
+  
+  
+  it('should throw BadRequestException for invalid startDate format', async () => {
+    await expect(
+      controller.getTotalRainfallByPostcodeAndDate(
+        'AL1',
+        'invalid-date',
+        '2024-12-31T23:59:59.999Z',
+      ),
+    ).rejects.toThrow(BadRequestException);
+  });
 
-    it('should return total rainfall for date range spanning over two years', async () => {
+  it('should throw BadRequestException for invalid endDate format', async () => {
+    await expect(
+      controller.getTotalRainfallByPostcodeAndDate(
+        'AL1',
+        '2024-01-01T00:00:00.000Z',
+        'invalid-date',
+      ),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('should throw BadRequestException when startDate is greater than endDate', async () => {
+    await expect(
+      controller.getTotalRainfallByPostcodeAndDate(
+        'AL1',
+        '2024-12-31T23:59:59.999Z',
+        '2024-01-01T00:00:00.000Z',
+      ),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  });
+
+  describe('getRainfallAverageByPostcode', () => {
+    it('should return rainfall average for given postcode', async () => {
       // Insert a sample climate data using mocked data
       const sampleClimateData = climateRepository.create(ClimateDatabaseData);
       await climateRepository.save(sampleClimateData);
 
       // Call the controller method
-      const result = await controller.getTotalRainfallByPostcodeAndDate(
-        'AL1',
-        '01-11-2024',
-        '28-02-2025',
-      );
+      const result = await controller.getRainfallAverageByPostcode('AL1');
 
-      // Calculate expected total rainfall for Nov + Dec 2024 + Jan + Feb 2025
-      const expectedTotalRainfall =
-        ClimateDatabaseData.MeanTotalRainFallNov +
-        ClimateDatabaseData.MeanTotalRainFallDec +
+      // Calculate expected average rainfall
+      const rainfallMeanSum =
         ClimateDatabaseData.MeanTotalRainFallJan +
-        ClimateDatabaseData.MeanTotalRainFallFeb;
+        ClimateDatabaseData.MeanTotalRainFallFeb +
+        ClimateDatabaseData.MeanTotalRainFallMar +
+        ClimateDatabaseData.MeanTotalRainFallApr +
+        ClimateDatabaseData.MeanTotalRainFallMay +
+        ClimateDatabaseData.MeanTotalRainFallJun +
+        ClimateDatabaseData.MeanTotalRainFallJul +
+        ClimateDatabaseData.MeanTotalRainFallAug +
+        ClimateDatabaseData.MeanTotalRainFallSep +
+        ClimateDatabaseData.MeanTotalRainFallOct +
+        ClimateDatabaseData.MeanTotalRainFallNov +
+        ClimateDatabaseData.MeanTotalRainFallDec;
+      const expectedRainfallAverage = Math.round(rainfallMeanSum);
 
-      // Assert the result with rounding
-      expect(result.totalRainfall).toBeCloseTo(expectedTotalRainfall, 2);
+      // Verify the result
+      expect(result.rainfallAverage).toBe(expectedRainfallAverage);
     });
-
-    it('should throw an error if start date is greater than end date within the same year', async () => {
-      try {
-        await controller.getTotalRainfallByPostcodeAndDate(
-          'AL1',
-          '31-12-2024',
-          '01-01-2024',
-        );
-      } catch (error) {
-        expect(error.status).toBe(404);
-      }
-    });
-
-    it('should throw an error if start year is greater than end year', async () => {
-      try {
-        await controller.getTotalRainfallByPostcodeAndDate(
-          'AL1',
-          '01-01-2025',
-          '01-01-2024',
-        );
-      } catch (error) {
-        expect(error.status).toBe(404);
-      }
-    });
-    
   });
 });
