@@ -28,6 +28,7 @@ describe('SoilAnalysisController', () => {
   let organisationRepository: any;
   let userRepository: any;
   let user: UserEntity;
+  let createdSoilAnalysis: any;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -68,10 +69,12 @@ describe('SoilAnalysisController', () => {
       createdField = await fieldRepository.save(createFieldReqBody);
       createSoilAnalysisReqBody.FieldID = createdField.ID;
       createSoilAnalysisReqBody.CreatedByID = user.ID;
-      const soilAnalysisData = await soilAnalysisRepository.save(
+      createdSoilAnalysis = await soilAnalysisRepository.save(
         createSoilAnalysisReqBody,
       );
-      const result = await controller.getSoilAnalysisById(soilAnalysisData.ID);
+      const result = await controller.getSoilAnalysisById(
+        createdSoilAnalysis.ID,
+      );
       expect(result.SoilAnalysis).toHaveProperty('ID');
     });
   });
@@ -94,6 +97,47 @@ describe('SoilAnalysisController', () => {
       expect(result.SoilAnalyses.records[0]).toHaveProperty('ID');
       expect(result.SoilAnalyses.records[0]).toHaveProperty('FieldID');
       expect(result.SoilAnalyses.records[0]).toHaveProperty('Date');
+    });
+  });
+
+  describe('Update SoilAnalysis', () => {
+    it('should update a soilAnalysis successfully', async () => {
+      const soilAnalysisId = createdSoilAnalysis.ID;
+
+      const updatedSoilAnalysisData: any = {
+        Year: 2024,
+      };
+
+      const result = await controller.updateSoilAnalysis(
+        updatedSoilAnalysisData,
+        soilAnalysisId,
+        {
+          userId: user.ID,
+        } as any,
+      );
+
+      expect(result.SoilAnalysis.ModifiedByID).toBeDefined();
+      expect(result.SoilAnalysis.ModifiedOn).toBeDefined();
+      expect(result.SoilAnalysis.Year).toEqual(2024);
+    });
+
+    it('should throw an error if soil-analysis is not found', async () => {
+      const soilAnalysisId = 0;
+      const updatedSoilAnalysisData: any = {
+        Year: 2024,
+      };
+
+      try {
+        await controller.updateSoilAnalysis(
+          updatedSoilAnalysisData,
+          soilAnalysisId,
+          {
+            userId: user.ID,
+          } as any,
+        );
+      } catch (error) {
+        expect(error.status).toBe(404);
+      }
     });
   });
 });

@@ -1,13 +1,24 @@
 import {
+  Body,
   Controller,
   Get,
   Param,
   ParseBoolPipe,
   ParseIntPipe,
+  Put,
   Query,
+  Req,
 } from '@nestjs/common';
-import { ApiSecurity, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiSecurity,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+  ApiBody,
+} from '@nestjs/swagger';
 import { SoilAnalysisService } from './soil-analysis.service';
+import { UpdateSoilAnalysisDto } from './dto/soil-analysis.dto';
+import SoilAnalysisEntity from '@db/entity/soil-analysis.entity';
 
 @ApiTags('Soil Analysis')
 @Controller('soil-analyses')
@@ -40,5 +51,22 @@ export class SoilAnalysisController {
       selectOptions,
     );
     return { SoilAnalyses };
+  }
+
+  @Put('/:soilAnalysisId')
+  @ApiOperation({ summary: 'Update SoilAnalysis by SoilAnalysisId' })
+  @ApiBody({ type: UpdateSoilAnalysisDto })
+  async updateSoilAnalysis(
+    @Body('SoilAnalysis') body: SoilAnalysisEntity,
+    @Param('soilAnalysisId', ParseIntPipe) soilAnalysisId: number,
+    @Req() req: Request,
+  ) {
+    const userId = req['userId'];
+    const SoilAnalysis = await this.soilAnalysisService.updateSoilAnalysis(
+      body,
+      userId,
+      soilAnalysisId,
+    );
+    return { SoilAnalysis };
   }
 }

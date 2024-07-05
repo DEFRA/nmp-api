@@ -1,9 +1,9 @@
 import SoilAnalysisEntity from '@db/entity/soil-analysis.entity';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApiDataResponseType } from '@shared/base.response';
 import { BaseService } from '@src/base/base.service';
-import { EntityManager, Repository } from 'typeorm';
+import { DeepPartial, EntityManager, Repository } from 'typeorm';
 
 @Injectable()
 export class SoilAnalysisService extends BaseService<
@@ -16,5 +16,28 @@ export class SoilAnalysisService extends BaseService<
     protected readonly entityManager: EntityManager,
   ) {
     super(repository, entityManager);
+  }
+
+  async updateSoilAnalysis(
+    updatedSoilAnalysisData: DeepPartial<SoilAnalysisEntity>,
+    userId: number,
+    soilAnalysisId: number,
+  ) {
+    const result = await this.repository.update(soilAnalysisId, {
+      ...updatedSoilAnalysisData,
+      ModifiedByID: userId,
+      ModifiedOn: new Date(),
+    });
+
+    if (result.affected === 0) {
+      throw new NotFoundException(
+        `SoilAnalysis with ID ${soilAnalysisId} not found`,
+      );
+    }
+
+    const updatedSoilAnalysis = await this.repository.findOne({
+      where: { ID: soilAnalysisId },
+    });
+    return updatedSoilAnalysis;
   }
 }
