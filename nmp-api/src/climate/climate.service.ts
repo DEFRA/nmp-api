@@ -6,30 +6,21 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, EntityManager } from 'typeorm';
 import ClimateDatabaseEntity from '@db/entity/climate-data.entity';
+import { BaseService } from '@src/base/base.service';
+import { ApiDataResponseType } from '@shared/base.response';
+import { validateISODateFormat } from '@shared/dateValidate';
 
 @Injectable()
-export class ClimateService {
+export class ClimateService extends BaseService<
+  ClimateDatabaseEntity,
+  ApiDataResponseType<ClimateDatabaseEntity>
+> {
   constructor(
     @InjectRepository(ClimateDatabaseEntity)
-    private readonly repository: Repository<ClimateDatabaseEntity>,
-    private readonly entityManager: EntityManager,
-  ) {}
-
-  private validateDateFormat(dateString: string): Date {
-    const parts = dateString.split(/[\s-]/);
-    if (parts.length !== 3) {
-      throw new BadRequestException('Invalid date format. Use "dd-mm-yyyy".');
-    }
-    const [day, month, year] = parts.map(Number);
-    const date = new Date(year, month - 1, day);
-    if (
-      date.getFullYear() !== year ||
-      date.getMonth() + 1 !== month ||
-      date.getDate() !== day
-    ) {
-      throw new BadRequestException('Invalid date.');
-    }
-    return date;
+    protected readonly repository: Repository<ClimateDatabaseEntity>,
+    protected readonly entityManager: EntityManager,
+  ) {
+    super(repository, entityManager);
   }
 
   private calculateTotalRainfall(
@@ -125,8 +116,8 @@ export class ClimateService {
     startDate: string,
     endDate: string,
   ) {
-    const startDateObj = this.validateDateFormat(startDate);
-    const endDateObj = this.validateDateFormat(endDate);
+    const startDateObj = validateISODateFormat(startDate);
+    const endDateObj = validateISODateFormat(endDate);
 
     const startMonth = startDateObj.getMonth() + 1;
     const endMonth = endDateObj.getMonth() + 1;
