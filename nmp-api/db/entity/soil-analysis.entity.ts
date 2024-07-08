@@ -24,7 +24,6 @@ export default class SoilAnalysisEntity {
   Field: FieldEntity;
 
   @Column('int')
-  @ApiProperty()
   FieldID: number;
 
   @Column('int')
