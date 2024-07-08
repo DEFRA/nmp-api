@@ -100,6 +100,21 @@ describe('SoilAnalysisController', () => {
     });
   });
 
+  describe('Create SoilAnalysis', () => {
+    it('should create a soil analysis', async () => {
+      createSoilAnalysisReqBody.FieldID = createdField.ID;
+      createSoilAnalysisReqBody.CreatedByID = user.ID;
+      const result = await controller.createSoilAnalysis(
+        createSoilAnalysisReqBody,
+        {
+          userId: user.ID,
+        } as any,
+      );
+      const createdSoilAnalysis = result.SoilAnalysis;
+      expect(createdSoilAnalysis).toHaveProperty('ID');
+    });
+  });
+
   describe('Update SoilAnalysis', () => {
     it('should update a soilAnalysis successfully', async () => {
       const soilAnalysisId = createdSoilAnalysis.ID;

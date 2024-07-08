@@ -5,6 +5,7 @@ import {
   Param,
   ParseBoolPipe,
   ParseIntPipe,
+  Post,
   Put,
   Query,
   Req,
@@ -17,8 +18,12 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { SoilAnalysisService } from './soil-analysis.service';
-import { UpdateSoilAnalysisDto } from './dto/soil-analysis.dto';
-import SoilAnalysisEntity from '@db/entity/soil-analysis.entity';
+import {
+  SoilAnalysisRequest,
+  CreateSoilAnalysisDto,
+  UpdateSoilAnalysisDto,
+} from './dto/soil-analysis.dto';
+import { DeepPartial } from 'typeorm';
 
 @ApiTags('Soil Analysis')
 @Controller('soil-analyses')
@@ -53,11 +58,26 @@ export class SoilAnalysisController {
     return { SoilAnalyses };
   }
 
+  @Post('/')
+  @ApiOperation({ summary: 'Create Soil Analysis api' })
+  @ApiBody({ type: CreateSoilAnalysisDto })
+  async createSoilAnalysis(
+    @Body('SoilAnalysis') body: DeepPartial<SoilAnalysisRequest>,
+    @Req() req: Request,
+  ) {
+    const userId = req['userId'];
+    const SoilAnalysis = await this.soilAnalysisService.createSoilAnalysis(
+      body,
+      userId,
+    );
+    return { SoilAnalysis };
+  }
+
   @Put('/:soilAnalysisId')
   @ApiOperation({ summary: 'Update SoilAnalysis by SoilAnalysisId' })
   @ApiBody({ type: UpdateSoilAnalysisDto })
   async updateSoilAnalysis(
-    @Body('SoilAnalysis') body: SoilAnalysisEntity,
+    @Body('SoilAnalysis') body: SoilAnalysisRequest,
     @Param('soilAnalysisId', ParseIntPipe) soilAnalysisId: number,
     @Req() req: Request,
   ) {
