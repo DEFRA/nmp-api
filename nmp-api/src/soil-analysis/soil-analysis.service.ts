@@ -17,6 +17,17 @@ export class SoilAnalysisService extends BaseService<
   ) {
     super(repository, entityManager);
   }
+  async createSoilAnalysis(
+    soilAnalysisBody: DeepPartial<SoilAnalysisEntity>,
+    userId: number,
+  ) {
+    const SoilAnalysis = await this.repository.save({
+      ...soilAnalysisBody,
+      CreatedByID: userId,
+    });
+
+    return SoilAnalysis;
+  }
 
   async updateSoilAnalysis(
     updatedSoilAnalysisData: DeepPartial<SoilAnalysisEntity>,
