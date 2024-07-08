@@ -207,4 +207,27 @@ describe('FarmController', () => {
       }
     });
   });
+
+  describe('Delete Farm', () => {
+    it('should delete a farm by ID', async () => {
+      const farmId = createdFarm.ID;
+      const result = await controller.deleteFarmById(farmId);
+      expect(result).toEqual({ message: 'Farm deleted successfully' });
+
+      try {
+        await controller.getFarmById(farmId);
+      } catch (error) {
+        expect(error.status).toBe(404);
+      }
+    });
+
+    it('should throw an error if farm with specified ID is not found', async () => {
+      const farmId = 999;
+      try {
+        await controller.deleteFarmById(farmId);
+      } catch (error) {
+        expect(error.status).toBe(404);
+      }
+    });
+  });
 });
