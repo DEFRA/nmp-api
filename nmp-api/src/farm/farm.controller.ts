@@ -2,7 +2,9 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
+  NotFoundException,
   Param,
   ParseBoolPipe,
   ParseIntPipe,
@@ -107,6 +109,28 @@ export class FarmController {
     return { Farms: records };
   }
 
-  
-
+  // @Delete('/:farmId')
+  // @ApiOperation({ summary: 'Delete Farm by Farm Id' })
+  // async deleteFarmById(@Param('farmId', ParseIntPipe) farmId: number) {
+  //  const result=  await this.farmService.delete(farmId);
+  //   if (!result) {
+  //     throw new NotFoundException(`Farm with ID ${farmId} not found`);
+  //   }
+  //   return { message: 'Farm deleted successfully' };
+  // }
+  @Delete('/:farmId')
+  @ApiOperation({ summary: 'Delete Farm by Farm Id' })
+  async deleteFarmById(@Param('farmId', ParseIntPipe) farmId: number) {
+    try {
+      const deleted =
+        await this.farmService.deleteFarmAndRelatedEntities(farmId);
+      if (!deleted) {
+        throw new NotFoundException(`Farm with ID ${farmId} not found`);
+      }
+      return { message: 'Farm deleted successfully' };
+    } catch (error) {
+      console.error('Error deleting farm:', error);
+      throw error;
+    }
+  }
 }
