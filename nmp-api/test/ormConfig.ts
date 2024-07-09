@@ -19,6 +19,9 @@ import { RainTypeEntity } from '@db/entity/rain-type.entity';
 import { RecommendationCommentEntity } from '@db/entity/recommendation-comment.entity';
 import { RecommendationEntity } from '@db/entity/recommendation.entity';
 import SoilAnalysisEntity from '@db/entity/soil-analysis.entity';
+import { SoilTypeSoilTextureEntity } from '@db/entity/soil-type-soil-texture.entity';
+import { SubSoilEntity } from '@db/entity/sub-soil.entity';
+import { TopSoilEntity } from '@db/entity/top-soil.entity';
 import UserEntity from '@db/entity/user.entity';
 import { WindspeedEntity } from '@db/entity/wind-speed.entity';
 import EnvironmentService from '@shared/environment.service';
@@ -54,6 +57,9 @@ export const ormConfig: any = {
     FarmManureTypeEntity,
     RainTypeEntity,
     WindspeedEntity,
+    TopSoilEntity,
+    SubSoilEntity,
+    SoilTypeSoilTextureEntity,
   ],
   options: {
     trustServerCertificate: true,

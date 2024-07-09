@@ -13,6 +13,7 @@ import ManagementPeriodEntity from '@db/entity/management-period.entity';
 import { CreateFieldWithSoilAnalysisAndCropsDto } from './dto/field.dto';
 import { CreateCropWithManagementPeriodsDto } from '@src/crop/dto/crop.dto';
 import { RB209SoilService } from '@src/vendors/rb209/soil/soil.service';
+import { SoilTypeSoilTextureEntity } from '@db/entity/soil-type-soil-texture.entity';
 
 @Injectable()
 export class FieldService extends BaseService<
@@ -28,6 +29,8 @@ export class FieldService extends BaseService<
     protected readonly cropRepository: Repository<CropEntity>,
     @InjectRepository(ManagementPeriodEntity)
     protected readonly managementPeriodRepository: Repository<ManagementPeriodEntity>,
+    @InjectRepository(SoilTypeSoilTextureEntity)
+    protected readonly soilTypeSoilTextureRepository: Repository<SoilTypeSoilTextureEntity>,
     protected readonly entityManager: EntityManager,
     protected readonly rB209SoilService: RB209SoilService,
   ) {
@@ -68,6 +71,23 @@ export class FieldService extends BaseService<
       throw new Error('Field already exists with this Farm Id and Name');
   }
 
+  async getSoilTextureBySoilTypeId(soilTypeId: number) {
+    const soilTexture = await this.soilTypeSoilTextureRepository.findOneBy({
+      SoilTypeID: soilTypeId,
+    });
+    if (soilTypeId == null || !soilTexture) {
+      return {
+        TopSoilID: null,
+        SubSoilID: null,
+      };
+    }
+
+    return {
+      TopSoilID: soilTexture.TopSoilID,
+      SubSoilID: soilTexture.SubSoilID,
+    };
+  }
+
   async createFieldWithSoilAnalysisAndCrops(
     farmId: number,
     body: CreateFieldWithSoilAnalysisAndCropsDto,
@@ -76,11 +96,17 @@ export class FieldService extends BaseService<
     const exists = await this.checkFieldExists(farmId, body.Field.Name);
     this.throwErrorIfFieldExists(exists);
 
+    const { TopSoilID, SubSoilID } = await this.getSoilTextureBySoilTypeId(
+      body.Field.SoilTypeID,
+    );
+
     return await this.entityManager.transaction(
       async (transactionalManager) => {
         const Field = await transactionalManager.save(
           this.repository.create({
             ...body.Field,
+            TopSoilID,
+            SubSoilID,
             FarmID: farmId,
             CreatedByID: userId,
           }),
@@ -129,8 +155,14 @@ export class FieldService extends BaseService<
     userId: number,
     fieldId: number,
   ) {
+    const { TopSoilID, SubSoilID } = await this.getSoilTextureBySoilTypeId(
+      updatedFieldData.SoilTypeID,
+    );
+
     const result = await this.repository.update(fieldId, {
       ...updatedFieldData,
+      TopSoilID,
+      SubSoilID,
       ModifiedByID: userId,
       ModifiedOn: new Date(),
     });
