@@ -98,7 +98,16 @@ export class RecommendationService extends BaseService<
                 Recommendation: recData.Recommendation,
                 RecommendationComments: comments,
                 ManagementPeriod: recData.ManagementPeriod,
-                OrganicManures: organicManures,
+                OrganicManures: organicManures.map((o) => {
+                  const organicManureData = {
+                    ...o,
+                    ManureTypeName: o.ManureType.Name,
+                    ApplicationMethodName: o.ApplicationMethod.Name,
+                  };
+                  delete organicManureData.ManureType;
+                  delete organicManureData.ApplicationMethod;
+                  return organicManureData;
+                }),
               };
             }),
           ),
