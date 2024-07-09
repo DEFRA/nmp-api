@@ -24,6 +24,7 @@ import OrganisationEntity from '@db/entity/organisation.entity';
 import { RB209SoilService } from '@src/vendors/rb209/soil/soil.service';
 import { CacheModule } from '@nestjs/cache-manager';
 import UserEntity from '@db/entity/user.entity';
+import { SoilTypeSoilTextureEntity } from '@db/entity/soil-type-soil-texture.entity';
 
 describe('FieldController', () => {
   let controller: FieldController;
@@ -44,6 +45,7 @@ describe('FieldController', () => {
           CropEntity,
           SoilAnalysisEntity,
           ManagementPeriodEntity,
+          SoilTypeSoilTextureEntity,
         ]),
       ],
       controllers: [FieldController],

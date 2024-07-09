@@ -13,6 +13,8 @@ import UserEntity from './user.entity';
 import CropEntity from './crop.entity';
 import SoilAnalysisEntity from './soil-analysis.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { SubSoilEntity } from './sub-soil.entity';
+import { TopSoilEntity } from './top-soil.entity';
 
 @Entity({ name: 'Fields' })
 @Index('UC_Fields_FarmName', ['Name', 'FarmID'], { unique: true })
@@ -34,6 +36,12 @@ export default class FieldEntity {
   @Column('int', { nullable: true })
   @ApiPropertyOptional()
   SoilTypeID: number;
+
+  @Column('int', { nullable: true })
+  TopSoilID: number;
+
+  @Column('int', { nullable: true })
+  SubSoilID: number;
 
   @Column('int', { default: 1, nullable: true })
   @ApiPropertyOptional()
@@ -102,6 +110,14 @@ export default class FieldEntity {
   @ManyToOne(() => UserEntity, (user) => user.ModifiedFields)
   @JoinColumn({ name: 'CreatedByID' })
   ModifiedByUser: UserEntity;
+
+  @ManyToOne(() => SubSoilEntity)
+  @JoinColumn({ name: 'SubSoilID' })
+  SubSoil: SubSoilEntity;
+
+  @ManyToOne(() => TopSoilEntity)
+  @JoinColumn({ name: 'TopSoilID' })
+  TopSoil: TopSoilEntity;
 
   @OneToMany(() => CropEntity, (crop) => crop.Field)
   Crops: CropEntity[];

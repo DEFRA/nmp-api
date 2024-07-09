@@ -10,6 +10,7 @@ import { SoilAnalysisService } from '@src/soil-analysis/soil-analysis.service';
 import { ManagementPeriodService } from '@src/management-period/management-period.service';
 import ManagementPeriodEntity from '@db/entity/management-period.entity';
 import { RB209SoilService } from '@src/vendors/rb209/soil/soil.service';
+import { SoilTypeSoilTextureEntity } from '@db/entity/soil-type-soil-texture.entity';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { RB209SoilService } from '@src/vendors/rb209/soil/soil.service';
       CropEntity,
       SoilAnalysisEntity,
       ManagementPeriodEntity,
+      SoilTypeSoilTextureEntity,
     ]),
   ],
   controllers: [FieldController],
