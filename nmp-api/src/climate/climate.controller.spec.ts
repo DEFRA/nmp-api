@@ -7,7 +7,7 @@ import { EntityManager } from 'typeorm';
 import { ormConfig } from '../../test/ormConfig';
 import { truncateAllTables } from '../../test/utils';
 import { ClimateDatabaseData } from '../../test/mocked-data/climateDatabase';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpStatus, NotFoundException } from '@nestjs/common';
 
 describe('ClimateController', () => {
   let controller: ClimateController;
@@ -141,4 +141,28 @@ describe('ClimateController', () => {
       expect(result.rainfallAverage).toBe(expectedRainfallAverage);
     });
   });
+  describe('getAllDataByPostcode', () => {
+    it('should return all climate data for given postcode', async () => {
+      // Insert a sample climate data using mocked data
+      const sampleClimateData = climateRepository.create(ClimateDatabaseData);
+      await climateRepository.save(sampleClimateData);
+
+      // Call the controller method
+      const result = await controller.getAllDataByPostcode('AL1');
+
+      // Verify the result
+      expect(result.records).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ PostCode: 'AL1' }),
+        ]),
+      );
+    });
+
+    it('should reject for an invalid postcode', async () => {
+      await expect(
+        controller.getAllDataByPostcode('INVALID'),
+      ).rejects
+    });
+  });
+
 });

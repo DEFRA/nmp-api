@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get,Param, Query } from '@nestjs/common';
 import { ClimateService } from './climate.service';
 import {
   ApiSecurity,
@@ -40,5 +40,15 @@ export class ClimateController {
       startDate,
       endDate,
     );
+  }
+
+  @Get('/all-data/:postcode')
+  @ApiParam({
+    name: 'postcode',
+    description: 'First half of Postcode, e.g., AB12',
+  })
+  @ApiOperation({ summary: 'Get all climate data by postcode' })
+  async getAllDataByPostcode(@Param('postcode') postcode: string) {
+    return await this.climateService.getBy('PostCode', postcode);
   }
 }
