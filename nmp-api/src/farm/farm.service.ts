@@ -2,6 +2,8 @@ import FarmEntity from '@db/entity/farm.entity';
 // import MixedView from '@db/view/mixed.view';
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -101,102 +103,25 @@ export class FarmService extends BaseService<
     });
     return farm;
   }
-  async deleteFarmAndRelatedEntities(farmId: number): Promise<boolean> {
-    return await this.entityManager.transaction(
-      async (transactionalEntityManager) => {
-        try {
-          // Fetch all related entities in bulk
-          const fields = await transactionalEntityManager.find(FieldEntity, {
-            where: { FarmID: farmId },
-          });
+  async deleteFarmAndRelatedEntities(farmId: number): Promise<void> {
+    const farmToDelete = await this.getById(farmId);
+    if (farmToDelete.records==null) {
+      throw new NotFoundException(`Farm with ID ${farmId} not found`);
+    }
 
-          const fieldIds = fields.map((field) => field.ID);
-
-          const crops = await transactionalEntityManager.find(CropEntity, {
-            where: { FieldID: In(fieldIds) },
-          });
-
-          const cropIds = crops.map((crop) => crop.ID);
-
-          const managementPeriods = await transactionalEntityManager.find(
-            ManagementPeriodEntity,
-            {
-              where: { CropID: In(cropIds) },
-            },
-          );
-
-          const managementPeriodIds = managementPeriods.map((mp) => mp.ID);
-
-          const recommendations = await transactionalEntityManager.find(
-            RecommendationEntity,
-            {
-              where: { ManagementPeriodID: In(managementPeriodIds) },
-            },
-          );
-
-          const recommendationIds = recommendations.map(
-            (recommendation) => recommendation.ID,
-          );
-
-          const recommendationComments = await transactionalEntityManager.find(
-            RecommendationCommentEntity,
-            {
-              where: { RecommendationID: In(recommendationIds) },
-            },
-          );
-
-          const soilAnalyses = await transactionalEntityManager.find(
-            SoilAnalysisEntity,
-            {
-              where: { FieldID: In(fieldIds) },
-            },
-          );
-
-          const organicManures = await transactionalEntityManager.find(
-            OrganicManureEntity,
-            {
-              where: { ManagementPeriodID: In(managementPeriodIds) },
-            },
-          );
-
-          // Perform bulk deletions
-          await transactionalEntityManager.delete(RecommendationCommentEntity, {
-            ID: In(recommendationComments.map((comment) => comment.ID)),
-          });
-          await transactionalEntityManager.delete(RecommendationEntity, {
-            ID: In(recommendationIds),
-          });
-          await transactionalEntityManager.delete(OrganicManureEntity, {
-            ID: In(organicManures.map((om) => om.ID)),
-          });
-          await transactionalEntityManager.delete(ManagementPeriodEntity, {
-            ID: In(managementPeriodIds),
-          });
-          await transactionalEntityManager.delete(CropEntity, {
-            ID: In(cropIds),
-          });
-          await transactionalEntityManager.delete(SoilAnalysisEntity, {
-            ID: In(soilAnalyses.map((sa) => sa.ID)),
-          });
-          await transactionalEntityManager.delete(FieldEntity, {
-            ID: In(fieldIds),
-          });
-
-          // Delete farm entity itself
-          const result = await transactionalEntityManager.delete(
-            FarmEntity,
-            farmId,
-          );
-          if (result.affected === 0) {
-            throw new NotFoundException(`Farm with ID ${farmId} not found`);
-          }
-
-          return true;
-        } catch (error) {
-          console.error('Error deleting farm and related entities:', error);
-          throw error;
-        }
-      },
-    );
+    try {
+      const storedProcedure =
+        'EXEC dbo.spFarms_DeleteFarmAndRelatedEntities @farmId = @0';
+      await this.entityManager.query(storedProcedure, [farmId]);
+    } catch (error) {
+      console.error('Error deleting farm:', error);
+      throw new HttpException(
+        'Error deleting farm',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
+
+
+

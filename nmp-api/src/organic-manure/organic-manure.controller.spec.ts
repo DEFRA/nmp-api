@@ -54,6 +54,8 @@ describe('OrganicManureController', () => {
   let manureGroupRepository: any;
 
   beforeAll(async () => {
+    await truncateAllTables(entityManager);
+
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         TypeOrmModule.forRoot(ormConfig),
@@ -232,7 +234,7 @@ describe('OrganicManureController', () => {
             ...organicManureReqBody.OrganicManures[0],
             OrganicManure: {
               ...organicManureReqBody.OrganicManures[0].OrganicManure,
-              N: 20.0, // Set N to a value that will make NH4N + NO3N + UricAcid > N
+              N: 20, // Set N to a value that will make NH4N + NO3N + UricAcid > N
             },
           },
         ],
