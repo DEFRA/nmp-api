@@ -32,6 +32,7 @@ import FarmManureTypeEntity from '@db/entity/farm-manure-type.entity';
 import UserEntity from '@db/entity/user.entity';
 import { CountryEntity } from '@db/entity/country.entity';
 import { ManureGroupEntity } from '@db/entity/manure-group.entity';
+import { BadRequestException } from '@nestjs/common';
 
 describe('OrganicManureController', () => {
   let controller: OrganicManureController;
@@ -221,5 +222,39 @@ describe('OrganicManureController', () => {
       expect(result.OrganicManures.length).toBeGreaterThan(0);
       expect(result.FarmManureType).toHaveProperty('ID');
     });
+  });
+  describe('Validation NH4N + NO3N + UricAcid <= N', () => {
+    it('should throw BadRequestException when NH4N + NO3N + UricAcid > N', async () => {
+      const invalidReqBody = {
+        ...organicManureReqBody,
+        OrganicManures: [
+          {
+            ...organicManureReqBody.OrganicManures[0],
+            OrganicManure: {
+              ...organicManureReqBody.OrganicManures[0].OrganicManure,
+              N: 20.0, // Set N to a value that will make NH4N + NO3N + UricAcid > N
+            },
+          },
+        ],
+      };
+
+      const req: any = {
+        userId: 1, // Mock userId as needed
+      };
+
+      try {
+        await controller.createOrganicManures(invalidReqBody, req);
+        fail('Expected BadRequestException to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(BadRequestException);
+        expect(error.message).toEqual(
+          'NH4N + NO3N + UricAcid must be less than or equal to TotalN',
+        );
+      }
+    });
+  });
+  afterAll(async () => {
+    await truncateAllTables(entityManager);
+    
   });
 });

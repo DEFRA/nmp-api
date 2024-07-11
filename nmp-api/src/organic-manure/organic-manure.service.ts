@@ -1,5 +1,5 @@
 import { OrganicManureEntity } from '@db/entity/organic-manure.entity';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApiDataResponseType } from '@shared/base.response';
 import { BaseService } from '@src/base/base.service';
@@ -36,16 +36,24 @@ export class OrganicManureService extends BaseService<
 
         for (const organicManureData of body.OrganicManures) {
           const { OrganicManure } = organicManureData;
+           if (
+             OrganicManure.NH4N + OrganicManure.NO3N + OrganicManure.UricAcid >
+             OrganicManure.N
+           ) {
+             throw new BadRequestException(
+               'NH4N + NO3N + UricAcid must be less than or equal to TotalN',
+             );
+           }
           if (organicManureData.SaveDefaultForFarm) {
             farmManureTypeData = {
               FarmID: organicManureData.FarmID,
               ManureTypeID: OrganicManure.ManureTypeID,
               FieldTypeID: organicManureData.FieldTypeID,
-              TotalN: OrganicManure.N,
+              TotalN: OrganicManure.N,//Nitogen
               DryMatter: OrganicManure.DryMatterPercent,
-              NH4N: OrganicManure.NH4N,
-              Uric: OrganicManure.UricAcid,
-              NO3N: OrganicManure.NO3N,
+              NH4N: OrganicManure.NH4N,//ammonium
+              Uric: OrganicManure.UricAcid,//uric acid
+              NO3N: OrganicManure.NO3N,//nitrate
               P2O5: OrganicManure.P2O5,
               SO3: OrganicManure.SO3,
               K2O: OrganicManure.K2O,

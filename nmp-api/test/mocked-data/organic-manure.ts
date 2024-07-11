@@ -4,7 +4,7 @@ export const organicManureReqBody: any = {
       OrganicManure: {
         ApplicationDate: new Date(),
         Confirm: true,
-        N: 10.5,
+        N: 25.5,
         P2O5: 5.2,
         K2O: 7.8,
         MgO: 3.4,
