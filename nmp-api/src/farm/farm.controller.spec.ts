@@ -32,8 +32,6 @@ describe('FarmController', () => {
   let farmRepository: any;
 
   beforeAll(async () => {
-     
-    
     app = await Test.createTestingModule({
       imports: [
         TypeOrmModule.forRoot(ormConfig),
@@ -42,8 +40,6 @@ describe('FarmController', () => {
       controllers: [FarmController],
       providers: [FarmService],
       exports: [TypeOrmModule],
-      
-      
     }).compile();
 
     controller = app.get<FarmController>(FarmController);
@@ -51,7 +47,7 @@ describe('FarmController', () => {
     organisationRepository = entityManager.getRepository(OrganisationEntity);
     userRepository = entityManager.getRepository(UserEntity);
     farmRepository = entityManager.getRepository(FarmEntity);
-     
+
     await truncateAllTables(entityManager);
   });
 
@@ -216,79 +212,69 @@ describe('FarmController', () => {
       }
     });
   });
-    describe('Delete Farm and Related Entities', () => {
-      it('should delete farm and all related entities', async () => {
-        
-       await truncateAllTables(entityManager);
-
-        // Create the organisation
-        organisation = await organisationRepository.save(
-          createOrganisationReqBody3,
-        );
-
-        // Create a farm with related entities (fields, crops, etc.)
-        const farmData = {
-          ...createFarmReqBody,
-          OrganisationID: organisation.ID, // Use the ID of the test organisation
-        };
-        const farm = await farmRepository.save(farmData);
-
-        // Create related entities (fields, crops, etc.)
-        const field = await entityManager.save(FieldEntity, {
-          ...createFieldReqBody2,
-          FarmID: farm.ID,
-          TotalArea: 500,
-        });
-
-        const crop = await entityManager.save(CropEntity, {
-          ...createCropReqBody,
-          FieldID: field.ID,
-          Year: 2023,
-          Confirm: true,
-        });
-
-        // Perform deletion
-        const deleteResult = await controller.deleteFarmById(farm.ID);
-
-        // Verify deletion result
-        expect(deleteResult).toBeDefined();
-
-        // Verify that related entities are deleted
-        const deletedFarm = await farmRepository.findOne({
-          where: { ID: farm.ID },
-        });
-        const deletedField = await entityManager.findOne(FieldEntity, {
-          where: { ID: field.ID },
-        });
-        const deletedCrop = await entityManager.findOne(CropEntity, {
-          where: { ID: crop.ID },
-        });
-
-        expect(deletedFarm).toBeNull();
-        expect(deletedField).toBeNull();
-        expect(deletedCrop).toBeNull();
-      });
-
-      it('should throw an error if farmId format is invalid', async () => {
-        const invalidFarmId = 99999;
-
-        try {
-          await controller.deleteFarmById(invalidFarmId);
-        } catch (error) {
-          expect(error.status).toBe(HttpStatus.NOT_FOUND);
-        }
-      });
-    });
-    afterAll(async () => {
+  describe('Delete Farm and Related Entities', () => {
+    it('should delete farm and all related entities', async () => {
       await truncateAllTables(entityManager);
-      await app.close();
+
+      // Create the organisation
+      organisation = await organisationRepository.save(
+        createOrganisationReqBody3,
+      );
+
+      // Create a farm with related entities (fields, crops, etc.)
+      const farmData = {
+        ...createFarmReqBody,
+        OrganisationID: organisation.ID, // Use the ID of the test organisation
+      };
+      const farm = await farmRepository.save(farmData);
+
+      // Create related entities (fields, crops, etc.)
+      const field = await entityManager.save(FieldEntity, {
+        ...createFieldReqBody2,
+        FarmID: farm.ID,
+        TotalArea: 500,
+      });
+
+      const crop = await entityManager.save(CropEntity, {
+        ...createCropReqBody,
+        FieldID: field.ID,
+        Year: 2023,
+        Confirm: true,
+      });
+
+      // Perform deletion
+      const deleteResult = await controller.deleteFarmById(farm.ID);
+
+      // Verify deletion result
+      expect(deleteResult).toBeDefined();
+
+      // Verify that related entities are deleted
+      const deletedFarm = await farmRepository.findOne({
+        where: { ID: farm.ID },
+      });
+      const deletedField = await entityManager.findOne(FieldEntity, {
+        where: { ID: field.ID },
+      });
+      const deletedCrop = await entityManager.findOne(CropEntity, {
+        where: { ID: crop.ID },
+      });
+
+      expect(deletedFarm).toBeNull();
+      expect(deletedField).toBeNull();
+      expect(deletedCrop).toBeNull();
     });
 
-
+    it('should throw an error if farmId format is invalid', async () => {
+      const invalidFarmId = 99999;
+      try {
+        await controller.deleteFarmById(invalidFarmId);
+      } catch (error) {
+        expect(error.status).toBe(HttpStatus.NOT_FOUND);
+      }
+    });
   });
-
- 
-
-
-  
-
+  afterAll(async () => {
+    await truncateAllTables(entityManager);
+    await app.close();
+  });
+});

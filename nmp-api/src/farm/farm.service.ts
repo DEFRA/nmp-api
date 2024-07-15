@@ -105,13 +105,12 @@ export class FarmService extends BaseService<
   }
   async deleteFarmAndRelatedEntities(farmId: number): Promise<void> {
     const farmToDelete = await this.getById(farmId);
-    if (farmToDelete.records==null) {
+    if (farmToDelete.records == null) {
       throw new NotFoundException(`Farm with ID ${farmId} not found`);
     }
-
     try {
       const storedProcedure =
-        'EXEC dbo.spFarms_DeleteFarmAndRelatedEntities @farmId = @0';
+        'EXEC dbo.spFarms_DeleteFarm @farmId = @0';
       await this.entityManager.query(storedProcedure, [farmId]);
     } catch (error) {
       console.error('Error deleting farm:', error);
@@ -122,6 +121,3 @@ export class FarmService extends BaseService<
     }
   }
 }
-
-
-
