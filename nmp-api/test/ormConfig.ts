@@ -2,6 +2,7 @@ import { ApplicationMethodsIncorpMethodEntity } from '@db/entity/application-met
 import { ApplicationMethodEntity } from '@db/entity/application-method.entity';
 import ClimateDatabaseEntity from '@db/entity/climate-data.entity';
 import { CountryEntity } from '@db/entity/country.entity';
+import { CropTypeLinkingEntity } from '@db/entity/crop-type-linking.entity';
 import CropEntity from '@db/entity/crop.entity';
 import FarmManureTypeEntity from '@db/entity/farm-manure-type.entity';
 import FarmEntity from '@db/entity/farm.entity';
@@ -10,7 +11,9 @@ import { IncorpMethodsIncorpDelayEntity } from '@db/entity/incorp-method-incorp-
 import { IncorporationDelayEntity } from '@db/entity/incorporation-delay.entity';
 import { IncorporationMethodEntity } from '@db/entity/incorporation-method.entity';
 import ManagementPeriodEntity from '@db/entity/management-period.entity';
+import { MannerCropTypeEntity } from '@db/entity/manner-crop-type.entity';
 import { ManureGroupEntity } from '@db/entity/manure-group.entity';
+import { ManureTypeCategoryEntity } from '@db/entity/manure-type-category.entity';
 import { ManureTypeEntity } from '@db/entity/manure-type.entity';
 import { MoistureTypeEntity } from '@db/entity/moisture-type.entity';
 import { OrganicManureEntity } from '@db/entity/organic-manure.entity';
@@ -60,6 +63,9 @@ export const ormConfig: any = {
     TopSoilEntity,
     SubSoilEntity,
     SoilTypeSoilTextureEntity,
+    CropTypeLinkingEntity,
+    MannerCropTypeEntity,
+    ManureTypeCategoryEntity,
   ],
   options: {
     trustServerCertificate: true,
