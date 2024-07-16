@@ -11,6 +11,8 @@ import { OrganicManureEntity } from './organic-manure.entity';
 import { ManureGroupEntity } from './manure-group.entity';
 import { CountryEntity } from './country.entity';
 import FarmManureTypeEntity from './farm-manure-type.entity';
+import { ManureTypeCategoryEntity } from './manure-type-category.entity';
+// import { ManureTypeCategoryEntity } from './manure-type-category.entity'; // Import the new entity
 
 @Entity({ name: 'ManureTypes' })
 export class ManureTypeEntity {
@@ -32,6 +34,9 @@ export class ManureTypeEntity {
 
   @Column('int')
   CountryID: number;
+
+  @Column('int', { nullable: true })
+  ManureTypeCategoryID: number; // New column
 
   @Column({ type: 'bit' })
   HighReadilyAvailableNitrogen: boolean;
@@ -94,6 +99,10 @@ export class ManureTypeEntity {
   @ManyToOne(() => CountryEntity, (country) => country.ManureTypes)
   @JoinColumn({ name: 'CountryID' })
   Countries: CountryEntity;
+
+  @ManyToOne(() => ManureTypeCategoryEntity, (category) => category.ManureTypes)
+  @JoinColumn({ name: 'ManureTypeCategoryID' })
+  ManureTypeCategory: ManureTypeCategoryEntity;
 
   @OneToMany(
     () => FarmManureTypeEntity,
