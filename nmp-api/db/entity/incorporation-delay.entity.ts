@@ -24,10 +24,10 @@ export class IncorporationDelayEntity {
   Name: string;
 
   @Column('int', { nullable: true })
-  FromHours: number;
+  Hours: number;
 
   @Column('int', { nullable: true })
-  ToHours: number;
+  CumulativeHours: number;
 
   @Column({ type: 'nvarchar', length: 1, nullable: true })
   ApplicableFor: string;

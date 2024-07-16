@@ -65,8 +65,8 @@ export const incorporationMethodData = {
 
 export const incorporationDelayData = {
   Name: 'Less than 2 hours',
-  FromHours: 0,
-  ToHours: 2,
+  Hours: 0,
+  CumulativeHours: 2,
   ApplicableFor: 'A',
 };
 
