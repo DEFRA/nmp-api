@@ -28,6 +28,9 @@ import FarmManureTypeEntity from '@db/entity/farm-manure-type.entity';
 import { SoilTypeSoilTextureEntity } from '@db/entity/soil-type-soil-texture.entity';
 import { TopSoilEntity } from '@db/entity/top-soil.entity';
 import { SubSoilEntity } from '@db/entity/sub-soil.entity';
+import { MannerCropTypeEntity } from '@db/entity/manner-crop-type.entity';
+import { CropTypeLinkingEntity } from '@db/entity/crop-type-linking.entity';
+import { ManureTypeCategoryEntity } from '@db/entity/manure-type-category.entity';
 
 dotven.config();
 
@@ -73,6 +76,9 @@ if (process.env.NODE_ENV === 'production') {
       TopSoilEntity,
       SubSoilEntity,
       SoilTypeSoilTextureEntity,
+      CropTypeLinkingEntity,
+      MannerCropTypeEntity,
+      ManureTypeCategoryEntity,
     ],
   };
 } else if (process.env.NODE_ENV === 'hosting') {
@@ -128,6 +134,9 @@ if (process.env.NODE_ENV === 'production') {
       TopSoilEntity,
       SubSoilEntity,
       SoilTypeSoilTextureEntity,
+      CropTypeLinkingEntity,
+      MannerCropTypeEntity,
+      ManureTypeCategoryEntity,
     ],
     synchronize: false,
     logging: true,
