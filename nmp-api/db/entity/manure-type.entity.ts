@@ -36,7 +36,7 @@ export class ManureTypeEntity {
   CountryID: number;
 
   @Column('int', { nullable: true })
-  ManureTypeCategoryID: number; // New column
+  ManureTypeCategoryID: number; 
 
   @Column({ type: 'bit' })
   HighReadilyAvailableNitrogen: boolean;
