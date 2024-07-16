@@ -11,8 +11,17 @@ export class MannerCropTypesController {
   ) {}
 
   @Get(':cropTypeID')
-  @ApiOperation({ summary: 'Get MannerCropTypeId and cropUptakeFactor by CropTypeId' })
-  async findByCropTypeID(@Param('cropTypeID') cropTypeID: number) {
-    return this.mannerCropTypesService.findByCropTypeID(cropTypeID);
+  @ApiOperation({
+    summary: 'Get MannerCropTypeId and cropUptakeFactor by CropTypeId',
+  })
+  async getMannerCropTypeInfoByCropTypeID(
+    @Param('cropTypeID') cropTypeID: number,
+  ) {
+    const records =
+      await this.mannerCropTypesService.getMannerCropTypeInfoByCropTypeID(
+        cropTypeID,
+      );
+
+    return { MannerCropTypes: records };
   }
 }
