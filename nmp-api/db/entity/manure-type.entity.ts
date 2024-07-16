@@ -12,7 +12,6 @@ import { ManureGroupEntity } from './manure-group.entity';
 import { CountryEntity } from './country.entity';
 import FarmManureTypeEntity from './farm-manure-type.entity';
 import { ManureTypeCategoryEntity } from './manure-type-category.entity';
-// import { ManureTypeCategoryEntity } from './manure-type-category.entity'; // Import the new entity
 
 @Entity({ name: 'ManureTypes' })
 export class ManureTypeEntity {
