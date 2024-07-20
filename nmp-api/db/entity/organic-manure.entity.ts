@@ -134,6 +134,10 @@ export class OrganicManureEntity {
   @ApiPropertyOptional()
   MoistureID: number;
 
+  @Column('decimal', { precision: 5, scale: 2, default: 0 })
+  @ApiPropertyOptional()
+  AutumnCropNitrogenUptake: number;
+
   @Column('datetime2', { nullable: true, precision: 7, default: 'GETDATE()' })
   CreatedOn: Date;
 

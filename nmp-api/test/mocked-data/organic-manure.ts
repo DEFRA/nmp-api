@@ -117,4 +117,5 @@ export const organicManureReqBody2 = {
   WindspeedID: null,
   RainfallWithinSixHoursID: null,
   MoistureID: null,
+  AutumnCropNitrogenUptake: 0,
 };
