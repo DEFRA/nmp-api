@@ -21,7 +21,7 @@ export class MannerCropTypesService extends BaseService<
     super(repository, entityManager);
   }
 
-  async getMannerCropTypeInfoByCropTypeID(cropTypeID: number): Promise<any> {
+  async getMannerCropTypesByCropTypeID(cropTypeID: number): Promise<any> {
     const cropTypeLinkings = await this.cropTypeLinkingsRepository.find({
       where: { CropTypeID: cropTypeID },
       relations: ['MannerCropType'],
@@ -41,5 +41,15 @@ export class MannerCropTypesService extends BaseService<
     }));
 
     return results;
+  }
+
+  async getMannerCropTypeLinkingInfoByCropTypeID(
+    cropTypeID: number,
+  ): Promise<any> {
+    const result = await this.cropTypeLinkingsRepository.findOneBy({
+      CropTypeID: cropTypeID,
+    });
+
+    return result;
   }
 }
