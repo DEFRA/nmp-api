@@ -58,6 +58,7 @@ describe('MannerCropTypesController', () => {
       const sampleCropTypeLinkingData = cropTypeLinkingRepository.create({
         CropTypeID: createCropReqBody.CropTypeID,
         MannerCropTypeID: mannerCropType.ID,
+        DefaultYield: null,
       });
 
       await cropTypeLinkingRepository.save(sampleCropTypeLinkingData);
