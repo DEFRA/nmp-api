@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryColumn, ManyToOne, JoinColumn, Column } from 'typeorm';
 import { MannerCropTypeEntity } from './manner-crop-type.entity';
 
 @Entity({ name: 'CropTypeLinkings' })
@@ -8,6 +8,9 @@ export class CropTypeLinkingEntity {
 
   @PrimaryColumn()
   MannerCropTypeID: number;
+
+  @Column('decimal', { precision: 18, scale: 1, nullable: true })
+  DefaultYield: number;
 
   @ManyToOne(
     () => MannerCropTypeEntity,

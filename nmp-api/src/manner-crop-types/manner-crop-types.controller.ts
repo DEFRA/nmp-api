@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
 import { MannerCropTypesService } from './manner-crop-types.service';
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
 
@@ -14,14 +14,27 @@ export class MannerCropTypesController {
   @ApiOperation({
     summary: 'Get MannerCropTypeId and cropUptakeFactor by CropTypeId',
   })
-  async getMannerCropTypeInfoByCropTypeID(
+  async getMannerCropTypesByCropTypeID(
     @Param('cropTypeID') cropTypeID: number,
   ) {
     const records =
-      await this.mannerCropTypesService.getMannerCropTypeInfoByCropTypeID(
+      await this.mannerCropTypesService.getMannerCropTypesByCropTypeID(
         cropTypeID,
       );
 
     return { MannerCropTypes: records };
+  }
+
+  @Get('/cropTypeYield/:cropTypeID')
+  @ApiOperation({
+    summary: 'Get CropTypeYield by CropTypeId',
+  })
+  async getCropTypeYieldByCropTypeID(@Param('cropTypeID') cropTypeID: number) {
+    const record =
+      await this.mannerCropTypesService.getCropTypeYieldByCropTypeID(
+        cropTypeID,
+      );
+
+    return { CropTypeYield: record };
   }
 }

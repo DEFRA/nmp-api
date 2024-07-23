@@ -40,6 +40,21 @@ describe('MannerCropTypesController', () => {
       CropTypeLinkingEntity,
     );
     await truncateAllTables(entityManager);
+
+    const sampleMannerCropTypeData = mannerCropTypeRepository.create(
+      createMannerCropTypeReqBody,
+    );
+    mannerCropType = await mannerCropTypeRepository.save(
+      sampleMannerCropTypeData,
+    );
+
+    const sampleCropTypeLinkingData = cropTypeLinkingRepository.create({
+      CropTypeID: createCropReqBody.CropTypeID,
+      MannerCropTypeID: mannerCropType.ID,
+      DefaultYield: 50.5,
+    });
+
+    await cropTypeLinkingRepository.save(sampleCropTypeLinkingData);
   });
 
   it('should be defined', () => {
@@ -48,26 +63,22 @@ describe('MannerCropTypesController', () => {
 
   describe('Get MannerCropTypeId and cropUptakeFactor by CropTypeId', () => {
     it('should return a MannerCropTypeId and cropUptakeFactor by CropTypeId', async () => {
-      const sampleMannerCropTypeData = mannerCropTypeRepository.create(
-        createMannerCropTypeReqBody,
-      );
-      mannerCropType = await mannerCropTypeRepository.save(
-        sampleMannerCropTypeData,
-      );
-
-      const sampleCropTypeLinkingData = cropTypeLinkingRepository.create({
-        CropTypeID: createCropReqBody.CropTypeID,
-        MannerCropTypeID: mannerCropType.ID,
-      });
-
-      await cropTypeLinkingRepository.save(sampleCropTypeLinkingData);
-
       const cropTypeId = createCropReqBody.CropTypeID;
       const result =
-        await controller.getMannerCropTypeInfoByCropTypeID(cropTypeId);
+        await controller.getMannerCropTypesByCropTypeID(cropTypeId);
 
       expect(result.MannerCropTypes).toBeDefined();
       expect(Array(result.MannerCropTypes).length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  describe('Get CropTypeYield by CropTypeId', () => {
+    it('should return a CropTypeYield by CropTypeId', async () => {
+      const cropTypeId = createCropReqBody.CropTypeID;
+      const result = await controller.getCropTypeYieldByCropTypeID(cropTypeId);
+
+      expect(result.CropTypeYield).toBeDefined();
+      expect(result.CropTypeYield).toEqual(50.5);
     });
   });
 });
