@@ -25,24 +25,16 @@ export class MannerCropTypesController {
     return { MannerCropTypes: records };
   }
 
-  @Get('/mannerCropTypeInfo/:cropTypeID')
+  @Get('/cropTypeYield/:cropTypeID')
   @ApiOperation({
-    summary: 'Get MannerCropTypeInfo by CropTypeId',
+    summary: 'Get CropTypeYield by CropTypeId',
   })
-  async getMannerCropTypeLinkingInfoByCropTypeID(
-    @Param('cropTypeID') cropTypeID: number,
-  ) {
+  async getCropTypeYieldByCropTypeID(@Param('cropTypeID') cropTypeID: number) {
     const record =
-      await this.mannerCropTypesService.getMannerCropTypeLinkingInfoByCropTypeID(
+      await this.mannerCropTypesService.getCropTypeYieldByCropTypeID(
         cropTypeID,
       );
 
-    if (!record) {
-      throw new NotFoundException(
-        `MannerCropType Info with ID ${cropTypeID} not found`,
-      );
-    }
-
-    return { MannerCropTypeInfo: record };
+    return { CropTypeYield: record };
   }
 }

@@ -51,7 +51,7 @@ describe('MannerCropTypesController', () => {
     const sampleCropTypeLinkingData = cropTypeLinkingRepository.create({
       CropTypeID: createCropReqBody.CropTypeID,
       MannerCropTypeID: mannerCropType.ID,
-      DefaultYield: null,
+      DefaultYield: 50.5,
     });
 
     await cropTypeLinkingRepository.save(sampleCropTypeLinkingData);
@@ -72,14 +72,13 @@ describe('MannerCropTypesController', () => {
     });
   });
 
-  describe('Get MannerCropTypeInfo by CropTypeId', () => {
-    it('should return a MannerCropTypeInfo by CropTypeId', async () => {
+  describe('Get CropTypeYield by CropTypeId', () => {
+    it('should return a CropTypeYield by CropTypeId', async () => {
       const cropTypeId = createCropReqBody.CropTypeID;
-      const result =
-        await controller.getMannerCropTypeLinkingInfoByCropTypeID(cropTypeId);
+      const result = await controller.getCropTypeYieldByCropTypeID(cropTypeId);
 
-      expect(result.MannerCropTypeInfo).toBeDefined();
-      expect(Array(result.MannerCropTypeInfo).length).toBeGreaterThanOrEqual(1);
+      expect(result.CropTypeYield).toBeDefined();
+      expect(result.CropTypeYield).toEqual(50.5);
     });
   });
 });

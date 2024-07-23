@@ -43,13 +43,13 @@ export class MannerCropTypesService extends BaseService<
     return results;
   }
 
-  async getMannerCropTypeLinkingInfoByCropTypeID(
-    cropTypeID: number,
-  ): Promise<any> {
-    const result = await this.cropTypeLinkingsRepository.findOneBy({
-      CropTypeID: cropTypeID,
-    });
+  async getCropTypeYieldByCropTypeID(cropTypeID: number) {
+    const cropTypeYield = (
+      await this.cropTypeLinkingsRepository.findOneBy({
+        CropTypeID: cropTypeID,
+      })
+    ).DefaultYield;
 
-    return result;
+    return cropTypeYield;
   }
 }

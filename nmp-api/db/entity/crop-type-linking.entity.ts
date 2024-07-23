@@ -9,7 +9,7 @@ export class CropTypeLinkingEntity {
   @PrimaryColumn()
   MannerCropTypeID: number;
 
-  @Column('decimal', { precision: 18, scale: 3, nullable: true })
+  @Column('decimal', { precision: 18, scale: 1, nullable: true })
   DefaultYield: number;
 
   @ManyToOne(
