@@ -31,7 +31,6 @@ import { SubSoilEntity } from '@db/entity/sub-soil.entity';
 import { MannerCropTypeEntity } from '@db/entity/manner-crop-type.entity';
 import { CropTypeLinkingEntity } from '@db/entity/crop-type-linking.entity';
 import { ManureTypeCategoryEntity } from '@db/entity/manure-type-category.entity';
-import { CropTypePotatoGroupEntity } from '@db/entity/crop-type-potato-group.entity';
 
 dotven.config();
 
@@ -80,7 +79,6 @@ if (process.env.NODE_ENV === 'production') {
       CropTypeLinkingEntity,
       MannerCropTypeEntity,
       ManureTypeCategoryEntity,
-      CropTypePotatoGroupEntity,
     ],
   };
 } else if (process.env.NODE_ENV === 'hosting') {
@@ -139,7 +137,6 @@ if (process.env.NODE_ENV === 'production') {
       CropTypeLinkingEntity,
       MannerCropTypeEntity,
       ManureTypeCategoryEntity,
-      CropTypePotatoGroupEntity,
     ],
     synchronize: false,
     logging: true,

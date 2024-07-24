@@ -3,7 +3,6 @@ import { ApplicationMethodEntity } from '@db/entity/application-method.entity';
 import ClimateDatabaseEntity from '@db/entity/climate-data.entity';
 import { CountryEntity } from '@db/entity/country.entity';
 import { CropTypeLinkingEntity } from '@db/entity/crop-type-linking.entity';
-import { CropTypePotatoGroupEntity } from '@db/entity/crop-type-potato-group.entity';
 import CropEntity from '@db/entity/crop.entity';
 import FarmManureTypeEntity from '@db/entity/farm-manure-type.entity';
 import FarmEntity from '@db/entity/farm.entity';
@@ -67,7 +66,6 @@ export const ormConfig: any = {
     CropTypeLinkingEntity,
     MannerCropTypeEntity,
     ManureTypeCategoryEntity,
-    CropTypePotatoGroupEntity,
   ],
   options: {
     trustServerCertificate: true,

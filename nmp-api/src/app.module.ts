@@ -40,7 +40,6 @@ import { WindspeedModule } from './windspeed/windspeed.module';
 import { MoistureTypeModule } from './moisture-type/moisture-type.module';
 import { RainTypeModule } from './rain-type/rain-type.module';
 import { MannerCropTypesModule } from './manner-crop-types/manner-crop-types.module';
-import { PotatoGroupModule } from './potato-group/potato-group.module';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -91,7 +90,6 @@ import { PotatoGroupModule } from './potato-group/potato-group.module';
     MoistureTypeModule,
     RainTypeModule,
     MannerCropTypesModule,
-    PotatoGroupModule,
   ],
   providers: [AzureAuthService],
 })
