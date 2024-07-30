@@ -167,14 +167,14 @@ describe('FarmController', () => {
     it('should throw an error if farm is with the updated data already exists ', async () => {
       createFarmReqBody4.OrganisationID = organisation.ID;
       const newFam = await farmRepository.save(createFarmReqBody4);
-      const farmId = newFam.ID;
       const updatedFarmData: any = {
+        ID: newFam.ID,
         Name: 'FarmName1',
         Postcode: 'CB23 8YW',
       };
 
       try {
-        await controller.updateFarm(updatedFarmData, farmId, {
+        await controller.updateFarm(updatedFarmData, {
           userId: user.ID,
         } as any);
       } catch (error) {
@@ -182,12 +182,12 @@ describe('FarmController', () => {
       }
     });
     it('should update a farm successfully', async () => {
-      const farmId = createdFarm.ID;
       createFarmReqBody.Address1 = 'Updated Cambridge University Farm';
       createFarmReqBody.Address2 = 'Updated Park Farm Address';
       createFarmReqBody.Name = 'Updated Farm Name';
+      createFarmReqBody.ID = createdFarm.ID;
 
-      const result = await controller.updateFarm(createFarmReqBody, farmId, {
+      const result = await controller.updateFarm(createFarmReqBody, {
         userId: user.ID,
       } as any);
 
@@ -197,14 +197,14 @@ describe('FarmController', () => {
     });
 
     it('should throw an error if farm is not found', async () => {
-      const farmId = 0;
       const updatedFarmData: any = {
+        ID: 0,
         Name: 'Updated Farm Name',
         Postcode: '12345',
       };
 
       try {
-        await controller.updateFarm(updatedFarmData, farmId, {
+        await controller.updateFarm(updatedFarmData, {
           userId: user.ID,
         } as any);
       } catch (error) {

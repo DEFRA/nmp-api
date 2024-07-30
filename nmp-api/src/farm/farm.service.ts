@@ -77,7 +77,29 @@ export class FarmService extends BaseService<
     farmId: number,
   ) {
     const result = await this.repository.update(farmId, {
-      ...updatedFarmData,
+      Address1: updatedFarmData.Address1,
+      Address2: updatedFarmData.Address2,
+      Address3: updatedFarmData.Address3,
+      Address4: updatedFarmData.Address4,
+      AverageAltitude: updatedFarmData.AverageAltitude,
+      BusinessName: updatedFarmData.BusinessName,
+      CPH: updatedFarmData.CPH,
+      CreatedByID: updatedFarmData.CreatedByID,
+      CreatedOn: updatedFarmData.CreatedOn,
+      Email: updatedFarmData.Email,
+      EnglishRules: updatedFarmData.EnglishRules,
+      FarmerName: updatedFarmData.FarmerName,
+      FieldsAbove300SeaLevel: updatedFarmData.FieldsAbove300SeaLevel,
+      MetricUnits: updatedFarmData.MetricUnits,
+      Mobile: updatedFarmData.Mobile,
+      NVZFields: updatedFarmData.NVZFields,
+      OrganisationID: updatedFarmData.OrganisationID,
+      Rainfall: updatedFarmData.Rainfall,
+      RegisteredOrganicProducer: updatedFarmData.RegisteredOrganicProducer,
+      SBI: updatedFarmData.SBI,
+      STD: updatedFarmData.STD,
+      Telephone: updatedFarmData.Telephone,
+      TotalFarmArea: updatedFarmData.TotalFarmArea,
       Name: updatedFarmData.Name.trim(),
       Postcode: updatedFarmData.Postcode.trim(),
       ModifiedByID: userId,
@@ -109,8 +131,7 @@ export class FarmService extends BaseService<
       throw new NotFoundException(`Farm with ID ${farmId} not found`);
     }
     try {
-      const storedProcedure =
-        'EXEC dbo.spFarms_DeleteFarm @farmId = @0';
+      const storedProcedure = 'EXEC dbo.spFarms_DeleteFarm @farmId = @0';
       await this.entityManager.query(storedProcedure, [farmId]);
     } catch (error) {
       console.error('Error deleting farm:', error);

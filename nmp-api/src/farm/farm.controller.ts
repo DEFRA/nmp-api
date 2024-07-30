@@ -22,7 +22,11 @@ import {
 } from '@nestjs/swagger';
 import { FarmService } from './farm.service';
 import FarmEntity from '@db/entity/farm.entity';
-import { CreateFarmRequest, UpdateFarmRequest } from './dto/farm.dto';
+import {
+  CreateFarmRequest,
+  UpdateFarmDto,
+  UpdateFarmRequest,
+} from './dto/farm.dto';
 
 @ApiTags('Farm')
 @ApiSecurity('Bearer')
@@ -52,7 +56,7 @@ export class FarmController {
     return { Farm: records };
   }
 
-  @Post('/')
+  @Post('/createFarm')
   @ApiOperation({ summary: 'Create Farm api' })
   @ApiBody({ type: CreateFarmRequest })
   async createFarm(@Body('Farm') farmBody: FarmEntity, @Req() req: Request) {
@@ -69,24 +73,24 @@ export class FarmController {
     return { Farm };
   }
 
-  @Put('/:farmId')
-  @ApiOperation({ summary: 'Update Farm by FarmId' })
+  @Put('/updateFarm')
+  @ApiOperation({ summary: 'Update Farm api' })
   @ApiBody({ type: UpdateFarmRequest })
-  async updateFarm(
-    @Body('Farm') farmBody: FarmEntity,
-    @Param('farmId', ParseIntPipe) farmId: number,
-    @Req() req: Request,
-  ) {
+  async updateFarm(@Body('Farm') farmBody: UpdateFarmDto, @Req() req: Request) {
     const farm = await this.farmService.getFarm(
       farmBody.Name,
       farmBody.Postcode,
     );
-    if (farm && farm.ID !== farmId)
+    if (farm && farm.ID !== farmBody.ID)
       throw new BadRequestException(
         'Other farms also exists with this Name and Postcode',
       );
     const userId = req['userId'];
-    const Farm = await this.farmService.updateFarm(farmBody, userId, farmId);
+    const Farm = await this.farmService.updateFarm(
+      farmBody,
+      userId,
+      farmBody.ID,
+    );
     return { Farm };
   }
 
@@ -109,7 +113,6 @@ export class FarmController {
     return { Farms: records };
   }
 
- 
   @Delete('/:farmId')
   @ApiOperation({ summary: 'Delete Farm by Farm Id' })
   async deleteFarmById(@Param('farmId', ParseIntPipe) farmId: number) {
