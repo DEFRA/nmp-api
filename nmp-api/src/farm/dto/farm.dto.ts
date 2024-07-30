@@ -6,4 +6,11 @@ export class CreateFarmRequest {
   Farm: FarmEntity;
 }
 
-export class UpdateFarmRequest extends CreateFarmRequest {}
+export class UpdateFarmDto extends FarmEntity {
+  @ApiProperty()
+  ID: number;
+}
+export class UpdateFarmRequest {
+  @ApiProperty()
+  Farm: UpdateFarmDto;
+}
