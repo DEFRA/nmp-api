@@ -40,6 +40,7 @@ import { WindspeedModule } from './windspeed/windspeed.module';
 import { MoistureTypeModule } from './moisture-type/moisture-type.module';
 import { RainTypeModule } from './rain-type/rain-type.module';
 import { MannerCropTypesModule } from './manner-crop-types/manner-crop-types.module';
+import { InorganicManureDurationModule } from './inorganic-manure-duration/inorganic-manure-duration.module';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -90,6 +91,7 @@ import { MannerCropTypesModule } from './manner-crop-types/manner-crop-types.mod
     MoistureTypeModule,
     RainTypeModule,
     MannerCropTypesModule,
+    InorganicManureDurationModule,
   ],
   providers: [AzureAuthService],
 })
