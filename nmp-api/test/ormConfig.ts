@@ -10,6 +10,7 @@ import FieldEntity from '@db/entity/field.entity';
 import { IncorpMethodsIncorpDelayEntity } from '@db/entity/incorp-method-incorp-delay.entity';
 import { IncorporationDelayEntity } from '@db/entity/incorporation-delay.entity';
 import { IncorporationMethodEntity } from '@db/entity/incorporation-method.entity';
+import { InOrganicManureDurationEntity } from '@db/entity/inorganic-manure-duration.entity';
 import ManagementPeriodEntity from '@db/entity/management-period.entity';
 import { MannerCropTypeEntity } from '@db/entity/manner-crop-type.entity';
 import { ManureGroupEntity } from '@db/entity/manure-group.entity';
@@ -66,6 +67,7 @@ export const ormConfig: any = {
     CropTypeLinkingEntity,
     MannerCropTypeEntity,
     ManureTypeCategoryEntity,
+    InOrganicManureDurationEntity,
   ],
   options: {
     trustServerCertificate: true,
