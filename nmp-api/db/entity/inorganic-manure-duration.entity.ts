@@ -13,14 +13,8 @@ export class InOrganicManureDurationEntity {
   Name: string;
 
   @Column({ type: 'int' })
-  StartDate: number;
+  ApplicationDate: number;
 
   @Column({ type: 'int' })
-  StartMonth: number;
-
-  @Column({ type: 'int' })
-  EndDate: number;
-
-  @Column({ type: 'int' })
-  EndMonth: number;
+  ApplicationMonth: number;
 }
