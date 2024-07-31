@@ -33,20 +33,32 @@ export class FarmService extends BaseService<
     super(repository, entityManager);
   }
 
-  async farmExistsByNameAndPostcode(farmName: string, postcode: string) {
-    return (await this.farmCountByNameAndPostcode(farmName, postcode)) > 0;
+  async farmExistsByNameAndPostcode(
+    farmName: string,
+    postcode: string,
+    id?: number,
+  ) {
+    return (await this.farmCountByNameAndPostcode(farmName, postcode, id)) > 0;
   }
 
-  async farmCountByNameAndPostcode(farmName: string, postcode: string) {
-    if (!farmName || !postcode)
+  async farmCountByNameAndPostcode(
+    farmName: string,
+    postcode: string,
+    id?: number,
+  ) {
+    if (!farmName || !postcode) {
       throw new BadRequestException('Farm Name and Postcode are required');
-    return await this.repository
-      .createQueryBuilder('Farms')
-      .where('Farms.Name = :name', { name: farmName.trim() })
-      .andWhere("REPLACE(Farms.Postcode, ' ', '') = :postcode", {
-        postcode: postcode.replaceAll(' ', ''),
-      })
-      .getCount();
+    }
+
+  const query = this.repository
+    .createQueryBuilder('Farms')
+    .where('Farms.Name = :name', { name: farmName.trim() })
+    .andWhere("REPLACE(Farms.Postcode, ' ', '') = :postcode", {
+      postcode: postcode.replaceAll(' ', ''),
+    })
+    .andWhere(id !== undefined ? 'Farms.ID != :id' : '1 = 1', { id });
+
+  return await query.getCount();
   }
 
   async createFarm(
