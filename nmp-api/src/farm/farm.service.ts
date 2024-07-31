@@ -50,18 +50,15 @@ export class FarmService extends BaseService<
       throw new BadRequestException('Farm Name and Postcode are required');
     }
 
-    const query = this.repository
-      .createQueryBuilder('Farms')
-      .where('Farms.Name = :name', { name: farmName.trim() })
-      .andWhere("REPLACE(Farms.Postcode, ' ', '') = :postcode", {
-        postcode: postcode.replaceAll(' ', ''),
-      });
+  const query = this.repository
+    .createQueryBuilder('Farms')
+    .where('Farms.Name = :name', { name: farmName.trim() })
+    .andWhere("REPLACE(Farms.Postcode, ' ', '') = :postcode", {
+      postcode: postcode.replaceAll(' ', ''),
+    })
+    .andWhere(id !== undefined ? 'Farms.ID != :id' : '1 = 1', { id });
 
-    if (id !== undefined) {
-      query.andWhere('Farms.ID != :id', { id });
-    }
-
-    return await query.getCount();
+  return await query.getCount();
   }
 
   async createFarm(
