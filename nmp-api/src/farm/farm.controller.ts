@@ -41,10 +41,12 @@ export class FarmController {
   async checkFarmExists(
     @Query('Name') farmName: string,
     @Query('Postcode') postcode: string,
+    @Query('Id', new ParseIntPipe({ optional: true })) id: number = 0,
   ) {
     const exists = await this.farmService.farmExistsByNameAndPostcode(
       farmName,
       postcode,
+      id
     );
     return { exists };
   }
@@ -63,6 +65,7 @@ export class FarmController {
     const exists = await this.farmService.farmExistsByNameAndPostcode(
       farmBody.Name,
       farmBody.Postcode,
+      
     );
     if (exists)
       throw new BadRequestException(
