@@ -41,6 +41,7 @@ import { MoistureTypeModule } from './moisture-type/moisture-type.module';
 import { RainTypeModule } from './rain-type/rain-type.module';
 import { MannerCropTypesModule } from './manner-crop-types/manner-crop-types.module';
 import { InorganicManureDurationModule } from './inorganic-manure-duration/inorganic-manure-duration.module';
+import { FertiliserManuresModule } from './fertiliser-manures/fertiliser-manures.module';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -92,11 +93,12 @@ import { InorganicManureDurationModule } from './inorganic-manure-duration/inorg
     RainTypeModule,
     MannerCropTypesModule,
     InorganicManureDurationModule,
+    FertiliserManuresModule,
   ],
   providers: [AzureAuthService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AzureAuthMiddleware).forRoutes('*');
+    //consumer.apply(AzureAuthMiddleware).forRoutes('*');
   }
 }
