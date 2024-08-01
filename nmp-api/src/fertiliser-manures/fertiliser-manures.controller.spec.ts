@@ -34,6 +34,7 @@ describe('FertiliserManuresController', () => {
   let entityManager: EntityManager;
 
   beforeAll(async () => {
+    await truncateAllTables(entityManager);
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         TypeOrmModule.forRoot(ormConfig),
@@ -102,8 +103,9 @@ describe('FertiliserManuresController', () => {
       expect(result).toHaveProperty('ID');
       expect(result.ManagementPeriodID).toEqual(createdManagementPeriod.ID);
     });
+   
   });
-
+  
   afterAll(async () => {
     await truncateAllTables(entityManager);
   });
