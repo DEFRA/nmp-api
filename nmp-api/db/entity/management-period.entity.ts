@@ -13,6 +13,7 @@ import UserEntity from './user.entity';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { RecommendationEntity } from './recommendation.entity';
 import { OrganicManureEntity } from './organic-manure.entity';
+import { FertiliserManuresEntity } from './fertiliser-manures.entity';
 
 @Entity({ name: 'ManagementPeriods' })
 export default class ManagementPeriodEntity {
@@ -90,4 +91,10 @@ export default class ManagementPeriodEntity {
     (organicManure) => organicManure.ManagementPeriods,
   )
   OrganicManures: OrganicManureEntity[];
+
+  @OneToMany(
+    () => OrganicManureEntity,
+    (fertiliserManures) => fertiliserManures.ManagementPeriods,
+  )
+  FertiliserManures: FertiliserManuresEntity[];
 }
