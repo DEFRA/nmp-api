@@ -26,6 +26,7 @@ export const truncateAllTables = async (entityManager: EntityManager) => {
     'ApplicationMethodsIncorpMethods',
     'Countries',
     'IncorpMethodsIncorpDelays',
+    'FertiliserManures',
   ];
 
   for (const tableName of tableOrder) {

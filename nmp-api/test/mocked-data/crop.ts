@@ -1,5 +1,5 @@
 export const createCropReqBody = {
-  FieldID: null,
+  FieldID: 1,
   Year: 2023,
   CropTypeID: 110,
   Variety: null,
