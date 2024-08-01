@@ -1,0 +1,17 @@
+{  
+  "cSpell.words": ["defra", "dotven", "nmp", "typeorm"],
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[cshtml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[ignore]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  },
+  "appService.showBuildDuringDeployPrompt": false,
+  "appService.zipIgnorePattern": [
+    "node_modules{,/**}",
+    ".vscode{,/**}"
+  ],
+  "appService.defaultWebAppToDeploy": "None"
+}
+
