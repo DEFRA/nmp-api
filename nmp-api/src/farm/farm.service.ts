@@ -143,28 +143,28 @@ export class FarmService extends BaseService<
         }
 
         // Check if we need to update the field entity conditionally
-        if (
-          updatedFarmData.FieldsAbove300SeaLevel === 2 ||
-          updatedFarmData.NVZFields === 2
-        ) {
-          const fieldUpdateData: Partial<FieldEntity> = {
-            IsAbove300SeaLevel:
-              updatedFarmData.FieldsAbove300SeaLevel === 2
-                ? existingFarm.FieldsAbove300SeaLevel // Preserve existing value
-                : updatedFarmData.FieldsAbove300SeaLevel === 1, // Convert 1 to true, otherwise false
-            IsWithinNVZ:
-              updatedFarmData.NVZFields === 2
-                ? existingFarm.NVZFields // Preserve existing value
-                : updatedFarmData.NVZFields === 1, // Convert 1 to true, otherwise false
-          };
+     if (
+       updatedFarmData.FieldsAbove300SeaLevel !== 2 ||
+       updatedFarmData.NVZFields !== 2
+     ) {
+       const fieldUpdateData: Partial<FieldEntity> = {};
 
-          // Assuming you have a field repository to perform the update
-          await transactionalManager.update(
-            FieldEntity,
-            { FarmID: farmId },
-            fieldUpdateData,
-          );
-        }
+       if (updatedFarmData.FieldsAbove300SeaLevel !== 2) {
+         fieldUpdateData.IsAbove300SeaLevel =
+           updatedFarmData.FieldsAbove300SeaLevel === 1;
+       }
+
+       if (updatedFarmData.NVZFields !== 2) {
+         fieldUpdateData.IsWithinNVZ = updatedFarmData.NVZFields === 1;
+       }
+
+       // Assuming you have a field repository to perform the update
+       await transactionalManager.update(
+         FieldEntity,
+         { FarmID: farmId },
+         fieldUpdateData,
+       );
+     }
 
         // Fetch and return the updated farm record
         const updatedFarm = await transactionalManager.findOne(FarmEntity, {
