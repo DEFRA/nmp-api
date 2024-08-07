@@ -18,7 +18,7 @@ const APPLICATION_SWAGGER_PATH =
   EnvironmentService.APPLICATION_SWAGGER_PATH() ?? 'docs';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {logger: ['error','fatal','warn']});
 
   const config = new DocumentBuilder()
     .setTitle('NMP Application API')
