@@ -19,13 +19,15 @@ export class FertiliserManuresService extends BaseService<
   }
 
   async createFertiliserManures(
-    data: DeepPartial<FertiliserManuresEntity>,
+    data: DeepPartial<FertiliserManuresEntity>[],
     userId: number,
-  ): Promise<FertiliserManuresEntity> {
-    const fertiliserManures = this.repository.create({
-      ...data,
-      CreatedByID: userId,
-    });
+  ): Promise<FertiliserManuresEntity[]> {
+    const fertiliserManures = data.map((item) =>
+      this.repository.create({
+        ...item,
+        CreatedByID: userId,
+      }),
+    );
     return this.repository.save(fertiliserManures);
   }
 }

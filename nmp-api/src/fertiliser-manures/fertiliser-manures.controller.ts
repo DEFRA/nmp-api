@@ -12,21 +12,21 @@ export class FertiliserManuresController {
   ) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create Fetiliser Manure api' })
+  @ApiOperation({ summary: 'Create Fertiliser Manure api' })
   @ApiBody({ type: CreateFertiliserManuresDto })
   async createFertiliserManure(
-    @Body('FertiliserManure') body: FertiliserManuresEntity,
+    @Body() body: CreateFertiliserManuresDto,
     @Req() req: Request,
-  ): Promise<FertiliserManuresEntity> {
+  ): Promise<FertiliserManuresEntity[]> {
     const userId = req['userId'];
     try {
-      const fertiliserManure =
+      const fertiliserManures =
         await this.fertiliserManuresService.createFertiliserManures(
-          body,
+          body.FertiliserManure,
           userId,
         );
 
-      return fertiliserManure;
+      return fertiliserManures;
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message);
