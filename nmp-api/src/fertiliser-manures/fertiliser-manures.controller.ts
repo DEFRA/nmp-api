@@ -1,11 +1,12 @@
 import { Controller, Post, Body, NotFoundException, Req } from '@nestjs/common';
 import { FertiliserManuresService } from './fertiliser-manures.service';
-import { ApiTags, ApiBody, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiBody, ApiOperation, ApiSecurity } from '@nestjs/swagger';
 import { CreateFertiliserManuresDto } from './dto/create-fertiliser-manures.dto';
 import { FertiliserManuresEntity } from '@db/entity/fertiliser-manures.entity';
 
-@Controller('fertiliser-manures')
 @ApiTags('Fertiliser Manures')
+@Controller('fertiliser-manures')
+@ApiSecurity('Bearer')
 export class FertiliserManuresController {
   constructor(
     private readonly fertiliserManuresService: FertiliserManuresService,
