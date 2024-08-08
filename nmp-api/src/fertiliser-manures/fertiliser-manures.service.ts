@@ -25,68 +25,101 @@ export class FertiliserManuresService extends BaseService<
     data: DeepPartial<FertiliserManuresEntity>[],
     userId: number,
   ): Promise<FertiliserManuresEntity[]> {
-    return await this.entityManager.transaction(
-      async (transactionalManager) => {
-        const fertiliserManures = data.map((item) => {
-          return this.repository.create({
+    return this.entityManager.transaction(async (transactionalManager) => {
+      // Create and save fertiliser manure records
+      const savedFertiliserManures = await transactionalManager.save(
+        FertiliserManuresEntity,
+        data.map((item) =>
+          this.repository.create({
             ...item,
             CreatedByID: userId,
-          });
-        });
+          }),
+        ),
+      );
 
-        const savedFertiliserManures = await transactionalManager.save(
-          FertiliserManuresEntity,
-          fertiliserManures,
+      // Get unique ManagementPeriodIDs
+      const managementPeriodIds = [
+        ...new Set(data.map((item) => item.ManagementPeriodID)),
+      ];
+
+      // Calculate and update total nutrients for each ManagementPeriodID
+      for (const managementPeriodId of managementPeriodIds) {
+        const totalNutrients = await this.calculateAndAccumulateTotalNutrients(
+          transactionalManager,
+          managementPeriodId,
         );
 
-        // Calculate the sum for each nutrient for the corresponding ManagementPeriodID
-        const managementPeriodId = data[0].ManagementPeriodID;
-        const nutrientsSum = await transactionalManager.find(
-          FertiliserManuresEntity,
+        // Find existing recommendation or create a new one
+        const existingRecommendation = await transactionalManager.findOne(
+          RecommendationEntity,
           {
             where: { ManagementPeriodID: managementPeriodId },
           },
         );
 
-        const totalNutrients = nutrientsSum.reduce(
-          (acc, current) => {
-            acc.N += Number(current.N);
-            acc.P2O5 += Number(current.P2O5);
-            acc.K2O += Number(current.K2O);
-            acc.MgO += Number(current.MgO);
-            acc.SO3 += Number(current.SO3);
-            acc.Na2O += Number(current.Na2O);
-            acc.Lime += Number(current.Lime);
-            return acc;
-          },
-          {
-            N: 0,
-            P2O5: 0,
-            K2O: 0,
-            MgO: 0,
-            SO3: 0,
-            Na2O: 0,
-            Lime: 0,
-          },
-        );
+        if (existingRecommendation) {
+          // Update the existing recommendation
+          await transactionalManager.update(
+            RecommendationEntity,
+            { ManagementPeriodID: managementPeriodId },
+            totalNutrients,
+          );
+        } else {
+          // Insert a new recommendation
+          await transactionalManager.insert(RecommendationEntity, {
+            ManagementPeriodID: managementPeriodId,
+            ...totalNutrients,
+          });
+        }
+      }
 
-        // Update the corresponding RecommendationEntity with the calculated total values
-        await transactionalManager.update(
-          RecommendationEntity,
-          { ManagementPeriodID: managementPeriodId },
-          {
-            FertilizerN: totalNutrients.N,
-            FertilizerP2O5: totalNutrients.P2O5,
-            FertilizerK2O: totalNutrients.K2O,
-            FertilizerMgO: totalNutrients.MgO,
-            FertilizerSO3: totalNutrients.SO3,
-            FertilizerNa2O: totalNutrients.Na2O,
-            FertilizerLime: totalNutrients.Lime,
-          },
-        );
+      return savedFertiliserManures;
+    });
+  }
 
-        return savedFertiliserManures;
+  private async calculateAndAccumulateTotalNutrients(
+    transactionalManager: EntityManager,
+    managementPeriodId: number,
+  ): Promise<Partial<RecommendationEntity>> {
+    // Fetch the new nutrients for the given ManagementPeriodID
+    const nutrientsSum = await transactionalManager.find(
+      FertiliserManuresEntity,
+      {
+        where: { ManagementPeriodID: managementPeriodId },
       },
     );
+
+    // Calculate total nutrients from new data
+    const newTotalNutrients = nutrientsSum.reduce(
+      (acc, current) => {
+        acc.N += Number(current.N) || 0;
+        acc.P2O5 += Number(current.P2O5) || 0;
+        acc.K2O += Number(current.K2O) || 0;
+        acc.MgO += Number(current.MgO) || 0;
+        acc.SO3 += Number(current.SO3) || 0;
+        acc.Na2O += Number(current.Na2O) || 0;
+        acc.Lime += Number(current.Lime) || 0;
+        return acc;
+      },
+      {
+        N: 0,
+        P2O5: 0,
+        K2O: 0,
+        MgO: 0,
+        SO3: 0,
+        Na2O: 0,
+        Lime: 0,
+      },
+    );
+
+    return {
+      FertilizerN: newTotalNutrients.N,
+      FertilizerP2O5: newTotalNutrients.P2O5,
+      FertilizerK2O: newTotalNutrients.K2O,
+      FertilizerMgO: newTotalNutrients.MgO,
+      FertilizerSO3: newTotalNutrients.SO3,
+      FertilizerNa2O: newTotalNutrients.Na2O,
+      FertilizerLime: newTotalNutrients.Lime,
+    };
   }
 }
