@@ -44,25 +44,44 @@ export class FertiliserManuresService extends BaseService<
 
       // Calculate and update total nutrients for each ManagementPeriodID
       for (const managementPeriodId of managementPeriodIds) {
-        const totalNutrients = await this.calculateTotalNutrients(
+        const totalNutrients = await this.calculateAndAccumulateTotalNutrients(
           transactionalManager,
           managementPeriodId,
         );
-        await transactionalManager.update(
+
+        // Find existing recommendation or create a new one
+        const existingRecommendation = await transactionalManager.findOne(
           RecommendationEntity,
-          { ManagementPeriodID: managementPeriodId },
-          totalNutrients,
+          {
+            where: { ManagementPeriodID: managementPeriodId },
+          },
         );
+
+        if (existingRecommendation) {
+          // Update the existing recommendation
+          await transactionalManager.update(
+            RecommendationEntity,
+            { ManagementPeriodID: managementPeriodId },
+            totalNutrients,
+          );
+        } else {
+          // Insert a new recommendation
+          await transactionalManager.insert(RecommendationEntity, {
+            ManagementPeriodID: managementPeriodId,
+            ...totalNutrients,
+          });
+        }
       }
 
       return savedFertiliserManures;
     });
   }
 
-  private async calculateTotalNutrients(
+  private async calculateAndAccumulateTotalNutrients(
     transactionalManager: EntityManager,
     managementPeriodId: number,
   ): Promise<Partial<RecommendationEntity>> {
+    // Fetch the new nutrients for the given ManagementPeriodID
     const nutrientsSum = await transactionalManager.find(
       FertiliserManuresEntity,
       {
@@ -70,15 +89,16 @@ export class FertiliserManuresService extends BaseService<
       },
     );
 
-    const totalNutrients = nutrientsSum.reduce(
+    // Calculate total nutrients from new data
+    const newTotalNutrients = nutrientsSum.reduce(
       (acc, current) => {
-        acc.N += Number(current.N);
-        acc.P2O5 += Number(current.P2O5);
-        acc.K2O += Number(current.K2O);
-        acc.MgO += Number(current.MgO);
-        acc.SO3 += Number(current.SO3);
-        acc.Na2O += Number(current.Na2O);
-        acc.Lime += Number(current.Lime);
+        acc.N += Number(current.N) || 0;
+        acc.P2O5 += Number(current.P2O5) || 0;
+        acc.K2O += Number(current.K2O) || 0;
+        acc.MgO += Number(current.MgO) || 0;
+        acc.SO3 += Number(current.SO3) || 0;
+        acc.Na2O += Number(current.Na2O) || 0;
+        acc.Lime += Number(current.Lime) || 0;
         return acc;
       },
       {
@@ -93,13 +113,13 @@ export class FertiliserManuresService extends BaseService<
     );
 
     return {
-      FertilizerN: totalNutrients.N,
-      FertilizerP2O5: totalNutrients.P2O5,
-      FertilizerK2O: totalNutrients.K2O,
-      FertilizerMgO: totalNutrients.MgO,
-      FertilizerSO3: totalNutrients.SO3,
-      FertilizerNa2O: totalNutrients.Na2O,
-      FertilizerLime: totalNutrients.Lime,
+      FertilizerN: newTotalNutrients.N,
+      FertilizerP2O5: newTotalNutrients.P2O5,
+      FertilizerK2O: newTotalNutrients.K2O,
+      FertilizerMgO: newTotalNutrients.MgO,
+      FertilizerSO3: newTotalNutrients.SO3,
+      FertilizerNa2O: newTotalNutrients.Na2O,
+      FertilizerLime: newTotalNutrients.Lime,
     };
   }
 }

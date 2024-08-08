@@ -36,7 +36,6 @@ describe('FertiliserManuresController', () => {
   let entityManager: EntityManager;
 
   beforeAll(async () => {
-    await truncateAllTables(entityManager);
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         TypeOrmModule.forRoot(ormConfig),
@@ -109,7 +108,7 @@ describe('FertiliserManuresController', () => {
         FertilizerMgO: 0,
         FertilizerSO3: 0,
         FertilizerNa2O: 0,
-        FertilizerLime: 0
+        FertilizerLime: 0,
       });
 
       const result = await controller.createFertiliserManure(
