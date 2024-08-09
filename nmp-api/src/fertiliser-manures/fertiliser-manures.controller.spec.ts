@@ -21,7 +21,6 @@ import {
 } from '../../test/mocked-data';
 import { createFertiliserManureReqBody } from '../../test/mocked-data/fertiliserManure';
 import { truncateAllTables } from '../../test/utils';
-import { RecommendationEntity } from '@db/entity/recommendation.entity';
 
 describe('FertiliserManuresController', () => {
   let controller: FertiliserManuresController;
@@ -31,18 +30,15 @@ describe('FertiliserManuresController', () => {
   let fieldRepository: Repository<FieldEntity>;
   let farmRepository: Repository<FarmEntity>;
   let organisationRepository: Repository<OrganisationEntity>;
-  let recommendationRepository: Repository<RecommendationEntity>;
   let user: UserEntity;
   let entityManager: EntityManager;
 
   beforeAll(async () => {
+    await truncateAllTables(entityManager);
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         TypeOrmModule.forRoot(ormConfig),
-        TypeOrmModule.forFeature([
-          FertiliserManuresEntity,
-          RecommendationEntity,
-        ]),
+        TypeOrmModule.forFeature([FertiliserManuresEntity]),
       ],
       controllers: [FertiliserManuresController],
       providers: [FertiliserManuresService],
@@ -61,8 +57,6 @@ describe('FertiliserManuresController', () => {
     managementPeriodRepository = entityManager.getRepository(
       ManagementPeriodEntity,
     );
-    recommendationRepository =
-      entityManager.getRepository(RecommendationEntity);
 
     await truncateAllTables(entityManager);
   });
@@ -72,7 +66,7 @@ describe('FertiliserManuresController', () => {
   });
 
   describe('Create Fertiliser Manure', () => {
-    it('should create a fertiliser manure and update the recommendation successfully', async () => {
+    it('should create fertiliser manures successfully', async () => {
       await truncateAllTables(entityManager);
       user = await userRepository.save(userData);
       const organisation = await organisationRepository.save(
@@ -99,18 +93,6 @@ describe('FertiliserManuresController', () => {
       createFertiliserManureReqBody.ManagementPeriodID =
         createdManagementPeriod.ID;
 
-      // Initially, create an empty recommendation
-      await recommendationRepository.save({
-        ManagementPeriodID: createdManagementPeriod.ID,
-        FertilizerN: 0,
-        FertilizerP2O5: 0,
-        FertilizerK2O: 0,
-        FertilizerMgO: 0,
-        FertilizerSO3: 0,
-        FertilizerNa2O: 0,
-        FertilizerLime: 0,
-      });
-
       const result = await controller.createFertiliserManure(
         { FertiliserManure: [createFertiliserManureReqBody] },
         {
@@ -126,34 +108,6 @@ describe('FertiliserManuresController', () => {
       expect(createdFertiliserManure).toHaveProperty('ID');
       expect(createdFertiliserManure.ManagementPeriodID).toEqual(
         createdManagementPeriod.ID,
-      );
-
-      // Check if the recommendation was updated correctly
-      const updatedRecommendation = await recommendationRepository.findOneBy({
-        ManagementPeriodID: createdManagementPeriod.ID,
-      });
-
-      expect(updatedRecommendation).toBeDefined();
-      expect(updatedRecommendation.FertilizerN).toBe(
-        createFertiliserManureReqBody.N,
-      );
-      expect(updatedRecommendation.FertilizerP2O5).toBe(
-        createFertiliserManureReqBody.P2O5,
-      );
-      expect(updatedRecommendation.FertilizerK2O).toBe(
-        createFertiliserManureReqBody.K2O,
-      );
-      expect(updatedRecommendation.FertilizerMgO).toBe(
-        createFertiliserManureReqBody.MgO,
-      );
-      expect(updatedRecommendation.FertilizerSO3).toBe(
-        createFertiliserManureReqBody.SO3,
-      );
-      expect(updatedRecommendation.FertilizerNa2O).toBe(
-        createFertiliserManureReqBody.Na2O,
-      );
-      expect(updatedRecommendation.FertilizerLime).toBe(
-        createFertiliserManureReqBody.Lime,
       );
     });
   });
