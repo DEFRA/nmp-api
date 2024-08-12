@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import EnvironmentService from '@shared/environment.service';
 import * as dotenv from 'dotenv';
 import { AppModule } from './app.module';
+import { CustomLoggerService } from './custom-logger/custom-logger.service';
 
 dotenv?.config();
 //require('dotenv').config();
@@ -18,7 +19,29 @@ const APPLICATION_SWAGGER_PATH =
   EnvironmentService.APPLICATION_SWAGGER_PATH() ?? 'docs';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {logger: ['error','fatal','warn']});
+  const app = await NestFactory.create(AppModule);
+  const customLogger = new CustomLoggerService();
+
+  console.log = (message?: any, ...optionalParams: any[]) => {
+    customLogger.log(`${message} ${optionalParams.join(' ')}`);
+  };
+
+  console.error = (message?: any, ...optionalParams: any[]) => {
+    customLogger.error(
+      `${message} ${optionalParams.join(' ')}`,
+      optionalParams.join(' '),
+    );
+  };
+
+  console.warn = (message?: any, ...optionalParams: any[]) => {
+    customLogger.warn(`${message} ${optionalParams.join(' ')}`);
+  };
+
+  console.debug = (message?: any, ...optionalParams: any[]) => {
+    customLogger.debug(`${message} ${optionalParams.join(' ')}`);
+  };
+  
+  console.log("test log");
 
   const config = new DocumentBuilder()
     .setTitle('NMP Application API')
