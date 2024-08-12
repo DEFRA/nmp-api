@@ -124,6 +124,7 @@ export class FarmService extends BaseService<
           TotalFarmArea: updatedFarmData.TotalFarmArea,
           Name: updatedFarmData.Name?.trim(),
           Postcode: updatedFarmData.Postcode?.trim(),
+          LastHarvestYear: updatedFarmData.LastHarvestYear,
           ModifiedByID: userId,
           ModifiedOn: new Date(),
           // FieldsAbove300SeaLevel and NVZFields will be updated in the `field` table only if the condition is not met

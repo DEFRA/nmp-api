@@ -116,6 +116,10 @@ export default class FarmEntity {
   @ApiProperty()
   FieldsAbove300SeaLevel: number;
 
+  @Column('int', { nullable: true })
+  @ApiPropertyOptional()
+  LastHarvestYear: number;
+
   @Column('datetime2', { nullable: true, precision: 7, default: 'GETDATE()' })
   CreatedOn: Date;
 
