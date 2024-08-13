@@ -37,4 +37,15 @@ export class MannerCropTypesController {
 
     return { CropTypeYield: record };
   }
+
+  @Get('/isPerennial/:cropTypeID')
+  @ApiOperation({
+    summary: 'Get IsPerennial by CropTypeId',
+  })
+  async getIsPerennialByCropTypeID(@Param('cropTypeID') cropTypeID: number) {
+    const record =
+      await this.mannerCropTypesService.getIsPerennialByCropTypeID(cropTypeID);
+
+    return { IsPerennial: record };
+  }
 }

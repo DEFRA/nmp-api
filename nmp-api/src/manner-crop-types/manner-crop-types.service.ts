@@ -52,4 +52,14 @@ export class MannerCropTypesService extends BaseService<
 
     return cropTypeYield;
   }
+
+  async getIsPerennialByCropTypeID(cropTypeID: number) {
+    const isPerennial = (
+      await this.cropTypeLinkingsRepository.findOneBy({
+        CropTypeID: cropTypeID,
+      })
+    ).IsPerennial;
+
+    return isPerennial;
+  }
 }
