@@ -1,14 +1,16 @@
 import { Injectable, LoggerService } from '@nestjs/common';
 import * as winston from 'winston';
 import 'winston-daily-rotate-file';
-
+import * as dotenv from 'dotenv';
+dotenv?.config();
+const loggerPath = `${process.env.DEPLOYMENT_TARGET}\logs` || 'logs';
 @Injectable()
 export class CustomLoggerService implements LoggerService {
   private logger: winston.Logger;
 
   constructor() {
     this.logger = winston.createLogger({
-      level: 'info',
+      level: 'debug',
       format: winston.format.combine(
         winston.format.timestamp(),
         winston.format.printf(({ timestamp, level, message }) => {
@@ -18,12 +20,12 @@ export class CustomLoggerService implements LoggerService {
       transports: [
         new winston.transports.Console(), // Logs to the console
         new winston.transports.DailyRotateFile({
-          dirname: 'logs',
+          dirname: loggerPath,
           filename: 'application-%DATE%.log',
           datePattern: 'YYYY-MM-DD',
           zippedArchive: true,
           maxSize: '20m',
-          maxFiles: '6d',
+          maxFiles: '7d',
         }),
       ],
     });

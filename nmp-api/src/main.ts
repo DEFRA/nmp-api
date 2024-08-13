@@ -6,14 +6,13 @@ import EnvironmentService from '@shared/environment.service';
 import * as dotenv from 'dotenv';
 import { AppModule } from './app.module';
 import { CustomLoggerService } from './custom-logger/custom-logger.service';
-
-const start = performance.now();
-
 dotenv?.config();
-//require('dotenv').config();
+let APPLICATION_PORT;
+const logger = new CustomLoggerService();
+const start = performance.now(); 
+logger.log(`---------------------------- Logger Started at ${start} ------------------------------------`)
 
-const APPLICATION_PORT =
-  process.env.PORT ?? EnvironmentService.APPLICATION_PORT();
+
 const APPLICATION_VER = EnvironmentService.APPLICATION_VER() ?? '1.0.0';
 // const APPLICATION_URL = EnvironmentService.APPLICATION_URL() ?? 'apis/v1';
 
@@ -32,7 +31,7 @@ const APPLICATION_SWAGGER_PATH =
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const customLogger = new CustomLoggerService();
+ /* const customLogger = new CustomLoggerService();
 
   console.log = (message?: any, ...optionalParams: any[]) => {
     customLogger.log(`${tryJsonStringify(message)} ${optionalParams.join(' ')}`);
@@ -57,8 +56,8 @@ async function bootstrap() {
     customLogger.verbose(`${tryJsonStringify(message)} ${optionalParams.join(' ')}`);
   };
   
-  console.log("test log");
-
+  */
+  
   const config = new DocumentBuilder()
     .setTitle('NMP Application API')
     .setDescription('NMP')
@@ -80,16 +79,16 @@ async function bootstrap() {
 
   app.enableCors();
   app.useGlobalInterceptors(new ResponseInterceptor());
-
+  APPLICATION_PORT = process.env.PORT ?? EnvironmentService.APPLICATION_PORT();
   await app.listen(APPLICATION_PORT);
 }
 
-console.log("Http server is starting...")
+logger.log(`Http server is starting ${start}`);
 bootstrap();
-console.log("Http server is started!")
-
 const end = performance.now();
-console.log(`Task Duration: ${end - start}ms`);
+logger.log( `Http server has been started! ${end}`)
 
-console.log(`Your app is listen on PORT ${APPLICATION_PORT}`);
-console.log(`Your swagger UI is accessible on  ${APPLICATION_SWAGGER_PATH}`);
+logger.log(`Task Duration: ${end - start}ms`);
+
+logger.log(`Your app is listen on PORT ${APPLICATION_PORT}`);
+logger.log(`Your swagger UI is accessible on  ${APPLICATION_SWAGGER_PATH}`);
