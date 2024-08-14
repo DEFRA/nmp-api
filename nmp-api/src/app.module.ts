@@ -42,6 +42,7 @@ import { RainTypeModule } from './rain-type/rain-type.module';
 import { MannerCropTypesModule } from './manner-crop-types/manner-crop-types.module';
 import { InorganicManureDurationModule } from './inorganic-manure-duration/inorganic-manure-duration.module';
 import { FertiliserManuresModule } from './fertiliser-manures/fertiliser-manures.module';
+import { CustomLoggerService } from './custom-logger/custom-logger.service';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -95,7 +96,7 @@ import { FertiliserManuresModule } from './fertiliser-manures/fertiliser-manures
     InorganicManureDurationModule,
     FertiliserManuresModule,
   ],
-  providers: [AzureAuthService],
+  providers: [AzureAuthService, CustomLoggerService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
