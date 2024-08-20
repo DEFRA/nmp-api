@@ -3,7 +3,7 @@ import * as winston from 'winston';
 import 'winston-daily-rotate-file';
 import * as dotenv from 'dotenv';
 dotenv?.config();
-const loggerPath = `${process.env.DEPLOYMENT_TARGET}\logs` || 'logs';
+const loggerPath = `${process.env.DEPLOYMENT_TARGET}` || 'logs';
 @Injectable()
 export class CustomLoggerService implements LoggerService {
   private logger: winston.Logger;
