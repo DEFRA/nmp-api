@@ -42,6 +42,7 @@ import { RainTypeModule } from './rain-type/rain-type.module';
 import { MannerCropTypesModule } from './manner-crop-types/manner-crop-types.module';
 import { InorganicManureDurationModule } from './inorganic-manure-duration/inorganic-manure-duration.module';
 import { FertiliserManuresModule } from './fertiliser-manures/fertiliser-manures.module';
+import { CustomLoggerService } from './custom-logger/custom-logger.service';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RB209BaseService } from './vendors/rb209/base.service';
@@ -100,7 +101,7 @@ import { AddressLookupService } from './vendors/address-lookup/address-lookup.se
     FertiliserManuresModule,
   ],
   providers: [
-    AzureAuthService,
+    AzureAuthService, CustomLoggerService,
     AppService,
     RB209BaseService,
     AddressLookupService,

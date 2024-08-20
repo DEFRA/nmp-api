@@ -46,7 +46,7 @@ export class FarmController {
     const exists = await this.farmService.farmExistsByNameAndPostcode(
       farmName,
       postcode,
-      id
+      id,
     );
     return { exists };
   }
@@ -65,7 +65,6 @@ export class FarmController {
     const exists = await this.farmService.farmExistsByNameAndPostcode(
       farmBody.Name,
       farmBody.Postcode,
-      
     );
     if (exists)
       throw new BadRequestException(
