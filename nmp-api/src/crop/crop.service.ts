@@ -72,16 +72,11 @@ export class CropService extends BaseService<
       })
     )[0];
 
-    
+    const cropTypeId = cropData.CropTypeID;
 
-    const cropTypeId = cropData.CropTypeID; 
-
-
-    
     const cropTypesList: any[] =
       await this.rB209ArableService.getData('/Arable/CropTypes');
 
-    
     const cropType = cropTypesList.find(
       (cropType) => cropType.cropTypeId === cropTypeId,
     );
