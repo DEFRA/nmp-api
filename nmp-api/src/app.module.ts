@@ -43,6 +43,10 @@ import { MannerCropTypesModule } from './manner-crop-types/manner-crop-types.mod
 import { InorganicManureDurationModule } from './inorganic-manure-duration/inorganic-manure-duration.module';
 import { FertiliserManuresModule } from './fertiliser-manures/fertiliser-manures.module';
 import { CustomLoggerService } from './custom-logger/custom-logger.service';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { RB209BaseService } from './vendors/rb209/base.service';
+import { AddressLookupService } from './vendors/address-lookup/address-lookup.service';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -96,10 +100,16 @@ import { CustomLoggerService } from './custom-logger/custom-logger.service';
     InorganicManureDurationModule,
     FertiliserManuresModule,
   ],
-  providers: [AzureAuthService, CustomLoggerService],
+  providers: [
+    AzureAuthService, CustomLoggerService,
+    AppService,
+    RB209BaseService,
+    AddressLookupService,
+  ],
+  controllers: [AppController],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-   consumer.apply(AzureAuthMiddleware).forRoutes('*');
+    consumer.apply(AzureAuthMiddleware).forRoutes('*');
   }
 }

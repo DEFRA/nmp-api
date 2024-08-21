@@ -72,7 +72,7 @@ export class RB209BaseService {
     );
   }
 
-  private async login() {
+  public async login() {
     const response = await this.request.post<RB209UsersDto>('/Users/Login', {
       email: EnvironmentService.RB209_USER_EMAIL(),
       password: EnvironmentService.RB209_USER_PASSWORD(),
