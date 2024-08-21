@@ -77,11 +77,11 @@ export class CropService extends BaseService<
     const cropTypeId = cropData.CropTypeID; 
 
 
-    // Step 2: Get the list of all crop types from the third-party API
+    
     const cropTypesList: any[] =
       await this.rB209ArableService.getData('/Arable/CropTypes');
 
-    // Step 3: Find the crop type that matches the provided CropTypeID
+    
     const cropType = cropTypesList.find(
       (cropType) => cropType.cropTypeId === cropTypeId,
     );
