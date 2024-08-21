@@ -24,6 +24,26 @@ export class OrganicManureService extends BaseService<
     super(repository, entityManager);
   }
 
+  async getTotalNitrogen(
+    managementPeriodID: number,
+    fromDate: Date,
+    toDate: Date,
+  ) {
+    const result = await this.repository
+      .createQueryBuilder('OrganicManures')
+      .select('SUM(organicManures.N)', 'totalN')
+      .where('organicManures.ManagementPeriodID = :managementPeriodID', {
+        managementPeriodID,
+      })
+      .andWhere(
+        'organicManures.ApplicationDate BETWEEN :fromDate AND :toDate',
+        { fromDate, toDate },
+      )
+      .getRawOne();
+
+    return result.totalN;
+  }
+
   async createOrganicManuresWithFarmManureType(
     body: CreateOrganicManuresWithFarmManureTypeDto,
     userId: number,
@@ -36,24 +56,24 @@ export class OrganicManureService extends BaseService<
 
         for (const organicManureData of body.OrganicManures) {
           const { OrganicManure } = organicManureData;
-           if (
-             OrganicManure.NH4N + OrganicManure.NO3N + OrganicManure.UricAcid >
-             OrganicManure.N
-           ) {
-             throw new BadRequestException(
-               'NH4N + NO3N + UricAcid must be less than or equal to TotalN',
-             );
-           }
+          if (
+            OrganicManure.NH4N + OrganicManure.NO3N + OrganicManure.UricAcid >
+            OrganicManure.N
+          ) {
+            throw new BadRequestException(
+              'NH4N + NO3N + UricAcid must be less than or equal to TotalN',
+            );
+          }
           if (organicManureData.SaveDefaultForFarm) {
             farmManureTypeData = {
               FarmID: organicManureData.FarmID,
               ManureTypeID: OrganicManure.ManureTypeID,
               FieldTypeID: organicManureData.FieldTypeID,
-              TotalN: OrganicManure.N,//Nitogen
+              TotalN: OrganicManure.N, //Nitogen
               DryMatter: OrganicManure.DryMatterPercent,
-              NH4N: OrganicManure.NH4N,//ammonium
-              Uric: OrganicManure.UricAcid,//uric acid
-              NO3N: OrganicManure.NO3N,//nitrate
+              NH4N: OrganicManure.NH4N, //ammonium
+              Uric: OrganicManure.UricAcid, //uric acid
+              NO3N: OrganicManure.NO3N, //nitrate
               P2O5: OrganicManure.P2O5,
               SO3: OrganicManure.SO3,
               K2O: OrganicManure.K2O,
