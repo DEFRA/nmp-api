@@ -31,9 +31,9 @@ export class AppService {
   private async checkDatabaseHealth(): Promise<any> {
     try {
       if (this.dataSource.isInitialized) {
-        return 'NMP API is working';
+        return { message: 'NMP API is working' };
       } else {
-        return 'Database connection is not initialized';
+        return { message: 'NMP API is not working' };
       }
     } catch (error) {
       console.error('Database connection error:', error);
