@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import {  DataSource } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { RB209BaseService } from './vendors/rb209/base.service';
 import { AddressLookupService } from './vendors/address-lookup/address-lookup.service';
-
 
 @Injectable()
 export class AppService {
@@ -14,51 +13,55 @@ export class AppService {
 
   async health(): Promise<any> {
     try {
-      const dbHealth = {
-        isConnected: this.dataSource.isInitialized,
-        message: 'NMP API is working',
-      };
-
+      const dbHealth = await this.checkDatabaseHealth();
       const rb209Health = await this.checkRB209Health();
-      const addressLookupHealth = await this.checkHealth();
+      const addressLookupHealth = await this.checkAddressLookupHealth();
 
       return {
-        database: dbHealth,
-        rb209: rb209Health,
-        addressLookup: addressLookupHealth,
+        nmp_api: dbHealth,
+        rb209_api: rb209Health,
+        addressLookup_api: addressLookupHealth,
       };
     } catch (error) {
       console.error('Error during health check:', error);
-      return { status: 'NMP Api is not working', error: error.message };
+      return { status: 'Error during health check:', error: error.message };
     }
   }
 
-  
+  private async checkDatabaseHealth(): Promise<any> {
+    try {
+      if (this.dataSource.isInitialized) {
+        return 'NMP API is working';
+      } else {
+        return 'Database connection is not initialized';
+      }
+    } catch (error) {
+      console.error('Database connection error:', error);
+      return {
+        isConnected: false,
+        message: 'Database connection failed',
+      };
+    }
+  }
 
   private async checkRB209Health(): Promise<any> {
     try {
-      // Call the login method 
+      // Call the login method
       const loginResponse = await this.rb209Service.login();
-      return { isConnected: true, message: 'RB209 API is Working' };
+      return { message: 'RB209 API is Working' };
     } catch (error) {
       console.error('RB209 API is not working:', error);
-      return { isConnected: false, message: 'RB209 API is not working' };
+      return { message: 'RB209 API is not working' };
     }
   }
 
-  async checkHealth(): Promise<any> {
+  private async checkAddressLookupHealth(): Promise<any> {
     try {
       // Attempt to fetch some data to ensure the service is responsive
       await this.addressLookupService.getAddressesByPostCode('EC1A 1BB'); // Or any other valid postcode
-      return {
-        isConnected: true,
-        message: 'Address Lookup is working',
-      };
+      return { message: 'Address Lookup is working' };
     } catch (error) {
-      return {
-        isConnected: false,
-        message: 'Address Lookup is not working',
-      };
+      return { message: 'Address Lookup is not working' };
     }
   }
 }
