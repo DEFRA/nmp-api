@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { OrganicManureService } from './organic-manure.service';
 import { CreateOrganicManuresWithFarmManureTypeDto } from './dto/organic-manure.dto';
@@ -8,6 +8,25 @@ import { CreateOrganicManuresWithFarmManureTypeDto } from './dto/organic-manure.
 @ApiSecurity('Bearer')
 export class OrganicManureController {
   constructor(private readonly organicManureService: OrganicManureService) {}
+
+  @Get('/total-nitrogen/:managementPeriodID')
+  @ApiOperation({
+    summary:
+      'Get Total Nitrogen by ManagementPeriodID and Application Date Range',
+  })
+  async getTotalNitrogen(
+    @Param('managementPeriodID') managementPeriodID: number,
+    @Query('fromDate') fromDate: Date,
+    @Query('toDate') toDate: Date,
+  ) {
+    const record = await this.organicManureService.getTotalNitrogen(
+      managementPeriodID,
+      fromDate,
+      toDate,
+    );
+
+    return { TotalN: record };
+  }
 
   @Post('/')
   @ApiOperation({
