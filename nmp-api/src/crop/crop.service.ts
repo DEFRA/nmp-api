@@ -6,6 +6,7 @@ import CropEntity from '@db/entity/crop.entity';
 import ManagementPeriodEntity from '@db/entity/management-period.entity';
 import { ApiDataResponseType } from '@shared/base.response';
 import { BaseService } from '@src/base/base.service';
+import { RB209ArableService } from '@src/vendors/rb209/arable/arable.service';
 
 @Injectable()
 export class CropService extends BaseService<
@@ -18,6 +19,7 @@ export class CropService extends BaseService<
     protected readonly entityManager: EntityManager,
     @InjectRepository(ManagementPeriodEntity)
     protected readonly managementPeriodRepository: Repository<ManagementPeriodEntity>,
+    protected readonly rB209ArableService: RB209ArableService,
   ) {
     super(repository, entityManager);
   }
@@ -54,5 +56,43 @@ export class CropService extends BaseService<
         };
       },
     );
+  }
+
+  async getCropTypeDataByFieldAndYear(
+    fieldId: number,
+    year: number,
+  ): Promise<any> {
+    // Step 1: Retrieve the CropTypeID based on fieldId and year
+    const cropData = (
+      await this.repository.find({
+        where: {
+          FieldID: fieldId,
+          Year: year,
+        },
+      })
+    )[0];
+
+    
+
+    const cropTypeId = cropData.CropTypeID; 
+
+
+    // Step 2: Get the list of all crop types from the third-party API
+    const cropTypesList: any[] =
+      await this.rB209ArableService.getData('/Arable/CropTypes');
+
+    // Step 3: Find the crop type that matches the provided CropTypeID
+    const cropType = cropTypesList.find(
+      (cropType) => cropType.cropTypeId === cropTypeId,
+    );
+
+    if (!cropType) {
+      console.error(`No crop type found for CropTypeID: ${cropTypeId}`);
+    }
+
+    return {
+      cropTypeId: cropType.cropTypeId,
+      cropType: cropType.cropType,
+    };
   }
 }
