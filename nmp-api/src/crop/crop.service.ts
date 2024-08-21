@@ -74,7 +74,7 @@ export class CropService extends BaseService<
 
     const cropTypeId = cropData.CropTypeID;
 
-    const cropTypesList: any[] =
+    const cropTypesList =
       await this.rB209ArableService.getData('/Arable/CropTypes');
 
     const cropType = cropTypesList.find(
