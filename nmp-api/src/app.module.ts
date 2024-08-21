@@ -110,6 +110,6 @@ import { AddressLookupService } from './vendors/address-lookup/address-lookup.se
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    //consumer.apply(AzureAuthMiddleware).forRoutes('*');
+    consumer.apply(AzureAuthMiddleware).forRoutes('*');
   }
 }

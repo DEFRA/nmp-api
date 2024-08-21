@@ -16,14 +16,11 @@ export class AppService {
     try {
       const dbHealth = {
         isConnected: this.dataSource.isInitialized,
-        message: 'Database Health Check Successful',
-        driver: {
-          driver: await this.getDatabaseVersion(),
-        },
+        message: 'NMP API is working',
       };
 
       const rb209Health = await this.checkRB209Health();
-      const addressLookupHealth = await this.checkAddressLookupHealth();
+      const addressLookupHealth = await this.checkHealth();
 
       return {
         database: dbHealth,
@@ -32,44 +29,35 @@ export class AppService {
       };
     } catch (error) {
       console.error('Error during health check:', error);
-      return { status: 'Health check failed', error: error.message };
+      return { status: 'NMP Api is not working', error: error.message };
     }
   }
 
-  private async getDatabaseVersion(): Promise<{ version: string }> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    let version: string;
-
-    try {
-      const result = await queryRunner.query('SELECT @@version as version');
-      console.log("result",result)
-      version = result[0]?.version || 'Unknown';
-    } finally {
-      await queryRunner.release();
-    }
-
-    return { version };
-  }
+  
 
   private async checkRB209Health(): Promise<any> {
     try {
-      const rb209Status = await this.rb209Service.check();
-      return { isConnected: true, message: rb209Status };
+      // Call the login method 
+      const loginResponse = await this.rb209Service.login();
+      return { isConnected: true, message: 'RB209 API is Working' };
     } catch (error) {
-      console.error('RB209 API health check failed:', error);
-      return { isConnected: false, message: 'RB209 API Health Check Failed' };
+      console.error('RB209 API is not working:', error);
+      return { isConnected: false, message: 'RB209 API is not working' };
     }
   }
 
-  private async checkAddressLookupHealth(): Promise<any> {
+  async checkHealth(): Promise<any> {
     try {
-      const addressLookupStatus = await this.addressLookupService.check();
-      return { isConnected: true, message: addressLookupStatus };
+      // Attempt to fetch some data to ensure the service is responsive
+      await this.addressLookupService.getAddressesByPostCode('EC1A 1BB'); // Or any other valid postcode
+      return {
+        isConnected: true,
+        message: 'Address Lookup is working',
+      };
     } catch (error) {
-      console.error('Address Lookup API health check failed:', error);
       return {
         isConnected: false,
-        message: 'Address Lookup API Health Check Failed',
+        message: 'Address Lookup is not working',
       };
     }
   }
