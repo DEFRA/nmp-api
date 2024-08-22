@@ -3,8 +3,9 @@
 :: Install npm packages
 echo Installing npm packages...
 cd "%DEPLOYMENT_TARGET%"
-npm install --force
-
+echo "%DEPLOYMENT_TARGET%"
+npm install
+::npm install --force
 :: Update npm
 echo Updating npm to the latest version...
 npm install -g npm
