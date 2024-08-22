@@ -30,8 +30,11 @@ export class OrganicManureService extends BaseService<
     toDate: Date,
   ) {
     const result = await this.repository
-      .createQueryBuilder('OrganicManures')
-      .select('SUM(organicManures.N)', 'totalN')
+      .createQueryBuilder('organicManures')
+      .select(
+        'SUM(organicManures.N * organicManures.ApplicationRate)',
+        'totalN',
+      )
       .where('organicManures.ManagementPeriodID = :managementPeriodID', {
         managementPeriodID,
       })
