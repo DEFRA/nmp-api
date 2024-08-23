@@ -47,6 +47,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RB209BaseService } from './vendors/rb209/base.service';
 import { AddressLookupService } from './vendors/address-lookup/address-lookup.service';
+import { CropTypeLinkingsModule } from './crop-type-linkings/crop-type-linkings.module';
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -99,9 +100,11 @@ import { AddressLookupService } from './vendors/address-lookup/address-lookup.se
     MannerCropTypesModule,
     InorganicManureDurationModule,
     FertiliserManuresModule,
+    CropTypeLinkingsModule,
   ],
   providers: [
-    AzureAuthService, CustomLoggerService,
+    AzureAuthService,
+    CustomLoggerService,
     AppService,
     RB209BaseService,
     AddressLookupService,

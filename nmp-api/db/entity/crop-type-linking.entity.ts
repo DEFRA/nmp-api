@@ -15,6 +15,9 @@ export class CropTypeLinkingEntity {
   @Column({ name: 'IsPerennial', type: 'bit' })
   IsPerennial: boolean;
 
+  @Column('int', { nullable: true })
+  NMaxLimit: number;
+
   @ManyToOne(
     () => MannerCropTypeEntity,
     (cropType) => cropType.CropTypeLinkings,
