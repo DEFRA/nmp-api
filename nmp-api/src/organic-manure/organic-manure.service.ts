@@ -6,6 +6,8 @@ import { BaseService } from '@src/base/base.service';
 import { EntityManager, Repository } from 'typeorm';
 import { CreateOrganicManuresWithFarmManureTypeDto } from './dto/organic-manure.dto';
 import FarmManureTypeEntity from '@db/entity/farm-manure-type.entity';
+import CropEntity from '@db/entity/crop.entity';
+import ManagementPeriodEntity from '@db/entity/management-period.entity';
 
 @Injectable()
 export class OrganicManureService extends BaseService<
@@ -15,10 +17,12 @@ export class OrganicManureService extends BaseService<
   constructor(
     @InjectRepository(OrganicManureEntity)
     protected readonly repository: Repository<OrganicManureEntity>,
-
     @InjectRepository(FarmManureTypeEntity)
     protected readonly farmManureTypeRepository: Repository<FarmManureTypeEntity>,
-
+    @InjectRepository(CropEntity)
+    protected readonly cropRepository: Repository<CropEntity>,
+    @InjectRepository(ManagementPeriodEntity)
+    protected readonly managementPeriodRepository: Repository<ManagementPeriodEntity>,
     protected readonly entityManager: EntityManager,
   ) {
     super(repository, entityManager);
@@ -45,6 +49,33 @@ export class OrganicManureService extends BaseService<
       .getRawOne();
 
     return result.totalN;
+  }
+
+  async getManureTypeIdsbyFieldAndYear(
+    fieldId: number,
+    year: number,
+    confirm: boolean,
+  ) {
+    const cropId = (
+      await this.cropRepository.findOne({
+        where: { FieldID: fieldId, Year: year, Confirm: confirm },
+      })
+    ).ID;
+
+    const managementPeriodId = (
+      await this.managementPeriodRepository.findOne({
+        where: { CropID: cropId },
+      })
+    ).ID;
+
+    const organicManures = await this.repository.find({
+      where: {
+        ManagementPeriodID: managementPeriodId,
+      },
+    });
+
+    const manureTypeIds = organicManures.map((data) => data.ManureTypeID);
+    return manureTypeIds;
   }
 
   async createOrganicManuresWithFarmManureType(
