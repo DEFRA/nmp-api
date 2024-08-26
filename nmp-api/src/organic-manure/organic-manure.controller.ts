@@ -28,6 +28,24 @@ export class OrganicManureController {
     return { TotalN: record };
   }
 
+  @Get('/manure-type/:fieldId')
+  @ApiOperation({
+    summary: 'Get ManureType IDs by FieldId and Harvest Year',
+  })
+  async getManureTypeIdsByFieldAndYear(
+    @Param('fieldId') fieldId: number,
+    @Query('year') year: number,
+    @Query('confirm') confirm: boolean,
+  ) {
+    const manureTypeIds =
+      await this.organicManureService.getManureTypeIdsbyFieldAndYear(
+        fieldId,
+        year,
+        confirm,
+      );
+    return { manureTypeIds };
+  }
+
   @Post('/')
   @ApiOperation({
     summary: 'Create Organic Manures along with Farm Manure Type',
