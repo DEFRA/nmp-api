@@ -176,15 +176,16 @@ export class CropController {
     );
   }
 
-  @Get(':fieldId/:year')
+  @Get('/crop-type/:fieldId')
   async getCropTypeByFieldAndYear(
     @Param('fieldId') fieldId: number,
-    @Param('year') year: number,
+    @Query('year') year: number,
+    @Query('confirm') confirm: boolean,
   ) {
-    
     const cropTypeData = await this.cropService.getCropTypeDataByFieldAndYear(
       fieldId,
       year,
+      confirm,
     );
     return cropTypeData;
   }

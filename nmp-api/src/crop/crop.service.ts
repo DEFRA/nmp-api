@@ -61,17 +61,16 @@ export class CropService extends BaseService<
   async getCropTypeDataByFieldAndYear(
     fieldId: number,
     year: number,
+    confirm: boolean,
   ): Promise<any> {
     // Step 1: Retrieve the CropTypeID based on fieldId and year
-    const cropData = (
-      await this.repository.find({
-        where: {
-          FieldID: fieldId,
-          Year: year,
-        },
-      })
-    )[0];
-
+    const cropData = await this.repository.findOne({
+      where: {
+        FieldID: fieldId,
+        Year: year,
+        Confirm: confirm,
+      },
+    });
     const cropTypeId = cropData.CropTypeID;
 
     const cropTypesList =
