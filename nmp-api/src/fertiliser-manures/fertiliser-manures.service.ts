@@ -4,6 +4,7 @@ import { Repository, EntityManager, DeepPartial } from 'typeorm';
 import { BaseService } from '../base/base.service';
 import { FertiliserManuresEntity } from '@db/entity/fertiliser-manures.entity';
 import { ApiDataResponseType } from '@shared/base.response';
+import { OrganicManureEntity } from '@db/entity/organic-manure.entity';
 
 @Injectable()
 export class FertiliserManuresService extends BaseService<
@@ -13,9 +14,39 @@ export class FertiliserManuresService extends BaseService<
   constructor(
     @InjectRepository(FertiliserManuresEntity)
     protected readonly repository: Repository<FertiliserManuresEntity>,
+    @InjectRepository(OrganicManureEntity)
+    protected readonly organicManureRepository: Repository<OrganicManureEntity>,
     protected readonly entityManager: EntityManager,
   ) {
     super(repository, entityManager);
+  }
+
+  async getTotalNitrogen(managementPeriodID: number, confirm: boolean) {
+    const fertiliserManuresResult = await this.repository
+      .createQueryBuilder('fertiliserManures')
+      .select(
+        'SUM(fertiliserManures.N * fertiliserManures.ApplicationRate)',
+        'totalN',
+      )
+      .where('fertiliserManures.ManagementPeriodID = :managementPeriodID', {
+        managementPeriodID,
+      })
+      .andWhere('fertiliserManures.Confirm =:confirm', { confirm })
+      .getRawOne();
+
+    const organicManuresResult = await this.organicManureRepository
+      .createQueryBuilder('organicManures')
+      .select(
+        'SUM(organicManures.N * organicManures.ApplicationRate)',
+        'totalN',
+      )
+      .where('organicManures.ManagementPeriodID = :managementPeriodID', {
+        managementPeriodID,
+      })
+      .andWhere('organicManures.Confirm =:confirm', { confirm })
+      .getRawOne();
+    const totalN = fertiliserManuresResult.totalN + organicManuresResult.totalN;
+    return totalN;
   }
 
   async createFertiliserManures(

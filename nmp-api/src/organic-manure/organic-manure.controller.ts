@@ -18,11 +18,13 @@ export class OrganicManureController {
     @Param('managementPeriodID') managementPeriodID: number,
     @Query('fromDate') fromDate: Date,
     @Query('toDate') toDate: Date,
+    @Query('confirm') confirm: boolean,
   ) {
     const record = await this.organicManureService.getTotalNitrogen(
       managementPeriodID,
       fromDate,
       toDate,
+      confirm,
     );
 
     return { TotalN: record };
@@ -37,13 +39,13 @@ export class OrganicManureController {
     @Query('year') year: number,
     @Query('confirm') confirm: boolean,
   ) {
-    const manureTypeIds =
+    const record =
       await this.organicManureService.getManureTypeIdsbyFieldAndYear(
         fieldId,
         year,
         confirm,
       );
-    return { manureTypeIds };
+    return { manureTypeIds: record };
   }
 
   @Post('/')
