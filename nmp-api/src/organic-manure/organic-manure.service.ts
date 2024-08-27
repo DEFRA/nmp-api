@@ -32,6 +32,7 @@ export class OrganicManureService extends BaseService<
     managementPeriodID: number,
     fromDate: Date,
     toDate: Date,
+    confirm: boolean,
   ) {
     const result = await this.repository
       .createQueryBuilder('organicManures')
@@ -46,6 +47,7 @@ export class OrganicManureService extends BaseService<
         'organicManures.ApplicationDate BETWEEN :fromDate AND :toDate',
         { fromDate, toDate },
       )
+      .andWhere('organicManures.Confirm =:confirm', { confirm })
       .getRawOne();
 
     return result.totalN;
@@ -60,13 +62,13 @@ export class OrganicManureService extends BaseService<
       await this.cropRepository.findOne({
         where: { FieldID: fieldId, Year: year, Confirm: confirm },
       })
-    ).ID;
+    )?.ID;
 
     const managementPeriodId = (
       await this.managementPeriodRepository.findOne({
         where: { CropID: cropId },
       })
-    ).ID;
+    )?.ID;
 
     const organicManures = await this.repository.find({
       where: {
