@@ -75,6 +75,7 @@ export class PlanService extends BaseService<
         multipleCrops: false,
         arable: [
           {
+            cropOrder: crop.CropOrder,
             cropGroupId: cropType.cropGroupId,
             cropTypeId: crop.CropTypeID,
             cropInfo1Id: crop.CropInfo1,

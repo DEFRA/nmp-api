@@ -137,6 +137,9 @@ class RecommendationSoilDto {
 
 class RecommendationGrasslandDto {
   @ApiProperty()
+  cropOrder: number;
+
+  @ApiProperty()
   snsId: number;
 
   @ApiProperty()
@@ -162,6 +165,9 @@ class RecommendationGrasslandDto {
 }
 
 class RecommendationArableDto {
+  @ApiProperty()
+  cropOrder: number;
+
   @ApiProperty()
   cropGroupId: number;
 
