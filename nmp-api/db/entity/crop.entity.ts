@@ -112,6 +112,10 @@ export default class CropEntity {
   @ApiPropertyOptional()
   PreviousID: number;
 
+  @ApiProperty()
+  @Column('int', { default: 1 })
+  CropOrder: number;
+
   @Column('datetime2', { nullable: true, precision: 7, default: 'GETDATE()' })
   CreatedOn: Date;
 
