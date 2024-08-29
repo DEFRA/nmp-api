@@ -20,6 +20,30 @@ export class FertiliserManuresService extends BaseService<
   ) {
     super(repository, entityManager);
   }
+  async getFertiliserManureNitrogenSum(
+    managementPeriodID: number,
+    fromDate: Date,
+    toDate: Date,
+    confirm: boolean,
+  ) {
+    const result = await this.repository
+      .createQueryBuilder('fertiliserManures')
+      .select(
+        'SUM(fertiliserManures.N * fertiliserManures.ApplicationRate)',
+        'totalN',
+      )
+      .where('fertiliserManures.ManagementPeriodID = :managementPeriodID', {
+        managementPeriodID,
+      })
+      .andWhere(
+        'fertiliserManures.ApplicationDate BETWEEN :fromDate AND :toDate',
+        { fromDate, toDate },
+      )
+      .andWhere('fertiliserManures.Confirm =:confirm', { confirm })
+      .getRawOne();
+
+    return result.totalN;
+  }
 
   async getTotalNitrogen(managementPeriodID: number, confirm: boolean) {
     const fertiliserManuresResult = await this.repository
