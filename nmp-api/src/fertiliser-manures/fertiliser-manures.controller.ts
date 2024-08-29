@@ -21,6 +21,28 @@ export class FertiliserManuresController {
     private readonly fertiliserManuresService: FertiliserManuresService,
   ) {}
 
+  @Get('/total-nitrogen/:managementPeriodID')
+  @ApiOperation({
+    summary:
+      'Get Fertiliser Manure Total Nitrogen by ManagementPeriodID and Application Date Range',
+  })
+  async getFertiliserManureNitrogenSum(
+    @Param('managementPeriodID') managementPeriodID: number,
+    @Query('fromDate') fromDate: Date,
+    @Query('toDate') toDate: Date,
+    @Query('confirm') confirm: boolean,
+  ) {
+    const record =
+      await this.fertiliserManuresService.getFertiliserManureNitrogenSum(
+        managementPeriodID,
+        fromDate,
+        toDate,
+        confirm,
+      );
+
+    return { TotalN: record };
+  }
+
   @Get('/organic-manures/total-nitrogen/:managementPeriodID')
   @ApiOperation({
     summary:
