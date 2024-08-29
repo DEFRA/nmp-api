@@ -32,14 +32,11 @@ export class AppService {
     try {
       if (this.dataSource.isInitialized) {
         return { message: 'NMP API is working' };
-      } else {
-        return { message: 'NMP API is not working' };
-      }
+      } 
     } catch (error) {
       console.error('Database connection error:', error);
       return {
-        isConnected: false,
-        message: 'Database connection failed',
+      errorMessage:error
       };
     }
   }
@@ -48,10 +45,15 @@ export class AppService {
     try {
       // Call the login method
       const loginResponse = await this.rb209Service.login();
-      return { message: 'RB209 API is Working' };
+      return {
+        message: 'RB209 API is Working',
+      };
     } catch (error) {
       console.error('RB209 API is not working:', error);
-      return { message: 'RB209 API is not working' };
+      return {
+        errorMessage: error.message,
+        code: error.code,
+      };
     }
   }
 
@@ -61,7 +63,11 @@ export class AppService {
       await this.addressLookupService.getAddressesByPostCode('EC1A 1BB'); // Or any other valid postcode
       return { message: 'Address Lookup is working' };
     } catch (error) {
-      return { message: 'Address Lookup is not working' };
+      console.error('Address Lookup is not working',error);
+      return {
+        errorMessage: error.message,
+        code: error.code,
+      };
     }
   }
 }
