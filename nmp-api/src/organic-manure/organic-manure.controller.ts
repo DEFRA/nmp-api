@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
-import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { OrganicManureService } from './organic-manure.service';
 import { CreateOrganicManuresWithFarmManureTypeDto } from './dto/organic-manure.dto';
 
@@ -63,5 +63,28 @@ export class OrganicManureController {
         userId,
       );
     return data;
+  }
+
+  @Get('check-existence')
+  @ApiQuery({ name: 'dateFrom', type: String, required: true })
+  @ApiQuery({ name: 'dateTo', type: String, required: true })
+  @ApiQuery({ name: 'manureTypeId', type: Number, required: false })
+  @ApiQuery({ name: 'isLiquid', type: Boolean, required: false})
+  @ApiResponse({
+    description: 'Check if manure exists within the date range.',
+  })
+  async checkManureExistence(
+    @Query('dateFrom') dateFrom: string,
+    @Query('dateTo') dateTo: string,
+    @Query('manureTypeId') manureTypeId?: number,
+    @Query('isLiquid') isLiquid?: boolean,
+  ): Promise<{ exists: boolean }> {
+    const exists = await this.organicManureService.checkManureExists(
+      new Date(dateFrom),
+      new Date(dateTo),
+      manureTypeId,
+      isLiquid,
+    );
+    return { exists };
   }
 }

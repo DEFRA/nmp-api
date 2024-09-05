@@ -3,11 +3,12 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ApiDataResponseType } from '@shared/base.response';
 import { BaseService } from '@src/base/base.service';
-import { EntityManager, Repository } from 'typeorm';
+import { Between, EntityManager, In, Repository } from 'typeorm';
 import { CreateOrganicManuresWithFarmManureTypeDto } from './dto/organic-manure.dto';
 import FarmManureTypeEntity from '@db/entity/farm-manure-type.entity';
 import CropEntity from '@db/entity/crop.entity';
 import ManagementPeriodEntity from '@db/entity/management-period.entity';
+import { ManureTypeEntity } from '@db/entity/manure-type.entity';
 
 @Injectable()
 export class OrganicManureService extends BaseService<
@@ -24,6 +25,8 @@ export class OrganicManureService extends BaseService<
     @InjectRepository(ManagementPeriodEntity)
     protected readonly managementPeriodRepository: Repository<ManagementPeriodEntity>,
     protected readonly entityManager: EntityManager,
+    @InjectRepository(ManureTypeEntity)
+    protected readonly manureTypeRepository: Repository<ManureTypeEntity>,
   ) {
     super(repository, entityManager);
   }
@@ -165,5 +168,51 @@ export class OrganicManureService extends BaseService<
         };
       },
     );
+  }
+
+  async checkManureExists(
+    dateFrom: Date,
+    dateTo: Date,
+    manureTypeId?: number,
+    isLiquid?: boolean,
+  ): Promise<boolean> {
+    if (String(isLiquid)==='true') {
+      // Find all manure types with IsLiquid true
+      const manureTypes = await this.manureTypeRepository.find({
+        where: { IsLiquid: true },
+      });
+
+      const manureTypeIds = manureTypes.map((manure) => manure.ID);
+
+      // Check if any OrganicManure records exist for these manure types within the date range
+      const exists = await this.repository
+        .createQueryBuilder('organicManure')
+        .where('organicManure.ManureTypeID IN (:...manureTypeIds)', {
+          manureTypeIds,
+        })
+        .andWhere(
+          'organicManure.ApplicationDate BETWEEN :dateFrom AND :dateTo',
+          { dateFrom, dateTo },
+        )
+        .getCount();
+
+      return exists > 0;
+    } else {
+      if (manureTypeId) {
+        // Check if the specified manureTypeId exists in OrganicManures table within the date range
+        const exists = await this.repository
+          .createQueryBuilder('organicManure')
+          .where('organicManure.ManureTypeID = :manureTypeId', { manureTypeId })
+          .andWhere(
+            'organicManure.ApplicationDate BETWEEN :dateFrom AND :dateTo',
+            { dateFrom, dateTo },
+          )
+          .getCount();
+
+        return exists > 0;
+      }
+
+      return false;
+    }
   }
 }

@@ -6,6 +6,7 @@ import { OrganicManureEntity } from '@db/entity/organic-manure.entity';
 import FarmManureTypeEntity from '@db/entity/farm-manure-type.entity';
 import CropEntity from '@db/entity/crop.entity';
 import ManagementPeriodEntity from '@db/entity/management-period.entity';
+import { ManureTypeEntity } from '@db/entity/manure-type.entity';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import ManagementPeriodEntity from '@db/entity/management-period.entity';
       FarmManureTypeEntity,
       CropEntity,
       ManagementPeriodEntity,
+      ManureTypeEntity
     ]),
   ],
   controllers: [OrganicManureController],
