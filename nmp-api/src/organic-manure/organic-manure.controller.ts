@@ -68,22 +68,20 @@ export class OrganicManureController {
   @Get('check-existence')
   @ApiQuery({ name: 'dateFrom', type: String, required: true })
   @ApiQuery({ name: 'dateTo', type: String, required: true })
-  @ApiQuery({ name: 'manureTypeId', type: Number, required: false })
-  @ApiQuery({ name: 'isLiquid', type: Boolean, required: false})
+  @ApiQuery({ name: 'confirm', type: Boolean, required: true })
   @ApiResponse({
-    description: 'Check if manure exists within the date range.',
+    description:
+      'Check if manure exists within the date range and manure type logic.',
   })
   async checkManureExistence(
     @Query('dateFrom') dateFrom: string,
     @Query('dateTo') dateTo: string,
-    @Query('manureTypeId') manureTypeId?: number,
-    @Query('isLiquid') isLiquid?: boolean,
+    @Query('confirm') confirm: boolean,
   ): Promise<{ exists: boolean }> {
     const exists = await this.organicManureService.checkManureExists(
       new Date(dateFrom),
       new Date(dateTo),
-      manureTypeId,
-      isLiquid,
+      confirm,
     );
     return { exists };
   }
