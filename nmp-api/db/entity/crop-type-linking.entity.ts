@@ -18,10 +18,13 @@ export class CropTypeLinkingEntity {
   @Column('int', { nullable: true })
   NMaxLimit: number;
 
+  @Column({ name: 'SNSCategoryID', type: 'int',nullable: true })
+  SNSCategoryID: number;
+
   @ManyToOne(
     () => MannerCropTypeEntity,
     (cropType) => cropType.CropTypeLinkings,
   )
   @JoinColumn({ name: 'MannerCropTypeID' })
-  MannerCropType: MannerCropTypeEntity;
+  MannerCropType: MannerCropTypeEntity;  
 }
