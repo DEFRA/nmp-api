@@ -40,7 +40,7 @@ class Step3 {
 
 export class CalculateSnsIndexRequest {
   @ApiProperty()
-  cropGroupId: number;
+  cropTypeId: number;
 
   @ApiProperty()
   seasonId: number;
