@@ -290,6 +290,89 @@ export class OrganicManureService extends BaseService<
     return { latestSoilAnalysis, errors };
   }
 
+  async buildManureApplications(
+    managementPeriodID: number,
+    manureTypeData: any,
+  ): Promise<any[]> {
+    const mulOrganicManuresData = await this.repository.find({
+      where: { ManagementPeriodID: managementPeriodID },
+    });
+
+    return mulOrganicManuresData.map((manure) => ({
+      manureDetails: {
+        manureID: manure.ManureTypeID,
+        name: manureTypeData.Name,
+        isLiquid: manureTypeData.IsLiquid,
+        dryMatter: manure.DryMatterPercent,
+        totalN: manure.N,
+        nH4N: manure.NH4N,
+        uric: manure.UricAcid,
+        nO3N: manure.NO3N,
+        p2O5: manure.P2O5,
+        sO3: manure.SO3,
+        k2O: manure.K2O,
+        mgO: manure.MgO,
+      },
+      applicationDate: new Date(manure.ApplicationDate)
+        .toISOString()
+        .split('T')[0],
+      applicationRate: {
+        value: manure.ApplicationRate,
+        unit: 'kg/hectare',
+      },
+      applicationMethodID: manure.ApplicationMethodID,
+      incorporationMethodID: manure.IncorporationMethodID,
+      incorporationDelayID: manure.IncorporationDelayID,
+      autumnCropNitrogenUptake: {
+        value: manure.AutumnCropNitrogenUptake,
+        unit: 'string',
+      },
+      endOfDrainageDate: new Date(manure.EndOfDrain)
+        .toISOString()
+        .split('T')[0],
+      rainfallPostApplication: manure.Rainfall,
+      cropNUptake: manure.AutumnCropNitrogenUptake,
+      windspeedID: manure.WindspeedID,
+      rainTypeID: manure.RainfallWithinSixHoursID,
+      topsoilMoistureID: manure.MoistureID,
+    }));
+  }
+
+  async buildMannerOutputReq(
+    farmData: any,
+    fieldData: any,
+    cropTypeLinkingData: any,
+    organicManureData: any,
+    manureApplications: any[],
+  ): Promise<any> {
+    return {
+      runType: farmData.EnglishRules ? 3 : 4,
+      FarmID: organicManureData.FarmID,
+      postcode: farmData.Postcode.split(' ')[0],
+      countryID: farmData.EnglishRules ? 1 : 2,
+      field: {
+        fieldID: fieldData.ID,
+        fieldName: fieldData.Name,
+        MannerCropTypeID: cropTypeLinkingData.MannerCropTypeID,
+        topsoilID: fieldData.TopSoilID,
+        subsoilID: fieldData.SubSoilID,
+        isInNVZ: fieldData.IsWithinNVZ,
+      },
+      manureApplications,
+    };
+  }
+   async checkIfManagementPeriodExistsInOrganicManure(organicManure: any): Promise<boolean> {
+    const managementPeriodExists = await this.repository.findOne({
+      where: { ManagementPeriodID: organicManure.ManagementPeriodID },
+    });
+
+    if(managementPeriodExists){
+      return true
+    } else{
+      return false
+    }
+  }
+
   async createOrganicManuresWithFarmManureType(
     body: CreateOrganicManuresWithFarmManureTypeDto,
     userId: number,
@@ -310,7 +393,9 @@ export class OrganicManureService extends BaseService<
               'NH4N + NO3N + UricAcid must be less than or equal to TotalN',
             );
           }
-
+         const newOrganicManure = await this.checkIfManagementPeriodExistsInOrganicManure(
+             OrganicManure,
+           );
           // Convert the Date object to YYYY-MM-DD string format
           const applicationDateObj = new Date(OrganicManure.ApplicationDate);
 
@@ -322,6 +407,7 @@ export class OrganicManureService extends BaseService<
           const endOfDrainageDate = endOfDrainageDateObj
             .toISOString()
             .split('T')[0];
+
           const manureTypeData = await this.manureTypeRepository.findOneBy({
             ID: OrganicManure.ManureTypeID,
           });
@@ -343,7 +429,22 @@ export class OrganicManureService extends BaseService<
             await this.CropTypeLinkingRepository.findOneBy({
               CropTypeID: cropData.CropTypeID,
             });
-          const mannerOutputReq = {
+
+          const manureApplications = await this.buildManureApplications(
+            OrganicManure.ManagementPeriodID,
+            manureTypeData,
+          );
+          let mannerOutputReq; 
+        if (newOrganicManure == true) {
+          mannerOutputReq = await this.buildMannerOutputReq(
+            farmData,
+            fieldData,
+            cropTypeLinkingData,
+            organicManureData,
+            manureApplications,
+          );
+        } else if (newOrganicManure == false) {
+          mannerOutputReq = {
             runType: farmData.EnglishRules ? 3 : 4,
             FarmID: organicManureData.FarmID,
             postcode: farmData.Postcode.split(' ')[0],
@@ -393,12 +494,14 @@ export class OrganicManureService extends BaseService<
               },
             ],
           };
-
-          const mannerOutputs =
-            await this.MannerCalculateNutrientsService.postData(
-              '/calculate-nutrients',
-              mannerOutputReq,
-            );
+        }
+          // Call the new helper function to create mannerOutputReq
+            const mannerOutputs =
+              await this.MannerCalculateNutrientsService.postData(
+                '/calculate-nutrients',
+                mannerOutputReq,
+              );
+             
 
           const Errors = [];
           const { latestSoilAnalysis, errors: soilAnalysisErrors } =
@@ -429,53 +532,6 @@ export class OrganicManureService extends BaseService<
               'Recommendation/Recommendations',
               nutrientRecommendationnReqBody,
             );
-
-          // const nutrientData = await this.RB209FieldService.getData(
-          //   `Nutrient/:${nutrientRecommendationsData.NutrientID}`,
-          // );
-          console.log(
-            'nutrientRecommendationsData',
-            nutrientRecommendationsData.calculations
-          );
-          if (
-            nutrientRecommendationsData.calculations
-          ) {
-            // Step 2: Extract all nutrientIds from the response
-            const nutrientIds =
-              nutrientRecommendationsData.calculations.map(
-                (calculation) => calculation.nutrientId,
-              );
-              console.log('nutrientIds', nutrientIds);
-            // Step 3: Loop through the nutrientIds and hit the `Nutrient/:NutrientID` API
-            const nutrientDetailsArray = [];
-
-            for (const nutrientId of nutrientIds) {
-              try {
-                const nutrientData = await this.RB209FieldService.getData(
-                  `Nutrient/${nutrientId}`,
-                );
-                console.log('nutrientDataaaa', nutrientData);
-                // Store the nutrient data for further processing or use
-                nutrientDetailsArray.push(nutrientData);
-
-                console.log(`Data for NutrientID ${nutrientId}:`, nutrientData);
-              } catch (error) {
-                console.error(
-                  `Failed to fetch data for NutrientID ${nutrientId}:`,
-                  error,
-                );
-              }
-            }
-
-            // Now you have all the nutrient details in nutrientDetailsArray for further use
-            console.log('All Nutrient Details:', nutrientDetailsArray);
-          } else {
-            console.error(
-              'Failed to fetch nutrient recommendations data:',
-              nutrientRecommendationsData,
-            );
-          }
-          
           if (organicManureData.SaveDefaultForFarm) {
             farmManureTypeData = {
               FarmID: organicManureData.FarmID,
@@ -502,42 +558,76 @@ export class OrganicManureService extends BaseService<
           );
           organicManures.push(savedOrganicManure);
           const updateRecommendationData = {
+            // initial values
             ManagementPeriodID: managementPeriodData.ID,
-            CropN: 50.123,
-            CropP2O5: 20.456,
-            CropK2O: 30.789,
-            CropMgO: 10.123,
-            CropSO3: 15.456,
-            CropNa2O: 5.789,
-            CropLime: 8.123,
-            ManureN: 25.456,
-            ManureP2O5: 12.789,
-            ManureK2O: 15.123,
-            ManureMgO: 7.456,
-            ManureSO3: 9.789,
-            ManureNa2O: 4.123,
-            ManureLime: 6.456,
-            FertilizerN: 55.789,
-            FertilizerP2O5: 22.123,
-            FertilizerK2O: 33.456,
-            FertilizerMgO: 18.789,
-            FertilizerSO3: 25.123,
-            FertilizerNa2O: 8.456,
-            FertilizerLime: 10.789,
-            PH: '6.5',
-            SNSIndex: 'Medium',
-            PIndex: 'High',
-            KIndex: 'Low',
-            MgIndex: 'Moderate',
-            SIndex: 'Low',
-            NaIndex: 'Moderate',
-            Comments: 'Updated recommendation for Crop NPK values.',
-            PreviousID: 10,
+            CropN: 0,
+            CropP2O5: 0,
+            CropK2O: 0,
+            CropMgO: 0,
+            CropSO3: 0,
+            CropNa2O: 0,
+            CropLime: 0,
+            ManureN: 0,
+            ManureP2O5: 0,
+            ManureK2O: 0,
+            ManureMgO: 0,
+            ManureSO3: 0,
+            ManureNa2O: 0,
+            ManureLime: 0,
+            FertilizerN: 0,
+            FertilizerP2O5: 0,
+            FertilizerK2O: 0,
+            FertilizerMgO: 0,
+            FertilizerSO3: 0,
+            FertilizerNa2O: 0,
+            FertilizerLime: 0,
           };
+
+          for (const calc of nutrientRecommendationsData.calculations) {
+            const nutrientId = calc.nutrientId;
+
+            // Fetch the nutrient name for the nutrientId
+            const nutrientData = await this.RB209FieldService.getData(
+              `Field/Nutrient/${nutrientId}`,
+            );
+            const nutrientName = nutrientData?.nutrient.toLowerCase();
+
+            // Update recommendation data based on nutrient name
+            if (nutrientName === 'nitrogen') {
+              updateRecommendationData.CropN = calc.recommendation || 0;
+              updateRecommendationData.ManureN = calc.applied || 0;
+              updateRecommendationData.FertilizerN = calc.cropNeed || 0;
+            } else if (nutrientName === 'phosphate') {
+              updateRecommendationData.CropP2O5 = calc.recommendation || 0;
+              updateRecommendationData.ManureP2O5 = calc.applied || 0;
+              updateRecommendationData.FertilizerP2O5 = calc.cropNeed || 0;
+            } else if (nutrientName === 'potash') {
+              updateRecommendationData.CropK2O = calc.recommendation || 0;
+              updateRecommendationData.ManureK2O = calc.applied || 0;
+              updateRecommendationData.FertilizerK2O = calc.cropNeed || 0;
+            } else if (nutrientName === 'magnesium') {
+              updateRecommendationData.CropMgO = calc.recommendation || 0;
+              updateRecommendationData.ManureMgO = calc.applied || 0;
+              updateRecommendationData.FertilizerMgO = calc.cropNeed || 0;
+            } else if (nutrientName === 'sulphur') {
+              updateRecommendationData.CropSO3 = calc.recommendation || 0;
+              updateRecommendationData.ManureSO3 = calc.applied || 0;
+              updateRecommendationData.FertilizerSO3 = calc.cropNeed || 0;
+            } else if (nutrientName === 'sodium') {
+              updateRecommendationData.CropNa2O = calc.recommendation || 0;
+              updateRecommendationData.ManureNa2O = calc.applied || 0;
+              updateRecommendationData.FertilizerNa2O = calc.cropNeed || 0;
+            } else if (nutrientName === 'lime') {
+              updateRecommendationData.CropLime = calc.recommendation || 0;
+              updateRecommendationData.ManureLime = calc.applied || 0;
+              updateRecommendationData.FertilizerLime = calc.cropNeed || 0;
+            }
+          }
           const updatedData =
             await this.updateRecommendationByManagementPeriodID(
               updateRecommendationData.ManagementPeriodID,
               updateRecommendationData,
+              transactionalManager,
             );
         }
 
@@ -585,24 +675,43 @@ export class OrganicManureService extends BaseService<
   async updateRecommendationByManagementPeriodID(
     managementPeriodID: number,
     updateData,
+    transactionalManager: EntityManager,
   ) {
-    const recommendation = await this.RecommendationRepository.findOne({
-      where: { ManagementPeriodID: managementPeriodID },
-    });
-    if (!recommendation) {
-      throw new Error(
-        'Recommendation not found for the given ManagementPeriodID',
+    let recommendation = await transactionalManager.findOne(
+      RecommendationEntity,
+      {
+        where: { ManagementPeriodID: managementPeriodID },
+      },
+    );
+
+    if (recommendation) {
+      // If recommendation exists, update its values
+      const updatedRecommendation = {
+        ...recommendation,
+        ...updateData, // Merge the update data with the existing recommendation
+      };
+
+      // Save the updated recommendation
+      return await transactionalManager.save(
+        RecommendationEntity,
+        updatedRecommendation,
+      );
+    } else {
+      // If recommendation doesn't exist, create a new one with the given data
+      const newRecommendation = transactionalManager.create(
+        RecommendationEntity,
+        {
+          ManagementPeriodID: managementPeriodID,
+          ...updateData, // Spread the data to create a new recommendation
+        },
+      );
+
+      // Save the new recommendation
+      return await transactionalManager.save(
+        RecommendationEntity,
+        newRecommendation,
       );
     }
-
-    // Update recommendation values
-    const updatedRecommendation = {
-      ...recommendation,
-      ...updateData, // Spread operator to merge new data into the recommendation
-    };
-
-    // Save the updated recommendation
-    return await this.RecommendationRepository.save(updatedRecommendation);
   }
 
   async checkManureExists(
