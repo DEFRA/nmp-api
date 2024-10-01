@@ -48,6 +48,12 @@ import { AppService } from './app.service';
 import { RB209BaseService } from './vendors/rb209/base.service';
 import { AddressLookupService } from './vendors/address-lookup/address-lookup.service';
 import { CropTypeLinkingsModule } from './crop-type-linkings/crop-type-linkings.module';
+import { MannerBaseService } from './vendors/manner/base.service';
+import { MannerClimateModule } from './vendors/manner/climate/climate.module';
+import { MannerApplicationMethodModule } from './vendors/manner/application-method/application-method.module';
+import { MannerApiCropTypesModule } from './vendors/manner/crop-types/crop-types.module';
+import { MannerCalculateNutrientsModule } from './vendors/manner/calculate-nutrients/calculate-nutrients.module';
+
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -101,11 +107,16 @@ import { CropTypeLinkingsModule } from './crop-type-linkings/crop-type-linkings.
     InorganicManureDurationModule,
     FertiliserManuresModule,
     CropTypeLinkingsModule,
+    MannerClimateModule,
+    MannerApplicationMethodModule,
+    MannerApiCropTypesModule,
+    MannerCalculateNutrientsModule,
   ],
   providers: [
     AzureAuthService,
     CustomLoggerService,
     AppService,
+    MannerBaseService,
     RB209BaseService,
     AddressLookupService,
   ],
