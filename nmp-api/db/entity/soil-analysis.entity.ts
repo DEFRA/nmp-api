@@ -78,6 +78,10 @@ export default class SoilAnalysisEntity {
   @ApiPropertyOptional()
   SoilNitrogenSupplyIndex: number;
 
+  @Column('datetime2', { nullable: true, precision: 7 })
+  @ApiPropertyOptional()
+  SoilNitrogenSampleDate: Date;
+
   @Column('int', { nullable: true })
   @ApiPropertyOptional()
   Sodium: number;
