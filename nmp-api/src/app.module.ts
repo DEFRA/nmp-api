@@ -56,6 +56,12 @@ import { MannerCalculateNutrientsModule } from './vendors/manner/calculate-nutri
 import { MannerIncorporationMethodModule } from './vendors/manner/incorporation-method/incorporation-method.module';
 import { MannerIncorporationDelayModule } from './vendors/manner/incorporation-delay/incorporation-delay.module';
 import { MannerWindspeedModule } from './vendors/manner/windspeed/windspeed.module';
+import { MannerRainfallPostApplicationService } from './vendors/manner/rainfall-post-application/rainfall-post-application.service';
+import { MannerRainfallPostApplicationModule } from './vendors/manner/rainfall-post-application/rainfall-post-application.module';
+import { MannerAutumnCropNitorgenUptakeModule } from './vendors/manner/autumn-crop-nitorgen-uptake/autumn-crop-nitorgen-uptake.module';
+import { MannerRainTypesModule } from './vendors/manner/rain-types/rain-types.module';
+import { MannerTopSoilModule } from './vendors/manner/top-soil/top-soil.module';
+import { MannerMoistureTypesModule } from './vendors/manner/moisture-types/moisture-types.module';
 
 
 @Module({
@@ -111,12 +117,17 @@ import { MannerWindspeedModule } from './vendors/manner/windspeed/windspeed.modu
     FertiliserManuresModule,
     CropTypeLinkingsModule,
     MannerClimateModule,
-    MannerApplicationMethodModule,   
+    MannerApplicationMethodModule,
     MannerApiCropTypesModule,
     MannerCalculateNutrientsModule,
     MannerIncorporationMethodModule,
     MannerIncorporationDelayModule,
     MannerWindspeedModule,
+    MannerRainfallPostApplicationModule,
+    MannerAutumnCropNitorgenUptakeModule,
+    MannerRainTypesModule,
+    MannerTopSoilModule,
+    MannerMoistureTypesModule
   ],
   providers: [
     AzureAuthService,

@@ -5,21 +5,18 @@ import { IntegerType } from 'typeorm';
 
 
 @ApiTags('Manner incorporation-delays')
-@Controller('incorporation-delays')
+@Controller('vendors/manner/incorporation-delays')
 @ApiSecurity('Bearer')
 export class MannerIncorporationDelayController {
   constructor(private readonly service: MannerIncorporationDelayService) {}
 
-  @Get('/by-incorp-method/:methodId')
+  @Get()
   @ApiOperation({
-    summary: 'Get list of Incorporation Delay by Incorporation Id',
+    summary: 'Retrieve all incorporation delays',
   })
-  async getIncorporationDelayByIncorporationId(
-    @Param('methodId') appId: number,
-    @Req() req: Request,
-  ) {
-    const endpoint = req.url;
-    return await this.service.getData(endpoint);
+  async getAllIncorporationDelays(@Req() req: Request) {
+    const url = req.url.split('/manner')[1];
+    return await this.service.getData(url);
   }
 
   @Get(':id')
@@ -30,7 +27,37 @@ export class MannerIncorporationDelayController {
     @Param('id', ParseIntPipe) id: number,
     @Req() req: Request,
   ) {
-    const url = req.url;
+    const url = req.url.split('/manner')[1];
     return await this.service.getData(url);
   }
+  @Get('/by-incorp-method/:methodId')
+  @ApiOperation({
+    summary: 'Retrieve incorporation delays by incorporation method ID ',
+  })
+  async getIncorporationDelayByIncorporationId(
+    @Param('methodId') methodId: number,
+    @Req() req: Request,
+  ) {
+    const endpoint = req.url.split('/manner')[1];
+    return await this.service.getData(endpoint);
+  }
+
+  // @Get('/by-applicable-for')
+  // @ApiOperation({
+  //   summary: 'Retrieve incorporation delays by Applicable For',
+  // })
+  // @ApiQuery({
+  //   name: 'applicableFor',
+  //   description:
+  //     'Filter by ApplicableFor (L for Liquid, S for Solid, P for Poultry, NULL for N/A or Not Incorporated)',
+  //   required: true,
+  // })
+  // async getIncorporationDelayByApplicationFor(
+  //   @Query('applicableFor') applicableFor: string, // Ensure this is a string
+  //   @Req() req: Request,
+  // ) {
+  //   const endpoint = req.url.split('/manner')[1];
+  //   console.log('endpoint', endpoint);
+  //   return await this.service.getData(endpoint);
+  // }
 }

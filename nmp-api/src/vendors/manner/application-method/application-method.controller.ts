@@ -4,7 +4,7 @@ import { ApiOperation, ApiQuery, ApiSecurity, ApiTags } from '@nestjs/swagger';
 
 
 @ApiTags('Manner application-methods')
-@Controller('application-methods')
+@Controller('vendors/manner/application-methods')
 @ApiSecurity('Bearer')
 export class MannerApplicationMethodController {
   constructor(private readonly service: MannerApplicationMethodService) {}
@@ -28,7 +28,7 @@ export class MannerApplicationMethodController {
     @Query('fieldType', new ParseIntPipe({ optional: true })) fieldType: Number,
     @Req() req: Request,
   ) {
-    const endpoint = req.url;
+    const endpoint = req.url.split('/manner')[1];
     return await this.service.getData(endpoint);
   }
 
@@ -40,7 +40,7 @@ export class MannerApplicationMethodController {
     @Param('id', ParseIntPipe) id: number,
     @Req() req: Request,
   ) {
-    const url = req.url;
+    const url = req.url.split('/manner')[1];
     return await this.service.getData(url);
   }
 }

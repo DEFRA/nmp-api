@@ -5,32 +5,41 @@ import { IntegerType } from 'typeorm';
 
 
 @ApiTags('Manner incorporation-methods')
-@Controller('incorporation-methods')
+@Controller('vendors/manner/incorporation-methods')
 @ApiSecurity('Bearer')
 export class MannerIncorporationMethodController {
   constructor(private readonly service: MannerIncorporationMethodService) {}
 
-  @Get('/by-app-method/:appId')
+  @Get()
   @ApiOperation({
-    summary: 'Get list of Incorporation Methods by Application Id',
+    summary: 'Retrieve all incorporation methods',
   })
-  async getIncorporationMethodByAppId(
-    @Param('appId') appId: number,
-    @Req() req: Request,
-  ) {
-    const endpoint = req.url;
+  async getAllIncorporationMethod(@Req() req: Request) {
+    const endpoint = req.url.split('/manner')[1];
     return await this.service.getData(endpoint);
   }
 
   @Get(':id')
   @ApiOperation({
-    summary: 'Retrieve incorporation method by ID',
+    summary: 'Retrieve incorporation method by Id',
   })
   async getIncorporationMethodById(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') appId: number,
     @Req() req: Request,
   ) {
-    const url = req.url;
+    const endpoint = req.url.split('/manner')[1];
+    return await this.service.getData(endpoint);
+  }
+
+  @Get('/by-app-method/:methodId')
+  @ApiOperation({
+    summary: 'Retrieve incorporation method by ID',
+  })
+  async getIncorporationMethodByMethodId(
+    @Param('methodId', ParseIntPipe) id: number,
+    @Req() req: Request,
+  ) {
+    const url = req.url.split('/manner')[1];
     return await this.service.getData(url);
   }
 }

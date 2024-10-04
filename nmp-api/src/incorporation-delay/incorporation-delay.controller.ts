@@ -33,19 +33,19 @@ export class IncorporationDelaysController {
     return { IncorporationDelays: delays };
   }
 
-  // @Get(':id')
-  // @ApiOperation({
-  //   summary: 'Get Incorporation Delay by ID',
-  // })
-  // @ApiParam({ name: 'id', description: 'Incorporation Delay ID' })
-  // async getIncorporationDelayById(@Param('id', ParseIntPipe) id: number) {
-  //   const { records } = await this.incorporationDelaysService.getById(id);
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Get Incorporation Delay by ID',
+  })
+  @ApiParam({ name: 'id', description: 'Incorporation Delay ID' })
+  async getIncorporationDelayById(@Param('id', ParseIntPipe) id: number) {
+    const { records } = await this.incorporationDelaysService.getById(id);
 
-  //   if (!records) {
-  //     throw new NotFoundException(
-  //       `Incorporation Delay with ID ${id} not found`,
-  //     );
-  //   }
-  //   return { IncorporationDelay: records };
-  // }
+    if (!records) {
+      throw new NotFoundException(
+        `Incorporation Delay with ID ${id} not found`,
+      );
+    }
+    return { IncorporationDelay: records };
+  }
 }

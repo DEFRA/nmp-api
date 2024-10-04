@@ -3,7 +3,7 @@ import { MannerApiCropTypesService } from './crop-types.service';
 import { ApiOperation, ApiSecurity, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Manner crop-types')
-@Controller('crop-types')
+@Controller('vendors/manner/crop-types')
 @ApiSecurity('Bearer')
 export class MannerApiCropTypesController {
   constructor(private readonly service: MannerApiCropTypesService) {}
@@ -11,8 +11,8 @@ export class MannerApiCropTypesController {
   @Get()
   @ApiOperation({ summary: 'Retrieve all croptypes' })
   async getAllCropTypes(@Req() req: Request) {
-    const auth=req.headers['authorization'];
-    const endpoint = req.url;
+    const auth = req.headers['authorization'];
+    const endpoint = req.url.split('/manner')[1];
     return await this.service.getData(endpoint);
   }
 
@@ -26,7 +26,7 @@ export class MannerApiCropTypesController {
   ) {
     const userId = req['userId'];
 
-    const url = req.url;
+    const url = req.url.split('/manner')[1];
     return await this.service.getData(url);
   }
 }

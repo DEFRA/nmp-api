@@ -5,7 +5,7 @@ import { CreateManureApplicationDto } from './dto/calculate-nutrients.dto';
 import { CalculateSnsIndexRequest } from '@src/vendors/rb209/measurement/dto/measurement.dto';
 
 @ApiTags('Manner calculate-nutrients ')
-@Controller('calculate-nutrients')
+@Controller('vendors/manner/calculate-nutrients')
 @ApiSecurity('Bearer')
 export class MannerCalculateNutrientsController {
   constructor(private readonly service: MannerCalculateNutrientsService) {}
@@ -19,7 +19,7 @@ export class MannerCalculateNutrientsController {
     @Body() body: CreateManureApplicationDto,
     @Req() req: Request,
   ) {
-    const url = req.url;
+    const url = req.url.split('/manner')[1];
     return await this.service.postData(url, body);
   }
 }

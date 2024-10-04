@@ -3,7 +3,7 @@ import { MannerClimateService } from './climate.service';
 import { ApiOperation, ApiParam, ApiSecurity, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Manner Climate')
-@Controller('/climates')
+@Controller('vendors/manner/climates')
 @ApiSecurity('Bearer')
 export class MannerClimateController {
   constructor(private readonly service: MannerClimateService) {}
@@ -14,7 +14,7 @@ export class MannerClimateController {
     @Param('postcode') postcode: string,
     @Req() req: Request,
   ) {
-    const endpoint = req.url;
+    const endpoint = req.url.split('/manner')[1];
     return await this.service.getData(endpoint);
   }
 
@@ -24,7 +24,7 @@ export class MannerClimateController {
     @Param('postcode') postcode: string,
     @Req() req: Request,
   ) {
-    const endpoint = req.url;
+    const endpoint = req.url.split('/manner')[1];
     return await this.service.getData(endpoint);
   }
 }

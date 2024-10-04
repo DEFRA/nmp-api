@@ -45,21 +45,21 @@ export class IncorporationMethodController {
     return { IncorporationMethods: data };
   }
 
-  // @Get(':id')
-  // @ApiOperation({
-  //   summary: 'Get Incorporation Method by ID',
-  // })
-  // @ApiParam({
-  //   name: 'id',
-  //   description: 'Incorporation Method ID',
-  // })
-  // async getIncorporationMethodById(@Param('id', ParseIntPipe) id: number) {
-  //   const { records } = await this.incorporationMethodService.getById(id);
-  //   if (!records) {
-  //     throw new NotFoundException(
-  //       `Incorporation Method with ID ${id} not found`,
-  //     );
-  //   }
-  //   return { IncorporationMethod: records };
-  // }
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Get Incorporation Method by ID',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Incorporation Method ID',
+  })
+  async getIncorporationMethodById(@Param('id', ParseIntPipe) id: number) {
+    const { records } = await this.incorporationMethodService.getById(id);
+    if (!records) {
+      throw new NotFoundException(
+        `Incorporation Method with ID ${id} not found`,
+      );
+    }
+    return { IncorporationMethod: records };
+  }
 }
