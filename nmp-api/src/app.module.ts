@@ -53,6 +53,15 @@ import { MannerClimateModule } from './vendors/manner/climate/climate.module';
 import { MannerApplicationMethodModule } from './vendors/manner/application-method/application-method.module';
 import { MannerApiCropTypesModule } from './vendors/manner/crop-types/crop-types.module';
 import { MannerCalculateNutrientsModule } from './vendors/manner/calculate-nutrients/calculate-nutrients.module';
+import { MannerIncorporationMethodModule } from './vendors/manner/incorporation-method/incorporation-method.module';
+import { MannerIncorporationDelayModule } from './vendors/manner/incorporation-delay/incorporation-delay.module';
+import { MannerWindspeedModule } from './vendors/manner/windspeed/windspeed.module';
+import { MannerRainfallPostApplicationService } from './vendors/manner/rainfall-post-application/rainfall-post-application.service';
+import { MannerRainfallPostApplicationModule } from './vendors/manner/rainfall-post-application/rainfall-post-application.module';
+import { MannerAutumnCropNitorgenUptakeModule } from './vendors/manner/autumn-crop-nitorgen-uptake/autumn-crop-nitorgen-uptake.module';
+import { MannerRainTypesModule } from './vendors/manner/rain-types/rain-types.module';
+import { MannerTopSoilModule } from './vendors/manner/top-soil/top-soil.module';
+import { MannerMoistureTypesModule } from './vendors/manner/moisture-types/moisture-types.module';
 
 
 @Module({
@@ -111,6 +120,14 @@ import { MannerCalculateNutrientsModule } from './vendors/manner/calculate-nutri
     MannerApplicationMethodModule,
     MannerApiCropTypesModule,
     MannerCalculateNutrientsModule,
+    MannerIncorporationMethodModule,
+    MannerIncorporationDelayModule,
+    MannerWindspeedModule,
+    MannerRainfallPostApplicationModule,
+    MannerAutumnCropNitorgenUptakeModule,
+    MannerRainTypesModule,
+    MannerTopSoilModule,
+    MannerMoistureTypesModule
   ],
   providers: [
     AzureAuthService,
