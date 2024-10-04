@@ -87,7 +87,9 @@ export class ResponseInterceptor implements NestInterceptor {
         ? StaticStrings.INFO_RESPONSE_STATUS_SUCCESS
         : StaticStrings.ERR_RECORDS_NOT_FOUND,
       status: true,
-      data: this.getValidatedAndFormattedData(data),
+      data: data.data
+        ? this.getValidatedAndFormattedData(data.data)
+        : this.getValidatedAndFormattedData(data),
       statusCode: HttpStatus.OK,
       timestamp: new Date().toISOString(),
       error: null,
