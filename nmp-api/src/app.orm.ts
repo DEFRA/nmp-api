@@ -84,6 +84,7 @@ if (process.env.NODE_ENV === 'production') {
       ManureTypeCategoryEntity,
       InOrganicManureDurationEntity,
       FertiliserManuresEntity,
+      SnsAnalysesEntity
     ],
   };
 } else if (process.env.NODE_ENV === 'hosting') {
