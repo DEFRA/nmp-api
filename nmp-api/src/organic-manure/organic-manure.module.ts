@@ -16,6 +16,7 @@ import { RB209ArableService } from '@src/vendors/rb209/arable/arable.service';
 import { RB209RecommendationService } from '@src/vendors/rb209/recommendation/recommendation.service';
 import { RecommendationEntity } from '@db/entity/recommendation.entity';
 import { RB209FieldService } from '@src/vendors/rb209/field/field.service';
+import { RecommendationCommentEntity } from '@db/entity/recommendation-comment.entity';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { RB209FieldService } from '@src/vendors/rb209/field/field.service';
       CropTypeLinkingEntity,
       SoilAnalysisEntity,
       RecommendationEntity,
+      RecommendationCommentEntity,
     ]),
   ],
   controllers: [OrganicManureController],
