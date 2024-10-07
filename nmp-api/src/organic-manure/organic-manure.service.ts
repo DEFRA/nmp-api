@@ -31,6 +31,7 @@ import { RB209ArableService } from '@src/vendors/rb209/arable/arable.service';
 import { RB209RecommendationService } from '@src/vendors/rb209/recommendation/recommendation.service';
 import { RecommendationEntity } from '@db/entity/recommendation.entity';
 import { RB209FieldService } from '@src/vendors/rb209/field/field.service';
+import { RecommendationCommentEntity } from '@db/entity/recommendation-comment.entity';
 
 @Injectable()
 export class OrganicManureService extends BaseService<
@@ -63,6 +64,8 @@ export class OrganicManureService extends BaseService<
     @InjectRepository(RecommendationEntity)
     protected readonly RecommendationRepository: Repository<RecommendationEntity>,
     protected readonly RB209FieldService: RB209FieldService,
+    @InjectRepository(RecommendationCommentEntity)
+    protected readonly recommendationCommentEntity: Repository<RecommendationCommentEntity>,
   ) {
     super(repository, entityManager);
   }
@@ -361,15 +364,17 @@ export class OrganicManureService extends BaseService<
       manureApplications,
     };
   }
-   async checkIfManagementPeriodExistsInOrganicManure(organicManure: any): Promise<boolean> {
+  async checkIfManagementPeriodExistsInOrganicManure(
+    organicManure: any,
+  ): Promise<boolean> {
     const managementPeriodExists = await this.repository.findOne({
       where: { ManagementPeriodID: organicManure.ManagementPeriodID },
     });
 
-    if(managementPeriodExists){
-      return true
-    } else{
-      return false
+    if (managementPeriodExists) {
+      return true;
+    } else {
+      return false;
     }
   }
 
@@ -393,9 +398,10 @@ export class OrganicManureService extends BaseService<
               'NH4N + NO3N + UricAcid must be less than or equal to TotalN',
             );
           }
-         const newOrganicManure = await this.checkIfManagementPeriodExistsInOrganicManure(
-             OrganicManure,
-           );
+          const newOrganicManure =
+            await this.checkIfManagementPeriodExistsInOrganicManure(
+              OrganicManure,
+            );
           // Convert the Date object to YYYY-MM-DD string format
           const applicationDateObj = new Date(OrganicManure.ApplicationDate);
 
@@ -434,74 +440,73 @@ export class OrganicManureService extends BaseService<
             OrganicManure.ManagementPeriodID,
             manureTypeData,
           );
-          let mannerOutputReq; 
-        if (newOrganicManure == true) {
-          mannerOutputReq = await this.buildMannerOutputReq(
-            farmData,
-            fieldData,
-            cropTypeLinkingData,
-            organicManureData,
-            manureApplications,
-          );
-        } else if (newOrganicManure == false) {
-          mannerOutputReq = {
-            runType: farmData.EnglishRules ? 3 : 4,
-            FarmID: organicManureData.FarmID,
-            postcode: farmData.Postcode.split(' ')[0],
-            countryID: farmData.EnglishRules ? 1 : 2,
-            field: {
-              fieldID: fieldData.ID,
-              fieldName: fieldData.Name,
-              MannerCropTypeID: cropTypeLinkingData.MannerCropTypeID,
-              topsoilID: fieldData.TopSoilID,
-              subsoilID: fieldData.SubSoilID,
-              isInNVZ: fieldData.IsWithinNVZ,
-            },
-            manureApplications: [
-              {
-                manureDetails: {
-                  manureID: OrganicManure.ManureTypeID,
-                  name: manureTypeData.Name,
-                  isLiquid: manureTypeData.IsLiquid,
-                  dryMatter: OrganicManure.DryMatterPercent,
-                  totalN: OrganicManure?.N,
-                  nH4N: OrganicManure.NH4N,
-                  uric: OrganicManure.UricAcid,
-                  nO3N: OrganicManure.NO3N,
-                  p2O5: OrganicManure.P2O5,
-                  sO3: OrganicManure.SO3,
-                  k2O: OrganicManure.K2O,
-                  mgO: OrganicManure.MgO,
-                },
-                applicationDate: applicationDate,
-                applicationRate: {
-                  value: OrganicManure.ApplicationRate,
-                  unit: 'kg/hectare',
-                },
-                applicationMethodID: OrganicManure.ApplicationMethodID,
-                incorporationMethodID: OrganicManure.IncorporationMethodID,
-                incorporationDelayID: OrganicManure.IncorporationDelayID,
-                autumnCropNitrogenUptake: {
-                  value: OrganicManure.AutumnCropNitrogenUptake,
-                  unit: 'string',
-                },
-                endOfDrainageDate: endOfDrainageDate,
-                rainfallPostApplication: OrganicManure.Rainfall,
-                cropNUptake: OrganicManure.AutumnCropNitrogenUptake,
-                windspeedID: OrganicManure.WindspeedID,
-                rainTypeID: OrganicManure.RainfallWithinSixHoursID,
-                topsoilMoistureID: OrganicManure.MoistureID,
+          let mannerOutputReq;
+          if (newOrganicManure == true) {
+            mannerOutputReq = await this.buildMannerOutputReq(
+              farmData,
+              fieldData,
+              cropTypeLinkingData,
+              organicManureData,
+              manureApplications,
+            );
+          } else if (newOrganicManure == false) {
+            mannerOutputReq = {
+              runType: farmData.EnglishRules ? 3 : 4,
+              FarmID: organicManureData.FarmID,
+              postcode: farmData.Postcode.split(' ')[0],
+              countryID: farmData.EnglishRules ? 1 : 2,
+              field: {
+                fieldID: fieldData.ID,
+                fieldName: fieldData.Name,
+                MannerCropTypeID: cropTypeLinkingData.MannerCropTypeID,
+                topsoilID: fieldData.TopSoilID,
+                subsoilID: fieldData.SubSoilID,
+                isInNVZ: fieldData.IsWithinNVZ,
               },
-            ],
-          };
-        }
+              manureApplications: [
+                {
+                  manureDetails: {
+                    manureID: OrganicManure.ManureTypeID,
+                    name: manureTypeData.Name,
+                    isLiquid: manureTypeData.IsLiquid,
+                    dryMatter: OrganicManure.DryMatterPercent,
+                    totalN: OrganicManure?.N,
+                    nH4N: OrganicManure.NH4N,
+                    uric: OrganicManure.UricAcid,
+                    nO3N: OrganicManure.NO3N,
+                    p2O5: OrganicManure.P2O5,
+                    sO3: OrganicManure.SO3,
+                    k2O: OrganicManure.K2O,
+                    mgO: OrganicManure.MgO,
+                  },
+                  applicationDate: applicationDate,
+                  applicationRate: {
+                    value: OrganicManure.ApplicationRate,
+                    unit: 'kg/hectare',
+                  },
+                  applicationMethodID: OrganicManure.ApplicationMethodID,
+                  incorporationMethodID: OrganicManure.IncorporationMethodID,
+                  incorporationDelayID: OrganicManure.IncorporationDelayID,
+                  autumnCropNitrogenUptake: {
+                    value: OrganicManure.AutumnCropNitrogenUptake,
+                    unit: 'string',
+                  },
+                  endOfDrainageDate: endOfDrainageDate,
+                  rainfallPostApplication: OrganicManure.Rainfall,
+                  cropNUptake: OrganicManure.AutumnCropNitrogenUptake,
+                  windspeedID: OrganicManure.WindspeedID,
+                  rainTypeID: OrganicManure.RainfallWithinSixHoursID,
+                  topsoilMoistureID: OrganicManure.MoistureID,
+                },
+              ],
+            };
+          }
           // Call the new helper function to create mannerOutputReq
-            const mannerOutputs =
-              await this.MannerCalculateNutrientsService.postData(
-                '/calculate-nutrients',
-                mannerOutputReq,
-              );
-             
+          const mannerOutputs =
+            await this.MannerCalculateNutrientsService.postData(
+              '/calculate-nutrients',
+              mannerOutputReq,
+            );
 
           const Errors = [];
           const { latestSoilAnalysis, errors: soilAnalysisErrors } =
@@ -532,6 +537,7 @@ export class OrganicManureService extends BaseService<
               'Recommendation/Recommendations',
               nutrientRecommendationnReqBody,
             );
+
           if (organicManureData.SaveDefaultForFarm) {
             farmManureTypeData = {
               FarmID: organicManureData.FarmID,
@@ -588,8 +594,10 @@ export class OrganicManureService extends BaseService<
 
             // Fetch the nutrient name for the nutrientId
             const nutrientData = await this.RB209FieldService.getData(
+              // one time request
               `Field/Nutrient/${nutrientId}`,
             );
+
             const nutrientName = nutrientData?.nutrient.toLowerCase();
 
             // Update recommendation data based on nutrient name
@@ -629,8 +637,16 @@ export class OrganicManureService extends BaseService<
               updateRecommendationData,
               transactionalManager,
             );
+         
+          const arableNotes = nutrientRecommendationsData.arableNotes;
+        
+          await this.saveOrUpdateArableNotes(
+            arableNotes,
+            updatedData,
+            transactionalManager,
+            userId,
+          );
         }
-
         if (farmManureTypeData) {
           const existingFarmManureType =
             await this.farmManureTypeRepository.findOne({
@@ -711,6 +727,78 @@ export class OrganicManureService extends BaseService<
         RecommendationEntity,
         newRecommendation,
       );
+    }
+  }
+
+  async saveOrUpdateArableNotes(
+    arableNotes: { nutrientId: number; note: string; sequenceId: number }[],
+    updatedData: any,
+    transactionalManager: EntityManager,
+    userId,
+  ): Promise<void> {
+    const RecommendationComments: RecommendationCommentEntity[] = [];
+
+    // Group notes by nutrientId and concatenate them
+    const notesByNutrient = arableNotes?.reduce(
+      (acc, note) => {
+        if (!acc[note.nutrientId]) {
+          acc[note.nutrientId] = [];
+        }
+        acc[note.nutrientId].push(note.note); // Group and accumulate notes by nutrientId
+        return acc;
+      },
+      {} as { [key: number]: string[] },
+    );
+
+    // Fetch existing comments by RecommendationID
+    const existingComments = await transactionalManager.find(
+      RecommendationCommentEntity,
+      {
+        where: { RecommendationID: updatedData.ID },
+      },
+    );
+
+    const processedNutrientIds = new Set<number>(); // Track processed nutrient IDs
+
+    // Loop through arable notes and either update or create new comments
+    for (const nutrientId in notesByNutrient) {
+      const concatenatedNote = notesByNutrient[nutrientId].join(' '); // Concatenate notes for same nutrient
+
+      const existingComment = existingComments.find(
+        (comment) => comment.Nutrient === parseInt(nutrientId),
+      );
+
+      if (existingComment) {
+        // Update existing comment if nutrientId matches
+        existingComment.Comment = concatenatedNote;
+        await transactionalManager.save(existingComment); // Save the updated comment
+      } else {
+        // Create a new comment for the nutrientId
+        const newComment = this.recommendationCommentEntity.create({
+          Nutrient: parseInt(nutrientId),
+          Comment: concatenatedNote, // Store concatenated note
+          RecommendationID: updatedData.ID,
+          ModifiedOn: new Date(),
+          CreatedOn: new Date(),
+          CreatedByID: userId,
+          ModifiedByID: userId,
+        });
+        RecommendationComments.push(newComment); // Add new comment to the array
+      }
+
+      processedNutrientIds.add(parseInt(nutrientId)); // Mark nutrientId as processed
+    }
+
+    // Remove comments whose nutrientIds are no longer present in arableNotes
+    for (const existingComment of existingComments) {
+      if (!processedNutrientIds.has(existingComment.Nutrient)) {
+        await transactionalManager.remove(existingComment); // Remove old comments
+      }
+    }
+
+    // Save all new recommendation comments if any were created
+    if (RecommendationComments.length > 0) {
+      await transactionalManager.save(RecommendationComments);
     }
   }
 

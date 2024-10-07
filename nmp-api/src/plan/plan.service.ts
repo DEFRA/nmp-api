@@ -362,17 +362,33 @@ export class PlanService extends BaseService<
             }),
           );
           const RecommendationComments: RecommendationCommentEntity[] = [];
-          for (const adviceNote of nutrientRecommendationsData.adviceNotes) {
-            const savedRecommendationComment = await transactionalManager.save(
-              this.recommendationCommentEntity.create({
-                Nutrient: adviceNote.nutrientId,
-                Comment: adviceNote.note,
-                RecommendationID: savedRecommendation.ID,
-                CreatedOn: savedCrop.CreatedOn,
-                CreatedByID: savedCrop.CreatedByID,
-              }),
+          const notesByNutrient =
+            nutrientRecommendationsData.adviceNotes.reduce(
+              (acc, adviceNote) => {
+                if (!acc[adviceNote.nutrientId]) {
+                  acc[adviceNote.nutrientId] = [];
+                }
+                acc[adviceNote.nutrientId].push(adviceNote.note); // Group notes by nutrientId
+                return acc;
+              },
+              {} as { [key: number]: string[] },
             );
-            RecommendationComments.push(savedRecommendationComment);
+          for (const nutrientId in notesByNutrient) {
+            const concatenatedNote = notesByNutrient[nutrientId].join(' '); // Concatenate notes for the same nutrientId
+
+            // Create a new recommendation comment with the concatenated notes
+            const newComment = this.recommendationCommentEntity.create({
+              Nutrient: parseInt(nutrientId),
+              Comment: concatenatedNote, // Store concatenated notes
+              RecommendationID: savedRecommendation.ID,
+              CreatedOn: savedCrop.CreatedOn,
+              CreatedByID: savedCrop.CreatedByID,
+            });
+
+            const savedRecommendationComment =
+              await transactionalManager.save(newComment);
+
+            RecommendationComments.push(savedRecommendationComment); // Push saved comment
           }
           Recommendations.push({
             Recommendation: savedRecommendation,
