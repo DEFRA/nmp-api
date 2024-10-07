@@ -33,6 +33,7 @@ import { CropTypeLinkingEntity } from '@db/entity/crop-type-linking.entity';
 import { ManureTypeCategoryEntity } from '@db/entity/manure-type-category.entity';
 import { InOrganicManureDurationEntity } from '@db/entity/inorganic-manure-duration.entity';
 import { FertiliserManuresEntity } from '@db/entity/fertiliser-manures.entity';
+import SnsAnalysesEntity from '@db/entity/sns-analysis.entity';
 
 dotven.config();
 
@@ -143,6 +144,7 @@ if (process.env.NODE_ENV === 'production') {
       ManureTypeCategoryEntity,
       InOrganicManureDurationEntity,
       FertiliserManuresEntity,
+      SnsAnalysesEntity
     ],
     synchronize: false,
     logging: true,

@@ -15,6 +15,7 @@ import SoilAnalysisEntity from './soil-analysis.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SubSoilEntity } from './sub-soil.entity';
 import { TopSoilEntity } from './top-soil.entity';
+import SnsAnalysesEntity from './sns-analysis.entity';
 
 @Entity({ name: 'Fields' })
 @Index('UC_Fields_FarmName', ['Name', 'FarmID'], { unique: true })
@@ -124,4 +125,7 @@ export default class FieldEntity {
 
   @OneToMany(() => SoilAnalysisEntity, (SoilAnalysis) => SoilAnalysis.Field)
   SoilAnalyses: SoilAnalysisEntity[];
+
+  @OneToMany(() => SnsAnalysesEntity, (snsAnalysis) => snsAnalysis.Field)
+  SnsAnalyses: SnsAnalysesEntity[];
 }

@@ -16,6 +16,7 @@ import { RecommendationCommentEntity } from './recommendation-comment.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { OrganicManureEntity } from './organic-manure.entity';
 import { FertiliserManuresEntity } from './fertiliser-manures.entity';
+import SnsAnalysesEntity from './sns-analysis.entity';
 
 @Entity({ name: 'Users' })
 export default class UserEntity {
@@ -76,6 +77,18 @@ export default class UserEntity {
     (soilAnalysis) => soilAnalysis.ModifiedByUser,
   )
   ModifiedSoilAnalyses: SoilAnalysisEntity[];
+
+  @OneToMany(
+    () => SnsAnalysesEntity,
+    (snsAnalysis) => snsAnalysis.CreatedByUser,
+  )
+  CreatedSnsAnalyses: SnsAnalysesEntity[]; // Added relation
+
+  @OneToMany(
+    () => SnsAnalysesEntity,
+    (snsAnalysis) => snsAnalysis.ModifiedByUser,
+  )
+  ModifiedSnsAnalyses: SnsAnalysesEntity[];
 
   @OneToMany(
     () => ManagementPeriodEntity,
