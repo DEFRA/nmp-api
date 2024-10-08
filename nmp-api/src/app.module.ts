@@ -62,6 +62,7 @@ import { MannerAutumnCropNitorgenUptakeModule } from './vendors/manner/autumn-cr
 import { MannerRainTypesModule } from './vendors/manner/rain-types/rain-types.module';
 import { MannerTopSoilModule } from './vendors/manner/top-soil/top-soil.module';
 import { MannerMoistureTypesModule } from './vendors/manner/moisture-types/moisture-types.module';
+import { MannerManureGroupModule } from './vendors/manner/manure-group/manure-group.module';
 
 
 @Module({
@@ -127,7 +128,8 @@ import { MannerMoistureTypesModule } from './vendors/manner/moisture-types/moist
     MannerAutumnCropNitorgenUptakeModule,
     MannerRainTypesModule,
     MannerTopSoilModule,
-    MannerMoistureTypesModule
+    MannerMoistureTypesModule,
+    MannerManureGroupModule
   ],
   providers: [
     AzureAuthService,
