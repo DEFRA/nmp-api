@@ -64,6 +64,7 @@ import { MannerTopSoilModule } from './vendors/manner/top-soil/top-soil.module';
 import { MannerMoistureTypesModule } from './vendors/manner/moisture-types/moisture-types.module';
 import { MannerManureGroupModule } from './vendors/manner/manure-group/manure-group.module';
 import { MannerManureTypesModule } from './vendors/manner/manure-types/manure-types.module';
+import { SecondCropLinkingsModule } from './second-crop-linkings/second-crop-linkings.module';
 
 
 @Module({
@@ -131,7 +132,8 @@ import { MannerManureTypesModule } from './vendors/manner/manure-types/manure-ty
     MannerTopSoilModule,
     MannerMoistureTypesModule,
     MannerManureGroupModule,
-    MannerManureTypesModule
+    MannerManureTypesModule,
+    SecondCropLinkingsModule
   ],
   providers: [
     AzureAuthService,
