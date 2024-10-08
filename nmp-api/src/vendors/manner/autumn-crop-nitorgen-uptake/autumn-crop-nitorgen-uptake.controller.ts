@@ -22,7 +22,6 @@ export class MannerAutumnCropNitorgenUptakeController {
     @Req() req: Request,
   ) {
     const url = req.url.split('/manner')[1];
-    console.log('url', url);
     return await this.service.postData(url, body);
   }
 }
