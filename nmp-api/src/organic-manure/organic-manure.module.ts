@@ -17,6 +17,7 @@ import { RB209RecommendationService } from '@src/vendors/rb209/recommendation/re
 import { RecommendationEntity } from '@db/entity/recommendation.entity';
 import { RB209FieldService } from '@src/vendors/rb209/field/field.service';
 import { RecommendationCommentEntity } from '@db/entity/recommendation-comment.entity';
+import { MannerManureTypesService } from '@src/vendors/manner/manure-types/manure-types.service';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { RecommendationCommentEntity } from '@db/entity/recommendation-comment.e
     RB209ArableService,
     RB209RecommendationService,
     RB209FieldService,
+    MannerManureTypesService
   ],
   exports: [TypeOrmModule],
 })

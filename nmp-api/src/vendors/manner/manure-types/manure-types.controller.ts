@@ -63,7 +63,7 @@ export class MannerManureTypesController {
 
   @Get(':id')
   @ApiOperation({
-    summary: 'Retrieve manure group by ID',
+    summary: 'Retrieve manure types by ID',
   })
   async getManureTypesById(@Param('id') appId: number, @Req() req: Request) {
     const endpoint = req.url.split('/manner')[1];
