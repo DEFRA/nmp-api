@@ -380,12 +380,11 @@ export class OrganicManureService extends BaseService<
     }
   }
 
-  
-
   async createOrganicManuresWithFarmManureType(
     body: CreateOrganicManuresWithFarmManureTypeDto,
     userId: number,
   ) {
+    console.log('npmbody', body);
     return await this.entityManager.transaction(
       async (transactionalManager) => {
         let savedFarmManureType: FarmManureTypeEntity | undefined;
@@ -418,10 +417,11 @@ export class OrganicManureService extends BaseService<
             .toISOString()
             .split('T')[0]
 
-          const manureTypeData = await this.manureTypeRepository.findOneBy({
-            ID: OrganicManure.ManureTypeID,
-          });
-       
+          const mannerManureTypeData = await this.MannerManureTypesService.getData(
+            `/manure-types/${OrganicManure.ManureTypeID}`,
+          );
+          
+         const manureTypeData =mannerManureTypeData.data;
           const managementPeriodData =
             await this.managementPeriodRepository.findOneBy({
               ID: OrganicManure.ManagementPeriodID,
