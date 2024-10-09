@@ -32,6 +32,7 @@ import { RB209RecommendationService } from '@src/vendors/rb209/recommendation/re
 import { RecommendationEntity } from '@db/entity/recommendation.entity';
 import { RB209FieldService } from '@src/vendors/rb209/field/field.service';
 import { RecommendationCommentEntity } from '@db/entity/recommendation-comment.entity';
+import { MannerManureTypesService } from '@src/vendors/manner/manure-types/manure-types.service';
 
 @Injectable()
 export class OrganicManureService extends BaseService<
@@ -66,6 +67,7 @@ export class OrganicManureService extends BaseService<
     protected readonly RB209FieldService: RB209FieldService,
     @InjectRepository(RecommendationCommentEntity)
     protected readonly recommendationCommentEntity: Repository<RecommendationCommentEntity>,
+    protected readonly MannerManureTypesService: MannerManureTypesService,
   ) {
     super(repository, entityManager);
   }
@@ -382,6 +384,7 @@ export class OrganicManureService extends BaseService<
     body: CreateOrganicManuresWithFarmManureTypeDto,
     userId: number,
   ) {
+    console.log('npmbody', body);
     return await this.entityManager.transaction(
       async (transactionalManager) => {
         let savedFarmManureType: FarmManureTypeEntity | undefined;
@@ -412,11 +415,13 @@ export class OrganicManureService extends BaseService<
           const endOfDrainageDateObj = new Date(OrganicManure.EndOfDrain);
           const endOfDrainageDate = endOfDrainageDateObj
             .toISOString()
-            .split('T')[0];
+            .split('T')[0]
 
-          const manureTypeData = await this.manureTypeRepository.findOneBy({
-            ID: OrganicManure.ManureTypeID,
-          });
+          const mannerManureTypeData = await this.MannerManureTypesService.getData(
+            `/manure-types/${OrganicManure.ManureTypeID}`,
+          );
+          
+         const manureTypeData =mannerManureTypeData.data;
           const managementPeriodData =
             await this.managementPeriodRepository.findOneBy({
               ID: OrganicManure.ManagementPeriodID,
@@ -501,6 +506,8 @@ export class OrganicManureService extends BaseService<
               ],
             };
           }
+
+         
           // Call the new helper function to create mannerOutputReq
           const mannerOutputs =
             await this.MannerCalculateNutrientsService.postData(
@@ -637,9 +644,9 @@ export class OrganicManureService extends BaseService<
               updateRecommendationData,
               transactionalManager,
             );
-         
+
           const arableNotes = nutrientRecommendationsData.arableNotes;
-        
+
           await this.saveOrUpdateArableNotes(
             arableNotes,
             updatedData,
