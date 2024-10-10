@@ -9,7 +9,7 @@ export class CreateFieldWithSoilAnalysisAndCropsDto {
   @ApiProperty()
   Field: FieldEntity;
 
-  @ApiProperty()
+  @ApiProperty({ nullable: true })
   SoilAnalysis: SoilAnalysisEntity;
 
   @ApiPropertyOptional({ nullable: true }) // Optional property that can be null
