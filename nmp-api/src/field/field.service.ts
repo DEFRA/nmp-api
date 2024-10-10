@@ -114,13 +114,18 @@ export class FieldService extends BaseService<
             CreatedByID: userId,
           }),
         );
-        const SoilAnalysis = await transactionalManager.save(
-          this.soilAnalysisRepository.create({
-            ...body.SoilAnalysis,
-            FieldID: Field.ID,
-            CreatedByID: userId,
-          }),
-        );
+        
+         let SoilAnalysis=null
+        if (body.SoilAnalysis){
+          SoilAnalysis = await transactionalManager.save(
+            this.soilAnalysisRepository.create({
+              ...body.SoilAnalysis,
+              FieldID: Field.ID,
+              CreatedByID: userId,
+            }),
+          );
+
+        }
 
         let SnsAnalysis = null;
         if (body.SnsAnalysis) {
