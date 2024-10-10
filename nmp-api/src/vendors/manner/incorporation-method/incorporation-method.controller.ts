@@ -42,4 +42,22 @@ export class MannerIncorporationMethodController {
     const url = req.url.split('/manner')[1];
     return await this.service.getData(url);
   }
+
+  @Get('/by-app-method-and-applicable-for/:methodId')
+  @ApiOperation({
+    summary: 'Retrieve incorporation method by applications method ID',
+  })
+  @ApiQuery({
+    name: 'applicableFor',
+    required: true,
+    type: String,
+    description: "Filter by ApplicableFor ('G' for Grass, 'A' for Arable and Horticulture, 'B' for Both, 'NULL' for N/A)",
+  })
+  async getIncorporationMethodByAppMethodAndApplicableFor(
+    @Param('methodId', ParseIntPipe) id: number,
+    @Req() req: Request,
+  ) {
+    const url = req.url.split('/manner')[1];
+    return await this.service.getData(url);
+  }
 }

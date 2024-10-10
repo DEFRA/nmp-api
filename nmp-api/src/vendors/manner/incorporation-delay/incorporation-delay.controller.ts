@@ -42,22 +42,22 @@ export class MannerIncorporationDelayController {
     return await this.service.getData(endpoint);
   }
 
-  // @Get('/by-applicable-for')
-  // @ApiOperation({
-  //   summary: 'Retrieve incorporation delays by Applicable For',
-  // })
-  // @ApiQuery({
-  //   name: 'applicableFor',
-  //   description:
-  //     'Filter by ApplicableFor (L for Liquid, S for Solid, P for Poultry, NULL for N/A or Not Incorporated)',
-  //   required: true,
-  // })
-  // async getIncorporationDelayByApplicationFor(
-  //   @Query('applicableFor') applicableFor: string, // Ensure this is a string
-  //   @Req() req: Request,
-  // ) {
-  //   const endpoint = req.url.split('/manner')[1];
-  //   console.log('endpoint', endpoint);
-  //   return await this.service.getData(endpoint);
-  // }
+  @Get('/by-incorp-method-and-applicable-for/:methodId')
+  @ApiOperation({
+    summary: 'Retrieve incorporation method by applications method ID',
+  })
+  @ApiQuery({
+    name: 'applicableFor',
+    required: true,
+    type: String,
+    description:
+      'Filter by ApplicableFor (L for Liquid, S for Solid, P for Poultry, NULL for N/A or Not Incorporated)',
+  })
+  async getIncorporationMethodByAppMethodAndApplicableFor(
+    @Param('methodId', ParseIntPipe) id: number,
+    @Req() req: Request,
+  ) {
+    const url = req.url.split('/manner')[1];
+    return await this.service.getData(url);
+  }
 }

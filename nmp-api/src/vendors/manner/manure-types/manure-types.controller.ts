@@ -53,7 +53,7 @@ export class MannerManureTypesController {
     countryId?: number,
     @Query('highReadilyAvailableNitrogen')
     highReadilyAvailableNitrogen?: boolean,
-    @Query('sLiquid') sLiquid?: boolean,
+    @Query('sLiquid') applicableFor?: boolean,
   ) {
     const url = req.url.split('/manner')[1];
 

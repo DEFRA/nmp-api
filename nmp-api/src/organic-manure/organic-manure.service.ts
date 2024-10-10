@@ -384,7 +384,6 @@ export class OrganicManureService extends BaseService<
     body: CreateOrganicManuresWithFarmManureTypeDto,
     userId: number,
   ) {
-    console.log('npmbody', body);
     return await this.entityManager.transaction(
       async (transactionalManager) => {
         let savedFarmManureType: FarmManureTypeEntity | undefined;
