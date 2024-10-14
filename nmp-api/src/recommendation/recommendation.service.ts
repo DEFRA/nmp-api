@@ -103,10 +103,6 @@ export class RecommendationService extends BaseService<
                     await this.MannerApplicationMethodService.getData(
                       `/application-methods/${o.ApplicationMethodID}`,
                     );
-                    console.log(
-                      'applicationMethodData',
-                      applicationMethodData,
-                    );
                   return {
                     ...o,
                     ManureTypeName: manureTypeData.data.name,
