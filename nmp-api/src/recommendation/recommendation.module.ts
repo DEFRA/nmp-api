@@ -6,6 +6,8 @@ import { RecommendationService } from './recommendation.service';
 import { RecommendationEntity } from '@db/entity/recommendation.entity';
 import { RecommendationCommentEntity } from '@db/entity/recommendation-comment.entity';
 import { OrganicManureEntity } from '@db/entity/organic-manure.entity';
+import { MannerManureTypesService } from '@src/vendors/manner/manure-types/manure-types.service';
+import { MannerApplicationMethodService } from '@src/vendors/manner/application-method/application-method.service';
 
 @Module({
   imports: [
@@ -16,7 +18,11 @@ import { OrganicManureEntity } from '@db/entity/organic-manure.entity';
     ]),
   ],
   controllers: [RecommendationController],
-  providers: [RecommendationService],
+  providers: [
+    RecommendationService,
+    MannerManureTypesService,
+    MannerApplicationMethodService
+  ],
   exports: [TypeOrmModule],
 })
 export class RecommendationModule {}
