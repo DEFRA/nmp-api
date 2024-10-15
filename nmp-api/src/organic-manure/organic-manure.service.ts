@@ -13,6 +13,7 @@ import {
   EntityManager,
   In,
   LessThanOrEqual,
+  Not,
   Repository,
 } from 'typeorm';
 import { CreateOrganicManuresWithFarmManureTypeDto } from './dto/organic-manure.dto';
@@ -306,8 +307,8 @@ export class OrganicManureService extends BaseService<
     return mulOrganicManuresData.map((manure) => ({
       manureDetails: {
         manureID: manure.ManureTypeID,
-        name: manureTypeData.Name,
-        isLiquid: manureTypeData.IsLiquid,
+        name: manureTypeData.name,
+        isLiquid: manureTypeData.isLiquid,
         dryMatter: manure.DryMatterPercent,
         totalN: manure.N,
         nH4N: manure.NH4N,
@@ -330,13 +331,12 @@ export class OrganicManureService extends BaseService<
       incorporationDelayID: manure.IncorporationDelayID,
       autumnCropNitrogenUptake: {
         value: manure.AutumnCropNitrogenUptake,
-        unit: 'string',
+        unit: 'string', //unit assign
       },
       endOfDrainageDate: new Date(manure.EndOfDrain)
         .toISOString()
         .split('T')[0],
       rainfallPostApplication: manure.Rainfall,
-      cropNUptake: manure.AutumnCropNitrogenUptake,
       windspeedID: manure.WindspeedID,
       rainTypeID: manure.RainfallWithinSixHoursID,
       topsoilMoistureID: manure.MoistureID,
@@ -352,7 +352,6 @@ export class OrganicManureService extends BaseService<
   ): Promise<any> {
     return {
       runType: farmData.EnglishRules ? 3 : 4,
-      FarmID: organicManureData.FarmID,
       postcode: farmData.Postcode.split(' ')[0],
       countryID: farmData.EnglishRules ? 1 : 2,
       field: {
@@ -414,13 +413,14 @@ export class OrganicManureService extends BaseService<
           const endOfDrainageDateObj = new Date(OrganicManure.EndOfDrain);
           const endOfDrainageDate = endOfDrainageDateObj
             .toISOString()
-            .split('T')[0]
+            .split('T')[0];
 
-          const mannerManureTypeData = await this.MannerManureTypesService.getData(
-            `/manure-types/${OrganicManure.ManureTypeID}`,
-          );
-          
-         const manureTypeData =mannerManureTypeData.data;
+          const mannerManureTypeData =
+            await this.MannerManureTypesService.getData(
+              `/manure-types/${OrganicManure.ManureTypeID}`,
+            );
+
+          const manureTypeData = mannerManureTypeData.data;
           const managementPeriodData =
             await this.managementPeriodRepository.findOneBy({
               ID: OrganicManure.ManagementPeriodID,
@@ -455,58 +455,55 @@ export class OrganicManureService extends BaseService<
             );
           } else if (newOrganicManure == false) {
             mannerOutputReq = {
-              runType: farmData.EnglishRules ? 3 : 4,
-              FarmID: organicManureData.FarmID,
-              postcode: farmData.Postcode.split(' ')[0],
-              countryID: farmData.EnglishRules ? 1 : 2,
+              runType: farmData.EnglishRules ? 3 : 4, //3
+              postcode: farmData.Postcode.split(' ')[0], //TN11
+              countryID: farmData.EnglishRules ? 1 : 2, //1
               field: {
-                fieldID: fieldData.ID,
-                fieldName: fieldData.Name,
-                MannerCropTypeID: cropTypeLinkingData.MannerCropTypeID,
-                topsoilID: fieldData.TopSoilID,
-                subsoilID: fieldData.SubSoilID,
-                isInNVZ: fieldData.IsWithinNVZ,
+                fieldID: fieldData.ID, //49
+                fieldName: fieldData.Name, //SHREYASH FARM 36 Field
+                MannerCropTypeID: cropTypeLinkingData.MannerCropTypeID, //4
+                topsoilID: fieldData.TopSoilID, //1
+                subsoilID: fieldData.SubSoilID, //1
+                isInNVZ: fieldData.IsWithinNVZ, //true
               },
               manureApplications: [
                 {
                   manureDetails: {
-                    manureID: OrganicManure.ManureTypeID,
-                    name: manureTypeData.Name,
-                    isLiquid: manureTypeData.IsLiquid,
-                    dryMatter: OrganicManure.DryMatterPercent,
-                    totalN: OrganicManure?.N,
-                    nH4N: OrganicManure.NH4N,
-                    uric: OrganicManure.UricAcid,
-                    nO3N: OrganicManure.NO3N,
-                    p2O5: OrganicManure.P2O5,
-                    sO3: OrganicManure.SO3,
-                    k2O: OrganicManure.K2O,
-                    mgO: OrganicManure.MgO,
+                    manureID: OrganicManure.ManureTypeID, //12
+                    name: manureTypeData.name, //Pig slurry
+                    isLiquid: manureTypeData.isLiquid, //true
+                    dryMatter: OrganicManure.DryMatterPercent, //4
+                    totalN: OrganicManure?.N, //3.6
+                    nH4N: OrganicManure.NH4N, //2.5
+                    uric: OrganicManure.UricAcid, //0
+                    nO3N: OrganicManure.NO3N, //0
+                    p2O5: OrganicManure.P2O5, //1.5
+                    sO3: OrganicManure.SO3, //0.7
+                    k2O: OrganicManure.K2O, //2.2
+                    mgO: OrganicManure.MgO, //0.7
                   },
-                  applicationDate: applicationDate,
+                  applicationDate: applicationDate, //2025-08-19
                   applicationRate: {
-                    value: OrganicManure.ApplicationRate,
+                    value: OrganicManure.ApplicationRate, //30
                     unit: 'kg/hectare',
                   },
-                  applicationMethodID: OrganicManure.ApplicationMethodID,
-                  incorporationMethodID: OrganicManure.IncorporationMethodID,
-                  incorporationDelayID: OrganicManure.IncorporationDelayID,
+                  applicationMethodID: OrganicManure.ApplicationMethodID, //5
+                  incorporationMethodID: OrganicManure.IncorporationMethodID, //7
+                  incorporationDelayID: OrganicManure.IncorporationDelayID, //15
                   autumnCropNitrogenUptake: {
-                    value: OrganicManure.AutumnCropNitrogenUptake,
+                    value: OrganicManure.AutumnCropNitrogenUptake, //20
                     unit: 'string',
                   },
-                  endOfDrainageDate: endOfDrainageDate,
-                  rainfallPostApplication: OrganicManure.Rainfall,
-                  cropNUptake: OrganicManure.AutumnCropNitrogenUptake,
-                  windspeedID: OrganicManure.WindspeedID,
-                  rainTypeID: OrganicManure.RainfallWithinSixHoursID,
-                  topsoilMoistureID: OrganicManure.MoistureID,
+                  endOfDrainageDate: endOfDrainageDate, //2026-03-30
+                  rainfallPostApplication: OrganicManure.Rainfall, //461
+                  windspeedID: OrganicManure.WindspeedID, //1
+                  rainTypeID: OrganicManure.RainfallWithinSixHoursID, //1
+                  topsoilMoistureID: OrganicManure.MoistureID, //2
                 },
               ],
             };
           }
-
-         
+          console.log('mannerOutputReq', mannerOutputReq);
           // Call the new helper function to create mannerOutputReq
           const mannerOutputs =
             await this.MannerCalculateNutrientsService.postData(
@@ -543,7 +540,10 @@ export class OrganicManureService extends BaseService<
               'Recommendation/Recommendations',
               nutrientRecommendationnReqBody,
             );
-
+          console.log(
+            'nutrientRecommendationsData',
+            nutrientRecommendationsData,
+          );
           if (organicManureData.SaveDefaultForFarm) {
             farmManureTypeData = {
               FarmID: organicManureData.FarmID,
@@ -740,23 +740,23 @@ export class OrganicManureService extends BaseService<
     arableNotes: { nutrientId: number; note: string; sequenceId: number }[],
     updatedData: any,
     transactionalManager: EntityManager,
-    userId,
+    userId: number,
   ): Promise<void> {
-    const RecommendationComments: RecommendationCommentEntity[] = [];
+    const recommendationComments: RecommendationCommentEntity[] = [];
 
-    // Group notes by nutrientId and concatenate them
+    // Group arableNotes by nutrientId and concatenate the notes
     const notesByNutrient = arableNotes?.reduce(
       (acc, note) => {
         if (!acc[note.nutrientId]) {
           acc[note.nutrientId] = [];
         }
-        acc[note.nutrientId].push(note.note); // Group and accumulate notes by nutrientId
+        acc[note.nutrientId].push(note.note); // Group notes by nutrientId
         return acc;
       },
       {} as { [key: number]: string[] },
     );
 
-    // Fetch existing comments by RecommendationID
+    // Fetch existing comments for the RecommendationID from the database
     const existingComments = await transactionalManager.find(
       RecommendationCommentEntity,
       {
@@ -766,45 +766,50 @@ export class OrganicManureService extends BaseService<
 
     const processedNutrientIds = new Set<number>(); // Track processed nutrient IDs
 
-    // Loop through arable notes and either update or create new comments
+    // Loop through the grouped arableNotes
     for (const nutrientId in notesByNutrient) {
-      const concatenatedNote = notesByNutrient[nutrientId].join(' '); // Concatenate notes for same nutrient
+      const concatenatedNote = notesByNutrient[nutrientId].join(' '); // Concatenate notes for the same nutrient
 
       const existingComment = existingComments.find(
         (comment) => comment.Nutrient === parseInt(nutrientId),
       );
 
       if (existingComment) {
-        // Update existing comment if nutrientId matches
+        // If a comment exists, update it with the new note
         existingComment.Comment = concatenatedNote;
-        await transactionalManager.save(existingComment); // Save the updated comment
+        existingComment.ModifiedOn = new Date(); // Update modification timestamp
+        existingComment.ModifiedByID = userId; // Update the user ID for modification
+        await transactionalManager.save(existingComment);
       } else {
-        // Create a new comment for the nutrientId
+        // Create a new comment if it doesn't exist
         const newComment = this.recommendationCommentEntity.create({
           Nutrient: parseInt(nutrientId),
-          Comment: concatenatedNote, // Store concatenated note
+          Comment: concatenatedNote,
           RecommendationID: updatedData.ID,
-          ModifiedOn: new Date(),
           CreatedOn: new Date(),
           CreatedByID: userId,
+          ModifiedOn: new Date(),
           ModifiedByID: userId,
         });
-        RecommendationComments.push(newComment); // Add new comment to the array
+        recommendationComments.push(newComment);
       }
 
-      processedNutrientIds.add(parseInt(nutrientId)); // Mark nutrientId as processed
+      processedNutrientIds.add(parseInt(nutrientId)); // Mark this nutrientId as processed
     }
 
-    // Remove comments whose nutrientIds are no longer present in arableNotes
-    for (const existingComment of existingComments) {
-      if (!processedNutrientIds.has(existingComment.Nutrient)) {
-        await transactionalManager.remove(existingComment); // Remove old comments
-      }
+    // Delete comments for nutrients that are no longer present in arableNotes
+    const nutrientIdsInNotes = arableNotes?.map((note) => note.nutrientId);
+
+    if (nutrientIdsInNotes?.length > 0) {
+      await transactionalManager.delete(RecommendationCommentEntity, {
+        RecommendationID: updatedData.ID,
+        Nutrient: Not(In(nutrientIdsInNotes)),
+      });
     }
 
     // Save all new recommendation comments if any were created
-    if (RecommendationComments.length > 0) {
-      await transactionalManager.save(RecommendationComments);
+    if (recommendationComments.length > 0) {
+      await transactionalManager.save(recommendationComments);
     }
   }
 
