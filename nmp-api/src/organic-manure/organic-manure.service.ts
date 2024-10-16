@@ -34,6 +34,7 @@ import { RecommendationEntity } from '@db/entity/recommendation.entity';
 import { RB209FieldService } from '@src/vendors/rb209/field/field.service';
 import { RecommendationCommentEntity } from '@db/entity/recommendation-comment.entity';
 import { MannerManureTypesService } from '@src/vendors/manner/manure-types/manure-types.service';
+import SnsAnalysesEntity from '@db/entity/sns-analysis.entity';
 
 @Injectable()
 export class OrganicManureService extends BaseService<
@@ -69,6 +70,8 @@ export class OrganicManureService extends BaseService<
     @InjectRepository(RecommendationCommentEntity)
     protected readonly recommendationCommentEntity: Repository<RecommendationCommentEntity>,
     protected readonly MannerManureTypesService: MannerManureTypesService,
+    @InjectRepository(SnsAnalysesEntity)
+    protected readonly snsAnalysisRepository: Repository<SnsAnalysesEntity>,
   ) {
     super(repository, entityManager);
   }
@@ -128,7 +131,8 @@ export class OrganicManureService extends BaseService<
   private async buildNutrientRecommendationReqBody(
     field: FieldEntity,
     farm: FarmEntity,
-    soilAnalysis: SoilAnalysisEntity,
+    soilAnalysis: SoilAnalysisEntity[],
+    snsAnalysesData: SnsAnalysesEntity,
     crop: CropEntity,
     mannerOutputs,
     organicManureData,
@@ -202,9 +206,9 @@ export class OrganicManureService extends BaseService<
         mannerOutputs: [
           {
             id: crop.CropOrder,
-            totalN: mannerOutputs.data.totalN,
-            availableN: mannerOutputs.data.currentCropAvailableN,
-            totalP: mannerOutputs.data.totalP2O5,
+            totalN: mannerOutputs?.data.totalN,
+            availableN: mannerOutputs?.data.currentCropAvailableN,
+            totalP: mannerOutputs?.data.totalP2O5,
             availableP: mannerOutputs.data.cropAvailableP2O5,
             totalK: mannerOutputs.data.totalK2O,
             availableK: mannerOutputs.data.cropAvailableK2O,
@@ -229,20 +233,34 @@ export class OrganicManureService extends BaseService<
       referenceValue: `${field.ID}-${crop.ID}-${crop.Year}`,
     };
     if (soilAnalysis) {
+      soilAnalysis?.forEach((soilAnalysis) => {
+        nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
+          soilAnalysisDate: soilAnalysis.Date,
+          soilpH: soilAnalysis.PH,
+          sulphurDeficient: soilAnalysis.SulphurDeficient,
+          snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
+          pIndexId: soilAnalysis.PhosphorusIndex,
+          kIndexId: soilAnalysis.PotassiumIndex,
+          mgIndexId: soilAnalysis.MagnesiumIndex,
+          snsMethodologyId: 4,
+          pMethodologyId: 0,
+          kMethodologyId: 4,
+          mgMethodologyId: 4,
+        });
+      });
+
+    }
+
+    // Add SnsAnalyses data
+    if (snsAnalysesData) {
       nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
-        soilAnalysisDate: soilAnalysis.Date,
-        soilpH: soilAnalysis.PH,
-        sulphurDeficient: soilAnalysis.SulphurDeficient,
-        snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
-        pIndexId: soilAnalysis.PhosphorusIndex,
-        kIndexId: soilAnalysis.PotassiumIndex,
-        mgIndexId: soilAnalysis.MagnesiumIndex,
+        soilAnalysisDate: snsAnalysesData.SampleDate, // Using snsAnalysesData.SampleDate
+        snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex, // Using snsAnalysesData.SoilNitrogenSupplyIndex
         snsMethodologyId: 4,
         pMethodologyId: 0,
         kMethodologyId: 4,
         mgMethodologyId: 4,
       });
-      nutrientRecommendationnReqBody.referenceValue = `${field.ID}-${crop.ID}-${soilAnalysis.ID}-${crop.Year}`;
     }
 
     if (previousCrop) {
@@ -254,6 +272,7 @@ export class OrganicManureService extends BaseService<
         previousCropTypeId: previousCrop.CropTypeID,
       };
     }
+    nutrientRecommendationnReqBody.referenceValue = `${field.ID}-${crop.ID}-${crop.Year}`;
 
     return nutrientRecommendationnReqBody;
   }
@@ -263,16 +282,18 @@ export class OrganicManureService extends BaseService<
     year: number,
   ) {
     const errors: string[] = [];
-    const latestSoilAnalysis = (
-      await this.soilAnalysisRepository.find({
-        where: {
-          FieldID: fieldId,
-          Year: LessThanOrEqual(year),
-        },
-        order: { Date: 'DESC' },
-        take: 1,
-      })
-    )[0];
+    const fiveYearsAgo = year - 4;
+
+    // Fetch all soil analyses for the last 5 years
+    const soilAnalysisRecords = await this.soilAnalysisRepository.find({
+      where: {
+        FieldID: fieldId,
+        Year: Between(fiveYearsAgo, year), // Fetch records within 5 years
+      },
+      order: { Date: 'DESC' }, // Order by date, most recent first
+    });
+
+  
 
     const soilRequiredKeys = [
       'Date',
@@ -284,16 +305,10 @@ export class OrganicManureService extends BaseService<
       'MagnesiumIndex',
     ];
 
-    if (latestSoilAnalysis)
-      soilRequiredKeys.forEach((key) => {
-        if (latestSoilAnalysis[key] === null) {
-          errors.push(
-            `${key} is required in soil analysis for field ${fieldName}`,
-          );
-        }
-      });
+    // Validate the most recent soil analysis (first record in the sorted array)
+    const latestSoilAnalysis = soilAnalysisRecords[0];
 
-    return { latestSoilAnalysis, errors };
+    return { latestSoilAnalysis, errors, soilAnalysisRecords };
   }
 
   async buildManureApplications(
@@ -379,6 +394,13 @@ export class OrganicManureService extends BaseService<
     }
   }
 
+  async getSnsAnalysesData(id:number){
+    const data = await this.snsAnalysisRepository.findOne({
+      where: { FieldID: id }, // This line is correct as per your entity definition
+    });
+
+    return data
+  }
   async createOrganicManuresWithFarmManureType(
     body: CreateOrganicManuresWithFarmManureTypeDto,
     userId: number,
@@ -420,7 +442,7 @@ export class OrganicManureService extends BaseService<
               `/manure-types/${OrganicManure.ManureTypeID}`,
             );
 
-          const manureTypeData = mannerManureTypeData.data;
+          const manureTypeData = mannerManureTypeData?.data;
           const managementPeriodData =
             await this.managementPeriodRepository.findOneBy({
               ID: OrganicManure.ManagementPeriodID,
@@ -512,29 +534,36 @@ export class OrganicManureService extends BaseService<
             );
 
           const Errors = [];
-          const { latestSoilAnalysis, errors: soilAnalysisErrors } =
-            await this.handleSoilAnalysisValidation(
-              fieldData.ID,
-              fieldData.Name,
-              cropData?.Year,
-            );
+          const {
+            latestSoilAnalysis,
+            errors: soilAnalysisErrors,
+            soilAnalysisRecords,
+          } = await this.handleSoilAnalysisValidation(
+            fieldData.ID,
+            fieldData.Name,
+            cropData?.Year,
+          );
           Errors.push(...soilAnalysisErrors);
           if (Errors.length > 0)
             throw new HttpException(
               JSON.stringify(Errors),
               HttpStatus.BAD_REQUEST,
             );
-
+          const snsAnalysesData = await this.getSnsAnalysesData(fieldData.ID);
           const nutrientRecommendationnReqBody =
             await this.buildNutrientRecommendationReqBody(
               fieldData,
               farmData,
-              latestSoilAnalysis,
+              soilAnalysisRecords,
+              snsAnalysesData,
               cropData,
               mannerOutputs,
               organicManureData,
             );
-
+        console.log(
+          'nutrientRecommendationnReqBody',
+          nutrientRecommendationnReqBody,
+        );
           const nutrientRecommendationsData =
             await this.rB209RecommendationService.postData(
               'Recommendation/Recommendations',
@@ -564,7 +593,7 @@ export class OrganicManureService extends BaseService<
           const savedOrganicManure = await transactionalManager.save(
             this.repository.create({
               ...organicManureData.OrganicManure,
-              AvailableN: mannerOutputs.data.currentCropAvailableN,
+              AvailableN: mannerOutputs?.data?.currentCropAvailableN,
               CreatedByID: userId,
             }),
           );
