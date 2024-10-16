@@ -329,10 +329,7 @@ export class PlanService extends BaseService<
               snsAnalysesData,
               crop,
             );
-            console.log(
-              'nutrientRecommendationnReqBody',
-              nutrientRecommendationnReqBody,
-            );
+           
           const nutrientRecommendationsData =
             await this.rB209RecommendationService.postData(
               'Recommendation/Recommendations',

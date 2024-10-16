@@ -525,7 +525,7 @@ export class OrganicManureService extends BaseService<
               ],
             };
           }
-          console.log('mannerOutputReq', mannerOutputReq);
+         
           // Call the new helper function to create mannerOutputReq
           const mannerOutputs =
             await this.MannerCalculateNutrientsService.postData(
@@ -560,19 +560,13 @@ export class OrganicManureService extends BaseService<
               mannerOutputs,
               organicManureData,
             );
-        console.log(
-          'nutrientRecommendationnReqBody',
-          nutrientRecommendationnReqBody,
-        );
+       
           const nutrientRecommendationsData =
             await this.rB209RecommendationService.postData(
               'Recommendation/Recommendations',
               nutrientRecommendationnReqBody,
             );
-          console.log(
-            'nutrientRecommendationsData',
-            nutrientRecommendationsData,
-          );
+         
           if (organicManureData.SaveDefaultForFarm) {
             farmManureTypeData = {
               FarmID: organicManureData.FarmID,
