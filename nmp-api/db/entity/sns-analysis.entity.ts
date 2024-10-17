@@ -17,7 +17,7 @@ export default class SnsAnalysesEntity {
     primaryKeyConstraintName: 'PK_SnsAnalyses',
   })
   @PrimaryColumn({ type: 'int', insert: false })
-  Id: number;
+  ID: number;
 
   @ManyToOne(() => FieldEntity, (field) => field.SnsAnalyses)
   @JoinColumn({ name: 'FieldID' })
