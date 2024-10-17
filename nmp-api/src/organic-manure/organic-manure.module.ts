@@ -18,6 +18,7 @@ import { RecommendationEntity } from '@db/entity/recommendation.entity';
 import { RB209FieldService } from '@src/vendors/rb209/field/field.service';
 import { RecommendationCommentEntity } from '@db/entity/recommendation-comment.entity';
 import { MannerManureTypesService } from '@src/vendors/manner/manure-types/manure-types.service';
+import SnsAnalysesEntity from '@db/entity/sns-analysis.entity';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { MannerManureTypesService } from '@src/vendors/manner/manure-types/manur
       SoilAnalysisEntity,
       RecommendationEntity,
       RecommendationCommentEntity,
+      SnsAnalysesEntity
     ]),
   ],
   controllers: [OrganicManureController],
@@ -42,7 +44,7 @@ import { MannerManureTypesService } from '@src/vendors/manner/manure-types/manur
     RB209ArableService,
     RB209RecommendationService,
     RB209FieldService,
-    MannerManureTypesService
+    MannerManureTypesService,
   ],
   exports: [TypeOrmModule],
 })
