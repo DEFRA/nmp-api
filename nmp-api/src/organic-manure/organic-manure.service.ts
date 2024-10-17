@@ -838,36 +838,60 @@ export class OrganicManureService extends BaseService<
     dateTo: Date,
     confirm: boolean,
   ): Promise<boolean> {
-    // Fetch all manure types from the API
-    const allManureTypes =
-      await this.MannerManureTypesService.getData('/manure-types');
+    try {
+      // Fetch all manure types from the API
+      const allManureTypes =
+        await this.MannerManureTypesService.getData('/manure-types');
 
-    // Filter manure types: IsLiquid is true OR ManureTypeID = 8 (for Poultry manure)
-    const liquidManureTypes = allManureTypes.filter(
-      (manure) => manure.IsLiquid === true || manure.ID === 8,
-    );
+      if (!allManureTypes?.data || allManureTypes.data.length === 0) {
+        // Log a error if no manure types are returned
+        console.error('No manure types returned from the Manner API');
+      }
 
-    // Extract manureTypeIds from the filtered result
-    const manureTypeIds = liquidManureTypes.map((manure) => manure.ID);
+      // Filter manure types: IsLiquid is true OR ManureTypeID = 8 (for Poultry manure)
+      const liquidManureTypes = allManureTypes.data.filter(
+        (manure) => manure.IsLiquid === true || manure.ID === 8,
+      );
 
-    if (manureTypeIds.length === 0) {
-      return false; // No valid manure types found
+      if (!liquidManureTypes || liquidManureTypes.length === 0) {
+        // Log a warning if no liquid or poultry manure types are found
+        console.warn('No valid liquid or poultry manure types found');
+      }
+
+      // Extract manureTypeIds from the filtered result
+      const manureTypeIds = liquidManureTypes.map((manure) => manure.ID);
+
+      // If no valid manureTypeIds, return false
+      if (!manureTypeIds || manureTypeIds.length === 0) {
+        return false; // No valid manure types found
+      }
+
+      // Query OrganicManures for these manureTypeIds within the date range
+      const manureTypeExists = await this.repository
+        .createQueryBuilder('organicManure')
+        .where('organicManure.ManureTypeID IN (:...manureTypeIds)', {
+          manureTypeIds,
+        })
+        .andWhere(
+          'organicManure.ApplicationDate BETWEEN :dateFrom AND :dateTo',
+          {
+            dateFrom,
+            dateTo,
+          },
+        )
+        .andWhere('organicManure.Confirm = :confirm', { confirm })
+        .getCount();
+
+      // Return true if any matching records are found
+      return manureTypeExists > 0;
+    } catch (error) {
+      // Log the error for debugging purposes
+      console.error('Error checking for manure existence:', error.message);
+
+      // You can choose to throw the error or handle it silently
+      throw new Error(
+        'Failed to check manure existence due to an internal error',
+      );
     }
-
-    // Query OrganicManures for these manureTypeIds within the date range
-    const manureTypeExists = await this.repository
-      .createQueryBuilder('organicManure')
-      .where('organicManure.ManureTypeID IN (:...manureTypeIds)', {
-        manureTypeIds,
-      })
-      .andWhere('organicManure.ApplicationDate BETWEEN :dateFrom AND :dateTo', {
-        dateFrom,
-        dateTo,
-      })
-      .andWhere('organicManure.Confirm = :confirm', { confirm })
-      .getCount();
-
-    // Return true if any matching records found
-    return manureTypeExists > 0;
   }
 }
