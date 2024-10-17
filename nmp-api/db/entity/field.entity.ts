@@ -82,6 +82,10 @@ export default class FieldEntity {
 
   @Column('bit', { nullable: true, default: 0 })
   @ApiPropertyOptional()
+  SoilOverChalk: boolean;
+
+  @Column('bit', { nullable: true, default: 0 })
+  @ApiPropertyOptional()
   IsWithinNVZ: boolean;
 
   @Column('bit', { nullable: true, default: 0 })
