@@ -15,6 +15,8 @@ import { RecommendationEntity } from './recommendation.entity';
 import { RecommendationCommentEntity } from './recommendation-comment.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { OrganicManureEntity } from './organic-manure.entity';
+import { FertiliserManuresEntity } from './fertiliser-manures.entity';
+import SnsAnalysesEntity from './sns-analysis.entity';
 
 @Entity({ name: 'Users' })
 export default class UserEntity {
@@ -77,6 +79,18 @@ export default class UserEntity {
   ModifiedSoilAnalyses: SoilAnalysisEntity[];
 
   @OneToMany(
+    () => SnsAnalysesEntity,
+    (snsAnalysis) => snsAnalysis.CreatedByUser,
+  )
+  CreatedSnsAnalyses: SnsAnalysesEntity[]; // Added relation
+
+  @OneToMany(
+    () => SnsAnalysesEntity,
+    (snsAnalysis) => snsAnalysis.ModifiedByUser,
+  )
+  ModifiedSnsAnalyses: SnsAnalysesEntity[];
+
+  @OneToMany(
     () => ManagementPeriodEntity,
     (managementPeriod) => managementPeriod.CreatedByUser,
   )
@@ -111,4 +125,16 @@ export default class UserEntity {
     (recommendationComment) => recommendationComment.ModifiedByUser,
   )
   ModifiedRecommendationComments: RecommendationCommentEntity[];
+
+  @OneToMany(
+    () => RecommendationCommentEntity,
+    (recommendationComment) => recommendationComment.CreatedByUser,
+  )
+  CreatedFertiliserManures: FertiliserManuresEntity[];
+
+  @OneToMany(
+    () => RecommendationCommentEntity,
+    (recommendationComment) => recommendationComment.ModifiedByUser,
+  )
+  ModifiedFertiliserManures: FertiliserManuresEntity[];
 }

@@ -1,4 +1,4 @@
-import { EntityManager, Repository, LessThanOrEqual } from 'typeorm';
+import { EntityManager, Repository, LessThanOrEqual, Between } from 'typeorm';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -15,6 +15,7 @@ import { RB209RecommendationService } from '@src/vendors/rb209/recommendation/re
 import { RecommendationCommentEntity } from '@db/entity/recommendation-comment.entity';
 import { NutrientsMapper } from '@constants/nutrient-mapper';
 import { CreateCropWithManagementPeriodsDto } from '@src/crop/dto/crop.dto';
+import SnsAnalysesEntity from '@db/entity/sns-analysis.entity';
 
 @Injectable()
 export class PlanService extends BaseService<
@@ -39,6 +40,8 @@ export class PlanService extends BaseService<
     protected readonly soilAnalysisRepository: Repository<SoilAnalysisEntity>,
     protected readonly rB209ArableService: RB209ArableService,
     protected readonly rB209RecommendationService: RB209RecommendationService,
+    @InjectRepository(SnsAnalysesEntity)
+    protected readonly snsAnalysisRepository: Repository<SnsAnalysesEntity>,
   ) {
     super(repository, entityManager);
   }
@@ -46,7 +49,8 @@ export class PlanService extends BaseService<
   private async buildNutrientRecommendationReqBody(
     field: FieldEntity,
     farm: FarmEntity,
-    soilAnalysis: SoilAnalysisEntity,
+    soilAnalysis: SoilAnalysisEntity[],
+    snsAnalysesData: SnsAnalysesEntity,
     crop: CropEntity,
   ) {
     const cropTypesList: any[] =
@@ -71,10 +75,11 @@ export class PlanService extends BaseService<
     })[0];
     const nutrientRecommendationnReqBody = {
       field: {
-        fieldType: 1,
-        multipleCrops: false,
+        fieldType: crop.FieldType,
+        multipleCrops: true,
         arable: [
           {
+            cropOrder: crop.CropOrder,
             cropGroupId: cropType.cropGroupId,
             cropTypeId: crop.CropTypeID,
             cropInfo1Id: crop.CropInfo1,
@@ -83,7 +88,22 @@ export class PlanService extends BaseService<
             expectedYield: crop.Yield,
           },
         ],
-        grassland: {},
+        grassland: {
+          cropOrder: null,
+          grassGrowthClassId: null,
+          yieldTypeId: null,
+          sequenceId: null,
+          grasslandSequence: [
+            {
+              position: null,
+              cropMaterialId: null,
+              yield: null,
+            },
+          ],
+          establishedDate: null,
+          seasonId: null,
+          siteClassId: null,
+        },
         soil: {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
@@ -97,6 +117,7 @@ export class PlanService extends BaseService<
         altitude: farm.AverageAltitude,
         rainfallAverage: farm.Rainfall,
         excessWinterRainfall: 0, //TODO:: need to find it
+        mannerManures: false,
         organicMaterials: [],
         previousCropping: {},
         countryId: farm.EnglishRules ? 1 : 2,
@@ -114,20 +135,33 @@ export class PlanService extends BaseService<
       referenceValue: `${field.ID}-${crop.ID}-${crop.Year}`,
     };
     if (soilAnalysis) {
+      soilAnalysis?.forEach((soilAnalysis) => {
+        nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
+          soilAnalysisDate: soilAnalysis.Date,
+          soilpH: soilAnalysis.PH,
+          sulphurDeficient: soilAnalysis.SulphurDeficient,
+          snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
+          pIndexId: soilAnalysis.PhosphorusIndex,
+          kIndexId: soilAnalysis.PotassiumIndex,
+          mgIndexId: soilAnalysis.MagnesiumIndex,
+          snsMethodologyId: 4,
+          pMethodologyId: 0,
+          kMethodologyId: 4,
+          mgMethodologyId: 4,
+        });
+      });
+    }
+
+    // Add SnsAnalyses data
+    if (snsAnalysesData) {
       nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
-        soilAnalysisDate: soilAnalysis.Date,
-        soilpH: soilAnalysis.PH,
-        sulphurDeficient: soilAnalysis.SulphurDeficient,
-        snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
-        pIndexId: soilAnalysis.PhosphorusIndex,
-        kIndexId: soilAnalysis.PotassiumIndex,
-        mgIndexId: soilAnalysis.MagnesiumIndex,
+        soilAnalysisDate: snsAnalysesData.SampleDate, // Using snsAnalysesData.SampleDate
+        snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex, // Using snsAnalysesData.SoilNitrogenSupplyIndex
         snsMethodologyId: 4,
         pMethodologyId: 0,
         kMethodologyId: 4,
         mgMethodologyId: 4,
       });
-      nutrientRecommendationnReqBody.referenceValue = `${field.ID}-${crop.ID}-${soilAnalysis.ID}-${crop.Year}`;
     }
 
     if (previousCrop) {
@@ -139,6 +173,7 @@ export class PlanService extends BaseService<
         previousCropTypeId: previousCrop.CropTypeID,
       };
     }
+    nutrientRecommendationnReqBody.referenceValue = `${field.ID}-${crop.ID}-${crop.Year}`;
 
     return nutrientRecommendationnReqBody;
   }
@@ -185,22 +220,22 @@ export class PlanService extends BaseService<
     return { farm, errors };
   }
 
-  private async handleSoilAnalysisValidation(
+  async handleSoilAnalysisValidation(
     fieldId: number,
     fieldName: string,
     year: number,
   ) {
     const errors: string[] = [];
-    const latestSoilAnalysis = (
-      await this.soilAnalysisRepository.find({
-        where: {
-          FieldID: fieldId,
-          Year: LessThanOrEqual(year),
-        },
-        order: { Date: 'DESC' },
-        take: 1,
-      })
-    )[0];
+    const fiveYearsAgo = year - 4;
+
+    // Fetch all soil analyses for the last 5 years
+    const soilAnalysisRecords = await this.soilAnalysisRepository.find({
+      where: {
+        FieldID: fieldId,
+        Year: Between(fiveYearsAgo, year), // Fetch records within 5 years
+      },
+      order: { Date: 'DESC' }, // Order by date, most recent first
+    });
 
     const soilRequiredKeys = [
       'Date',
@@ -212,16 +247,9 @@ export class PlanService extends BaseService<
       'MagnesiumIndex',
     ];
 
-    if (latestSoilAnalysis)
-      soilRequiredKeys.forEach((key) => {
-        if (latestSoilAnalysis[key] === null) {
-          errors.push(
-            `${key} is required in soil analysis for field ${fieldName}`,
-          );
-        }
-      });
+    const latestSoilAnalysis = soilAnalysisRecords[0];
 
-    return { latestSoilAnalysis, errors };
+    return { latestSoilAnalysis, errors, soilAnalysisRecords };
   }
 
   private handleCropValidation(crop: CropEntity) {
@@ -243,6 +271,14 @@ export class PlanService extends BaseService<
     }
 
     return errors;
+  }
+
+  async getSnsAnalysesData(id: number) {
+    const data = await this.snsAnalysisRepository.findOne({
+      where: { FieldID: id }, // This line is correct as per your entity definition
+    });
+
+    return data;
   }
 
   async createNutrientsRecommendationForField(
@@ -268,12 +304,15 @@ export class PlanService extends BaseService<
           );
           Errors.push(...farmErrors);
 
-          const { latestSoilAnalysis, errors: soilAnalysisErrors } =
-            await this.handleSoilAnalysisValidation(
-              fieldId,
-              field.Name,
-              crop?.Year,
-            );
+          const {
+            latestSoilAnalysis,
+            errors: soilAnalysisErrors,
+            soilAnalysisRecords,
+          } = await this.handleSoilAnalysisValidation(
+            fieldId,
+            field.Name,
+            crop?.Year,
+          );
           Errors.push(...soilAnalysisErrors);
           if (Errors.length > 0)
             throw new HttpException(
@@ -281,14 +320,16 @@ export class PlanService extends BaseService<
               HttpStatus.BAD_REQUEST,
             );
 
+          const snsAnalysesData = await this.getSnsAnalysesData(fieldId);
           const nutrientRecommendationnReqBody =
             await this.buildNutrientRecommendationReqBody(
               field,
               farm,
-              latestSoilAnalysis,
+              soilAnalysisRecords,
+              snsAnalysesData,
               crop,
             );
-
+           
           const nutrientRecommendationsData =
             await this.rB209RecommendationService.postData(
               'Recommendation/Recommendations',
@@ -361,17 +402,33 @@ export class PlanService extends BaseService<
             }),
           );
           const RecommendationComments: RecommendationCommentEntity[] = [];
-          for (const adviceNote of nutrientRecommendationsData.adviceNotes) {
-            const savedRecommendationComment = await transactionalManager.save(
-              this.recommendationCommentEntity.create({
-                Nutrient: adviceNote.nutrientId,
-                Comment: adviceNote.note,
-                RecommendationID: savedRecommendation.ID,
-                CreatedOn: savedCrop.CreatedOn,
-                CreatedByID: savedCrop.CreatedByID,
-              }),
+          const notesByNutrient =
+            nutrientRecommendationsData.adviceNotes.reduce(
+              (acc, adviceNote) => {
+                if (!acc[adviceNote.nutrientId]) {
+                  acc[adviceNote.nutrientId] = [];
+                }
+                acc[adviceNote.nutrientId].push(adviceNote.note); // Group notes by nutrientId
+                return acc;
+              },
+              {} as { [key: number]: string[] },
             );
-            RecommendationComments.push(savedRecommendationComment);
+          for (const nutrientId in notesByNutrient) {
+            const concatenatedNote = notesByNutrient[nutrientId].join(' '); // Concatenate notes for the same nutrientId
+
+            // Create a new recommendation comment with the concatenated notes
+            const newComment = this.recommendationCommentEntity.create({
+              Nutrient: parseInt(nutrientId),
+              Comment: concatenatedNote, // Store concatenated notes
+              RecommendationID: savedRecommendation.ID,
+              CreatedOn: savedCrop.CreatedOn,
+              CreatedByID: savedCrop.CreatedByID,
+            });
+
+            const savedRecommendationComment =
+              await transactionalManager.save(newComment);
+
+            RecommendationComments.push(savedRecommendationComment); // Push saved comment
           }
           Recommendations.push({
             Recommendation: savedRecommendation,

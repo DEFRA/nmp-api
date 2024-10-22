@@ -7,6 +7,9 @@ import { ApiDataResponseType } from '@shared/base.response';
 import { BaseService } from '@src/base/base.service';
 import { RecommendationCommentEntity } from '@db/entity/recommendation-comment.entity';
 import { OrganicManureEntity } from '@db/entity/organic-manure.entity';
+import { MannerManureTypesService } from '@src/vendors/manner/manure-types/manure-types.service';
+import { MannerApplicationMethodService } from '@src/vendors/manner/application-method/application-method.service';
+
 
 @Injectable()
 export class RecommendationService extends BaseService<
@@ -21,6 +24,8 @@ export class RecommendationService extends BaseService<
     @InjectRepository(OrganicManureEntity)
     protected readonly organicManureRepository: Repository<OrganicManureEntity>,
     protected readonly entityManager: EntityManager,
+    protected readonly MannerManureTypesService: MannerManureTypesService,
+    protected readonly MannerApplicationMethodService: MannerApplicationMethodService,
   ) {
     super(repository, entityManager);
   }
@@ -73,6 +78,7 @@ export class RecommendationService extends BaseService<
                   RecommendationID: recData.Recommendation.ID,
                 },
               });
+
               const organicManures = await this.organicManureRepository.find({
                 where: {
                   ManagementPeriodID: recData.ManagementPeriod.ID,
@@ -83,36 +89,39 @@ export class RecommendationService extends BaseService<
                   ApplicationDate: true,
                   ApplicationRate: true,
                   ApplicationMethodID: true,
-                  ManureType: {
-                    ID: true,
-                    Name: true,
-                  },
-                  ApplicationMethod: {
-                    ID: true,
-                    Name: true,
-                  },
                 },
-                relations: ['ManureType', 'ApplicationMethod'],
               });
+
+              // Fetch ManureType details from external API
+              const organicManuresWithDetails = await Promise.all(
+                organicManures.map(async (o) => {
+                  const manureTypeData =
+                    await this.MannerManureTypesService.getData(
+                      `/manure-types/${o.ManureTypeID}`,
+                    );
+                  const applicationMethodData =
+                    await this.MannerApplicationMethodService.getData(
+                      `/application-methods/${o.ApplicationMethodID}`,
+                    );
+                  return {
+                    ...o,
+                    ManureTypeName: manureTypeData.data.name,
+                    ApplicationMethodName: applicationMethodData.data.name,
+                  };
+                }),
+              );
+
               return {
                 Recommendation: recData.Recommendation,
                 RecommendationComments: comments,
                 ManagementPeriod: recData.ManagementPeriod,
-                OrganicManures: organicManures.map((o) => {
-                  const organicManureData = {
-                    ...o,
-                    ManureTypeName: o.ManureType.Name,
-                    ApplicationMethodName: o.ApplicationMethod.Name,
-                  };
-                  delete organicManureData.ManureType;
-                  delete organicManureData.ApplicationMethod;
-                  return organicManureData;
-                }),
+                OrganicManures: organicManuresWithDetails,
               };
             }),
           ),
         })),
       );
+
       return dataWithComments;
     } catch (error) {
       console.error('Error while fetching join data:', error);

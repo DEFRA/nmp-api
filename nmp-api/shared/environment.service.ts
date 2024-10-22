@@ -122,6 +122,12 @@ export default class EnvironmentService {
     }
   }
 
+  static MANNER_BASE_URL(): string {
+    get: {
+      return this.getEnv('MANNER_BASE_URL');
+    }
+  }
+
   static APPLICATION_ENV(): string {
     get: {
       if (!this.getEnv('APPLICATION_ENV')) {

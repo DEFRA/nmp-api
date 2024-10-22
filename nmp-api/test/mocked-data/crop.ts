@@ -1,5 +1,5 @@
 export const createCropReqBody = {
-  FieldID: null,
+  FieldID: 1,
   Year: 2023,
   CropTypeID: 110,
   Variety: null,
@@ -21,6 +21,7 @@ export const createCropReqBody = {
   GrazingIntensity: 0,
   PreviousID: null,
   FieldType: 1,
+  CropOrder: 1,
   CreatedByID: null,
 };
 
@@ -50,6 +51,7 @@ export const createPlanReqBody: any = {
         PreviousID: null,
         FieldID: null,
         FieldType: 1,
+        CropOrder: 1,
       },
       ManagementPeriods: [
         {
@@ -87,6 +89,7 @@ export const createCropWithManagementPeriodReqBody: any = {
     GrazingIntensity: 0,
     PreviousID: 0,
     FieldType: 1,
+    CropOrder: 1,
   },
   ManagementPeriods: [
     {

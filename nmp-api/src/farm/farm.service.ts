@@ -50,15 +50,15 @@ export class FarmService extends BaseService<
       throw new BadRequestException('Farm Name and Postcode are required');
     }
 
-  const query = this.repository
-    .createQueryBuilder('Farms')
-    .where('Farms.Name = :name', { name: farmName.trim() })
-    .andWhere("REPLACE(Farms.Postcode, ' ', '') = :postcode", {
-      postcode: postcode.replaceAll(' ', ''),
-    })
-    .andWhere(id !== undefined ? 'Farms.ID != :id' : '1 = 1', { id });
+    const query = this.repository
+      .createQueryBuilder('Farms')
+      .where('Farms.Name = :name', { name: farmName.trim() })
+      .andWhere("REPLACE(Farms.Postcode, ' ', '') = :postcode", {
+        postcode: postcode.replaceAll(' ', ''),
+      })
+      .andWhere(id !== undefined ? 'Farms.ID != :id' : '1 = 1', { id });
 
-  return await query.getCount();
+    return await query.getCount();
   }
 
   async createFarm(
@@ -88,44 +88,93 @@ export class FarmService extends BaseService<
     userId: number,
     farmId: number,
   ) {
-    const result = await this.repository.update(farmId, {
-      Address1: updatedFarmData.Address1,
-      Address2: updatedFarmData.Address2,
-      Address3: updatedFarmData.Address3,
-      Address4: updatedFarmData.Address4,
-      AverageAltitude: updatedFarmData.AverageAltitude,
-      BusinessName: updatedFarmData.BusinessName,
-      CPH: updatedFarmData.CPH,
-      CreatedByID: updatedFarmData.CreatedByID,
-      CreatedOn: updatedFarmData.CreatedOn,
-      Email: updatedFarmData.Email,
-      EnglishRules: updatedFarmData.EnglishRules,
-      FarmerName: updatedFarmData.FarmerName,
-      FieldsAbove300SeaLevel: updatedFarmData.FieldsAbove300SeaLevel,
-      MetricUnits: updatedFarmData.MetricUnits,
-      Mobile: updatedFarmData.Mobile,
-      NVZFields: updatedFarmData.NVZFields,
-      OrganisationID: updatedFarmData.OrganisationID,
-      Rainfall: updatedFarmData.Rainfall,
-      RegisteredOrganicProducer: updatedFarmData.RegisteredOrganicProducer,
-      SBI: updatedFarmData.SBI,
-      STD: updatedFarmData.STD,
-      Telephone: updatedFarmData.Telephone,
-      TotalFarmArea: updatedFarmData.TotalFarmArea,
-      Name: updatedFarmData.Name.trim(),
-      Postcode: updatedFarmData.Postcode.trim(),
-      ModifiedByID: userId,
-      ModifiedOn: new Date(),
-    });
+    return await this.entityManager.transaction(
+      async (transactionalManager) => {
+        // Fetch the existing farm record
+        const existingFarm = await transactionalManager.findOne(FarmEntity, {
+          where: { ID: farmId },
+        });
 
-    if (result.affected === 0) {
-      throw new NotFoundException(`Farm with ID ${farmId} not found`);
-    }
+        if (!existingFarm) {
+          throw new NotFoundException(`Farm with ID ${farmId} not found`);
+        }
 
-    const updatedFarm = await this.repository.findOne({
-      where: { ID: farmId },
-    });
-    return updatedFarm;
+        // Prepare the update data for the farm entity
+        const farmUpdateData: DeepPartial<FarmEntity> = {
+          Address1: updatedFarmData.Address1,
+          Address2: updatedFarmData.Address2,
+          Address3: updatedFarmData.Address3,
+          Address4: updatedFarmData.Address4,
+          AverageAltitude: updatedFarmData.AverageAltitude,
+          BusinessName: updatedFarmData.BusinessName,
+          CPH: updatedFarmData.CPH,
+          CreatedByID: updatedFarmData.CreatedByID,
+          CreatedOn: updatedFarmData.CreatedOn,
+          Email: updatedFarmData.Email,
+          EnglishRules: updatedFarmData.EnglishRules,
+          FarmerName: updatedFarmData.FarmerName,
+          MetricUnits: updatedFarmData.MetricUnits,
+          Mobile: updatedFarmData.Mobile,
+          OrganisationID: updatedFarmData.OrganisationID,
+          Rainfall: updatedFarmData.Rainfall,
+          RegisteredOrganicProducer: updatedFarmData.RegisteredOrganicProducer,
+          SBI: updatedFarmData.SBI,
+          STD: updatedFarmData.STD,
+          Telephone: updatedFarmData.Telephone,
+          TotalFarmArea: updatedFarmData.TotalFarmArea,
+          Name: updatedFarmData.Name?.trim(),
+          Postcode: updatedFarmData.Postcode?.trim(),
+          LastHarvestYear: updatedFarmData.LastHarvestYear,
+          ModifiedByID: userId,
+          ModifiedOn: new Date(),
+          // FieldsAbove300SeaLevel and NVZFields will be updated in the `field` table only if the condition is not met
+          FieldsAbove300SeaLevel: updatedFarmData.FieldsAbove300SeaLevel,
+          NVZFields: updatedFarmData.NVZFields,
+        };
+
+        // Perform the farm update
+        const result = await transactionalManager.update(
+          FarmEntity,
+          farmId,
+          farmUpdateData,
+        );
+
+        if (result.affected === 0) {
+          throw new NotFoundException(`Farm with ID ${farmId} not found`);
+        }
+
+        // Check if we need to update the field entity conditionally
+        if (
+          updatedFarmData.FieldsAbove300SeaLevel !== 2 ||
+          updatedFarmData.NVZFields !== 2
+        ) {
+          const fieldUpdateData: Partial<FieldEntity> = {};
+
+          if (updatedFarmData.FieldsAbove300SeaLevel !== 2) {
+            fieldUpdateData.IsAbove300SeaLevel =
+              updatedFarmData.FieldsAbove300SeaLevel === 1;
+          }
+
+          if (updatedFarmData.NVZFields !== 2) {
+            fieldUpdateData.IsWithinNVZ = updatedFarmData.NVZFields === 1;
+          }
+
+          // Assuming you have a field repository to perform the update
+          await transactionalManager.update(
+            FieldEntity,
+            { FarmID: farmId },
+            fieldUpdateData,
+          );
+        }
+
+        // Fetch and return the updated farm record
+        const updatedFarm = await transactionalManager.findOne(FarmEntity, {
+          where: { ID: farmId },
+        });
+
+        return updatedFarm;
+      },
+    );
   }
 
   async getFarm(name: string, postcode: string) {

@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+class RecommendationPKBalanceDto {
+  @ApiProperty()
+  phosphate: number;
+
+  @ApiProperty()
+  potash: number;
+}
+
 class RecommendationNutrientsDto {
   @ApiProperty()
   nitrogen: boolean;
@@ -34,9 +42,6 @@ class RecommendationPreviousCroppingDto {
   previousCropTypeId: number;
 
   @ApiProperty()
-  snsId: number;
-
-  @ApiProperty()
   smnDepth: number;
 
   @ApiProperty()
@@ -44,6 +49,9 @@ class RecommendationPreviousCroppingDto {
 }
 
 class RecommendationOrganicMaterialDto {
+  @ApiProperty()
+  id: number;
+
   @ApiProperty()
   materialId: number;
 
@@ -70,6 +78,38 @@ class RecommendationOrganicMaterialDto {
 
   @ApiProperty()
   sulphur: number;
+}
+
+class RecommendationMannerOutputDto {
+  @ApiProperty()
+  id: number;
+
+  @ApiProperty()
+  totalN: number;
+
+  @ApiProperty()
+  availableN: number;
+
+  @ApiProperty()
+  totalP: number;
+
+  @ApiProperty()
+  availableP: number;
+
+  @ApiProperty()
+  totalK: number;
+
+  @ApiProperty()
+  availableK: number;
+
+  @ApiProperty()
+  totalS: number;
+
+  @ApiProperty()
+  availableS: number;
+
+  @ApiProperty()
+  totalM: number;
 }
 
 class RecommendationSoilAnalysisDto {
@@ -107,17 +147,6 @@ class RecommendationSoilAnalysisDto {
   mgMethodologyId: number;
 }
 
-class RecommendationGrasslandSequenceDto {
-  @ApiProperty()
-  position: number;
-
-  @ApiProperty()
-  cropMaterialId: number;
-
-  @ApiProperty()
-  yield: number;
-}
-
 class RecommendationSoilDto {
   @ApiProperty()
   soilTypeId: number;
@@ -131,11 +160,28 @@ class RecommendationSoilDto {
   @ApiProperty()
   psc: number;
 
+  @ApiProperty({ type: RecommendationPKBalanceDto })
+  pkBalance: RecommendationPKBalanceDto;
+
   @ApiProperty({ type: [RecommendationSoilAnalysisDto] })
   soilAnalyses: RecommendationSoilAnalysisDto[];
 }
 
+class RecommendationGrasslandSequenceDto {
+  @ApiProperty()
+  position: number;
+
+  @ApiProperty()
+  cropMaterialId: number;
+
+  @ApiProperty()
+  yield: number;
+}
+
 class RecommendationGrasslandDto {
+  @ApiProperty()
+  cropOrder: number;
+
   @ApiProperty()
   snsId: number;
 
@@ -162,6 +208,9 @@ class RecommendationGrasslandDto {
 }
 
 class RecommendationArableDto {
+  @ApiProperty()
+  cropOrder: number;
+
   @ApiProperty()
   cropGroupId: number;
 
@@ -215,8 +264,14 @@ class RecommendationFieldDto {
   @ApiProperty()
   excessWinterRainfall: number;
 
+  @ApiProperty()
+  mannerManures: boolean;
+
   @ApiProperty({ type: [RecommendationOrganicMaterialDto] })
   organicMaterials: RecommendationOrganicMaterialDto[];
+
+  @ApiProperty({ type: [RecommendationMannerOutputDto] })
+  mannerOutputs: RecommendationMannerOutputDto[];
 
   @ApiProperty()
   previousCropping: RecommendationPreviousCroppingDto;

@@ -6,6 +6,7 @@ import { CropTypeLinkingEntity } from '@db/entity/crop-type-linking.entity';
 import CropEntity from '@db/entity/crop.entity';
 import FarmManureTypeEntity from '@db/entity/farm-manure-type.entity';
 import FarmEntity from '@db/entity/farm.entity';
+import { FertiliserManuresEntity } from '@db/entity/fertiliser-manures.entity';
 import FieldEntity from '@db/entity/field.entity';
 import { IncorpMethodsIncorpDelayEntity } from '@db/entity/incorp-method-incorp-delay.entity';
 import { IncorporationDelayEntity } from '@db/entity/incorporation-delay.entity';
@@ -68,6 +69,7 @@ export const ormConfig: any = {
     MannerCropTypeEntity,
     ManureTypeCategoryEntity,
     InOrganicManureDurationEntity,
+    FertiliserManuresEntity,
   ],
   options: {
     trustServerCertificate: true,

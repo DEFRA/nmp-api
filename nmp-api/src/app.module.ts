@@ -41,6 +41,31 @@ import { MoistureTypeModule } from './moisture-type/moisture-type.module';
 import { RainTypeModule } from './rain-type/rain-type.module';
 import { MannerCropTypesModule } from './manner-crop-types/manner-crop-types.module';
 import { InorganicManureDurationModule } from './inorganic-manure-duration/inorganic-manure-duration.module';
+import { FertiliserManuresModule } from './fertiliser-manures/fertiliser-manures.module';
+import { CustomLoggerService } from './custom-logger/custom-logger.service';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { RB209BaseService } from './vendors/rb209/base.service';
+import { AddressLookupService } from './vendors/address-lookup/address-lookup.service';
+import { CropTypeLinkingsModule } from './crop-type-linkings/crop-type-linkings.module';
+import { MannerBaseService } from './vendors/manner/base.service';
+import { MannerClimateModule } from './vendors/manner/climate/climate.module';
+import { MannerApplicationMethodModule } from './vendors/manner/application-method/application-method.module';
+import { MannerApiCropTypesModule } from './vendors/manner/crop-types/crop-types.module';
+import { MannerCalculateNutrientsModule } from './vendors/manner/calculate-nutrients/calculate-nutrients.module';
+import { MannerIncorporationMethodModule } from './vendors/manner/incorporation-method/incorporation-method.module';
+import { MannerIncorporationDelayModule } from './vendors/manner/incorporation-delay/incorporation-delay.module';
+import { MannerWindspeedModule } from './vendors/manner/windspeed/windspeed.module';
+import { MannerRainfallPostApplicationService } from './vendors/manner/rainfall-post-application/rainfall-post-application.service';
+import { MannerRainfallPostApplicationModule } from './vendors/manner/rainfall-post-application/rainfall-post-application.module';
+import { MannerAutumnCropNitorgenUptakeModule } from './vendors/manner/autumn-crop-nitorgen-uptake/autumn-crop-nitorgen-uptake.module';
+import { MannerRainTypesModule } from './vendors/manner/rain-types/rain-types.module';
+import { MannerTopSoilModule } from './vendors/manner/top-soil/top-soil.module';
+import { MannerMoistureTypesModule } from './vendors/manner/moisture-types/moisture-types.module';
+import { MannerManureGroupModule } from './vendors/manner/manure-group/manure-group.module';
+import { MannerManureTypesModule } from './vendors/manner/manure-types/manure-types.module';
+import { SecondCropLinkingsModule } from './second-crop-linkings/second-crop-linkings.module';
+
 
 @Module({
   // imports: [TypeOrmModule.forRoot(connectionSetup), MasterModule],
@@ -92,8 +117,33 @@ import { InorganicManureDurationModule } from './inorganic-manure-duration/inorg
     RainTypeModule,
     MannerCropTypesModule,
     InorganicManureDurationModule,
+    FertiliserManuresModule,
+    CropTypeLinkingsModule,
+    MannerClimateModule,
+    MannerApplicationMethodModule,
+    MannerApiCropTypesModule,
+    MannerCalculateNutrientsModule,
+    MannerIncorporationMethodModule,
+    MannerIncorporationDelayModule,
+    MannerWindspeedModule,
+    MannerRainfallPostApplicationModule,
+    MannerAutumnCropNitorgenUptakeModule,
+    MannerRainTypesModule,
+    MannerTopSoilModule,
+    MannerMoistureTypesModule,
+    MannerManureGroupModule,
+    MannerManureTypesModule,
+    SecondCropLinkingsModule
   ],
-  providers: [AzureAuthService],
+  providers: [
+    AzureAuthService,
+    CustomLoggerService,
+    AppService,
+    MannerBaseService,
+    RB209BaseService,
+    AddressLookupService,
+  ],
+  controllers: [AppController],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

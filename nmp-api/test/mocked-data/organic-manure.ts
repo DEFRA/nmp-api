@@ -32,6 +32,7 @@ export const organicManureReqBody: any = {
 export const manureTypeData = {
   Name: 'Cattle FYM - Fresh',
   ManureGroupID: null,
+  ManureTypeCategoryID:1,
   CountryID: null,
   HighReadilyAvailableNitrogen: false,
   IsLiquid: false,

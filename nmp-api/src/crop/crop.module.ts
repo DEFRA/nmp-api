@@ -18,6 +18,7 @@ import { FarmService } from '@src/farm/farm.service';
 import { SoilAnalysisService } from '@src/soil-analysis/soil-analysis.service';
 import { RB209ArableService } from '@src/vendors/rb209/arable/arable.service';
 import { RB209RecommendationService } from '@src/vendors/rb209/recommendation/recommendation.service';
+import SnsAnalysesEntity from '@db/entity/sns-analysis.entity';
 
 @Module({
   imports: [
@@ -29,6 +30,8 @@ import { RB209RecommendationService } from '@src/vendors/rb209/recommendation/re
       FarmEntity,
       SoilAnalysisEntity,
       RecommendationCommentEntity,
+      SnsAnalysesEntity
+
     ]),
     RB209ArableModule,
     RB209FieldModule,

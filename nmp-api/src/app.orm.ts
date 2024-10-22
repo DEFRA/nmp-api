@@ -32,6 +32,9 @@ import { MannerCropTypeEntity } from '@db/entity/manner-crop-type.entity';
 import { CropTypeLinkingEntity } from '@db/entity/crop-type-linking.entity';
 import { ManureTypeCategoryEntity } from '@db/entity/manure-type-category.entity';
 import { InOrganicManureDurationEntity } from '@db/entity/inorganic-manure-duration.entity';
+import { FertiliserManuresEntity } from '@db/entity/fertiliser-manures.entity';
+import SnsAnalysesEntity from '@db/entity/sns-analysis.entity';
+import { SecondCropLinkingEntity } from '@db/entity/second-crop-linking.entity';
 
 dotven.config();
 
@@ -81,6 +84,9 @@ if (process.env.NODE_ENV === 'production') {
       MannerCropTypeEntity,
       ManureTypeCategoryEntity,
       InOrganicManureDurationEntity,
+      FertiliserManuresEntity,
+      SnsAnalysesEntity,
+      SecondCropLinkingEntity
     ],
   };
 } else if (process.env.NODE_ENV === 'hosting') {
@@ -140,6 +146,9 @@ if (process.env.NODE_ENV === 'production') {
       MannerCropTypeEntity,
       ManureTypeCategoryEntity,
       InOrganicManureDurationEntity,
+      FertiliserManuresEntity,
+      SnsAnalysesEntity,
+      SecondCropLinkingEntity
     ],
     synchronize: false,
     logging: true,

@@ -14,6 +14,7 @@ import { CreateFieldWithSoilAnalysisAndCropsDto } from './dto/field.dto';
 import { CreateCropWithManagementPeriodsDto } from '@src/crop/dto/crop.dto';
 import { RB209SoilService } from '@src/vendors/rb209/soil/soil.service';
 import { SoilTypeSoilTextureEntity } from '@db/entity/soil-type-soil-texture.entity';
+import SnsAnalysesEntity from '@db/entity/sns-analysis.entity';
 
 @Injectable()
 export class FieldService extends BaseService<
@@ -33,6 +34,8 @@ export class FieldService extends BaseService<
     protected readonly soilTypeSoilTextureRepository: Repository<SoilTypeSoilTextureEntity>,
     protected readonly entityManager: EntityManager,
     protected readonly rB209SoilService: RB209SoilService,
+    @InjectRepository(SnsAnalysesEntity)
+    protected readonly snsAnalysisRepository: Repository<SnsAnalysesEntity>,
   ) {
     super(repository, entityManager);
   }
@@ -111,13 +114,29 @@ export class FieldService extends BaseService<
             CreatedByID: userId,
           }),
         );
-        const SoilAnalysis = await transactionalManager.save(
-          this.soilAnalysisRepository.create({
-            ...body.SoilAnalysis,
-            FieldID: Field.ID,
-            CreatedByID: userId,
-          }),
-        );
+        
+         let SoilAnalysis=null
+        if (body.SoilAnalysis){
+          SoilAnalysis = await transactionalManager.save(
+            this.soilAnalysisRepository.create({
+              ...body.SoilAnalysis,
+              FieldID: Field.ID,
+              CreatedByID: userId,
+            }),
+          );
+
+        }
+
+        let SnsAnalysis = null;
+        if (body.SnsAnalysis) {
+          SnsAnalysis = await transactionalManager.save(
+            this.snsAnalysisRepository.create({
+              ...body.SnsAnalysis,
+              FieldID: Field.ID,
+              CreatedByID: userId,
+            }),
+          );
+        }
         const Crops: CreateCropWithManagementPeriodsDto[] = [];
         for (const cropData of body.Crops) {
           const savedCrop = await transactionalManager.save(
@@ -144,6 +163,7 @@ export class FieldService extends BaseService<
         return {
           Field,
           SoilAnalysis,
+          SnsAnalysis,
           Crops,
         };
       },

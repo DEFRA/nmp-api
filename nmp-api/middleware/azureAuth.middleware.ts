@@ -27,7 +27,7 @@ export class AzureAuthMiddleware implements NestMiddleware {
     private readonly userRepository: Repository<UserEntity>,
     protected readonly azureAuthService: AzureAuthService,
   ) {
-    this.excludedPaths = ['*', '/health'];
+    this.excludedPaths = ['*', '/health','/'];
     this.optionalUserPresentPath = ['/users'];
     this.policyName = EnvironmentService.AZURE_AD_B2C_POLICY_NAME();
     this.clientId = EnvironmentService.AZURE_AD_B2C_CLIENT_ID();
@@ -71,19 +71,20 @@ export class AzureAuthMiddleware implements NestMiddleware {
 
   async use(req: Request, res: Response, next: NextFunction) {
     const authHeader = req.headers['authorization'];
-    const currentPath = req.baseUrl;
+    const currentPath = req.originalUrl;
+
+      if (this.excludedPaths.includes(currentPath)) {
+        // Skip token validation and proceed with the request
+        next();
+        return;
+      }
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new UnauthorizedException(StaticStrings.ERR_TOKEN_NOT_PROVIDED);
     }
 
     const token = authHeader.split(' ')[1];
-    // Check if the current path is in the excluded paths
-    if (this.excludedPaths.includes(currentPath)) {
-      // Skip token validation and proceed with the request
-      next();
-      return;
-    }
+
 
     try {
       const { issuerUrl, jwksUri } = await this.azureAuthService.getData(
