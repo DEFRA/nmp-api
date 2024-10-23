@@ -239,6 +239,7 @@ export class OrganicManureService extends BaseService<
     mannerOutputs,
     organicManureData,
   ) {
+    console.log('englishrles', farm?.EnglishRules);
     const cropTypesList: any[] =
       await this.rB209ArableService.getData('/Arable/CropTypes');
     const cropType = cropTypesList.find(
@@ -315,7 +316,7 @@ export class OrganicManureService extends BaseService<
           },
         ],
         previousCropping: {},
-        countryId: farm.EnglishRules ? 1 : 2,
+        countryId: farm?.EnglishRules ? 1 : 2,
       },
       nutrients: {
         nitrogen: true,
@@ -640,9 +641,26 @@ export class OrganicManureService extends BaseService<
       }
     });
 
-    // Save for Crop Order 1
-    let firstCropSaveData = await transactionalManager.save(
-      this.RecommendationRepository.create({
+    // Check if recommendation exists for the first crop's ManagementPeriodID, and update or create
+    // let firstCropSaveData = await transactionalManager.findOne(
+    //   this.RecommendationRepository,
+    //   { where: { ManagementPeriodID: firstCropManagementPeriodId } },
+    // );
+
+    let firstCropSaveData = await this.RecommendationRepository.findOne({
+      where: { ManagementPeriodID: firstCropManagementPeriodId }, // This line is correct as per your entity definition
+    });
+
+    if (firstCropSaveData) {
+      firstCropSaveData = {
+        ...firstCropSaveData,
+        ...cropOrder1Data,
+        ModifiedOn: new Date(),
+        ModifiedByID: userId,
+      };
+      await transactionalManager.save(RecommendationEntity, firstCropSaveData);
+    } else {
+      firstCropSaveData = this.RecommendationRepository.create({
         ...cropOrder1Data,
         ManagementPeriodID: firstCropManagementPeriodId,
         Comments:
@@ -652,14 +670,34 @@ export class OrganicManureService extends BaseService<
           nutrientRecommendationsData.versionNumber,
         CreatedOn: new Date(),
         CreatedByID: userId,
-      }),
-    );
+      });
+      await transactionalManager.save(RecommendationEntity, firstCropSaveData);
+    }
 
-    // Save for Crop Order 2 if present
+    // Check if recommendation exists for the second crop's ManagementPeriodID, and update or create
     let secondCropSaveData;
     if (cropData.CropOrder === 2) {
-      secondCropSaveData = await transactionalManager.save(
-        this.RecommendationRepository.create({
+      // secondCropSaveData = await transactionalManager.findOne(
+      //   this.RecommendationRepository,
+      //   { where: { ManagementPeriodID: secondCropManagementPeriodId } },
+      // );
+      secondCropSaveData = await this.RecommendationRepository.findOne({
+        where: { ManagementPeriodID: secondCropManagementPeriodId }, // This line is correct as per your entity definition
+      });
+
+      if (secondCropSaveData) {
+        secondCropSaveData = {
+          ...secondCropSaveData,
+          ...cropOrder2Data,
+          ModifiedOn: new Date(),
+          ModifiedByID: userId,
+        };
+        await transactionalManager.save(
+          RecommendationEntity,
+          secondCropSaveData,
+        );
+      } else {
+        secondCropSaveData = this.RecommendationRepository.create({
           ...cropOrder2Data,
           ManagementPeriodID: secondCropManagementPeriodId,
           Comments:
@@ -669,8 +707,12 @@ export class OrganicManureService extends BaseService<
             nutrientRecommendationsData.versionNumber,
           CreatedOn: new Date(),
           CreatedByID: userId,
-        }),
-      );
+        });
+        await transactionalManager.save(
+          RecommendationEntity,
+          secondCropSaveData,
+        );
+      }
     }
 
     // Return both crops if CropOrder is 2, otherwise return only the first crop
@@ -727,7 +769,7 @@ export class OrganicManureService extends BaseService<
             });
 
           const cropData = await this.cropRepository.findOneBy({
-            ID: managementPeriodData.CropID,
+            ID: managementPeriodData?.CropID,
           });
           const fieldData = await this.fieldRepository.findOneBy({
             ID: cropData.FieldID,
@@ -844,7 +886,10 @@ export class OrganicManureService extends BaseService<
               'Recommendation/Recommendations',
               nutrientRecommendationnReqBody,
             );
-
+          console.log(
+            'nutrientRecommendationsData',
+            nutrientRecommendationsData,
+          );
           if (organicManureData.SaveDefaultForFarm) {
             farmManureTypeData = {
               FarmID: organicManureData.FarmID,
@@ -867,11 +912,16 @@ export class OrganicManureService extends BaseService<
               ...organicManureData.OrganicManure,
               AvailableN: mannerOutputs?.data?.currentCropAvailableN,
               CreatedByID: userId,
+              ...(organicManureData.OrganicManure.ID == 0 ? { ID: null } : {}),
             }),
           );
 
           organicManures.push(savedOrganicManure);
-          let arableNotes = nutrientRecommendationsData.arableNotes;
+          console.log(
+            'nutrientRecommendationsDataaaaa',
+            nutrientRecommendationsData,
+          );
+          let arableNotes = nutrientRecommendationsData.adviceNotes;
           if (cropData.CropOrder == 2) {
             const cropOrderFirstData = await this.getFirstCropData(
               fieldData.ID,
@@ -920,12 +970,19 @@ export class OrganicManureService extends BaseService<
               OrganicManure.ManagementPeriodID,
             );
 
-            await this.saveOrUpdateArableNotes(
-              arableNotes,
-              savedData.firstCropSaveData,
-              transactionalManager,
-              userId,
-            );
+            // await this.saveOrUpdateArableNotes(
+            //   arableNotes,
+            //   savedData.firstCropSaveData,
+            //   transactionalManager,
+            //   userId,
+            // );
+  await this.saveOrUpdateSequenceId1Notes(
+    arableNotes,
+    savedData.firstCropSaveData,
+    transactionalManager,
+    userId,
+  );
+
           }
         }
         if (farmManureTypeData) {
@@ -1012,7 +1069,7 @@ export class OrganicManureService extends BaseService<
     }
   }
 
-  async saveOrUpdateArableNotes(
+  async saveOrUpdateSequenceId1Notes(
     arableNotes: { nutrientId: number; note: string; sequenceId: number }[],
     updatedData: any,
     transactionalManager: EntityManager,
@@ -1020,21 +1077,29 @@ export class OrganicManureService extends BaseService<
   ): Promise<void> {
     const recommendationComments: RecommendationCommentEntity[] = [];
 
-    // Group arableNotes by nutrientId and sequenceId, and concatenate the notes
-    const notesByNutrientAndSequence = arableNotes?.reduce(
-      (acc, note) => {
-        const key = `${note.nutrientId}-${note.sequenceId}`; // Create a unique key for nutrientId and sequenceId
-
-        if (!acc[key]) {
-          acc[key] = [];
-        }
-
-        acc[key].push(note.note); // Group notes by nutrientId and sequenceId
-
-        return acc;
-      },
-      {} as { [key: string]: string[] }, // Accumulator object with nutrientId-sequenceId as the key
+    // Filter out notes that have sequenceId 1
+    const sequenceId1Notes = arableNotes?.filter(
+      (note) => note.sequenceId === 1,
     );
+
+    // Helper function to group notes by nutrientId and concatenate them
+    const groupNotesByNutrientId = (
+      notes: { nutrientId: number; note: string }[],
+    ) => {
+      return notes.reduce(
+        (acc, note) => {
+          if (!acc[note.nutrientId]) {
+            acc[note.nutrientId] = [];
+          }
+          acc[note.nutrientId].push(note.note); // Group and concatenate notes by nutrientId
+          return acc;
+        },
+        {} as { [key: number]: string[] },
+      );
+    };
+
+    const sequenceId1NotesByNutrientId =
+      groupNotesByNutrientId(sequenceId1Notes);
 
     // Fetch existing comments for the RecommendationID from the database
     const existingComments = await transactionalManager.find(
@@ -1044,27 +1109,30 @@ export class OrganicManureService extends BaseService<
       },
     );
 
-    const processedKeys = new Set<string>(); // Track processed nutrientId-sequenceId keys
+    const nutrientIdsInNotes = Object.keys(sequenceId1NotesByNutrientId).map(
+      Number,
+    );
 
-    // Loop through the grouped arableNotes
-    for (const key in notesByNutrientAndSequence) {
-      const [nutrientId, sequenceId] = key.split('-').map(Number); // Extract nutrientId and sequenceId from the key
-      const concatenatedNote = notesByNutrientAndSequence[key].join(' '); // Concatenate notes for the same nutrient and sequence
+    // Loop through the grouped notes and either update or create new comments
+    for (const nutrientId in sequenceId1NotesByNutrientId) {
+      const concatenatedNote =
+        sequenceId1NotesByNutrientId[nutrientId].join(' ');
 
+      // Check if a comment exists for the current nutrientId and update it
       const existingComment = existingComments.find(
-        (comment) => comment.Nutrient === nutrientId,
+        (comment) => comment.Nutrient === Number(nutrientId),
       );
 
       if (existingComment) {
-        // If a comment exists, update it with the new note
+        // Update existing comment
         existingComment.Comment = concatenatedNote;
-        existingComment.ModifiedOn = new Date(); // Update modification timestamp
-        existingComment.ModifiedByID = userId; // Update the user ID for modification
+        existingComment.ModifiedOn = new Date();
+        existingComment.ModifiedByID = userId;
         await transactionalManager.save(existingComment);
       } else {
-        // Create a new comment if it doesn't exist
+        // Create new comment
         const newComment = this.recommendationCommentEntity.create({
-          Nutrient: nutrientId,
+          Nutrient: Number(nutrientId),
           Comment: concatenatedNote,
           RecommendationID: updatedData.ID,
           CreatedOn: new Date(),
@@ -1074,22 +1142,111 @@ export class OrganicManureService extends BaseService<
         });
         recommendationComments.push(newComment);
       }
-
-      processedKeys.add(key); // Mark this nutrientId-sequenceId combination as processed
     }
 
-    // Collect nutrientIds from arableNotes
-    const nutrientIdsInNotes = arableNotes?.map((note) => note.nutrientId);
+    // Remove comments that are no longer present in arableNotes
+    await transactionalManager.delete(RecommendationCommentEntity, {
+      RecommendationID: updatedData.ID,
+      Nutrient: Not(In(nutrientIdsInNotes)),
+    });
 
-    if (nutrientIdsInNotes?.length > 0) {
-      // Delete comments for nutrients that are no longer present in arableNotes
+    // Save any new comments created
+    if (recommendationComments.length > 0) {
+      await transactionalManager.save(recommendationComments);
+    }
+  }
+
+  async saveOrUpdateArableNotes(
+    arableNotes: { nutrientId: number; note: string; sequenceId: number }[],
+    updatedData: any,
+    transactionalManager: EntityManager,
+    userId: number,
+  ): Promise<void> {
+    const recommendationComments: RecommendationCommentEntity[] = [];
+    console.log('arableNotes', arableNotes);
+    // Separate arableNotes into first crop (sequenceId = 1) and second crop (sequenceId = 2)
+    const firstCropNotes = arableNotes?.filter((note) => note.sequenceId === 1);
+    console.log('firstCropNotes', firstCropNotes);
+    const secondCropNotes = arableNotes?.filter(
+      (note) => note.sequenceId === 2,
+    );
+
+    // Helper function to group notes by nutrientId and concatenate them
+    const groupNotesByNutrientId = (
+      notes: { nutrientId: number; note: string }[],
+    ) => {
+      return notes.reduce(
+        (acc, note) => {
+          if (!acc[note.nutrientId]) {
+            acc[note.nutrientId] = [];
+          }
+          acc[note.nutrientId].push(note.note); // Group and concatenate notes by nutrientId
+          return acc;
+        },
+        {} as { [key: number]: string[] },
+      );
+    };
+
+    const firstCropNotesByNutrientId = groupNotesByNutrientId(firstCropNotes);
+    const secondCropNotesByNutrientId = groupNotesByNutrientId(secondCropNotes);
+
+    // Fetch existing comments for the RecommendationID from the database
+    const existingComments = await transactionalManager.find(
+      RecommendationCommentEntity,
+      {
+        where: { RecommendationID: updatedData.ID },
+      },
+    );
+
+    const saveComments = async (
+      notesByNutrientId: { [key: number]: string[] },
+      sequenceId: number,
+    ) => {
+      const nutrientIdsInNotes = Object.keys(notesByNutrientId).map(Number);
+
+      for (const nutrientId in notesByNutrientId) {
+        const concatenatedNote = notesByNutrientId[nutrientId].join(' ');
+
+        // Check if a comment exists for the current nutrientId and update it
+        const existingComment = existingComments.find(
+          (comment) => comment.Nutrient === Number(nutrientId),
+        );
+
+        if (existingComment) {
+          // Update existing comment
+          existingComment.Comment = concatenatedNote;
+          existingComment.ModifiedOn = new Date();
+          existingComment.ModifiedByID = userId;
+          await transactionalManager.save(existingComment);
+        } else {
+          // Create new comment
+          const newComment = this.recommendationCommentEntity.create({
+            Nutrient: Number(nutrientId),
+            Comment: concatenatedNote,
+            RecommendationID: updatedData.ID,
+            CreatedOn: new Date(),
+            CreatedByID: userId,
+            ModifiedOn: new Date(),
+            ModifiedByID: userId,
+          });
+          recommendationComments.push(newComment);
+        }
+      }
+
+      // Remove comments that are no longer present in arableNotes
       await transactionalManager.delete(RecommendationCommentEntity, {
         RecommendationID: updatedData.ID,
-        Nutrient: Not(In(nutrientIdsInNotes)), // Only match by nutrientId for deletion
+        Nutrient: Not(In(nutrientIdsInNotes)),
       });
-    }
+    };
 
-    // Save all new recommendation comments if any were created
+    // Process first crop notes (sequenceId = 1)
+    await saveComments(firstCropNotesByNutrientId, 1);
+
+    // Process second crop notes (sequenceId = 2)
+    await saveComments(secondCropNotesByNutrientId, 2);
+
+    // Save any new comments created
     if (recommendationComments.length > 0) {
       await transactionalManager.save(recommendationComments);
     }
