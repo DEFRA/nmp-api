@@ -24,6 +24,7 @@ import {
   UpdateSoilAnalysisDto,
 } from './dto/soil-analysis.dto';
 import { DeepPartial } from 'typeorm';
+import SoilAnalysisEntity from '@db/entity/soil-analysis.entity';
 
 @ApiTags('Soil Analysis')
 @Controller('soil-analyses')
@@ -75,9 +76,9 @@ export class SoilAnalysisController {
 
   @Put('/:soilAnalysisId')
   @ApiOperation({ summary: 'Update SoilAnalysis by SoilAnalysisId' })
-  @ApiBody({ type: UpdateSoilAnalysisDto })
+  @ApiBody({ type: SoilAnalysisEntity })
   async updateSoilAnalysis(
-    @Body('SoilAnalysis') body: SoilAnalysisRequest,
+    @Body('soilAnalysis') body: SoilAnalysisEntity,
     @Param('soilAnalysisId', ParseIntPipe) soilAnalysisId: number,
     @Req() req: Request,
   ) {
