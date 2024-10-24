@@ -35,6 +35,7 @@ export class ManureTypeController {
       manureGroupId,
       countryId,
     );
+    console.log("mant",data)
     return data;
   }
 
