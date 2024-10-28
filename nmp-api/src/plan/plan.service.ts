@@ -559,7 +559,7 @@ export class PlanService extends BaseService<
         }),
       );
     }
-    console.log('bkjdbcdkb', ManagementPeriods[0].ID);
+    
     let managementPeriodIdSecondCrop = ManagementPeriods[0]?.ID;
     // Save or update for Crop Order 2
     let secondCropSaveData;
