@@ -386,6 +386,8 @@ export class PlanService extends BaseService<
     firstCropData,
     managementPeriodData,
     ManagementPeriods,
+    latestSoilAnalysis,
+    snsAnalysesData,
     userId,
   ) {
     // Initialize variables for recommendations for both Crop Orders
@@ -411,6 +413,12 @@ export class PlanService extends BaseService<
       CropLime: 0,
       ManureLime: 0,
       FertilizerLime: 0,
+      PH: latestSoilAnalysis?.PH?.toString(),
+      SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString(),
+      PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString(),
+      KIndex: latestSoilAnalysis?.PotassiumIndex?.toString(),
+      MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString(),
+      SIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString()
     };
 
     let cropOrder2Data = {
@@ -435,6 +443,12 @@ export class PlanService extends BaseService<
       CropLime: 0,
       ManureLime: 0,
       FertilizerLime: 0,
+      PH: latestSoilAnalysis?.PH?.toString(),
+      SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString(),
+      PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString(),
+      KIndex: latestSoilAnalysis?.PotassiumIndex?.toString(),
+      MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString(),
+      SIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString(),
     };
 
     // Iterate through the nutrient recommendations data
@@ -799,7 +813,7 @@ export class PlanService extends BaseService<
             );
             ManagementPeriods.push(savedManagementPeriod);
           }
-          console.log('ManagementPeriods', ManagementPeriods[0].ID);
+          
           let savedRecommendation;
           if (crop.CropOrder == 2) {
             const firstCropData = await this.getFirstCropData(
@@ -819,6 +833,8 @@ export class PlanService extends BaseService<
                 firstCropData,
                 managementPeriodData,
                 ManagementPeriods,
+                latestSoilAnalysis,
+                snsAnalysesData,
                 userId,
               );
             console.log(
@@ -874,6 +890,7 @@ export class PlanService extends BaseService<
                 PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString(),
                 KIndex: latestSoilAnalysis?.PotassiumIndex?.toString(),
                 MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString(),
+                SIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString(),
                 ManagementPeriodID: ManagementPeriods[0]?.ID,
                 Comments: `Reference Value: ${nutrientRecommendationsData.referenceValue}\nVersion: ${nutrientRecommendationsData.versionNumber}`,
                 CreatedOn: new Date(),
