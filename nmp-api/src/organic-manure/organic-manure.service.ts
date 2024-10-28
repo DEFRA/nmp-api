@@ -152,70 +152,34 @@ export class OrganicManureService extends BaseService<
   }
 
   private async buildArableBody(
-    crop: CropEntity,
+    dataMultipleCrops: CropEntity | CropEntity[], // Accept either a single crop or multiple crops
     field: FieldEntity,
   ): Promise<any[]> {
     const arableBody = [];
 
-    // Fetch cropType for the current crop (CropOrder 1 or 2)
+    // Ensure dataMultipleCrops is always treated as an array
+    const crops = Array.isArray(dataMultipleCrops)
+      ? dataMultipleCrops
+      : [dataMultipleCrops];
+
+    // Fetch cropTypes list once for all crops
     const cropTypesList: any[] =
       await this.rB209ArableService.getData('/Arable/CropTypes');
-    const currentCropType = cropTypesList.find(
-      (cropType) => cropType.cropTypeId === crop.CropTypeID,
-    );
 
-    if (!currentCropType || currentCropType.cropGroupId === null) {
-      throw new HttpException(
-        `Invalid CropTypeId for crop having field name ${field.Name}`,
-        HttpStatus.BAD_REQUEST,
+    // Iterate over crops (single or multiple)
+    for (const crop of crops) {
+      const currentCropType = cropTypesList.find(
+        (cropType) => cropType.cropTypeId === crop.CropTypeID,
       );
-    }
 
-    // If CropOrder is 1, add only the current crop's data
-    if (crop.CropOrder === 1) {
-      arableBody.push({
-        cropOrder: crop.CropOrder,
-        cropGroupId: currentCropType.cropGroupId,
-        cropTypeId: crop.CropTypeID,
-        cropInfo1Id: crop.CropInfo1,
-        cropInfo2Id: crop.CropInfo2,
-        sowingDate: crop.SowingDate,
-        expectedYield: crop.Yield,
-      });
-    }
-
-    // If CropOrder is 2, find the crop with CropOrder 1 and add both crops
-    if (crop.CropOrder === 2) {
-      // Find the previous crop with CropOrder 1
-
-      const previousCrop = await this.getFirstCropData(field.ID, crop.Year);
-
-      if (previousCrop) {
-        // Fetch cropType for the previous crop
-        const previousCropType = cropTypesList.find(
-          (cropType) => cropType.cropTypeId === previousCrop.CropTypeID,
+      if (!currentCropType || currentCropType.cropGroupId == null) {
+        throw new HttpException(
+          `Invalid CropTypeId for crop having field name ${field.Name}`,
+          HttpStatus.BAD_REQUEST,
         );
-
-        if (!previousCropType || previousCropType.cropGroupId === null) {
-          throw new HttpException(
-            `Invalid CropTypeId for previous crop having field name ${field.Name}`,
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-
-        // Add CropOrder 1 (previous crop)
-        arableBody.push({
-          cropOrder: previousCrop.CropOrder,
-          cropGroupId: previousCropType.cropGroupId,
-          cropTypeId: previousCrop.CropTypeID,
-          cropInfo1Id: previousCrop.CropInfo1,
-          cropInfo2Id: previousCrop.CropInfo2,
-          sowingDate: previousCrop.SowingDate,
-          expectedYield: previousCrop.Yield,
-        });
       }
 
-      // Add CropOrder 2 (current crop)
+      // Add crop to arableBody based on its CropOrder
       arableBody.push({
         cropOrder: crop.CropOrder,
         cropGroupId: currentCropType.cropGroupId,
@@ -227,7 +191,8 @@ export class OrganicManureService extends BaseService<
       });
     }
 
-    return arableBody;
+    // Return the list of crops sorted by CropOrder (if necessary)
+    return arableBody.sort((a, b) => a.cropOrder - b.cropOrder);
   }
 
   private async buildNutrientRecommendationReqBody(
@@ -235,17 +200,23 @@ export class OrganicManureService extends BaseService<
     farm: FarmEntity,
     soilAnalysis: SoilAnalysisEntity[],
     snsAnalysesData: SnsAnalysesEntity,
+    dataMultipleCrops: CropEntity | CropEntity[],
     crop: CropEntity,
     mannerOutputs,
     organicManureData,
   ) {
-    console.log('englishrles', farm?.EnglishRules);
     const cropTypesList: any[] =
       await this.rB209ArableService.getData('/Arable/CropTypes');
     const cropType = cropTypesList.find(
       (cropType) => cropType.cropTypeId === crop.CropTypeID,
     );
+    const crops = Array.isArray(dataMultipleCrops)
+      ? dataMultipleCrops
+      : [dataMultipleCrops];
 
+    // Check if there are multiple crops or a single crop
+    const isMultipleCrops =
+      Array.isArray(dataMultipleCrops) && dataMultipleCrops.length > 1;
     if (!cropType || cropType.cropGroupId === null) {
       throw new HttpException(
         `Invalid CropTypeId for crop having field name ${field.Name}`,
@@ -260,32 +231,31 @@ export class OrganicManureService extends BaseService<
       },
       take: 1,
     })[0];
-    const arableBody = await this.buildArableBody(crop, field);
+    const arableBody = await this.buildArableBody(dataMultipleCrops, field);
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: crop.FieldType,
         multipleCrops: true,
         arable: arableBody,
-        grassland:
-          crop.CropOrder == 1
-            ? {
-                cropOrder: null,
-                snsId: null,
-                grassGrowthClassId: null,
-                yieldTypeId: null,
-                sequenceId: null,
-                grasslandSequence: [
-                  {
-                    position: null,
-                    cropMaterialId: null,
-                    yield: null,
-                  },
-                ],
-                establishedDate: null,
-                seasonId: null,
-                siteClassId: null,
-              }
-            : {},
+        grassland: isMultipleCrops
+          ? {}
+          : {
+              cropOrder: null,
+              snsId: null,
+              grassGrowthClassId: null,
+              yieldTypeId: null,
+              sequenceId: null,
+              grasslandSequence: [
+                {
+                  position: null,
+                  cropMaterialId: null,
+                  yield: null,
+                },
+              ],
+              establishedDate: null,
+              seasonId: null,
+              siteClassId: null,
+            },
         soil: {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
@@ -304,7 +274,7 @@ export class OrganicManureService extends BaseService<
         mannerOutputs: [
           {
             id: crop.CropOrder,
-            totalN: mannerOutputs?.data.totalN,
+            totalN: mannerOutputs?.data?.totalN,
             availableN: mannerOutputs?.data.currentCropAvailableN,
             totalP: mannerOutputs?.data.totalP2O5,
             availableP: mannerOutputs.data.cropAvailableP2O5,
@@ -496,15 +466,21 @@ export class OrganicManureService extends BaseService<
 
     return data;
   }
+
+  async getSecondCropRecommendation(secondCropManagementPeriodId) {
+    await this.RecommendationRepository.findOne({
+      where: { ManagementPeriodID: secondCropManagementPeriodId.ID },
+    });
+  }
   async saveRecommendationForMultipleCrops(
     transactionalManager,
     nutrientRecommendationsData,
     userId,
     cropData,
-    firstCropManagementPeriodId,
-    secondCropManagementPeriodId,
+    dataMultipleCrops,
+    latestSoilAnalysis,
+    snsAnalysesData,
   ) {
-    // Initialize variables for recommendations for both Crop Orders
     let cropOrder1Data = {
       CropN: 0,
       ManureN: 0,
@@ -527,163 +503,164 @@ export class OrganicManureService extends BaseService<
       CropLime: 0,
       ManureLime: 0,
       FertilizerLime: 0,
+      PH: latestSoilAnalysis?.PH?.toString(),
+      SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString(),
+      PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString(),
+      KIndex: latestSoilAnalysis?.PotassiumIndex?.toString(),
+      MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString(),
+      SIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString(),
     };
 
     let cropOrder2Data = {
-      CropN: 0,
-      ManureN: 0,
-      FertilizerN: 0,
-      CropP2O5: 0,
-      ManureP2O5: 0,
-      FertilizerP2O5: 0,
-      CropK2O: 0,
-      ManureK2O: 0,
-      FertilizerK2O: 0,
-      CropMgO: 0,
-      ManureMgO: 0,
-      FertilizerMgO: 0,
-      CropSO3: 0,
-      ManureSO3: 0,
-      FertilizerSO3: 0,
-      CropNa2O: 0,
-      ManureNa2O: 0,
-      FertilizerNa2O: 0,
-      CropLime: 0,
-      ManureLime: 0,
-      FertilizerLime: 0,
+      ...cropOrder1Data,
     };
 
-    // Iterate through the nutrient recommendations data
-    nutrientRecommendationsData.calculations.forEach((calculation) => {
-      const nutrientId = calculation.nutrientId;
-      const sequenceId = calculation.sequenceId;
+    const firstCrop = dataMultipleCrops.find((crop) => crop.CropOrder === 1);
+    const secondCrop = dataMultipleCrops.find((crop) => crop.CropOrder === 2);
 
-      switch (nutrientId) {
-        case 0:
-          if (sequenceId === 1) {
-            cropOrder1Data.CropN = calculation.recommendation;
-            cropOrder1Data.ManureN = calculation.applied;
-            cropOrder1Data.FertilizerN = calculation.cropNeed;
-          } else if (sequenceId === 2) {
-            cropOrder2Data.CropN = calculation.recommendation;
-            cropOrder2Data.ManureN = calculation.applied;
-            cropOrder2Data.FertilizerN = calculation.cropNeed;
-          }
-          break;
-        case 1:
-          if (sequenceId === 1) {
-            cropOrder1Data.CropP2O5 = calculation.recommendation;
-            cropOrder1Data.ManureP2O5 = calculation.applied;
-            cropOrder1Data.FertilizerP2O5 = calculation.cropNeed;
-          } else if (sequenceId === 2) {
-            cropOrder2Data.CropP2O5 = calculation.recommendation;
-            cropOrder2Data.ManureP2O5 = calculation.applied;
-            cropOrder2Data.FertilizerP2O5 = calculation.cropNeed;
-          }
-          break;
-        case 2:
-          if (sequenceId === 1) {
-            cropOrder1Data.CropK2O = calculation.recommendation;
-            cropOrder1Data.ManureK2O = calculation.applied;
-            cropOrder1Data.FertilizerK2O = calculation.cropNeed;
-          } else if (sequenceId === 2) {
-            cropOrder2Data.CropK2O = calculation.recommendation;
-            cropOrder2Data.ManureK2O = calculation.applied;
-            cropOrder2Data.FertilizerK2O = calculation.cropNeed;
-          }
-          break;
-        case 3:
-          if (sequenceId === 1) {
-            cropOrder1Data.CropMgO = calculation.recommendation;
-            cropOrder1Data.ManureMgO = calculation.applied;
-            cropOrder1Data.FertilizerMgO = calculation.cropNeed;
-          } else if (sequenceId === 2) {
-            cropOrder2Data.CropMgO = calculation.recommendation;
-            cropOrder2Data.ManureMgO = calculation.applied;
-            cropOrder2Data.FertilizerMgO = calculation.cropNeed;
-          }
-          break;
-        case 4:
-          if (sequenceId === 1) {
-            cropOrder1Data.CropSO3 = calculation.recommendation;
-            cropOrder1Data.ManureSO3 = calculation.applied;
-            cropOrder1Data.FertilizerSO3 = calculation.cropNeed;
-          } else if (sequenceId === 2) {
-            cropOrder2Data.CropSO3 = calculation.recommendation;
-            cropOrder2Data.ManureSO3 = calculation.applied;
-            cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
-          }
-          break;
-        case 5:
-          if (sequenceId === 1) {
-            cropOrder1Data.CropNa2O = calculation.recommendation;
-            cropOrder1Data.ManureNa2O = calculation.applied;
-            cropOrder1Data.FertilizerNa2O = calculation.cropNeed;
-          } else if (sequenceId === 2) {
-            cropOrder2Data.CropNa2O = calculation.recommendation;
-            cropOrder2Data.ManureNa2O = calculation.applied;
-            cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
-          }
-          break;
-        case 6:
-          if (sequenceId === 1) {
-            cropOrder1Data.CropLime = calculation.recommendation;
-            cropOrder1Data.ManureLime = calculation.applied;
-            cropOrder1Data.FertilizerLime = calculation.cropNeed;
-          } else if (sequenceId === 2) {
-            cropOrder2Data.CropLime = calculation.recommendation;
-            cropOrder2Data.ManureLime = calculation.applied;
-            cropOrder2Data.FertilizerLime = calculation.cropNeed;
-          }
-          break;
-        default:
-          break;
-      }
-    });
+    // Get all recommendations once and store them in a map
+    const allRecommendations = await this.RecommendationRepository.find();
+    const recommendationMap = allRecommendations.reduce(
+      (acc, recommendation) => {
+        acc[recommendation.ManagementPeriodID] = recommendation;
+        return acc;
+      },
+      {},
+    );
 
-    // Check if recommendation exists for the first crop's ManagementPeriodID, and update or create
-    // let firstCropSaveData = await transactionalManager.findOne(
-    //   this.RecommendationRepository,
-    //   { where: { ManagementPeriodID: firstCropManagementPeriodId } },
-    // );
+    // Get ManagementPeriodID for first crop
+    let firstCropSaveData = null;
+    if (firstCrop) {
+      const firstCropManagementPeriodId =
+        await this.managementPeriodRepository.findOneBy({
+          CropID: firstCrop.ID,
+        });
 
-    let firstCropSaveData = await this.RecommendationRepository.findOne({
-      where: { ManagementPeriodID: firstCropManagementPeriodId }, // This line is correct as per your entity definition
-    });
-
-    if (firstCropSaveData) {
-      firstCropSaveData = {
-        ...firstCropSaveData,
-        ...cropOrder1Data,
-        ModifiedOn: new Date(),
-        ModifiedByID: userId,
-      };
-      await transactionalManager.save(RecommendationEntity, firstCropSaveData);
-    } else {
-      firstCropSaveData = this.RecommendationRepository.create({
-        ...cropOrder1Data,
-        ManagementPeriodID: firstCropManagementPeriodId,
-        Comments:
-          'Reference Value: ' +
-          nutrientRecommendationsData.referenceValue +
-          '\nVersion: ' +
-          nutrientRecommendationsData.versionNumber,
-        CreatedOn: new Date(),
-        CreatedByID: userId,
+      nutrientRecommendationsData.calculations.forEach((calculation) => {
+        if (calculation.sequenceId === 1) {
+          switch (calculation.nutrientId) {
+            case 0:
+              cropOrder1Data.CropN = calculation.recommendation;
+              cropOrder1Data.ManureN = calculation.applied;
+              cropOrder1Data.FertilizerN = calculation.cropNeed;
+              break;
+            case 1:
+              cropOrder1Data.CropP2O5 = calculation.recommendation;
+              cropOrder1Data.ManureP2O5 = calculation.applied;
+              cropOrder1Data.FertilizerP2O5 = calculation.cropNeed;
+              break;
+            case 2:
+              cropOrder1Data.CropK2O = calculation.recommendation;
+              cropOrder1Data.ManureK2O = calculation.applied;
+              cropOrder1Data.FertilizerK2O = calculation.cropNeed;
+              break;
+            case 3:
+              cropOrder1Data.CropMgO = calculation.recommendation;
+              cropOrder1Data.ManureMgO = calculation.applied;
+              cropOrder1Data.FertilizerMgO = calculation.cropNeed;
+              break;
+            case 4:
+              cropOrder1Data.CropSO3 = calculation.recommendation;
+              cropOrder1Data.ManureSO3 = calculation.applied;
+              cropOrder1Data.FertilizerSO3 = calculation.cropNeed;
+              break;
+            case 5:
+              cropOrder1Data.CropNa2O = calculation.recommendation;
+              cropOrder1Data.ManureNa2O = calculation.applied;
+              cropOrder1Data.FertilizerNa2O = calculation.cropNeed;
+              break;
+            case 6:
+              cropOrder1Data.CropLime = calculation.recommendation;
+              cropOrder1Data.ManureLime = calculation.applied;
+              cropOrder1Data.FertilizerLime = calculation.cropNeed;
+              break;
+          }
+        }
       });
-      await transactionalManager.save(RecommendationEntity, firstCropSaveData);
+
+      firstCropSaveData = recommendationMap[firstCropManagementPeriodId.ID];
+
+      if (firstCropSaveData) {
+        firstCropSaveData = {
+          ...firstCropSaveData,
+          ...cropOrder1Data,
+          ModifiedOn: new Date(),
+          ModifiedByID: userId,
+        };
+        await transactionalManager.save(
+          RecommendationEntity,
+          firstCropSaveData,
+        );
+      } else {
+        firstCropSaveData = this.RecommendationRepository.create({
+          ...cropOrder1Data,
+          ManagementPeriodID: firstCropManagementPeriodId.ID,
+          Comments:
+            'Reference Value: ' +
+            nutrientRecommendationsData.referenceValue +
+            '\nVersion: ' +
+            nutrientRecommendationsData.version,
+          CreatedOn: new Date(),
+          CreatedByID: userId,
+        });
+        await transactionalManager.save(
+          RecommendationEntity,
+          firstCropSaveData,
+        );
+      }
     }
 
-    // Check if recommendation exists for the second crop's ManagementPeriodID, and update or create
-    let secondCropSaveData;
-    if (cropData.CropOrder === 2) {
-      // secondCropSaveData = await transactionalManager.findOne(
-      //   this.RecommendationRepository,
-      //   { where: { ManagementPeriodID: secondCropManagementPeriodId } },
-      // );
-      secondCropSaveData = await this.RecommendationRepository.findOne({
-        where: { ManagementPeriodID: secondCropManagementPeriodId }, // This line is correct as per your entity definition
+    // Get ManagementPeriodID for second crop if it exists
+    let secondCropSaveData = null;
+    if (secondCrop) {
+      const secondCropManagementPeriodId =
+        await this.managementPeriodRepository.findOneBy({
+          CropID: secondCrop.ID,
+        });
+
+      nutrientRecommendationsData.calculations.forEach((calculation) => {
+        if (calculation.sequenceId === 2) {
+          switch (calculation.nutrientId) {
+            case 0:
+              cropOrder2Data.CropN = calculation.recommendation;
+              cropOrder2Data.ManureN = calculation.applied;
+              cropOrder2Data.FertilizerN = calculation.cropNeed;
+              break;
+            case 1:
+              cropOrder2Data.CropP2O5 = calculation.recommendation;
+              cropOrder2Data.ManureP2O5 = calculation.applied;
+              cropOrder2Data.FertilizerP2O5 = calculation.cropNeed;
+              break;
+            case 2:
+              cropOrder2Data.CropK2O = calculation.recommendation;
+              cropOrder2Data.ManureK2O = calculation.applied;
+              cropOrder2Data.FertilizerK2O = calculation.cropNeed;
+              break;
+            case 3:
+              cropOrder2Data.CropMgO = calculation.recommendation;
+              cropOrder2Data.ManureMgO = calculation.applied;
+              cropOrder2Data.FertilizerMgO = calculation.cropNeed;
+              break;
+            case 4:
+              cropOrder2Data.CropSO3 = calculation.recommendation;
+              cropOrder2Data.ManureSO3 = calculation.applied;
+              cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
+              break;
+            case 5:
+              cropOrder2Data.CropNa2O = calculation.recommendation;
+              cropOrder2Data.ManureNa2O = calculation.applied;
+              cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
+              break;
+            case 6:
+              cropOrder2Data.CropLime = calculation.recommendation;
+              cropOrder2Data.ManureLime = calculation.applied;
+              cropOrder2Data.FertilizerLime = calculation.cropNeed;
+              break;
+          }
+        }
       });
+
+      secondCropSaveData = recommendationMap[secondCropManagementPeriodId.ID];
 
       if (secondCropSaveData) {
         secondCropSaveData = {
@@ -699,12 +676,12 @@ export class OrganicManureService extends BaseService<
       } else {
         secondCropSaveData = this.RecommendationRepository.create({
           ...cropOrder2Data,
-          ManagementPeriodID: secondCropManagementPeriodId,
+          ManagementPeriodID: secondCropManagementPeriodId.ID,
           Comments:
             'Reference Value: ' +
             nutrientRecommendationsData.referenceValue +
             '\nVersion: ' +
-            nutrientRecommendationsData.versionNumber,
+            nutrientRecommendationsData.version,
           CreatedOn: new Date(),
           CreatedByID: userId,
         });
@@ -715,10 +692,12 @@ export class OrganicManureService extends BaseService<
       }
     }
 
-    // Return both crops if CropOrder is 2, otherwise return only the first crop
-    return cropData.CropOrder === 2
-      ? { firstCropSaveData, secondCropSaveData }
-      : { firstCropSaveData };
+    // Return the saved data for one or both crops based on the input
+    if (secondCrop) {
+      return { firstCropSaveData, secondCropSaveData };
+    } else {
+      return { firstCropSaveData };
+    }
   }
 
   async createOrganicManuresWithFarmManureType(
@@ -863,12 +842,22 @@ export class OrganicManureService extends BaseService<
             fieldData.Name,
             cropData?.Year,
           );
+          console.log('latestSoilAnalysis', latestSoilAnalysis);
           Errors.push(...soilAnalysisErrors);
           if (Errors.length > 0)
             throw new HttpException(
               JSON.stringify(Errors),
               HttpStatus.BAD_REQUEST,
             );
+
+          const dataMultipleCrops = await this.cropRepository.find({
+            where: {
+              FieldID: fieldData.ID,
+              Year: cropData.Year,
+              Confirm: false, // Or 0 based on your field setup
+            },
+          });
+          console.log('dataMultipleCrops', dataMultipleCrops);
           const snsAnalysesData = await this.getSnsAnalysesData(fieldData.ID);
           const nutrientRecommendationnReqBody =
             await this.buildNutrientRecommendationReqBody(
@@ -876,10 +865,15 @@ export class OrganicManureService extends BaseService<
               farmData,
               soilAnalysisRecords,
               snsAnalysesData,
+              dataMultipleCrops,
               cropData,
               mannerOutputs,
               organicManureData,
             );
+          console.log(
+            'nutrientRecommendationnReqBody',
+            nutrientRecommendationnReqBody,
+          );
 
           const nutrientRecommendationsData =
             await this.rB209RecommendationService.postData(
@@ -922,68 +916,33 @@ export class OrganicManureService extends BaseService<
             nutrientRecommendationsData,
           );
           let arableNotes = nutrientRecommendationsData.adviceNotes;
-          if (cropData.CropOrder == 2) {
-            const cropOrderFirstData = await this.getFirstCropData(
-              fieldData.ID,
-              cropData.Year,
-            );
 
-            const firstCropManagementPeriodId =
-              await this.getManagementPeriodId(cropOrderFirstData.ID);
+          // const cropOrderFirstData = await this.getFirstCropData(
+          //   fieldData.ID,
+          //   cropData.Year,
+          // );
 
-            const savedData = await this.saveRecommendationForMultipleCrops(
-              transactionalManager,
-              nutrientRecommendationsData,
-              userId,
-              cropData,
-              firstCropManagementPeriodId,
-              OrganicManure.ManagementPeriodID,
-            );
+          // const firstCropManagementPeriodId =
+          //   await this.getManagementPeriodId(cropOrderFirstData.ID);
 
-            await this.saveOrUpdateArableNotes(
-              arableNotes,
-              savedData.firstCropSaveData,
-              transactionalManager,
-              userId,
-            );
-            await this.saveOrUpdateArableNotes(
-              arableNotes,
-              savedData.secondCropSaveData,
-              transactionalManager,
-              userId,
-            );
-          } else {
-            const cropOrderFirstData = await this.getFirstCropData(
-              fieldData.ID,
-              cropData.Year,
-            );
+          const savedData = await this.saveRecommendationForMultipleCrops(
+            transactionalManager,
+            nutrientRecommendationsData,
+            userId,
+            cropData,
+            dataMultipleCrops,
+            latestSoilAnalysis,
+            snsAnalysesData,
+          );
 
-            const firstCropManagementPeriodId =
-              await this.getManagementPeriodId(cropOrderFirstData.ID);
+          console.log('savedDataaa', savedData);
 
-            const savedData = await this.saveRecommendationForMultipleCrops(
-              transactionalManager,
-              nutrientRecommendationsData,
-              userId,
-              cropData,
-              firstCropManagementPeriodId,
-              OrganicManure.ManagementPeriodID,
-            );
-
-            // await this.saveOrUpdateArableNotes(
-            //   arableNotes,
-            //   savedData.firstCropSaveData,
-            //   transactionalManager,
-            //   userId,
-            // );
-  await this.saveOrUpdateSequenceId1Notes(
-    arableNotes,
-    savedData.firstCropSaveData,
-    transactionalManager,
-    userId,
-  );
-
-          }
+          await this.saveOrUpdateArableNotes(
+            arableNotes,
+            savedData,
+            transactionalManager,
+            userId,
+          );
         }
         if (farmManureTypeData) {
           const existingFarmManureType =
@@ -1158,29 +1117,24 @@ export class OrganicManureService extends BaseService<
 
   async saveOrUpdateArableNotes(
     arableNotes: { nutrientId: number; note: string; sequenceId: number }[],
-    updatedData: any,
+    savedData: { firstCropSaveData: any; secondCropSaveData?: any },
     transactionalManager: EntityManager,
     userId: number,
   ): Promise<void> {
     const recommendationComments: RecommendationCommentEntity[] = [];
-    console.log('arableNotes', arableNotes);
-    // Separate arableNotes into first crop (sequenceId = 1) and second crop (sequenceId = 2)
-    const firstCropNotes = arableNotes?.filter((note) => note.sequenceId === 1);
-    console.log('firstCropNotes', firstCropNotes);
-    const secondCropNotes = arableNotes?.filter(
-      (note) => note.sequenceId === 2,
-    );
 
-    // Helper function to group notes by nutrientId and concatenate them
+    // Separate notes by crop sequence
+    const firstCropNotes = arableNotes.filter((note) => note.sequenceId === 1);
+    const secondCropNotes = arableNotes.filter((note) => note.sequenceId === 2);
+
+    // Group notes by nutrientId and concatenate
     const groupNotesByNutrientId = (
       notes: { nutrientId: number; note: string }[],
     ) => {
       return notes.reduce(
         (acc, note) => {
-          if (!acc[note.nutrientId]) {
-            acc[note.nutrientId] = [];
-          }
-          acc[note.nutrientId].push(note.note); // Group and concatenate notes by nutrientId
+          if (!acc[note.nutrientId]) acc[note.nutrientId] = [];
+          acc[note.nutrientId].push(note.note);
           return acc;
         },
         {} as { [key: number]: string[] },
@@ -1190,24 +1144,20 @@ export class OrganicManureService extends BaseService<
     const firstCropNotesByNutrientId = groupNotesByNutrientId(firstCropNotes);
     const secondCropNotesByNutrientId = groupNotesByNutrientId(secondCropNotes);
 
-    // Fetch existing comments for the RecommendationID from the database
-    const existingComments = await transactionalManager.find(
-      RecommendationCommentEntity,
-      {
-        where: { RecommendationID: updatedData.ID },
-      },
-    );
-
+    // Helper to handle comment updates and deletions for each crop's notes
     const saveComments = async (
       notesByNutrientId: { [key: number]: string[] },
-      sequenceId: number,
+      recommendationId: number,
     ) => {
       const nutrientIdsInNotes = Object.keys(notesByNutrientId).map(Number);
+      const existingComments = await transactionalManager.find(
+        RecommendationCommentEntity,
+        { where: { RecommendationID: recommendationId } },
+      );
 
       for (const nutrientId in notesByNutrientId) {
         const concatenatedNote = notesByNutrientId[nutrientId].join(' ');
 
-        // Check if a comment exists for the current nutrientId and update it
         const existingComment = existingComments.find(
           (comment) => comment.Nutrient === Number(nutrientId),
         );
@@ -1218,35 +1168,55 @@ export class OrganicManureService extends BaseService<
           existingComment.ModifiedOn = new Date();
           existingComment.ModifiedByID = userId;
           await transactionalManager.save(existingComment);
+
+          // Log the updated comment
+          console.log(
+            `Updated comment for RecommendationID ${recommendationId}, NutrientID ${nutrientId}: ${concatenatedNote}`,
+          );
         } else {
           // Create new comment
           const newComment = this.recommendationCommentEntity.create({
             Nutrient: Number(nutrientId),
             Comment: concatenatedNote,
-            RecommendationID: updatedData.ID,
+            RecommendationID: recommendationId,
             CreatedOn: new Date(),
             CreatedByID: userId,
             ModifiedOn: new Date(),
             ModifiedByID: userId,
           });
           recommendationComments.push(newComment);
+
+          // Log the newly created comment
+          console.log(
+            `Created new comment for RecommendationID ${recommendationId}, NutrientID ${nutrientId}: ${concatenatedNote}`,
+          );
         }
       }
 
-      // Remove comments that are no longer present in arableNotes
+      // Delete comments that no longer have a matching nutrientId
       await transactionalManager.delete(RecommendationCommentEntity, {
-        RecommendationID: updatedData.ID,
+        RecommendationID: recommendationId,
         Nutrient: Not(In(nutrientIdsInNotes)),
       });
     };
 
-    // Process first crop notes (sequenceId = 1)
-    await saveComments(firstCropNotesByNutrientId, 1);
+    // Process first crop comments if available
+    if (savedData.firstCropSaveData) {
+      await saveComments(
+        firstCropNotesByNutrientId,
+        savedData.firstCropSaveData.ID,
+      );
+    }
 
-    // Process second crop notes (sequenceId = 2)
-    await saveComments(secondCropNotesByNutrientId, 2);
+    // Process second crop comments if available
+    if (savedData.secondCropSaveData) {
+      await saveComments(
+        secondCropNotesByNutrientId,
+        savedData.secondCropSaveData.ID,
+      );
+    }
 
-    // Save any new comments created
+    // Save any new comments
     if (recommendationComments.length > 0) {
       await transactionalManager.save(recommendationComments);
     }
