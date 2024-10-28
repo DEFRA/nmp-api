@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseBoolPipe,
@@ -117,5 +118,16 @@ export class FieldController {
     const userId = req['userId'];
     const Field = await this.fieldService.updateField(body, userId, fieldId);
     return { Field };
+  }
+
+  @Delete('/:fieldId')
+  @ApiOperation({ summary: 'Delete Field by Field Id' })
+  async deleteFieldById(@Param('fieldId', ParseIntPipe) fieldId: number) {
+    try {
+      await this.fieldService.deleteFieldById(fieldId);
+      return { message: 'Field deleted successfully' };
+    } catch (error) {
+      console.error('Error deleting field:', error);
+    }
   }
 }
