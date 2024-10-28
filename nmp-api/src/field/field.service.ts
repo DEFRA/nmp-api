@@ -175,12 +175,13 @@ export class FieldService extends BaseService<
     userId: number,
     fieldId: number,
   ) {
+    const { ID, ...dataToUpdate } = updatedFieldData;
     const { TopSoilID, SubSoilID } = await this.getSoilTextureBySoilTypeId(
       updatedFieldData.SoilTypeID,
     );
 
     const result = await this.repository.update(fieldId, {
-      ...updatedFieldData,
+      ...dataToUpdate,
       TopSoilID,
       SubSoilID,
       ModifiedByID: userId,

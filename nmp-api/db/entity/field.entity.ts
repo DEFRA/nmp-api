@@ -25,6 +25,7 @@ export default class FieldEntity {
     primaryKeyConstraintName: 'PK_Fields',
   })
   @PrimaryColumn({ type: 'int', insert: false })
+  @ApiPropertyOptional()
   ID: number;
 
   @ManyToOne(() => FarmEntity, (farm) => farm.Fields)
