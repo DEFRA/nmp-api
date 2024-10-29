@@ -170,11 +170,12 @@ export class FieldService extends BaseService<
   }
 
   async updateField(
-    updatedFieldData: DeepPartial<FieldEntity>,
+    updatedFieldData: DeepPartial<FieldEntity> & { EncryptedFieldId?: string },
     userId: number,
     fieldId: number,
   ) {
-    const { ID, ...dataToUpdate } = updatedFieldData;
+    const { ID, CreatedByID, CreatedOn, EncryptedFieldId, ...dataToUpdate } =
+      updatedFieldData;
     const { TopSoilID, SubSoilID } = await this.getSoilTextureBySoilTypeId(
       updatedFieldData.SoilTypeID,
     );
