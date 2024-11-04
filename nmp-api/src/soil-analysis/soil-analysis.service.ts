@@ -34,8 +34,10 @@ export class SoilAnalysisService extends BaseService<
     userId: number,
     soilAnalysisId: number,
   ) {
+
+    const { CreatedByID,CreatedOn, ...updatedData } = updatedSoilAnalysisData;
     const result = await this.repository.update(soilAnalysisId, {
-      ...updatedSoilAnalysisData,
+      ...updatedData,
       ModifiedByID: userId,
       ModifiedOn: new Date(),
     });

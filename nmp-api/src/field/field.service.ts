@@ -114,9 +114,9 @@ export class FieldService extends BaseService<
             CreatedByID: userId,
           }),
         );
-        
-         let SoilAnalysis=null
-        if (body.SoilAnalysis){
+
+        let SoilAnalysis = null;
+        if (body.SoilAnalysis) {
           SoilAnalysis = await transactionalManager.save(
             this.soilAnalysisRepository.create({
               ...body.SoilAnalysis,
@@ -124,7 +124,6 @@ export class FieldService extends BaseService<
               CreatedByID: userId,
             }),
           );
-
         }
 
         let SnsAnalysis = null;
@@ -171,16 +170,18 @@ export class FieldService extends BaseService<
   }
 
   async updateField(
-    updatedFieldData: DeepPartial<FieldEntity>,
+    updatedFieldData: DeepPartial<FieldEntity> & { EncryptedFieldId?: string },
     userId: number,
     fieldId: number,
   ) {
+    const { ID, CreatedByID, CreatedOn, EncryptedFieldId, ...dataToUpdate } =
+      updatedFieldData;
     const { TopSoilID, SubSoilID } = await this.getSoilTextureBySoilTypeId(
       updatedFieldData.SoilTypeID,
     );
 
     const result = await this.repository.update(fieldId, {
-      ...updatedFieldData,
+      ...dataToUpdate,
       TopSoilID,
       SubSoilID,
       ModifiedByID: userId,
@@ -195,5 +196,23 @@ export class FieldService extends BaseService<
       where: { ID: fieldId },
     });
     return updatedField;
+  }
+
+  async deleteFieldById(fieldId: number): Promise<void> {
+    // Check if the field exists
+    const fieldToDelete = await this.repository.findOne({
+      where: { ID: fieldId },
+    });
+    if (!fieldToDelete) {
+      throw new NotFoundException(`Field with ID ${fieldId} not found`);
+    }
+
+    try {
+      // Execute the stored procedure
+      const storedProcedure = 'EXEC dbo.spFields_DeleteFields @fieldId = @0';
+      await this.entityManager.query(storedProcedure, [fieldId]);
+    } catch (error) {
+      console.error('Error deleting field:', error);
+    }
   }
 }

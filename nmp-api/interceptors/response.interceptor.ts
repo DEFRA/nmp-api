@@ -124,6 +124,18 @@ export class ResponseInterceptor implements NestInterceptor {
         this.cacheResponse(request.url, data);
       }),
       map((data) => {
+          if (data?.data?.success === false) {
+            // Manually throw an error to handle in the error flow
+            throw new HttpException(
+              {
+                success: false,
+                message: data.data.message || 'An error occurred',
+                data: null,
+                errors: data.errors || [],
+              },
+              400,
+            );
+          }
         const response: ResponseFormat = this.formatSuccessResponse(data);
         return response;
       }),
