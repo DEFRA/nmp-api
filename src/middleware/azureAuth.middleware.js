@@ -11,6 +11,7 @@ const boom = require("@hapi/boom");
 class AzureAuthMiddleware {
   #excludedPaths;
   #optionalUserPresentPath;
+  #otherExcludedPaths;
   #jwksClient;
   #policyName;
   #clientId;
@@ -23,8 +24,8 @@ class AzureAuthMiddleware {
       EnvironmentService.APPLICATION_SWAGGER_PATH() || "/docs",
       "/swagger.json",
       "/swaggerui",
-      "/"
     ];
+    this.#otherExcludedPaths="/";
     this.#optionalUserPresentPath = ["/users"];
     this.#policyName = EnvironmentService.AZURE_AD_B2C_POLICY_NAME();
     this.#clientId = EnvironmentService.AZURE_AD_B2C_CLIENT_ID();
@@ -71,10 +72,16 @@ class AzureAuthMiddleware {
   async use(request, h) {
     const authHeader = request.headers["authorization"];
     const currentPath = request.route.path;
-      if (this.#excludedPaths.includes(currentPath)) {
-        // Skip token validation and proceed with the request
-        return h.continue;
-      }
+
+    if (this.#otherExcludedPaths.includes(currentPath)) {
+      // Skip token validation and proceed with the request
+      return h.continue;
+    } else if (
+      this.#excludedPaths.some((path) => currentPath.startsWith(path))
+    ) {
+      console.log(`Skipping token validation for path: ${currentPath}`); // Debugging
+      return h.continue; // Skip token validation and proceed
+    }
 
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
