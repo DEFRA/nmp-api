@@ -23,6 +23,7 @@ class AzureAuthMiddleware {
       EnvironmentService.APPLICATION_SWAGGER_PATH() || "/docs",
       "/swagger.json",
       "/swaggerui",
+      "/"
     ];
     this.#optionalUserPresentPath = ["/users"];
     this.#policyName = EnvironmentService.AZURE_AD_B2C_POLICY_NAME();
@@ -70,10 +71,11 @@ class AzureAuthMiddleware {
   async use(request, h) {
     const authHeader = request.headers["authorization"];
     const currentPath = request.route.path;
-    if (this.#excludedPaths.some((path) => currentPath.startsWith(path))) {
-      // Skip token validation and proceed with the request
-      return h.continue;
-    }
+      if (this.#excludedPaths.includes(currentPath)) {
+        // Skip token validation and proceed with the request
+        return h.continue;
+      }
+
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       throw boom.unauthorized(StaticStrings.ERR_TOKEN_NOT_PROVIDED);
