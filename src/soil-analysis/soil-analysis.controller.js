@@ -29,12 +29,12 @@ class SoilAnalysesController {
     let selectOptions = {};
     if (shortSummary) selectOptions = { ID: true, Date: true, FieldID: true };
     try {
-      const { records } = await this.#soilAnalysisService.getBy(
+      const SoilAnalyses = await this.#soilAnalysisService.getBy(
         "FieldID",
         fieldId,
         selectOptions
       );
-      return this.#h.response({ SoilAnalyses: records });
+      return this.#h.response({ SoilAnalyses });
     } catch (error) {
       return this.#h.response({ error });
     }
