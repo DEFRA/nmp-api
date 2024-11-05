@@ -30,6 +30,7 @@ const FieldEntitySchema = Joi.object({
 }).required();
 
 const SoilAnalysisSchema = Joi.object({
+  FieldID: Joi.number().integer().allow(null),
   Year: Joi.number().integer().required(),
   SulphurDeficient: Joi.boolean().default(true).required(),
   Date: Joi.date().iso().allow(null),
