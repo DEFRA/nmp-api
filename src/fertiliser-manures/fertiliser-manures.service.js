@@ -64,10 +64,13 @@ class FertiliserManuresService extends BaseService {
 
   async createFertiliserManures(fertiliserManureData, userId) {
     return await AppDataSource.transaction(async (transactionalManager) => {
-      const fertiliserManures = fertiliserManureData.map((item) => ({
-        ...item,
+     
+      const fertiliserManures = fertiliserManureData.map(({ ID, ...rest }) => ({
+        ...rest,
         CreatedByID: userId,
+        CreatedOn: new Date(),
       }));
+
       const savedFertiliserManures = await transactionalManager.save(
         FertiliserManuresEntity,
         fertiliserManures

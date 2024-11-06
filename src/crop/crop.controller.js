@@ -50,7 +50,7 @@ class CropController {
       if (cropTypes.length === 0) {
         throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
       }
-      return this.#h.response( cropTypes );
+      return this.#h.response(cropTypes);
     } catch (error) {
       console.error(
         "Error in getCropsPlansCropTypesByHarvestYear controller:",
@@ -112,7 +112,7 @@ class CropController {
       const { fieldId } = this.#request.params;
 
       const Crops = await this.#cropService.getBy("FieldID", fieldId);
-  
+
       return this.#h.response({ Crops });
     } catch (error) {
       console.error("Error in getCropsByFieldId controller:", error);
@@ -130,7 +130,7 @@ class CropController {
       if (records.length === 0) {
         throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
       }
-      return this.#h.response(  records );
+      return this.#h.response(records);
     } catch (error) {
       console.error("Error in getCropsPlansByFarmId controller:", error);
       return this.#h.response({ error });
@@ -185,6 +185,43 @@ class CropController {
       return this.#h.response(cropTypeData);
     } catch (error) {
       return this.#h.response({ error });
+    }
+  }
+
+  async updateCropByFieldAndYearAndConfirm() {
+    try {
+      const { fieldId } = this.#request.params; // Extract fieldId from params
+      const { year, confirm } = this.#request.query; // Extract year and confirm from query
+      const cropData = this.#request.payload; // Get the crop data from the payload
+      const userId = this.#request.userId;
+      
+      const cropExists = await this.#cropService.getCrops(fieldId, year, confirm);
+      if (cropExists && cropExists.FieldID !== fieldId && cropExists.Year !==year && cropExists.Confirm !==confirm  ) {
+        throw boom.conflict(
+          "crop does'nt exist"
+        );
+      }
+      // Assuming you have a service method to update the crop data
+      const updatedCrop =
+        await this.#cropService.updateCropByFieldYearAndConfirm(
+          cropData,
+          userId,
+          fieldId,
+          year,
+          confirm,
+        );
+
+      if (!updatedCrop) {
+        throw boom.notFound("Crop not found or update failed.");
+      }
+
+      return this.#h.response(updatedCrop); // Return the updated crop
+    } catch (error) {
+      console.error(
+        "Error in updateCropByFieldAndYearAndConfirm controller:",
+        error
+      );
+      return this.#h.response({ error }); // Return error response
     }
   }
 }
