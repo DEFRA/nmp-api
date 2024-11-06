@@ -836,34 +836,78 @@ class PlanService extends BaseService {
                 recommendation.cropNeedValue;
             }
           );
-          savedRecommendation = await transactionalManager.save(
-            RecommendationEntity,
-            this.repository.create({
-              CropN: cropNutrientsValue.N,
-              CropP2O5: cropNutrientsValue.P2O5,
-              CropK2O: cropNutrientsValue.K2O,
-              CropMgO: cropNutrientsValue.MgO,
-              CropSO3: cropNutrientsValue.SO3,
-              CropNa2O: cropNutrientsValue.Na2O,
-              CropLime: cropNutrientsValue.CropLime,
-              FertilizerN: cropNutrientsValue.N,
-              FertilizerP2O5: cropNutrientsValue.P2O5,
-              FertilizerK2O: cropNutrientsValue.K2O,
-              FertilizerMgO: cropNutrientsValue.MgO,
-              FertilizerSO3: cropNutrientsValue.SO3,
-              FertilizerNa2O: cropNutrientsValue.Na2O,
-              FertilizerLime: cropNutrientsValue.FertilizerLime,
-              PH: latestSoilAnalysis?.PH?.toString(),
-              SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString(),
-              PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString(),
-              KIndex: latestSoilAnalysis?.PotassiumIndex?.toString(),
-              MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString(),
-              ManagementPeriodID: ManagementPeriods[0].ID,
-              Comments: `Reference Value: ${nutrientRecommendationsData.referenceValue}\nVersion: ${nutrientRecommendationsData.versionNumber}`,
-              CreatedOn: savedCrop.CreatedOn,
-              CreatedByID: savedCrop.CreatedByID,
-            })
-          );
+          const existingRecommendation = await this.repository.findOne({
+            where: { ManagementPeriodID: ManagementPeriods[0].ID },
+          });
+
+          if (existingRecommendation) {
+            // Update the existing recommendation
+            existingRecommendation.CropN = cropNutrientsValue.N;
+            existingRecommendation.CropP2O5 = cropNutrientsValue.P2O5;
+            existingRecommendation.CropK2O = cropNutrientsValue.K2O;
+            existingRecommendation.CropMgO = cropNutrientsValue.MgO;
+            existingRecommendation.CropSO3 = cropNutrientsValue.SO3;
+            existingRecommendation.CropNa2O = cropNutrientsValue.Na2O;
+            existingRecommendation.CropLime = cropNutrientsValue.CropLime;
+            existingRecommendation.FertilizerN = cropNutrientsValue.N;
+            existingRecommendation.FertilizerP2O5 = cropNutrientsValue.P2O5;
+            existingRecommendation.FertilizerK2O = cropNutrientsValue.K2O;
+            existingRecommendation.FertilizerMgO = cropNutrientsValue.MgO;
+            existingRecommendation.FertilizerSO3 = cropNutrientsValue.SO3;
+            existingRecommendation.FertilizerNa2O = cropNutrientsValue.Na2O;
+            existingRecommendation.FertilizerLime =
+              cropNutrientsValue.FertilizerLime;
+            existingRecommendation.PH = latestSoilAnalysis?.PH?.toString();
+            existingRecommendation.SNSIndex =
+              latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString();
+            existingRecommendation.PIndex =
+              latestSoilAnalysis?.PhosphorusIndex?.toString();
+            existingRecommendation.KIndex =
+              latestSoilAnalysis?.PotassiumIndex?.toString();
+            existingRecommendation.MgIndex =
+              latestSoilAnalysis?.MagnesiumIndex?.toString();
+            existingRecommendation.Comments = `Reference Value: ${nutrientRecommendationsData.referenceValue}\nVersion: ${nutrientRecommendationsData.versionNumber}`;
+            existingRecommendation.ModifiedOn = new Date(); // Assuming you update this field on modification
+            existingRecommendation.ModifiedByID = savedCrop.CreatedByID; // Assuming you have the modifier's ID
+
+            // Save the updated record
+            savedRecommendation = await transactionalManager.save(
+              RecommendationEntity,
+              existingRecommendation
+            );
+          } else {
+            // Create a new recommendation
+            savedRecommendation = await transactionalManager.save(
+              RecommendationEntity,
+              this.repository.create({
+                CropN: cropNutrientsValue.N,
+                CropP2O5: cropNutrientsValue.P2O5,
+                CropK2O: cropNutrientsValue.K2O,
+                CropMgO: cropNutrientsValue.MgO,
+                CropSO3: cropNutrientsValue.SO3,
+                CropNa2O: cropNutrientsValue.Na2O,
+                CropLime: cropNutrientsValue.CropLime,
+                FertilizerN: cropNutrientsValue.N,
+                FertilizerP2O5: cropNutrientsValue.P2O5,
+                FertilizerK2O: cropNutrientsValue.K2O,
+                FertilizerMgO: cropNutrientsValue.MgO,
+                FertilizerSO3: cropNutrientsValue.SO3,
+                FertilizerNa2O: cropNutrientsValue.Na2O,
+                FertilizerLime: cropNutrientsValue.FertilizerLime,
+                PH: latestSoilAnalysis?.PH?.toString(),
+                SNSIndex:
+                  latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString(),
+                PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString(),
+                KIndex: latestSoilAnalysis?.PotassiumIndex?.toString(),
+                MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString(),
+                ManagementPeriodID: ManagementPeriods[0].ID,
+                Comments: `Reference Value: ${nutrientRecommendationsData.referenceValue}\nVersion: ${nutrientRecommendationsData.versionNumber}`,
+                CreatedOn: savedCrop.CreatedOn,
+                CreatedByID: savedCrop.CreatedByID,
+              })
+            );
+          }
+
           const RecommendationComments = [];
           const notesByNutrient =
             nutrientRecommendationsData.adviceNotes.reduce(

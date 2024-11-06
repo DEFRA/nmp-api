@@ -103,14 +103,14 @@ class FieldController {
       const data = await this.#fieldService.createFieldWithSoilAnalysisAndCrops(
         farmId,
         body,
-        userId,
+        userId
       );
       return this.#h.response(data);
     } catch (error) {
       return this.#h.response({ error });
     }
   }
-  async deleteField() {
+  async deleteFieldById() {
     const { fieldId } = this.#request.params;
     try {
       const result = await this.#fieldService.deleteFieldAndRelatedEntities(
@@ -119,11 +119,9 @@ class FieldController {
       if (result?.affectedRows === 0) {
         throw boom.notFound(`Field with ID ${fieldId} not found.`);
       }
-      return this.#h
-        .response({ message: "Field deleted successfully." })
-        .code(204);
+      return this.#h.response({ message: "Field deleted successfully." });
     } catch (error) {
-      return this.#h.response({ error: error.message }).code(500);
+      return this.#h.response({ error: error.message });
     }
   }
 }
