@@ -258,7 +258,7 @@ module.exports = [
     },
     handler: async (request, h) => {
       const controller = new FieldController(request, h);
-      return controller.deleteField();
+      return controller.deleteFieldById();
     },
   },
 ];

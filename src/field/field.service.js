@@ -12,6 +12,7 @@ const { BaseService } = require("../base/base.service");
 const RB209SoilService = require("../vendors/rb209/soil/soil.service");
 const boom = require("@hapi/boom");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
+const { RecommendationEntity } = require("../db/entity/recommendation.entity");
 
 class FieldService extends BaseService {
   constructor() {
@@ -28,6 +29,8 @@ class FieldService extends BaseService {
     );
     this.rB209SoilService = new RB209SoilService();
     this.snsAnalysisRepository = AppDataSource.getRepository(SnsAnalysesEntity);
+    this.recommendationRepository = AppDataSource.getRepository(RecommendationEntity);
+
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -70,7 +73,54 @@ class FieldService extends BaseService {
       SubSoilID: soilTexture.SubSoilID,
     };
   }
-  async createFieldWithSoilAnalysisAndCrops(farmId,body, userId) {
+  async saveRecommendationCrops(
+    transactionalManager,
+    managementPeriodID,
+    userId
+  ) {
+    // Initialize variables for recommendations for both Crop Orders
+    let cropData = {
+      CropN: null,
+      ManureN: null,
+      FertilizerN: null,
+      CropP2O5: null,
+      ManureP2O5: null,
+      FertilizerP2O5: null,
+      CropK2O: null,
+      ManureK2O: null,
+      FertilizerK2O: null,
+      CropMgO: null,
+      ManureMgO: null,
+      FertilizerMgO: null,
+      CropSO3: null,
+      ManureSO3: null,
+      FertilizerSO3: null,
+      CropNa2O: null,
+      ManureNa2O: null,
+      FertilizerNa2O: null,
+      CropLime: null,
+      ManureLime: null,
+      FertilizerLime: null,
+      PH: null,
+      SNSIndex: null,
+      PIndex: null,
+      KIndex: null,
+      MgIndex: null,
+      SIndex: null,
+    };
+    console.log("managementPeriodIDkkkk",managementPeriodID);
+    await transactionalManager.save(
+      RecommendationEntity,
+      this.recommendationRepository.create({
+        ...cropData,
+        ManagementPeriodID: managementPeriodID,
+        Comments: null,
+        CreatedOn: new Date(),
+        CreatedByID: userId,
+      })
+    );
+  }
+  async createFieldWithSoilAnalysisAndCrops(farmId, body, userId) {
     const exists = await this.checkFieldExists(farmId, body.Field.Name);
     if (exists) {
       throw boom.conflict("Field already exists with this Farm Id and Name");
@@ -104,7 +154,7 @@ class FieldService extends BaseService {
       let SnsAnalysis = null;
       if (body.SnsAnalysis) {
         SnsAnalysis = await transactionalManager.save(
-          SnsAnalysesEntity ,
+          SnsAnalysesEntity,
           this.snsAnalysisRepository.create({
             ...body?.SnsAnalysis,
             FieldID: Field.ID,
@@ -123,8 +173,9 @@ class FieldService extends BaseService {
           })
         );
         const ManagementPeriods = [];
+        let savedManagementPeriod;
         for (const managementPeriod of cropData.ManagementPeriods) {
-          const savedManagementPeriod = await transactionalManager.save(
+          savedManagementPeriod = await transactionalManager.save(
             ManagementPeriodEntity,
             this.managementPeriodRepository.create({
               ...managementPeriod,
@@ -134,6 +185,12 @@ class FieldService extends BaseService {
           );
           ManagementPeriods.push(savedManagementPeriod);
         }
+        await this.saveRecommendationCrops(
+          transactionalManager,
+          savedManagementPeriod.ID,
+          userId
+        );
+
         Crops.push({ Crop: savedCrop, ManagementPeriods });
       }
 
@@ -189,7 +246,6 @@ class FieldService extends BaseService {
     } catch (error) {
       // Log the error and throw an internal server error
       console.error("Error deleting field:", error);
-      throw boom.internal("Error deleting field");
     }
   }
 }
