@@ -47,7 +47,17 @@ class CropService extends BaseService {
       return { Crop: savedCrop, ManagementPeriods: managementPeriods };
     });
   }
-
+  async getCrops(fieldId, year, confirm) {
+    const confirmValue = confirm ? 1 : 0;
+    const cropData = await this.repository.findOne({
+      where: {
+        FieldID: fieldId,
+        Year: year,
+        Confirm: confirmValue,
+      },
+    });
+    return cropData;
+  }
   async getCropTypeDataByFieldAndYear(fieldId, year, confirm) {
     const cropData = await this.repository.findOne({
       where: {
@@ -73,6 +83,73 @@ class CropService extends BaseService {
       cropTypeId: cropType.cropTypeId,
       cropType: cropType.cropType,
     };
+  }
+
+  async updateCropByFieldYearAndConfirm(
+    updatedCropData,
+    userId,
+    fieldId,
+    year,
+    confirm
+  ) {
+    // Convert confirm to integer for database (1 for true, 0 for false)
+    const confirmValue = confirm ? 1 : 0;
+    const result = await AppDataSource.transaction(
+      async (transactionalManager) => {
+        // Find the existing crop based on FieldID, Year, and Confirm
+        const existingCrop = await transactionalManager.findOne(CropEntity, {
+          where: { FieldID: fieldId, Year: year, Confirm: confirmValue },
+        });
+
+        if (!existingCrop) {
+          throw boom.notFound(
+            `Crop for FieldID ${fieldId}, Year ${year}, and Confirm ${confirm} not found`
+          );
+        }
+
+        // Destructure out fields you don't want to update
+        const {
+          ID,
+          CreatedByID,
+          CreatedOn,
+          PreviousID,
+          Year,
+          FieldName,
+          EncryptedCounter,
+          FieldID,
+          ...updateData
+        } = updatedCropData;
+
+        // Perform the update on the CropEntity using FieldID, Year, and Confirm
+        const updateResult = await transactionalManager.update(
+          CropEntity,
+          { FieldID: fieldId, Year: year, Confirm: confirmValue },
+          {
+            ...updateData,
+            ModifiedByID: userId,
+            ModifiedOn: new Date(),
+          }
+        );
+
+        if (updateResult.affected === 0) {
+          throw boom.notFound(
+            `Crop for FieldID ${fieldId}, Year ${year}, and Confirm ${confirmValue} not found`
+          );
+        }
+
+        // If needed, perform additional updates to related entities (e.g., Fields or any other logic)
+        // Example:
+
+        // Return the updated crop record
+        const updatedCrop = await transactionalManager.findOne(CropEntity, {
+          where: { FieldID: fieldId, Year: year, Confirm: confirmValue },
+        });
+
+        return updatedCrop;
+      }
+    );
+
+    return result;
   }
 }
 

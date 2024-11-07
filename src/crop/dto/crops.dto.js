@@ -77,6 +77,7 @@ const CreateCropWithManagementPeriodsDto = Joi.object({
 }).required();
 
 module.exports = {
+  CropDto,
   CreatePlanDto,
   CreateCropWithManagementPeriodsDto,
   CreatePlanDto,
