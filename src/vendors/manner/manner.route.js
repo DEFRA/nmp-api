@@ -1,0 +1,16 @@
+module.exports = [
+  ...require("./application-method/application-method.route"),
+  ...require("./calculate-nutrients/calculate-nutrients.route"),
+  ...require("./manure-types/manure-types.route"),
+  ...require("./climate/climate.route"),
+  ...require("./incorporation-delay/incorporation-delay.route"),
+  ...require("./incorporation-method/incorporation-method.route"),
+  ...require("./manure-group/manure-group.route"),
+  ...require("./moisture-types/moisture-types.route"),
+  ...require("./rain-types/rain-types.route"),
+  ...require("./rainfall-post-application/rainfall-post-application.route"),
+  ...require("./top-soil/top-soil.route"),
+  ...require("./windspeed/windspeed.route"),
+  ...require("./autumn-crop-nitrogen-uptake/autumn-crop-nitrogen-uptake.route"),
+  ...require("./crop-types/crop-types.route"),
+];

@@ -1,0 +1,32 @@
+const Joi = require("joi");
+
+const FertiliserManureDto = Joi.object({
+  ID: Joi.number().integer().allow(null).optional(),
+  ManagementPeriodID: Joi.number().integer().required(),
+  ApplicationDate: Joi.date().iso().required(),
+  ApplicationRate: Joi.number().precision(3).required(),
+  Confirm: Joi.boolean().required(),
+  N: Joi.number().precision(3).required(),
+  P2O5: Joi.number().precision(3).required(),
+  K2O: Joi.number().precision(3).required(),
+  MgO: Joi.number().precision(3).required(),
+  SO3: Joi.number().precision(3).required(),
+  Na2O: Joi.number().precision(3).required(),
+  NFertAnalysisPercent: Joi.number().precision(3).required(),
+  P2O5FertAnalysisPercent: Joi.number().precision(3).required(),
+  K2OFertAnalysisPercent: Joi.number().precision(3).required(),
+  MgOFertAnalysisPercent: Joi.number().precision(3).required(),
+  SO3FertAnalysisPercent: Joi.number().precision(3).required(),
+  Na2OFertAnalysisPercent: Joi.number().precision(3).required(),
+  Lime: Joi.number().precision(3).required(),
+  NH4N: Joi.number().precision(3).required(),
+  NO3N: Joi.number().precision(3).required(),
+}).required();
+
+const CreateFertiliserManuresDto = Joi.object({
+    FertiliserManure: Joi.array().items(FertiliserManureDto).required(),
+});
+
+module.exports = {
+    CreateFertiliserManuresDto,
+};
