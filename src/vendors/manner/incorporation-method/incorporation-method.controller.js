@@ -35,7 +35,6 @@ class MannerIncorporationMethodsController {
     const { applicableFor } = this.#request.query;
     let endpoint = this.#request.url.pathname.split("/manner")[1];
     endpoint += `?applicableFor=${applicableFor}`;
-    console.log("endpoint", endpoint);
     const data = await this.#service.getData(endpoint, this.#request);
     return this.#h.response(data);
   }

@@ -13,9 +13,26 @@ class MannerApplicationMethodController {
 
   async getAllApplicationMethods() {
     const { isLiquid, fieldType } = this.#request.query;
-    const endpoint = this.#request.url.pathname.split("/manner")[1];
+    let endpoint = this.#request.url.pathname.split("/manner")[1];
+    // Initialize an array to hold query parameters
+    let queryParams = [];
 
-    const data = await this.#service.getData(endpoint,this.#request);
+    // Add isLiquid query param if it exists
+    if (isLiquid !== undefined) {
+      queryParams.push(`isLiquid=${isLiquid}`);
+    }
+
+    // Add fieldType query param if it exists
+    if (fieldType !== undefined) {
+      queryParams.push(`fieldType=${fieldType}`);
+    }
+
+    // If any query parameters exist, append them to the endpoint
+    if (queryParams.length > 0) {
+      endpoint += `?${queryParams.join("&")}`;
+    }
+
+    const data = await this.#service.getData(endpoint, this.#request);
     return this.#h.response(data);
   }
 
