@@ -37,7 +37,7 @@ class PlanService extends BaseService {
       AppDataSource.getRepository(SoilAnalysisEntity);
     this.rB209ArableService = new RB209ArableService();
     this.rB209RecommendationService = new RB209RecommendationService();
-    this.snsAnalysisRepository = AppDataSource.getRepository(SnsAnalysesEntity) 
+    this.snsAnalysisRepository = AppDataSource.getRepository(SnsAnalysesEntity);
   }
 
   async getManagementPeriods(id) {
@@ -602,31 +602,28 @@ class PlanService extends BaseService {
     secondCropSaveData, // Second crop data
     transactionalManager,
     nutrientRecommendationsData,
-    userId,
+    userId
   ) {
     const RecommendationComments = [];
     console.log("secondCropSaveData", secondCropSaveData);
     // Separate advice notes by sequenceId for first crop (sequenceId = 1) and second crop (sequenceId = 2)
     const firstCropNotes = nutrientRecommendationsData.adviceNotes?.filter(
-      (note) => note.sequenceId === 1,
+      (note) => note.sequenceId === 1
     );
     const secondCropNotes = nutrientRecommendationsData.adviceNotes?.filter(
-      (note) => note.sequenceId === 2,
+      (note) => note.sequenceId === 2
     );
 
     // Helper function to group notes by nutrientId and concatenate them
     const groupNotesByNutrientId = (notes) => {
-      return notes.reduce(
-        (acc, adviceNote) => {
-          const nutrientId = adviceNote.nutrientId;
-          if (!acc[nutrientId]) {
-            acc[nutrientId] = [];
-          }
-          acc[nutrientId].push(adviceNote.note); // Group notes by nutrientId
-          return acc;
-        },
-        {},
-      );
+      return notes.reduce((acc, adviceNote) => {
+        const nutrientId = adviceNote.nutrientId;
+        if (!acc[nutrientId]) {
+          acc[nutrientId] = [];
+        }
+        acc[nutrientId].push(adviceNote.note); // Group notes by nutrientId
+        return acc;
+      }, {});
     };
 
     const firstCropNotesByNutrientId = groupNotesByNutrientId(firstCropNotes);
@@ -639,18 +636,18 @@ class PlanService extends BaseService {
     const saveComments = async (notesByNutrientId, savedCrop) => {
       const existingComments = await transactionalManager.find(
         RecommendationCommentEntity,
-        { where: { RecommendationID: savedCrop.ID } },
+        { where: { RecommendationID: savedCrop.ID } }
       );
 
       for (const nutrientId in notesByNutrientId) {
-        const concatenatedNote = notesByNutrientId[nutrientId].join(' '); // Concatenate notes for the same nutrientId
+        const concatenatedNote = notesByNutrientId[nutrientId].join(" "); // Concatenate notes for the same nutrientId
 
         // Add nutrientId to the processed list
         nutrientIdsInData.push(parseInt(nutrientId));
 
         // Check if the comment already exists for this nutrientId in the database
         const existingComment = existingComments.find(
-          (comment) => comment.Nutrient === parseInt(nutrientId),
+          (comment) => comment.Nutrient === parseInt(nutrientId)
         );
 
         if (existingComment) {
@@ -659,8 +656,10 @@ class PlanService extends BaseService {
           existingComment.ModifiedOn = new Date();
           existingComment.ModifiedByID = userId;
 
-          const updatedComment =
-            await transactionalManager.save(RecommendationCommentEntity,existingComment);
+          const updatedComment = await transactionalManager.save(
+            RecommendationCommentEntity,
+            existingComment
+          );
           RecommendationComments.push(updatedComment);
         } else {
           // Create a new comment if not found
@@ -672,20 +671,23 @@ class PlanService extends BaseService {
             CreatedByID: userId,
           });
 
-          const savedComment = await transactionalManager.save(RecommendationCommentEntity,newComment);
+          const savedComment = await transactionalManager.save(
+            RecommendationCommentEntity,
+            newComment
+          );
           RecommendationComments.push(savedComment);
         }
       }
 
       // Remove comments from the database if the nutrientId is not in the new data
       const commentsToDelete = existingComments.filter(
-        (comment) => !nutrientIdsInData.includes(comment.Nutrient),
+        (comment) => !nutrientIdsInData.includes(comment.Nutrient)
       );
 
       if (commentsToDelete.length > 0) {
         await transactionalManager.remove(
           RecommendationCommentEntity,
-          commentsToDelete,
+          commentsToDelete
         );
       }
     };
@@ -739,7 +741,7 @@ class PlanService extends BaseService {
         if (Errors.length > 0) {
           throw new Error(JSON.stringify(Errors));
         }
-          const snsAnalysesData = await this.getSnsAnalysesData(fieldId);
+        const snsAnalysesData = await this.getSnsAnalysesData(fieldId);
         const nutrientRecommendationnReqBody =
           await this.buildNutrientRecommendationReqBody(
             field,
@@ -943,7 +945,7 @@ class PlanService extends BaseService {
             RecommendationComments,
           });
         }
-    }
+      }
 
       return { Recommendations };
     });
@@ -1040,14 +1042,21 @@ class PlanService extends BaseService {
       throw error;
     }
   }
-  async getCropsPlansManagementPeriodIds(fieldIds, harvestYear, cropTypeId) {
+  async getCropsPlansManagementPeriodIds(
+    fieldIds,
+    harvestYear,
+    cropTypeId,
+    cropOrder
+  ) {
     try {
+      cropOrder = cropOrder || 1;
       const storedProcedure =
-        "EXEC dbo.spCrops_GetCropPlansManagementPeriodByHarvestYear @fieldIds = @0, @harvestYear = @1, @cropTypeId = @2";
+        "EXEC dbo.spCrops_GetCropPlansManagementPeriodByHarvestYear @fieldIds = @0, @harvestYear = @1, @cropTypeId = @2 , @cropOrder = @3";
       const plans = await this.executeQuery(storedProcedure, [
         fieldIds,
         harvestYear,
         cropTypeId,
+        cropOrder,
       ]);
       return { ManagementPeriods: plans };
     } catch (error) {

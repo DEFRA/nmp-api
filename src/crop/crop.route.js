@@ -124,6 +124,7 @@ module.exports = [
           fieldIds: Joi.string()
             .required()
             .description("Comma separated Field Ids, e.g. 1,2,3"),
+          cropOrder: Joi.number().integer().optional().allow(null),
         }),
         failAction: (request, h, err) => {
           return h

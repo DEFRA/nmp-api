@@ -62,13 +62,14 @@ class CropController {
   async getCropsPlansManagementPeriodIdsByHarvestYear() {
     try {
       const { harvestYear } = this.#request.params;
-      const { cropTypeId, fieldIds } = this.#request.query;
+      const { cropTypeId, fieldIds,cropOrder } = this.#request.query;
 
       const managementPeriodIds =
         await this.#planService.getCropsPlansManagementPeriodIds(
           fieldIds,
           harvestYear,
-          cropTypeId
+          cropTypeId,
+          cropOrder
         );
       if (managementPeriodIds.ManagementPeriods.length === 0) {
         throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
