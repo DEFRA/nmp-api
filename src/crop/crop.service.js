@@ -9,6 +9,7 @@ const boom = require("@hapi/boom");
 const { StaticStrings } = require("../shared/static.string");
 const { FarmEntity } = require("../db/entity/farm.entity");
 const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
+const { FertiliserManuresEntity } = require("../db/entity/fertiliser-manures.entity");
 
 class CropService extends BaseService {
   constructor() {
@@ -21,6 +22,9 @@ class CropService extends BaseService {
     this.farmRepository = AppDataSource.getRepository(FarmEntity);
     this.organicManureRepository =
       AppDataSource.getRepository(OrganicManureEntity);
+    this.fertiliserRepository = AppDataSource.getRepository(
+      FertiliserManuresEntity
+    );
   }
 
   async createCropWithManagementPeriods(
@@ -218,7 +222,6 @@ class CropService extends BaseService {
           where: { FieldID: fieldId, Year: harvestYear },
           select: ["ID", "SowingDate"],
         });
-
         return {
           CropId: cropRecord ? cropRecord.ID : null,
           PlantingDate: cropRecord ? cropRecord.SowingDate : null,
@@ -260,6 +263,21 @@ class CropService extends BaseService {
       } catch (error) {
         console.error(
           `Error fetching organic manure data for ManagementPeriodID: ${managementPeriodId}`,
+          error
+        );
+        return [];
+      }
+    };
+
+    const findInorganicFertiliserData = async (managementPeriodId) => {
+      try {
+        const fertiliserEntries = await this.fertiliserRepository.find({
+          where: { ManagementPeriodID: managementPeriodId },
+        });
+        return fertiliserEntries;
+      } catch (error) {
+        console.error(
+          `Error fetching inorganic fertiliser data for ManagementPeriodID: ${managementPeriodId}`,
           error
         );
         return [];
@@ -328,13 +346,38 @@ class CropService extends BaseService {
         }));
       })
     );
+
+    const inorganicFertiliserApplications = await Promise.all(
+      cropDetails.map(async (crop) => {
+        const managementPeriodId = await findManagementPeriodId(crop.CropId);
+        const fertiliserData = managementPeriodId
+          ? await findInorganicFertiliserData(managementPeriodId)
+          : [];
+        return fertiliserData.map((fertiliser) => ({
+          InorganicFertiliserId: fertiliser.ID,
+          ApplicationDate: fertiliser.ApplicationDate,
+          Field: crop.FieldName,
+          Crop: crop.CropTypeName,
+          N: fertiliser.N,
+          P2O5: fertiliser.P2O5,
+          K2O: fertiliser.K2O,
+          MgO: fertiliser.MgO,
+          SO3: fertiliser.SO3,
+          Na2O: fertiliser.Na2O,
+          Lime: fertiliser.Lime,
+          NH4N: fertiliser.NH4N,
+          NO3N: fertiliser.NO3N,
+        }));
+      })
+    );
+
     return {
       farmDetails: {
         rainfall: rainfall || "Unknown",
       },
       CropDetails: cropDetails,
-      OrganicMaterial: organicMaterials.flat(), // Flattening the list of arrays
-      InorganicFertiliserApplication: [],
+      OrganicMaterial: organicMaterials.flat(),
+      InorganicFertiliserApplication: inorganicFertiliserApplications.flat(),
     };
   }
 }
