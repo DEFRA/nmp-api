@@ -340,4 +340,38 @@ module.exports = [
       return controller.updateCropByFieldAndYearAndConfirm(); // Assuming this method exists in your controller
     },
   },
+  {
+    method: "GET",
+    path: "/crops/organic-inorganic-details/{harvestYear}",
+    options: {
+      tags: ["api", "Crop"],
+      description:
+        "Get crop organic and inorganic details by harvest year and farmId",
+      validate: {
+        params: Joi.object({
+          harvestYear: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          farmId: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new CropController(request, h);
+      return controller.getCropOrganicAndInorganicDetailsByHarvestYearAndFarmId();
+    },
+  },
 ];

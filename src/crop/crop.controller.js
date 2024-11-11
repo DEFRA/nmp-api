@@ -62,7 +62,7 @@ class CropController {
   async getCropsPlansManagementPeriodIdsByHarvestYear() {
     try {
       const { harvestYear } = this.#request.params;
-      const { cropTypeId, fieldIds,cropOrder } = this.#request.query;
+      const { cropTypeId, fieldIds, cropOrder } = this.#request.query;
 
       const managementPeriodIds =
         await this.#planService.getCropsPlansManagementPeriodIds(
@@ -195,12 +195,19 @@ class CropController {
       const { year, confirm } = this.#request.query; // Extract year and confirm from query
       const cropData = this.#request.payload; // Get the crop data from the payload
       const userId = this.#request.userId;
-      
-      const cropExists = await this.#cropService.getCrops(fieldId, year, confirm);
-      if (cropExists && cropExists.FieldID !== fieldId && cropExists.Year !==year && cropExists.Confirm !==confirm  ) {
-        throw boom.conflict(
-          "crop does'nt exist"
-        );
+
+      const cropExists = await this.#cropService.getCrops(
+        fieldId,
+        year,
+        confirm
+      );
+      if (
+        cropExists &&
+        cropExists.FieldID !== fieldId &&
+        cropExists.Year !== year &&
+        cropExists.Confirm !== confirm
+      ) {
+        throw boom.conflict("crop does'nt exist");
       }
       // Assuming you have a service method to update the crop data
       const updatedCrop =
@@ -209,7 +216,7 @@ class CropController {
           userId,
           fieldId,
           year,
-          confirm,
+          confirm
         );
 
       if (!updatedCrop) {
@@ -223,6 +230,30 @@ class CropController {
         error
       );
       return this.#h.response({ error }); // Return error response
+    }
+  }
+  async getCropOrganicAndInorganicDetailsByHarvestYearAndFarmId() {
+    try {
+      const { harvestYear } = this.#request.params;
+      const { farmId } = this.#request.query;
+
+      // Call the CropService to fetch organic and inorganic details
+      const cropDetails = await this.#cropService.getOrganicAndInorganicDetails(
+        farmId,
+        harvestYear
+      );
+
+      if (!cropDetails || cropDetails.length === 0) {
+        throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
+      }
+
+      return this.#h.response(cropDetails);
+    } catch (error) {
+      console.error(
+        "Error in getCropOrganicAndInorganicDetailsByHarvestYearAndFarmId controller:",
+        error
+      );
+      return this.#h.response({ error });
     }
   }
 }
