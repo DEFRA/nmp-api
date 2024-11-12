@@ -1,0 +1,7 @@
+# templates/webpack-build.yml
+parameters:
+  buildCommand: 'npm run build'
+
+steps:
+- script: ${{ parameters.buildCommand }}
+  displayName: 'Run Webpack build'

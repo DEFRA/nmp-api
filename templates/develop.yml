@@ -1,31 +1,7 @@
-# Node.js with webpack
-# Build a Node.js project using the webpack CLI.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
-
-#trigger:
-#- develop
-
-#pool:
-#  vmImage: windows-latest
-
-#steps:
-#- task: NodeTool@0
-#  inputs:
-#    versionSpec: '20.x'
-#  displayName: 'Install Node.js'
-
-#- script: |
-#    npm install -g webpack webpack-cli --save-dev
-#    npm install
-#    npx webpack
-#  displayName: 'npm install, run webpack'
-
-
 trigger:
   branches:
     include:
-      - develop  # Replace with the branch you want to trigger the pipeline on
+      - main  # Replace with the branch you want to trigger the pipeline on
 
 pool:
   vmImage: 'windows-latest'  # Use 'ubuntu-latest' or 'macOS-latest' if needed

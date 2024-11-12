@@ -1,0 +1,12 @@
+# templates/publish-artifact.yml
+parameters:
+  artifactPath: 'dist'
+  artifactName: 'webpack-build'
+
+steps:
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: ${{ parameters.artifactPath }}
+    ArtifactName: ${{ parameters.artifactName }}
+    publishLocation: 'Container'
+  displayName: 'Publish build artifacts'
