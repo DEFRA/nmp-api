@@ -1,25 +1,13 @@
-const axios = require('axios');
-const EnvironmentService = require('../../shared/environment.service');
 
+const AddressLookupBaseService = require('./base.service');
+const CacheManager = require('../rb209/cacheManager');
 
-class AddressLookupService {
-    constructor() {
-        this.request = axios.create({
-            baseURL: EnvironmentService.ADDR_LOOKUP_BASE_URL(),
-            headers: {
-                'Ocp-Apim-Subscription-Key': EnvironmentService.ADDR_LOOKUP_SUBSCRIPTION_KEY(),
-            },
-        });
-    }
+const cacheManager = new CacheManager();
 
-    async check() {
-        return 'Connected!';
-    }
-
-    async getAddressesByPostCode(postcode, offset) {
-        const response = await this.request.get(`/addresses?postcode=${postcode}&offset=${offset}`);
-        return response.data;
-    }
+class AddressLookupService extends AddressLookupBaseService {
+  constructor() {
+        super(cacheManager);
+  }
 }
 
 module.exports = AddressLookupService;
