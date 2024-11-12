@@ -3,7 +3,7 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 const nodeExternals = require("webpack-node-externals");
 
 module.exports = {
-  mode: process.env.NODE_ENV ||"none", 
+  mode: process.env.NODE_ENV ||"Development", 
   entry: "./server.js", // Entry point for your project
   output: {
     filename: "index.js",
