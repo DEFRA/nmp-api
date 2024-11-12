@@ -11,7 +11,7 @@ steps:
 # Step 1: Install Node.js version
 - template: templates/install-node.yml  # Call a template to install Node.js
   parameters:
-    nodeVersion: '20.x'  # Specify the Node.js version required for your project
+    nodeVersion: '20.16'  # Specify the Node.js version required for your project
 
 # Step 2: Install dependencies
 - template: templates/npm-install.yml  # Call a template to install npm packages

@@ -1,6 +1,6 @@
 # templates/install-node.yml
 parameters:
-  nodeVersion: '16.x'  # Default Node.js version
+  nodeVersion: '20.x'  # Default Node.js version
 
 steps:
 - task: UseNode@1
