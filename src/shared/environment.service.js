@@ -103,6 +103,7 @@ class EnvironmentService {
   }
 
   static ADDR_LOOKUP_BASE_URL() {
+    //ADDR_LOOKUP
     get: {
       return this.getEnv("ADDR_LOOKUP_BASE_URL");
     }
@@ -111,6 +112,30 @@ class EnvironmentService {
   static ADDR_LOOKUP_SUBSCRIPTION_KEY() {
     get: {
       return this.getEnv("ADDR_LOOKUP_SUBSCRIPTION_KEY");
+    }
+  }
+
+  static ADDR_SCOPE() {
+    get: {
+      return this.getEnv("ADDR_SCOPE");
+    }
+  }
+
+  static ADDR_CLIENT_ID() {
+    get: {
+      return this.getEnv("ADDR_CLIENT_ID");
+    }
+  }
+
+  static ADDR_CLIENT_SECRET() {
+    get: {
+      return this.getEnv("ADDR_CLIENT_SECRET");
+    }
+  }
+
+  static ADDR_TENANT_ID() {
+    get: {
+      return this.getEnv("ADDR_TENANT_ID");
     }
   }
   static MANNER_BASE_URL() {

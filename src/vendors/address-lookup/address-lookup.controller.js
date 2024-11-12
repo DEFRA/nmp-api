@@ -24,7 +24,10 @@ class AddressLookupController {
     const { postcode } = this.#request.query;
     const { offset } = this.#request.query;
     try {
-      const data = await this.#service.getAddressesByPostCode(postcode, offset);
+     // const data = await this.#service.getAddressesByPostCode(postcode, offset);
+     const data = await this.#service.getData(
+       `/addresses?postcode=${postcode}&offset=${offset}`
+     );
       return this.#h.response(data);
     } catch (error) {
       return this.#h.response({ error });
