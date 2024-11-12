@@ -1,0 +1,4 @@
+# templates/npm-install.yml
+steps:
+- script: npm install
+  displayName: 'Install npm dependencies'

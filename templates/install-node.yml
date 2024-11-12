@@ -1,0 +1,9 @@
+# templates/install-node.yml
+parameters:
+  nodeVersion: '20.x'  # Default Node.js version
+
+steps:
+- task: UseNode@1
+  inputs:
+    versionSpec: ${{ parameters.nodeVersion }}
+  displayName: 'Install Node.js'
