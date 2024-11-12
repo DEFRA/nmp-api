@@ -493,8 +493,8 @@ class OrganicManureService extends BaseService {
       ...cropOrder1Data,
     };
 
-    const firstCrop = dataMultipleCrops.find((crop) => crop.CropOrder === 1);
-    const secondCrop = dataMultipleCrops.find((crop) => crop.CropOrder === 2);
+    const firstCrop = dataMultipleCrops?.find((crop) => crop.CropOrder === 1);
+    const secondCrop = dataMultipleCrops?.find((crop) => crop.CropOrder === 2);
 
     // Get all recommendations once and store them in a map
     // const allRecommendations = await this.RecommendationRepository.find();
@@ -514,7 +514,7 @@ class OrganicManureService extends BaseService {
           CropID: firstCrop.ID,
         });
 
-      nutrientRecommendationsData.calculations.forEach((calculation) => {
+      nutrientRecommendationsData?.calculations?.forEach((calculation) => {
         if (calculation.sequenceId === 1) {
           switch (calculation.nutrientId) {
             case 0:
@@ -596,7 +596,7 @@ class OrganicManureService extends BaseService {
           CropID: secondCrop.ID,
         });
 
-      nutrientRecommendationsData.calculations.forEach((calculation) => {
+      nutrientRecommendationsData?.calculations?.forEach((calculation) => {
         if (calculation.sequenceId === 2) {
           switch (calculation.nutrientId) {
             case 0:

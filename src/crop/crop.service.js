@@ -7,6 +7,9 @@ const { BaseService } = require("../base/base.service");
 const RB209ArableService = require("../vendors/rb209/arable/arable.service");
 const boom = require("@hapi/boom");
 const { StaticStrings } = require("../shared/static.string");
+const { FarmEntity } = require("../db/entity/farm.entity");
+const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
+const { FertiliserManuresEntity } = require("../db/entity/fertiliser-manures.entity");
 
 class CropService extends BaseService {
   constructor() {
@@ -16,6 +19,12 @@ class CropService extends BaseService {
       ManagementPeriodEntity
     );
     this.rB209ArableService = new RB209ArableService();
+    this.farmRepository = AppDataSource.getRepository(FarmEntity);
+    this.organicManureRepository =
+      AppDataSource.getRepository(OrganicManureEntity);
+    this.fertiliserRepository = AppDataSource.getRepository(
+      FertiliserManuresEntity
+    );
   }
 
   async createCropWithManagementPeriods(
@@ -151,6 +160,227 @@ class CropService extends BaseService {
 
     return result;
   }
+  // Other methods...
+  async mapCropTypeIdWithTheirNames(plans) {
+    try {
+      const unorderedMap = {};
+      const cropTypesList = await this.rB209ArableService.getData(
+        "/Arable/CropTypes"
+      );
+
+      for (const cropType of cropTypesList) {
+        unorderedMap[cropType.cropTypeId] = cropType.cropType;
+      }
+
+      for (const plan of plans) {
+        plan.CropTypeName = unorderedMap[plan.CropTypeID] || null;
+      }
+
+      return plans;
+    } catch (error) {
+      console.error("Error mapping CropTypeId with their names:", error);
+      throw error;
+    }
+  }
+  async getOrganicAndInorganicDetails(farmId, harvestYear) {
+    const storedProcedure =
+      "EXEC dbo.spCrops_GetPlansByHarvestYear @farmId = @0, @harvestYear = @1";
+    const plans = await this.executeQuery(storedProcedure, [
+      farmId,
+      harvestYear,
+    ]);
+
+    const cropTypesList = await this.rB209ArableService.getData(
+      "/Arable/CropTypes"
+    );
+
+    const findCropGroupId = (cropTypeId) => {
+      const cropType = cropTypesList.find(
+        (crop) => crop.cropTypeId === cropTypeId
+      );
+      return cropType ? cropType.cropGroupId : null;
+    };
+
+    const findCropGroupName = async (cropGroupId) => {
+      try {
+        const cropGroupResponse = await this.rB209ArableService.getData(
+          `/Arable/CropCroup/${cropGroupId}`
+        );
+        return cropGroupResponse?.data?.cropGroupName || "Unknown";
+      } catch (error) {
+        console.error(
+          `Error fetching crop group name for ID: ${cropGroupId}`,
+          error
+        );
+        return "Unknown";
+      }
+    };
+
+    const findCropDetailsFromRepo = async (fieldId, harvestYear) => {
+      try {
+        const cropRecord = await this.repository.findOne({
+          where: { FieldID: fieldId, Year: harvestYear },
+          select: ["ID", "SowingDate"],
+        });
+        return {
+          CropId: cropRecord ? cropRecord.ID : null,
+          PlantingDate: cropRecord ? cropRecord.SowingDate : null,
+        };
+      } catch (error) {
+        console.error(
+          `Error fetching crop details for FieldID: ${fieldId}`,
+          error
+        );
+        return {
+          CropId: null,
+          PlantingDate: null,
+        };
+      }
+    };
+
+    const findManagementPeriodId = async (cropId) => {
+      try {
+        const managementPeriod = await this.managementPeriodRepository.findOne({
+          where: { CropID: cropId },
+          select: ["ID"],
+        });
+        return managementPeriod ? managementPeriod.ID : null;
+      } catch (error) {
+        console.error(
+          `Error fetching ManagementPeriodID for CropId: ${cropId}`,
+          error
+        );
+        return null;
+      }
+    };
+
+    const findOrganicManureData = async (managementPeriodId) => {
+      try {
+        const organicManureEntries = await this.organicManureRepository.find({
+          where: { ManagementPeriodID: managementPeriodId },
+        });
+        return organicManureEntries;
+      } catch (error) {
+        console.error(
+          `Error fetching organic manure data for ManagementPeriodID: ${managementPeriodId}`,
+          error
+        );
+        return [];
+      }
+    };
+
+    const findInorganicFertiliserData = async (managementPeriodId) => {
+      try {
+        const fertiliserEntries = await this.fertiliserRepository.find({
+          where: { ManagementPeriodID: managementPeriodId },
+        });
+        return fertiliserEntries;
+      } catch (error) {
+        console.error(
+          `Error fetching inorganic fertiliser data for ManagementPeriodID: ${managementPeriodId}`,
+          error
+        );
+        return [];
+      }
+    };
+
+    const findFarmRainfall = async (farmId) => {
+      try {
+        const farmRecord = await this.farmRepository.findOne({
+          where: { ID: farmId },
+          select: ["Rainfall"],
+        });
+        return farmRecord ? farmRecord.Rainfall : null;
+      } catch (error) {
+        console.error(`Error fetching rainfall for farmId: ${farmId}`, error);
+        return null;
+      }
+    };
+
+    const rainfall = await findFarmRainfall(farmId);
+    const plansWithNames = await this.mapCropTypeIdWithTheirNames(plans);
+
+    const cropDetails = await Promise.all(
+      plansWithNames.map(async (plan) => {
+        const cropGroupId = findCropGroupId(plan.CropTypeID);
+        const cropGroupName = cropGroupId
+          ? await findCropGroupName(cropGroupId)
+          : "Unknown";
+
+        const { CropId, PlantingDate } = await findCropDetailsFromRepo(
+          plan.FieldID,
+          harvestYear
+        );
+
+        return {
+          CropId: CropId,
+          CropTypeID: plan.CropTypeID,
+          CropTypeName: plan.CropTypeName,
+          CropGroupID: cropGroupId,
+          CropGroupName: cropGroupName,
+          FieldID: plan.FieldID,
+          FieldName: plan.FieldName,
+          CropVariety: plan.CropVariety,
+          OtherCropName: plan.OtherCropName,
+          CropInfo1: plan.CropInfo1,
+          Yield: plan.Yield,
+          LastModifiedOn: plan.LastModifiedOn,
+          PlantingDate: PlantingDate,
+        };
+      })
+    );
+
+    const organicMaterials = await Promise.all(
+      cropDetails.map(async (crop) => {
+        const managementPeriodId = await findManagementPeriodId(crop.CropId);
+        const organicManureData = managementPeriodId
+          ? await findOrganicManureData(managementPeriodId)
+          : [];
+        return organicManureData.map((organicManure) => ({
+          OrganicMaterialId: organicManure.ID,
+          ApplicationDate: organicManure.ApplicationDate,
+          Field: crop.FieldName,
+          Crop: crop.CropTypeName,
+          TypeOfManure: organicManure.TypeOfManure,
+          Rate: organicManure.ApplicationRate,
+        }));
+      })
+    );
+
+    const inorganicFertiliserApplications = await Promise.all(
+      cropDetails.map(async (crop) => {
+        const managementPeriodId = await findManagementPeriodId(crop.CropId);
+        const fertiliserData = managementPeriodId
+          ? await findInorganicFertiliserData(managementPeriodId)
+          : [];
+        return fertiliserData.map((fertiliser) => ({
+          InorganicFertiliserId: fertiliser.ID,
+          ApplicationDate: fertiliser.ApplicationDate,
+          Field: crop.FieldName,
+          Crop: crop.CropTypeName,
+          N: fertiliser.N,
+          P2O5: fertiliser.P2O5,
+          K2O: fertiliser.K2O,
+          MgO: fertiliser.MgO,
+          SO3: fertiliser.SO3,
+          Na2O: fertiliser.Na2O,
+          Lime: fertiliser.Lime,
+          NH4N: fertiliser.NH4N,
+          NO3N: fertiliser.NO3N,
+        }));
+      })
+    );
+
+    return {
+      farmDetails: {
+        rainfall: rainfall || "Unknown",
+      },
+      CropDetails: cropDetails,
+      OrganicMaterial: organicMaterials.flat(),
+      InorganicFertiliserApplication: inorganicFertiliserApplications.flat(),
+    };
+  }
 }
+
 
 module.exports = { CropService };
