@@ -80,7 +80,7 @@ class CropService extends BaseService {
     });
     const cropTypeId = cropData?.CropTypeID;
 
-    if (!cropTypeId) {
+    if ( cropTypeId == null || cropTypeId == undefined) {
       throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
     }
     const cropTypesList = await this.rB209ArableService.getData(
