@@ -68,7 +68,7 @@ class SoilAnalysesController {
           parseInt(soilAnalysisId)
         );
 
-      return this.#h.response({ SoilAnalysis: updatedSoilAnalysis });
+      return this.#h.response({ soilAnalysis: updatedSoilAnalysis });
     } catch (error) {
       return this.#h.response({ error });
     }
