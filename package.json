@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node dist/index.js",
     "start:dev": "concurrently \"npm run build\" \"nodemon server.js\"",
-    "build": "webpack --config webpack.config.js",
+    "build": "webpack --config webpack.config.js --verbose",
     "build-watch": "concurrently \"npm run build -- --watch\" \"npm run dev\""
   },
   "keywords": [],
@@ -49,5 +49,6 @@
     "webpack": "^5.94.0",
     "webpack-cli": "^5.1.4",
     "webpack-node-externals": "^3.0.0"
+    
   }
 }
