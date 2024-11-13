@@ -207,9 +207,10 @@ class CropService extends BaseService {
     const findCropGroupName = async (cropGroupId) => {
       try {
         const cropGroupResponse = await this.rB209ArableService.getData(
-          `/Arable/CropCroup/${cropGroupId}`
+          `/Arable/CropGroup/${cropGroupId}`
         );
-        return cropGroupResponse?.data?.cropGroupName || "Unknown";
+        
+        return cropGroupResponse.cropGroupName;
       } catch (error) {
         console.error(
           `Error fetching crop group name for ID: ${cropGroupId}`,
@@ -306,10 +307,11 @@ class CropService extends BaseService {
     const cropDetails = await Promise.all(
       plansWithNames.map(async (plan) => {
         const cropGroupId = findCropGroupId(plan.CropTypeID);
+        console.log("cropGroupId", cropGroupId);
         const cropGroupName = cropGroupId
           ? await findCropGroupName(cropGroupId)
           : "Unknown";
-         
+         console.log("cropGroupName", cropGroupName);
           console.log("plansWithNames", plansWithNames);
         const { CropId, PlantingDate } = await findCropDetailsFromRepo(
           plan.FieldID,
