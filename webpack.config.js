@@ -3,11 +3,11 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 const nodeExternals = require("webpack-node-externals");
 
 module.exports = {
-  mode: process.env.NODE_ENV ||"development", 
+  mode: process.env.NODE_ENV || "development", 
   entry: "./server.js", // Entry point for your project
   output: {
     filename: "index.js",
-    path: path.resolve(__dirname, mode == "production" ? "build" : "dist"), // Output directory
+    path: path.resolve(__dirname, process.env.NODE_ENV == "production" ? "build" : "dist"), // Output directory
   },
   target: "node", // Target environment
   externals: [nodeExternals()], // Ignore node_modules in the bundle
