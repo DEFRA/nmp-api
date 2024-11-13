@@ -412,7 +412,7 @@ class CropService extends BaseService {
         rainfall: rainfall || "Unknown",
       },
       CropDetails: cropDetails,
-      OrganicMaterial: organicMaterials,
+      OrganicMaterial: flattenedOrganicMaterials,
       InorganicFertiliserApplication: inorganicFertiliserApplications.flat(),
     };
   }
