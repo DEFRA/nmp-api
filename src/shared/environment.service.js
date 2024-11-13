@@ -146,9 +146,9 @@ class EnvironmentService {
 
   static APPLICATION_ENV() {
     get: {
-      if (!this.getEnv("APPLICATION_ENV")) {
-        return process.env.NODE_ENV == "production" ? "PROD" : "DEV";
-      }
+      //if (!this.getEnv("APPLICATION_ENV")) {
+      //  return process.env.NODE_ENV == "production" ? "PRODUCTION" : "DEVELOPMENT";
+      //}
       return this.getEnv("APPLICATION_ENV");
     }
   }
