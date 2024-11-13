@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node dist/index.js",
     "start:dev": "concurrently \"npm run build\" \"nodemon server.js\"",
-    "build": "webpack --config webpack.config.js --verbose",
+    "build": "webpack --config webpack.config.js",
     "build-watch": "concurrently \"npm run build -- --watch\" \"npm run dev\""
   },
   "keywords": [],
