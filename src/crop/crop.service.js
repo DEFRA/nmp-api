@@ -309,7 +309,8 @@ class CropService extends BaseService {
         const cropGroupName = cropGroupId
           ? await findCropGroupName(cropGroupId)
           : "Unknown";
-
+         
+          console.log("plansWithNames", plansWithNames);
         const { CropId, PlantingDate } = await findCropDetailsFromRepo(
           plan.FieldID,
           harvestYear
@@ -410,7 +411,7 @@ class CropService extends BaseService {
         rainfall: rainfall || "Unknown",
       },
       CropDetails: cropDetails,
-      OrganicMaterial: organicMaterials.flat(),
+      OrganicMaterial: organicMaterials,
       InorganicFertiliserApplication: inorganicFertiliserApplications.flat(),
     };
   }
