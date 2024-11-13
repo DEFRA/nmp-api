@@ -7,7 +7,7 @@ module.exports = {
   entry: "./server.js", // Entry point for your project
   output: {
     filename: "index.js",
-    path: path.resolve(__dirname, 'dist'), // Output directory
+    path: path.resolve(__dirname, mode == "production" ? "build" : "dist"), // Output directory
   },
   target: "node", // Target environment
   externals: [nodeExternals()], // Ignore node_modules in the bundle
