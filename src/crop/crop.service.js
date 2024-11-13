@@ -352,9 +352,10 @@ class CropService extends BaseService {
            try {
              const manureTypeResponse =
                await this.MannerManureTypesService.getData(
-                 `/manure-types/${organicManureData.ManureTypeID}`,
+                 `/manure-types/${organicManure.ManureTypeID}`,
                  request
                );
+  
              mannerManureTypeData = manureTypeResponse.data;
            } catch (error) {
              console.error(
