@@ -240,7 +240,8 @@ class CropController {
       // Call the CropService to fetch organic and inorganic details
       const cropDetails = await this.#cropService.getOrganicAndInorganicDetails(
         farmId,
-        harvestYear
+        harvestYear,
+        this.#request
       );
 
       if (!cropDetails || cropDetails.length === 0) {
