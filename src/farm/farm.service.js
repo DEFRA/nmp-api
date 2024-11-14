@@ -81,7 +81,8 @@ class FarmService extends BaseService {
         if (!existingFarm) {
           throw boom.notFound(`Farm with ID ${farmId} not found`);
         }
-        const { ID, ...updateData } = updatedFarmData;
+        const { ID, FullAddress, EncryptedFarmId, ...updateData } =
+          updatedFarmData;
         const updateResult = await transactionalManager.update(
           FarmEntity,
           farmId,

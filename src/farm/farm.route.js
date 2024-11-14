@@ -144,7 +144,7 @@ module.exports = [
       tags: ["api", "Farm"],
       description: "Update Farm api",
       validate: {
-        payload: FarmUpdatePayloadDto,
+        payload: FarmPayloadDto,
         failAction: (request, h, err) => {
           return h
             .response(
