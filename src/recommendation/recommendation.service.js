@@ -11,6 +11,7 @@ const {
 const { BaseService } = require("../base/base.service");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
 const MannerApplicationMethodService = require("../vendors/manner/application-method/application-method.service");
+const { FertiliserManuresEntity } = require("../db/entity/fertiliser-manures.entity");
 
 class RecommendationService extends BaseService {
   constructor() {
@@ -23,6 +24,7 @@ class RecommendationService extends BaseService {
       AppDataSource.getRepository(OrganicManureEntity);
     this.MannerManureTypesService = new MannerManureTypesService();  
     this.MannerApplicationMethodService = new MannerApplicationMethodService();
+    this.FertiliserManuresRepository = AppDataSource.getRepository(FertiliserManuresEntity);
   }
 
   async getNutrientsRecommendationsForField(
@@ -38,7 +40,7 @@ class RecommendationService extends BaseService {
         harvestYear,
       ]);
       const mappedRecommendations = recommendations.map((r) => {
-        const data = { Crop: {}, Recommendation: {}, ManagementPeriod: {} };
+        const data = { Crop: {}, Recommendation: {}, ManagementPeriod: {}, FertiliserManure: {}}; 
         Object.keys(r).forEach((recDataKey) => {
           if (recDataKey.startsWith("Crop_"))
             data.Crop[recDataKey.slice(5)] = r[recDataKey];
@@ -46,6 +48,8 @@ class RecommendationService extends BaseService {
             data.Recommendation[recDataKey.slice(15)] = r[recDataKey];
           else if (recDataKey.startsWith("ManagementPeriod_"))
             data.ManagementPeriod[recDataKey.slice(17)] = r[recDataKey];
+          else if (recDataKey.startsWith("FertiliserManure_"))
+            data.FertiliserManure[recDataKey.slice(17)] = r[recDataKey];
         });
         return data;
       });
@@ -60,6 +64,7 @@ class RecommendationService extends BaseService {
           ).concat({
             Recommendation: r.Recommendation,
             ManagementPeriod: r.ManagementPeriod,
+            FertiliserManure: r.FertiliserManure,
           }),
         };
       });
@@ -85,6 +90,26 @@ class RecommendationService extends BaseService {
                   ApplicationDate: true,
                   ApplicationRate: true,
                   ApplicationMethodID: true,
+                },
+              });
+
+              const FertiliserManures = await this.FertiliserManuresRepository.find({
+                where: {
+                  ManagementPeriodID: recData.ManagementPeriod.ID,
+                },
+                select: {
+                  ID: true,
+                  ApplicationDate: true,
+                  ApplicationRate: true,
+                  N: true,
+                  P2O5: true,
+                  K2O: true,
+                  MgO: true,
+                  SO3: true,
+                  Na2O: true,
+                  Lime: true,
+                  NH4N: true,
+                  NO3N: true,
                 },
               });
 
@@ -114,6 +139,7 @@ class RecommendationService extends BaseService {
                 RecommendationComments: comments,
                 ManagementPeriod: recData.ManagementPeriod,
                 OrganicManures: organicManuresWithDetails,
+                FertiliserManures:FertiliserManures,
               };
             })
           ),
