@@ -2,7 +2,7 @@ const Joi = require('joi');
 
 const FarmDto = Joi.object({
   ID: Joi.number().integer().allow(null).optional(),
-  FullAddress: Joi.string().optional().allow(null, ""),
+  FullAddress: Joi.string().allow(null, ""),
   OrganisationID: Joi.string().required(),
   Name: Joi.string().required(),
   Address1: Joi.string().required(),
