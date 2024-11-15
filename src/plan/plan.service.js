@@ -711,6 +711,94 @@ class PlanService extends BaseService {
     });
   }
 
+  async savedefaultRecommendationCrops(
+    transactionalManager,
+    managementPeriodID,
+    userId
+  ) {
+    // Initialize variables for recommendations for both Crop Orders
+    let cropData = {
+      CropN: null,
+      ManureN: null,
+      FertilizerN: null,
+      CropP2O5: null,
+      ManureP2O5: null,
+      FertilizerP2O5: null,
+      CropK2O: null,
+      ManureK2O: null,
+      FertilizerK2O: null,
+      CropMgO: null,
+      ManureMgO: null,
+      FertilizerMgO: null,
+      CropSO3: null,
+      ManureSO3: null,
+      FertilizerSO3: null,
+      CropNa2O: null,
+      ManureNa2O: null,
+      FertilizerNa2O: null,
+      CropLime: null,
+      ManureLime: null,
+      FertilizerLime: null,
+      PH: null,
+      SNSIndex: null,
+      PIndex: null,
+      KIndex: null,
+      MgIndex: null,
+      SIndex: null,
+    };
+    console.log("managementPeriodIDkkkk", managementPeriodID);
+    await transactionalManager.save(
+      RecommendationEntity,
+      this.repository.create({
+        ...cropData,
+        ManagementPeriodID: managementPeriodID,
+        Comments: null,
+        CreatedOn: new Date(),
+        CreatedByID: userId,
+      })
+    );
+  }
+  async savedDefault(cropData, userId, transactionalManager) {
+    console.log("cropData", cropData);
+    const ManagementPeriods = [];
+
+    // Save the Crop first (assumed as savedCrop)
+    const savedCrop = await transactionalManager.save(
+      CropEntity,
+      this.cropRepository.create({
+        ...cropData.Crop,
+        FieldID: cropData.Crop.FieldID, // assuming cropData contains Crop object
+        CreatedByID: userId,
+      })
+    );
+
+    // Iterate over the cropData ManagementPeriods and save them using the transactionalManager
+    for (const managementPeriod of cropData.ManagementPeriods) {
+      const savedManagementPeriod = await transactionalManager.save(
+        ManagementPeriodEntity,
+        this.managementPeriodRepository.create({
+          ...managementPeriod,
+          CropID: savedCrop.ID, // Link saved crop with ManagementPeriods
+          CreatedByID: userId,
+        })
+      );
+      ManagementPeriods.push(savedManagementPeriod);
+
+      //Call saveRecommendationCrops immediately after saving each ManagementPeriod
+      await this.savedefaultRecommendationCrops(
+        transactionalManager,
+        savedManagementPeriod.ID, // Pass the saved management period's ID
+        userId
+      );
+    }
+
+    // Return the transaction result with the saved crop and management periods
+    return {
+      Crop: savedCrop,
+      ManagementPeriods,
+    };
+  }
+
   async createNutrientsRecommendationForField(crops, userId) {
     return await AppDataSource.transaction(async (transactionalManager) => {
       const Recommendations = [];
@@ -742,6 +830,13 @@ class PlanService extends BaseService {
           throw new Error(JSON.stringify(Errors));
         }
         const snsAnalysesData = await this.getSnsAnalysesData(fieldId);
+       if (crop.CropTypeID === 170) {
+         await this.savedDefault(cropData, userId, transactionalManager);
+         return {
+           message: "Default crop saved and exiting early",
+           Recommendations,
+         };
+       }
         const nutrientRecommendationnReqBody =
           await this.buildNutrientRecommendationReqBody(
             field,
