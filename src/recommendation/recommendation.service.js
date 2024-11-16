@@ -134,8 +134,13 @@ class RecommendationService extends BaseService {
                 })
               );
 
+              const mergedRecommendation = {
+                ...recData.Recommendation,
+                ...recData.FertiliserManure, // Adds FertiliserManure properties to Recommendation
+              };
+
               return {
-                Recommendation: recData.Recommendation,
+                Recommendation: mergedRecommendation,
                 RecommendationComments: comments,
                 ManagementPeriod: recData.ManagementPeriod,
                 OrganicManures: organicManuresWithDetails,
