@@ -1,7 +1,7 @@
 {
-  "name": "hapi-project",
+  "name": "nmp-api",
   "version": "1.0.0",
-  "description": "",
+  "description": "Nutrient Management Planning Tool - API",
   "main": "index.js",
   "scripts": {
     "start": "node dist/index.js",

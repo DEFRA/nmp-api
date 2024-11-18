@@ -759,7 +759,7 @@ class PlanService extends BaseService {
     );
   }
   async savedDefault(cropData, userId, transactionalManager) {
-    console.log("cropData", cropData);
+   
     const ManagementPeriods = [];
 
     // Save the Crop first (assumed as savedCrop)
@@ -800,6 +800,7 @@ class PlanService extends BaseService {
   }
 
   async createNutrientsRecommendationForField(crops, userId) {
+      const allManagementPeriods = await this.managementPeriodRepository.find();
     return await AppDataSource.transaction(async (transactionalManager) => {
       const Recommendations = [];
       const Errors = [];
@@ -933,9 +934,12 @@ class PlanService extends BaseService {
                 recommendation.cropNeedValue;
             }
           );
-          const existingRecommendation = await this.repository.findOne({
-            where: { ManagementPeriodID: ManagementPeriods[0].ID },
-          });
+          // const existingRecommendation = await this.repository.findOne({
+          //   where: { ManagementPeriodID: ManagementPeriods[0].ID },
+          // });
+          const existingRecommendation = allManagementPeriods.find(
+            (mp) => mp.ID === ManagementPeriods[0].ID
+          );
 
           if (existingRecommendation) {
             // Update the existing recommendation
@@ -1007,7 +1011,7 @@ class PlanService extends BaseService {
 
           const RecommendationComments = [];
           const notesByNutrient =
-            nutrientRecommendationsData.adviceNotes.reduce(
+            nutrientRecommendationsData?.adviceNotes?.reduce(
               (acc, adviceNote) => {
                 if (!acc[adviceNote?.nutrientId]) {
                   acc[adviceNote?.nutrientId] = [];
