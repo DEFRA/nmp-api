@@ -496,8 +496,6 @@ class OrganicManureService extends BaseService {
     const firstCrop = dataMultipleCrops?.find((crop) => crop.CropOrder === 1);
     const secondCrop = dataMultipleCrops?.find((crop) => crop.CropOrder === 2);
 
-    // Get all recommendations once and store them in a map
-    // const allRecommendations = await this.RecommendationRepository.find();
     const recommendationMap = allRecommendations.reduce(
       (acc, recommendation) => {
         acc[recommendation.ManagementPeriodID] = recommendation;
@@ -678,6 +676,92 @@ class OrganicManureService extends BaseService {
     }
   }
 
+  async saveRecommendationForOtherCrops(
+    transactionalManager,
+    OrganicManure,
+    mannerOutputs,
+    userId,
+    latestSoilAnalysis,
+    snsAnalysesData,
+    allRecommendations
+  ) {
+    // Prepare cropOrderData with the values from latestSoilAnalysis, snsAnalysesData, and mannerOutputReq
+    let cropOrderData = {
+      CropN: null,
+      ManureN: mannerOutputs.currentCropAvailableN,
+      FertilizerN: null,
+      CropP2O5: null,
+      ManureP2O5: mannerOutputs.cropAvailableP2O5 || null,
+      FertilizerP2O5: null,
+      ManureK2O: mannerOutputs.cropAvailableK2O || null,
+      CropMgO: null,
+      ManureMgO: null,
+      FertilizerMgO: null,
+      CropSO3: null,
+      ManureSO3: null,
+      FertilizerSO3: null,
+      CropNa2O: null, // assuming Na2O is present in mannerOutputReq if not remove this
+      ManureNa2O: null,
+      FertilizerNa2O: null, // assuming Na2O is present
+      CropLime: null,
+      ManureLime: null,
+      FertilizerLime: null, // Assuming no data for FertilizerLime
+      PH: latestSoilAnalysis?.PH?.toString() || null,
+      SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
+      PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
+      KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
+      MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
+      SIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString() || null,
+    };
+
+    // Check if there's an existing recommendation for the current OrganicManure.ManagementPeriodID
+    let recommendation = allRecommendations.find(
+      (rec) => rec.ManagementPeriodID === OrganicManure.ManagementPeriodID
+    );
+
+    if (recommendation) {
+      // If a recommendation exists, update it
+      recommendation = {
+        ...recommendation,
+        ...cropOrderData,
+        ModifiedOn: new Date(),
+        ModifiedByID: userId,
+      };
+      await transactionalManager.save(RecommendationEntity, recommendation);
+    } else {
+      // If no recommendation exists, create a new one
+      recommendation = this.RecommendationRepository.create({
+        ...cropOrderData,
+        ManagementPeriodID: OrganicManure.ManagementPeriodID,
+        Comments: "New recommendation created",
+        CreatedOn: new Date(),
+        CreatedByID: userId,
+      });
+      await transactionalManager.save(RecommendationEntity, recommendation);
+    }
+
+    return recommendation;
+  }
+
+  async saveOrganicManureForOtherCropType(
+    organicManureData,
+    mannerOutputs,
+    transactionalManager,
+    userId,
+    organicManures
+  ) {
+    const savedOrganicManure = await transactionalManager.save(
+      OrganicManureEntity,
+      this.repository.create({
+        ...organicManureData.OrganicManure,
+        AvailableN: mannerOutputs.data.currentCropAvailableN,
+        CreatedByID: userId,
+        ...(organicManureData.OrganicManure.ID == 0 ? { ID: null } : {}),
+      })
+    );
+    organicManures.push(savedOrganicManure);
+  }
+
   async createOrganicManuresWithFarmManureType(request, body, userId) {
     return await AppDataSource.transaction(async (transactionalManager) => {
       let savedFarmManureType;
@@ -718,7 +802,7 @@ class OrganicManureService extends BaseService {
           );
 
         const manureTypeData = mannerManureTypeData.data;
-        console.log("manureTypeDataaa", manureTypeData);
+
         const managementPeriodData =
           await this.managementPeriodRepository.findOneBy({
             ID: OrganicManure.ManagementPeriodID,
@@ -803,6 +887,7 @@ class OrganicManureService extends BaseService {
             ],
           };
         }
+        console.log("mannerOutputReq", mannerOutputReq);
 
         // Call the new helper function to create mannerOutputReq
         const mannerOutputs =
@@ -811,7 +896,11 @@ class OrganicManureService extends BaseService {
             mannerOutputReq,
             request
           );
+          console.log("mannerOutputs", mannerOutputs);
 
+        if (mannerOutputs.data == null) {
+          console.error("Vendor manner api is not working");
+        }
         const Errors = [];
         const {
           latestSoilAnalysis,
@@ -833,11 +922,37 @@ class OrganicManureService extends BaseService {
           where: {
             FieldID: fieldData.ID,
             Year: cropData.Year,
-            Confirm: false, // Or 0 based on your field setup
+            Confirm: false,
           },
         });
 
         const snsAnalysesData = await this.getSnsAnalysesData(fieldData.ID);
+
+        if (cropData.CropTypeID === 170) {
+          await this.saveOrganicManureForOtherCropType(
+            organicManureData,
+            mannerOutputs,
+            transactionalManager,
+            userId,
+            organicManures
+          );
+
+         const saveOtherCropRecommendations = await this.saveRecommendationForOtherCrops(
+            transactionalManager, // Transaction manager for transactional save
+            OrganicManure, // OrganicManure data
+            mannerOutputs, // Manner output request
+            userId, // User ID
+            latestSoilAnalysis, // Latest soil analysis data
+            snsAnalysesData, // sns analyses data
+            allRecommendations // All recommendations (or relevant recommendation data)
+          );
+          console.log(
+            "saveOtherCropRecommendations",
+            saveOtherCropRecommendations
+          );
+          return { OrganicManures: organicManures };
+        }
+
         const nutrientRecommendationnReqBody =
           await this.buildNutrientRecommendationReqBody(
             fieldData,
@@ -1052,7 +1167,7 @@ class OrganicManureService extends BaseService {
           );
         } else {
           // Create new comment
-          const newComment = this.recommendationCommentEntity.create({
+          const newComment = this.recommendationCommentRepository.create({
             Nutrient: Number(nutrientId),
             Comment: concatenatedNote,
             RecommendationID: recommendationId,
