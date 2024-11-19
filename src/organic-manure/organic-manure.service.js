@@ -685,15 +685,16 @@ class OrganicManureService extends BaseService {
     snsAnalysesData,
     allRecommendations
   ) {
+
     // Prepare cropOrderData with the values from latestSoilAnalysis, snsAnalysesData, and mannerOutputReq
     let cropOrderData = {
       CropN: null,
-      ManureN: mannerOutputs.currentCropAvailableN,
+      ManureN: mannerOutputs.data.currentCropAvailableN,
       FertilizerN: null,
       CropP2O5: null,
-      ManureP2O5: mannerOutputs.cropAvailableP2O5 || null,
+      ManureP2O5: mannerOutputs.data.cropAvailableP2O5 || null,
       FertilizerP2O5: null,
-      ManureK2O: mannerOutputs.cropAvailableK2O || null,
+      ManureK2O: mannerOutputs.data.cropAvailableK2O || null,
       CropMgO: null,
       ManureMgO: null,
       FertilizerMgO: null,
@@ -887,7 +888,7 @@ class OrganicManureService extends BaseService {
             ],
           };
         }
-        console.log("mannerOutputReq", mannerOutputReq);
+      
 
         // Call the new helper function to create mannerOutputReq
         const mannerOutputs =
@@ -896,7 +897,7 @@ class OrganicManureService extends BaseService {
             mannerOutputReq,
             request
           );
-          console.log("mannerOutputs", mannerOutputs);
+          
 
         if (mannerOutputs.data == null) {
           console.error("Vendor manner api is not working");
@@ -946,10 +947,7 @@ class OrganicManureService extends BaseService {
             snsAnalysesData, // sns analyses data
             allRecommendations // All recommendations (or relevant recommendation data)
           );
-          console.log(
-            "saveOtherCropRecommendations",
-            saveOtherCropRecommendations
-          );
+         
           return { OrganicManures: organicManures };
         }
 
