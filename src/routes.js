@@ -25,4 +25,5 @@ module.exports = [
   ...require("./inorganic-manure-duration/inorganic-manure-duration.route"),
   ...require("./crop-type-linking/crop-type-linking.route"),
   ...require("./second-crop-linkings/second-crop-linkings.route"),
+  ...require("./pk-balance/pk-balance.route"),
 ];

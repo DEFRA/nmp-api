@@ -57,15 +57,17 @@ class SoilAnalysesController {
 
   async updateSoilAnalysis() {
     const { soilAnalysisId } = this.#request.params;
-    const updatedSoilAnalysisData = this.#request.payload.SoilAnalysis;
+    //const updatedSoilAnalysisData = this.#request.payload.SoilAnalysis;
     const userId = this.#request.userId;
+    const {pKBalanceData,updatedSoilAnalysisData} = this.#request.payload;
 
     try {
       const updatedSoilAnalysis =
         await this.#soilAnalysisService.updateSoilAnalysis(
           updatedSoilAnalysisData,
           userId,
-          parseInt(soilAnalysisId)
+          parseInt(soilAnalysisId),
+          pKBalanceData
         );
 
       return this.#h.response({ SoilAnalysis: updatedSoilAnalysis });

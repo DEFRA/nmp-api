@@ -16,7 +16,7 @@ class SoilAnalysesService extends BaseService {
     return soilAnalysis;
   }
 
-  async updateSoilAnalysis(updatedSoilAnalysisData, userId, soilAnalysisId) {
+  async updateSoilAnalysis(updatedSoilAnalysisData, userId, soilAnalysisId,pKBalanceData) {
     const { CreatedByID, CreatedOn, ...updatedData } = updatedSoilAnalysisData;
     const result = await this.repository.update(soilAnalysisId, {
       ...updatedData,
@@ -27,10 +27,19 @@ class SoilAnalysesService extends BaseService {
     if (result.affected === 0) {
       throw new Error(`Soil Analysis with ID ${soilAnalysisId} not found`);
     }
-
     const updatedSoilAnalysis = await this.repository.findOne({
       where: { ID: soilAnalysisId },
     });
+    if(updatedSoilAnalysis.Potassium!=null||updatedSoilAnalysis.Phosphorus!=null)
+    {          
+          let PKBalance = null;
+          if (body.PKBalance) {
+            const result =  await this.repository.save({
+              ...pKBalanceData,
+              CreatedByID: userId,
+            });
+          }
+    }
     return updatedSoilAnalysis;
   }
 }

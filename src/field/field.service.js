@@ -13,6 +13,7 @@ const RB209SoilService = require("../vendors/rb209/soil/soil.service");
 const boom = require("@hapi/boom");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
+const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 
 class FieldService extends BaseService {
   constructor() {
@@ -30,6 +31,8 @@ class FieldService extends BaseService {
     this.rB209SoilService = new RB209SoilService();
     this.snsAnalysisRepository = AppDataSource.getRepository(SnsAnalysesEntity);
     this.recommendationRepository = AppDataSource.getRepository(RecommendationEntity);
+    this.pkbalanceRepository =
+    AppDataSource.getRepository(PKBalanceEntity);
 
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
@@ -151,6 +154,24 @@ class FieldService extends BaseService {
           })
         );
       }
+      if(SoilAnalysis!=null)
+      {
+        if(SoilAnalysis.Phosphorus!=null||SoilAnalysis.Potassium!=null)
+          {
+            let PKBalance = null;
+            if (body.PKBalance) {
+              PKBalance = await transactionalManager.save(
+                PKBalanceEntity,
+                this.pkbalanceRepository.create({
+                  ...body?.pkbalance,
+                  FieldID: Field.ID,
+                  Year:SoilAnalysis.Date.Year,
+                  CreatedByID: userId,
+                })
+              );
+            }
+         }
+    }
       let SnsAnalysis = null;
       if (body.SnsAnalysis) {
         SnsAnalysis = await transactionalManager.save(
