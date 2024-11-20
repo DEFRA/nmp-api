@@ -46,7 +46,7 @@ module.exports = [
     },
     options: {
       tags: ["api", "PK Balance"],
-      description: "Create PK Balance",
+      description: "Create Pk Balance",
       validate: {
         payload: CreatePKBalanceDto,
         failAction: (request, h, err) => {
@@ -68,7 +68,7 @@ module.exports = [
 
   {
     method: "PUT",
-    path: "/pk-Balance/{pKBalanceId}",
+    path: "/pk-Balance/{PkBalanceId}",
     handler: async (request, h) => {
       const controller = new PKBalanceController(request, h);
       return controller.updatePKBalance();
