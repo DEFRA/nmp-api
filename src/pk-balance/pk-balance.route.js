@@ -45,7 +45,7 @@ module.exports = [
       return controller.createPKBalance();
     },
     options: {
-      tags: ["api", "PK Balance"],
+      tags: ["api", "Pk Balance"],
       description: "Create Pk Balance",
       validate: {
         payload: CreatePKBalanceDto,
@@ -74,7 +74,7 @@ module.exports = [
       return controller.updatePKBalance();
     },
     options: {
-      tags: ["api", "pk Balance"],
+      tags: ["api", "Pk Balance"],
       description: "Update PK Balance by Id",
       validate: {
         params: Joi.object({
