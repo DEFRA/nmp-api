@@ -12,12 +12,12 @@ class PKBalanceController {
     }
 
 async createPKBalance() {
-  const pKBalanceBody = this.#request.payload.SoilAnalysis;
+  const { PKBalance } = this.#request.payload;
   const userId = this.#request.userId;
 
   try {
     const data = await this.#PKBalanceService.createPKBalance(
-      pKBalanceBody,
+      PKBalance,
       userId
     );
     return this.#h.response({ PKBalance: data });
@@ -51,7 +51,7 @@ async createPKBalance() {
     //if (shortSummary) selectOptions = { ID: true, Date: true, FieldID: true };
     try {
       const PkBalances = await this.#PKBalanceService.getBy(
-        "Year",
+       "Year",
         year,
         fieldId
       );
@@ -61,3 +61,4 @@ async createPKBalance() {
     }
   }
 }
+module.exports = { PKBalanceController };

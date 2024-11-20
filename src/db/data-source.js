@@ -33,6 +33,7 @@ const {CountryEntity}=     require("./entity/country.entity.js");
 const {ManureTypeCategoryEntity}=     require("./entity/manure-type-category.entity.js");
 const { SnsAnalysesEntity } = require("./entity/sns-analysis.entity.js");
 const { SecondCropLinkingEntity } = require("./entity/second-crop-linking.entity.js");
+const { PKBalanceEntity } = require("./entity/pk-balance.entity.js");
 
 //const requireContext = require.context('./entity/', false, /\.entity\.js$/);
 //const entities = requireContext.keys().map(requireContext);
@@ -77,7 +78,8 @@ const baseConfig = {
     CountryEntity,
     ManureTypeCategoryEntity,
     SnsAnalysesEntity,
-    SecondCropLinkingEntity
+    SecondCropLinkingEntity,
+    PKBalanceEntity
   ],
   migrations: [],
   subscribers: [],

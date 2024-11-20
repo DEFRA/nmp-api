@@ -34,6 +34,7 @@ const {ManureTypeCategoryEntity}=     require("./entity/manure-type-category.ent
 const dotven = require("dotenv");
 const { SnsAnalysesEntity } = require("./entity/sns-analysis.entity.js");
 const { SecondCropLinkingEntity } = require("./entity/second-crop-linking.entity.js");
+const { PKBalanceEntity } = require("./entity/pk-balance.entity.js");
 
 dotven.config();
 
@@ -77,7 +78,8 @@ const baseConfig = {
     CountryEntity,
     ManureTypeCategoryEntity,
     SnsAnalysesEntity,
-    SecondCropLinkingEntity
+    SecondCropLinkingEntity,
+    PKBalanceEntity
   ],
 };
 

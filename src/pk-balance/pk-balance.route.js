@@ -42,7 +42,7 @@ module.exports = [
     path: "/pk-Balance",
     handler: async (request, h) => {
       const controller = new PKBalanceController(request, h);
-      return controller.CreatePKBalance();
+      return controller.createPKBalance();
     },
     options: {
       tags: ["api", "PK Balance"],
