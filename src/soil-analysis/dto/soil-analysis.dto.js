@@ -50,7 +50,7 @@ const CreateSoilAnalysisDto = Joi.object({
 
 const UpdateSoilAnalysisDto = Joi.object({
   SoilAnalysis: SoilAnalysisDto.required(),
-  PKBalance:PKBalanceDto.optional()
+  PKBalance:PKBalanceDto.optional().allow(null)
 });
 
 module.exports = {

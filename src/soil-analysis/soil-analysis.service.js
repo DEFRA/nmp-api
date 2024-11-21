@@ -1,5 +1,5 @@
 const { AppDataSource } = require("../db/data-source");
-const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity")
+const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const { BaseService } = require("../base/base.service");
 
 class SoilAnalysesService extends BaseService {
@@ -16,7 +16,12 @@ class SoilAnalysesService extends BaseService {
     return soilAnalysis;
   }
 
-  async updateSoilAnalysis(updatedSoilAnalysisData, userId, soilAnalysisId,pKBalanceData) {
+  async updateSoilAnalysis(
+    updatedSoilAnalysisData,
+    userId,
+    soilAnalysisId,
+    pKBalanceData
+  ) {
     const { CreatedByID, CreatedOn, ...updatedData } = updatedSoilAnalysisData;
     const result = await this.repository.update(soilAnalysisId, {
       ...updatedData,
@@ -27,20 +32,28 @@ class SoilAnalysesService extends BaseService {
     if (result.affected === 0) {
       throw new Error(`Soil Analysis with ID ${soilAnalysisId} not found`);
     }
-    const updatedSoilAnalysis = await this.repository.findOne({
+    const SoilAnalysis = await this.repository.findOne({
       where: { ID: soilAnalysisId },
     });
-    if(updatedSoilAnalysis.Potassium!=null||updatedSoilAnalysis.Phosphorus!=null)
-    {          
-          let PKBalance = null;
-          if (body.PKBalance) {
-            const result =  await this.repository.save({
-              ...pKBalanceData,
-              CreatedByID: userId,
-            });
-          }
+    const pkBalanceEntries = await this.pkbalanceRepository.find({
+      where: { Year: SoilAnalysis.Date.Year, FieldId: SoilAnalysis.FieldID },
+    });
+
+    let PKBalance = null;
+    if (pkBalanceEntries == null) {
+      if (SoilAnalysis.Potassium != null || SoilAnalysis.Phosphorus != null) {
+        if (body.PKBalance) {
+          const { CreatedByID, CreatedOn, ...updatedPKBalanceData } =
+            pKBalanceData;
+          const PKBalance = await this.repository.save({
+            ...updatedPKBalanceData,
+            ModifiedByID: userId,
+            ModifiedOn: new Date(),
+          });
+        }
+      }
     }
-    return updatedSoilAnalysis;
+    return { SoilAnalysis, PKBalance };
   }
 }
 

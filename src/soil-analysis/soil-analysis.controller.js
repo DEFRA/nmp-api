@@ -57,12 +57,12 @@ class SoilAnalysesController {
 
   async updateSoilAnalysis() {
     const { soilAnalysisId } = this.#request.params;
-    //const updatedSoilAnalysisData = this.#request.payload.SoilAnalysis;
+    const updatedSoilAnalysisData = this.#request.payload.SoilAnalysis;
     const userId = this.#request.userId;
-    const {pKBalanceData,updatedSoilAnalysisData} = this.#request.payload;
+    const pKBalanceData = this.#request.payload.PKBalance;
 
     try {
-      const updatedSoilAnalysis =
+      const data=
         await this.#soilAnalysisService.updateSoilAnalysis(
           updatedSoilAnalysisData,
           userId,
@@ -70,7 +70,7 @@ class SoilAnalysesController {
           pKBalanceData
         );
 
-      return this.#h.response({ SoilAnalysis: updatedSoilAnalysis });
+      return this.#h.response({ data });
     } catch (error) {
       return this.#h.response({ error });
     }

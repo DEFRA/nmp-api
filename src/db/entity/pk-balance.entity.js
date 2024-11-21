@@ -1,6 +1,6 @@
 const { EntitySchema } = require("typeorm");
 
-const PKBalanceEntity = new EntitySchema({
+const   PKBalanceEntity = new EntitySchema({
   name: "PKBalance",
   tableName: "PKBalances",
   columns: {

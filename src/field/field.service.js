@@ -14,6 +14,7 @@ const boom = require("@hapi/boom");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
+const { CleanPlugin } = require("webpack");
 
 class FieldService extends BaseService {
   constructor() {
@@ -158,18 +159,20 @@ class FieldService extends BaseService {
       {
         if(SoilAnalysis.Phosphorus!=null||SoilAnalysis.Potassium!=null)
           {
+        console.log("dbihdbvdwv",body.PKBalance)
+
             let PKBalance = null;
             if (body.PKBalance) {
               PKBalance = await transactionalManager.save(
                 PKBalanceEntity,
                 this.pkbalanceRepository.create({
-                  ...body?.pkbalance,
+                  ...body?.PKBalance,
                   FieldID: Field.ID,
-                  Year:SoilAnalysis.Date.Year,
                   CreatedByID: userId,
                 })
               );
             }
+            console.log("llllll",PKBalance)
          }
     }
       let SnsAnalysis = null;
@@ -220,6 +223,7 @@ class FieldService extends BaseService {
         SoilAnalysis,
         SnsAnalysis,
         Crops,
+        PKBalance
       };
     });
   }
