@@ -208,27 +208,28 @@ class OrganicManureService extends BaseService {
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: crop.FieldType,
-        multipleCrops: true,
+        multipleCrops: crop.CropOrder == 2 ? true : false,
         arable: arableBody,
-        grassland: isMultipleCrops
-          ? {}
-          : {
-              cropOrder: null,
-              snsId: null,
-              grassGrowthClassId: null,
-              yieldTypeId: null,
-              sequenceId: null,
-              grasslandSequence: [
-                {
-                  position: null,
-                  cropMaterialId: null,
-                  yield: null,
-                },
-              ],
-              establishedDate: null,
-              seasonId: null,
-              siteClassId: null,
-            },
+        grassland:
+          crop.FieldType == 1
+            ? {}
+            : {
+                cropOrder: null,
+                snsId: null,
+                grassGrowthClassId: null,
+                yieldTypeId: null,
+                sequenceId: null,
+                grasslandSequence: [
+                  {
+                    position: null,
+                    cropMaterialId: null,
+                    yield: null,
+                  },
+                ],
+                establishedDate: null,
+                seasonId: null,
+                siteClassId: null,
+              },
         soil: {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,

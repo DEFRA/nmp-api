@@ -168,14 +168,16 @@ class PlanService extends BaseService {
     })[0];
     // Use the buildArableBody function to get the arable array
     const arableBody = await this.buildArableBody(crop, field);
+    
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: crop.FieldType,
-        multipleCrops: true,
+        multipleCrops: crop.CropOrder == 2 ? true : false,
         arable: arableBody,
         grassland:
-          crop.CropOrder == 1
-            ? {
+          crop.FieldType == 1
+            ? {}
+            : {
                 cropOrder: null,
                 snsId: null,
                 grassGrowthClassId: null,
@@ -191,8 +193,7 @@ class PlanService extends BaseService {
                 establishedDate: null,
                 seasonId: null,
                 siteClassId: null,
-              }
-            : {},
+              },
         soil: {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
@@ -852,7 +853,7 @@ class PlanService extends BaseService {
             nutrientRecommendationnReqBody
           );
 
-        console.log("nutrientRecommendationsData", nutrientRecommendationsData);
+       
         if (
           !nutrientRecommendationsData.recommendations ||
           !nutrientRecommendationsData.adviceNotes ||
