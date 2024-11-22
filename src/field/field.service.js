@@ -161,17 +161,27 @@ class FieldService extends BaseService {
      
           if (body.PKBalance) {
             let pkBalanceBody = body.PKBalance;
-            let { CreatedByID, CreatedOn } = body.PKBalance;
+            console.log("pkBalanceBody", pkBalanceBody);
+            let { CreatedByID, CreatedOn, ...createdData } = body.PKBalance;
 
-            PKBalance = await this.pkBalanceRepository.save({
-              ...body?.PKBalance,
-              FieldID: Field.ID,
-              CreatedByID: userId,
-            });
-            let pkBalanceEntry = await this.pkBalanceRepository.find({
-              where: { Year: SoilAnalysis.Date.Year, FieldID: Field.ID },
-            });
-            console.log("abcd", pkBalanceEntry);
+            // PKBalance = await this.pkBalanceRepository.save({
+            //   ...createdData,
+            //   FieldID: Field.ID,
+            //   CreatedByID: userId,
+            // });
+
+            PKBalance = await transactionalManager.save(
+              PKBalanceEntity,
+              this.pkBalanceRepository.create({
+                ...createdData,
+                FieldID: Field.ID,
+                CreatedByID: userId,
+              })
+            );
+            // let pkBalanceEntry = await this.pkBalanceRepository.find({
+            //   where: { Year: SoilAnalysis.Date.Year, FieldID: Field.ID },
+            // });
+            // console.log("abcd", pkBalanceEntry);
             // PKBalance = await this.pkbalanceRepository.save({
             // ...body?.PKBalance,
             //FieldID: Field.ID,
