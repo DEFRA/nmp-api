@@ -40,25 +40,30 @@ class SoilAnalysesService extends BaseService {
     let pkBalanceEntry = await this.pkBalanceRepository.find({
       where: { Year: SoilAnalysis.Date.Year, FieldID: SoilAnalysis.FieldID },
     });
-    console.log('abc',pkBalanceEntry);
-    let PKBalance = null;
-    if (pkBalanceEntry.length == 0) {      
+
+    let newPKBalanceData = null;
+    
       if (SoilAnalysis.Potassium != null || SoilAnalysis.Phosphorus != null) {        
+        if (pkBalanceEntry.length == 0) {
         if (pKBalanceData) {
           let { CreatedByID, CreatedOn, ...updatedPKBalanceData } =
             pKBalanceData;
-          PKBalance = await this.pkBalanceRepository.save({
+            newPKBalanceData = await this.pkBalanceRepository.save({
             ...updatedPKBalanceData,
             CreatedByID: userId,
           });
-        }
+        } 
       }
-      console.log('abc',PKBalance);
+    }else {
+       await this.pkBalanceRepository.delete({
+        Year: SoilAnalysis.Year,
+        FieldID: SoilAnalysis.FieldID,
+      });
     }
-    let newPKBalanceData = await this.pkBalanceRepository.find({
+    let PKBalance = await this.pkBalanceRepository.findOne({
       where: { Year: SoilAnalysis.Date.Year, FieldID: SoilAnalysis.FieldID },
     });
-    return { SoilAnalysis, newPKBalanceData };
+    return { SoilAnalysis, PKBalance };
   }
 }
 
