@@ -36,5 +36,15 @@ class PKBalanceService extends BaseService {
     });
     return updatedPKBalance;
   }
+
+  async getPKBalanceByYearAndFieldId(Year,FieldID) {
+    const data = await this.repository.findOne({
+      where: {
+        FieldID: FieldID,
+        Year: Year
+      },
+    });
+    return data;
+  }
 }
 module.exports = { PKBalanceService };

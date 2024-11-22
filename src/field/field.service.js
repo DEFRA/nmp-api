@@ -31,10 +31,9 @@ class FieldService extends BaseService {
     );
     this.rB209SoilService = new RB209SoilService();
     this.snsAnalysisRepository = AppDataSource.getRepository(SnsAnalysesEntity);
-    this.recommendationRepository = AppDataSource.getRepository(RecommendationEntity);
-    this.pkbalanceRepository =
-    AppDataSource.getRepository(PKBalanceEntity);
-
+    this.recommendationRepository =
+      AppDataSource.getRepository(RecommendationEntity);
+    this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -112,7 +111,7 @@ class FieldService extends BaseService {
       MgIndex: null,
       SIndex: null,
     };
-    console.log("managementPeriodIDkkkk",managementPeriodID);
+    console.log("managementPeriodIDkkkk", managementPeriodID);
     await transactionalManager.save(
       RecommendationEntity,
       this.recommendationRepository.create({
@@ -155,26 +154,33 @@ class FieldService extends BaseService {
           })
         );
       }
-      if(SoilAnalysis!=null)
-      {
-        if(SoilAnalysis.Phosphorus!=null||SoilAnalysis.Potassium!=null)
-          {
-        console.log("dbihdbvdwv",body.PKBalance)
+      let PKBalance = null;
+      if (body.SoilAnalysis != null) {
+        if (SoilAnalysis.Phosphorus != null || SoilAnalysis.Potassium != null) {
+     
+     
+          if (body.PKBalance) {
+            let pkBalanceBody = body.PKBalance;
+            let { CreatedByID, CreatedOn } = body.PKBalance;
 
-            let PKBalance = null;
-            if (body.PKBalance) {
-              PKBalance = await transactionalManager.save(
-                PKBalanceEntity,
-                this.pkbalanceRepository.create({
-                  ...body?.PKBalance,
-                  FieldID: Field.ID,
-                  CreatedByID: userId,
-                })
-              );
-            }
-            console.log("llllll",PKBalance)
-         }
-    }
+            PKBalance = await this.pkBalanceRepository.save({
+              ...body?.PKBalance,
+              FieldID: Field.ID,
+              CreatedByID: userId,
+            });
+            let pkBalanceEntry = await this.pkBalanceRepository.find({
+              where: { Year: SoilAnalysis.Date.Year, FieldID: Field.ID },
+            });
+            console.log("abcd", pkBalanceEntry);
+            // PKBalance = await this.pkbalanceRepository.save({
+            // ...body?.PKBalance,
+            //FieldID: Field.ID,
+            //CreatedByID: userId,
+            //});
+          }
+         
+        }
+      }
       let SnsAnalysis = null;
       if (body.SnsAnalysis) {
         SnsAnalysis = await transactionalManager.save(
@@ -223,7 +229,7 @@ class FieldService extends BaseService {
         SoilAnalysis,
         SnsAnalysis,
         Crops,
-        PKBalance
+        PKBalance,
       };
     });
   }

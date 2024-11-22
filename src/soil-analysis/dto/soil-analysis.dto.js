@@ -38,11 +38,11 @@ const PKBalanceDto = Joi.object({
   FieldID: Joi.number().required(),
   PBalance: Joi.number().required(),
   KBalance: Joi.number().required(),
-  PreviousID:Joi.number().optional(),
-  CreatedOn: Joi.date().required(),
-  CreatedByID: Joi.number().required(),
-  ModifiedOn: Joi.date().optional().allow(null),
-  ModifiedByID: Joi.number().optional().allow(null),
+  PreviousID:Joi.number().allow(null).optional(),
+  CreatedOn: Joi.date().iso().allow(null),
+  CreatedByID: Joi.number().integer().allow(null),
+  ModifiedOn: Joi.date().iso().allow(null),
+  ModifiedByID: Joi.number().integer().allow(null),
 });
 const CreateSoilAnalysisDto = Joi.object({
   SoilAnalysis: SoilAnalysisDto.required()

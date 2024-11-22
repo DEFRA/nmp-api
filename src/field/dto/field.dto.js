@@ -97,7 +97,7 @@ const PKBalanceSchema = Joi.object({
   FieldID: Joi.number().allow(null).optional(),
   PBalance: Joi.number().required(),
   KBalance: Joi.number().required(),
-  PreviousID: Joi.number().integer().allow(null),
+  PreviousID:Joi.number().allow(null).optional(),
   CreatedOn: Joi.date().iso().allow(null),
   CreatedByID: Joi.number().integer().allow(null),
   ModifiedOn: Joi.date().iso().allow(null),
