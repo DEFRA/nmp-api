@@ -85,10 +85,10 @@ class SoilAnalysesService extends BaseService {
           }
         } else {
           // Delete PK Balance entry if applicable
-          await transactionalManager.delete(PKBalanceEntity, {
-            Year: SoilAnalysis.Date.Year,
-            FieldID: SoilAnalysis.FieldID,
-          });
+           await transactionalManager.delete(PKBalanceEntity, {
+             Year: SoilAnalysis.Year,
+             FieldID: SoilAnalysis.FieldID,
+           });
         }
 
         // Retrieve the updated PKBalance entry
