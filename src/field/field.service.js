@@ -13,6 +13,8 @@ const RB209SoilService = require("../vendors/rb209/soil/soil.service");
 const boom = require("@hapi/boom");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
+const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
+const { CleanPlugin } = require("webpack");
 
 class FieldService extends BaseService {
   constructor() {
@@ -29,8 +31,9 @@ class FieldService extends BaseService {
     );
     this.rB209SoilService = new RB209SoilService();
     this.snsAnalysisRepository = AppDataSource.getRepository(SnsAnalysesEntity);
-    this.recommendationRepository = AppDataSource.getRepository(RecommendationEntity);
-
+    this.recommendationRepository =
+      AppDataSource.getRepository(RecommendationEntity);
+    this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -108,7 +111,7 @@ class FieldService extends BaseService {
       MgIndex: null,
       SIndex: null,
     };
-    console.log("managementPeriodIDkkkk",managementPeriodID);
+    console.log("managementPeriodIDkkkk", managementPeriodID);
     await transactionalManager.save(
       RecommendationEntity,
       this.recommendationRepository.create({
@@ -150,6 +153,43 @@ class FieldService extends BaseService {
             CreatedByID: userId,
           })
         );
+      }
+      let PKBalance = null;
+      if (body.SoilAnalysis != null) {
+        if (SoilAnalysis.Phosphorus != null || SoilAnalysis.Potassium != null) {
+     
+     
+          if (body.PKBalance) {
+            let pkBalanceBody = body.PKBalance;
+            console.log("pkBalanceBody", pkBalanceBody);
+            let { CreatedByID, CreatedOn, ...createdData } = body.PKBalance;
+
+            // PKBalance = await this.pkBalanceRepository.save({
+            //   ...createdData,
+            //   FieldID: Field.ID,
+            //   CreatedByID: userId,
+            // });
+
+            PKBalance = await transactionalManager.save(
+              PKBalanceEntity,
+              this.pkBalanceRepository.create({
+                ...createdData,
+                FieldID: Field.ID,
+                CreatedByID: userId,
+              })
+            );
+            // let pkBalanceEntry = await this.pkBalanceRepository.find({
+            //   where: { Year: SoilAnalysis.Date.Year, FieldID: Field.ID },
+            // });
+            // console.log("abcd", pkBalanceEntry);
+            // PKBalance = await this.pkbalanceRepository.save({
+            // ...body?.PKBalance,
+            //FieldID: Field.ID,
+            //CreatedByID: userId,
+            //});
+          }
+         
+        }
       }
       let SnsAnalysis = null;
       if (body.SnsAnalysis) {
@@ -199,6 +239,7 @@ class FieldService extends BaseService {
         SoilAnalysis,
         SnsAnalysis,
         Crops,
+        PKBalance,
       };
     });
   }

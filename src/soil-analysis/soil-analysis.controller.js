@@ -59,16 +59,18 @@ class SoilAnalysesController {
     const { soilAnalysisId } = this.#request.params;
     const updatedSoilAnalysisData = this.#request.payload.SoilAnalysis;
     const userId = this.#request.userId;
+    const pKBalanceData = this.#request.payload.PKBalance;
 
     try {
-      const updatedSoilAnalysis =
+      const data=
         await this.#soilAnalysisService.updateSoilAnalysis(
           updatedSoilAnalysisData,
           userId,
-          parseInt(soilAnalysisId)
+          parseInt(soilAnalysisId),
+          pKBalanceData
         );
 
-      return this.#h.response({ SoilAnalysis: updatedSoilAnalysis });
+      return this.#h.response({ data });
     } catch (error) {
       return this.#h.response({ error });
     }
