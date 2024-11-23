@@ -11,11 +11,18 @@ class SoilAnalysesService extends BaseService {
   }
 
   async createSoilAnalysis(soilAnalysisBody, userId) {
-    const soilAnalysis = await this.repository.save({
-      ...soilAnalysisBody,
-      CreatedByID: userId,
-    });
-    return soilAnalysis;
+    return await AppDataSource.transaction(
+      async (transactionalManager) => {
+        const soilAnalysis = await transactionalManager.save(
+          SoilAnalysisEntity,
+          {
+            ...soilAnalysisBody,
+            CreatedByID: userId,
+          }
+        );
+        return soilAnalysis;
+      }
+    );
   }
 
   async updateSoilAnalysis(
@@ -24,46 +31,80 @@ class SoilAnalysesService extends BaseService {
     soilAnalysisId,
     pKBalanceData
   ) {
-    const { CreatedByID, CreatedOn, ...updatedData } = updatedSoilAnalysisData;
-    const result = await this.repository.update(soilAnalysisId, {
-      ...updatedData,
-      ModifiedByID: userId,
-      ModifiedOn: new Date(),
-    });
+    return await AppDataSource.transaction(
+      async (transactionalManager) => {
+        const { CreatedByID, CreatedOn, ...updatedData } =
+          updatedSoilAnalysisData;
 
-    if (result.affected === 0) {
-      throw new Error(`Soil Analysis with ID ${soilAnalysisId} not found`);
-    }
-    const SoilAnalysis = await this.repository.findOne({
-      where: { ID: soilAnalysisId },
-    });
-    let pkBalanceEntry = await this.pkBalanceRepository.find({
-      where: { Year: SoilAnalysis.Date.Year, FieldID: SoilAnalysis.FieldID },
-    });
+        // Update SoilAnalysis
+        const result = await transactionalManager.update(
+          SoilAnalysisEntity,
+          soilAnalysisId,
+          {
+            ...updatedData,
+            ModifiedByID: userId,
+            ModifiedOn: new Date(),
+          }
+        );
 
-    let newPKBalanceData = null;
-    
-      if (SoilAnalysis.Potassium != null || SoilAnalysis.Phosphorus != null) {        
-        if (pkBalanceEntry.length == 0) {
-        if (pKBalanceData) {
-          let { CreatedByID, CreatedOn, ...updatedPKBalanceData } =
-            pKBalanceData;
-            newPKBalanceData = await this.pkBalanceRepository.save({
-            ...updatedPKBalanceData,
-            CreatedByID: userId,
-          });
-        } 
+        if (result.affected === 0) {
+          throw new Error(`Soil Analysis with ID ${soilAnalysisId} not found`);
+        }
+
+        const SoilAnalysis = await transactionalManager.findOne(
+          SoilAnalysisEntity,
+          {
+            where: { ID: soilAnalysisId },
+          }
+        );
+
+        // Check for PK Balance entry
+        let pkBalanceEntry = await transactionalManager.find(
+          PKBalanceEntity,
+          {
+            where: {
+              Year: SoilAnalysis.Date.Year,
+              FieldID: SoilAnalysis.FieldID,
+            },
+          }
+        );
+
+        let newPKBalanceData = null;
+
+        if (SoilAnalysis.Potassium != null || SoilAnalysis.Phosphorus != null) {
+          if (pkBalanceEntry.length === 0 && pKBalanceData) {
+            let { CreatedByID, CreatedOn, ...updatedPKBalanceData } =
+              pKBalanceData;
+            newPKBalanceData = await transactionalManager.save(
+              PKBalanceEntity,
+              {
+                ...updatedPKBalanceData,
+                CreatedByID: userId,
+              }
+            );
+          }
+        } else {
+          // Delete PK Balance entry if applicable
+           await transactionalManager.delete(PKBalanceEntity, {
+             Year: SoilAnalysis.Year,
+             FieldID: SoilAnalysis.FieldID,
+           });
+        }
+
+        // Retrieve the updated PKBalance entry
+        let PKBalance = await transactionalManager.findOne(
+          PKBalanceEntity,
+          {
+            where: {
+              Year: SoilAnalysis.Date.Year,
+              FieldID: SoilAnalysis.FieldID,
+            },
+          }
+        );
+
+        return { SoilAnalysis, PKBalance };
       }
-    }else {
-       await this.pkBalanceRepository.delete({
-        Year: SoilAnalysis.Year,
-        FieldID: SoilAnalysis.FieldID,
-      });
-    }
-    let PKBalance = await this.pkBalanceRepository.findOne({
-      where: { Year: SoilAnalysis.Date.Year, FieldID: SoilAnalysis.FieldID },
-    });
-    return { SoilAnalysis, PKBalance };
+    );
   }
 }
 
