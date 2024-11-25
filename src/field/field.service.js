@@ -14,7 +14,7 @@ const boom = require("@hapi/boom");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
-const { CleanPlugin } = require("webpack");
+
 
 class FieldService extends BaseService {
   constructor() {
