@@ -66,7 +66,6 @@ class RecommendationService extends BaseService {
           KBalance: true
         },
       });
-console.log('pkBalance',PKbalance);
       const groupedObj = {};
 
       mappedRecommendations.forEach((r) => {
