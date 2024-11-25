@@ -19,6 +19,7 @@ const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const boom = require("@hapi/boom");
 const { NutrientsMapper } = require("../constants/nutrient-mapper");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
+const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 
 class PlanService extends BaseService {
   constructor() {
@@ -38,6 +39,7 @@ class PlanService extends BaseService {
     this.rB209ArableService = new RB209ArableService();
     this.rB209RecommendationService = new RB209RecommendationService();
     this.snsAnalysisRepository = AppDataSource.getRepository(SnsAnalysesEntity);
+    this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity)
   }
 
   async getManagementPeriods(id) {
@@ -168,7 +170,12 @@ class PlanService extends BaseService {
     })[0];
     // Use the buildArableBody function to get the arable array
     const arableBody = await this.buildArableBody(crop, field);
-    
+    const pkBalanceData = await this.pkBalanceRepository.find({
+      where: {
+        FieldID: field.ID,
+        Year: crop.Year,
+      },
+    });
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: crop.FieldType,
@@ -199,7 +206,10 @@ class PlanService extends BaseService {
           kReleasingClay: field.SoilReleasingClay,
           nvzActionProgrammeId: field.NVZProgrammeID,
           psc: 0, //TODO:: need to find it
-          soilAnalyses: [],
+          pkBalance: {
+            phosphate: pkBalanceData.PBalance,
+            potash: pkBalanceData.KBalance,
+          },
         },
         harvestYear: crop.Year,
         area: farm.TotalFarmArea,
@@ -852,7 +862,7 @@ class PlanService extends BaseService {
             "Recommendation/Recommendations",
             nutrientRecommendationnReqBody
           );
-
+      console.log("nutrientRecommendationsData", nutrientRecommendationsData);
        
         if (
           !nutrientRecommendationsData.recommendations ||

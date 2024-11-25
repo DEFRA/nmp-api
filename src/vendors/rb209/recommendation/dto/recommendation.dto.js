@@ -50,12 +50,16 @@ const RecommendationGrasslandSequenceDto = Joi.object({
   cropMaterialId: Joi.number().required(),
   yield: Joi.number().required(),
 });
-
+const PKBalanceDto = Joi.object({
+  PBalance: Joi.number().required(),
+  KBalance: Joi.number().required(),
+});
 const RecommendationSoilDto = Joi.object({
   soilTypeId: Joi.number().required(),
   kReleasingClay: Joi.boolean().allow(null).required(),
   nvzActionProgrammeId: Joi.number().required(),
   psc: Joi.number().required(),
+  pkBalance:PKBalanceDto,
   soilAnalyses: Joi.array().items(RecommendationSoilAnalysisDto).required(),
 });
 
