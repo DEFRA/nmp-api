@@ -12,6 +12,7 @@ const { BaseService } = require("../base/base.service");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
 const MannerApplicationMethodService = require("../vendors/manner/application-method/application-method.service");
 const { FertiliserManuresEntity } = require("../db/entity/fertiliser-manures.entity");
+const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 
 class RecommendationService extends BaseService {
   constructor() {
@@ -25,6 +26,7 @@ class RecommendationService extends BaseService {
     this.MannerManureTypesService = new MannerManureTypesService();  
     this.MannerApplicationMethodService = new MannerApplicationMethodService();
     this.FertiliserManuresRepository = AppDataSource.getRepository(FertiliserManuresEntity);
+    this.PKbalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
   }
 
   async getNutrientsRecommendationsForField(
@@ -53,12 +55,23 @@ class RecommendationService extends BaseService {
         });
         return data;
       });
-
+      const PKbalance = await this.PKbalanceRepository.findOne({
+        where: {
+          Year: harvestYear-1,
+          FieldID:fieldId
+        },
+        select: {
+          ID: true,
+          PBalance: true,
+          KBalance: true
+        },
+      });
       const groupedObj = {};
 
       mappedRecommendations.forEach((r) => {
         groupedObj[r.Crop.ID] = {
           Crop: r.Crop,
+          PKbalance:PKbalance,
           Recommendations: (
             groupedObj[r.Crop.ID]?.Recommendations || []
           ).concat({
@@ -112,7 +125,6 @@ class RecommendationService extends BaseService {
                   NO3N: true,
                 },
               });
-
               // Fetch ManureType details from external API
               const organicManuresWithDetails = await Promise.all(
                 organicManures.map(async (o) => {
@@ -144,8 +156,7 @@ class RecommendationService extends BaseService {
                 RecommendationComments: comments,
                 ManagementPeriod: recData.ManagementPeriod,
                 OrganicManures: organicManuresWithDetails,
-                FertiliserManures:FertiliserManures,
-              };
+                FertiliserManures:FertiliserManures             };
             })
           ),
         }))
