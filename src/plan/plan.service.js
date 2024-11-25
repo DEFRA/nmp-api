@@ -210,6 +210,7 @@ class PlanService extends BaseService {
             phosphate: pkBalanceData.PBalance,
             potash: pkBalanceData.KBalance,
           },
+          soilAnalyses: [],
         },
         harvestYear: crop.Year,
         area: farm.TotalFarmArea,
