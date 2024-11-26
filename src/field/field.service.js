@@ -156,12 +156,11 @@ class FieldService extends BaseService {
       }
       let PKBalance = null;
       if (body.SoilAnalysis != null) {
-        if (SoilAnalysis.Phosphorus != null || SoilAnalysis.Potassium != null) {
-     
-     
+        if (SoilAnalysis.Potassium != null || SoilAnalysis.Phosphorus != null||
+          SoilAnalysis.PotassiumIndex != null || SoilAnalysis.PhosphorusIndex != null
+        ) {
           if (body.PKBalance) {
             let pkBalanceBody = body.PKBalance;
-            
             let { CreatedByID, CreatedOn, ...createdData } = body.PKBalance;
             PKBalance = await transactionalManager.save(
               PKBalanceEntity,
@@ -172,7 +171,6 @@ class FieldService extends BaseService {
               })
             );
           }
-         
         }
       }
       let SnsAnalysis = null;

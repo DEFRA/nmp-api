@@ -23,6 +23,7 @@ const RB209FieldService = require("../vendors/rb209/field/field.service");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
 const { LessThanOrEqual, Between, Not, In } = require("typeorm");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
+const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 
 class OrganicManureService extends BaseService {
   constructor() {
@@ -54,6 +55,7 @@ class OrganicManureService extends BaseService {
     this.RB209FieldService = new RB209FieldService();
     this.MannerManureTypesService = new MannerManureTypesService();
     this.snsAnalysisRepository = AppDataSource.getRepository(SnsAnalysesEntity);
+    this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
   }
 
   async getTotalNitrogen(managementPeriodID, fromDate, toDate, confirm) {
@@ -204,6 +206,12 @@ class OrganicManureService extends BaseService {
       },
       take: 1,
     })[0];
+    const pkBalanceData = await this.pkBalanceRepository.find({
+      where: {
+        FieldID: field.ID,
+        Year: crop.Year - 1,
+      },
+    });
     const arableBody = await this.buildArableBody(dataMultipleCrops, field);
     const nutrientRecommendationnReqBody = {
       field: {
@@ -235,6 +243,10 @@ class OrganicManureService extends BaseService {
           kReleasingClay: field.SoilReleasingClay,
           nvzActionProgrammeId: field.NVZProgrammeID,
           psc: 0, //TODO:: need to find it
+          pkBalance: {
+            phosphate: pkBalanceData != null ? pkBalanceData.PBalance : 0,
+            potash: pkBalanceData != null ? pkBalanceData.KBalance : 0,
+          },
           soilAnalyses: [],
         },
         harvestYear: crop.Year,

@@ -71,7 +71,9 @@ class SoilAnalysesService extends BaseService {
 
         let newPKBalanceData = null;
 
-        if (SoilAnalysis.Potassium != null || SoilAnalysis.Phosphorus != null) {
+        if (SoilAnalysis.Potassium != null || SoilAnalysis.Phosphorus != null||
+          SoilAnalysis.PotassiumIndex != null || SoilAnalysis.PhosphorusIndex != null
+        ) {
           if (pkBalanceEntry.length === 0 && pKBalanceData) {
             let { CreatedByID, CreatedOn, ...updatedPKBalanceData } =
               pKBalanceData;

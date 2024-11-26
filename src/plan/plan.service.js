@@ -20,6 +20,9 @@ const boom = require("@hapi/boom");
 const { NutrientsMapper } = require("../constants/nutrient-mapper");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
+const {
+  FertiliserManuresEntity,
+} = require("../db/entity/fertiliser-manures.entity");
 
 class PlanService extends BaseService {
   constructor() {
@@ -39,7 +42,10 @@ class PlanService extends BaseService {
     this.rB209ArableService = new RB209ArableService();
     this.rB209RecommendationService = new RB209RecommendationService();
     this.snsAnalysisRepository = AppDataSource.getRepository(SnsAnalysesEntity);
-    this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity)
+    this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
+    this.fertiliserRepository = AppDataSource.getRepository(
+      FertiliserManuresEntity
+    );
   }
 
   async getManagementPeriods(id) {
@@ -173,7 +179,7 @@ class PlanService extends BaseService {
     const pkBalanceData = await this.pkBalanceRepository.find({
       where: {
         FieldID: field.ID,
-        Year: crop.Year,
+        Year: crop.Year - 1,
       },
     });
     const nutrientRecommendationnReqBody = {
@@ -207,8 +213,8 @@ class PlanService extends BaseService {
           nvzActionProgrammeId: field.NVZProgrammeID,
           psc: 0, //TODO:: need to find it
           pkBalance: {
-            phosphate: pkBalanceData.PBalance,
-            potash: pkBalanceData.KBalance,
+            phosphate: pkBalanceData != null ? pkBalanceData.PBalance : 0,
+            potash: pkBalanceData != null ? pkBalanceData.KBalance : 0,
           },
           soilAnalyses: [],
         },
@@ -771,7 +777,6 @@ class PlanService extends BaseService {
     );
   }
   async savedDefault(cropData, userId, transactionalManager) {
-   
     const ManagementPeriods = [];
 
     // Save the Crop first (assumed as savedCrop)
@@ -812,15 +817,20 @@ class PlanService extends BaseService {
   }
 
   async createNutrientsRecommendationForField(crops, userId) {
-      const allManagementPeriods = await this.managementPeriodRepository.find();
+    const allManagementPeriods = await this.managementPeriodRepository.find();
     return await AppDataSource.transaction(async (transactionalManager) => {
       const Recommendations = [];
       const Errors = [];
+
       for (const cropData of crops) {
         const crop = cropData?.Crop;
         const errors = this.handleCropValidation(crop);
         Errors.push(...errors);
         const fieldId = crop.FieldID;
+        const pkBalanceData = await this.pkBalanceRepository.findOne({
+          where: { Year: crop?.Year - 1, FieldID: fieldId },
+        });
+
         const { field, errors: fieldErrors } = await this.handleFieldValidation(
           fieldId
         );
@@ -843,13 +853,13 @@ class PlanService extends BaseService {
           throw new Error(JSON.stringify(Errors));
         }
         const snsAnalysesData = await this.getSnsAnalysesData(fieldId);
-       if (crop.CropTypeID === 170) {
-         await this.savedDefault(cropData, userId, transactionalManager);
-         return {
-           message: "Default crop saved and exiting early",
-           Recommendations,
-         };
-       }
+        if (crop.CropTypeID === 170) {
+          await this.savedDefault(cropData, userId, transactionalManager);
+          return {
+            message: "Default crop saved and exiting early",
+            Recommendations,
+          };
+        }
         const nutrientRecommendationnReqBody =
           await this.buildNutrientRecommendationReqBody(
             field,
@@ -863,8 +873,8 @@ class PlanService extends BaseService {
             "Recommendation/Recommendations",
             nutrientRecommendationnReqBody
           );
-      console.log("nutrientRecommendationsData", nutrientRecommendationsData);
-       
+          console.log("nutrientRecommendationsData", nutrientRecommendationsData);
+
         if (
           !nutrientRecommendationsData.recommendations ||
           !nutrientRecommendationsData.adviceNotes ||
@@ -880,7 +890,10 @@ class PlanService extends BaseService {
             CreatedByID: userId,
           })
         );
+
         const ManagementPeriods = [];
+        let sumOfP205 = 0;
+        let sumOfK20 = 0;
         for (const managementPeriod of cropData.ManagementPeriods) {
           const savedManagementPeriod = await transactionalManager.save(
             ManagementPeriodEntity,
@@ -891,6 +904,43 @@ class PlanService extends BaseService {
             })
           );
           ManagementPeriods.push(savedManagementPeriod);
+        }
+
+        let pBalance = 0;
+        let kBalance = 0;
+        for (const recommendation of nutrientRecommendationsData.calculations) {
+          try {
+            switch (recommendation.nutrientId) {
+              case 1:
+                pBalance = pBalance - recommendation.cropNeed;
+                break;
+              case 2:
+                kBalance = kBalance - recommendation.cropNeed;
+                break;
+            }
+            const updateData = {
+              Year: crop?.Year - 1,
+              FieldID: fieldId,
+              PBalance: pBalance,
+              KBalance: kBalance,
+            };
+
+            const updateDataObj = {
+              ...pkBalanceData,
+              ...updateData,
+              ModifiedOn: new Date(),
+              ModifiedByID: userId,
+            };
+
+            await transactionalManager.save(PKBalanceEntity, updateDataObj);
+          } catch (error) {
+            console.error(
+              `Error while updating PKBalance Data FieldId: ${fieldId} And Year:${
+                crop?.Year - 1
+              }:`,
+              error
+            );
+          }
         }
 
         let savedRecommendation;
