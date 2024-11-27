@@ -1,4 +1,5 @@
 const { LessThanOrEqual, Between } = require("typeorm");
+const { MoreThan } = require("typeorm");
 const { AppDataSource } = require("../db/data-source");
 const { BaseService } = require("../base/base.service");
 const RB209ArableService = require("../vendors/rb209/arable/arable.service");
@@ -19,6 +20,10 @@ const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const boom = require("@hapi/boom");
 const { NutrientsMapper } = require("../constants/nutrient-mapper");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
+const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
+const {
+  FertiliserManuresEntity,
+} = require("../db/entity/fertiliser-manures.entity");
 
 class PlanService extends BaseService {
   constructor() {
@@ -38,6 +43,10 @@ class PlanService extends BaseService {
     this.rB209ArableService = new RB209ArableService();
     this.rB209RecommendationService = new RB209RecommendationService();
     this.snsAnalysisRepository = AppDataSource.getRepository(SnsAnalysesEntity);
+    this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
+    this.fertiliserRepository = AppDataSource.getRepository(
+      FertiliserManuresEntity
+    );
   }
 
   async getManagementPeriods(id) {
@@ -168,7 +177,12 @@ class PlanService extends BaseService {
     })[0];
     // Use the buildArableBody function to get the arable array
     const arableBody = await this.buildArableBody(crop, field);
-    
+    const pkBalanceData = await this.pkBalanceRepository.find({
+      where: {
+        FieldID: field.ID,
+        Year: crop.Year - 1,
+      },
+    });
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: crop.FieldType,
@@ -199,6 +213,10 @@ class PlanService extends BaseService {
           kReleasingClay: field.SoilReleasingClay,
           nvzActionProgrammeId: field.NVZProgrammeID,
           psc: 0, //TODO:: need to find it
+          pkBalance: {
+            phosphate: pkBalanceData != null ? pkBalanceData.PBalance : 0,
+            potash: pkBalanceData != null ? pkBalanceData.KBalance : 0,
+          },
           soilAnalyses: [],
         },
         harvestYear: crop.Year,
@@ -760,7 +778,6 @@ class PlanService extends BaseService {
     );
   }
   async savedDefault(cropData, userId, transactionalManager) {
-   
     const ManagementPeriods = [];
 
     // Save the Crop first (assumed as savedCrop)
@@ -801,15 +818,26 @@ class PlanService extends BaseService {
   }
 
   async createNutrientsRecommendationForField(crops, userId) {
-      const allManagementPeriods = await this.managementPeriodRepository.find();
+    const allManagementPeriods = await this.managementPeriodRepository.find();
     return await AppDataSource.transaction(async (transactionalManager) => {
       const Recommendations = [];
       const Errors = [];
+
       for (const cropData of crops) {
         const crop = cropData?.Crop;
         const errors = this.handleCropValidation(crop);
         Errors.push(...errors);
         const fieldId = crop.FieldID;
+        const pkBalanceData = await this.pkBalanceRepository.findOne({
+          where: { Year: crop?.Year, FieldID: fieldId },
+        });
+        const cropPlanOfNextYear = await this.cropRepository.find({
+          where: {
+            FieldID: fieldId,
+            Year: MoreThan(crop?.Year),
+          },
+          select: { ID: true },
+        });
         const { field, errors: fieldErrors } = await this.handleFieldValidation(
           fieldId
         );
@@ -832,13 +860,13 @@ class PlanService extends BaseService {
           throw new Error(JSON.stringify(Errors));
         }
         const snsAnalysesData = await this.getSnsAnalysesData(fieldId);
-       if (crop.CropTypeID === 170) {
-         await this.savedDefault(cropData, userId, transactionalManager);
-         return {
-           message: "Default crop saved and exiting early",
-           Recommendations,
-         };
-       }
+        if (crop.CropTypeID === 170) {
+          await this.savedDefault(cropData, userId, transactionalManager);
+          return {
+            message: "Default crop saved and exiting early",
+            Recommendations,
+          };
+        }
         const nutrientRecommendationnReqBody =
           await this.buildNutrientRecommendationReqBody(
             field,
@@ -852,8 +880,8 @@ class PlanService extends BaseService {
             "Recommendation/Recommendations",
             nutrientRecommendationnReqBody
           );
+        console.log("nutrientRecommendationsData", nutrientRecommendationsData);
 
-       
         if (
           !nutrientRecommendationsData.recommendations ||
           !nutrientRecommendationsData.adviceNotes ||
@@ -869,7 +897,10 @@ class PlanService extends BaseService {
             CreatedByID: userId,
           })
         );
+
         const ManagementPeriods = [];
+        let sumOfP205 = 0;
+        let sumOfK20 = 0;
         for (const managementPeriod of cropData.ManagementPeriods) {
           const savedManagementPeriod = await transactionalManager.save(
             ManagementPeriodEntity,
@@ -881,7 +912,34 @@ class PlanService extends BaseService {
           );
           ManagementPeriods.push(savedManagementPeriod);
         }
-
+        console.log("ManagementPeriods", cropData.ManagementPeriods);
+        // const cropPlanOfNextYear = await this.cropPlanOfNextYearIsExist(
+        //   fieldId,
+        //   crop?.Year
+        // );
+        console.log("cropPlanOfNextYear", cropPlanOfNextYear);
+        if (cropPlanOfNextYear.length == 0) {
+          try {
+            let saveAndUpdatePKBalance = await this.createOrUpdatePKBalance(
+              fieldId,
+              crop?.Year,
+              nutrientRecommendationsData.calculations,
+              pkBalanceData,
+              userId
+            );
+            if (saveAndUpdatePKBalance) {
+              await transactionalManager.save(
+                PKBalanceEntity,
+                saveAndUpdatePKBalance.saveAndUpdatePKBalance
+              );
+            }
+          } catch (error) {
+            console.error(
+              `Error while saving PKBalance Data FieldId: ${fieldId} And Year:${crop?.Year}:`,
+              error
+            );
+          }
+        }
         let savedRecommendation;
         if (crop.CropOrder == 2) {
           const firstCropData = await this.getFirstCropData(
@@ -1164,6 +1222,53 @@ class PlanService extends BaseService {
         "Error while fetching crop plans management period ids using fieldIds,  harvest year and crop typeId:",
         error
       );
+      throw error;
+    }
+  }
+ 
+  async createOrUpdatePKBalance(fieldId, year, calculations, pkBalanceData,userId) {
+    try {
+      let pBalance = 0;
+      let kBalance = 0;
+    let saveAndUpdatePKBalance;
+      for (const recommendation of calculations) {
+        switch (recommendation.nutrientId) {
+          case 1:
+            pBalance = pBalance - recommendation.cropNeed;
+            break;
+          case 2:
+            kBalance = kBalance - recommendation.cropNeed;
+            break;
+        }
+      }
+
+      if (pkBalanceData) {
+        const updateData = {
+          Year: year,
+          FieldID: fieldId,
+          PBalance: pBalance,
+          KBalance: kBalance,
+        };
+        saveAndUpdatePKBalance = {
+          ...pkBalanceData,
+          ...updateData,
+          ModifiedOn: new Date(),
+          ModifiedByID: userId,
+        };
+      } else {
+        saveAndUpdatePKBalance = {
+          Year: year,
+          FieldID: fieldId,
+          PBalance: pBalance,
+          KBalance: kBalance,
+          CreatedOn: new Date(),
+          CreatedByID: userId,
+        };
+      }
+      console.log('saveAndUpdatePKBalance',saveAndUpdatePKBalance)
+      return { saveAndUpdatePKBalance };
+    } catch (error) {
+      console.error("Error while saving pkBalance data", error);
       throw error;
     }
   }

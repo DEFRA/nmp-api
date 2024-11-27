@@ -57,7 +57,7 @@ class RecommendationService extends BaseService {
       });
       const PKbalance = await this.PKbalanceRepository.findOne({
         where: {
-          Year: harvestYear-1,
+          Year: harvestYear,
           FieldID:fieldId
         },
         select: {
