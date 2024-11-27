@@ -1,4 +1,5 @@
 const { LessThanOrEqual, Between } = require("typeorm");
+const { MoreThan } = require("typeorm");
 const { AppDataSource } = require("../db/data-source");
 const { BaseService } = require("../base/base.service");
 const RB209ArableService = require("../vendors/rb209/arable/arable.service");
@@ -828,9 +829,15 @@ class PlanService extends BaseService {
         Errors.push(...errors);
         const fieldId = crop.FieldID;
         const pkBalanceData = await this.pkBalanceRepository.findOne({
-          where: { Year: crop?.Year - 1, FieldID: fieldId },
+          where: { Year: crop?.Year, FieldID: fieldId },
         });
-
+        const cropPlanOfNextYear = await this.cropRepository.find({
+          where: {
+            FieldID: fieldId,
+            Year: MoreThan(crop?.Year),
+          },
+          select: { ID: true },
+        });
         const { field, errors: fieldErrors } = await this.handleFieldValidation(
           fieldId
         );
@@ -873,7 +880,7 @@ class PlanService extends BaseService {
             "Recommendation/Recommendations",
             nutrientRecommendationnReqBody
           );
-          console.log("nutrientRecommendationsData", nutrientRecommendationsData);
+        console.log("nutrientRecommendationsData", nutrientRecommendationsData);
 
         if (
           !nutrientRecommendationsData.recommendations ||
@@ -905,44 +912,34 @@ class PlanService extends BaseService {
           );
           ManagementPeriods.push(savedManagementPeriod);
         }
-
-        let pBalance = 0;
-        let kBalance = 0;
-        for (const recommendation of nutrientRecommendationsData.calculations) {
+        console.log("ManagementPeriods", cropData.ManagementPeriods);
+        // const cropPlanOfNextYear = await this.cropPlanOfNextYearIsExist(
+        //   fieldId,
+        //   crop?.Year
+        // );
+        console.log("cropPlanOfNextYear", cropPlanOfNextYear);
+        if (cropPlanOfNextYear.length == 0) {
           try {
-            switch (recommendation.nutrientId) {
-              case 1:
-                pBalance = pBalance - recommendation.cropNeed;
-                break;
-              case 2:
-                kBalance = kBalance - recommendation.cropNeed;
-                break;
+            let saveAndUpdatePKBalance = await this.createOrUpdatePKBalance(
+              fieldId,
+              crop?.Year,
+              nutrientRecommendationsData.calculations,
+              pkBalanceData,
+              userId
+            );
+            if (saveAndUpdatePKBalance) {
+              await transactionalManager.save(
+                PKBalanceEntity,
+                saveAndUpdatePKBalance.saveAndUpdatePKBalance
+              );
             }
-            const updateData = {
-              Year: crop?.Year - 1,
-              FieldID: fieldId,
-              PBalance: pBalance,
-              KBalance: kBalance,
-            };
-
-            const updateDataObj = {
-              ...pkBalanceData,
-              ...updateData,
-              ModifiedOn: new Date(),
-              ModifiedByID: userId,
-            };
-
-            await transactionalManager.save(PKBalanceEntity, updateDataObj);
           } catch (error) {
             console.error(
-              `Error while updating PKBalance Data FieldId: ${fieldId} And Year:${
-                crop?.Year - 1
-              }:`,
+              `Error while saving PKBalance Data FieldId: ${fieldId} And Year:${crop?.Year}:`,
               error
             );
           }
         }
-
         let savedRecommendation;
         if (crop.CropOrder == 2) {
           const firstCropData = await this.getFirstCropData(
@@ -1225,6 +1222,54 @@ class PlanService extends BaseService {
         "Error while fetching crop plans management period ids using fieldIds,  harvest year and crop typeId:",
         error
       );
+      throw error;
+    }
+  }
+ 
+  async createOrUpdatePKBalance(fieldId, year, calculations, pkBalanceData,userId) {
+    try {
+      let pBalance = 0;
+      let kBalance = 0;
+    let saveAndUpdatePKBalance;
+      for (const recommendation of calculations) {
+        switch (recommendation.nutrientId) {
+          case 1:
+            pBalance = pBalance - recommendation.cropNeed;
+            break;
+          case 2:
+            kBalance = kBalance - recommendation.cropNeed;
+            break;
+        }
+      }
+
+      console.log('FieldIsii',fieldId);
+      if (pkBalanceData) {
+        const updateData = {
+          Year: year,
+          FieldID: fieldId,
+          PBalance: pBalance,
+          KBalance: kBalance,
+        };
+        saveAndUpdatePKBalance = {
+          ...pkBalanceData,
+          ...updateData,
+          ModifiedOn: new Date(),
+          ModifiedByID: userId,
+        };
+      } else {
+        saveAndUpdatePKBalance = {
+          Year: year,
+          FieldID: fieldId,
+          PBalance: pBalance,
+          KBalance: kBalance,
+          CreatedOn: new Date(),
+          CreatedByID: userId,
+        };
+      }
+      console.log('saveAndUpdatePKBalance',saveAndUpdatePKBalance)
+      return { saveAndUpdatePKBalance };
+    } catch (error) {
+      console.error("Error while saving pkBalance data", error);
       throw error;
     }
   }
