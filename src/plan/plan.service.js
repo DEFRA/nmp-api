@@ -1242,7 +1242,6 @@ class PlanService extends BaseService {
         }
       }
 
-      console.log('FieldIsii',fieldId);
       if (pkBalanceData) {
         const updateData = {
           Year: year,
