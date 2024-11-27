@@ -28,13 +28,13 @@ class AddressLookupController {
      const data = await this.#service.getData(
        `/addresses?postcode=${postcode}&offset=${offset}`
      );
-     if(data == undefined){
-      return [];
+    //  if(data == undefined){
+    //   return [];
 
-     }else{
+    //  }else{
 
        return this.#h.response(data);
-     }
+     //}
     } catch (error) {
       return this.#h.response({ error });
     }
