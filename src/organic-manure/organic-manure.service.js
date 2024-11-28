@@ -216,7 +216,7 @@ class OrganicManureService extends BaseService {
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: crop.FieldType,
-        multipleCrops: crop.CropOrder == 2 ? true : false,
+        multipleCrops: arableBody.length > 1 ? true : false,
         arable: arableBody,
         grassland:
           crop.FieldType == 1
@@ -980,6 +980,11 @@ class OrganicManureService extends BaseService {
           await this.rB209RecommendationService.postData(
             "Recommendation/Recommendations",
             nutrientRecommendationnReqBody
+          );
+
+          console.log(
+            "nutrientRecommendationsData",
+            nutrientRecommendationsData
           );
 
         if (organicManureData.SaveDefaultForFarm) {
