@@ -92,12 +92,27 @@ const SnsAnalysisSchema = Joi.object({
   ModifiedByID: Joi.number().integer().allow(null),
 }); 
 
+const PKBalanceSchema = Joi.object({
+  Year: Joi.number().required(),
+  FieldID: Joi.number().allow(null).optional(),
+  PBalance: Joi.number().required(),
+  KBalance: Joi.number().required(),
+  PreviousID:Joi.number().allow(null).optional(),
+  CreatedOn: Joi.date().iso().allow(null),
+  CreatedByID: Joi.number().integer().allow(null),
+  ModifiedOn: Joi.date().iso().allow(null),
+  ModifiedByID: Joi.number().integer().allow(null),
+});
 // UpdateFieldDto Schema
 const UpdateFieldDtoSchema = Joi.object({
   Field: FieldEntitySchema,
   SoilAnalysis: SoilAnalysisSchema.allow(null).optional(),
   SnsAnalysis: SnsAnalysisSchema.allow(null).optional(),
-  Crops: Joi.array().items(CreateCropWithManagementPeriodsDto).allow(null).required(),
+  Crops: Joi.array()
+    .items(CreateCropWithManagementPeriodsDto)
+    .allow(null)
+    .required(),
+  PKBalance: PKBalanceSchema.allow(null).optional()
 });
 
 const CreateFieldWithSoilAnalysisAndCropsDto = Joi.object({
@@ -105,6 +120,7 @@ const CreateFieldWithSoilAnalysisAndCropsDto = Joi.object({
   SoilAnalysis: SoilAnalysisSchema.allow(null).optional(),
   SnsAnalysis: SnsAnalysisSchema.allow(null).optional(),
   Crops: Joi.array().items(CreateCropWithManagementPeriodsDto).required(),
+  PKBalance:PKBalanceSchema.allow(null).optional()
 });
 
 module.exports = {

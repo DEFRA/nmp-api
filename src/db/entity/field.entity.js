@@ -161,6 +161,12 @@ const FieldEntity = new EntitySchema({
         name: "FieldID", // This column in SnsAnalyses table refers to the field's ID
       },
     },
+    PKBalances: {
+      type: "one-to-many",
+      target: "PKBalances",
+      joinColumn: { name: "ID" },
+      inverseSide: "Fields",
+    },   
   },
 });
 

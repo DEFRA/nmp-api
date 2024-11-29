@@ -32,10 +32,28 @@ const SoilAnalysisDto = Joi.object({
   ModifiedByID: Joi.number().integer().allow(null).optional(),
 });
 
+const PKBalanceDto = Joi.object({
+  ID: Joi.number().integer().allow(null).optional(),
+  Year: Joi.number().required(),
+  FieldID: Joi.number().required(),
+  PBalance: Joi.number().required(),
+  KBalance: Joi.number().required(),
+  PreviousID:Joi.number().allow(null).optional(),
+  CreatedOn: Joi.date().iso().allow(null),
+  CreatedByID: Joi.number().integer().allow(null),
+  ModifiedOn: Joi.date().iso().allow(null),
+  ModifiedByID: Joi.number().integer().allow(null),
+});
 const CreateSoilAnalysisDto = Joi.object({
+  SoilAnalysis: SoilAnalysisDto.required()
+});
+
+const UpdateSoilAnalysisDto = Joi.object({
   SoilAnalysis: SoilAnalysisDto.required(),
+  PKBalance:PKBalanceDto.optional().allow(null)
 });
 
 module.exports = {
   CreateSoilAnalysisDto,
+  UpdateSoilAnalysisDto
 };

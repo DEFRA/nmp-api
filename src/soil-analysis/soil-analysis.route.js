@@ -1,6 +1,6 @@
 const Joi = require("joi");
 const { SoilAnalysesController } = require("./soil-analysis.controller");
-const { CreateSoilAnalysisDto } = require("./dto/soil-analysis.dto");
+const { CreateSoilAnalysisDto, UpdateSoilAnalysisDto } = require("./dto/soil-analysis.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 
 module.exports = [
@@ -111,7 +111,7 @@ module.exports = [
         params: Joi.object({
           soilAnalysisId: Joi.number().integer().required(),
         }),
-        payload: CreateSoilAnalysisDto,
+        payload: UpdateSoilAnalysisDto,
         failAction: (request, h, err) => {
           return h
             .response(
