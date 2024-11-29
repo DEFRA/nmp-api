@@ -885,6 +885,9 @@ class PlanService extends BaseService {
               );
             }
           }
+          else{
+            //call shreyash's function
+          }
           return {
             message: "Default crop saved and exiting early",
             Recommendations,
@@ -963,6 +966,9 @@ class PlanService extends BaseService {
               error
             );
           }
+        }
+        else{
+          //call shreyash's function
         }
         let savedRecommendation;
         if (crop.CropOrder == 2) {

@@ -1030,7 +1030,7 @@ class OrganicManureService extends BaseService {
               isNextYearOrganicManureExist == true) ||
             (isNextYearPlanExist == true && isNextYearFertiliserExist == true)
           ) {
-            // call function
+            //call shreyash's function
           } else {
             let pBalance = 0;
             let kBalance = 0;
@@ -1168,7 +1168,7 @@ class OrganicManureService extends BaseService {
             isNextYearOrganicManureExist == true) ||
           (isNextYearPlanExist == true && isNextYearFertiliserExist == true)
         ) {
-          // call function
+          //call shreyash's function
         } else {
           let pBalance = 0;
           let kBalance = 0;
