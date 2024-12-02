@@ -33,9 +33,9 @@ class BaseService {
       where: { [column]: value },
       select: selectOptions,
     });
-    if (records.length == 0 || !records) {
-      throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
-    }
+    // if (records.length == 0 || !records) {
+    //   throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
+    // }
     return { records };
   }
 
