@@ -138,9 +138,9 @@ class FarmController {
         organisationId,
         selectOptions
       );
-      if (!farms) {
-        throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
-      }
+      // if (!farms) {
+      //   throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
+      // }
       return this.#h.response({ Farms: farms.records });
     } catch (error) {
       console.error("Error in getFarmsByOrganisationId controller:", error);
