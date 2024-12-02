@@ -16,6 +16,10 @@ const FarmManureTypeEntity = new EntitySchema({
     ManureTypeID: {
       type: "int",
     },
+    ManureTypeName: {
+      type: "nvarchar",
+      length: 250,
+    },
     FieldTypeID: {
       type: "int",
     },

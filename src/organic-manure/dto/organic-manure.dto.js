@@ -5,6 +5,7 @@ const OrganicManureEntitySchema = Joi.object({
   ID: Joi.number().integer().required(),
   ManagementPeriodID: Joi.number().integer().required(),
   ManureTypeID: Joi.number().integer().required(),
+  ManureTypeName: Joi.string().optional().allow(null),
   ApplicationDate: Joi.date().iso().allow(null),
   Confirm: Joi.boolean().allow(null),
   N: Joi.number().precision(3).required(),

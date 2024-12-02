@@ -1117,6 +1117,7 @@ class OrganicManureService extends BaseService {
           farmManureTypeData = {
             FarmID: organicManureData.FarmID,
             ManureTypeID: OrganicManure.ManureTypeID,
+            ManureTypeName: OrganicManure.ManureTypeName,
             FieldTypeID: organicManureData.FieldTypeID,
             TotalN: OrganicManure.N, //Nitogen
             DryMatter: OrganicManure.DryMatterPercent,
