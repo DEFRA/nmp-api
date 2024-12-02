@@ -862,10 +862,37 @@ class PlanService extends BaseService {
         const snsAnalysesData = await this.getSnsAnalysesData(fieldId);
         if (crop.CropTypeID === 170) {
           await this.savedDefault(cropData, userId, transactionalManager);
+          console.log("cropPlanOfNextYear", cropPlanOfNextYear);
+          if (cropPlanOfNextYear.length == 0) {
+            try {
+              let saveAndUpdatePKBalance =  {
+                Year: crop?.Year,
+                FieldID: fieldId,
+                PBalance: 0,
+                KBalance: 0,
+                CreatedOn: new Date(),
+                CreatedByID: userId,
+              };
+              
+                await transactionalManager.save(
+                  PKBalanceEntity,
+                  saveAndUpdatePKBalance
+                );
+            } catch (error) {
+              console.error(
+                `Error while saving PKBalance Data FieldId: ${fieldId} And Year:${crop?.Year}:`,
+                error
+              );
+            }
+          }
+          else{
+            //call shreyash's function
+          }
           return {
             message: "Default crop saved and exiting early",
             Recommendations,
           };
+          
         }
         const nutrientRecommendationnReqBody =
           await this.buildNutrientRecommendationReqBody(
@@ -939,6 +966,9 @@ class PlanService extends BaseService {
               error
             );
           }
+        }
+        else{
+          //call shreyash's function
         }
         let savedRecommendation;
         if (crop.CropOrder == 2) {
