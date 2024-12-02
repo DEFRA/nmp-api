@@ -79,7 +79,8 @@ const baseConfig = {
     ManureTypeCategoryEntity,
     SnsAnalysesEntity,
     SecondCropLinkingEntity,
-    PKBalanceEntity
+    PKBalanceEntity,
+    FarmManureTypeEntity
   ],
   migrations: [],
   subscribers: [],

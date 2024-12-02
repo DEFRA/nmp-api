@@ -26,4 +26,5 @@ module.exports = [
   ...require("./crop-type-linking/crop-type-linking.route"),
   ...require("./second-crop-linkings/second-crop-linkings.route"),
   ...require("./pk-balance/pk-balance.route"),
+  ...require("./farm-manure-type/farm-manure-type.route"),
 ];

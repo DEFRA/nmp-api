@@ -19,6 +19,10 @@ const OrganicManureEntity = new EntitySchema({
       type: "int",
       nullable: false,
     },
+    ManureTypeName: {
+      type: "nvarchar",
+      length: 250,
+    },
     ApplicationDate: {
       type: "datetime",
       nullable: true,
