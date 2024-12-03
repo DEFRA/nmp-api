@@ -36,6 +36,7 @@ const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const {
   FertiliserManuresEntity,
 } = require("../db/entity/fertiliser-manures.entity");
+const UpdateReommendation = require("../shared/updateRecommendation.service");
 
 class OrganicManureService extends BaseService {
   constructor() {
@@ -71,6 +72,7 @@ class OrganicManureService extends BaseService {
     this.fertiliserRepository = AppDataSource.getRepository(
       FertiliserManuresEntity
     );
+    this.UpdateReommendationService = new UpdateReommendation();
   }
 
   async getTotalNitrogen(managementPeriodID, fromDate, toDate, confirm) {
@@ -990,23 +992,25 @@ class OrganicManureService extends BaseService {
                   fertData.ManagementPeriodID === managementPeriodDataId[0]
               );
               console.log("fertiliserId", filterFertiliserData);
-            
-            if (filterOrganicManure != null && filterOrganicManure.length > 0) {
-              console.log("filterOrganicManure", filterFertiliserData);
-              isNextYearOrganicManureExist = true;
+
+              if (
+                filterOrganicManure != null &&
+                filterOrganicManure.length > 0
+              ) {
+                console.log("filterOrganicManure", filterFertiliserData);
+                isNextYearOrganicManureExist = true;
+              }
+              if (
+                filterFertiliserData != null &&
+                filterFertiliserData.length > 0
+              ) {
+                console.log("filterOrganicManure", filterFertiliserData);
+                isNextYearFertiliserExist = true;
+              }
             }
-            if (
-              filterFertiliserData != null &&
-              filterFertiliserData.length > 0
-            ) {
-              console.log("filterOrganicManure", filterFertiliserData);
-              isNextYearFertiliserExist = true;
-            }
-          }
           }
         }
         if (cropData.CropTypeID === 170) {
-          
           await this.saveOrganicManureForOtherCropType(
             organicManureData,
             mannerOutputs,
@@ -1041,35 +1045,25 @@ class OrganicManureService extends BaseService {
             const pkBalanceData = await this.pkBalanceRepository.findOne({
               where: { Year: cropData?.Year, FieldID: fieldData.ID },
             });
-            console.log(
-              "pkBalanceData",
-              pkBalanceData
-            );
+            console.log("pkBalanceData", pkBalanceData);
             let updatePKBalance;
             // for (const manPeriodId of organicManureData.managementPeriodID) {
-              
+
             if (pkBalanceData) {
-           const fertiliserData = await this.getP205AndK20fromfertiliser(
+              const fertiliserData = await this.getP205AndK20fromfertiliser(
                 OrganicManure.ManagementPeriodID
               );
-           
-              console.log("fertiliserData.length", fertiliserData.length);  
-              if (fertiliserData.p205>0 || fertiliserData.k20 > 0) {
-                console.log("fertiliserData.p205", fertiliserData.p205);
-                console.log("PBalance", mannerOutputs.data.cropAvailableP2O5+pkBalanceData.PBalance);
-                console.log("ssss", mannerOutputs.data.cropAvailableK2O+pkBalanceData.KBalance);
-                console.log("aaaa", fertiliserData.k20);
+
+              console.log("fertiliserData.length", fertiliserData.length);
+              if (fertiliserData.p205 > 0 || fertiliserData.k20 > 0) {
                 //mannerOutputs.data.cropAvailableP2O5+pkBalanceData.PBalance
-                pBalance =
-                  fertiliserData.p205 - (mannerOutputs.data.cropAvailableP2O5+pkBalanceData.PBalance);
-                kBalance =
-                  fertiliserData.k20 - (mannerOutputs.data.cropAvailableK2O+pkBalanceData.KBalance);
+                pBalance = fertiliserData.p205 - (0 - pkBalanceData.PBalance);
+                kBalance = fertiliserData.k20 - (0 - pkBalanceData.KBalance);
               } else {
-                pBalance = pBalance - (mannerOutputs.data.cropAvailableP2O5+pkBalanceData.PBalance);
-                kBalance = kBalance - (mannerOutputs.data.cropAvailableK2O+pkBalanceData.KBalance);
+                pBalance = pBalance - (0 - pkBalanceData.PBalance);
+                kBalance = kBalance - (0 - pkBalanceData.KBalance);
               }
-              console.log("pBalance", pBalance);
-              console.log("kBalance", kBalance);
+
               const updateData = {
                 Year: cropData?.Year,
                 FieldID: fieldData.ID,
@@ -1083,7 +1077,6 @@ class OrganicManureService extends BaseService {
                 ModifiedOn: new Date(),
                 ModifiedByID: userId,
               };
-              console.log("updatePKBalance", updatePKBalance);
             }
             if (updatePKBalance) {
               await transactionalManager.save(PKBalanceEntity, updatePKBalance);
@@ -1169,7 +1162,30 @@ class OrganicManureService extends BaseService {
             isNextYearOrganicManureExist == true) ||
           (isNextYearPlanExist == true && isNextYearFertiliserExist == true)
         ) {
-          //call shreyash's function
+          this.UpdateReommendationService.updateRecommendationsForField(
+            fieldId,
+            crop?.Year,
+            request,
+            userId
+          )
+            .then((res) => {
+              if (res === undefined) {
+                console.log(
+                  "updateRecommendationAndOrganicManure returned undefined"
+                );
+              } else {
+                console.log(
+                  "updateRecommendationAndOrganicManure result:",
+                  res
+                );
+              }
+            })
+            .catch((error) => {
+              console.error(
+                "Error updating recommendation and organic manure:",
+                error
+              );
+            });
         } else {
           let pBalance = 0;
           let kBalance = 0;
@@ -1182,7 +1198,7 @@ class OrganicManureService extends BaseService {
             OrganicManure.ManagementPeriodID
           );
           let updatePKBalance;
-          if (fertiliserData.p205>0 || fertiliserData.k20 > 0) {
+          if (fertiliserData.p205 > 0 || fertiliserData.k20 > 0) {
             console.log("fertiliserData", fertiliserData);
             for (const recommendation of nutrientRecommendationsData.calculations) {
               switch (recommendation.nutrientId) {
@@ -1195,7 +1211,6 @@ class OrganicManureService extends BaseService {
               }
             }
           } else {
-
             for (const recommendation of nutrientRecommendationsData.calculations) {
               switch (recommendation.nutrientId) {
                 case 1:
@@ -1499,7 +1514,7 @@ class OrganicManureService extends BaseService {
         K2O: true,
       },
     });
-    
+
     if (fertiliserData && fertiliserData.length > 0) {
       for (const fertiliser of fertiliserData) {
         sumOfP205 += fertiliser.P2O5 || 0;

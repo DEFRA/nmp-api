@@ -111,7 +111,7 @@ class FieldService extends BaseService {
       MgIndex: null,
       SIndex: null,
     };
-    console.log("managementPeriodIDkkkk", managementPeriodID);
+  
     await transactionalManager.save(
       RecommendationEntity,
       this.recommendationRepository.create({
