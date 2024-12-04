@@ -55,7 +55,7 @@ class UpdateRecommendation {
   }
 
   async getYearsGreaterThanGivenYear(fieldID, year) {
-    const years = await this.soilAnalysisRepository.find({
+    const years = await this.cropRepository.find({
       where: {
         FieldID: fieldID,
         Year: MoreThan(year), // Fetch records with Year greater than the provided year
@@ -73,7 +73,7 @@ class UpdateRecommendation {
       fieldID,
       year
     );
-
+console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
     // Execute the original year synchronously and return its result
     const originalYearResult = await this.updateRecommendationAndOrganicManure(
       fieldID,
@@ -95,6 +95,7 @@ class UpdateRecommendation {
   }
 
   async processRemainingYearsInBackground(fieldID, years, request, userId) {
+    console.log("multiple years started", years);
     // If there are remaining years, process them in the background
     if (years.length > 0) {
       console.log("Processing the following years in background:", years);
@@ -119,6 +120,7 @@ class UpdateRecommendation {
 
   async updateRecommendationAndOrganicManure(fieldID, year, request, userId) {
     console.log("second fucntion started")
+    console.log("YUUUUU",year)
     let flag = true;
     return await AppDataSource.transaction(async (transactionalManager) => {
       const organicManureAllData = await this.getAllOrganicManure();
@@ -129,9 +131,10 @@ class UpdateRecommendation {
       }
 
       const cropIds = crops.map((crop) => crop.ID);
-
+     
       const managementPeriods = await this.getManagementPeriods(cropIds);
-
+     console.log("cropIdsssss", cropIds);
+     console.log("managsssementPeriods", managementPeriods);
       if (managementPeriods.length === 0) {
         throw new Error("No Management Periods found for the selected crops");
       }
@@ -260,7 +263,7 @@ class UpdateRecommendation {
           organicManuresData
         );
 
-        await this.saveRecommendationForOtherCrops(
+       const otherRecommendations= await this.saveRecommendationForOtherCrops(
           transactionalManager,
           organicManure,
           mannerOutputs,
@@ -269,8 +272,8 @@ class UpdateRecommendation {
           snsAnalysesData,
           allRecommendations
         ); 
-
-        if(fertiliserData){
+     console.log("otherRecommendations", otherRecommendations);
+       
 
           let saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldData.ID,
@@ -288,7 +291,7 @@ class UpdateRecommendation {
                saveAndUpdatePKBalance.saveAndUpdatePKBalance
              );
            }
-        }
+        
 
 
         return { OrganicManures: organicManures };
@@ -323,7 +326,7 @@ class UpdateRecommendation {
         snsAnalysesData,
         allRecommendations
       );
-      if (fertiliserData) {
+     
         let saveAndUpdatePKBalance = await this.UpdatePKBalance(
           fieldData.ID,
           cropData,
@@ -340,7 +343,7 @@ class UpdateRecommendation {
             saveAndUpdatePKBalance.saveAndUpdatePKBalance
           );
         }
-      }
+      
       console.log("savedDatasss", savedData);
       await this.saveOrUpdateArableNotes(
         arableNotes,
@@ -410,11 +413,13 @@ class UpdateRecommendation {
       let fertiliserData = await this.getFertiliserData(
         secondCropManagementData.ID
       );
+      console.log("fertiliserDataaaa", fertiliserData);
+      console.log("secondCropManagementData.ID", secondCropManagementData.ID);
       const snsAnalysesData = await this.getSnsAnalysesData(fieldId);
       let nutrientRecommendationsData;
       if (crop.CropTypeID === 170 || crop.cropInfo1Id == null ) {
-        // await this.savedDefault(crop, userId, transactionalManager);
-        if (fertiliserData) {
+        //await this.savedDefault(crop, userId, transactionalManager);
+      
           try {
             let saveAndUpdatePKBalance = await this.UpdatePKBalance(
               fieldId,
@@ -425,7 +430,8 @@ class UpdateRecommendation {
               secondCropManagementData,
               fertiliserData
             );
-
+   console.log("saveAndUpdatePKBalance", saveAndUpdatePKBalance);
+     
             if (saveAndUpdatePKBalance) {
               await transactionalManager.save(
                 PKBalanceEntity,
@@ -438,7 +444,7 @@ class UpdateRecommendation {
               error
             );
           }
-        }
+        
 
         console.log("cropPlanOfNextYear", cropPlanOfNextYear);
 
@@ -477,18 +483,18 @@ class UpdateRecommendation {
         nutrientRecommendationsData
       );
 
-      if (fertiliserData) {
+      
         try {
           let saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldId,
             crop,
-            nutrientRecommendationsData.calculations,
+            nutrientRecommendationsData,
             pkBalanceData,
             userId,
             secondCropManagementData,
             fertiliserData
           );
-
+   console.log("saveAndUpdatePKBalance", saveAndUpdatePKBalance);
           if (saveAndUpdatePKBalance) {
             await transactionalManager.save(
               PKBalanceEntity,
@@ -501,7 +507,7 @@ class UpdateRecommendation {
             error
           );
         }
-      }
+      
 
       let savedRecommendation;
       if (crop.CropOrder == 2) {
@@ -678,22 +684,35 @@ class UpdateRecommendation {
     secondCropManagementData,
     fertiliserData
   ) {
+    console.log("calculationhhhs", calculations);
     try {
       let pBalance = 0;
       let kBalance = 0;
       let saveAndUpdatePKBalance;
-
-      if (crop.CropTypeID == 170) {
-        pBalance = fertiliserData.P2O5 -( 0 - pkBalanceData.P2O5);
-        pBalance = fertiliserData.K20 - (0 - pkBalanceData.K20);
+    console.log("crop.CropTypeID", crop.CropTypeID);
+      if (crop.CropTypeID == 170 || crop.CropInfo1 == null) {
+        pBalance =
+          fertiliserData == null
+            ? 0
+            : fertiliserData.P2O5 - (0 - pkBalanceData.P2O5);
+        pBalance =
+          fertiliserData == null
+            ? 0
+            : fertiliserData.K2O - (0 - pkBalanceData.K20);
       } else {
         for (const recommendation of calculations) {
           switch (recommendation.nutrientId) {
             case 1:
-              pBalance = fertiliserData.P2O5 - recommendation.cropNeed;
+              pBalance =
+                fertiliserData == null
+                  ? 0
+                  : fertiliserData.P2O5 - recommendation.cropNeed;
               break;
             case 2:
-              kBalance = fertiliserData.K20 - recommendation.cropNeed;
+              kBalance =
+                fertiliserData == null
+                  ? 0
+                  : fertiliserData.K2O - recommendation.cropNeed;
               break;
           }
         }
@@ -1903,7 +1922,7 @@ class UpdateRecommendation {
 
   async getCrops(fieldID, year) {
     return this.cropRepository.find({
-      where: { Year: year, FieldID: fieldID },
+      where: {  FieldID: fieldID },
     });
   }
 
