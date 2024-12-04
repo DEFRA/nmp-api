@@ -14,6 +14,10 @@ const CountryEntity = new EntitySchema({
       type: "nvarchar",
       length: 50,
     },
+    RB209CountryID: {
+      type: "int",
+      nullable: false,
+    },
   },
   relations: {
     ManureTypes: {
