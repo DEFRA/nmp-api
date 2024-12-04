@@ -1,10 +1,14 @@
 const { In, Between, Not, MoreThan } = require("typeorm");
 const { AppDataSource } = require("../db/data-source");
-const { CropTypeLinkingEntity } = require("../db/entity/crop-type-linking.entity");
+const {
+  CropTypeLinkingEntity,
+} = require("../db/entity/crop-type-linking.entity");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { FarmEntity } = require("../db/entity/farm.entity");
 const { FieldEntity } = require("../db/entity/field.entity");
-const { ManagementPeriodEntity } = require("../db/entity/management-period.entity");
+const {
+  ManagementPeriodEntity,
+} = require("../db/entity/management-period.entity");
 const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
@@ -12,10 +16,16 @@ const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const MannerCalculateNutrientsService = require("../vendors/manner/calculate-nutrients/calculate-nutrients.service");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
 const RB209ArableService = require("../vendors/rb209/arable/arable.service");
-const { RB209RecommendationService } = require("../vendors/rb209/recommendation/recommendation.service");
+const {
+  RB209RecommendationService,
+} = require("../vendors/rb209/recommendation/recommendation.service");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
-const { RecommendationCommentEntity } = require("../db/entity/recommendation-comment.entity");
-const { FertiliserManuresEntity } = require("../db/entity/fertiliser-manures.entity");
+const {
+  RecommendationCommentEntity,
+} = require("../db/entity/recommendation-comment.entity");
+const {
+  FertiliserManuresEntity,
+} = require("../db/entity/fertiliser-manures.entity");
 const { NutrientsMapper } = require("../constants/nutrient-mapper");
 
 class UpdateRecommendation {
@@ -67,13 +77,13 @@ class UpdateRecommendation {
     return years.map((record) => record.Year);
   }
   async updateRecommendationsForField(fieldID, year, request, userId) {
-    console.log("function started")
+    console.log("function started");
     // Fetch all years greater than the provided year for the given FieldID
     const yearsGreaterThanGivenYear = await this.getYearsGreaterThanGivenYear(
       fieldID,
       year
     );
-console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
+    console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
     // Execute the original year synchronously and return its result
     const originalYearResult = await this.updateRecommendationAndOrganicManure(
       fieldID,
@@ -119,51 +129,53 @@ console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
   }
 
   async updateRecommendationAndOrganicManure(fieldID, year, request, userId) {
-    console.log("second fucntion started")
-    console.log("YUUUUU",year)
+    console.log("second fucntion started");
+    console.log("YUUUUU", year);
     let flag = true;
     return await AppDataSource.transaction(async (transactionalManager) => {
       const organicManureAllData = await this.getAllOrganicManure();
       const crops = await this.getCrops(fieldID, year);
 
-      if (crops.length === 0) {
-        console.error("No crops found for the given Year and FieldID");
-      }
+      if (crops.length > 0) {
+        // console.error("No crops found for the given Year and FieldID");
+        //}
+        const cropIds = crops.map((crop) => crop.ID);
 
-      const cropIds = crops.map((crop) => crop.ID);
-     
-      const managementPeriods = await this.getManagementPeriods(cropIds);
-     console.log("cropIdsssss", cropIds);
-     console.log("managsssementPeriods", managementPeriods);
-      if (managementPeriods.length === 0) {
-        throw new Error("No Management Periods found for the selected crops");
-      }
-      const organicManuresData = [];
+        const managementPeriods = await this.getManagementPeriods(cropIds);
+        console.log("cropIdsssss", cropIds);
+        console.log("managsssementPeriods", managementPeriods);
+        if (managementPeriods.length === 0) {
+          throw new Error("No Management Periods found for the selected crops");
+        }
+        const organicManuresData = [];
 
-      const organicManures = await this.getOrganicManures(managementPeriods);
-      console.log("organicManures", organicManures);
-      const allRecommendations = await this.RecommendationRepository.find();
-      if (organicManures.length > 0) {
-        await this.saveRecommendationWithManure(
-          organicManures,
-          organicManureAllData,
-          request,
-          fieldID,
-          transactionalManager,
-          userId,
-          allRecommendations
-        );
-      } else {
-        await this.saveRecommendationWithoutManure(
-          crops,
-          organicManures,
-          organicManureAllData,
-          request,
-          fieldID,
-          transactionalManager,
-          userId,
-          allRecommendations
-        );
+        const organicManures = await this.getOrganicManures(managementPeriods);
+        console.log("organicManures", organicManures);
+        const allRecommendations = await this.RecommendationRepository.find();
+        if (organicManures.length > 0) {
+          console.log("line no 156");
+          await this.saveRecommendationWithManure(
+            organicManures,
+            organicManureAllData,
+            request,
+            fieldID,
+            transactionalManager,
+            userId,
+            allRecommendations
+          );
+        } else {
+          console.log("line no 167");
+          await this.saveRecommendationWithoutManure(
+            crops,
+            organicManures,
+            organicManureAllData,
+            request,
+            fieldID,
+            transactionalManager,
+            userId,
+            allRecommendations
+          );
+        }
       }
     });
   }
@@ -177,9 +189,9 @@ console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
     userId,
     allRecommendations
   ) {
-    console.log("FUNCTION WITH MANURE STARTED")
+    console.log("FUNCTION WITH MANURE STARTED");
     for (const organicManure of organicManures) {
-    console.log("FUNCTION WITH MANURE STARTED INSIDE LOOP");
+      console.log("FUNCTION WITH MANURE STARTED INSIDE LOOP");
 
       const manureApplications = await this.buildManureApplications(
         organicManure.ManagementPeriodID,
@@ -221,10 +233,10 @@ console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
       if (Errors.length > 0) {
         throw new HttpException(JSON.stringify(Errors), HttpStatus.BAD_REQUEST);
       }
-        const pkBalanceData = await this.getPKBalanceData(
-          cropData?.Year - 1,
-          fieldData.ID
-        );
+      const pkBalanceData = await this.getPKBalanceData(
+        cropData?.Year - 1,
+        fieldData.ID
+      );
 
       const mannerOutputReq = await this.buildMannerOutputReq(
         fieldID,
@@ -247,23 +259,25 @@ console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
           Confirm: false,
         },
       });
-     let nutrientRecommendationsData
+      let nutrientRecommendationsData;
       const snsAnalysesData = await this.getSnsAnalysesData(fieldData.ID);
-  let fertiliserData = await this.getFertiliserData(
-    organicManure.ManagementPeriodID
-  );
-  console.log("cropDatdddda", cropData);
-  console.log("organicManuresDatamkmkmk", organicManuresData);
+      let fertiliserData = await this.getFertiliserData(
+        organicManure.ManagementPeriodID
+      );
+      console.log("cropDatdddda", cropData);
+      console.log("organicManuresDatamkmkmk", organicManuresData);
+      //get PKBalance data
+      let pkBalance = await this.getPKBalanceData(cropData?.Year, fieldData.ID);
       if (cropData.CropTypeID === 170) {
-        await this.saveOrganicManureForOtherCropType(
-          organicManure,
-          mannerOutputs,
-          transactionalManager,
-          userId,
-          organicManuresData
-        );
+        // await this.saveOrganicManureForOtherCropType(
+        //   organicManure,
+        //   mannerOutputs,
+        //   transactionalManager,
+        //   userId,
+        //   organicManuresData
+        // );
 
-       const otherRecommendations= await this.saveRecommendationForOtherCrops(
+        const otherRecommendations = await this.saveRecommendationForOtherCrops(
           transactionalManager,
           organicManure,
           mannerOutputs,
@@ -271,28 +285,25 @@ console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
           latestSoilAnalysis,
           snsAnalysesData,
           allRecommendations
-        ); 
-     console.log("otherRecommendations", otherRecommendations);
-       
+        );
+        console.log("otherRecommendations", otherRecommendations);
 
-          let saveAndUpdatePKBalance = await this.UpdatePKBalance(
-            fieldData.ID,
-            cropData,
-            nutrientRecommendationsData.calculations,
-            pkBalanceData,
-            userId,
-            secondCropManagementData,
-            fertiliserData
+        let saveAndUpdatePKBalance = await this.UpdatePKBalance(
+          fieldData.ID,
+          cropData,
+          nutrientRecommendationsData.calculations,
+          pkBalance,
+          userId,
+          secondCropManagementData,
+          fertiliserData
+        );
+
+        if (saveAndUpdatePKBalance) {
+          await transactionalManager.save(
+            PKBalanceEntity,
+            saveAndUpdatePKBalance.saveAndUpdatePKBalance
           );
-
-           if (saveAndUpdatePKBalance) {
-             await transactionalManager.save(
-               PKBalanceEntity,
-               saveAndUpdatePKBalance.saveAndUpdatePKBalance
-             );
-           }
-        
-
+        }
 
         return { OrganicManures: organicManures };
       }
@@ -309,11 +320,10 @@ console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
           organicManure
         );
 
-      nutrientRecommendationsData =
-        await this.getNutrientRecommendationsData(
-          nutrientRecommendationnReqBody
-        );
-        
+      nutrientRecommendationsData = await this.getNutrientRecommendationsData(
+        nutrientRecommendationnReqBody
+      );
+
       let arableNotes = nutrientRecommendationsData.adviceNotes;
 
       const savedData = await this.saveRecommendationForMultipleCrops(
@@ -326,24 +336,24 @@ console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
         snsAnalysesData,
         allRecommendations
       );
-     
-        let saveAndUpdatePKBalance = await this.UpdatePKBalance(
-          fieldData.ID,
-          cropData,
-          nutrientRecommendationsData.calculations,
-          pkBalanceData,
-          userId,
-          secondCropManagementData,
-          fertiliserData
-        );
 
-        if (saveAndUpdatePKBalance) {
-          await transactionalManager.save(
-            PKBalanceEntity,
-            saveAndUpdatePKBalance.saveAndUpdatePKBalance
-          );
-        }
-      
+      let saveAndUpdatePKBalance = await this.UpdatePKBalance(
+        fieldData.ID,
+        cropData,
+        nutrientRecommendationsData.calculations,
+        pkBalance,
+        userId,
+        secondCropManagementData,
+        fertiliserData
+      );
+
+      if (saveAndUpdatePKBalance) {
+        await transactionalManager.save(
+          PKBalanceEntity,
+          saveAndUpdatePKBalance.saveAndUpdatePKBalance
+        );
+      }
+
       console.log("savedDatasss", savedData);
       await this.saveOrUpdateArableNotes(
         arableNotes,
@@ -351,7 +361,10 @@ console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
         transactionalManager,
         userId
       );
-       console.log("nutrientRecommendationsDatsssa", nutrientRecommendationsData);
+      console.log(
+        "nutrientRecommendationsDatsssa",
+        nutrientRecommendationsData
+      );
       return nutrientRecommendationsData;
     }
   }
@@ -366,11 +379,11 @@ console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
     userId,
     allRecommendations
   ) {
-    console.log("WITHOUT MANURE STARTED")
+    console.log("WITHOUT MANURE STARTED");
     const Recommendations = [];
     const Errors = [];
     for (const crop of crops) {
-    console.log("WITHOUT MANURE STARTED INSIDE LOOP");
+      console.log("WITHOUT MANURE STARTED INSIDE LOOP");
 
       const errors = await this.handleCropValidation(crop);
       const fieldId = crop.FieldID;
@@ -417,34 +430,35 @@ console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
       console.log("secondCropManagementData.ID", secondCropManagementData.ID);
       const snsAnalysesData = await this.getSnsAnalysesData(fieldId);
       let nutrientRecommendationsData;
-      if (crop.CropTypeID === 170 || crop.cropInfo1Id == null ) {
+      //get PKBalance data
+      let pkBalance = await this.getPKBalanceData(crop?.Year, fieldId);
+      if (crop.CropTypeID === 170 || crop.cropInfo1Id == null) {
         //await this.savedDefault(crop, userId, transactionalManager);
-      
-          try {
-            let saveAndUpdatePKBalance = await this.UpdatePKBalance(
-              fieldId,
-              crop,
-              nutrientRecommendationsData,
-              pkBalanceData,
-              userId,
-              secondCropManagementData,
-              fertiliserData
-            );
-   console.log("saveAndUpdatePKBalance", saveAndUpdatePKBalance);
-     
-            if (saveAndUpdatePKBalance) {
-              await transactionalManager.save(
-                PKBalanceEntity,
-                saveAndUpdatePKBalance.saveAndUpdatePKBalance
-              );
-            }
-          } catch (error) {
-            console.error(
-              `Error while saving PKBalance Data FieldId: ${fieldId} And Year:${crop?.Year}:`,
-              error
+
+        try {
+          let saveAndUpdatePKBalance = await this.UpdatePKBalance(
+            fieldId,
+            crop,
+            nutrientRecommendationsData,
+            pkBalance,
+            userId,
+            secondCropManagementData,
+            fertiliserData
+          );
+          console.log("saveAndUpdatePKBalance", saveAndUpdatePKBalance);
+
+          if (saveAndUpdatePKBalance) {
+            await transactionalManager.save(
+              PKBalanceEntity,
+              saveAndUpdatePKBalance.saveAndUpdatePKBalance
             );
           }
-        
+        } catch (error) {
+          console.error(
+            `Error while saving PKBalance Data FieldId: ${fieldId} And Year:${crop?.Year}:`,
+            error
+          );
+        }
 
         console.log("cropPlanOfNextYear", cropPlanOfNextYear);
 
@@ -483,31 +497,29 @@ console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
         nutrientRecommendationsData
       );
 
-      
-        try {
-          let saveAndUpdatePKBalance = await this.UpdatePKBalance(
-            fieldId,
-            crop,
-            nutrientRecommendationsData,
-            pkBalanceData,
-            userId,
-            secondCropManagementData,
-            fertiliserData
-          );
-   console.log("saveAndUpdatePKBalance", saveAndUpdatePKBalance);
-          if (saveAndUpdatePKBalance) {
-            await transactionalManager.save(
-              PKBalanceEntity,
-              saveAndUpdatePKBalance.saveAndUpdatePKBalance
-            );
-          }
-        } catch (error) {
-          console.error(
-            `Error while saving PKBalance Data FieldId: ${fieldId} And Year:${crop?.Year}:`,
-            error
+      try {
+        let saveAndUpdatePKBalance = await this.UpdatePKBalance(
+          fieldId,
+          crop,
+          nutrientRecommendationsData,
+          pkBalance,
+          userId,
+          secondCropManagementData,
+          fertiliserData
+        );
+        console.log("saveAndUpdatePKBalance", saveAndUpdatePKBalance);
+        if (saveAndUpdatePKBalance) {
+          await transactionalManager.save(
+            PKBalanceEntity,
+            saveAndUpdatePKBalance.saveAndUpdatePKBalance
           );
         }
-      
+      } catch (error) {
+        console.error(
+          `Error while saving PKBalance Data FieldId: ${fieldId} And Year:${crop?.Year}:`,
+          error
+        );
+      }
 
       let savedRecommendation;
       if (crop.CropOrder == 2) {
@@ -684,21 +696,25 @@ console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
     secondCropManagementData,
     fertiliserData
   ) {
-    console.log("calculationhhhs", calculations);
+    console.log("pkBalanceData123", pkBalanceData);
     try {
       let pBalance = 0;
       let kBalance = 0;
       let saveAndUpdatePKBalance;
-    console.log("crop.CropTypeID", crop.CropTypeID);
+      console.log("crop.CropTypeID", crop.CropTypeID);
+      console.log("crop.Year", crop.Year);
       if (crop.CropTypeID == 170 || crop.CropInfo1 == null) {
+        console.log("fertiliserData", fertiliserData);
+        console.log("fertiliserData.P2O5", fertiliserData.P2O5);
+        console.log("pkBalanceData.PBalance", pkBalanceData.PBalance);
         pBalance =
           fertiliserData == null
             ? 0
-            : fertiliserData.P2O5 - (0 - pkBalanceData.P2O5);
-        pBalance =
+            : fertiliserData.P2O5 - (0 - pkBalanceData.PBalance);
+        kBalance =
           fertiliserData == null
             ? 0
-            : fertiliserData.K2O - (0 - pkBalanceData.K20);
+            : fertiliserData.K2O - (0 - pkBalanceData.KBalance);
       } else {
         for (const recommendation of calculations) {
           switch (recommendation.nutrientId) {
@@ -717,18 +733,29 @@ console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
           }
         }
       }
-
-      const updateData = {
-        Year: crop.Year,
-        FieldID: fieldId,
-        PBalance: pBalance,
-        KBalance: kBalance,
-      };
-      saveAndUpdatePKBalance = {
-        ...updateData,
-        ModifiedOn: new Date(),
-        ModifiedByID: userId,
-      };
+      if (pkBalanceData) {
+        const updateData = {
+          Year: crop.Year,
+          FieldID: fieldId,
+          PBalance: pBalance,
+          KBalance: kBalance,
+        };
+        saveAndUpdatePKBalance = {
+          ...pkBalanceData,
+          ...updateData,
+          ModifiedOn: new Date(),
+          ModifiedByID: userId,
+        };
+      } else {
+        saveAndUpdatePKBalance = {
+          Year: year,
+          FieldID: fieldId,
+          PBalance: pBalance,
+          KBalance: kBalance,
+          CreatedOn: new Date(),
+          CreatedByID: userId,
+        };
+      }
 
       return { saveAndUpdatePKBalance };
     } catch (error) {
@@ -1041,7 +1068,7 @@ console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
   }
   async savedDefault(cropData, userId, transactionalManager) {
     const ManagementPeriods = [];
-   console.log("kckcknn",cropData)
+    console.log("kckcknn", cropData);
     // Save the Crop first (assumed as savedCrop)
     const savedCrop = await transactionalManager.save(
       CropEntity,
@@ -1226,17 +1253,18 @@ console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
         ModifiedByID: userId,
       };
       await transactionalManager.save(RecommendationEntity, recommendation);
-    } else {
-      // If no recommendation exists, create a new one
-      recommendation = this.RecommendationRepository.create({
-        ...cropOrderData,
-        ManagementPeriodID: OrganicManure.ManagementPeriodID,
-        Comments: "New recommendation created",
-        CreatedOn: new Date(),
-        CreatedByID: userId,
-      });
-      await transactionalManager.save(RecommendationEntity, recommendation);
     }
+    // else {
+    //   // If no recommendation exists, create a new one
+    //   recommendation = this.RecommendationRepository.create({
+    //     ...cropOrderData,
+    //     ManagementPeriodID: OrganicManure.ManagementPeriodID,
+    //     Comments: "New recommendation created",
+    //     CreatedOn: new Date(),
+    //     CreatedByID: userId,
+    //   });
+    //   await transactionalManager.save(RecommendationEntity, recommendation);
+    // }
 
     return recommendation;
   }
@@ -1600,7 +1628,7 @@ console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
       const currentCropType = cropTypesList.find(
         (cropType) => cropType.cropTypeId === crop.CropTypeID
       );
-     c
+      c;
       if (!currentCropType || currentCropType.cropGroupId == null) {
         throw new HttpException(
           `Invalid CropTypeId for crop having field name ${field.Name}`,
@@ -1922,7 +1950,7 @@ console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
 
   async getCrops(fieldID, year) {
     return this.cropRepository.find({
-      where: {  FieldID: fieldID },
+      where: { FieldID: fieldID },
     });
   }
 
@@ -2075,4 +2103,4 @@ console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
     return mannerOutputData;
   }
 }
-module.exports = {UpdateRecommendation};
+module.exports = { UpdateRecommendation };

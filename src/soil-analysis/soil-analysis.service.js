@@ -2,8 +2,9 @@ const { AppDataSource } = require("../db/data-source");
 const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const { BaseService } = require("../base/base.service");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
-const { UpdateRecommendation } = require("../shared/updateRecommendation.service");
-
+const {
+  UpdateRecommendation,
+} = require("../shared/updateRecommendation.service");
 
 class SoilAnalysesService extends BaseService {
   constructor() {
@@ -96,27 +97,30 @@ class SoilAnalysesService extends BaseService {
         },
       });
 
-      this.UpdateRecommendation.updateRecommendationsForField(
-        updatedSoilAnalysisData.FieldID,
-        updatedSoilAnalysisData.Year,
-        request,
-        userId
-      )
-        .then((res) => {
-          if (res === undefined) {
-            console.log(
-              "updateRecommendationAndOrganicManure returned undefined"
+      if (PKBalance) {
+        console.log('start')
+        this.UpdateRecommendation.updateRecommendationsForField(
+          updatedSoilAnalysisData.FieldID,
+          updatedSoilAnalysisData.Year,
+          request,
+          userId
+        )
+          .then((res) => {
+            if (res === undefined) {
+              console.log(
+                "updateRecommendationAndOrganicManure returned undefined"
+              );
+            } else {
+              console.log("updateRecommendationAndOrganicManure result:", res);
+            }
+          })
+          .catch((error) => {
+            console.error(
+              "Error updating recommendation and organic manure:",
+              error
             );
-          } else {
-            console.log("updateRecommendationAndOrganicManure result:", res);
-          }
-        })
-        .catch((error) => {
-          console.error(
-            "Error updating recommendation and organic manure:",
-            error
-          );
-        });
+          });
+      }
 
       return { SoilAnalysis, PKBalance };
     });
