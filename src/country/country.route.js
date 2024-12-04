@@ -7,7 +7,7 @@ const getController = (request, h) => new CountryController(request, h);
 module.exports = [
   {
     method: "GET",
-    path: "/country",
+    path: "/countries/all-data",
     options: {
       tags: ["api", "Country"],
       description: "Get all countries",
