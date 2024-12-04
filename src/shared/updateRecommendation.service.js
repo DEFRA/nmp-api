@@ -27,6 +27,7 @@ const {
   FertiliserManuresEntity,
 } = require("../db/entity/fertiliser-manures.entity");
 const { NutrientsMapper } = require("../constants/nutrient-mapper");
+const { CleanPlugin } = require("webpack");
 
 class UpdateRecommendation {
   constructor() {
@@ -161,7 +162,8 @@ class UpdateRecommendation {
             fieldID,
             transactionalManager,
             userId,
-            allRecommendations
+            allRecommendations,
+            year
           );
         } else {
           console.log("line no 167");
@@ -173,7 +175,8 @@ class UpdateRecommendation {
             fieldID,
             transactionalManager,
             userId,
-            allRecommendations
+            allRecommendations,
+            year
           );
         }
       }
@@ -187,7 +190,8 @@ class UpdateRecommendation {
     fieldID,
     transactionalManager,
     userId,
-    allRecommendations
+    allRecommendations,
+    year
   ) {
     console.log("FUNCTION WITH MANURE STARTED");
     for (const organicManure of organicManures) {
@@ -287,15 +291,16 @@ class UpdateRecommendation {
           allRecommendations
         );
         console.log("otherRecommendations", otherRecommendations);
-
+        console.log('pkBalance111',pkBalance);
         let saveAndUpdatePKBalance = await this.UpdatePKBalance(
           fieldData.ID,
           cropData,
-          nutrientRecommendationsData.calculations,
+          nutrientRecommendationsData,
           pkBalance,
           userId,
           secondCropManagementData,
-          fertiliserData
+          fertiliserData,
+          year
         );
 
         if (saveAndUpdatePKBalance) {
@@ -336,15 +341,16 @@ class UpdateRecommendation {
         snsAnalysesData,
         allRecommendations
       );
-
+      console.log('pkBalance111',pkBalance);
       let saveAndUpdatePKBalance = await this.UpdatePKBalance(
         fieldData.ID,
         cropData,
-        nutrientRecommendationsData.calculations,
+        nutrientRecommendationsData,
         pkBalance,
         userId,
         secondCropManagementData,
-        fertiliserData
+        fertiliserData,
+        year
       );
 
       if (saveAndUpdatePKBalance) {
@@ -377,12 +383,15 @@ class UpdateRecommendation {
     fieldID,
     transactionalManager,
     userId,
-    allRecommendations
+    allRecommendations,
+    year
   ) {
     console.log("WITHOUT MANURE STARTED");
     const Recommendations = [];
     const Errors = [];
+    console.log('crops111',crops);
     for (const crop of crops) {
+      console.log('crop1',crops);
       console.log("WITHOUT MANURE STARTED INSIDE LOOP");
 
       const errors = await this.handleCropValidation(crop);
@@ -432,10 +441,15 @@ class UpdateRecommendation {
       let nutrientRecommendationsData;
       //get PKBalance data
       let pkBalance = await this.getPKBalanceData(crop?.Year, fieldId);
-      if (crop.CropTypeID === 170 || crop.cropInfo1Id == null) {
-        //await this.savedDefault(crop, userId, transactionalManager);
 
+      if (crop.CropTypeID === 170 || crop.CropInfo1) {
+        
+        console.log('pkBalance111',pkBalance);
+        console.log("crop.cropInfo1Idjj",crop.CropInfo1)
+        console.log("crop.CropTypeIDsss",crop.CropTypeID)
         try {
+          console.log("otherCase")
+          console.log("nutrientRecommendationsData",nutrientRecommendationsData)
           let saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldId,
             crop,
@@ -443,7 +457,8 @@ class UpdateRecommendation {
             pkBalance,
             userId,
             secondCropManagementData,
-            fertiliserData
+            fertiliserData,
+            year
           );
           console.log("saveAndUpdatePKBalance", saveAndUpdatePKBalance);
 
@@ -467,7 +482,7 @@ class UpdateRecommendation {
           Recommendations,
         };
       }
-
+console.log('forOtherCrop')
       const dataMultipleCrops = await this.cropRepository.find({
         where: {
           FieldID: field.ID,
@@ -487,7 +502,7 @@ class UpdateRecommendation {
         );
       console.log(
         "nutrientRecommendationnWithoutMannerReqBody",
-        nutrientRecommendationnReqBody
+        nutrientRecommendationnReqBody.arable
       );
       nutrientRecommendationsData = await this.getNutrientRecommendationsData(
         nutrientRecommendationnReqBody
@@ -496,8 +511,9 @@ class UpdateRecommendation {
         "nutrientRecommendationsDataWithout",
         nutrientRecommendationsData
       );
-
+console.log('pkBalance111',pkBalance);
       try {
+      
         let saveAndUpdatePKBalance = await this.UpdatePKBalance(
           fieldId,
           crop,
@@ -505,7 +521,8 @@ class UpdateRecommendation {
           pkBalance,
           userId,
           secondCropManagementData,
-          fertiliserData
+          fertiliserData,
+          year
         );
         console.log("saveAndUpdatePKBalance", saveAndUpdatePKBalance);
         if (saveAndUpdatePKBalance) {
@@ -690,23 +707,23 @@ class UpdateRecommendation {
   async UpdatePKBalance(
     fieldId,
     crop,
-    calculations,
+    nutrientRecommendationsData,
     pkBalanceData,
     userId,
     secondCropManagementData,
-    fertiliserData
+    fertiliserData,
+    year
   ) {
     console.log("pkBalanceData123", pkBalanceData);
+   
     try {
       let pBalance = 0;
       let kBalance = 0;
       let saveAndUpdatePKBalance;
-      console.log("crop.CropTypeID", crop.CropTypeID);
-      console.log("crop.Year", crop.Year);
-      if (crop.CropTypeID == 170 || crop.CropInfo1 == null) {
-        console.log("fertiliserData", fertiliserData);
-        console.log("fertiliserData.P2O5", fertiliserData.P2O5);
-        console.log("pkBalanceData.PBalance", pkBalanceData.PBalance);
+      console.log("crop.cropInfo1Idjhhhj",crop.CropInfo1)
+      console.log("crop.CropTypeIDsshhhs",crop.CropTypeID)
+      if (crop.CropTypeID == 170 || crop.CropInfo1) {
+        console.log('Othererrorrrr')
         pBalance =
           fertiliserData == null
             ? 0
@@ -716,7 +733,8 @@ class UpdateRecommendation {
             ? 0
             : fertiliserData.K2O - (0 - pkBalanceData.KBalance);
       } else {
-        for (const recommendation of calculations) {
+        console.log('NotOthererrorrrr')
+        for (const recommendation of nutrientRecommendationsData.calculations) {
           switch (recommendation.nutrientId) {
             case 1:
               pBalance =
@@ -735,7 +753,7 @@ class UpdateRecommendation {
       }
       if (pkBalanceData) {
         const updateData = {
-          Year: crop.Year,
+          Year: year,
           FieldID: fieldId,
           PBalance: pBalance,
           KBalance: kBalance,
@@ -1628,7 +1646,7 @@ class UpdateRecommendation {
       const currentCropType = cropTypesList.find(
         (cropType) => cropType.cropTypeId === crop.CropTypeID
       );
-      c;
+      
       if (!currentCropType || currentCropType.cropGroupId == null) {
         throw new HttpException(
           `Invalid CropTypeId for crop having field name ${field.Name}`,
@@ -1690,7 +1708,9 @@ class UpdateRecommendation {
       },
       take: 1,
     })[0];
+    console.log("dataMultipleCropsss",dataMultipleCrops)
     const arableBody = await this.buildArableBody(dataMultipleCrops, field);
+    console.log('arablefffBody',arableBody)
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: crop.FieldType,
@@ -1950,7 +1970,7 @@ class UpdateRecommendation {
 
   async getCrops(fieldID, year) {
     return this.cropRepository.find({
-      where: { FieldID: fieldID },
+      where: { FieldID: fieldID , Year:year},
     });
   }
 
