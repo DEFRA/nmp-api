@@ -140,7 +140,7 @@ const FarmEntity = new EntitySchema({
     },
     CountryID: {
       type: "int",
-      nullable: false,
+      default: 1,
     },
   },
   relations: {
