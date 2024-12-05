@@ -90,64 +90,76 @@ class SoilAnalysesService extends BaseService {
       }
 
       // Retrieve the updated PKBalance entry
+
       let PKBalance = await transactionalManager.findOne(PKBalanceEntity, {
         where: {
           Year: SoilAnalysis.Date.Year,
           FieldID: SoilAnalysis.FieldID,
         },
       });
-
-      if (PKBalance) {
-        
-        const updateData = {
-          Year: PKBalance.Year,
-          FieldID: PKBalance.FieldID,
-          PBalance: 0,
-          KBalance: 0,
-        };
-        
-        const saveAndUpdatePKBalance = {
-          ...PKBalance,
-          ...updateData,
-          ModifiedOn: new Date(),
-          ModifiedByID: userId,
-        };
-
-        console.log('aaaaaaa',saveAndUpdatePKBalance)
-        if (saveAndUpdatePKBalance) {
-          await transactionalManager.save(
-            PKBalanceEntity,
-            saveAndUpdatePKBalance
-          );
-        }
-        let PKBalancew33 = await transactionalManager.findOne(PKBalanceEntity, {
-          where: {
+      if (
+        SoilAnalysis.Potassium != null ||
+        SoilAnalysis.Phosphorus != null ||
+        SoilAnalysis.PotassiumIndex != null ||
+        SoilAnalysis.PhosphorusIndex != null
+      ) {
+        if (PKBalance) {
+          const updateData = {
             Year: PKBalance.Year,
             FieldID: PKBalance.FieldID,
-          },
-        });
-        console.log("start");
-        this.UpdateRecommendation.updateRecommendationsForField(
-          updatedSoilAnalysisData.FieldID,
-          updatedSoilAnalysisData.Year,
-          request,
-          userId
-        )
-          .then((res) => {
-            if (res === undefined) {
-              console.log(
-                "updateRecommendationAndOrganicManure returned undefined"
-              );
-            } else {
-              console.log("updateRecommendationAndOrganicManure result:", res);
-            }
-          })
-          .catch((error) => {
-            console.error(
-              "Error updating recommendation and organic manure:",
-              error
+            PBalance: 0,
+            KBalance: 0,
+          };
+
+          const saveAndUpdatePKBalance = {
+            ...PKBalance,
+            ...updateData,
+            ModifiedOn: new Date(),
+            ModifiedByID: userId,
+          };
+
+          console.log("aaaaaaa", saveAndUpdatePKBalance);
+          if (saveAndUpdatePKBalance) {
+            await transactionalManager.save(
+              PKBalanceEntity,
+              saveAndUpdatePKBalance
             );
-          });
+          }
+          // let PKBalancew33 = await transactionalManager.findOne(
+          //   PKBalanceEntity,
+          //   {
+          //     where: {
+          //       Year: PKBalance.Year,
+          //       FieldID: PKBalance.FieldID,
+          //     },
+          //   }
+          // );
+          console.log("start");
+          this.UpdateRecommendation.updateRecommendationsForField(
+            updatedSoilAnalysisData.FieldID,
+            updatedSoilAnalysisData.Year,
+            request,
+            userId
+          )
+            .then((res) => {
+              if (res === undefined) {
+                console.log(
+                  "updateRecommendationAndOrganicManure returned undefined"
+                );
+              } else {
+                console.log(
+                  "updateRecommendationAndOrganicManure result:",
+                  res
+                );
+              }
+            })
+            .catch((error) => {
+              console.error(
+                "Error updating recommendation and organic manure:",
+                error
+              );
+            });
+        }
       }
 
       return { SoilAnalysis, PKBalance };
