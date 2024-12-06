@@ -138,6 +138,10 @@ const FarmEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
+    CountryID: {
+      type: "int",
+      default: 1,
+    },
   },
   relations: {
     Fields: {
@@ -169,6 +173,12 @@ const FarmEntity = new EntitySchema({
       type: "many-to-one",
       inverseSide: "ModifiedFarms",
       joinColumn: { name: "ModifiedByID" },
+    },
+    Country: {
+      type: "many-to-one",
+      target: "Country",
+      joinColumn: { name: "CountryID" },
+      inverseSide: "Farms",
     },
   },
 });
