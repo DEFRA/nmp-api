@@ -79,6 +79,8 @@ class UpdateRecommendation {
   }
   async updateRecommendationsForField(fieldID, year, request, userId) {
     console.log("function started");
+    console.log("year",year);
+    console.log("fieldID",fieldID);
     // Fetch all years greater than the provided year for the given FieldID
     const yearsGreaterThanGivenYear = await this.getYearsGreaterThanGivenYear(
       fieldID,
@@ -265,11 +267,12 @@ class UpdateRecommendation {
       });
       let nutrientRecommendationsData;
       const snsAnalysesData = await this.getSnsAnalysesData(fieldData.ID);
+      const secondCropManagementData = await this.getManagementPeriod(cropData.ID);
       let fertiliserData = await this.getFertiliserData(
         organicManure.ManagementPeriodID
       );
       console.log("cropDatdddda", cropData);
-      console.log("organicManuresDatamkmkmk", organicManuresData);
+      //console.log("organicManuresDatamkmkmk", organicManuresData);
       //get PKBalance data
       let pkBalance = await this.getPKBalanceData(cropData?.Year, fieldData.ID);
       if (cropData.CropTypeID === 170) {
@@ -292,6 +295,7 @@ class UpdateRecommendation {
         );
         console.log("otherRecommendations", otherRecommendations);
         console.log("pkBalance111", pkBalance);
+        console.log("333", pkBalance);
         let saveAndUpdatePKBalance = await this.UpdatePKBalance(
           fieldData.ID,
           cropData,
@@ -342,6 +346,7 @@ class UpdateRecommendation {
         allRecommendations
       );
       console.log("pkBalance111", pkBalance);
+      console.log("4444", pkBalance);
       let saveAndUpdatePKBalance = await this.UpdatePKBalance(
         fieldData.ID,
         cropData,
@@ -438,6 +443,7 @@ class UpdateRecommendation {
       if (Errors.length > 0) {
         throw new Error(JSON.stringify(Errors));
       }
+      
       const secondCropManagementData = await this.getManagementPeriod(crop.ID);
       let fertiliserData = await this.getFertiliserData(
         secondCropManagementData.ID
@@ -450,7 +456,7 @@ class UpdateRecommendation {
       let pkBalance = await this.getPKBalanceData(crop?.Year, fieldId);
       console.log("cropData", crop.CropInfo1);
       if (crop.CropTypeID === 170 || crop.CropInfo1 === null) {
-        console.log("pkBalance111", pkBalance);
+        console.log("pkBalance111", pkBalance);        
         try {
           console.log("otherCase");
           console.log(
@@ -515,6 +521,7 @@ class UpdateRecommendation {
           nutrientRecommendationsData
         );
         console.log("pkBalance111", pkBalance);
+        console.log("2222", pkBalance);
         try {
           let saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldId,
@@ -987,7 +994,7 @@ class UpdateRecommendation {
       };
       await transactionalManager.save(RecommendationEntity, firstCropSaveData);
     }
-
+console.log('aaaaaaaa')
     // Save or update for Crop Order 2
     let secondCropSaveData = await this.getRecommendationByManagementPeriodID(
       secondCropManagementData.ID

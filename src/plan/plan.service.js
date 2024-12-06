@@ -24,6 +24,9 @@ const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const {
   FertiliserManuresEntity,
 } = require("../db/entity/fertiliser-manures.entity");
+const {
+  UpdateRecommendation,
+} = require("../shared/updateRecommendation.service");
 
 class PlanService extends BaseService {
   constructor() {
@@ -47,6 +50,7 @@ class PlanService extends BaseService {
     this.fertiliserRepository = AppDataSource.getRepository(
       FertiliserManuresEntity
     );
+    this.UpdateRecommendation = new UpdateRecommendation();
   }
 
   async getManagementPeriods(id) {
@@ -817,7 +821,7 @@ class PlanService extends BaseService {
     };
   }
 
-  async createNutrientsRecommendationForField(crops, userId) {
+  async createNutrientsRecommendationForField(crops, userId,request) {
     const allManagementPeriods = await this.managementPeriodRepository.find();
     return await AppDataSource.transaction(async (transactionalManager) => {
       const Recommendations = [];
@@ -886,7 +890,31 @@ class PlanService extends BaseService {
             }
           }
           else{
-            //call shreyash's function
+               //call shreyash's function
+            this.UpdateRecommendation.updateRecommendationsForField(
+              crop.FieldID,
+              crop.Year,
+              request,
+              userId
+            )
+              .then((res) => {
+                if (res === undefined) {
+                  console.log(
+                    "updateRecommendationAndOrganicManure returned undefined"
+                  );
+                } else {
+                  console.log(
+                    "updateRecommendationAndOrganicManure result:",
+                    res
+                  );
+                }
+              })
+              .catch((error) => {
+                console.error(
+                  "Error updating recommendation and organic manure:",
+                  error
+                );
+              });
           }
           return {
             message: "Default crop saved and exiting early",
@@ -944,32 +972,7 @@ class PlanService extends BaseService {
         //   fieldId,
         //   crop?.Year
         // );
-        console.log("cropPlanOfNextYear", cropPlanOfNextYear);
-        if (cropPlanOfNextYear.length == 0) {
-          try {
-            let saveAndUpdatePKBalance = await this.createOrUpdatePKBalance(
-              fieldId,
-              crop?.Year,
-              nutrientRecommendationsData.calculations,
-              pkBalanceData,
-              userId
-            );
-            if (saveAndUpdatePKBalance) {
-              await transactionalManager.save(
-                PKBalanceEntity,
-                saveAndUpdatePKBalance.saveAndUpdatePKBalance
-              );
-            }
-          } catch (error) {
-            console.error(
-              `Error while saving PKBalance Data FieldId: ${fieldId} And Year:${crop?.Year}:`,
-              error
-            );
-          }
-        }
-        else{
-          //call shreyash's function
-        }
+        
         let savedRecommendation;
         if (crop.CropOrder == 2) {
           const firstCropData = await this.getFirstCropData(
@@ -1132,6 +1135,56 @@ class PlanService extends BaseService {
             Recommendation: savedRecommendation,
             RecommendationComments,
           });
+        }
+        console.log("cropPlanOfNextYear", cropPlanOfNextYear);
+        if (cropPlanOfNextYear.length == 0) {
+          try {
+            let saveAndUpdatePKBalance = await this.createOrUpdatePKBalance(
+              fieldId,
+              crop?.Year,
+              nutrientRecommendationsData.calculations,
+              pkBalanceData,
+              userId
+            );
+            if (saveAndUpdatePKBalance) {
+              await transactionalManager.save(
+                PKBalanceEntity,
+                saveAndUpdatePKBalance.saveAndUpdatePKBalance
+              );
+            }
+          } catch (error) {
+            console.error(
+              `Error while saving PKBalance Data FieldId: ${fieldId} And Year:${crop?.Year}:`,
+              error
+            );
+          }
+        }
+        else{
+             //call shreyash's function
+          this.UpdateRecommendation.updateRecommendationsForField(
+            crop.FieldID,
+            crop.Year,
+            request,
+            userId
+          )
+            .then((res) => {
+              if (res === undefined) {
+                console.log(
+                  "updateRecommendationAndOrganicManure returned undefined"
+                );
+              } else {
+                console.log(
+                  "updateRecommendationAndOrganicManure result:",
+                  res
+                );
+              }
+            })
+            .catch((error) => {
+              console.error(
+                "Error updating recommendation and organic manure:",
+                error
+              );
+            });
         }
       }
 

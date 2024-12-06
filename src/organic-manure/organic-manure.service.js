@@ -36,7 +36,9 @@ const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const {
   FertiliserManuresEntity,
 } = require("../db/entity/fertiliser-manures.entity");
-const UpdateReommendation = require("../shared/updateRecommendation.service");
+const {
+  UpdateRecommendation,
+} = require("../shared/updateRecommendation.service");
 
 class OrganicManureService extends BaseService {
   constructor() {
@@ -72,7 +74,7 @@ class OrganicManureService extends BaseService {
     this.fertiliserRepository = AppDataSource.getRepository(
       FertiliserManuresEntity
     );
-    this.UpdateReommendationService = new UpdateReommendation();
+    this.UpdateRecommendation = new UpdateRecommendation();
   }
 
   async getTotalNitrogen(managementPeriodID, fromDate, toDate, confirm) {
@@ -1035,6 +1037,31 @@ class OrganicManureService extends BaseService {
             (isNextYearPlanExist == true && isNextYearFertiliserExist == true)
           ) {
             //call shreyash's function
+            this.UpdateRecommendation.updateRecommendationsForField(
+                cropData.FieldID,
+                cropData.Year,
+                request,
+                userId
+              )
+                .then((res) => {
+                  if (res === undefined) {
+                    console.log(
+                      "updateRecommendationAndOrganicManure returned undefined"
+                    );
+                  } else {
+                    console.log(
+                      "updateRecommendationAndOrganicManure result:",
+                      res
+                    );
+                  }
+                })
+                .catch((error) => {
+                  console.error(
+                    "Error updating recommendation and organic manure:",
+                    error
+                  );
+                });
+            
           } else {
             let pBalance = 0;
             let kBalance = 0;
@@ -1162,9 +1189,10 @@ class OrganicManureService extends BaseService {
             isNextYearOrganicManureExist == true) ||
           (isNextYearPlanExist == true && isNextYearFertiliserExist == true)
         ) {
-          this.UpdateReommendationService.updateRecommendationsForField(
-            fieldId,
-            crop?.Year,
+          //shreaysh codde
+          this.UpdateRecommendation.updateRecommendationsForField(
+            cropData.FieldID,
+            cropData?.Year,
             request,
             userId
           )
