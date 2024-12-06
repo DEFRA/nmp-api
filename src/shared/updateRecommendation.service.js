@@ -27,7 +27,6 @@ const {
   FertiliserManuresEntity,
 } = require("../db/entity/fertiliser-manures.entity");
 const { NutrientsMapper } = require("../constants/nutrient-mapper");
-const { CleanPlugin } = require("webpack");
 
 class UpdateRecommendation {
   constructor() {
