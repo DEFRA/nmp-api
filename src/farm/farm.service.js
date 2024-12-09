@@ -45,7 +45,8 @@ class FarmService extends BaseService {
     }
   }
 
-  async createFarm(farmBody, userId) {
+  async createFarm(farm, userId) {
+    let farmBody = farm.Farm
     const farmExists = await this.farmExistsByNameAndPostcode(
       farmBody.Name.trim(),
       farmBody.Postcode.trim()
@@ -55,6 +56,7 @@ class FarmService extends BaseService {
     }
     const newFarm = await this.repository.save({
       ...farmBody,
+      ...(farmBody.ID === 0 ? { ID: null } : {}),
       Name: farmBody.Name.trim(),
       Postcode: farmBody.Postcode.trim(),
       CreatedByID: userId,

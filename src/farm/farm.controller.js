@@ -79,7 +79,6 @@ class FarmController {
 
   async createFarm() {
     try {
-      console.log("farmpayload", this.#request.payload);
       const { Farm } = this.#request.payload;
       const exists = await this.#farmService.farmExistsByNameAndPostcode(
         Farm.Name,
@@ -89,11 +88,12 @@ class FarmController {
         throw boom.conflict("Farm already exists with this Name and Postcode");
       }
       const userId = this.#request.userId;
-      const newFarm = await this.#farmService.createFarm({
-        ...Farm,
-        CreatedByID:userId,
-        ...(Farm.ID === 0 ? { ID: null } : {}),
-      });
+      const newFarm = await this.#farmService.createFarm(
+        {
+          Farm,
+        },
+        userId
+      );
       return this.#h.response({ Farm: newFarm });
     } catch (error) {
       console.error(error);
