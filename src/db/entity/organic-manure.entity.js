@@ -67,6 +67,12 @@ const OrganicManureEntity = new EntitySchema({
       scale: 3,
       nullable: false,
     },
+    AvailableSO3: {
+      type: "decimal",
+      precision: 18,
+      scale: 3,
+      nullable: false,
+    },
     ApplicationRate: {
       type: "int",
       nullable: false,
