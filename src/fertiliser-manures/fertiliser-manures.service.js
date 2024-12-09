@@ -14,6 +14,7 @@ const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const {
   UpdateRecommendation,
 } = require("../shared/updateRecommendation.service");
+const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 
 class FertiliserManuresService extends BaseService {
   constructor() {
@@ -29,7 +30,9 @@ class FertiliserManuresService extends BaseService {
       ManagementPeriodEntity
     );
     this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
-    this.UpdateRecommendation = new UpdateRecommendation();
+    this.UpdateRecommendation = new UpdateRecommendation();  
+      this.soilAnalysisRepository =
+    AppDataSource.getRepository(SoilAnalysisEntity);
   }
   async getFertiliserManureNitrogenSum(
     managementPeriodID,
@@ -94,6 +97,7 @@ class FertiliserManuresService extends BaseService {
         CreatedByID: userId,
         CreatedOn: new Date(),
       }));
+      const soilAnalysisAllData = await this.soilAnalysisRepository.find();
       const fertiliserData = await this.repository.find({
         where: {
           ManagementPeriodID: fertiliserManureData[0].ManagementPeriodID,
@@ -117,7 +121,20 @@ class FertiliserManuresService extends BaseService {
       const fieldData = await this.fieldRepository.findOneBy({
         ID: cropData.FieldID,
       });
-
+      const soilAnalsisData = soilAnalysisAllData.filter((soilAnalyses) => {
+        return soilAnalyses.FieldID === cropData.FieldID;
+      });
+      let isSoilAnalysisHavePAndK = false;
+      if (soilAnalsisData) {
+        isSoilAnalysisHavePAndK = soilAnalsisData.some(
+          (item) =>
+            item.PhosphorusIndex !== null || item.PotassiumIndex !== null
+        )
+          ? true
+          : false;
+      }
+console.log('isSoilAnalysisHavePAndK',isSoilAnalysisHavePAndK)
+      if (isSoilAnalysisHavePAndK) {
       const pkBalanceData = await this.pkBalanceRepository.findOne({
         where: { Year: cropData?.Year, FieldID: fieldData.ID },
       });
@@ -225,6 +242,7 @@ class FertiliserManuresService extends BaseService {
           }
         }
       }
+    }
       return savedFertiliserManures;
     });
   }
