@@ -286,7 +286,7 @@ class OrganicManureService extends BaseService {
             totalK: mannerOutputs.data.totalK2O,
             availableK: mannerOutputs.data.cropAvailableK2O,
             totalS: mannerOutputs.data.totalSO3,
-            availableS: 0, //TODO:: need to find it
+            availableS: mannerOutputs.data.cropAvailableSO3, 
             totalM: mannerOutputs.data.totalMgO,
           },
         ],
@@ -730,7 +730,7 @@ class OrganicManureService extends BaseService {
       ManureMgO: null,
       FertilizerMgO: null,
       CropSO3: null,
-      ManureSO3: null,
+      ManureSO3: mannerOutputs.data.cropAvailableSO3,
       FertilizerSO3: null,
       CropNa2O: null, // assuming Na2O is present in mannerOutputReq if not remove this
       ManureNa2O: null,
@@ -782,11 +782,13 @@ class OrganicManureService extends BaseService {
     userId,
     organicManures
   ) {
+    console.log("mannerOutputsother", mannerOutputs);
     const savedOrganicManure = await transactionalManager.save(
       OrganicManureEntity,
       this.repository.create({
         ...organicManureData.OrganicManure,
         AvailableN: mannerOutputs.data.currentCropAvailableN,
+        AvailableSO3: mannerOutputs.data.cropAvailableSO3,
         CreatedByID: userId,
         ...(organicManureData.OrganicManure.ID == 0 ? { ID: null } : {}),
       })
@@ -934,7 +936,7 @@ class OrganicManureService extends BaseService {
             mannerOutputReq,
             request
           );
-
+          console.log("mannerOutputs", mannerOutputs);
         if (mannerOutputs.data == null) {
           console.error("Vendor manner api is not working");
         }
@@ -1124,6 +1126,9 @@ class OrganicManureService extends BaseService {
             mannerOutputs,
             organicManureData
           );
+          console.log(
+            "nutrientRecommensssdationnReqBody".nutrientRecommendationnReqBody
+          );
 
         const nutrientRecommendationsData =
           await this.rB209RecommendationService.postData(
@@ -1150,12 +1155,15 @@ class OrganicManureService extends BaseService {
             MgO: OrganicManure.MgO,
           };
         }
+   
+    console.log("mannerOutputsnew", mannerOutputs);
 
         const savedOrganicManure = await transactionalManager.save(
           OrganicManureEntity,
           this.repository.create({
             ...organicManureData.OrganicManure,
             AvailableN: mannerOutputs.data.currentCropAvailableN,
+            AvailableSO3: mannerOutputs.data.cropAvailableSO3,
             CreatedByID: userId,
             ...(organicManureData.OrganicManure.ID == 0 ? { ID: null } : {}),
           })

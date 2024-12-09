@@ -77,9 +77,7 @@ class UpdateRecommendation {
     return years.map((record) => record.Year);
   }
   async updateRecommendationsForField(fieldID, year, request, userId) {
-    console.log("function started");
-    console.log("year",year);
-    console.log("fieldID",fieldID);
+
     // Fetch all years greater than the provided year for the given FieldID
     const yearsGreaterThanGivenYear = await this.getYearsGreaterThanGivenYear(
       fieldID,
@@ -131,8 +129,7 @@ class UpdateRecommendation {
   }
 
   async updateRecommendationAndOrganicManure(fieldID, year, request, userId) {
-    console.log("second fucntion started");
-    console.log("YUUUUU", year);
+   
     let flag = true;
     return await AppDataSource.transaction(async (transactionalManager) => {
       const organicManureAllData = await this.getAllOrganicManure();
@@ -144,18 +141,17 @@ class UpdateRecommendation {
         const cropIds = crops.map((crop) => crop.ID);
 
         const managementPeriods = await this.getManagementPeriods(cropIds);
-        console.log("cropIdsssss", cropIds);
-        console.log("managsssementPeriods", managementPeriods);
+
         if (managementPeriods.length === 0) {
           throw new Error("No Management Periods found for the selected crops");
         }
         const organicManuresData = [];
 
         const organicManures = await this.getOrganicManures(managementPeriods);
-        console.log("organicManures", organicManures);
+      
         const allRecommendations = await this.RecommendationRepository.find();
         if (organicManures.length > 0) {
-          console.log("line no 156");
+       
           await this.saveRecommendationWithManure(
             organicManures,
             organicManureAllData,
@@ -270,7 +266,7 @@ class UpdateRecommendation {
       let fertiliserData = await this.getFertiliserData(
         organicManure.ManagementPeriodID
       );
-      console.log("cropDatdddda", cropData);
+    
       //console.log("organicManuresDatamkmkmk", organicManuresData);
       //get PKBalance data
       let pkBalance = await this.getPKBalanceData(cropData?.Year, fieldData.ID);
@@ -1790,7 +1786,7 @@ console.log('aaaaaaaa')
             totalK: mannerOutputs.data.totalK2O,
             availableK: mannerOutputs.data.cropAvailableK2O,
             totalS: mannerOutputs.data.totalSO3,
-            availableS: 0, //TODO:: need to find it
+            availableS: mannerOutputs.data.cropAvailableSO3,
             totalM: mannerOutputs.data.totalMgO,
           },
         ],
