@@ -1,45 +1,75 @@
 const { DataSource } = require("typeorm");
 const EnvironmentService = require("../shared/environment.service");
-const {FarmEntity}= require("./entity/farm.entity.js");
-const {FieldEntity}= require("./entity/field.entity.js");
-const {UserEntity}=     require("./entity/user.entity.js");
-const {OrganisationEntity}=     require("./entity/organisation.entity.js");
-const {MoistureTypeEntity}=     require("./entity/moisture-type.entity.js");
-const {ClimateDatabaseEntity}=     require("./entity/climate.entity.js");
-const {ManureTypeEntity}=     require("./entity/manure-type.entity.js");
-const {CropEntity}=     require("./entity/crop.entity.js");
-const {ManagementPeriodEntity}=     require("./entity/management-period.entity.js");
-const {RainTypeEntity}=     require("./entity/rain-type.entity.js");
-const {IncorporationMethodEntity}=     require("./entity/incorporation-method.entity.js");
-const {ManureGroupEntity}=     require("./entity/manure-group.entity.js");
-const {IncorporationDelayEntity}=     require("./entity/incorporation-delay.entity.js");
-const {WindspeedEntity}=     require("./entity/wind-speed.entity.js");
-const {SoilAnalysisEntity}=     require("./entity/soil-analysis.entity.js");
-const {MannerCropTypeEntity}=     require("./entity/manner-crop-type.entity.js");
-const {CropTypeLinkingEntity}=     require("./entity/crop-type-linking.entity.js");
-const {ApplicationMethodEntity}=     require("./entity/application-method.entity.js");
-const {ApplicationMethodsIncorpMethodEntity}=     require("./entity/application-method-incorp-method.entity.js");
-const {IncorpMethodsIncorpDelayEntity}=    require("./entity/incorp-method-incorp-delay.entity.js");
-const {SoilTypeSoilTextureEntity}=     require("./entity/soil-type-soil-texture.entity.js");
-const {SubSoilEntity}=     require("./entity/sub-soil.entity.js");
-const {TopSoilEntity}=     require("./entity/top-soil.entity.js");
-const {RecommendationEntity}=     require("./entity/recommendation.entity.js");
-const {RecommendationCommentEntity}=     require("./entity/recommendation-comment.entity.js");
-const {OrganicManureEntity}=     require("./entity/organic-manure.entity.js");
-const {FarmManureTypeEntity}=     require("./entity/farm-manure-type.entity.js");
-const {FertiliserManuresEntity}=     require("./entity/fertiliser-manures.entity.js");
-const {InOrganicManureDurationEntity}=     require("./entity/inorganic-manure-duration.entity.js");
-const {CountryEntity}=     require("./entity/country.entity.js");
-const {ManureTypeCategoryEntity}=     require("./entity/manure-type-category.entity.js");
+const { FarmEntity } = require("./entity/farm.entity.js");
+const { FieldEntity } = require("./entity/field.entity.js");
+const { UserEntity } = require("./entity/user.entity.js");
+const { OrganisationEntity } = require("./entity/organisation.entity.js");
+const { MoistureTypeEntity } = require("./entity/moisture-type.entity.js");
+const { ClimateDatabaseEntity } = require("./entity/climate.entity.js");
+const { ManureTypeEntity } = require("./entity/manure-type.entity.js");
+const { CropEntity } = require("./entity/crop.entity.js");
+const {
+  ManagementPeriodEntity,
+} = require("./entity/management-period.entity.js");
+const { RainTypeEntity } = require("./entity/rain-type.entity.js");
+const {
+  IncorporationMethodEntity,
+} = require("./entity/incorporation-method.entity.js");
+const { ManureGroupEntity } = require("./entity/manure-group.entity.js");
+const {
+  IncorporationDelayEntity,
+} = require("./entity/incorporation-delay.entity.js");
+const { WindspeedEntity } = require("./entity/wind-speed.entity.js");
+const { SoilAnalysisEntity } = require("./entity/soil-analysis.entity.js");
+const { MannerCropTypeEntity } = require("./entity/manner-crop-type.entity.js");
+const {
+  CropTypeLinkingEntity,
+} = require("./entity/crop-type-linking.entity.js");
+const {
+  ApplicationMethodEntity,
+} = require("./entity/application-method.entity.js");
+const {
+  ApplicationMethodsIncorpMethodEntity,
+} = require("./entity/application-method-incorp-method.entity.js");
+const {
+  IncorpMethodsIncorpDelayEntity,
+} = require("./entity/incorp-method-incorp-delay.entity.js");
+const {
+  SoilTypeSoilTextureEntity,
+} = require("./entity/soil-type-soil-texture.entity.js");
+const { SubSoilEntity } = require("./entity/sub-soil.entity.js");
+const { TopSoilEntity } = require("./entity/top-soil.entity.js");
+const { RecommendationEntity } = require("./entity/recommendation.entity.js");
+const {
+  RecommendationCommentEntity,
+} = require("./entity/recommendation-comment.entity.js");
+const { OrganicManureEntity } = require("./entity/organic-manure.entity.js");
+const { FarmManureTypeEntity } = require("./entity/farm-manure-type.entity.js");
+const {
+  FertiliserManuresEntity,
+} = require("./entity/fertiliser-manures.entity.js");
+const {
+  InOrganicManureDurationEntity,
+} = require("./entity/inorganic-manure-duration.entity.js");
+const { CountryEntity } = require("./entity/country.entity.js");
+const {
+  ManureTypeCategoryEntity,
+} = require("./entity/manure-type-category.entity.js");
 const { SnsAnalysesEntity } = require("./entity/sns-analysis.entity.js");
-const { SecondCropLinkingEntity } = require("./entity/second-crop-linking.entity.js");
+const {
+  SecondCropLinkingEntity,
+} = require("./entity/second-crop-linking.entity.js");
 const { PKBalanceEntity } = require("./entity/pk-balance.entity.js");
+const { GrassManagementOptionsEntity } = require("./entity/grassManagementOptionsEntity.js");
+const { GrassTypicalCutsEntity } = require("./entity/grassTypicalCutsEntity.js");
+
+
 
 //const requireContext = require.context('./entity/', false, /\.entity\.js$/);
 //const entities = requireContext.keys().map(requireContext);
 //entities: entities.map(module => module.default || module),
 
-const isProduction = EnvironmentService.NODE_ENV() === 'production';
+const isProduction = EnvironmentService.NODE_ENV() === "production";
 const baseConfig = {
   type: "mssql",
   host: EnvironmentService.DATABASE_HOST(),
@@ -80,7 +110,9 @@ const baseConfig = {
     SnsAnalysesEntity,
     SecondCropLinkingEntity,
     PKBalanceEntity,
-    FarmManureTypeEntity
+    FarmManureTypeEntity,
+    GrassManagementOptionsEntity,
+    GrassTypicalCutsEntity
   ],
   migrations: [],
   subscribers: [],
@@ -98,7 +130,7 @@ if (isProduction) {
       authentication: {
         type: EnvironmentService.AZURE_AD_CONNECTION_TYPE(),
       },
-    }    
+    },
   };
 } else {
   dataSourceConfig = {

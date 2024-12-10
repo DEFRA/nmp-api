@@ -28,4 +28,6 @@ module.exports = [
   ...require("./pk-balance/pk-balance.route"),
   ...require("./farm-manure-type/farm-manure-type.route"),
   ...require("./country/country.route"),
+  ...require("./grassManagementOptions/grassManagementOptions.route"),
+  ...require("./GrassTypicalCuts/grassTypicalCuts.route"),
 ];
