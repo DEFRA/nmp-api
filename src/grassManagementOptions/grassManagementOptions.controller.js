@@ -14,8 +14,17 @@ class GrassManagementOptionsController {
 
   async findAll() {
     try {
-      const  records  = await this.#GrassManagementOptionsService.getAll();
-      return this.#h.response( records );
+      const records = await this.#GrassManagementOptionsService.getAll();
+      return this.#h.response(records);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+  async findAllgrassTypicalCuts() {
+    try {
+      const records =
+        await this.#GrassManagementOptionsService.getAllgrassTypicalCuts();
+      return this.#h.response(records);
     } catch (error) {
       return this.#h.response({ error });
     }

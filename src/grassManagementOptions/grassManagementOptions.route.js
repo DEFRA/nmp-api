@@ -4,7 +4,7 @@ const { GrassManagementOptionsController } = require("./grassManagementOptions.c
 module.exports = [
   {
     method: "GET",
-    path: "/grassManagementOptions",
+    path: "/grassland/grassManagementOptions",
     options: {
       tags: ["api", "Grass Management "],
       description: "Get all GrassManagementOptions data",
@@ -12,6 +12,18 @@ module.exports = [
     handler: async (request, h) => {
       const controller = new GrassManagementOptionsController(request, h);
       return controller.findAll();
+    },
+  },
+  {
+    method: "GET",
+    path: "/grassland/grassTypicalCuts",
+    options: {
+      tags: ["api", "Grass Management "],
+      description: "Get all GrassManagementOptions data",
+    },
+    handler: async (request, h) => {
+      const controller = new GrassManagementOptionsController(request, h);
+      return controller.findAllgrassTypicalCuts();
     },
   },
 ];
