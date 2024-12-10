@@ -29,5 +29,14 @@ class GrassManagementOptionsController {
       return this.#h.response({ error });
     }
   }
+  async findAllSoilNitrogenSupplyItems() {
+    try {
+      const records =
+        await this.#GrassManagementOptionsService.getAllSoilNitrogenSupplyItems();
+      return this.#h.response(records);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
 }
 module.exports = { GrassManagementOptionsController };

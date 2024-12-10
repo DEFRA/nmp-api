@@ -26,4 +26,16 @@ module.exports = [
       return controller.findAllgrassTypicalCuts();
     },
   },
+  {
+    method: "GET",
+    path: "/grassland/soilNitrogenSupply",
+    options: {
+      tags: ["api", "Grass Management "],
+      description: "Get all SoilNitrogenSupply data",
+    },
+    handler: async (request, h) => {
+      const controller = new GrassManagementOptionsController(request, h);
+      return controller.findAllSoilNitrogenSupplyItems();
+    },
+  },
 ];
