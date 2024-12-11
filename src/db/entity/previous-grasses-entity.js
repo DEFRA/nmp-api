@@ -66,19 +66,19 @@ const PreviousGrassesEntity = new EntitySchema({
     },
     GrassManagementOptions: {
       type: "many-to-one",
-      target: "GrassManagementOption",
+      target: "GrassManagementOptions",
       joinColumn: { name: "GrassManagementOptionID" },
       inverseSide: "PreviousGrasses",
     },
     GrassTypicalCuts: {
       type: "many-to-one",
-      target: "GrassTypicalCut",
+      target: "GrassTypicalCuts",
       joinColumn: { name: "GrassTypicalCutID" },
       inverseSide: "PreviousGrasses",
     },
     SoilNitrogenSupplyItems: {
       type: "many-to-one",
-      target: "SoilNitrogenSupplyItem",
+      target: "SoilNitrogenSupplyItems",
       joinColumn: { name: "SoilNitrogenSupplyItemID" },
       inverseSide: "PreviousGrasses",
     },

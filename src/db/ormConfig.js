@@ -64,6 +64,7 @@ const { PKBalanceEntity } = require("./entity/pk-balance.entity.js");
 const { GrassManagementOptionsEntity } = require("./entity/grassManagementOptionsEntity.js");
 const { GrassTypicalCutsEntity } = require("./entity/grassTypicalCutsEntity.js");
 const { SoilNitrogenSupplyItemsEntity } = require("./entity/soil-nitrogen-supply-items.entity.js");
+const { PreviousGrassesEntity } = require("./entity/previous-grasses-entity.js");
 
 
 dotven.config();
@@ -113,7 +114,8 @@ const baseConfig = {
     FarmManureTypeEntity,
     GrassManagementOptionsEntity,
     GrassTypicalCutsEntity,
-    SoilNitrogenSupplyItemsEntity
+    SoilNitrogenSupplyItemsEntity,
+    PreviousGrassesEntity
   ],
 };
 
