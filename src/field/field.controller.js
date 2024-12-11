@@ -124,6 +124,22 @@ class FieldController {
       return this.#h.response({ error: error.message });
     }
   }
+  async getFieldSoilAnalysisAndSnsAnalysis() {
+    const { fieldId } = this.#request.params;
+    try {
+      const records =
+        await this.#fieldService.getFieldSoilAnalysisAndSnsAnalysisDetails(
+          fieldId,
+        );
+      if (!records) {
+        throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
+      }
+      return this.#h.response({ Records: records });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+  
 }
 
 module.exports = { FieldController };

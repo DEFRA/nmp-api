@@ -35,7 +35,9 @@ class FieldService extends BaseService {
     this.recommendationRepository =
       AppDataSource.getRepository(RecommendationEntity);
     this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
-    this.previousGrassesRepository = AppDataSource.getRepository(PreviousGrassesEntity);
+    this.previousGrassesRepository = AppDataSource.getRepository(
+      PreviousGrassesEntity
+    );
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -113,7 +115,7 @@ class FieldService extends BaseService {
       MgIndex: null,
       SIndex: null,
     };
-  
+
     await transactionalManager.save(
       RecommendationEntity,
       this.recommendationRepository.create({
@@ -290,6 +292,25 @@ class FieldService extends BaseService {
       // Log the error and throw an internal server error
       console.error("Error deleting field:", error);
     }
+  }
+
+  async getFieldSoilAnalysisAndSnsAnalysisDetails(fieldId) {
+    const fieldData = await this.repository.findOneBy({
+      ID: fieldId,
+    });
+
+    const soilAnalysisData = await this.soilAnalysisRepository.findOneBy({
+      FieldID: fieldId,
+    });
+    const snsAnalysisData = await this.snsAnalysisRepository.findOneBy({
+      FieldID: fieldId,
+    });
+
+    return {
+      Field: fieldData,
+      SoilAnalysis: soilAnalysisData,
+      SnsAnalysesEntity: snsAnalysisData,
+    };
   }
 }
 
