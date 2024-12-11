@@ -57,44 +57,44 @@ const PreviousGrassesEntity = new EntitySchema({
       nullable: true,
     },
   },
-  // relations: {
-  //   Fields: {
-  //     type: "many-to-one",
-  //     target: "Field",
-  //     joinColumn: { name: "FieldID" },
-  //     inverseSide: "PreviousGrasses",
-  //   },
-  //   GrassManagementOptions: {
-  //     type: "many-to-one",
-  //     target: "GrassManagementOption",
-  //     joinColumn: { name: "GrassManagementOptionID" },
-  //     inverseSide: "PreviousGrasses",
-  //   },
-  //   GrassTypicalCuts: {
-  //     type: "many-to-one",
-  //     target: "GrassTypicalCut",
-  //     joinColumn: { name: "GrassTypicalCutID" },
-  //     inverseSide: "PreviousGrasses",
-  //   },
-  //   SoilNitrogenSupplyItems: {
-  //     type: "many-to-one",
-  //     target: "SoilNitrogenSupplyItem",
-  //     joinColumn: { name: "SoilNitrogenSupplyItemID" },
-  //     inverseSide: "PreviousGrasses",
-  //   },
-  //   CreatedByUser: {
-  //     type: "many-to-one",
-  //     target: "User",
-  //     joinColumn: { name: "CreatedByID" },
-  //     inverseSide: "CreatedPreviousGrasses",
-  //   },
-  //   ModifiedByUser: {
-  //     type: "many-to-one",
-  //     target: "User",
-  //     joinColumn: { name: "ModifiedByID" },
-  //     inverseSide: "ModifiedPreviousGrasses",
-  //   },
-  // },
+  relations: {
+    Fields: {
+      type: "many-to-one",
+      target: "Field",
+      joinColumn: { name: "FieldID" },
+      inverseSide: "PreviousGrasses",
+    },
+    GrassManagementOptions: {
+      type: "many-to-one",
+      target: "GrassManagementOptions",
+      joinColumn: { name: "GrassManagementOptionID" },
+      inverseSide: "PreviousGrasses",
+    },
+    GrassTypicalCuts: {
+      type: "many-to-one",
+      target: "GrassTypicalCuts",
+      joinColumn: { name: "GrassTypicalCutID" },
+      inverseSide: "PreviousGrasses",
+    },
+    SoilNitrogenSupplyItems: {
+      type: "many-to-one",
+      target: "SoilNitrogenSupplyItems",
+      joinColumn: { name: "SoilNitrogenSupplyItemID" },
+      inverseSide: "PreviousGrasses",
+    },
+    CreatedByUser: {
+      type: "many-to-one",
+      target: "User",
+      joinColumn: { name: "CreatedByID" },
+      inverseSide: "CreatedPreviousGrasses",
+    },
+    ModifiedByUser: {
+      type: "many-to-one",
+      target: "User",
+      joinColumn: { name: "ModifiedByID" },
+      inverseSide: "ModifiedPreviousGrasses",
+    },
+  },
 });
 
 module.exports = { PreviousGrassesEntity };
