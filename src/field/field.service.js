@@ -309,7 +309,7 @@ class FieldService extends BaseService {
     return {
       Field: fieldData,
       SoilAnalysis: soilAnalysisData,
-      SnsAnalysesEntity: snsAnalysisData,
+      SnsAnalyses: snsAnalysisData,
     };
   }
 }
