@@ -4,7 +4,7 @@ const GrassManagementOptionsEntity = new EntitySchema({
   name: "GrassManagementOptions",
   tableName: "GrassManagementOptions",
   columns: {
-    Id: {
+    ID: {
       type: "int",
       primary: true,
       generated: true,
@@ -15,6 +15,14 @@ const GrassManagementOptionsEntity = new EntitySchema({
       length: 50,
       nullable: false,
       name: "Name",
+    },
+  },
+  relations: {
+    PreviousGrasses: {
+      type: "one-to-many",
+      target: "PreviousGrasses",
+      joinColumn: { name: "ID" },
+      inverseSide: "GrassManagementOptions",
     },
   },
 });

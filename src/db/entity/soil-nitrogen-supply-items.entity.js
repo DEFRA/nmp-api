@@ -22,7 +22,14 @@ const SoilNitrogenSupplyItemsEntity = new EntitySchema({
       name: "SoilNitrogenSupplyId",
     },
   },
-  
+  relations: {
+    PreviousGrasses: {
+      type: "one-to-many",
+      target: "PreviousGrasses",
+      joinColumn: { name: "ID" },
+      inverseSide: "SoilNitrogenSupplyItems",
+    },
+  },
 });
 
 module.exports = { SoilNitrogenSupplyItemsEntity };

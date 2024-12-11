@@ -14,6 +14,7 @@ const boom = require("@hapi/boom");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
+const { PreviousGrassesEntity } = require("../db/entity/previous-grasses-entity");
 
 
 class FieldService extends BaseService {
@@ -34,6 +35,7 @@ class FieldService extends BaseService {
     this.recommendationRepository =
       AppDataSource.getRepository(RecommendationEntity);
     this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
+    this.previousGrassesRepository = AppDataSource.getRepository(PreviousGrassesEntity);
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -156,8 +158,11 @@ class FieldService extends BaseService {
       }
       let PKBalance = null;
       if (body.SoilAnalysis != null) {
-        if (SoilAnalysis.Potassium != null || SoilAnalysis.Phosphorus != null||
-          SoilAnalysis.PotassiumIndex != null || SoilAnalysis.PhosphorusIndex != null
+        if (
+          SoilAnalysis.Potassium != null ||
+          SoilAnalysis.Phosphorus != null ||
+          SoilAnalysis.PotassiumIndex != null ||
+          SoilAnalysis.PhosphorusIndex != null
         ) {
           if (body.PKBalance) {
             let pkBalanceBody = body.PKBalance;
@@ -183,6 +188,21 @@ class FieldService extends BaseService {
             CreatedByID: userId,
           })
         );
+      }
+      // Save PreviousGrasses
+      let PreviousGrasses = [];
+      if (body.PreviousGrasses && body.PreviousGrasses.length > 0) {
+        for (const grassData of body.PreviousGrasses) {
+          const savedGrass = await transactionalManager.save(
+            PreviousGrassesEntity, // Replace with actual PreviousGrasses entity name
+            this.previousGrassesRepository.create({
+              ...grassData,
+              FieldID: Field.ID,
+              CreatedByID: userId,
+            })
+          );
+          PreviousGrasses.push(savedGrass);
+        }
       }
       const Crops = [];
       for (const cropData of body.Crops) {
