@@ -28,7 +28,7 @@ const CropTypeLinkingEntity = new EntitySchema({
     },
     SNSCategoryID: {
       type: "int",
-      primary: true,
+      nullable: true,
     },
   },
   relations: {
