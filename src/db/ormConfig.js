@@ -65,6 +65,7 @@ const { GrassManagementOptionsEntity } = require("./entity/grassManagementOption
 const { GrassTypicalCutsEntity } = require("./entity/grassTypicalCutsEntity.js");
 const { SoilNitrogenSupplyItemsEntity } = require("./entity/soil-nitrogen-supply-items.entity.js");
 const { PreviousGrassesEntity } = require("./entity/previous-grasses-entity.js");
+const { SNSCategoriesEntity } = require("./entity/snsCategories.entity.js");
 
 
 dotven.config();
@@ -115,7 +116,8 @@ const baseConfig = {
     GrassManagementOptionsEntity,
     GrassTypicalCutsEntity,
     SoilNitrogenSupplyItemsEntity,
-    PreviousGrassesEntity
+    PreviousGrassesEntity,
+    SNSCategoriesEntity
   ],
 };
 
