@@ -196,9 +196,10 @@ class FieldService extends BaseService {
       if (body.PreviousGrasses && body.PreviousGrasses.length > 0) {
         for (const grassData of body.PreviousGrasses) {
           const savedGrass = await transactionalManager.save(
-            PreviousGrassesEntity, // Replace with actual PreviousGrasses entity name
+            PreviousGrassesEntity,
             this.previousGrassesRepository.create({
               ...grassData,
+              ...(grassData.ID == 0 ? { ID: null } : {}),
               FieldID: Field.ID,
               CreatedByID: userId,
             })
