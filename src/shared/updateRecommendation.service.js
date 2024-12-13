@@ -216,9 +216,8 @@ class UpdateRecommendation {
       });
       const cropTypeLinkingData =
         await this.CropTypeLinkingRepository.findOneBy({
-          CropTypeID: fieldData.TopSoilID,
+          CropTypeID: cropData.CropTypeID,
         });
-
       const Errors = [];
       const {
         latestSoilAnalysis,
@@ -238,7 +237,7 @@ class UpdateRecommendation {
         cropData?.Year - 1,
         fieldData.ID
       );
-
+      console.log("Previous", pkBalanceData);
       const mannerOutputReq = await this.buildMannerOutputReq(
         fieldID,
         manureApplications,
@@ -321,13 +320,14 @@ class UpdateRecommendation {
           dataMultipleCrops,
           cropData,
           mannerOutputs,
-          organicManure
+          organicManure,
+          pkBalanceData
         );
 
       nutrientRecommendationsData = await this.getNutrientRecommendationsData(
         nutrientRecommendationnReqBody
       );
-
+      // console.log("nutrientRecommendationsData", nutrientRecommendationsData);
       let arableNotes = nutrientRecommendationsData.adviceNotes;
 
       const savedData = await this.saveRecommendationsForMultipleCrops(
@@ -340,8 +340,9 @@ class UpdateRecommendation {
         snsAnalysesData,
         allRecommendations
       );
-      console.log("pkBalance111", pkBalance);
-      console.log("4444", pkBalance);
+      // console.log("poojaaa", nutrientRecommendationnReqBody);
+      // console.log("pkBalance111", pkBalance);
+      // console.log("4444", pkBalance);
       let saveAndUpdatePKBalance = await this.UpdatePKBalance(
         fieldData.ID,
         cropData,
@@ -354,13 +355,13 @@ class UpdateRecommendation {
       );
 
       if (saveAndUpdatePKBalance) {
-        await transactionalManager.save(
-          PKBalanceEntity,
-          saveAndUpdatePKBalance.saveAndUpdatePKBalance
-        );
-      }
+         await transactionalManager.save(
+           PKBalanceEntity,
+           saveAndUpdatePKBalance.saveAndUpdatePKBalance
+         );
+       }
 
-      console.log("savedDatasss", savedData);
+      // console.log("savedDatasss", savedData);
       await this.saveOrUpdateArableNotes(
         arableNotes,
         savedData,
@@ -368,9 +369,9 @@ class UpdateRecommendation {
         userId
       );
       console.log(
-        "nutrientRecommendationsDatsssa",
-        nutrientRecommendationsData
-      );
+         "nutrientRecommendationsDatsssa",
+         nutrientRecommendationsData
+       );
       return nutrientRecommendationsData;
     }
   }
@@ -1514,7 +1515,7 @@ console.log('aaaaaaaa')
       });
 
       firstCropSaveData = recommendationMap[firstCropManagementPeriodId.ID];
-
+// console.log('firstCropSaveData',firstCropSaveData)
       if (firstCropSaveData) {
         firstCropSaveData = {
           ...firstCropSaveData,
@@ -1694,7 +1695,8 @@ console.log('aaaaaaaa')
     dataMultipleCrops,
     crop,
     mannerOutputs,
-    organicManureData
+    organicManureData,
+    pkBalanceData
   ) {
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
@@ -1724,9 +1726,10 @@ console.log('aaaaaaaa')
       },
       take: 1,
     })[0];
-    console.log("dataMultipleCropsss", dataMultipleCrops);
+    // console.log("dataMultipleCropsss", dataMultipleCrops);
     const arableBody = await this.buildArableBody(dataMultipleCrops, field);
-    console.log("arablefffBody", arableBody);
+    console.log("pkBalanceData", pkBalanceData);
+    console.log("mannerOutputs", mannerOutputs);
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: crop.FieldType,
@@ -1757,6 +1760,10 @@ console.log('aaaaaaaa')
           kReleasingClay: field.SoilReleasingClay,
           nvzActionProgrammeId: field.NVZProgrammeID,
           psc: 0, //TODO:: need to find it
+          pkBalance: {
+            phosphate: pkBalanceData != null ? pkBalanceData.PBalance : 0,
+            potash: pkBalanceData != null ? pkBalanceData.KBalance : 0,
+          },
           soilAnalyses: [],
         },
         harvestYear: crop.Year,
@@ -1813,6 +1820,7 @@ console.log('aaaaaaaa')
         });
       });
     }
+    console.log("soilAnalysis", soilAnalysis);
     // Add SnsAnalyses data
     if (snsAnalysesData) {
       nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
@@ -1869,6 +1877,7 @@ console.log('aaaaaaaa')
       },
       take: 1,
     })[0];
+    console.log('mannerOutput',mannerOutputData)
     // Use the buildArableBody function to get the arable array
     const arableBody = await this.buildArableBody(dataMultipleCrops, field);
     const nutrientRecommendationnReqBody = {
@@ -1946,7 +1955,7 @@ console.log('aaaaaaaa')
         });
       });
     }
-
+console.log('soilAnalysis',soilAnalysis)
     // Add SnsAnalyses data
     if (snsAnalysesData) {
       nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
@@ -2057,7 +2066,7 @@ console.log('aaaaaaaa')
       request
     );
 
-    console.log("manureTypeDataddd", manureTypeData);
+     console.log("manureTypeDataddd", manureTypeData);
 
     return mulOrganicManuresData.map((manure) => ({
       manureDetails: {

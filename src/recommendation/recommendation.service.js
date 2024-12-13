@@ -57,7 +57,7 @@ class RecommendationService extends BaseService {
       });
       const PKbalance = await this.PKbalanceRepository.findOne({
         where: {
-          Year: harvestYear,
+          Year: harvestYear-1,
           FieldID:fieldId
         },
         select: {
@@ -67,7 +67,7 @@ class RecommendationService extends BaseService {
         },
       });
       const groupedObj = {};
-
+ console.log('PKBalnceee',PKbalance)
       mappedRecommendations.forEach((r) => {
         groupedObj[r.Crop.ID] = {
           Crop: r.Crop,
