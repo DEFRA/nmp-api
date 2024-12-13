@@ -443,21 +443,14 @@ class UpdateRecommendation {
       let fertiliserData = await this.getFertiliserData(
         secondCropManagementData.ID
       );
-      console.log("fertiliserDataaaa", fertiliserData);
-      console.log("secondCropManagementData.ID", secondCropManagementData.ID);
+      
       const snsAnalysesData = await this.getSnsAnalysesData(fieldId);
       let nutrientRecommendationsData;
       //get PKBalance data
       let pkBalance = await this.getPKBalanceData(crop?.Year, fieldId);
-      console.log("cropData", crop.CropInfo1);
-      if (crop.CropTypeID === 170 || crop.CropInfo1 === null) {
-        console.log("pkBalance111", pkBalance);        
-        try {
-          console.log("otherCase");
-          console.log(
-            "nutrientRecommendationsData",
-            nutrientRecommendationsData
-          );
+      console.log("Current Year",pkBalance);   
+      if (crop.CropTypeID === 170 || crop.CropInfo1 === null) {      
+        try {    
           let saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldId,
             crop,
@@ -490,10 +483,9 @@ class UpdateRecommendation {
           Recommendations,
         };
       } else {
-        console.log("forOtherCrop");
-       
+        console.log("forOtherCrop");    
 
-        console.log("callingggg");
+        
         const nutrientRecommendationnReqBody =
           await this.buildNutrientWithoutMannerRecommendationReqBody(
             field,
@@ -504,19 +496,19 @@ class UpdateRecommendation {
             crop,
             pkBalanceData
           );
-        console.log(
-          "nutrientRecommendationnWithoutMannerReqBody",
-          nutrientRecommendationnReqBody.arable
-        );
+        // console.log(
+        //   "nutrientRecommendationnWithoutMannerReqBody",
+        //   nutrientRecommendationnReqBody.arable
+        // );
         nutrientRecommendationsData = await this.getNutrientRecommendationsData(
           nutrientRecommendationnReqBody
         );
-        console.log(
-          "nutrientRecommendationsDataWithout",
+         console.log(
+           "nutrientRecommendationsDataWithout",
           nutrientRecommendationsData
         );
-        console.log("pkBalance111", pkBalance);
-        console.log("2222", pkBalance);
+        console.log("periviousYearPkBalnce", pkBalanceData);
+        
         try {
           let saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldId,
@@ -731,26 +723,23 @@ class UpdateRecommendation {
     fertiliserData,
     year
   ) {
-    console.log("pkBalanceData123", pkBalanceData);
 
     try {
       let pBalance = 0;
       let kBalance = 0;
       let saveAndUpdatePKBalance;
-      console.log("crop.cropInfo1Idjhhhj", crop.CropInfo1);
-      console.log("crop.CropTypeIDsshhhs", crop.CropTypeID);
+
       if (crop.CropTypeID == 170 || crop.CropInfo1 === null) {
-        console.log("Othererrorrrr");
+
         pBalance =
-          fertiliserData == null
+          (fertiliserData == null
             ? 0
-            : fertiliserData.P2O5 - (0 - pkBalanceData.PBalance);
+            : fertiliserData.P2O5) - (0 - pkBalanceData.PBalance);
         kBalance =
-          fertiliserData == null
+          (fertiliserData == null
             ? 0
-            : fertiliserData.K2O - (0 - pkBalanceData.KBalance);
-      } else {
-        console.log("NotOthererrorrrr");
+            : fertiliserData.K2O) - (0 - pkBalanceData.KBalance);
+      } else {        
         console.log("fertiliserData", fertiliserData);
         for (const recommendation of nutrientRecommendationsData.calculations) {
           console.log(
@@ -760,17 +749,19 @@ class UpdateRecommendation {
           switch (recommendation.nutrientId) {
             case 1:
               pBalance =
-                fertiliserData == null
+          (fertiliserData == null
                   ? 0
-                  : fertiliserData.P2O5 - recommendation.cropNeed;
+                  : fertiliserData.P2O5) - recommendation.cropNeed;
               console.log("pBalance", pBalance);
               console.log("recommendation.cropNeedP", recommendation.cropNeed);
               break;
             case 2:
               kBalance =
-                fertiliserData == null
+                (fertiliserData == null
                   ? 0
-                  : fertiliserData.K2O - recommendation.cropNeed;
+                  : fertiliserData.K2O) - recommendation.cropNeed;
+                  
+              console.log("kBalance", kBalance);
               console.log("recommendation.cropNeedK", recommendation.cropNeed);
               break;
           }

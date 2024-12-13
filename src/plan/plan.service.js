@@ -181,12 +181,14 @@ class PlanService extends BaseService {
     })[0];
     // Use the buildArableBody function to get the arable array
     const arableBody = await this.buildArableBody(crop, field);
+    console.log('arableBody',arableBody)
     const pkBalanceData = await this.pkBalanceRepository.find({
       where: {
         FieldID: field.ID,
         Year: crop.Year - 1,
       },
     });
+    console.log('pkBalanceData',pkBalanceData)
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: crop.FieldType,
@@ -941,6 +943,7 @@ class PlanService extends BaseService {
             "Recommendation/Recommendations",
             nutrientRecommendationnReqBody
           );
+          console.log("nutrientRecommendationnReqBody", nutrientRecommendationnReqBody);
         console.log("nutrientRecommendationsData", nutrientRecommendationsData);
 
         if (
