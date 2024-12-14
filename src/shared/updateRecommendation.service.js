@@ -1889,7 +1889,7 @@ console.log('aaaaaaaa')
       },
       take: 1,
     })[0];
-    console.log('mannerOutput',mannerOutputData)
+   
     // Use the buildArableBody function to get the arable array
     const arableBody = await this.buildArableBody(dataMultipleCrops, field);
     const nutrientRecommendationnReqBody = {
