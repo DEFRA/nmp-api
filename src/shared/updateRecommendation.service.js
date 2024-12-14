@@ -27,6 +27,7 @@ const {
   FertiliserManuresEntity,
 } = require("../db/entity/fertiliser-manures.entity");
 const { NutrientsMapper } = require("../constants/nutrient-mapper");
+const { InprogressCalculationsEntity } = require("../db/entity/inprogress-calculations-entity");
 
 class UpdateRecommendation {
   constructor() {
@@ -62,6 +63,8 @@ class UpdateRecommendation {
     this.fertiliserRepository = AppDataSource.getRepository(
       FertiliserManuresEntity
     );
+    
+    this.farmExistRepository =AppDataSource.getRepository(InprogressCalculationsEntity)
   }
 
   async getYearsGreaterThanGivenYear(fieldID, year) {
@@ -84,24 +87,25 @@ class UpdateRecommendation {
       year
     );
     console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
+    const allYearsTogether = [year , ...yearsGreaterThanGivenYear]; 
     // Execute the original year synchronously and return its result
-    const originalYearResult = await this.updateRecommendationAndOrganicManure(
-      fieldID,
-      year,
-      request,
-      userId
-    );
-    if (yearsGreaterThanGivenYear) {
+    // const originalYearResult = await this.updateRecommendationAndOrganicManure(
+    //   fieldID,
+    //   year,
+    //   request,
+    //   userId
+    // );
+   // if (yearsGreaterThanGivenYear) {
       // Execute the remaining years asynchronously (background process)
       this.processRemainingYearsInBackground(
         fieldID,
-        yearsGreaterThanGivenYear,
+        allYearsTogether,
         request,
         userId
       );
-    }
+  //  }
     // Return the result for the original year
-    return originalYearResult;
+    
   }
 
   async processRemainingYearsInBackground(fieldID, years, request, userId) {
@@ -129,7 +133,12 @@ class UpdateRecommendation {
   }
 
   async updateRecommendationAndOrganicManure(fieldID, year, request, userId) {
-   
+   const fieldData = await this.fieldRespository.findOne({
+     where: { ID: fieldID },
+   });
+
+    const farmID = fieldData.FarmID;
+    await this.farmExistRepository.save({ FarmID: farmID });
     let flag = true;
     return await AppDataSource.transaction(async (transactionalManager) => {
       const organicManureAllData = await this.getAllOrganicManure();
@@ -176,6 +185,7 @@ class UpdateRecommendation {
             year
           );
         }
+        await this.farmExistRepository.delete({ FarmID: farmID });
       }
     });
   }
@@ -308,7 +318,10 @@ class UpdateRecommendation {
           );
         }
 
-        return { OrganicManures: organicManures };
+        return {
+           otherOrganicManures: organicManures, 
+           otherUpdatedPKBalance:saveAndUpdatePKBalance
+          };
       }
 
       const nutrientRecommendationnReqBody =
@@ -368,11 +381,10 @@ class UpdateRecommendation {
         transactionalManager,
         userId
       );
-      console.log(
-         "nutrientRecommendationsDatsssa",
-         nutrientRecommendationsData
-       );
-      return nutrientRecommendationsData;
+      return {
+        savedRecommendationsData: savedData,
+        saveAndUpdatePKBalance: saveAndUpdatePKBalance,
+      };
     }
   }
 
