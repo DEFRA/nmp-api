@@ -29,4 +29,5 @@ module.exports = [
   ...require("./farm-manure-type/farm-manure-type.route"),
   ...require("./country/country.route"),
   ...require("./grassManagementOptions/grassManagementOptions.route"),
+  ...require("./inprogress-calculations/Inprogress-calculations.route"),
 ];

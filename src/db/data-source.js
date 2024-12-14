@@ -65,6 +65,7 @@ const { GrassTypicalCutsEntity } = require("./entity/grassTypicalCutsEntity.js")
 const { SoilNitrogenSupplyItemsEntity } = require("./entity/soil-nitrogen-supply-items.entity.js");
 const { PreviousGrassesEntity } = require("./entity/previous-grasses-entity.js");
 const { SNSCategoriesEntity } = require("./entity/snsCategories.entity.js");
+const { InprogressCalculationsEntity } = require("./entity/inprogress-calculations-entity.js");
 
 
 
@@ -118,7 +119,8 @@ const baseConfig = {
     GrassTypicalCutsEntity,
     SoilNitrogenSupplyItemsEntity,
     PreviousGrassesEntity,
-    SNSCategoriesEntity
+    SNSCategoriesEntity,
+    InprogressCalculationsEntity
   ],
   migrations: [],
   subscribers: [],
