@@ -320,7 +320,7 @@ class FieldService extends BaseService {
       SoilAnalysis: soilAnalysisData,
       SnsAnalyses: snsAnalysisData,
       Crop: cropData,
-      PreviousGrassesData: previousGrassesData,
+      PreviousGrasses: previousGrassesData,
     };
   }
 }
