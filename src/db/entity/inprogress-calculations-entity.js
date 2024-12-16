@@ -6,7 +6,7 @@ const InprogressCalculationsEntity = new EntitySchema({
   columns: {
     FarmID: {
       type: "int",
-      primary: true, // Mark FarmID as the primary key
+      primary: true,
       nullable: false,
     },
   },
