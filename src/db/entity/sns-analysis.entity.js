@@ -55,6 +55,9 @@ const SnsAnalysesEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
+    CurrentCropTypeID: {
+      type: "int",
+    },
     PercentageOfOrganicMatter: {
       type: "decimal",
       precision: 18,
