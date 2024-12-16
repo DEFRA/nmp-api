@@ -138,8 +138,13 @@ class UpdateRecommendation {
    });
 
     const farmID = fieldData.FarmID;
-    await this.farmExistRepository.save({ FarmID: farmID });
-    let flag = true;
+      const existingFarm = await this.farmExistRepository.findOne({
+        where: { FarmID: farmID },
+      });
+if (!existingFarm) {
+  // Step 3: If FarmID doesn't exist, save the entry
+  await this.farmExistRepository.save({ FarmID: farmID });
+}
     return await AppDataSource.transaction(async (transactionalManager) => {
       const organicManureAllData = await this.getAllOrganicManure();
       const crops = await this.getCrops(fieldID, year);

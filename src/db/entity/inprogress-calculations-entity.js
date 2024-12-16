@@ -4,22 +4,18 @@ const InprogressCalculationsEntity = new EntitySchema({
   name: "InprogressCalculations",
   tableName: "InprogressCalculations",
   columns: {
-    ID: {
-      type: "int",
-      primary: true,
-      generated: true, 
-    },
     FarmID: {
       type: "int",
+      primary: true, // Mark FarmID as the primary key
       nullable: false,
     },
   },
   relations: {
     Farm: {
       type: "many-to-one",
-      target: "Farm", 
+      target: "Farm",
       joinColumn: { name: "FarmID" },
-      inverseSide: "InprogressCalculations", 
+      inverseSide: "InprogressCalculations",
     },
   },
 });
