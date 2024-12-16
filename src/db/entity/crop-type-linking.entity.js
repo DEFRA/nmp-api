@@ -19,11 +19,15 @@ const CropTypeLinkingEntity = new EntitySchema({
       nullable: true,
     },
     IsPerennial: {
-      type: 'bit',
+      type: "bit",
       nullable: false,
     },
     NMaxLimit: {
-      type: 'int',
+      type: "int",
+      nullable: true,
+    },
+    SNSCategoryID: {
+      type: "int",
       nullable: true,
     },
   },
@@ -34,6 +38,12 @@ const CropTypeLinkingEntity = new EntitySchema({
       joinColumn: {
         name: "MannerCropTypeID",
       },
+      inverseSide: "CropTypeLinkings",
+    },
+    SNSCategories: {
+      type: "many-to-one",
+      target: "SNSCategories",
+      joinColumn: { name: "SNSCategoryID" },
       inverseSide: "CropTypeLinkings",
     },
   },

@@ -231,6 +231,7 @@ class OrganicManureService extends BaseService {
         Year: crop.Year - 1,
       },
     });
+    console.log('previousYear',pkBalanceData)
     const arableBody = await this.buildArableBody(dataMultipleCrops, field);
     const nutrientRecommendationnReqBody = {
       field: {
