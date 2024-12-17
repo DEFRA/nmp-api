@@ -8,13 +8,16 @@ class InprogressCalculationsService extends BaseService {
     this.repository = AppDataSource.getRepository(InprogressCalculationsEntity);
   }
 
-  async checkFarmExistsInCalculations(farmId) {
+  async checkFarmExistsInCalculations(fieldId, year) {
     try {
       // Find if the farmId exists in any row of the InprogressCalculationsEntity
       const exists = await this.repository.findOne({
-        where: { FarmID: farmId },
+        where: {
+          FieldID: fieldId,
+          Year: year,
+        },
       });
-    
+
       // Return true if farmId exists, otherwise false
       return !!exists;
     } catch (error) {
