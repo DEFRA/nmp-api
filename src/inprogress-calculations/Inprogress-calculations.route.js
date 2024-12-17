@@ -18,7 +18,7 @@ module.exports = [
             .integer()
             .min(1900)
             .max(new Date().getFullYear())
-            .required(), // Year is now a query parameter
+            .required(), 
         }),
         failAction: (request, h, err) => {
           return h

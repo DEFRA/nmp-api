@@ -10,7 +10,7 @@ class InprogressCalculationsService extends BaseService {
 
   async checkFarmExistsInCalculations(fieldId, year) {
     try {
-      // Find if the farmId exists in any row of the InprogressCalculationsEntity
+     
       const exists = await this.repository.findOne({
         where: {
           FieldID: fieldId,
@@ -18,7 +18,7 @@ class InprogressCalculationsService extends BaseService {
         },
       });
 
-      // Return true if farmId exists, otherwise false
+     
       return !!exists;
     } catch (error) {
       console.error("Error checking farm existence:", error);
