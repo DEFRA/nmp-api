@@ -312,12 +312,15 @@ class FieldService extends BaseService {
        CropInfo1: null,
        Yield: null,
      });
-
+   const previousGrassesData = await this.previousGrassesRepository.find({
+     where: { FieldID: fieldId },
+   });
     return {
       Field: fieldData,
       SoilAnalysis: soilAnalysisData,
       SnsAnalyses: snsAnalysisData,
       Crop: cropData,
+      PreviousGrasses: previousGrassesData,
     };
   }
 }
