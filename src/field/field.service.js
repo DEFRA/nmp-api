@@ -14,6 +14,7 @@ const boom = require("@hapi/boom");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
+const { PreviousGrassesEntity } = require("../db/entity/previous-grasses-entity");
 
 
 class FieldService extends BaseService {
@@ -34,6 +35,9 @@ class FieldService extends BaseService {
     this.recommendationRepository =
       AppDataSource.getRepository(RecommendationEntity);
     this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
+    this.previousGrassesRepository = AppDataSource.getRepository(
+      PreviousGrassesEntity
+    );
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -111,7 +115,7 @@ class FieldService extends BaseService {
       MgIndex: null,
       SIndex: null,
     };
-  
+
     await transactionalManager.save(
       RecommendationEntity,
       this.recommendationRepository.create({
@@ -156,8 +160,11 @@ class FieldService extends BaseService {
       }
       let PKBalance = null;
       if (body.SoilAnalysis != null) {
-        if (SoilAnalysis.Potassium != null || SoilAnalysis.Phosphorus != null||
-          SoilAnalysis.PotassiumIndex != null || SoilAnalysis.PhosphorusIndex != null
+        if (
+          SoilAnalysis.Potassium != null ||
+          SoilAnalysis.Phosphorus != null ||
+          SoilAnalysis.PotassiumIndex != null ||
+          SoilAnalysis.PhosphorusIndex != null
         ) {
           if (body.PKBalance) {
             let pkBalanceBody = body.PKBalance;
@@ -183,6 +190,22 @@ class FieldService extends BaseService {
             CreatedByID: userId,
           })
         );
+      }
+      // Save PreviousGrasses
+      let PreviousGrasses = [];
+      if (body.PreviousGrasses && body.PreviousGrasses.length > 0) {
+        for (const grassData of body.PreviousGrasses) {
+          const savedGrass = await transactionalManager.save(
+            PreviousGrassesEntity,
+            this.previousGrassesRepository.create({
+              ...grassData,
+              ...(grassData.ID == 0 ? { ID: null } : {}),
+              FieldID: Field.ID,
+              CreatedByID: userId,
+            })
+          );
+          PreviousGrasses.push(savedGrass);
+        }
       }
       const Crops = [];
       for (const cropData of body.Crops) {
@@ -270,6 +293,35 @@ class FieldService extends BaseService {
       // Log the error and throw an internal server error
       console.error("Error deleting field:", error);
     }
+  }
+
+  async getFieldSoilAnalysisAndSnsAnalysisDetails(fieldId) {
+    const fieldData = await this.repository.findOneBy({
+      ID: fieldId,
+    });
+   
+  
+    const soilAnalysisData = await this.soilAnalysisRepository.findOneBy({
+      FieldID: fieldId,
+    });
+    const snsAnalysisData = await this.snsAnalysisRepository.findOneBy({
+      FieldID: fieldId,
+    });
+     const cropData = await this.cropRepository.findOneBy({
+       FieldID: fieldId,
+       CropInfo1: null,
+       Yield: null,
+     });
+   const previousGrassesData = await this.previousGrassesRepository.find({
+     where: { FieldID: fieldId },
+   });
+    return {
+      Field: fieldData,
+      SoilAnalysis: soilAnalysisData,
+      SnsAnalyses: snsAnalysisData,
+      Crop: cropData,
+      PreviousGrasses: previousGrassesData,
+    };
   }
 }
 
