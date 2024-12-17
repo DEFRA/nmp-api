@@ -180,12 +180,12 @@ const FarmEntity = new EntitySchema({
       joinColumn: { name: "CountryID" },
       inverseSide: "Farms",
     },
-    InprogressCalculations: {
-      type: "one-to-many",
-      target: "InprogressCalculations",
-      joinColumn: { name: "ID" },
-      inverseSide: "Farm",
-    },
+    // InprogressCalculations: {
+    //   type: "one-to-many",
+    //   target: "InprogressCalculations",
+    //   joinColumn: { name: "ID" },
+    //   inverseSide: "Farm",
+    // },
   },
 });
 
