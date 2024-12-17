@@ -159,6 +159,7 @@ class CropController {
   async createNutrientsRecommendationForFieldByFieldId() {
     const body = this.#request.payload;
     const userId = this.#request.userId;
+    this.#request
     try {
       const data =
         await this.#planService.createNutrientsRecommendationForField(

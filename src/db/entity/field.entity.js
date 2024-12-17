@@ -69,7 +69,7 @@ const FieldEntity = new EntitySchema({
       type: "bit",
       nullable: true,
       default: 0,
-    }, 
+    },
     SoilOverChalk: {
       type: "bit",
       nullable: true,
@@ -141,6 +141,13 @@ const FieldEntity = new EntitySchema({
       inverseSide: "Fields",
       joinColumn: { name: "TopSoilID" },
     },
+    PreviousGrasses: {
+      type: "one-to-many",
+      target: "PreviousGrasses",
+      joinColumn: { name: "ID" },
+      inverseSide: "Fields",
+    },
+
     CreatedByUser: {
       target: "User",
       type: "many-to-one",
@@ -166,7 +173,13 @@ const FieldEntity = new EntitySchema({
       target: "PKBalances",
       joinColumn: { name: "ID" },
       inverseSide: "Fields",
-    },   
+    },
+    InprogressCalculations: {
+      type: "one-to-many",
+      target: "InprogressCalculations",
+      joinColumn: { name: "ID" },
+      inverseSide: "Field",
+    },
   },
 });
 

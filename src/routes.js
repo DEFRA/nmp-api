@@ -27,4 +27,7 @@ module.exports = [
   ...require("./second-crop-linkings/second-crop-linkings.route"),
   ...require("./pk-balance/pk-balance.route"),
   ...require("./farm-manure-type/farm-manure-type.route"),
+  ...require("./country/country.route"),
+  ...require("./grassManagementOptions/grassManagementOptions.route"),
+  ...require("./inprogress-calculations/Inprogress-calculations.route"),
 ];

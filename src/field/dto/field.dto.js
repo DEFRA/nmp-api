@@ -82,6 +82,7 @@ const SnsAnalysisSchema = Joi.object({
   NumberOfShoots: Joi.number().integer().allow(null),
   CropHeight: Joi.number().integer().allow(null),
   SeasonId: Joi.number().integer().allow(null),
+  CurrentCropTypeID: Joi.number().integer(),
   PercentageOfOrganicMatter: Joi.number().integer().allow(null),
   AdjustmentValue: Joi.number().integer().allow(null),
   SoilNitrogenSupplyValue: Joi.number().integer().allow(null),
@@ -91,6 +92,21 @@ const SnsAnalysisSchema = Joi.object({
   ModifiedOn: Joi.date().iso().allow(null),
   ModifiedByID: Joi.number().integer().allow(null),
 }); 
+
+const PreviousGrassesSchema = Joi.object({
+  ID: Joi.number().integer().allow(null),
+  FieldID: Joi.number().integer().required(),
+  HasGrassInLastThreeYear: Joi.boolean().required(),
+  HarvestYear: Joi.number().integer().allow(null),
+  GrassManagementOptionID: Joi.number().integer().allow(null),
+  GrassTypicalCutID: Joi.number().integer().allow(null),
+  HasGreaterThan30PercentClover: Joi.boolean().allow(null),
+  SoilNitrogenSupplyItemID: Joi.number().integer().allow(null),
+  CreatedOn: Joi.date().iso().allow(null),
+  CreatedByID: Joi.number().integer().allow(null),
+  ModifiedOn: Joi.date().iso().allow(null),
+  ModifiedByID: Joi.number().integer().allow(null),
+}).required();
 
 const PKBalanceSchema = Joi.object({
   Year: Joi.number().required(),
@@ -120,7 +136,11 @@ const CreateFieldWithSoilAnalysisAndCropsDto = Joi.object({
   SoilAnalysis: SoilAnalysisSchema.allow(null).optional(),
   SnsAnalysis: SnsAnalysisSchema.allow(null).optional(),
   Crops: Joi.array().items(CreateCropWithManagementPeriodsDto).required(),
-  PKBalance:PKBalanceSchema.allow(null).optional()
+  PKBalance: PKBalanceSchema.allow(null).optional(),
+  PreviousGrasses: Joi.array()
+    .items(PreviousGrassesSchema)
+    .allow(null)
+    .optional(),
 });
 
 module.exports = {

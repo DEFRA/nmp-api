@@ -132,6 +132,18 @@ const UserEntity = new EntitySchema({
       inverseSide: "ModifiedByUser", // Matches the relation in SnsAnalysesEntity
       joinColumn: { name: "ID" },
     },
+    CreatedPreviousGrasses: {
+      type: "one-to-many",
+      target: "PreviousGrasses",
+      inverseSide: "CreatedByUser", // Matches the relation in SnsAnalysesEntity
+      joinColumn: { name: "ID" },
+    },
+    ModifiedPreviousGrasses: {
+      type: "one-to-many",
+      target: "PreviousGrasses",
+      inverseSide: "ModifiedByUser", // Matches the relation in SnsAnalysesEntity
+      joinColumn: { name: "ID" },
+    },
   },
 });
 
