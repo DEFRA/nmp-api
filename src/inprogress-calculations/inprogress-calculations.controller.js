@@ -13,18 +13,20 @@ class InprogressCalculationsController {
   }
 
   async getInprogressCalculationsByFarmID() {
-    const { farmId } = this.#request.params;
+      const { fieldId } = this.#request.params;
+    const { year } = this.#request.query; 
     
     try {
       const exists =
         await this.#inprogressCalculationsService.checkFarmExistsInCalculations(
-          farmId
+          fieldId,
+          year
         );
         if (exists) {
-          // If the farm exists, return a success response with the farmId
+         
           return this.#h.response(exists);
         } else {
-          // If the farm doesn't exist, return a not found response
+          
           return this.#h.response(exists);
         }
     } catch (error) {
