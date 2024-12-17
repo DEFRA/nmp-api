@@ -28,6 +28,7 @@ const OrganicManureEntitySchema = Joi.object({
   NO3N: Joi.number().precision(3).required(),
   AvailableP2O5: Joi.number().precision(3).allow(null),
   AvailableK2O: Joi.number().precision(3).allow(null),
+  AvailableSO3:Joi.number().precision(3).allow(null),
   WindspeedID: Joi.number().integer().allow(null),
   RainfallWithinSixHoursID: Joi.number().integer().allow(null),
   MoistureID: Joi.number().integer().allow(null),

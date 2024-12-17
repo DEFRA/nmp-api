@@ -11,6 +11,10 @@ const {
   ManagementPeriodEntity,
 } = require("../db/entity/management-period.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
+const {
+  UpdateRecommendation,
+} = require("../shared/updateRecommendation.service");
+const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 
 class FertiliserManuresService extends BaseService {
   constructor() {
@@ -26,6 +30,9 @@ class FertiliserManuresService extends BaseService {
       ManagementPeriodEntity
     );
     this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
+    this.UpdateRecommendation = new UpdateRecommendation();  
+      this.soilAnalysisRepository =
+    AppDataSource.getRepository(SoilAnalysisEntity);
   }
   async getFertiliserManureNitrogenSum(
     managementPeriodID,
@@ -77,7 +84,7 @@ class FertiliserManuresService extends BaseService {
     return fertiliserManuresResult.totalN + organicManuresResult.totalN;
   }
 
-  async createFertiliserManures(fertiliserManureData, userId) {
+  async createFertiliserManures(fertiliserManureData, userId,request) {
     const cropPlanAllData = await this.cropRepository.find({
       select: ["ID", "FieldID", "Year"],
     });
@@ -90,6 +97,7 @@ class FertiliserManuresService extends BaseService {
         CreatedByID: userId,
         CreatedOn: new Date(),
       }));
+      const soilAnalysisAllData = await this.soilAnalysisRepository.find();
       const fertiliserData = await this.repository.find({
         where: {
           ManagementPeriodID: fertiliserManureData[0].ManagementPeriodID,
@@ -113,7 +121,20 @@ class FertiliserManuresService extends BaseService {
       const fieldData = await this.fieldRepository.findOneBy({
         ID: cropData.FieldID,
       });
-
+      const soilAnalsisData = soilAnalysisAllData.filter((soilAnalyses) => {
+        return soilAnalyses.FieldID === cropData.FieldID;
+      });
+      let isSoilAnalysisHavePAndK = false;
+      if (soilAnalsisData) {
+        isSoilAnalysisHavePAndK = soilAnalsisData.some(
+          (item) =>
+            item.PhosphorusIndex !== null || item.PotassiumIndex !== null
+        )
+          ? true
+          : false;
+      }
+console.log('isSoilAnalysisHavePAndK',isSoilAnalysisHavePAndK)
+      if (isSoilAnalysisHavePAndK) {
       const pkBalanceData = await this.pkBalanceRepository.findOne({
         where: { Year: cropData?.Year, FieldID: fieldData.ID },
       });
@@ -152,6 +173,30 @@ class FertiliserManuresService extends BaseService {
       }
       if(isNextYearPlanExist == true && isNextYearFertiliserExist == true) {
         //call shreyash's function
+        this.UpdateRecommendation.updateRecommendationsForField(
+          fieldData.ID ,
+          cropData?.Year,
+          request,
+          userId
+        )
+          .then((res) => {
+            if (res === undefined) {
+              console.log(
+                "updateRecommendationAndOrganicManure returned undefined"
+              );
+            } else {
+              console.log(
+                "updateRecommendationAndOrganicManure result:",
+                res
+              );
+            }
+          })
+          .catch((error) => {
+            console.error(
+              "Error updating recommendation and organic manure:",
+              error
+            );
+          });
       } else {
         console.log("pkBalanceData", pkBalanceData);
         if (pkBalanceData) {
@@ -197,6 +242,7 @@ class FertiliserManuresService extends BaseService {
           }
         }
       }
+    }
       return savedFertiliserManures;
     });
   }

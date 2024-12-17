@@ -11,12 +11,12 @@ const RecommendationNutrientsDto = Joi.object({
 });
 
 const RecommendationPreviousCroppingDto = Joi.object({
-  previousGrassId: Joi.number().required(),
-  previousCropGroupId: Joi.number().required(),
-  previousCropTypeId: Joi.number().required(),
-  snsId: Joi.number().required(),
-  smnDepth: Joi.number().required(),
-  measuredSmn: Joi.number().required(),
+  previousGrassId: Joi.number(),
+  previousCropGroupId: Joi.number(),
+  previousCropTypeId: Joi.number(),
+  snsId: Joi.number(),
+  smnDepth: Joi.number(),
+  measuredSmn: Joi.number(),
 });
 
 const RecommendationOrganicMaterialDto = Joi.object({
@@ -33,26 +33,26 @@ const RecommendationOrganicMaterialDto = Joi.object({
 
 const RecommendationSoilAnalysisDto = Joi.object({
   soilAnalysisDate: Joi.date().iso().required(),
-  soilpH: Joi.number().required(),
+  soilpH: Joi.number().required().allow(null),
   sulphurDeficient: Joi.boolean().required(),
-  snsIndexId: Joi.number().required(),
-  pIndexId: Joi.number().required(),
-  kIndexId: Joi.number().required(),
-  mgIndexId: Joi.number().required(),
+  snsIndexId: Joi.number().required().allow(null),
+  pIndexId: Joi.number().required().allow(null),
+  kIndexId: Joi.number().required().allow(null),
+  mgIndexId: Joi.number().required().allow(null),
   snsMethodologyId: Joi.number().required(),
-  pMethodologyId: Joi.number().required(),
-  kMethodologyId: Joi.number().required(),
-  mgMethodologyId: Joi.number().required(),
+  pMethodologyId: Joi.number().required().allow(null),
+  kMethodologyId: Joi.number().required().allow(null),
+  mgMethodologyId: Joi.number().required().allow(null),
 });
 
 const RecommendationGrasslandSequenceDto = Joi.object({
-  position: Joi.number().required(),
-  cropMaterialId: Joi.number().required(),
-  yield: Joi.number().required(),
+  position: Joi.number(),
+  cropMaterialId: Joi.number(),
+  yield: Joi.number(),
 });
 const PKBalanceDto = Joi.object({
-  PBalance: Joi.number().required(),
-  KBalance: Joi.number().required(),
+  phosphate: Joi.number().required(),
+  potash: Joi.number().required(),
 });
 const RecommendationSoilDto = Joi.object({
   soilTypeId: Joi.number().required(),
@@ -64,17 +64,16 @@ const RecommendationSoilDto = Joi.object({
 });
 
 const RecommendationGrasslandDto = Joi.object({
-  cropOrder: Joi.number().required(),
-  snsId: Joi.number().required(),
-  grassGrowthClassId: Joi.number().required(),
-  yieldTypeId: Joi.number().required(),
-  sequenceId: Joi.number().required(),
+  cropOrder: Joi.number(),
+  snsId: Joi.number(),
+  grassGrowthClassId: Joi.number(),
+  yieldTypeId: Joi.number(),
+  sequenceId: Joi.number(),
   grasslandSequence: Joi.array()
-    .items(RecommendationGrasslandSequenceDto)
-    .required(),
-  establishedDate: Joi.date().iso().required(),
-  seasonId: Joi.number().required(),
-  siteClassId: Joi.number().required(),
+    .items(RecommendationGrasslandSequenceDto),    
+  establishedDate: Joi.date().iso(),
+  seasonId: Joi.number(),
+  siteClassId: Joi.number(),
 });
 
 const RecommendationArableDto = Joi.object({
@@ -91,7 +90,7 @@ const RecommendationFieldDto = Joi.object({
   fieldType: Joi.number().required(),
   multipleCrops: Joi.boolean().required(),
   arable: Joi.array().items(RecommendationArableDto),
-  grassland: RecommendationGrasslandDto,
+  grassland: RecommendationGrasslandDto.optional(),
   soil: RecommendationSoilDto,
   harvestYear: Joi.number().required(),
   area: Joi.number().required(),
@@ -102,7 +101,7 @@ const RecommendationFieldDto = Joi.object({
   organicMaterials: Joi.array()
     .items(RecommendationOrganicMaterialDto)
     .required(),
-  previousCropping: RecommendationPreviousCroppingDto.required(),
+  previousCropping: RecommendationPreviousCroppingDto.optional(),
   countryId: Joi.number().required(),
 });
 

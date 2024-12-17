@@ -49,7 +49,8 @@ class FertiliserManuresController {
         try {
             const data = await this.#fertiliserManuresService.createFertiliserManures(
                 fertiliserManureBody,
-                userId
+                userId,
+                this.#request
             );
             return this.#h.response({ FertiliserManure: data });
         } catch (error) {

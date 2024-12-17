@@ -62,13 +62,13 @@ class SoilAnalysesController {
     const pKBalanceData = this.#request.payload.PKBalance;
 
     try {
-      const data=
-        await this.#soilAnalysisService.updateSoilAnalysis(
-          updatedSoilAnalysisData,
-          userId,
-          parseInt(soilAnalysisId),
-          pKBalanceData
-        );
+      const data = await this.#soilAnalysisService.updateSoilAnalysis(
+        updatedSoilAnalysisData,
+        userId,
+        parseInt(soilAnalysisId),
+        pKBalanceData,
+        this.#request
+      );
 
       return this.#h.response({ data });
     } catch (error) {
