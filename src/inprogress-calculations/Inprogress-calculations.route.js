@@ -5,13 +5,20 @@ const { InprogressCalculationsController } = require("./inprogress-calculations.
 module.exports = [
   {
     method: "GET",
-    path: "/inprogress-calculations/{farmId}",
+    path: "/inprogress-calculations/{fieldId}",
     options: {
       tags: ["api", "Inprogress Calculations"],
-      description: "Get Inprogress Calculations by FarmID",
+      description: "Get Inprogress Calculations by FieldId and Harvest Year",
       validate: {
         params: Joi.object({
-          farmId: Joi.number().required(),
+          fieldId: Joi.number().required(),
+        }),
+        query: Joi.object({
+          year: Joi.number()
+            .integer()
+            .min(1900)
+            .max(new Date().getFullYear())
+            .required(), 
         }),
         failAction: (request, h, err) => {
           return h
