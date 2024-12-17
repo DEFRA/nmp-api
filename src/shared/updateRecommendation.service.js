@@ -110,6 +110,37 @@ class UpdateRecommendation {
 
   async processRemainingYearsInBackground(fieldID, years, request, userId) {
     console.log("multiple years started", years);
+
+     for (const yearToSave of years) {
+       try {
+         // Check if FieldID and Year combination already exists
+         const existingEntry = await this.farmExistRepository.findOne({
+           where: { FieldID: fieldID, Year: yearToSave },
+         });
+
+         // If it doesn't exist, save it
+         if (!existingEntry) {
+           await this.farmExistRepository.save({
+             FieldID: fieldID,
+             Year: yearToSave,
+           });
+           console.log(
+             `Saved entry for FieldID: ${fieldID}, Year: ${yearToSave}`
+           );
+         } else {
+           console.log(
+             `Entry for FieldID: ${fieldID}, Year: ${yearToSave} already exists`
+           );
+         }
+       } catch (error) {
+         console.error(
+           `Error saving entry for FieldID: ${fieldID}, Year: ${yearToSave}`,
+           error
+         );
+       }
+     }
+
+
     // If there are remaining years, process them in the background
     if (years.length > 0) {
       console.log("Processing the following years in background:", years);
@@ -133,18 +164,7 @@ class UpdateRecommendation {
   }
 
   async updateRecommendationAndOrganicManure(fieldID, year, request, userId) {
-   const fieldData = await this.fieldRespository.findOne({
-     where: { ID: fieldID },
-   });
-
-    const farmID = fieldData.FarmID;
-    const existingFarm = await this.farmExistRepository.findOne({
-      where: { FarmID: farmID },
-    });
-    if (!existingFarm) {
-      // Step 3: If FarmID doesn't exist, save the entry
-      await this.farmExistRepository.save({ FarmID: farmID });
-    }
+ 
     return await AppDataSource.transaction(async (transactionalManager) => {
       const organicManureAllData = await this.getAllOrganicManure();
       const crops = await this.getCrops(fieldID, year);
@@ -190,7 +210,11 @@ class UpdateRecommendation {
             year
           );
         }
-        await this.farmExistRepository.delete({ FarmID: farmID });
+         await this.farmExistRepository.delete({
+           FieldID: fieldID,
+           Year: year,
+         });
+         console.log(`Deleted entry for FieldID: ${fieldID}, Year: ${year}`);
       }
     });
   }

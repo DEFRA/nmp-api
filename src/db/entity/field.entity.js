@@ -174,6 +174,12 @@ const FieldEntity = new EntitySchema({
       joinColumn: { name: "ID" },
       inverseSide: "Fields",
     },
+    InprogressCalculations: {
+      type: "one-to-many",
+      target: "InprogressCalculations",
+      joinColumn: { name: "ID" },
+      inverseSide: "Field",
+    },
   },
 });
 
