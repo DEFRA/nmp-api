@@ -1036,7 +1036,8 @@ class OrganicManureService extends BaseService {
           }
         }
 
-        if (cropData.CropTypeID === 170) {
+        if (cropData.CropTypeID === 170||cropData.CropInfo1=== null) {
+          console.log('basicPlan')
           await this.saveOrganicManureForOtherCropType(
             organicManureData,
             mannerOutputs,
