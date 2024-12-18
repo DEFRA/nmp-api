@@ -216,6 +216,7 @@ class FieldService extends BaseService {
               ...(grassData.ID == 0 ? { ID: null } : {}),
               FieldID: Field.ID,
               CreatedByID: userId,
+              CreatedOn: new Date()
             })
           );
           PreviousGrasses.push(savedGrass);
