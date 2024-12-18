@@ -3,7 +3,7 @@ const Joi = require("joi");
 const Step1ArablePotatoDto = Joi.object({
   Depth0To30Cm: Joi.number().required(),
   Depth30To60Cm: Joi.number().required(),
-  Depth60To90Cm: Joi.number().required(),
+  Depth60To90Cm: Joi.number().required().allow(null),
 }).optional().allow(null);
 
 const Step1VegDto = Joi.object({
