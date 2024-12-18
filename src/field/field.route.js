@@ -291,4 +291,40 @@ module.exports = [
       return controller.getFieldSoilAnalysisAndSnsAnalysis();
     },
   },
+
+  {
+    method: "GET",
+    path: "/fields/fieldRelatedData/{fieldId}",
+    options: {
+      tags: ["api", "Field"],
+      description: "Get field data by Field ID(s) and Year",
+      validate: {
+        params: Joi.object({
+          fieldId: Joi.string()
+            .pattern(/^[0-9]+(,[0-9]+)*$/) // Validate FieldIDs (comma-separated)
+            .required(),
+        }),
+        query: Joi.object({
+          year: Joi.number().integer().required(), // Expecting year as a query parameter
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new FieldController(request, h);
+      return controller.getFieldRelatedData();
+    },
+  },
 ];
