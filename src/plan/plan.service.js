@@ -871,6 +871,7 @@ class PlanService extends BaseService {
         }
         const snsAnalysesData = await this.getSnsAnalysesData(fieldId);
         if (crop.CropTypeID === 170) {
+          console.log('basicPlan',cropData)
           await this.savedDefault(cropData, userId, transactionalManager);
           if (
             isSoilAnalysisHavePAndK
@@ -878,19 +879,32 @@ class PlanService extends BaseService {
             console.log("cropPlanOfNextYear", cropPlanOfNextYear);
             if (cropPlanOfNextYear.length == 0) {
               try {
-                let saveAndUpdatePKBalance = {
-                  Year: crop?.Year,
-                  FieldID: fieldId,
-                  PBalance: 0,
-                  KBalance: 0,
-                  CreatedOn: new Date(),
-                  CreatedByID: userId,
-                };
-
-                await transactionalManager.save(
-                  PKBalanceEntity,
-                  saveAndUpdatePKBalance
+                let saveAndUpdatePKBalance = await this.createOrUpdatePKBalance(
+                  fieldId,
+                  crop,
+                  null,
+                  pkBalanceData,
+                  userId
                 );
+                if (saveAndUpdatePKBalance) {
+                  await transactionalManager.save(
+                    PKBalanceEntity,
+                    saveAndUpdatePKBalance.saveAndUpdatePKBalance
+                  );
+                }
+                // let saveAndUpdatePKBalance = {
+                //   Year: crop?.Year,
+                //   FieldID: fieldId,
+                //   PBalance: 0,
+                //   KBalance: 0,
+                //   CreatedOn: new Date(),
+                //   CreatedByID: userId,
+                // };
+
+                // await transactionalManager.save(
+                //   PKBalanceEntity,
+                //   saveAndUpdatePKBalance
+                // );
               } catch (error) {
                 console.error(
                   `Error while saving PKBalance Data FieldId: ${fieldId} And Year:${crop?.Year}:`,
@@ -1151,7 +1165,7 @@ class PlanService extends BaseService {
             try {
               let saveAndUpdatePKBalance = await this.createOrUpdatePKBalance(
                 fieldId,
-                crop?.Year,
+                crop,
                 nutrientRecommendationsData.calculations,
                 pkBalanceData,
                 userId
@@ -1321,7 +1335,7 @@ class PlanService extends BaseService {
 
   async createOrUpdatePKBalance(
     fieldId,
-    year,
+    crop,
     calculations,
     pkBalanceData,
     userId
@@ -1330,6 +1344,11 @@ class PlanService extends BaseService {
       let pBalance = 0;
       let kBalance = 0;
       let saveAndUpdatePKBalance;
+      if(crop.CropTypeID===170||crop.CropInfo1===null)
+      {
+
+      }
+      else{
       for (const recommendation of calculations) {
         switch (recommendation.nutrientId) {
           case 1:
@@ -1340,10 +1359,11 @@ class PlanService extends BaseService {
             break;
         }
       }
+    }
 
       if (pkBalanceData) {
         const updateData = {
-          Year: year,
+          Year: crop?.Year,
           FieldID: fieldId,
           PBalance: pBalance,
           KBalance: kBalance,
@@ -1356,7 +1376,7 @@ class PlanService extends BaseService {
         };
       } else {
         saveAndUpdatePKBalance = {
-          Year: year,
+          Year: crop?.Year,
           FieldID: fieldId,
           PBalance: pBalance,
           KBalance: kBalance,
