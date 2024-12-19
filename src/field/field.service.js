@@ -365,6 +365,35 @@ class FieldService extends BaseService {
         const soilAnalysis = await this.soilAnalysisRepository.find({
           where: { FieldID: field.ID, Year: year },
         });
+
+        // Find the latest date between ModifiedOn or CreatedOn for SoilAnalysis
+        const lastModifiedDate = soilAnalysis.reduce((latest, entry) => {
+          const comparisonDate = entry.ModifiedOn || entry.CreatedOn; // Use ModifiedOn or fallback to CreatedOn
+          return new Date(comparisonDate) > new Date(latest)
+            ? comparisonDate
+            : latest;
+        }, soilAnalysis[0]?.ModifiedOn || soilAnalysis[0]?.CreatedOn || null);
+
+        // Create soilAnalysisAndSNSanalysis object by combining data from both sources
+        const soilAnalysisAndSNSanalysis = soilAnalysis.map((soil) => {
+          const matchingSns = snsAnalysis.find(
+            (sns) => sns.FieldID === soil.FieldID && sns.Year === year
+          );
+          return {
+            PH: soil.PH, // From SoilAnalysis.PH
+            Phosphorus: soil.Phosphorus, // From SoilAnalysis.Phosphorus
+            Potassium: soil.Potassium, // From SoilAnalysis.Potassium
+            Magnesium: soil.Magnesium, // From SoilAnalysis.Magnesium
+            SNS: matchingSns
+              ? matchingSns.SoilNitrogenSupplyValue
+              : "Not Entered", // From SnsAnalysis
+            SNSIndex: matchingSns
+              ? matchingSns.SoilNitrogenSupplyIndex
+              : "Not Entered", // From SnsAnalysis
+            SNSMethod: "Not Entered", // As per your requirement (no method provided)
+          };
+        });
+
         const pkBalance = await this.pkBalanceRepository.findOne({
           where: { FieldID: field.ID, Year: year },
         });
@@ -426,8 +455,10 @@ class FieldService extends BaseService {
           ...field,
           Crops: cropsWithManagement,
           PreviousGrasses: previousGrasses,
-          SnsAnalysis: snsAnalysis,
-          SoilAnalysis: soilAnalysis,
+          soilAnalysis: {
+            LastModify: lastModifiedDate, // Latest ModifiedOn date from SoilAnalysis
+            soilAnalysisAndSNSanalysis: soilAnalysisAndSNSanalysis, // Combined data from both Soil and SNS analysis
+          },
           PKBalance: pkBalance,
         };
 
