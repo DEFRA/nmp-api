@@ -15,6 +15,10 @@ const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const { PreviousGrassesEntity } = require("../db/entity/previous-grasses-entity");
+const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
+const { RecommendationCommentEntity } = require("../db/entity/recommendation-comment.entity");
+const { FertiliserManuresEntity } = require("../db/entity/fertiliser-manures.entity");
+const { FarmEntity } = require("../db/entity/farm.entity");
 
 
 class FieldService extends BaseService {
@@ -38,6 +42,16 @@ class FieldService extends BaseService {
     this.previousGrassesRepository = AppDataSource.getRepository(
       PreviousGrassesEntity
     );
+    this.organicManureRepository =
+      AppDataSource.getRepository(OrganicManureEntity);
+    this.recommendationCommentsRepository = AppDataSource.getRepository(
+      RecommendationCommentEntity
+    );
+    this.fertiliserManureRepository = AppDataSource.getRepository(
+      FertiliserManuresEntity
+    );
+        this.farmRepository = AppDataSource.getRepository(FarmEntity);
+
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -202,6 +216,7 @@ class FieldService extends BaseService {
               ...(grassData.ID == 0 ? { ID: null } : {}),
               FieldID: Field.ID,
               CreatedByID: userId,
+              CreatedOn: new Date()
             })
           );
           PreviousGrasses.push(savedGrass);
@@ -299,22 +314,21 @@ class FieldService extends BaseService {
     const fieldData = await this.repository.findOneBy({
       ID: fieldId,
     });
-   
-  
+
     const soilAnalysisData = await this.soilAnalysisRepository.findOneBy({
       FieldID: fieldId,
     });
     const snsAnalysisData = await this.snsAnalysisRepository.findOneBy({
       FieldID: fieldId,
     });
-     const cropData = await this.cropRepository.findOneBy({
-       FieldID: fieldId,
-       CropInfo1: null,
-       Yield: null,
-     });
-   const previousGrassesData = await this.previousGrassesRepository.find({
-     where: { FieldID: fieldId },
-   });
+    const cropData = await this.cropRepository.findOneBy({
+      FieldID: fieldId,
+      CropInfo1: null,
+      Yield: null,
+    });
+    const previousGrassesData = await this.previousGrassesRepository.find({
+      where: { FieldID: fieldId },
+    });
     return {
       Field: fieldData,
       SoilAnalysis: soilAnalysisData,
@@ -322,6 +336,148 @@ class FieldService extends BaseService {
       Crop: cropData,
       PreviousGrasses: previousGrassesData,
     };
+  }
+
+  async getFieldRelatedData(fieldIds, year) {
+    // Fetch all fields by the list of FieldIDs
+    const fields = await this.repository.findByIds(fieldIds);
+
+    // Create a map to store fields grouped by farm
+    const farmFieldMap = {};
+
+    await Promise.all(
+      fields.map(async (field) => {
+        // Fetch the farm associated with the field
+        const farm = await this.farmRepository.findOne({
+          where: { ID: field.FarmID },
+        });
+
+        // Fetch crops, previousGrasses, snsAnalysis, soilAnalysis, and pkBalance for the current field
+        const crops = await this.cropRepository.find({
+          where: { FieldID: field.ID, Year: year },
+        });
+        const previousGrasses = await this.previousGrassesRepository.find({
+          where: { FieldID: field.ID },
+        });
+        const snsAnalysis = await this.snsAnalysisRepository.find({
+          where: { FieldID: field.ID },
+        });
+        const soilAnalysis = await this.soilAnalysisRepository.find({
+          where: { FieldID: field.ID, Year: year },
+        });
+
+        // Find the latest date between ModifiedOn or CreatedOn for SoilAnalysis
+        const lastModifiedDate = soilAnalysis.reduce((latest, entry) => {
+          const comparisonDate = entry.ModifiedOn || entry.CreatedOn; // Use ModifiedOn or fallback to CreatedOn
+          return new Date(comparisonDate) > new Date(latest)
+            ? comparisonDate
+            : latest;
+        }, soilAnalysis[0]?.ModifiedOn || soilAnalysis[0]?.CreatedOn || null);
+
+        // Create soilAnalysisAndSNSanalysis object by combining data from both sources
+        const soilAnalysisAndSNSanalysis = soilAnalysis.map((soil) => {
+          const matchingSns = snsAnalysis.find(
+            (sns) => sns.FieldID === soil.FieldID && sns.Year === year
+          );
+          return {
+            PH: soil.PH, // From SoilAnalysis.PH
+            Phosphorus: soil.Phosphorus, // From SoilAnalysis.Phosphorus
+            Potassium: soil.Potassium, // From SoilAnalysis.Potassium
+            Magnesium: soil.Magnesium, // From SoilAnalysis.Magnesium
+            SNS: matchingSns
+              ? matchingSns.SoilNitrogenSupplyValue
+              : "Not Entered", // From SnsAnalysis
+            SNSIndex: matchingSns
+              ? matchingSns.SoilNitrogenSupplyIndex
+              : "Not Entered", // From SnsAnalysis
+            SNSMethod: "Not Entered", // As per your requirement (no method provided)
+          };
+        });
+
+        const pkBalance = await this.pkBalanceRepository.findOne({
+          where: { FieldID: field.ID, Year: year },
+        });
+
+        // Enrich crops with management periods and their sub-objects
+        const cropsWithManagement = await Promise.all(
+          crops.map(async (crop) => {
+            const managementPeriods =
+              await this.managementPeriodRepository.find({
+                where: { CropID: crop.ID },
+              });
+
+            const managementWithSubData = await Promise.all(
+              managementPeriods.map(async (managementPeriod) => {
+                const organicManures = await this.organicManureRepository.find({
+                  where: { ManagementPeriodID: managementPeriod.ID },
+                });
+                const recommendations =
+                  await this.recommendationRepository.find({
+                    where: { ManagementPeriodID: managementPeriod.ID },
+                  });
+                const fertiliserManures =
+                  await this.fertiliserManureRepository.find({
+                    where: { ManagementPeriodID: managementPeriod.ID },
+                  });
+
+                // Fetch comments for each recommendation
+                const recommendationsWithComments = await Promise.all(
+                  recommendations.map(async (recommendation) => {
+                    const recommendationComments =
+                      await this.recommendationCommentsRepository.find({
+                        where: { RecommendationID: recommendation.ID },
+                      });
+                    return {
+                      ...recommendation,
+                      RecommendationComments: recommendationComments,
+                    };
+                  })
+                );
+
+                return {
+                  ...managementPeriod,
+                  OrganicManures: organicManures,
+                  Recommendations: recommendationsWithComments,
+                  FertiliserManures: fertiliserManures,
+                };
+              })
+            );
+
+            return {
+              ...crop,
+              ManagementPeriods: managementWithSubData,
+            };
+          })
+        );
+
+        // Build the full field object with all associated sub-objects
+        const fieldData = {
+          ...field,
+          Crops: cropsWithManagement,
+          PreviousGrasses: previousGrasses,
+          soilAnalysis: {
+            LastModify: lastModifiedDate, // Latest ModifiedOn date from SoilAnalysis
+            soilAnalysisAndSNSanalysis: soilAnalysisAndSNSanalysis, // Combined data from both Soil and SNS analysis
+          },
+          PKBalance: pkBalance,
+        };
+
+        // Group fields by farm
+        if (!farmFieldMap[farm.ID]) {
+          farmFieldMap[farm.ID] = {
+            Farm: farm,
+            Fields: [],
+          };
+        }
+        farmFieldMap[farm.ID].Fields.push(fieldData);
+      })
+    );
+
+    // Convert the farmFieldMap object into an array of farms with their associated fields
+    const farmData = Object.values(farmFieldMap);
+
+    // Return the enriched farm data with fields and their associated data
+    return farmData;
   }
 }
 

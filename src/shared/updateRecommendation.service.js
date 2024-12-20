@@ -1764,8 +1764,7 @@ console.log('aaaaaaaa')
     })[0];
     // console.log("dataMultipleCropsss", dataMultipleCrops);
     const arableBody = await this.buildArableBody(dataMultipleCrops, field);
-    console.log("pkBalanceData", pkBalanceData);
-    console.log("mannerOutputs", mannerOutputs);
+  
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: crop.FieldType,
