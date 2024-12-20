@@ -610,7 +610,7 @@ class UpdateRecommendation {
           );
       } else {
         const cropNutrientsValue = {};
-        nutrientRecommendationsData.recommendations.forEach(
+        nutrientRecommendationsData.calculations.forEach(
           (recommendation) => {
             cropNutrientsValue[NutrientsMapper[recommendation.nutrientId]] =
               recommendation.cropNeedValue;
