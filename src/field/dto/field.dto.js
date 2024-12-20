@@ -128,7 +128,11 @@ const UpdateFieldDtoSchema = Joi.object({
     .items(CreateCropWithManagementPeriodsDto)
     .allow(null)
     .required(),
-  PKBalance: PKBalanceSchema.allow(null).optional()
+  PKBalance: PKBalanceSchema.allow(null).optional(),
+  PreviousGrasses: Joi.array()
+    .items(PreviousGrassesSchema)
+    .allow(null)
+    .optional(),
 });
 
 const CreateFieldWithSoilAnalysisAndCropsDto = Joi.object({
