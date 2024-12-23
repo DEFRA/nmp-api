@@ -50,8 +50,7 @@ class FieldService extends BaseService {
     this.fertiliserManureRepository = AppDataSource.getRepository(
       FertiliserManuresEntity
     );
-        this.farmRepository = AppDataSource.getRepository(FarmEntity);
-
+    this.farmRepository = AppDataSource.getRepository(FarmEntity);
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -216,7 +215,7 @@ class FieldService extends BaseService {
               ...(grassData.ID == 0 ? { ID: null } : {}),
               FieldID: Field.ID,
               CreatedByID: userId,
-              CreatedOn: new Date()
+              CreatedOn: new Date(),
             })
           );
           PreviousGrasses.push(savedGrass);
@@ -342,16 +341,16 @@ class FieldService extends BaseService {
     // Fetch all fields by the list of FieldIDs
     const fields = await this.repository.findByIds(fieldIds);
 
-    // Create a map to store fields grouped by farm
-    const farmFieldMap = {};
+    // Fetch the farm associated with the first field (assuming all fields belong to the same farm)
+    const farm = await this.farmRepository.findOne({
+      where: { ID: fields[0].FarmID },
+    });
+
+    // Initialize an array to store fields with related data
+    const fieldsWithRelatedData = [];
 
     await Promise.all(
       fields.map(async (field) => {
-        // Fetch the farm associated with the field
-        const farm = await this.farmRepository.findOne({
-          where: { ID: field.FarmID },
-        });
-
         // Fetch crops, previousGrasses, snsAnalysis, soilAnalysis, and pkBalance for the current field
         const crops = await this.cropRepository.find({
           where: { FieldID: field.ID, Year: year },
@@ -462,22 +461,16 @@ class FieldService extends BaseService {
           PKBalance: pkBalance,
         };
 
-        // Group fields by farm
-        if (!farmFieldMap[farm.ID]) {
-          farmFieldMap[farm.ID] = {
-            Farm: farm,
-            Fields: [],
-          };
-        }
-        farmFieldMap[farm.ID].Fields.push(fieldData);
+        // Add the field data to the list of fields
+        fieldsWithRelatedData.push(fieldData);
       })
     );
 
-    // Convert the farmFieldMap object into an array of farms with their associated fields
-    const farmData = Object.values(farmFieldMap);
+    // Add the fields to the farm object
+    farm.Fields = fieldsWithRelatedData;
 
-    // Return the enriched farm data with fields and their associated data
-    return farmData;
+    // Return the enriched farm object with fields nested inside
+    return {Farm:farm};
   }
 }
 
