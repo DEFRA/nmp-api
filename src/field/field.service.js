@@ -433,7 +433,7 @@ class FieldService extends BaseService {
           where: { FieldID: field.ID, Year: year },
         });
 
-        console.log("crops alldata", crops);
+       
 
         const previousCropData = await this.cropRepository.findOne({
           where: { FieldID: field.ID, CropInfo1: null },
