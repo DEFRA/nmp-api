@@ -308,7 +308,7 @@ class UpdateRecommendation {
       //console.log("organicManuresDatamkmkmk", organicManuresData);
       //get PKBalance data
       let pkBalance = await this.getPKBalanceData(cropData?.Year, fieldData.ID);
-      if (cropData.CropTypeID === 170) {
+      if (cropData.CropTypeID === 170||cropData.CropInfo1===null) {
         // await this.saveOrganicManureForOtherCropType(
         //   organicManure,
         //   mannerOutputs,
@@ -316,7 +316,6 @@ class UpdateRecommendation {
         //   userId,
         //   organicManuresData
         // );
-
         const otherRecommendations = await this.saveRecommendationForOtherCrops(
           transactionalManager,
           organicManure,
@@ -327,8 +326,6 @@ class UpdateRecommendation {
           allRecommendations
         );
         console.log("otherRecommendations", otherRecommendations);
-        console.log("pkBalance111", pkBalance);
-        console.log("333", pkBalance);
         let saveAndUpdatePKBalance = await this.UpdatePKBalance(
           fieldData.ID,
           cropData,
@@ -770,9 +767,7 @@ class UpdateRecommendation {
       let pBalance = 0;
       let kBalance = 0;
       let saveAndUpdatePKBalance;
-
       if (crop.CropTypeID == 170 || crop.CropInfo1 === null) {
-
         pBalance =
           (fertiliserData == null
             ? 0
@@ -1769,8 +1764,7 @@ console.log('aaaaaaaa')
     })[0];
     // console.log("dataMultipleCropsss", dataMultipleCrops);
     const arableBody = await this.buildArableBody(dataMultipleCrops, field);
-    console.log("pkBalanceData", pkBalanceData);
-    console.log("mannerOutputs", mannerOutputs);
+  
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: crop.FieldType,

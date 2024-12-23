@@ -225,7 +225,7 @@ class OrganicManureService extends BaseService {
       },
       take: 1,
     })[0];
-    const pkBalanceData = await this.pkBalanceRepository.find({
+    const pkBalanceData = await this.pkBalanceRepository.findOne({
       where: {
         FieldID: field.ID,
         Year: crop.Year - 1,
@@ -1036,7 +1036,8 @@ class OrganicManureService extends BaseService {
           }
         }
 
-        if (cropData.CropTypeID === 170) {
+        if (cropData.CropTypeID === 170||cropData.CropInfo1=== null) {
+          console.log('basicPlan')
           await this.saveOrganicManureForOtherCropType(
             organicManureData,
             mannerOutputs,
