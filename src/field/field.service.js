@@ -556,7 +556,7 @@ class FieldService extends BaseService {
                 return {
                   ...managementPeriod,
                   OrganicManures: organicManuresWithNames,
-                  Recommendations: recommendation
+                  Recommendation: recommendation
                     ? {
                         ...recommendation,
                         RecommendationComments: recommendationComments,
