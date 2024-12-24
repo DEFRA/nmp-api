@@ -351,11 +351,18 @@ class FieldService extends BaseService {
   }
 
   // Helper function to fetch crop type name
-  async getCropTypeName(cropTypeID) {
-    const cropType = await this.rB209ArableService.getData(
-      `/Arable/CropType/${cropTypeID}`
+  async getCropTypeName(cropTypeID, cropTypeAllData) {
+    // Find the crop type in cropTypeAllData by matching cropTypeId
+    const cropType = cropTypeAllData.find(
+      (item) => item.cropTypeId === cropTypeID
     );
-    return cropType.cropTypeName;
+
+    // Check if the cropType is found
+    if (cropType) {
+      return cropType.cropType;
+    } else {
+      throw new Error("Crop type not found");
+    }
   }
 
   // Helper function to fetch crop type name
@@ -417,6 +424,10 @@ class FieldService extends BaseService {
   async getFieldRelatedData(fieldIds, year, request) {
     // Fetch all fields by the list of FieldIDs
     const fields = await this.repository.findByIds(fieldIds);
+    const cropTypeAllData = await this.rB209ArableService.getData(
+      `/Arable/CropTypes`
+    );
+    console.log("cropTypeAllData", cropTypeAllData);
 
     // Fetch the farm associated with the first field (assuming all fields belong to the same farm)
     const farm = await this.farmRepository.findOne({
@@ -433,15 +444,14 @@ class FieldService extends BaseService {
           where: { FieldID: field.ID, Year: year },
         });
 
-       
-
         const previousCropData = await this.cropRepository.findOne({
           where: { FieldID: field.ID, CropInfo1: null },
           select: ["CropTypeID"],
         });
 
         const previousCropTypename = await this.getCropTypeName(
-          previousCropData.CropTypeID
+          previousCropData.CropTypeID,
+          cropTypeAllData
         );
 
         const previousGrasses = await this.previousGrassesRepository.find({
@@ -487,7 +497,7 @@ class FieldService extends BaseService {
         const pkBalance = await this.pkBalanceRepository.findOne({
           where: { FieldID: field.ID, Year: year },
         });
- 
+
         // Enrich crops with management periods and their sub-objects
         const cropsWithManagement = await Promise.all(
           crops.map(async (crop) => {
@@ -566,7 +576,10 @@ class FieldService extends BaseService {
                 };
               })
             );
-            const cropTypeName = await this.getCropTypeName(crop.CropTypeID);
+            const cropTypeName = await this.getCropTypeName(
+              crop.CropTypeID,
+              cropTypeAllData
+            );
             let cropInfo1Name;
             if (crop.CropInfo1) {
               cropInfo1Name = await this.getCropInfo1Name(
@@ -601,25 +614,25 @@ class FieldService extends BaseService {
 
         // Get SulphurDeficient from soilAnalysis
         const sulphurDeficient = latestSoilAnalysis?.SulphurDeficient;
-        console.log("latestSoilAnalysis", latestSoilAnalysis);
-        console.log("sulphurDeficient", sulphurDeficient);
         // Create soilDetails object
         const soilDetails = {
           SoilTypeName: soilTypeName,
           PotashReleasingClay: field.SoilReleasingClay,
           SulphurDeficient: sulphurDeficient,
-          StartingP:pkBalance?.PBalance || null,
-          Startingk:pkBalance?.KBalance || null
+          StartingP: pkBalance?.PBalance || null,
+          Startingk: pkBalance?.KBalance || null,
         };
 
         // Build the full field object with all associated sub-objects
         const fieldData = {
           ...field,
+          PrevioudCropID: previousCropData.CropTypeID,
           PreviousCrop: previousCropTypename,
           Crops: cropsWithManagement,
           PreviousGrasses: previousGrasses,
           soilAnalysis: {
-            LastModify: latestSoilAnalysis?.ModifiedOn || latestSoilAnalysis?.CreatedOn, // Latest ModifiedOn date from SoilAnalysis
+            LastModify:
+              latestSoilAnalysis?.ModifiedOn || latestSoilAnalysis?.CreatedOn, // Latest ModifiedOn date from SoilAnalysis
             soilAnalysisAndSNSanalysis: soilAnalysisAndSNSanalysis, // Combined data from both Soil and SNS analysis
           },
           soilDetails: soilDetails,
