@@ -631,7 +631,7 @@ class FieldService extends BaseService {
               cropTypeAllData
             );
             let cropInfo1Name;
-            if (crop.CropInfo1) {
+            if (crop.CropInfo1!=null) {   
               cropInfo1Name = await this.getCropInfo1Name(
                 crop.CropTypeID,
                 crop.CropInfo1
