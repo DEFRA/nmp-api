@@ -14,18 +14,28 @@ const boom = require("@hapi/boom");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
-const { PreviousGrassesEntity } = require("../db/entity/previous-grasses-entity");
+const {
+  PreviousGrassesEntity,
+} = require("../db/entity/previous-grasses-entity");
 const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
-const { RecommendationCommentEntity } = require("../db/entity/recommendation-comment.entity");
-const { FertiliserManuresEntity } = require("../db/entity/fertiliser-manures.entity");
+const {
+  RecommendationCommentEntity,
+} = require("../db/entity/recommendation-comment.entity");
+const {
+  FertiliserManuresEntity,
+} = require("../db/entity/fertiliser-manures.entity");
 const { FarmEntity } = require("../db/entity/farm.entity");
 const RB209ArableService = require("../vendors/rb209/arable/arable.service");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
 const MannerApplicationMethodService = require("../vendors/manner/application-method/application-method.service");
-const { IncorporationMethodService } = require("../incorporation-method/incorporation-method.service");
+const {
+  IncorporationMethodService,
+} = require("../incorporation-method/incorporation-method.service");
 const MannerIncorporationMethodService = require("../vendors/manner/incorporation-method/incorporation-method.service");
 const MannerIncorporationDelayService = require("../vendors/manner/incorporation-delay/incorporation-delay.service");
-
+const {
+  GrassManagementOptionsEntity,
+} = require("../db/entity/grassManagementOptionsEntity");
 
 class FieldService extends BaseService {
   constructor() {
@@ -64,6 +74,9 @@ class FieldService extends BaseService {
       new MannerIncorporationMethodService();
     this.MannerIncorporationDelayService =
       new MannerIncorporationDelayService();
+    this.grassManagementOptionsRepository = AppDataSource.getRepository(
+      GrassManagementOptionsEntity
+    );
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -351,11 +364,18 @@ class FieldService extends BaseService {
   }
 
   // Helper function to fetch crop type name
-  async getCropTypeName(cropTypeID) {
-    const cropType = await this.rB209ArableService.getData(
-      `/Arable/CropType/${cropTypeID}`
+  async getCropTypeName(cropTypeID, cropTypeAllData) {
+    // Find the crop type in cropTypeAllData by matching cropTypeId
+    const cropType = cropTypeAllData.find(
+      (item) => item.cropTypeId === cropTypeID
     );
-    return cropType.cropTypeName;
+
+    // Check if the cropType is found
+    if (cropType) {
+      return cropType.cropType;
+    } else {
+      throw new Error("Crop type not found");
+    }
   }
 
   // Helper function to fetch crop type name
@@ -414,9 +434,21 @@ class FieldService extends BaseService {
     return incorporationDelayData.data.name;
   }
 
+  async getPreviousCropDataByFieldID(fieldID) {
+    const previousGrasses = await this.previousGrassesRepository.findOne({
+      where: { FieldID: fieldID },
+    });
+
+    return previousGrasses;
+  }
+
   async getFieldRelatedData(fieldIds, year, request) {
     // Fetch all fields by the list of FieldIDs
     const fields = await this.repository.findByIds(fieldIds);
+    const cropTypeAllData = await this.rB209ArableService.getData(
+      `/Arable/CropTypes`
+    );
+    console.log("cropTypeAllData", cropTypeAllData);
 
     // Fetch the farm associated with the first field (assuming all fields belong to the same farm)
     const farm = await this.farmRepository.findOne({
@@ -433,20 +465,48 @@ class FieldService extends BaseService {
           where: { FieldID: field.ID, Year: year },
         });
 
-       
-
         const previousCropData = await this.cropRepository.findOne({
           where: { FieldID: field.ID, CropInfo1: null },
           select: ["CropTypeID"],
         });
 
         const previousCropTypename = await this.getCropTypeName(
-          previousCropData.CropTypeID
+          previousCropData.CropTypeID,
+          cropTypeAllData
         );
 
-        const previousGrasses = await this.previousGrassesRepository.find({
-          where: { FieldID: field.ID },
-        });
+        // const previousGrasses = await this.previousGrassesRepository.find({
+        //   where: { FieldID: field.ID },
+        // });
+        const previousGrasses = await this.getPreviousCropDataByFieldID(
+          field.ID
+        );
+        let grassManagementOptionName = null;
+        if (previousGrasses) {
+          const grassManagementOptionID =
+            previousGrasses.GrassManagementOptionID != null
+              ? previousGrasses.GrassManagementOptionID
+              : null;
+     
+        
+          if (grassManagementOptionID) {
+            const grassManagementOption =
+              await this.grassManagementOptionsRepository.findOne({
+                where: { ID: grassManagementOptionID },
+                select: ["Name"],
+              });
+              console.log(
+                "grassManagementOption",
+                grassManagementOption
+              );
+            grassManagementOptionName = grassManagementOption
+              ? grassManagementOption.Name
+              : null;
+
+             
+          }
+
+        }
         const snsAnalysis = await this.snsAnalysisRepository.find({
           where: { FieldID: field.ID },
         });
@@ -487,7 +547,7 @@ class FieldService extends BaseService {
         const pkBalance = await this.pkBalanceRepository.findOne({
           where: { FieldID: field.ID, Year: year },
         });
- 
+
         // Enrich crops with management periods and their sub-objects
         const cropsWithManagement = await Promise.all(
           crops.map(async (crop) => {
@@ -566,7 +626,10 @@ class FieldService extends BaseService {
                 };
               })
             );
-            const cropTypeName = await this.getCropTypeName(crop.CropTypeID);
+            const cropTypeName = await this.getCropTypeName(
+              crop.CropTypeID,
+              cropTypeAllData
+            );
             let cropInfo1Name;
             if (crop.CropInfo1) {
               cropInfo1Name = await this.getCropInfo1Name(
@@ -601,25 +664,26 @@ class FieldService extends BaseService {
 
         // Get SulphurDeficient from soilAnalysis
         const sulphurDeficient = latestSoilAnalysis?.SulphurDeficient;
-        console.log("latestSoilAnalysis", latestSoilAnalysis);
-        console.log("sulphurDeficient", sulphurDeficient);
         // Create soilDetails object
         const soilDetails = {
           SoilTypeName: soilTypeName,
           PotashReleasingClay: field.SoilReleasingClay,
           SulphurDeficient: sulphurDeficient,
-          StartingP:pkBalance?.PBalance || null,
-          Startingk:pkBalance?.KBalance || null
+          StartingP: pkBalance?.PBalance || null,
+          Startingk: pkBalance?.KBalance || null,
         };
 
         // Build the full field object with all associated sub-objects
         const fieldData = {
           ...field,
+          Management: grassManagementOptionName,
+          PreviousCropID: previousCropData.CropTypeID,
           PreviousCrop: previousCropTypename,
           Crops: cropsWithManagement,
-          PreviousGrasses: previousGrasses,
+          // PreviousGrasses: previousGrasses,
           soilAnalysis: {
-            LastModify: latestSoilAnalysis?.ModifiedOn || latestSoilAnalysis?.CreatedOn, // Latest ModifiedOn date from SoilAnalysis
+            LastModify:
+              latestSoilAnalysis?.ModifiedOn || latestSoilAnalysis?.CreatedOn, // Latest ModifiedOn date from SoilAnalysis
             soilAnalysisAndSNSanalysis: soilAnalysisAndSNSanalysis, // Combined data from both Soil and SNS analysis
           },
           soilDetails: soilDetails,
