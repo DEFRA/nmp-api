@@ -14,18 +14,28 @@ const boom = require("@hapi/boom");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
-const { PreviousGrassesEntity } = require("../db/entity/previous-grasses-entity");
+const {
+  PreviousGrassesEntity,
+} = require("../db/entity/previous-grasses-entity");
 const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
-const { RecommendationCommentEntity } = require("../db/entity/recommendation-comment.entity");
-const { FertiliserManuresEntity } = require("../db/entity/fertiliser-manures.entity");
+const {
+  RecommendationCommentEntity,
+} = require("../db/entity/recommendation-comment.entity");
+const {
+  FertiliserManuresEntity,
+} = require("../db/entity/fertiliser-manures.entity");
 const { FarmEntity } = require("../db/entity/farm.entity");
 const RB209ArableService = require("../vendors/rb209/arable/arable.service");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
 const MannerApplicationMethodService = require("../vendors/manner/application-method/application-method.service");
-const { IncorporationMethodService } = require("../incorporation-method/incorporation-method.service");
+const {
+  IncorporationMethodService,
+} = require("../incorporation-method/incorporation-method.service");
 const MannerIncorporationMethodService = require("../vendors/manner/incorporation-method/incorporation-method.service");
 const MannerIncorporationDelayService = require("../vendors/manner/incorporation-delay/incorporation-delay.service");
-
+const {
+  GrassManagementOptionsEntity,
+} = require("../db/entity/grassManagementOptionsEntity");
 
 class FieldService extends BaseService {
   constructor() {
@@ -64,6 +74,9 @@ class FieldService extends BaseService {
       new MannerIncorporationMethodService();
     this.MannerIncorporationDelayService =
       new MannerIncorporationDelayService();
+    this.grassManagementOptionsRepository = AppDataSource.getRepository(
+      GrassManagementOptionsEntity
+    );
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -421,6 +434,14 @@ class FieldService extends BaseService {
     return incorporationDelayData.data.name;
   }
 
+  async getPreviousCropDataByFieldID(fieldID) {
+    const previousGrasses = await this.previousGrassesRepository.findOne({
+      where: { FieldID: fieldID },
+    });
+
+    return previousGrasses;
+  }
+
   async getFieldRelatedData(fieldIds, year, request) {
     // Fetch all fields by the list of FieldIDs
     const fields = await this.repository.findByIds(fieldIds);
@@ -454,9 +475,38 @@ class FieldService extends BaseService {
           cropTypeAllData
         );
 
-        const previousGrasses = await this.previousGrassesRepository.find({
-          where: { FieldID: field.ID },
-        });
+        // const previousGrasses = await this.previousGrassesRepository.find({
+        //   where: { FieldID: field.ID },
+        // });
+        const previousGrasses = await this.getPreviousCropDataByFieldID(
+          field.ID
+        );
+        let grassManagementOptionName = null;
+        if (previousGrasses) {
+          const grassManagementOptionID =
+            previousGrasses.GrassManagementOptionID != null
+              ? previousGrasses.GrassManagementOptionID
+              : null;
+     
+        
+          if (grassManagementOptionID) {
+            const grassManagementOption =
+              await this.grassManagementOptionsRepository.findOne({
+                where: { ID: grassManagementOptionID },
+                select: ["Name"],
+              });
+              console.log(
+                "grassManagementOption",
+                grassManagementOption
+              );
+            grassManagementOptionName = grassManagementOption
+              ? grassManagementOption.Name
+              : null;
+
+             
+          }
+
+        }
         const snsAnalysis = await this.snsAnalysisRepository.find({
           where: { FieldID: field.ID },
         });
@@ -626,10 +676,11 @@ class FieldService extends BaseService {
         // Build the full field object with all associated sub-objects
         const fieldData = {
           ...field,
-          PrevioudCropID: previousCropData.CropTypeID,
+          Management: grassManagementOptionName,
+          PreviousCropID: previousCropData.CropTypeID,
           PreviousCrop: previousCropTypename,
           Crops: cropsWithManagement,
-          PreviousGrasses: previousGrasses,
+          // PreviousGrasses: previousGrasses,
           soilAnalysis: {
             LastModify:
               latestSoilAnalysis?.ModifiedOn || latestSoilAnalysis?.CreatedOn, // Latest ModifiedOn date from SoilAnalysis
