@@ -129,7 +129,7 @@ class FieldController {
     try {
       const records =
         await this.#fieldService.getFieldSoilAnalysisAndSnsAnalysisDetails(
-          fieldId,
+          fieldId
         );
       if (!records) {
         throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
@@ -139,7 +139,28 @@ class FieldController {
       return this.#h.response({ error });
     }
   }
-  
+
+  async getFieldRelatedData() {
+    const { fieldId } = this.#request.params;
+     const { year } = this.#request.query;
+
+    try {
+      // Handle multiple FieldIDs, split by comma if needed (if multiple IDs are passed)
+      const fieldIds = fieldId.split(",").map((id) => parseInt(id));
+
+      // Fetch related data for the fields
+      const fieldData = await this.#fieldService.getFieldRelatedData(
+        fieldIds,
+        year,
+        this.#request
+      );
+
+      // Return the Field objects with related data
+      return this.#h.response(fieldData);
+    } catch (error) {
+      return this.#h.response({ error: error.message }).code(400);
+    }
+  }
 }
 
 module.exports = { FieldController };
