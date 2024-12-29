@@ -151,7 +151,8 @@ class FieldController {
       // Fetch related data for the fields
       const fieldData = await this.#fieldService.getFieldRelatedData(
         fieldIds,
-        year
+        year,
+        this.#request
       );
 
       // Return the Field objects with related data
