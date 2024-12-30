@@ -533,15 +533,7 @@ class FieldService extends BaseService {
                   : "Not Entered",
               SNSMethod: "Not Entered",
             }
-          : {
-              PH: "Not Entered",
-              Phosphorus: "Not Entered",
-              Potassium: "Not Entered",
-              Magnesium: "Not Entered",
-              SNS: "Not Entered",
-              SNSIndex: "Not Entered",
-              SNSMethod: "Not Entered",
-            };
+          :null;
 
         const pkBalance = await this.pkBalanceRepository.findOne({
           where: { FieldID: field.ID, Year: year },
@@ -660,7 +652,6 @@ class FieldService extends BaseService {
           `/Soil/SoilType/${field.SoilTypeID}`
         );
         const soilTypeName = soil?.soilType;
-console.log('pkBalance.PBalance',pkBalance?.PBalance || null)
         // Get SulphurDeficient from soilAnalysis
         const sulphurDeficient = latestSoilAnalysis?.SulphurDeficient;
         // Create soilDetails object
