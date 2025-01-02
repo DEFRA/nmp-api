@@ -448,7 +448,6 @@ class FieldService extends BaseService {
     const cropTypeAllData = await this.rB209ArableService.getData(
       `/Arable/CropTypes`
     );
-    console.log("cropTypeAllData", cropTypeAllData);
 
     // Fetch the farm associated with the first field (assuming all fields belong to the same farm)
     const farm = await this.farmRepository.findOne({
@@ -512,7 +511,7 @@ class FieldService extends BaseService {
         });
         // Fetch the latest SoilAnalysis entry for the current field
         const latestSoilAnalysis = await this.soilAnalysisRepository.findOne({
-          where: { FieldID: field.ID, Year: year },
+          where: { FieldID: field.ID},
           order: { ModifiedOn: "DESC" }, // Sort by ModifiedOn descending
           take: 1, // Retrieve only the latest entry
         });
@@ -534,15 +533,7 @@ class FieldService extends BaseService {
                   : "Not Entered",
               SNSMethod: "Not Entered",
             }
-          : {
-              PH: "Not Entered",
-              Phosphorus: "Not Entered",
-              Potassium: "Not Entered",
-              Magnesium: "Not Entered",
-              SNS: "Not Entered",
-              SNSIndex: "Not Entered",
-              SNSMethod: "Not Entered",
-            };
+          :null;
 
         const pkBalance = await this.pkBalanceRepository.findOne({
           where: { FieldID: field.ID, Year: year },
@@ -661,7 +652,6 @@ class FieldService extends BaseService {
           `/Soil/SoilType/${field.SoilTypeID}`
         );
         const soilTypeName = soil?.soilType;
-
         // Get SulphurDeficient from soilAnalysis
         const sulphurDeficient = latestSoilAnalysis?.SulphurDeficient;
         // Create soilDetails object
@@ -669,8 +659,8 @@ class FieldService extends BaseService {
           SoilTypeName: soilTypeName,
           PotashReleasingClay: field.SoilReleasingClay,
           SulphurDeficient: sulphurDeficient,
-          StartingP: pkBalance?.PBalance || null,
-          Startingk: pkBalance?.KBalance || null,
+          StartingP: (pkBalance && pkBalance.PBalance != null) ? pkBalance.PBalance : null,
+          Startingk: (pkBalance && pkBalance.KBalance != null) ? pkBalance.KBalance : null,
         };
 
         // Build the full field object with all associated sub-objects
@@ -681,12 +671,12 @@ class FieldService extends BaseService {
           PreviousCrop: previousCropTypename,
           Crops: cropsWithManagement,
           // PreviousGrasses: previousGrasses,
-          soilAnalysis: {
+          SoilAnalysis: {
             LastModify:
               latestSoilAnalysis?.ModifiedOn || latestSoilAnalysis?.CreatedOn, // Latest ModifiedOn date from SoilAnalysis
-            soilAnalysisAndSNSanalysis: soilAnalysisAndSNSanalysis, // Combined data from both Soil and SNS analysis
+            SoilAnalysisAndSNSanalysis: soilAnalysisAndSNSanalysis, // Combined data from both Soil and SNS analysis
           },
-          soilDetails: soilDetails,
+          SoilDetails: soilDetails,
         };
 
         // Add the field data to the list of fields
