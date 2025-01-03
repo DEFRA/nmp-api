@@ -36,4 +36,33 @@ module.exports = [
       },
     },
   },
+  {
+    method: "GET",
+    path: "/crop-info-questions/{cropTypeID}",
+    handler: async (request, h) => {
+      return getController(request, h).getCropInfoQuestionsByCropTypeID();
+    },
+    options: {
+      tags: ["api", "Crop Info Questions"],
+      description: "Get CropInfoQuestions by CropTypeID",
+      validate: {
+        params: Joi.object({
+          cropTypeID: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+  },
 ];
