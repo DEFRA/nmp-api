@@ -37,7 +37,7 @@ class CropTypeLinkingsController {
         );
       if (!record) {
         throw boom.notFound(
-          "No CropTypeLinking Data found based on CropTypeID"
+          "No CropQuestions Data found based on CropTypeID"
         );
       }
       return this.#h.response({ CropTypeQuestion: record });
