@@ -35,11 +35,7 @@ class CropTypeLinkingsController {
         await this.#cropTypeLinkingsService.getCropInfoQuestionsByCropTypeID(
           cropTypeID
         );
-      if (!record) {
-        throw boom.notFound(
-          "No CropQuestions Data found based on CropTypeID"
-        );
-      }
+    
       return this.#h.response({ CropTypeQuestion: record });
     } catch (error) {
       return this.#h.response({ error });

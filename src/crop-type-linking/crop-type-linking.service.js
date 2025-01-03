@@ -20,10 +20,17 @@ class CropTypeLinkingsService extends BaseService {
     const cropType = await this.repository.findOneBy({
       CropTypeID: cropTypeID,
     });
-   const cropTypeQuestions = await this.cropInfoQuestionsRepository.findOneBy({
-     ID: cropType.CropInfoOneQuestionID
-   });
-   return cropTypeQuestions.CropInfoQuestion;
+   
+    if(cropType.CropInfoOneQuestionID !=null){
+
+        const cropTypeQuestions = await this.cropInfoQuestionsRepository.findOneBy({
+          ID: cropType.CropInfoOneQuestionID
+        });
+        return cropTypeQuestions.CropInfoQuestion;
+    }else{
+        return null
+    }
+
   }
 }
 
