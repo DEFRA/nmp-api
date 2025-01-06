@@ -159,7 +159,7 @@ class CropController {
   async createNutrientsRecommendationForFieldByFieldId() {
     const body = this.#request.payload;
     const userId = this.#request.userId;
-    this.#request
+    this.#request;
     try {
       const data =
         await this.#planService.createNutrientsRecommendationForField(
@@ -255,6 +255,17 @@ class CropController {
         "Error in getCropOrganicAndInorganicDetailsByHarvestYearAndFarmId controller:",
         error
       );
+      return this.#h.response({ error });
+    }
+  }
+  async getCropDataById() {
+    try {
+      const { id } = this.#request.params;
+      const { records } = await this.#cropService.getById(id);
+     
+      return this.#h.response(records);
+    } catch (error) {
+      console.error("Error in getCropsDataByCropId controller:", error);
       return this.#h.response({ error });
     }
   }
