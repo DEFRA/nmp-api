@@ -2136,7 +2136,6 @@ console.log('soilAnalysis',soilAnalysis)
         .toISOString()
         .split("T")[0],
       rainfallPostApplication: manure.Rainfall,
-      cropNUptake: manure.AutumnCropNitrogenUptake,
       windspeedID: manure.WindspeedID,
       rainTypeID: manure.RainfallWithinSixHoursID,
       topsoilMoistureID: manure.MoistureID,
