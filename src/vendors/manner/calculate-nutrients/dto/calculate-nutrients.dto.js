@@ -89,10 +89,6 @@ const ManureApplicationDto = Joi.object({
     .integer()
     .required()
     .description("Post-application rainfall amount"),
-  cropNUptake: Joi.number()
-    .integer()
-    .required()
-    .description("Crop nitrogen uptake amount"),
   windspeedID: Joi.number()
     .integer()
     .required()
