@@ -28,6 +28,19 @@ class CropTypeLinkingsController {
       return this.#h.response({ error });
     }
   }
+  async getCropInfoQuestionsByCropTypeID() {
+    const { cropTypeID } = this.#request.params;
+    try {
+      const record =
+        await this.#cropTypeLinkingsService.getCropInfoQuestionsByCropTypeID(
+          cropTypeID
+        );
+    
+      return this.#h.response({ CropTypeQuestion: record });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
 }
 
 module.exports = { CropTypeLinkingsController };

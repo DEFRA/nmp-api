@@ -24,7 +24,7 @@ const Step3Dto = Joi.object({
 
 const CalculateSnsIndexRequest = Joi.object({
   CropTypeId: Joi.number().required(),
-  SeasonId: Joi.number().required(),
+  SeasonId: Joi.number().optional().allow(null),
   Step1ArablePotato: Step1ArablePotatoDto,
   Step1Veg: Step1VegDto,
   Step2: Step2Dto,
