@@ -30,6 +30,10 @@ const CropTypeLinkingEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
+    CropInfoOneQuestionID: {
+      type: "int",
+      nullable: true,
+    },
   },
   relations: {
     MannerCropType: {
@@ -45,6 +49,12 @@ const CropTypeLinkingEntity = new EntitySchema({
       target: "SNSCategories",
       joinColumn: { name: "SNSCategoryID" },
       inverseSide: "CropTypeLinkings",
+    },
+    CropInfoOneQuestion: {
+      type: "many-to-one",
+      target: "CropInfoQuestions",
+      joinColumn: { name: "CropInfoOneQuestionID" },
+      inverseSide: "CropTypeLinking",
     },
   },
 });
