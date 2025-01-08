@@ -1220,8 +1220,8 @@ class OrganicManureService extends BaseService {
             OrganicManureEntity,
             this.repository.create({
               ...organicManureData.OrganicManure,
-              AvailableN: mannerOutputs.data.currentCropAvailableN,
-              AvailableSO3: mannerOutputs.data.cropAvailableSO3,
+              // AvailableN: mannerOutputs.data.currentCropAvailableN,
+              // AvailableSO3: mannerOutputs.data.cropAvailableSO3,
               CreatedByID: userId,
               ...(organicManureData.OrganicManure.ID == 0 ? { ID: null } : {}),
             })
