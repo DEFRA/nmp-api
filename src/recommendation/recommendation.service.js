@@ -44,10 +44,30 @@ class RecommendationService extends BaseService {
      );
   }
 
-  async processSoilRecommendations(harvestYear, fieldId) {
+  async processSoilRecommendations(harvestYear, fieldId) { // recommandationData
     try {
       const currentYear = harvestYear;
       const fiveYearsAgo = currentYear - 5;
+       // cropOrder 1 = recommandationData.cropNeed-lime
+ //fetch cropData using managperiodId (recommandationData.ManmanagperiodId)= field, year
+ // soil analysis(field, year)
+ // crop id get (field, year-1)
+ //fetch managperiod(cropID)= managperiodId
+ // fetch fertiliser (managperiodId)
+ // sum total lime
+
+ // cropOrder2 = recommandationData.cropNeed-lime
+//fetch cropData using managperiodId (recommandationData.ManmanagperiodId)= field, year
+ // soil analysis(field, year)
+ // crop id get (field, year-1)
+ //fetch managperiod(cropID)= managperiodId= 
+ // fetch fertiliser (managperiodId)
+ // sum total lime (crop order 1)
+ // sum total lime (crop order 2)
+ //crop order 1 lime+crop order 2 lime
+
+
+
 
       // Step 1: Find soil recommendations for the past 5 years including the current year
       const soilRecommendations = await this.soilAnalysisRepository.find({ //before fertiliser apply
