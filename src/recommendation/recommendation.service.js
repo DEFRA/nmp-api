@@ -13,6 +13,10 @@ const MannerManureTypesService = require("../vendors/manner/manure-types/manure-
 const MannerApplicationMethodService = require("../vendors/manner/application-method/application-method.service");
 const { FertiliserManuresEntity } = require("../db/entity/fertiliser-manures.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
+const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
+const { Between } = require("typeorm");
+const { CropEntity } = require("../db/entity/crop.entity");
+const { ManagementPeriodEntity } = require("../db/entity/management-period.entity");
 
 class RecommendationService extends BaseService {
   constructor() {
@@ -23,17 +27,140 @@ class RecommendationService extends BaseService {
     );
     this.organicManureRepository =
       AppDataSource.getRepository(OrganicManureEntity);
-    this.MannerManureTypesService = new MannerManureTypesService();  
+    this.MannerManureTypesService = new MannerManureTypesService();
     this.MannerApplicationMethodService = new MannerApplicationMethodService();
-    this.FertiliserManuresRepository = AppDataSource.getRepository(FertiliserManuresEntity);
+    this.FertiliserManuresRepository = AppDataSource.getRepository(
+      FertiliserManuresEntity
+    );
     this.PKbalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
+    this.soilAnalysisRepository =
+      AppDataSource.getRepository(SoilAnalysisEntity);
+    this.cropRepository = AppDataSource.getRepository(CropEntity);
+    this.managementPeriodRepository = AppDataSource.getRepository(
+      ManagementPeriodEntity
+    );
+     this.fertiliserManuresRepository = AppDataSource.getRepository(
+       FertiliserManuresEntity
+     );
   }
 
-  async getNutrientsRecommendationsForField(
-    fieldId,
-    harvestYear,
-    request
-  ) {
+  async processSoilRecommendations(harvestYear, fieldId) {
+    try {
+      const currentYear = harvestYear;
+      const fiveYearsAgo = currentYear - 5;
+
+      // Step 1: Find soil recommendations for the past 5 years including the current year
+      const soilRecommendations = await this.soilAnalysisRepository.find({
+        where: {
+          FieldID: fieldId,
+          Year: Between(fiveYearsAgo, currentYear),
+        },
+      });
+
+      // Step 2: Check if any year has pH value > 0
+      const recommendationWithPH = soilRecommendations.find(
+        (rec) => rec.PH > 0
+      );
+
+      if (!recommendationWithPH) {
+        // If no pH > 0 is found, return without doing anything
+        return null;
+      }
+
+      // If a pH > 0 is found, get the year of that recommendation
+      const yearWithPH = recommendationWithPH.Year;
+
+      // Step 3: Find data in CropRepository by fieldId and yearWithPH
+      const cropData = await this.cropRepository.findOne({
+        where: {
+          FieldID: fieldId,
+          Year: yearWithPH,
+        },
+        select: {
+          ID: true, // We only need the crop ID now
+        },
+      });
+
+      if (!cropData) {
+        console.error(
+          `No crop data found for FieldID ${fieldId} and Year ${yearWithPH}`
+        );
+        return null; // Exit if no crop data is found
+      }
+
+      // Step 4: Find ManagementPeriodID in ManagementPeriodRepository using cropData.ID
+      const managementPeriodData =
+        await this.managementPeriodRepository.findOne({
+          where: {
+            CropID: cropData.ID, // Assuming CropID is the foreign key to the crop table
+          },
+          select: {
+            ID: true, // The ManagementPeriodID we need
+          },
+        });
+
+      if (!managementPeriodData) {
+        console.error(
+          `No management period data found for CropID ${cropData.ID}`
+        );
+        return null; // Exit if no management period data is found
+      }
+
+      const managementPeriodID = managementPeriodData.ID;
+
+      // Step 5: Find data in FertiliserManuresRepository by ManagementPeriodID
+      const fertiliserManuresData =
+        await this.fertiliserManuresRepository.findOne({
+          where: {
+            ManagementPeriodID: managementPeriodID,
+          },
+          select: {
+            Lime: true,
+          },
+        });
+
+      if (!fertiliserManuresData) {
+        console.error(
+          `No fertiliser manures data found for ManagementPeriodID ${managementPeriodID}`
+        );
+        return null; // Exit if no fertiliser data is found
+      }
+
+      const limeValue = fertiliserManuresData.Lime;
+
+      // Step 6: Find data in RecommendationRepository by ManagementPeriodID
+      const recommendationData = await this.repository.findOne({
+        where: {
+          ManagementPeriodID: managementPeriodID,
+        },
+        select: {
+          CropNeed: true,
+        },
+      });
+
+      if (!recommendationData) {
+        console.error(
+          `No recommendation data found for ManagementPeriodID ${managementPeriodID}`
+        );
+        return null; // Exit if no recommendation data is found
+      }
+
+      const cropNeedValue = recommendationData.CropNeed;
+
+      // Step 7: Perform the calculation (CropNeed - Lime)
+      const result = cropNeedValue - limeValue;
+
+      // Return the result of the calculation
+      return {
+        result,
+      };
+    } catch (error) {
+      console.error("Error in processSoilRecommendations:", error);
+      throw error;
+    }
+  }
+
+  async getNutrientsRecommendationsForField(fieldId, harvestYear, request) {
     try {
       const storedProcedure =
         "EXEC dbo.spRecommendations_GetRecommendations @fieldId = @0, @harvestYear = @1";
@@ -42,7 +169,12 @@ class RecommendationService extends BaseService {
         harvestYear,
       ]);
       const mappedRecommendations = recommendations.map((r) => {
-        const data = { Crop: {}, Recommendation: {}, ManagementPeriod: {}, FertiliserManure: {}}; 
+        const data = {
+          Crop: {},
+          Recommendation: {},
+          ManagementPeriod: {},
+          FertiliserManure: {},
+        };
         Object.keys(r).forEach((recDataKey) => {
           if (recDataKey.startsWith("Crop_"))
             data.Crop[recDataKey.slice(5)] = r[recDataKey];
@@ -57,21 +189,21 @@ class RecommendationService extends BaseService {
       });
       const PKbalance = await this.PKbalanceRepository.findOne({
         where: {
-          Year: harvestYear-1,
-          FieldID:fieldId
+          Year: harvestYear - 1,
+          FieldID: fieldId,
         },
         select: {
           ID: true,
           PBalance: true,
-          KBalance: true
+          KBalance: true,
         },
       });
       const groupedObj = {};
- console.log('PKBalnceee',PKbalance)
+      console.log("PKBalnceee", PKbalance);
       mappedRecommendations.forEach((r) => {
         groupedObj[r.Crop.ID] = {
           Crop: r.Crop,
-          PKbalance:PKbalance,
+          PKbalance: PKbalance,
           Recommendations: (
             groupedObj[r.Crop.ID]?.Recommendations || []
           ).concat({
@@ -106,25 +238,33 @@ class RecommendationService extends BaseService {
                 },
               });
 
-              const FertiliserManures = await this.FertiliserManuresRepository.find({
-                where: {
-                  ManagementPeriodID: recData.ManagementPeriod.ID,
-                },
-                select: {
-                  ID: true,
-                  ApplicationDate: true,
-                  ApplicationRate: true,
-                  N: true,
-                  P2O5: true,
-                  K2O: true,
-                  MgO: true,
-                  SO3: true,
-                  Na2O: true,
-                  Lime: true,
-                  NH4N: true,
-                  NO3N: true,
-                },
-              });
+              const FertiliserManures =
+                await this.FertiliserManuresRepository.find({
+                  where: {
+                    ManagementPeriodID: recData.ManagementPeriod.ID,
+                  },
+                  select: {
+                    ID: true,
+                    ApplicationDate: true,
+                    ApplicationRate: true,
+                    N: true,
+                    P2O5: true,
+                    K2O: true,
+                    MgO: true,
+                    SO3: true,
+                    Na2O: true,
+                    Lime: true,
+                    NH4N: true,
+                    NO3N: true,
+                  },
+                });
+              const currentYear = harvestYear;
+              const fiveYearsAgo = currentYear - 5; //crop table crop ID se Management PeriodID Fertilisertable managementperiod se recommendation main croplime se fertriliser minus kaarna hai
+
+              const previousAppliedLime = await this.processSoilRecommendations(
+                harvestYear,
+                fieldId
+              );
               // Fetch ManureType details from external API
               const organicManuresWithDetails = await Promise.all(
                 organicManures.map(async (o) => {
@@ -156,7 +296,9 @@ class RecommendationService extends BaseService {
                 RecommendationComments: comments,
                 ManagementPeriod: recData.ManagementPeriod,
                 OrganicManures: organicManuresWithDetails,
-                FertiliserManures:FertiliserManures             };
+                FertiliserManures: FertiliserManures,
+                previousAppliedLime: previousAppliedLime,
+              };
             })
           ),
         }))
