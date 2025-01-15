@@ -191,7 +191,7 @@ class RecommendationService extends BaseService {
 
       // Step 5: Handle CropOrder 2 (second crop)
       if (cropData.CropOrder === 2) {
-        // Fetch the second crop's data
+        
         const firstCropOrderData = await this.findCropDataByFieldIDAndYear(
           fieldId,
           cropData.Year
