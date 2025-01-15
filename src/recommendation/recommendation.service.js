@@ -50,7 +50,7 @@ class RecommendationService extends BaseService {
       const fiveYearsAgo = currentYear - 5;
 
       // Step 1: Find soil recommendations for the past 5 years including the current year
-      const soilRecommendations = await this.soilAnalysisRepository.find({
+      const soilRecommendations = await this.soilAnalysisRepository.find({ //before fertiliser apply
         where: {
           FieldID: fieldId,
           Year: Between(fiveYearsAgo, currentYear),
@@ -64,7 +64,7 @@ class RecommendationService extends BaseService {
 
       if (!recommendationWithPH) {
         // If no pH > 0 is found, return without doing anything
-        return null;
+        return 0;
       }
 
       // If a pH > 0 is found, get the year of that recommendation
@@ -74,7 +74,7 @@ class RecommendationService extends BaseService {
       const cropData = await this.cropRepository.findOne({
         where: {
           FieldID: fieldId,
-          Year: yearWithPH,
+          Year: harvestYear-1,
         },
         select: {
           ID: true, // We only need the crop ID now
@@ -110,7 +110,7 @@ class RecommendationService extends BaseService {
 
       // Step 5: Find data in FertiliserManuresRepository by ManagementPeriodID
       const fertiliserManuresData =
-        await this.fertiliserManuresRepository.findOne({
+        await this.fertiliserManuresRepository.findOne({  // sum
           where: {
             ManagementPeriodID: managementPeriodID,
           },
@@ -131,7 +131,7 @@ class RecommendationService extends BaseService {
       // Step 6: Find data in RecommendationRepository by ManagementPeriodID
       const recommendationData = await this.repository.findOne({
         where: {
-          ManagementPeriodID: managementPeriodID,
+          ManagementPeriodID: managementPeriodID, // current year not previous year
         },
         select: {
           CropNeed: true,
