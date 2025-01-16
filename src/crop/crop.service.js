@@ -221,14 +221,12 @@ class CropService extends BaseService {
       }
     };
 
-    const findCropDetailsFromRepo = async (fieldId, harvestYear) => {
+    const findCropDetailsFromRepo = async (CropID) => {
       try {
         const cropRecord = await this.repository.findOne({
-          where: { FieldID: fieldId, Year: harvestYear },
-          select: ["ID", "SowingDate"],
+          where: { ID: CropID },
         });
         return {
-          CropId: cropRecord ? cropRecord.ID : null,
           PlantingDate: cropRecord ? cropRecord.SowingDate : null,
         };
       } catch (error) {
@@ -314,9 +312,8 @@ class CropService extends BaseService {
           : "Unknown";
          console.log("cropGroupName", cropGroupName);
           console.log("plansWithNames", plansWithNames);
-        const { CropId, PlantingDate } = await findCropDetailsFromRepo(
-          plan.FieldID,
-          harvestYear
+        const { PlantingDate } = await findCropDetailsFromRepo(
+          plan.CropID
         );
 
         return {
