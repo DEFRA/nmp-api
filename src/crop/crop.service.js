@@ -192,6 +192,7 @@ class CropService extends BaseService {
       farmId,
       harvestYear,
     ]);
+    console.log("planssss",plans)
     
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
@@ -303,7 +304,7 @@ class CropService extends BaseService {
 
     const rainfall = await findFarmRainfall(farmId);
     const plansWithNames = await this.mapCropTypeIdWithTheirNames(plans);
-
+   console.log("plansWithNames", plansWithNames);
     const cropDetails = await Promise.all(
       plansWithNames.map(async (plan) => {
         const cropGroupId = findCropGroupId(plan.CropTypeID);
@@ -319,7 +320,7 @@ class CropService extends BaseService {
         );
 
         return {
-          CropId: CropId,
+          CropId: plan.CropID,
           CropTypeID: plan.CropTypeID,
           CropTypeName: plan.CropTypeName,
           CropGroupID: cropGroupId,
@@ -335,7 +336,7 @@ class CropService extends BaseService {
         };
       })
     );
-
+    console.log("cropDetails", cropDetails);
    const organicMaterials = await Promise.all(
      cropDetails.map(async (crop) => {
        // Fetch the management period ID for the crop
