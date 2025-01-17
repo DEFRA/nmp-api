@@ -192,6 +192,7 @@ class CropService extends BaseService {
       farmId,
       harvestYear,
     ]);
+    console.log("planssss",plans)
     
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
@@ -220,14 +221,12 @@ class CropService extends BaseService {
       }
     };
 
-    const findCropDetailsFromRepo = async (fieldId, harvestYear) => {
+    const findCropDetailsFromRepo = async (CropID) => {
       try {
         const cropRecord = await this.repository.findOne({
-          where: { FieldID: fieldId, Year: harvestYear },
-          select: ["ID", "SowingDate"],
+          where: { ID: CropID },
         });
         return {
-          CropId: cropRecord ? cropRecord.ID : null,
           PlantingDate: cropRecord ? cropRecord.SowingDate : null,
         };
       } catch (error) {
@@ -303,7 +302,7 @@ class CropService extends BaseService {
 
     const rainfall = await findFarmRainfall(farmId);
     const plansWithNames = await this.mapCropTypeIdWithTheirNames(plans);
-
+   console.log("plansWithNames", plansWithNames);
     const cropDetails = await Promise.all(
       plansWithNames.map(async (plan) => {
         const cropGroupId = findCropGroupId(plan.CropTypeID);
@@ -313,13 +312,12 @@ class CropService extends BaseService {
           : "Unknown";
          console.log("cropGroupName", cropGroupName);
           console.log("plansWithNames", plansWithNames);
-        const { CropId, PlantingDate } = await findCropDetailsFromRepo(
-          plan.FieldID,
-          harvestYear
+        const { PlantingDate } = await findCropDetailsFromRepo(
+          plan.CropID
         );
 
         return {
-          CropId: CropId,
+          CropId: plan.CropID,
           CropTypeID: plan.CropTypeID,
           CropTypeName: plan.CropTypeName,
           CropGroupID: cropGroupId,
@@ -335,7 +333,7 @@ class CropService extends BaseService {
         };
       })
     );
-
+    console.log("cropDetails", cropDetails);
    const organicMaterials = await Promise.all(
      cropDetails.map(async (crop) => {
        // Fetch the management period ID for the crop

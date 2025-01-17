@@ -156,7 +156,8 @@ class PlanService extends BaseService {
     farm,
     soilAnalysis,
     snsAnalysesData,
-    crop
+    crop,
+    allPKBalanceData
   ) {
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
@@ -182,12 +183,15 @@ class PlanService extends BaseService {
     // Use the buildArableBody function to get the arable array
     const arableBody = await this.buildArableBody(crop, field);
     console.log("arableBody", arableBody);
-    const pkBalanceData = await this.pkBalanceRepository.findOne({
-      where: {
-        FieldID: field.ID,
-        Year: crop.Year - 1,
-      },
-    });
+    // const pkBalanceData = await this.pkBalanceRepository.findOne({
+    //   where: {
+    //     FieldID: field.ID,
+    //     Year: crop.Year - 1,
+    //   },
+    // });
+    const pkBalanceData = allPKBalanceData.find(
+      (data) => data.FieldID === field.ID && data.Year === crop.Year - 1
+    );
 
     const nutrientRecommendationnReqBody = {
       field: {
@@ -1034,15 +1038,23 @@ class PlanService extends BaseService {
     // } else
     //{
     // Create a new recommendation
-    firstCropSaveData = await transactionalManager.save(
-      RecommendationEntity,
-      this.repository.create({
-        ...cropOrder1Data,
-        ManagementPeriodID: ManagementPeriods[0].ID,
-        Comments: `Reference Value: ${nutrientRecommendationsData.referenceValue}\nVersion: ${nutrientRecommendationsData.versionNumber}`,
-        CreatedOn: new Date(),
-        CreatedByID: userId,
-      })
+    // firstCropSaveData = await transactionalManager.save(
+    //   RecommendationEntity,
+    //   this.repository.create({
+    //     ...cropOrder1Data,
+    //     ManagementPeriodID: ManagementPeriods[0].ID,
+    //     Comments: `Reference Value: ${nutrientRecommendationsData.referenceValue}\nVersion: ${nutrientRecommendationsData.versionNumber}`,
+    //     CreatedOn: new Date(),
+    //     CreatedByID: userId,
+    //   })
+    // );
+    // Save or update for Crop Order 1
+    firstCropSaveData = await this.createCropSaveData(
+      transactionalManager,
+      cropOrder1Data,
+      ManagementPeriods[0].ID,
+      nutrientRecommendationsData,
+      userId
     );
     //}
 
@@ -1050,10 +1062,37 @@ class PlanService extends BaseService {
       firstCropSaveData,
     };
   }
+  // New function to save the crop data
+  async createCropSaveData(
+    transactionalManager,
+    cropOrderData,
+    managementPeriodId,
+    nutrientRecommendationsData,
+    userId
+  ) {
+    const newCropSaveData = await transactionalManager.save(
+      RecommendationEntity,
+      this.repository.create({
+        ...cropOrderData,
+        ManagementPeriodID: managementPeriodId,
+        Comments: `Reference Value: ${nutrientRecommendationsData.referenceValue}\nVersion: ${nutrientRecommendationsData.versionNumber}`,
+        CreatedOn: new Date(),
+        CreatedByID: userId,
+      })
+    );
+
+    return newCropSaveData;
+  }
+  async findPkBalanceData(cropYear, fieldId) {
+    return await this.pkBalanceRepository.findOne({
+      where: { Year: cropYear, FieldID: fieldId },
+    });
+  }
 
   async createNutrientsRecommendationForField(crops, userId, request) {
     const allManagementPeriods = await this.managementPeriodRepository.find();
-
+    const allPKBalanceData = await this.pkBalanceRepository.find();
+    const allCropData = await this.cropRepository.find();
     return await AppDataSource.transaction(async (transactionalManager) => {
       const Recommendations = [];
       const Errors = [];
@@ -1074,17 +1113,25 @@ class PlanService extends BaseService {
         )
           ? true
           : false;
-        const pkBalanceData = await this.pkBalanceRepository.findOne({
-          where: { Year: crop?.Year, FieldID: fieldId },
-        });
+        // const pkBalanceData = await this.pkBalanceRepository.findOne({
+        //   where: { Year: crop?.Year, FieldID: fieldId },
+        // });
+
+        const pkBalanceData = allPKBalanceData.find(
+          (data) => data.Year === crop.Year && data.FieldID === fieldId
+        );
+
         console.log("isSoilAnalysisHavePAndK", isSoilAnalysisHavePAndK);
-        const cropPlanOfNextYear = await this.cropRepository.find({
-          where: {
-            FieldID: fieldId,
-            Year: MoreThan(crop?.Year),
-          },
-          select: { ID: true },
-        });
+        // const cropPlanOfNextYear = await this.cropRepository.find({
+        //   where: {
+        //     FieldID: fieldId,
+        //     Year: MoreThan(crop?.Year),
+        //   },
+        //   select: { ID: true },
+        // });
+        const cropPlanOfNextYear = allCropData
+          .filter((data) => data.FieldID === fieldId && data.Year > crop?.Year) // Filter records in memory
+          .map((data) => ({ ID: data.ID }));
         const { field, errors: fieldErrors } = await this.handleFieldValidation(
           fieldId
         );
@@ -1093,13 +1140,13 @@ class PlanService extends BaseService {
           field.FarmID
         );
         Errors.push(...farmErrors);
-        const dataMultipleCrops = await this.cropRepository.find({
-          where: {
-            FieldID: field.ID,
-            Year: crop.Year,
-            Confirm: false,
-          },
-        });
+        // const dataMultipleCrops = await this.cropRepository.find({
+        //   where: {
+        //     FieldID: field.ID,
+        //     Year: crop.Year,
+        //     Confirm: false,
+        //   },
+        // });
         const {
           latestSoilAnalysis,
           errors: soilAnalysisErrors,
@@ -1192,7 +1239,8 @@ class PlanService extends BaseService {
             farm,
             soilAnalysisRecords,
             snsAnalysesData,
-            crop
+            crop,
+            allPKBalanceData
           );
         console.log(
           "nutrientRecommendationnReqBodyggggg",
@@ -1316,7 +1364,6 @@ class PlanService extends BaseService {
             snsAnalysesData,
             userId
           );
-          
 
           savedRecommendation = savedData.firstCropSaveData;
 
@@ -1404,18 +1451,28 @@ class PlanService extends BaseService {
             const concatenatedNote = notesByNutrient[nutrientId]?.join(" "); // Concatenate notes for the same nutrientId
 
             // Create a new recommendation comment with the concatenated notes
-            const newComment = this.recommendationCommentRepository?.create({
-              Nutrient: parseInt(nutrientId),
-              Comment: concatenatedNote, // Store concatenated notes
-              RecommendationID: savedRecommendation?.ID,
-              CreatedOn: new Date(),
-              CreatedByID: userId,
-            });
+            // const newComment = this.recommendationCommentRepository?.create({
+            //   Nutrient: parseInt(nutrientId),
+            //   Comment: concatenatedNote, // Store concatenated notes
+            //   RecommendationID: savedRecommendation?.ID,
+            //   CreatedOn: new Date(),
+            //   CreatedByID: userId,
+            // });
 
-            const savedRecommendationComment = await transactionalManager?.save(
-              RecommendationCommentEntity,
-              newComment
-            );
+            // const savedRecommendationComment = await transactionalManager?.save(
+            //   RecommendationCommentEntity,
+            //   newComment
+            // );
+            // Create and save recommendation comment
+            const savedRecommendationComment =
+              await this.createAndSaveRecommendationComment(
+                nutrientId,
+                concatenatedNote,
+                savedRecommendation,
+                userId,
+                transactionalManager
+              );
+
             RecommendationComments.push(savedRecommendationComment);
           }
           Recommendations.push({
@@ -1477,6 +1534,53 @@ class PlanService extends BaseService {
       }
 
       return { Recommendations };
+    });
+  }
+
+  async createAndSaveRecommendationComment(
+    nutrientId,
+    concatenatedNote,
+    savedRecommendation,
+    userId,
+    transactionalManager
+  ) {
+    // Create a new recommendation comment with the concatenated notes
+    // const newComment = this.recommendationCommentRepository?.create({
+    //   Nutrient: parseInt(nutrientId),
+    //   Comment: concatenatedNote, // Store concatenated notes
+    //   RecommendationID: savedRecommendation?.ID,
+    //   CreatedOn: new Date(),
+    //   CreatedByID: userId,
+    // });
+    // Use the new function to create the recommendation comment
+    const newComment = await this.createRecommendationComment(
+      nutrientId,
+      concatenatedNote,
+      savedRecommendation,
+      userId
+    );
+
+    // Save the new recommendation comment
+    const savedRecommendationComment = await transactionalManager?.save(
+      RecommendationCommentEntity,
+      newComment
+    );
+
+    return savedRecommendationComment;
+  }
+  async createRecommendationComment(
+    nutrientId,
+    concatenatedNote,
+    savedRecommendation,
+    userId
+  ) {
+    // Create a new recommendation comment object
+    return this.recommendationCommentRepository?.create({
+      Nutrient: parseInt(nutrientId),
+      Comment: concatenatedNote, // Store concatenated notes
+      RecommendationID: savedRecommendation?.ID,
+      CreatedOn: new Date(),
+      CreatedByID: userId,
     });
   }
   async getCropsPlanFields(farmId, harvestYear, cropTypeID) {
