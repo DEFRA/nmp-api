@@ -1,22 +1,22 @@
 const { AppDataSource } = require("../db/data-source");
-const {
-  RecommendationEntity,
-} = require("../db/entity/recommendation.entity");
+const { RecommendationEntity } = require("../db/entity/recommendation.entity");
 const {
   RecommendationCommentEntity,
 } = require("../db/entity/recommendation-comment.entity");
-const {
-  OrganicManureEntity,
-} = require("../db/entity/organic-manure.entity");
+const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
 const { BaseService } = require("../base/base.service");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
 const MannerApplicationMethodService = require("../vendors/manner/application-method/application-method.service");
-const { FertiliserManuresEntity } = require("../db/entity/fertiliser-manures.entity");
+const {
+  FertiliserManuresEntity,
+} = require("../db/entity/fertiliser-manures.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const { Between } = require("typeorm");
 const { CropEntity } = require("../db/entity/crop.entity");
-const { ManagementPeriodEntity } = require("../db/entity/management-period.entity");
+const {
+  ManagementPeriodEntity,
+} = require("../db/entity/management-period.entity");
 
 class RecommendationService extends BaseService {
   constructor() {
@@ -123,13 +123,15 @@ class RecommendationService extends BaseService {
       query.where.CropOrder = cropOrder;
     }
 
-    // If soilAnalysisYear is provided, adjust the query to include years up to soilAnalysisYear
+    // If soilAnalysisYear 2024 is provided, adjust the query to include years up to soilAnalysisYear
+    //Harvestyear 2024
     if (soilAnalysisYear) {
-      if (year > soilAnalysisYear){
-
+      if (year > soilAnalysisYear) {
         query.where.Year = Between(soilAnalysisYear, year); // Include years between `year` and `soilAnalysisYear`
-      }else{
+      } else if (year == soilAnalysisYear) {
         query.where.Year = Between(year, soilAnalysisYear); // Include years between `year` and `soilAnalysisYear`
+      } else if (year < soilAnalysisYear) {
+        return null;
       }
     }
 
@@ -251,11 +253,11 @@ class RecommendationService extends BaseService {
             cropData.Year - 1,
             soilAnalysisYear
           );
-
+          if (firstCropOrderDataList != null) {
         totalLime1 = await this.getApplyLimeInCaseOfMultipleCrops(
           firstCropOrderDataList
         );
-
+      }
         // Now, totalLime1 contains the sum of lime for all crops found in the list
         console.log(`Total Lime from all firstCropOrderData: ${totalLime1}`);
       }
@@ -268,10 +270,11 @@ class RecommendationService extends BaseService {
             cropData.Year - 1,
             soilAnalysisYear
           );
-
+          if (CropOrderDataList != null) {
         totalLime1 = await this.getApplyLimeInCaseOfMultipleCrops(
           CropOrderDataList
         );
+      }
         let cropOrder = 1;
         const firstCropOrderData =
           await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
@@ -279,9 +282,12 @@ class RecommendationService extends BaseService {
             cropData.Year,
             cropOrder
           );
-        totalLime1 += await this.getApplyLimeInCaseOfMultipleCrops(
-          firstCropOrderData
-        );
+          console.log('firstCropOrderData',firstCropOrderData)
+        if (firstCropOrderData != null) {
+          totalLime1 += await this.getApplyLimeInCaseOfMultipleCrops(
+            firstCropOrderData
+          );
+        }
       }
 
       // Step 6: Sum total lime values for both crops
@@ -294,8 +300,7 @@ class RecommendationService extends BaseService {
       const result = cropNeedValue - totalLime;
 
       // Return the result of the calculation
-      return result
-    
+      return result;
     } catch (error) {
       console.error("Error in processSoilRecommendations:", error);
       throw error;
@@ -428,7 +433,6 @@ class RecommendationService extends BaseService {
                 ...recData.Recommendation,
                 ...recData.FertiliserManure, // Adds FertiliserManure properties to Recommendation
               };
-            ;
               const previousAppliedLime = await this.processSoilRecommendations(
                 harvestYear,
                 fieldId,
@@ -437,7 +441,7 @@ class RecommendationService extends BaseService {
               // Add previousAppliedLime to the mergedRecommendation object
               mergedRecommendation.PreviousAppliedLime =
                 previousAppliedLime || 0;
-      
+
               return {
                 Recommendation: mergedRecommendation,
                 RecommendationComments: comments,
