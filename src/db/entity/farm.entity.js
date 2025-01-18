@@ -142,6 +142,10 @@ const FarmEntity = new EntitySchema({
       type: "int",
       default: 1,
     },
+    ClimateDataPostCode: {
+      type: "nvarchar",
+      length: 8,
+    },
   },
   relations: {
     Fields: {

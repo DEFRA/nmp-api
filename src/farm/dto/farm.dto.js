@@ -28,6 +28,7 @@ const FarmDto = Joi.object({
   FieldsAbove300SeaLevel: Joi.number().required(),
   EncryptedFarmId: Joi.string().optional().allow(null),
   CountryID: Joi.number().required(),
+  ClimateDataPostCode: Joi.string().required(),
   CreatedOn: Joi.date().allow(null),
   CreatedByID: Joi.number().allow(null),
   ModifiedOn: Joi.date().allow(null),
