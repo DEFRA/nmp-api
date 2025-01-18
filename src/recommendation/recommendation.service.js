@@ -338,7 +338,7 @@ class RecommendationService extends BaseService {
           ManagementPeriod: {},
           FertiliserManure: {},
         };
-        console.log("r.recommendations", r);
+        
         const previousAppliedLime = await this.processSoilRecommendations(
           harvestYear,
           fieldId,
@@ -346,10 +346,7 @@ class RecommendationService extends BaseService {
         );
         // Add previousAppliedLime to Recommendation object
         data.Recommendation.PreviousAppliedLime = previousAppliedLime || 0;
-        console.log(
-          "data.Recommendation.PreviousAppliedLime",
-          data.Recommendation.PreviousAppliedLime
-        );
+        
         Object.keys(r).forEach((recDataKey) => {
           if (recDataKey.startsWith("Crop_"))
             data.Crop[recDataKey.slice(5)] = r[recDataKey];
