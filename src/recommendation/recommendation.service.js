@@ -1,22 +1,22 @@
 const { AppDataSource } = require("../db/data-source");
-const {
-  RecommendationEntity,
-} = require("../db/entity/recommendation.entity");
+const { RecommendationEntity } = require("../db/entity/recommendation.entity");
 const {
   RecommendationCommentEntity,
 } = require("../db/entity/recommendation-comment.entity");
-const {
-  OrganicManureEntity,
-} = require("../db/entity/organic-manure.entity");
+const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
 const { BaseService } = require("../base/base.service");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
 const MannerApplicationMethodService = require("../vendors/manner/application-method/application-method.service");
-const { FertiliserManuresEntity } = require("../db/entity/fertiliser-manures.entity");
+const {
+  FertiliserManuresEntity,
+} = require("../db/entity/fertiliser-manures.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const { Between } = require("typeorm");
 const { CropEntity } = require("../db/entity/crop.entity");
-const { ManagementPeriodEntity } = require("../db/entity/management-period.entity");
+const {
+  ManagementPeriodEntity,
+} = require("../db/entity/management-period.entity");
 
 class RecommendationService extends BaseService {
   constructor() {
@@ -119,27 +119,30 @@ class RecommendationService extends BaseService {
     };
 
     // If cropOrder is provided, include it in the query
-    if (cropOrder !== null) {
+    if (cropOrder) {
       query.where.CropOrder = cropOrder;
     }
 
-    // If soilAnalysisYear is provided, adjust the query to include years up to soilAnalysisYear
+    // If soilAnalysisYear 2024 is provided, adjust the query to include years up to soilAnalysisYear
+    //Harvestyear 2024
     if (soilAnalysisYear) {
-      if (year > soilAnalysisYear){
-
+      if (year > soilAnalysisYear) {
         query.where.Year = Between(soilAnalysisYear, year); // Include years between `year` and `soilAnalysisYear`
-      }else{
+      } else if (year == soilAnalysisYear) {
         query.where.Year = Between(year, soilAnalysisYear); // Include years between `year` and `soilAnalysisYear`
+      } else if (year < soilAnalysisYear) {
+        return null;
       }
     }
 
     // Determine whether to use `findOne` or `find` based on the provided parameters
-    if (!soilAnalysisYear && cropOrder !== null) {
+    if (!soilAnalysisYear && cropOrder) {
       // If only fieldID, year, and cropOrder are provided, return a single result using findOne
       return await this.cropRepository.findOne(query);
     } else {
       // If soilAnalysisYear is provided, return all crop data between year and soilAnalysisYear
       const cropDataList = await this.cropRepository.find(query);
+      console.log("cropDataList", cropDataList);
       return cropDataList.length > 0 ? cropDataList : null;
     }
   }
@@ -196,7 +199,7 @@ class RecommendationService extends BaseService {
         await this.findAndSumFertiliserManuresByManagementPeriodID(
           previousManagementPeriodData.ID
         );
-
+      console.log("limeForThisManagementPeriod", limeForThisManagementPeriod);
       // Accumulate the lime value
       totalLime += limeForThisManagementPeriod;
     }
@@ -229,73 +232,90 @@ class RecommendationService extends BaseService {
 
       // Get the soilAnalysisYear from the recommendation with pH > 0
       const soilAnalysisYear = recommendationWithPH.Year;
-      console.log(
-        "Recommendation.ManagementPeriodID",
-        Recommendation.ManagementPeriodID
-      );
-      const managementPeriodData = await this.findManagementPeriodByID(
-        Recommendation.ManagementPeriodID
-      );
+      // console.log(
+      //   "RecommendationData",
+      //   Recommendation.Crop_ID
+      // );
+      // console.log(
+      //   "RecommendationData1",
+      //   Recommendation
+      // );
+      // const managementPeriodData = await this.findManagementPeriodByID(
+      //   Recommendation.ManagementPeriodID
+      // );
       // Step 3: Proceed with the process only if pH > 0 is found
-      const cropData = await this.findCropDataByID(managementPeriodData.CropID); // check order 1 or 2
-
+      const cropData = await this.findCropDataByID(Recommendation.Crop_ID); // check order 1 or 2
+      console.log("cropData", cropData);
       let totalLime1 = 0;
       let totalLime2 = 0;
+      let result = 0;
+      if (cropData != null) {
+        // Step 4: Handle CropOrder 1 (first crop)
+        if (cropData.CropOrder === 1) {
+          console.log("croporder1");
+          // Step: Fetch multiple firstCropOrderData based on fieldID, year, and soilAnalysisYear
+          const firstCropOrderDataList =
+            await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
+              fieldId,
+              cropData.Year - 1,
+              soilAnalysisYear,
+              1
+            );
+          console.log("CropOrderDataList", firstCropOrderDataList);
+          if (firstCropOrderDataList != null) {
+            totalLime1 = await this.getApplyLimeInCaseOfMultipleCrops(
+              firstCropOrderDataList
+            );
+          }
 
-      // Step 4: Handle CropOrder 1 (first crop)
-      if (cropData.CropOrder === 1) {
-        // Step: Fetch multiple firstCropOrderData based on fieldID, year, and soilAnalysisYear
-        const firstCropOrderDataList =
-          await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
-            fieldId,
-            cropData.Year - 1,
-            soilAnalysisYear
-          );
+          // Now, totalLime1 contains the sum of lime for all crops found in the list
+          console.log(`Total Lime from all firstCropOrderData: ${totalLime1}`);
+        }
 
-        totalLime1 = await this.getApplyLimeInCaseOfMultipleCrops(
-          firstCropOrderDataList
-        );
+        // Step 5: Handle CropOrder 2 (second crop)
+        if (cropData.CropOrder === 2) {
+          console.log("croporder2");
+          totalLime1 = 0;
+          const CropOrderDataList =
+            await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
+              fieldId,
+              cropData.Year - 1,
+              soilAnalysisYear
+            );
 
-        // Now, totalLime1 contains the sum of lime for all crops found in the list
-        console.log(`Total Lime from all firstCropOrderData: ${totalLime1}`);
+          if (CropOrderDataList != null) {
+            console.log("CropOrderDataList", CropOrderDataList);
+            totalLime1 = await this.getApplyLimeInCaseOfMultipleCrops(
+              CropOrderDataList
+            );
+          }
+          let cropOrder = 1;
+          const firstCropOrderData =
+            await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
+              fieldId,
+              cropData.Year,
+              null,
+              cropOrder
+            );
+          if (firstCropOrderData != null) {
+            console.log("CropOrderDataList", firstCropOrderData);
+            totalLime1 += await this.getApplyLimeInCaseOfMultipleCrops(
+              firstCropOrderData
+            );
+          }
+        }
+
+        // Step 6: Sum total lime values for both crops
+        const totalLime = totalLime1 + totalLime2;
+        console.log("totalLime", totalLime);
+
+        // Step 7: Subtract the total lime from cropN in the recommendation
+        const cropNeedValue = Recommendation.Recommendation_CropN;
+        console.log("cropNeedValue", cropNeedValue);
+        result = cropNeedValue - totalLime;
       }
-
-      // Step 5: Handle CropOrder 2 (second crop)
-      if (cropData.CropOrder === 2) {
-        const CropOrderDataList =
-          await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
-            fieldId,
-            cropData.Year - 1,
-            soilAnalysisYear
-          );
-
-        totalLime1 = await this.getApplyLimeInCaseOfMultipleCrops(
-          CropOrderDataList
-        );
-        let cropOrder = 1;
-        const firstCropOrderData =
-          await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
-            fieldId,
-            cropData.Year,
-            cropOrder
-          );
-        totalLime1 += await this.getApplyLimeInCaseOfMultipleCrops(
-          firstCropOrderData
-        );
-      }
-
-      // Step 6: Sum total lime values for both crops
-      const totalLime = totalLime1 + totalLime2;
-      console.log("totalLime", totalLime);
-
-      // Step 7: Subtract the total lime from cropN in the recommendation
-      const cropNeedValue = Recommendation.CropN;
-      console.log("cropNeedValue", cropNeedValue);
-      const result = cropNeedValue - totalLime;
-
       // Return the result of the calculation
-      return result
-    
+      return result;
     } catch (error) {
       console.error("Error in processSoilRecommendations:", error);
       throw error;
@@ -310,13 +330,23 @@ class RecommendationService extends BaseService {
         fieldId,
         harvestYear,
       ]);
-      const mappedRecommendations = recommendations.map((r) => {
+
+      const mappedRecommendations = recommendations.map(async (r) => {
         const data = {
           Crop: {},
           Recommendation: {},
           ManagementPeriod: {},
           FertiliserManure: {},
         };
+        
+        const previousAppliedLime = await this.processSoilRecommendations(
+          harvestYear,
+          fieldId,
+          r
+        );
+        // Add previousAppliedLime to Recommendation object
+        data.Recommendation.PreviousAppliedLime = previousAppliedLime || 0;
+        
         Object.keys(r).forEach((recDataKey) => {
           if (recDataKey.startsWith("Crop_"))
             data.Crop[recDataKey.slice(5)] = r[recDataKey];
@@ -329,6 +359,7 @@ class RecommendationService extends BaseService {
         });
         return data;
       });
+      console.log("AllGood");
       const PKbalance = await this.PKbalanceRepository.findOne({
         where: {
           Year: harvestYear - 1,
@@ -342,7 +373,8 @@ class RecommendationService extends BaseService {
       });
       const groupedObj = {};
       console.log("PKBalnceee", PKbalance);
-      mappedRecommendations.forEach((r) => {
+      const mappedRecommendationsNew = await Promise.all(mappedRecommendations);
+      mappedRecommendationsNew.forEach((r) => {
         groupedObj[r.Crop.ID] = {
           Crop: r.Crop,
           PKbalance: PKbalance,
@@ -400,6 +432,11 @@ class RecommendationService extends BaseService {
                     NO3N: true,
                   },
                 });
+              // const previousAppliedLime = await this.processSoilRecommendations(
+              //   harvestYear,
+              //   fieldId,
+              //   recData.Recommendation
+              // );
               const currentYear = harvestYear;
               const fiveYearsAgo = currentYear - 5; //crop table crop ID se Management PeriodID Fertilisertable managementperiod se recommendation main croplime se fertriliser minus kaarna hai
 
@@ -428,16 +465,11 @@ class RecommendationService extends BaseService {
                 ...recData.Recommendation,
                 ...recData.FertiliserManure, // Adds FertiliserManure properties to Recommendation
               };
-            ;
-              const previousAppliedLime = await this.processSoilRecommendations(
-                harvestYear,
-                fieldId,
-                recData.Recommendation
-              );
-              // Add previousAppliedLime to the mergedRecommendation object
-              mergedRecommendation.PreviousAppliedLime =
-                previousAppliedLime || 0;
-      
+              // console.log()
+              //               // Add previousAppliedLime to the mergedRecommendation object
+              //               mergedRecommendation.PreviousAppliedLime =
+              //                 previousAppliedLime || 0;
+
               return {
                 Recommendation: mergedRecommendation,
                 RecommendationComments: comments,

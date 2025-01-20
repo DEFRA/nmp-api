@@ -1828,7 +1828,7 @@ console.log('aaaaaaaa')
         },
         harvestYear: crop.Year,
         area: farm.TotalFarmArea,
-        postcode: farm.Postcode,
+        postcode: farm.ClimateDataPostCode,
         altitude: farm.AverageAltitude,
         rainfallAverage: farm.Rainfall,
         excessWinterRainfall: 0, //TODO:: need to find it
@@ -1978,7 +1978,7 @@ console.log('aaaaaaaa')
         },
         harvestYear: crop.Year,
         area: farm.TotalFarmArea,
-        postcode: farm.Postcode,
+        postcode: farm.ClimateDataPostCode,
         altitude: farm.AverageAltitude,
         rainfallAverage: farm.Rainfall,
         excessWinterRainfall: 0, //TODO:: need to find it
@@ -2178,7 +2178,7 @@ console.log('soilAnalysis',soilAnalysis)
   ) {
     return {
       runType: farmData.EnglishRules ? 3 : 4,
-      postcode: farmData.Postcode.split(" ")[0],
+      postcode: farmData.ClimateDataPostCode.split(" ")[0],
       countryID: farmData.EnglishRules ? 1 : 2,
       field: {
         fieldID: fieldData.ID,
