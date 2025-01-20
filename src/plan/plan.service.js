@@ -231,7 +231,7 @@ class PlanService extends BaseService {
         },
         harvestYear: crop.Year,
         area: farm.TotalFarmArea,
-        postcode: farm.Postcode,
+        postcode: farm.ClimateDataPostCode,
         altitude: farm.AverageAltitude,
         rainfallAverage: farm.Rainfall,
         excessWinterRainfall: 0, //TODO:: need to find it
