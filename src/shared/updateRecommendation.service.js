@@ -610,12 +610,10 @@ class UpdateRecommendation {
           );
       } else {
         const cropNutrientsValue = {};
-        nutrientRecommendationsData.calculations.forEach(
-          (recommendation) => {
-            cropNutrientsValue[NutrientsMapper[recommendation.nutrientId]] =
-              recommendation.cropNeedValue;
-          }
-        );
+        nutrientRecommendationsData.calculations.forEach((recommendation) => {
+          cropNutrientsValue[NutrientsMapper[recommendation.nutrientId]] =
+            recommendation.cropNeedValue;
+        });
         // const existingRecommendation = await this.repository.findOne({
         //   where: { ManagementPeriodID: ManagementPeriods[0].ID },
         // });
@@ -623,18 +621,18 @@ class UpdateRecommendation {
           (mp) => mp.ManagementPeriodID === secondCropManagementData.ID
         );
 
-         let savedData= await this.saveRecommendationsForMultipleCrops(
-           transactionalManager,
-           nutrientRecommendationsData,
-           userId,
-           crop,
-           dataMultipleCrops,
-           latestSoilAnalysis,
-           snsAnalysesData,
-           allRecommendations
-         );
-      
-      savedRecommendation = savedData.firstCropSaveData
+        let savedData = await this.saveRecommendationsForMultipleCrops(
+          transactionalManager,
+          nutrientRecommendationsData,
+          userId,
+          crop,
+          dataMultipleCrops,
+          latestSoilAnalysis,
+          snsAnalysesData,
+          allRecommendations
+        );
+
+        savedRecommendation = savedData.firstCropSaveData;
         // if (existingRecommendation) {
         //   // Update the existing recommendation
         //   existingRecommendation.CropN = cropNutrientsValue.N;
@@ -715,23 +713,50 @@ class UpdateRecommendation {
             },
             {}
           );
+        // Fetch all existing comments related to the savedRecommendation.ID at once
+        const existingallComments =
+          await this.recommendationCommentRepository.find({
+            where: {
+              RecommendationID: savedRecommendation?.ID,
+            },
+          });
         for (const nutrientId in notesByNutrient) {
           const concatenatedNote = notesByNutrient[nutrientId]?.join(" "); // Concatenate notes for the same nutrientId
 
-          // Create a new recommendation comment with the concatenated notes
-          const newComment = this.recommendationCommentRepository?.create({
-            Nutrient: parseInt(nutrientId),
-            Comment: concatenatedNote, // Store concatenated notes
-            RecommendationID: savedRecommendation?.ID,
-            CreatedOn: new Date(),
-            CreatedByID: userId,
-          });
-
-          const savedRecommendationComment = await transactionalManager?.save(
-            RecommendationCommentEntity,
-            newComment
+          // Check if a recommendation comment already exists for the Nutrient in the fetched data
+          const alreadyExistingComment = existingallComments.find(
+            (comment) => comment.Nutrient === parseInt(nutrientId)
           );
-          RecommendationComments.push(savedRecommendationComment);
+
+          let newComment;
+
+          if (alreadyExistingComment) {
+            // Update the existing comment
+            alreadyExistingComment.Comment = concatenatedNote; // Update the comment with the concatenated notes
+            alreadyExistingComment.ModifiedOn = new Date(); // Optionally track when the comment was modified
+            alreadyExistingComment.ModifiedByID = userId;
+
+            // Save the updated comment
+            newComment = await transactionalManager.save(
+              RecommendationCommentEntity,
+              alreadyExistingComment
+            );
+          } else {
+            // Create a new recommendation comment if it doesn't exist
+            newComment = this.recommendationCommentRepository.create({
+              Nutrient: parseInt(nutrientId),
+              Comment: concatenatedNote, // Store concatenated notes
+              RecommendationID: savedRecommendation?.ID,
+              CreatedOn: new Date(),
+              CreatedByID: userId,
+            });
+
+            // Save the new comment
+            newComment = await transactionalManager.save(
+              RecommendationCommentEntity,
+              newComment
+            );
+          }
         }
         Recommendations.push({
           Recommendation: savedRecommendation,
@@ -1803,7 +1828,7 @@ console.log('aaaaaaaa')
         },
         harvestYear: crop.Year,
         area: farm.TotalFarmArea,
-        postcode: farm.Postcode,
+        postcode: farm.ClimateDataPostCode,
         altitude: farm.AverageAltitude,
         rainfallAverage: farm.Rainfall,
         excessWinterRainfall: 0, //TODO:: need to find it
@@ -1953,7 +1978,7 @@ console.log('aaaaaaaa')
         },
         harvestYear: crop.Year,
         area: farm.TotalFarmArea,
-        postcode: farm.Postcode,
+        postcode: farm.ClimateDataPostCode,
         altitude: farm.AverageAltitude,
         rainfallAverage: farm.Rainfall,
         excessWinterRainfall: 0, //TODO:: need to find it
@@ -2136,7 +2161,6 @@ console.log('soilAnalysis',soilAnalysis)
         .toISOString()
         .split("T")[0],
       rainfallPostApplication: manure.Rainfall,
-      cropNUptake: manure.AutumnCropNitrogenUptake,
       windspeedID: manure.WindspeedID,
       rainTypeID: manure.RainfallWithinSixHoursID,
       topsoilMoistureID: manure.MoistureID,
@@ -2154,7 +2178,7 @@ console.log('soilAnalysis',soilAnalysis)
   ) {
     return {
       runType: farmData.EnglishRules ? 3 : 4,
-      postcode: farmData.Postcode.split(" ")[0],
+      postcode: farmData.ClimateDataPostCode.split(" ")[0],
       countryID: farmData.EnglishRules ? 1 : 2,
       field: {
         fieldID: fieldData.ID,
