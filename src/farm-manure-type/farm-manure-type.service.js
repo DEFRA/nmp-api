@@ -29,21 +29,26 @@ class FarmManureTypeService extends BaseService {
   constructor() {
     super(FarmManureTypeEntity);
     this.repository = AppDataSource.getRepository(FarmManureTypeEntity);
-    
   }
-
-  
 
   async getFarmManureTypebyFarmId(farmdId) {
-    const farmManureTypeData = (
-      await this.repository.find({
-        where: { FarmID: farmdId },
-      })
-    );
-    
-    console.log("FarmManure",farmManureTypeData)
+    const farmManureTypeData = await this.repository.find({
+      where: { FarmID: farmdId },
+    });
+
+    console.log("FarmManure", farmManureTypeData);
     return farmManureTypeData;
   }
-  
+  async checkFarmManureTypeExists(farmId, manureTypeId, manureTypeName) {
+    const farmManureType = await this.repository.findOne({
+      where: {
+        FarmID: farmId,
+        ManureTypeID: manureTypeId,
+        ManureTypeName: manureTypeName,
+      },
+    });
+
+    return !!farmManureType; // Return true if exists, false otherwise
+  }
 }
 module.exports = { FarmManureTypeService };
