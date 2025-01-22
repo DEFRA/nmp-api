@@ -1382,6 +1382,7 @@ class OrganicManureService extends BaseService {
             where: {
               FarmID: farmManureTypeData.FarmID,
               ManureTypeID: farmManureTypeData.ManureTypeID,
+              ManureTypeName: farmManureTypeData.ManureTypeName,
             },
           });
         if (existingFarmManureType) {
@@ -1406,6 +1407,7 @@ class OrganicManureService extends BaseService {
             this.farmManureTypeRepository.create({
               ...farmManureTypeData,
               CreatedByID: userId,
+              CreatedOn:new Date()
             })
           );
         }
