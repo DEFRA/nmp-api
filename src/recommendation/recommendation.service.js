@@ -306,13 +306,15 @@ class RecommendationService extends BaseService {
         }
 
         // Step 6: Sum total lime values for both crops
-        const totalLime = totalLime1 + totalLime2;
-        console.log("totalLime", totalLime);
+        
+        console.log("totalLime", totalLime1);
 
         // Step 7: Subtract the total lime from cropN in the recommendation
         const cropNeedValue = Recommendation.Recommendation_CropN;
         console.log("cropNeedValue", cropNeedValue);
-        result = cropNeedValue - totalLime;
+        if (totalLime1 > 0) {
+          result = cropNeedValue - totalLime1;
+        }
       }
       // Return the result of the calculation
       return result;
@@ -338,7 +340,7 @@ class RecommendationService extends BaseService {
           ManagementPeriod: {},
           FertiliserManure: {},
         };
-        
+
         const previousAppliedLime = await this.processSoilRecommendations(
           harvestYear,
           fieldId,
@@ -346,7 +348,7 @@ class RecommendationService extends BaseService {
         );
         // Add previousAppliedLime to Recommendation object
         data.Recommendation.PreviousAppliedLime = previousAppliedLime || 0;
-        
+
         Object.keys(r).forEach((recDataKey) => {
           if (recDataKey.startsWith("Crop_"))
             data.Crop[recDataKey.slice(5)] = r[recDataKey];

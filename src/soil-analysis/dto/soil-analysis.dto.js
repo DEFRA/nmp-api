@@ -10,7 +10,7 @@ const SoilAnalysisDto = Joi.object({
   Phosphorus: Joi.number().required().allow(null),
   PhosphorusIndex: Joi.number().integer().required().allow(null),
   Potassium: Joi.number().required().allow(null),
-  PotassiumIndex: Joi.number().integer().required().allow(null),
+  PotassiumIndex: Joi.number().integer().min(-2).max(9).required().allow(null),
   Magnesium: Joi.number().required().allow(null),
   MagnesiumIndex: Joi.number().integer().required().allow(null),
   SoilNitrogenSupply: Joi.number().required().allow(null),

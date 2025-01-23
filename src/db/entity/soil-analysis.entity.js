@@ -48,7 +48,7 @@ const SoilAnalysisEntity = new EntitySchema({
       nullable: true,
     },
     PotassiumIndex: {
-      type: "tinyint",
+      type: "smallint",
       nullable: true,
     },
     Magnesium: {
