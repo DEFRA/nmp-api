@@ -16,14 +16,6 @@ const FieldEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
-    TopSoilID: {
-      type: "int",
-      nullable: true,
-    },
-    SubSoilID: {
-      type: "int",
-      nullable: true,
-    },
     NVZProgrammeID: {
       type: "int",
       default: 1,
@@ -128,18 +120,6 @@ const FieldEntity = new EntitySchema({
       target: "SoilAnalysis",
       joinColumn: { name: "ID" },
       inverseSide: "Field",
-    },
-    SubSoil: {
-      target: "SubSoil",
-      type: "many-to-one",
-      inverseSide: "Fields",
-      joinColumn: { name: "SubSoilID" },
-    },
-    TopSoil: {
-      target: "TopSoil",
-      type: "many-to-one",
-      inverseSide: "Fields",
-      joinColumn: { name: "TopSoilID" },
     },
     PreviousGrasses: {
       type: "one-to-many",

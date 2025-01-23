@@ -39,6 +39,7 @@ const {
 const {
   UpdateRecommendation,
 } = require("../shared/updateRecommendation.service");
+const { SoilTypeSoilTextureEntity } = require("../db/entity/soil-type-soil-texture.entity");
 
 class OrganicManureService extends BaseService {
   constructor() {
@@ -75,6 +76,9 @@ class OrganicManureService extends BaseService {
       FertiliserManuresEntity
     );
     this.UpdateRecommendation = new UpdateRecommendation();
+    this.soilTypeTextureRepository = AppDataSource.getRepository(
+      SoilTypeSoilTextureEntity
+    );
   }
 
   async getTotalNitrogen(managementPeriodID, fromDate, toDate, confirm) {
@@ -468,7 +472,8 @@ class OrganicManureService extends BaseService {
     fieldData,
     cropTypeLinkingData,
     organicManureData,
-    manureApplications
+    manureApplications,
+    soilTypeTextureData
   ) {
     return {
       runType: farmData.EnglishRules ? 3 : 4,
@@ -478,8 +483,8 @@ class OrganicManureService extends BaseService {
         fieldID: fieldData.ID,
         fieldName: fieldData.Name,
         MannerCropTypeID: cropTypeLinkingData.MannerCropTypeID,
-        topsoilID: fieldData.TopSoilID,
-        subsoilID: fieldData.SubSoilID,
+        topsoilID: soilTypeTextureData.TopSoilID,
+        subsoilID: soilTypeTextureData.SubSoilID,
         isInNVZ: fieldData.IsWithinNVZ,
       },
       manureApplications,
@@ -910,6 +915,9 @@ class OrganicManureService extends BaseService {
         const soilAnalsisData = soilAnalysisAllData.filter((soilAnalyses) => {
           return soilAnalyses.FieldID === cropData.FieldID;
         });
+        const soilTypeTextureData = this.soilTypeTextureRepository.findOneBy({
+          SoilTypeID: fieldData.SoilTypeID,
+        });
         let isSoilAnalysisHavePAndK = false;
         if (soilAnalsisData) {
           isSoilAnalysisHavePAndK = soilAnalsisData.some(
@@ -934,7 +942,8 @@ class OrganicManureService extends BaseService {
             fieldData,
             cropTypeLinkingData,
             organicManureData,
-            manureApplications
+            manureApplications,
+            soilTypeTextureData
           );
         } else if (newOrganicManure == false) {
           // mannerOutputReq = {
@@ -1407,7 +1416,7 @@ class OrganicManureService extends BaseService {
             this.farmManureTypeRepository.create({
               ...farmManureTypeData,
               CreatedByID: userId,
-              CreatedOn:new Date()
+              CreatedOn: new Date(),
             })
           );
         }
