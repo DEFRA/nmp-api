@@ -915,7 +915,7 @@ class OrganicManureService extends BaseService {
         const soilAnalsisData = soilAnalysisAllData.filter((soilAnalyses) => {
           return soilAnalyses.FieldID === cropData.FieldID;
         });
-        const soilTypeTextureData = this.soilTypeTextureRepository.findOneBy({
+        const soilTypeTextureData = await this.soilTypeTextureRepository.findOneBy({
           SoilTypeID: fieldData.SoilTypeID,
         });
         let isSoilAnalysisHavePAndK = false;
