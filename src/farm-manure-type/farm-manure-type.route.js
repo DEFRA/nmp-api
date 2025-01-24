@@ -36,5 +36,37 @@ module.exports = [
         return getController(request, h).getFarmManureTypeByFarmId();
       },
     },
-  }
+  },
+  {
+    method: "GET",
+    path: "/farm-manure-type/check",
+    options: {
+      tags: ["api", "Farm Manure Type"],
+      description:
+        "Check if FarmManureType exists by FarmID, ManureTypeID, and ManureTypeName",
+      validate: {
+        query: Joi.object({
+          farmId: Joi.number().integer().required(),
+          manureTypeId: Joi.number().integer().required(),
+          manureTypeName: Joi.string().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+      handler: async (request, h) => {
+        return getController(request, h).checkFarmManureTypeExists();
+      },
+    },
+  },
 ];

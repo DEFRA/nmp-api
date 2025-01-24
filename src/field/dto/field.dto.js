@@ -18,8 +18,6 @@ const FieldEntitySchema = Joi.object({
   SoilOverChalk: Joi.boolean().optional().allow(null),
   IsWithinNVZ: Joi.boolean().optional(),
   IsAbove300SeaLevel: Joi.boolean().optional(),
-  TopSoilID: Joi.number().integer().allow(null),
-  SubSoilID: Joi.number().integer().allow(null),
   IsActive: Joi.boolean().required(),
   CreatedOn: Joi.date().iso().allow(null),
   CreatedByID: Joi.number().integer().allow(null),
@@ -46,7 +44,7 @@ const SoilAnalysisSchema = Joi.object({
     .default(0)
     .allow(null),
   Potassium: Joi.number().integer().allow(null),
-  PotassiumIndex: Joi.number().integer().min(0).max(255).default(0).allow(null),
+  PotassiumIndex: Joi.number().integer().min(-2).max(9).allow(null),
   Magnesium: Joi.number().integer().allow(null),
   MagnesiumIndex: Joi.number().integer().min(0).max(255).default(0).allow(null),
   SoilNitrogenSupply: Joi.number().integer().allow(null),
