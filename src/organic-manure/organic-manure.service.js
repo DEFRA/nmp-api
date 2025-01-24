@@ -100,6 +100,41 @@ class OrganicManureService extends BaseService {
 
     return result.totalN;
   }
+  async getTotalNitrogenIfIsGreenFoodCompost(
+    managementPeriodID,
+    fromDate,
+    toDate,
+    confirm,
+    isGreenFoodCompost
+  ) {
+    const query = this.repository
+      .createQueryBuilder("organicManures")
+      .select(
+        "SUM(organicManures.N * organicManures.ApplicationRate)",
+        "totalN"
+      )
+      .where("organicManures.ManagementPeriodID = :managementPeriodID", {
+        managementPeriodID,
+      })
+      .andWhere(
+        "organicManures.ApplicationDate BETWEEN :fromDate AND :toDate",
+        {
+          fromDate,
+          toDate,
+        }
+      )
+      .andWhere("organicManures.Confirm = :confirm", { confirm });
+
+    // Add additional filtering for ManureTypeID when isGreenFoodCompost is true
+    if (isGreenFoodCompost) {
+      query.andWhere("organicManures.ManureTypeID IN (:...manureTypeIDs)", {
+        manureTypeIDs: [24, 32],
+      });
+    }
+
+    const result = await query.getRawOne();
+    return result.totalN;
+  }
 
   async getManureTypeIdsbyFieldAndYear(fieldId, year, confirm) {
     const cropId = (
@@ -915,9 +950,10 @@ class OrganicManureService extends BaseService {
         const soilAnalsisData = soilAnalysisAllData.filter((soilAnalyses) => {
           return soilAnalyses.FieldID === cropData.FieldID;
         });
-        const soilTypeTextureData = await this.soilTypeTextureRepository.findOneBy({
-          SoilTypeID: fieldData.SoilTypeID,
-        });
+        const soilTypeTextureData =
+          await this.soilTypeTextureRepository.findOneBy({
+            SoilTypeID: fieldData.SoilTypeID,
+          });
         let isSoilAnalysisHavePAndK = false;
         if (soilAnalsisData) {
           isSoilAnalysisHavePAndK = soilAnalsisData.some(
