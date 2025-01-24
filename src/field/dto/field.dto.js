@@ -46,7 +46,7 @@ const SoilAnalysisSchema = Joi.object({
     .default(0)
     .allow(null),
   Potassium: Joi.number().integer().allow(null),
-  PotassiumIndex: Joi.number().integer().min(0).max(255).default(0).allow(null),
+  PotassiumIndex: Joi.number().integer().min(-2).max(9).allow(null),
   Magnesium: Joi.number().integer().allow(null),
   MagnesiumIndex: Joi.number().integer().min(0).max(255).default(0).allow(null),
   SoilNitrogenSupply: Joi.number().integer().allow(null),
