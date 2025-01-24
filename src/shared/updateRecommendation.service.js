@@ -28,6 +28,7 @@ const {
 } = require("../db/entity/fertiliser-manures.entity");
 const { NutrientsMapper } = require("../constants/nutrient-mapper");
 const { InprogressCalculationsEntity } = require("../db/entity/inprogress-calculations-entity");
+const { SoilTypeSoilTextureEntity } = require("../db/entity/soil-type-soil-texture.entity");
 
 class UpdateRecommendation {
   constructor() {
@@ -65,6 +66,9 @@ class UpdateRecommendation {
     );
     
     this.farmExistRepository =AppDataSource.getRepository(InprogressCalculationsEntity)
+    this.soilTypeTextureRepository = AppDataSource.getRepository(
+      SoilTypeSoilTextureEntity
+    );
   }
 
   async getYearsGreaterThanGivenYear(fieldID, year) {
@@ -257,6 +261,9 @@ class UpdateRecommendation {
         await this.CropTypeLinkingRepository.findOneBy({
           CropTypeID: cropData.CropTypeID,
         });
+          const soilTypeTextureData = this.soilTypeTextureRepository.findOneBy({
+            SoilTypeID: fieldData.SoilTypeID,
+          });
       const Errors = [];
       const {
         latestSoilAnalysis,
@@ -284,7 +291,8 @@ class UpdateRecommendation {
         cropData,
         farmData,
         fieldData,
-        cropTypeLinkingData
+        cropTypeLinkingData,
+        soilTypeTextureData
       );
 
       const mannerOutputs = await this.processMannerOutputs(
@@ -2184,8 +2192,8 @@ console.log('soilAnalysis',soilAnalysis)
         fieldID: fieldData.ID,
         fieldName: fieldData.Name,
         MannerCropTypeID: cropTypeLinkingData.MannerCropTypeID,
-        topsoilID: fieldData.TopSoilID,
-        subsoilID: fieldData.SubSoilID,
+        topsoilID: soilTypeTextureData.TopSoilID,
+        subsoilID: soilTypeTextureData.SubSoilID,
         isInNVZ: fieldData.IsWithinNVZ,
       },
       manureApplications,
