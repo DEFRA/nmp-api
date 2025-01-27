@@ -498,6 +498,8 @@ class UpdateRecommendation {
       console.log("Current Year",pkBalance);   
       if (crop.CropTypeID === 170 || crop.CropInfo1 === null) {      
         try {    
+          if(pkBalance!=null)
+          {
           let saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldId,
             crop,
@@ -516,6 +518,7 @@ class UpdateRecommendation {
               saveAndUpdatePKBalance.saveAndUpdatePKBalance
             );
           }
+        }
         } catch (error) {
           console.error(
             `Error while saving PKBalance Data FieldId: ${fieldId} And Year:${crop?.Year}:`,

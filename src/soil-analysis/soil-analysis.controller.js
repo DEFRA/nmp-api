@@ -43,13 +43,15 @@ class SoilAnalysesController {
   async createSoilAnalysis() {
     const soilAnalysisBody = this.#request.payload.SoilAnalysis;
     const userId = this.#request.userId;
-
+const pKBalanceData=this.#request.payload.PKBalance;
     try {
       const data = await this.#soilAnalysisService.createSoilAnalysis(
         soilAnalysisBody,
-        userId
+        userId,
+        pKBalanceData,
+        this.#request
       );
-      return this.#h.response({ SoilAnalysis: data });
+      return this.#h.response({  data });
     } catch (error) {
       return this.#h.response({ error });
     }
