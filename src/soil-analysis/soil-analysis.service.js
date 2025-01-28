@@ -20,6 +20,7 @@ class SoilAnalysesService extends BaseService {
       const soilAnalysis = await transactionalManager.save(SoilAnalysisEntity, {
         ...soilAnalysisBody,
         CreatedByID: userId,
+        CreatedOn: new Date(),
       });
          
          // Check for PK Balance entry
