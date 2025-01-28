@@ -164,7 +164,7 @@ const OrganicManureEntity = new EntitySchema({
       default: 0,
       nullable: true,
     },
-    PercentOfTotalNForUseInNmaxCalculation: {
+    AvailableNForNMax: {
       type: "decimal",
       precision: 18,
       scale: 3,

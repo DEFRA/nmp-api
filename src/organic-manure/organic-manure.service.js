@@ -110,7 +110,7 @@ class OrganicManureService extends BaseService {
     const query = this.repository
       .createQueryBuilder("organicManures")
       .select(
-        "SUM(organicManures.N * organicManures.ApplicationRate)",
+        "SUM(organicManures.AvailableNForNMax)",
         "totalN"
       )
       .where("organicManures.ManagementPeriodID = :managementPeriodID", {
@@ -128,6 +128,11 @@ class OrganicManureService extends BaseService {
     // Add additional filtering for ManureTypeID when isGreenFoodCompost is true
     if (isGreenFoodCompost) {
       query.andWhere("organicManures.ManureTypeID IN (:...manureTypeIDs)", {
+        manureTypeIDs: [24, 32],
+      });
+    }
+    if (!isGreenFoodCompost) {
+      query.andWhere("organicManures.ManureTypeID NOT IN (:...manureTypeIDs)", {
         manureTypeIDs: [24, 32],
       });
     }
