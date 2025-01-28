@@ -532,27 +532,27 @@ class OrganicManureService extends BaseService {
     allRecommendations
   ) {
     let cropOrder1Data = {
-      CropN: 0,
-      ManureN: 0,
-      FertilizerN: 0,
-      CropP2O5: 0,
-      ManureP2O5: 0,
-      FertilizerP2O5: 0,
-      CropK2O: 0,
-      ManureK2O: 0,
-      FertilizerK2O: 0,
-      CropMgO: 0,
-      ManureMgO: 0,
-      FertilizerMgO: 0,
-      CropSO3: 0,
-      ManureSO3: 0,
-      FertilizerSO3: 0,
-      CropNa2O: 0,
-      ManureNa2O: 0,
-      FertilizerNa2O: 0,
-      CropLime: 0,
-      ManureLime: 0,
-      FertilizerLime: 0,
+      CropN: null,
+      ManureN: null,
+      FertilizerN: null,
+      CropP2O5: null,
+      ManureP2O5: null,
+      FertilizerP2O5: null,
+      CropK2O: null,
+      ManureK2O: null,
+      FertilizerK2O: null,
+      CropMgO: null,
+      ManureMgO: null,
+      FertilizerMgO: null,
+      CropSO3: null,
+      ManureSO3: null,
+      FertilizerSO3: null,
+      CropNa2O: null,
+      ManureNa2O: null,
+      FertilizerNa2O: null,
+      CropLime: null,
+      ManureLime: null,
+      FertilizerLime: null,
       PH: latestSoilAnalysis?.PH?.toString(),
       SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString(),
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString(),
@@ -604,22 +604,22 @@ class OrganicManureService extends BaseService {
               break;
             case 3:
               cropOrder1Data.CropMgO = calculation.recommendation;
-              cropOrder1Data.ManureMgO = calculation.applied;
+              cropOrder1Data.ManureMgO = null;
               cropOrder1Data.FertilizerMgO = calculation.cropNeed;
               break;
             case 4:
-              cropOrder2Data.CropNa2O = calculation.recommendation;
-              cropOrder2Data.ManureNa2O = calculation.applied;
-              cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
+              cropOrder1Data.CropNa2O = calculation.recommendation;
+              cropOrder1Data.ManureNa2O = calculation.applied;
+              cropOrder1Data.FertilizerNa2O = calculation.cropNeed;
               break;
             case 5:
-              cropOrder2Data.CropSO3 = calculation.recommendation;
-              cropOrder2Data.ManureSO3 = calculation.applied;
-              cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
+              cropOrder1Data.CropSO3 = calculation.recommendation;
+              cropOrder1Data.ManureSO3 = calculation.applied;
+              cropOrder1Data.FertilizerSO3 = calculation.cropNeed;
               break;
             case 6:
               cropOrder1Data.CropLime = calculation.recommendation;
-              cropOrder1Data.ManureLime = calculation.applied;
+              cropOrder1Data.ManureLime = null;
               cropOrder1Data.FertilizerLime = calculation.cropNeed;
               break;
           }
@@ -686,7 +686,7 @@ class OrganicManureService extends BaseService {
               break;
             case 3:
               cropOrder2Data.CropMgO = calculation.recommendation;
-              cropOrder2Data.ManureMgO = calculation.applied;
+              cropOrder2Data.ManureMgO = null;
               cropOrder2Data.FertilizerMgO = calculation.cropNeed;
               break;
             case 4:
@@ -701,7 +701,7 @@ class OrganicManureService extends BaseService {
               break;
             case 6:
               cropOrder2Data.CropLime = calculation.recommendation;
-              cropOrder2Data.ManureLime = calculation.applied;
+              cropOrder2Data.ManureLime = null;
               cropOrder2Data.FertilizerLime = calculation.cropNeed;
               break;
           }
