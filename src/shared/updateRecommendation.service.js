@@ -28,6 +28,7 @@ const {
 } = require("../db/entity/fertiliser-manures.entity");
 const { NutrientsMapper } = require("../constants/nutrient-mapper");
 const { InprogressCalculationsEntity } = require("../db/entity/inprogress-calculations-entity");
+const { SoilTypeSoilTextureEntity } = require("../db/entity/soil-type-soil-texture.entity");
 
 class UpdateRecommendation {
   constructor() {
@@ -65,6 +66,9 @@ class UpdateRecommendation {
     );
     
     this.farmExistRepository =AppDataSource.getRepository(InprogressCalculationsEntity)
+    this.soilTypeTextureRepository = AppDataSource.getRepository(
+      SoilTypeSoilTextureEntity
+    );
   }
 
   async getYearsGreaterThanGivenYear(fieldID, year) {
@@ -257,6 +261,9 @@ class UpdateRecommendation {
         await this.CropTypeLinkingRepository.findOneBy({
           CropTypeID: cropData.CropTypeID,
         });
+          const soilTypeTextureData = this.soilTypeTextureRepository.findOneBy({
+            SoilTypeID: fieldData.SoilTypeID,
+          });
       const Errors = [];
       const {
         latestSoilAnalysis,
@@ -284,7 +291,8 @@ class UpdateRecommendation {
         cropData,
         farmData,
         fieldData,
-        cropTypeLinkingData
+        cropTypeLinkingData,
+        soilTypeTextureData
       );
 
       const mannerOutputs = await this.processMannerOutputs(
@@ -986,18 +994,6 @@ class UpdateRecommendation {
           }
           break;
         case 4:
-          // Sulfur (SO3) handling
-          if (sequenceId === 1) {
-            cropOrder1Data.CropSO3 = calculation.recommendation;
-            cropOrder1Data.ManureSO3 = calculation.applied;
-            cropOrder1Data.FertilizerSO3 = calculation.cropNeed;
-          } else if (sequenceId === 2) {
-            cropOrder2Data.CropSO3 = calculation.recommendation;
-            cropOrder2Data.ManureSO3 = calculation.applied;
-            cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
-          }
-          break;
-        case 5:
           // Sodium (Na2O) handling
           if (sequenceId === 1) {
             cropOrder1Data.CropNa2O = calculation.recommendation;
@@ -1007,6 +1003,18 @@ class UpdateRecommendation {
             cropOrder2Data.CropNa2O = calculation.recommendation;
             cropOrder2Data.ManureNa2O = calculation.applied;
             cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
+          }
+          break;
+        case 5:
+          // Sulfur (SO3) handling
+          if (sequenceId === 1) {
+            cropOrder1Data.CropSO3 = calculation.recommendation;
+            cropOrder1Data.ManureSO3 = calculation.applied;
+            cropOrder1Data.FertilizerSO3 = calculation.cropNeed;
+          } else if (sequenceId === 2) {
+            cropOrder2Data.CropSO3 = calculation.recommendation;
+            cropOrder2Data.ManureSO3 = calculation.applied;
+            cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
           }
           break;
         case 6:
@@ -1557,14 +1565,14 @@ console.log('aaaaaaaa')
               cropOrder1Data.FertilizerMgO = calculation.cropNeed;
               break;
             case 4:
-              cropOrder1Data.CropSO3 = calculation.recommendation;
-              cropOrder1Data.ManureSO3 = calculation.applied;
-              cropOrder1Data.FertilizerSO3 = calculation.cropNeed;
+              cropOrder2Data.CropNa2O = calculation.recommendation;
+              cropOrder2Data.ManureNa2O = calculation.applied;
+              cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
               break;
             case 5:
-              cropOrder1Data.CropNa2O = calculation.recommendation;
-              cropOrder1Data.ManureNa2O = calculation.applied;
-              cropOrder1Data.FertilizerNa2O = calculation.cropNeed;
+              cropOrder2Data.CropSO3 = calculation.recommendation;
+              cropOrder2Data.ManureSO3 = calculation.applied;
+              cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
               break;
             case 6:
               cropOrder1Data.CropLime = calculation.recommendation;
@@ -1639,14 +1647,14 @@ console.log('aaaaaaaa')
               cropOrder2Data.FertilizerMgO = calculation.cropNeed;
               break;
             case 4:
-              cropOrder2Data.CropSO3 = calculation.recommendation;
-              cropOrder2Data.ManureSO3 = calculation.applied;
-              cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
-              break;
-            case 5:
               cropOrder2Data.CropNa2O = calculation.recommendation;
               cropOrder2Data.ManureNa2O = calculation.applied;
               cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
+              break;
+            case 5:
+              cropOrder2Data.CropSO3 = calculation.recommendation;
+              cropOrder2Data.ManureSO3 = calculation.applied;
+              cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
               break;
             case 6:
               cropOrder2Data.CropLime = calculation.recommendation;
@@ -2184,8 +2192,8 @@ console.log('soilAnalysis',soilAnalysis)
         fieldID: fieldData.ID,
         fieldName: fieldData.Name,
         MannerCropTypeID: cropTypeLinkingData.MannerCropTypeID,
-        topsoilID: fieldData.TopSoilID,
-        subsoilID: fieldData.SubSoilID,
+        topsoilID: soilTypeTextureData.TopSoilID,
+        subsoilID: soilTypeTextureData.SubSoilID,
         isInNVZ: fieldData.IsWithinNVZ,
       },
       manureApplications,

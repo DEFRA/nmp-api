@@ -30,4 +30,5 @@ module.exports = [
   ...require("./country/country.route"),
   ...require("./grassManagementOptions/grassManagementOptions.route"),
   ...require("./inprogress-calculations/Inprogress-calculations.route"),
+  ...require("./soil-type-soil-texture/soil-type-soil-texture.route"),
 ];

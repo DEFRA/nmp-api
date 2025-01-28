@@ -39,6 +39,7 @@ const {
 const {
   UpdateRecommendation,
 } = require("../shared/updateRecommendation.service");
+const { SoilTypeSoilTextureEntity } = require("../db/entity/soil-type-soil-texture.entity");
 
 class OrganicManureService extends BaseService {
   constructor() {
@@ -75,6 +76,9 @@ class OrganicManureService extends BaseService {
       FertiliserManuresEntity
     );
     this.UpdateRecommendation = new UpdateRecommendation();
+    this.soilTypeTextureRepository = AppDataSource.getRepository(
+      SoilTypeSoilTextureEntity
+    );
   }
 
   async getTotalNitrogen(managementPeriodID, fromDate, toDate, confirm) {
@@ -468,7 +472,8 @@ class OrganicManureService extends BaseService {
     fieldData,
     cropTypeLinkingData,
     organicManureData,
-    manureApplications
+    manureApplications,
+    soilTypeTextureData
   ) {
     return {
       runType: farmData.EnglishRules ? 3 : 4,
@@ -478,8 +483,8 @@ class OrganicManureService extends BaseService {
         fieldID: fieldData.ID,
         fieldName: fieldData.Name,
         MannerCropTypeID: cropTypeLinkingData.MannerCropTypeID,
-        topsoilID: fieldData.TopSoilID,
-        subsoilID: fieldData.SubSoilID,
+        topsoilID: soilTypeTextureData.TopSoilID,
+        subsoilID: soilTypeTextureData.SubSoilID,
         isInNVZ: fieldData.IsWithinNVZ,
       },
       manureApplications,
@@ -603,14 +608,14 @@ class OrganicManureService extends BaseService {
               cropOrder1Data.FertilizerMgO = calculation.cropNeed;
               break;
             case 4:
-              cropOrder1Data.CropSO3 = calculation.recommendation;
-              cropOrder1Data.ManureSO3 = calculation.applied;
-              cropOrder1Data.FertilizerSO3 = calculation.cropNeed;
+              cropOrder2Data.CropNa2O = calculation.recommendation;
+              cropOrder2Data.ManureNa2O = calculation.applied;
+              cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
               break;
             case 5:
-              cropOrder1Data.CropNa2O = calculation.recommendation;
-              cropOrder1Data.ManureNa2O = calculation.applied;
-              cropOrder1Data.FertilizerNa2O = calculation.cropNeed;
+              cropOrder2Data.CropSO3 = calculation.recommendation;
+              cropOrder2Data.ManureSO3 = calculation.applied;
+              cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
               break;
             case 6:
               cropOrder1Data.CropLime = calculation.recommendation;
@@ -685,14 +690,14 @@ class OrganicManureService extends BaseService {
               cropOrder2Data.FertilizerMgO = calculation.cropNeed;
               break;
             case 4:
-              cropOrder2Data.CropSO3 = calculation.recommendation;
-              cropOrder2Data.ManureSO3 = calculation.applied;
-              cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
-              break;
-            case 5:
               cropOrder2Data.CropNa2O = calculation.recommendation;
               cropOrder2Data.ManureNa2O = calculation.applied;
               cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
+              break;
+            case 5:
+              cropOrder2Data.CropSO3 = calculation.recommendation;
+              cropOrder2Data.ManureSO3 = calculation.applied;
+              cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
               break;
             case 6:
               cropOrder2Data.CropLime = calculation.recommendation;
@@ -910,6 +915,9 @@ class OrganicManureService extends BaseService {
         const soilAnalsisData = soilAnalysisAllData.filter((soilAnalyses) => {
           return soilAnalyses.FieldID === cropData.FieldID;
         });
+        const soilTypeTextureData = await this.soilTypeTextureRepository.findOneBy({
+          SoilTypeID: fieldData.SoilTypeID,
+        });
         let isSoilAnalysisHavePAndK = false;
         if (soilAnalsisData) {
           isSoilAnalysisHavePAndK = soilAnalsisData.some(
@@ -934,7 +942,8 @@ class OrganicManureService extends BaseService {
             fieldData,
             cropTypeLinkingData,
             organicManureData,
-            manureApplications
+            manureApplications,
+            soilTypeTextureData
           );
         } else if (newOrganicManure == false) {
           // mannerOutputReq = {
@@ -1382,6 +1391,7 @@ class OrganicManureService extends BaseService {
             where: {
               FarmID: farmManureTypeData.FarmID,
               ManureTypeID: farmManureTypeData.ManureTypeID,
+              ManureTypeName: farmManureTypeData.ManureTypeName,
             },
           });
         if (existingFarmManureType) {
@@ -1406,6 +1416,7 @@ class OrganicManureService extends BaseService {
             this.farmManureTypeRepository.create({
               ...farmManureTypeData,
               CreatedByID: userId,
+              CreatedOn: new Date(),
             })
           );
         }
