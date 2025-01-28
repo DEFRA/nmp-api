@@ -608,14 +608,14 @@ class OrganicManureService extends BaseService {
               cropOrder1Data.FertilizerMgO = calculation.cropNeed;
               break;
             case 4:
-              cropOrder1Data.CropSO3 = calculation.recommendation;
-              cropOrder1Data.ManureSO3 = calculation.applied;
-              cropOrder1Data.FertilizerSO3 = calculation.cropNeed;
+              cropOrder2Data.CropNa2O = calculation.recommendation;
+              cropOrder2Data.ManureNa2O = calculation.applied;
+              cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
               break;
             case 5:
-              cropOrder1Data.CropNa2O = calculation.recommendation;
-              cropOrder1Data.ManureNa2O = calculation.applied;
-              cropOrder1Data.FertilizerNa2O = calculation.cropNeed;
+              cropOrder2Data.CropSO3 = calculation.recommendation;
+              cropOrder2Data.ManureSO3 = calculation.applied;
+              cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
               break;
             case 6:
               cropOrder1Data.CropLime = calculation.recommendation;
@@ -690,14 +690,14 @@ class OrganicManureService extends BaseService {
               cropOrder2Data.FertilizerMgO = calculation.cropNeed;
               break;
             case 4:
-              cropOrder2Data.CropSO3 = calculation.recommendation;
-              cropOrder2Data.ManureSO3 = calculation.applied;
-              cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
-              break;
-            case 5:
               cropOrder2Data.CropNa2O = calculation.recommendation;
               cropOrder2Data.ManureNa2O = calculation.applied;
               cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
+              break;
+            case 5:
+              cropOrder2Data.CropSO3 = calculation.recommendation;
+              cropOrder2Data.ManureSO3 = calculation.applied;
+              cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
               break;
             case 6:
               cropOrder2Data.CropLime = calculation.recommendation;
