@@ -28,6 +28,25 @@ class OrganicManureController {
       return this.#h.response({ error });
     }
   }
+  async getTotalNitrogenIfIsGreenFoodCompost() {
+    const { managementPeriodID } = this.#request.params;
+    const { fromDate, toDate, confirm, isGreenFoodCompost } =
+      this.#request.query;
+
+    try {
+      const records =
+        await this.#organicManureService.getTotalNitrogenIfIsGreenFoodCompost(
+          managementPeriodID,
+          fromDate,
+          toDate,
+          confirm,
+          isGreenFoodCompost
+        );
+      return this.#h.response({ TotalN: records });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
 
   async getManureTypeIdsByFieldAndYear() {
     const { fieldId } = this.#request.params;
@@ -50,7 +69,7 @@ class OrganicManureController {
   }
 
   async createOrganicManures() {
-    const  OrganicManures  = this.#request.payload;
+    const OrganicManures = this.#request.payload;
     const userId = this.#request.userId;
 
     try {
@@ -75,7 +94,7 @@ class OrganicManureController {
         confirm,
         this.#request
       );
-      return this.#h.response({ exists:manureExists });
+      return this.#h.response({ exists: manureExists });
     } catch (error) {
       return this.#h.response({ error });
     }
