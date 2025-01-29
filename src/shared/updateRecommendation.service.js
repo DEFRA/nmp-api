@@ -309,7 +309,7 @@ class UpdateRecommendation {
       let nutrientRecommendationsData;
       const snsAnalysesData = await this.getSnsAnalysesData(fieldData.ID);
       const secondCropManagementData = await this.getManagementPeriod(cropData.ID);
-      let fertiliserData = await this.getFertiliserData(
+      let fertiliserData = await this.getP205AndK20fromfertiliser(
         organicManure.ManagementPeriodID
       );
     
@@ -338,7 +338,7 @@ class UpdateRecommendation {
           fieldData.ID,
           cropData,
           nutrientRecommendationsData,
-          pkBalance,
+          pkBalanceData,
           userId,
           secondCropManagementData,
           fertiliserData,
@@ -387,14 +387,12 @@ class UpdateRecommendation {
         snsAnalysesData,
         allRecommendations
       );
-      // console.log("poojaaa", nutrientRecommendationnReqBody);
-      // console.log("pkBalance111", pkBalance);
-      // console.log("4444", pkBalance);
+      
       let saveAndUpdatePKBalance = await this.UpdatePKBalance(
         fieldData.ID,
         cropData,
         nutrientRecommendationsData,
-        pkBalance,
+        pkBalanceData,
         userId,
         secondCropManagementData,
         fertiliserData,
@@ -487,10 +485,13 @@ class UpdateRecommendation {
       }
       
       const secondCropManagementData = await this.getManagementPeriod(crop.ID);
-      let fertiliserData = await this.getFertiliserData(
+      let fertiliserData = await this.getP205AndK20fromfertiliser(
         secondCropManagementData.ID
       );
-      
+      // const fertiliserData = await this.getP205AndK20fromfertiliser(
+      //   OrganicManure.ManagementPeriodID
+      // );
+      console.log("fertiliserData",fertiliserData);  
       const snsAnalysesData = await this.getSnsAnalysesData(fieldId);
       let nutrientRecommendationsData;
       //get PKBalance data
@@ -498,11 +499,12 @@ class UpdateRecommendation {
       console.log("Current Year",pkBalance);   
       if (crop.CropTypeID === 170 || crop.CropInfo1 === null) {      
         try {    
+          
           let saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldId,
             crop,
             nutrientRecommendationsData,
-            pkBalance,
+            pkBalanceData,
             userId,
             secondCropManagementData,
             fertiliserData,
@@ -515,7 +517,8 @@ class UpdateRecommendation {
               PKBalanceEntity,
               saveAndUpdatePKBalance.saveAndUpdatePKBalance
             );
-          }
+          
+        }
         } catch (error) {
           console.error(
             `Error while saving PKBalance Data FieldId: ${fieldId} And Year:${crop?.Year}:`,
@@ -561,7 +564,7 @@ class UpdateRecommendation {
             fieldId,
             crop,
             nutrientRecommendationsData,
-            pkBalance,
+            pkBalanceData,
             userId,
             secondCropManagementData,
             fertiliserData,
@@ -784,7 +787,27 @@ class UpdateRecommendation {
       where: { ManagementPeriodID: ID },
     });
   }
+  async getP205AndK20fromfertiliser(managementPeriodId) {
+    let sumOfP205 = 0;
+    let sumOfK20 = 0;
+    const fertiliserData = await this.fertiliserRepository.find({
+      where: {
+        ManagementPeriodID: managementPeriodId,
+      },
+      select: {
+        P2O5: true,
+        K2O: true,
+      },
+    });
 
+    if (fertiliserData && fertiliserData.length > 0) {
+      for (const fertiliser of fertiliserData) {
+        sumOfP205 += fertiliser.P2O5 || 0;
+        sumOfK20 += fertiliser.K2O || 0;
+      }
+    }
+    return { p205: sumOfP205, k20: sumOfK20 };
+  }
   async UpdatePKBalance(
     fieldId,
     crop,
@@ -800,28 +823,38 @@ class UpdateRecommendation {
       let pBalance = 0;
       let kBalance = 0;
       let saveAndUpdatePKBalance;
-      if (crop.CropTypeID == 170 || crop.CropInfo1 === null) {
+      
+      if (crop.CropTypeID == 170 || crop.CropInfo1 == null) {            
+        if(pkBalanceData)
+          { 
         pBalance =
           (fertiliserData == null
             ? 0
-            : fertiliserData.P2O5) - (0 - pkBalanceData.PBalance);
+            : fertiliserData.p205) - (0 - pkBalanceData== null
+              ? 0:pkBalanceData.PBalance);
         kBalance =
           (fertiliserData == null
             ? 0
-            : fertiliserData.K2O) - (0 - pkBalanceData.KBalance);
+            : fertiliserData.k20) - (0 -pkBalanceData== null
+              ? 0: pkBalanceData.KBalance);
+          }
+          else{
+            pBalance=fertiliserData == null
+            ? 0
+            : fertiliserData.p205;
+            kBalance=fertiliserData == null
+            ? 0
+            : fertiliserData.k20;
+          }
       } else {        
         console.log("fertiliserData", fertiliserData);
-        for (const recommendation of nutrientRecommendationsData.calculations) {
-          console.log(
-            "nutrientRecommendationsData.calculations",
-            nutrientRecommendationsData.calculations
-          );
+        for (const recommendation of nutrientRecommendationsData.calculations) {          
           switch (recommendation.nutrientId) {
             case 1:
               pBalance =
           (fertiliserData == null
                   ? 0
-                  : fertiliserData.P2O5) - recommendation.cropNeed;
+                  : fertiliserData.p205) - recommendation.cropNeed;
               console.log("pBalance", pBalance);
               console.log("recommendation.cropNeedP", recommendation.cropNeed);
               break;
@@ -829,7 +862,7 @@ class UpdateRecommendation {
               kBalance =
                 (fertiliserData == null
                   ? 0
-                  : fertiliserData.K2O) - recommendation.cropNeed;
+                  : fertiliserData.k20) - recommendation.cropNeed;
                   
               console.log("kBalance", kBalance);
               console.log("recommendation.cropNeedK", recommendation.cropNeed);
@@ -837,7 +870,9 @@ class UpdateRecommendation {
           }
         }
       }
-      if (pkBalanceData) {
+      //geting current pKBalance
+      let pkBalance = await this.getPKBalanceData(crop?.Year, fieldId);      
+      if (pkBalance) {
         const updateData = {
           Year: year,
           FieldID: fieldId,
@@ -845,7 +880,7 @@ class UpdateRecommendation {
           KBalance: kBalance,
         };
         saveAndUpdatePKBalance = {
-          ...pkBalanceData,
+          ...pkBalance,
           ...updateData,
           ModifiedOn: new Date(),
           ModifiedByID: userId,
@@ -880,27 +915,27 @@ class UpdateRecommendation {
   ) {
     // Initialize variables for recommendations for both Crop Orders
     let cropOrder1Data = {
-      CropN: 0,
-      ManureN: 0,
-      FertilizerN: 0,
-      CropP2O5: 0,
-      ManureP2O5: 0,
-      FertilizerP2O5: 0,
-      CropK2O: 0,
-      ManureK2O: 0,
-      FertilizerK2O: 0,
-      CropMgO: 0,
-      ManureMgO: 0,
-      FertilizerMgO: 0,
-      CropSO3: 0,
-      ManureSO3: 0,
-      FertilizerSO3: 0,
-      CropNa2O: 0,
-      ManureNa2O: 0,
-      FertilizerNa2O: 0,
-      CropLime: 0,
-      ManureLime: 0,
-      FertilizerLime: 0,
+      CropN: null,
+      ManureN: null,
+      FertilizerN: null,
+      CropP2O5: null,
+      ManureP2O5: null,
+      FertilizerP2O5: null,
+      CropK2O: null,
+      ManureK2O: null,
+      FertilizerK2O: null,
+      CropMgO: null,
+      ManureMgO: null,
+      FertilizerMgO: null,
+      CropSO3: null,
+      ManureSO3: null,
+      FertilizerSO3: null,
+      CropNa2O: null,
+      ManureNa2O: null,
+      FertilizerNa2O: null,
+      CropLime: null,
+      ManureLime: null,
+      FertilizerLime: null,
       PH: latestSoilAnalysis?.PH?.toString(),
       SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString(),
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString(),
@@ -910,27 +945,27 @@ class UpdateRecommendation {
     };
 
     let cropOrder2Data = {
-      CropN: 0,
-      ManureN: 0,
-      FertilizerN: 0,
-      CropP2O5: 0,
-      ManureP2O5: 0,
-      FertilizerP2O5: 0,
-      CropK2O: 0,
-      ManureK2O: 0,
-      FertilizerK2O: 0,
-      CropMgO: 0,
-      ManureMgO: 0,
-      FertilizerMgO: 0,
-      CropSO3: 0,
-      ManureSO3: 0,
-      FertilizerSO3: 0,
-      CropNa2O: 0,
-      ManureNa2O: 0,
-      FertilizerNa2O: 0,
-      CropLime: 0,
-      ManureLime: 0,
-      FertilizerLime: 0,
+      CropN: null,
+      ManureN: null,
+      FertilizerN: null,
+      CropP2O5: null,
+      ManureP2O5: null,
+      FertilizerP2O5: null,
+      CropK2O: null,
+      ManureK2O: null,
+      FertilizerK2O: null,
+      CropMgO: null,
+      ManureMgO: null,
+      FertilizerMgO: null,
+      CropSO3: null,
+      ManureSO3: null,
+      FertilizerSO3: null,
+      CropNa2O: null,
+      ManureNa2O: null,
+      FertilizerNa2O: null,
+      CropLime: null,
+      ManureLime: null,
+      FertilizerLime: null,
       PH: latestSoilAnalysis?.PH?.toString(),
       SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString(),
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString(),
@@ -1489,27 +1524,27 @@ console.log('aaaaaaaa')
     allRecommendations
   ) {
     let cropOrder1Data = {
-      CropN: 0,
-      ManureN: 0,
-      FertilizerN: 0,
-      CropP2O5: 0,
-      ManureP2O5: 0,
-      FertilizerP2O5: 0,
-      CropK2O: 0,
-      ManureK2O: 0,
-      FertilizerK2O: 0,
-      CropMgO: 0,
-      ManureMgO: 0,
-      FertilizerMgO: 0,
-      CropSO3: 0,
-      ManureSO3: 0,
-      FertilizerSO3: 0,
-      CropNa2O: 0,
-      ManureNa2O: 0,
-      FertilizerNa2O: 0,
-      CropLime: 0,
-      ManureLime: 0,
-      FertilizerLime: 0,
+      CropN: null,
+      ManureN: null,
+      FertilizerN: null,
+      CropP2O5: null,
+      ManureP2O5: null,
+      FertilizerP2O5: null,
+      CropK2O: null,
+      ManureK2O: null,
+      FertilizerK2O: null,
+      CropMgO: null,
+      ManureMgO: null,
+      FertilizerMgO: null,
+      CropSO3: null,
+      ManureSO3: null,
+      FertilizerSO3: null,
+      CropNa2O: null,
+      ManureNa2O: null,
+      FertilizerNa2O: null,
+      CropLime: null,
+      ManureLime: null,
+      FertilizerLime: null,
       PH: latestSoilAnalysis?.PH?.toString(),
       SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString(),
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString(),
@@ -1561,7 +1596,7 @@ console.log('aaaaaaaa')
               break;
             case 3:
               cropOrder1Data.CropMgO = calculation.recommendation;
-              cropOrder1Data.ManureMgO = calculation.applied;
+              cropOrder1Data.ManureMgO = null;
               cropOrder1Data.FertilizerMgO = calculation.cropNeed;
               break;
             case 4:
@@ -1576,7 +1611,7 @@ console.log('aaaaaaaa')
               break;
             case 6:
               cropOrder1Data.CropLime = calculation.recommendation;
-              cropOrder1Data.ManureLime = calculation.applied;
+              cropOrder1Data.ManureLime = null;
               cropOrder1Data.FertilizerLime = calculation.cropNeed;
               break;
           }
@@ -1643,7 +1678,7 @@ console.log('aaaaaaaa')
               break;
             case 3:
               cropOrder2Data.CropMgO = calculation.recommendation;
-              cropOrder2Data.ManureMgO = calculation.applied;
+              cropOrder2Data.ManureMgO = null;
               cropOrder2Data.FertilizerMgO = calculation.cropNeed;
               break;
             case 4:
@@ -1658,7 +1693,7 @@ console.log('aaaaaaaa')
               break;
             case 6:
               cropOrder2Data.CropLime = calculation.recommendation;
-              cropOrder2Data.ManureLime = calculation.applied;
+              cropOrder2Data.ManureLime = null;
               cropOrder2Data.FertilizerLime = calculation.cropNeed;
               break;
           }

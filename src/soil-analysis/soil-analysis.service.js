@@ -14,13 +14,115 @@ class SoilAnalysesService extends BaseService {
     this.UpdateRecommendation = new UpdateRecommendation();
   }
 
-  async createSoilAnalysis(soilAnalysisBody, userId) {
+  async createSoilAnalysis(soilAnalysisBody, userId,pKBalanceData,request) {
+    
     return await AppDataSource.transaction(async (transactionalManager) => {
       const soilAnalysis = await transactionalManager.save(SoilAnalysisEntity, {
         ...soilAnalysisBody,
         CreatedByID: userId,
+        CreatedOn: new Date(),
       });
-      return soilAnalysis;
+         
+         // Check for PK Balance entry
+         let pkBalanceEntry = await transactionalManager.find(PKBalanceEntity, {
+          where: {
+            Year: soilAnalysis.Year,
+            FieldID: soilAnalysis.FieldID,
+          },
+        });
+  console.log('pkBalanceEntry',pkBalanceEntry)
+        let newPKBalanceData = null;
+  
+        if (
+          soilAnalysis.Potassium != null ||
+          soilAnalysis.Phosphorus != null ||
+          soilAnalysis.PotassiumIndex != null ||
+          soilAnalysis.PhosphorusIndex != null
+        ) {
+          if (pkBalanceEntry.length === 0 && pKBalanceData) {
+      
+            let { CreatedByID, CreatedOn, ...updatedPKBalanceData } =
+              pKBalanceData;
+            newPKBalanceData = await transactionalManager.save(PKBalanceEntity, {
+              ...updatedPKBalanceData,
+              CreatedByID: userId,
+            });
+          }
+        } else {
+          // Delete PK Balance entry if applicable
+          await transactionalManager.delete(PKBalanceEntity, {
+            Year: soilAnalysis.Year,
+            FieldID: soilAnalysis.FieldID,
+          });
+        }
+
+        // Retrieve the updated PKBalance entry
+
+      let PKBalance = await transactionalManager.findOne(PKBalanceEntity, {
+        where: {
+          Year: soilAnalysis.Year,
+          FieldID: soilAnalysis.FieldID,
+        },
+      });
+      
+      if (
+        soilAnalysis.Potassium != null ||
+        soilAnalysis.Phosphorus != null ||
+        soilAnalysis.PotassiumIndex != null ||
+        soilAnalysis.PhosphorusIndex != null
+      ) {
+        if (PKBalance) {
+          const updateData = {
+            Year: PKBalance.Year,
+            FieldID: PKBalance.FieldID,
+            PBalance: 0,
+            KBalance: 0,
+          };
+
+          const saveAndUpdatePKBalance = {
+            ...PKBalance,
+            ...updateData,
+            ModifiedOn: new Date(),
+            ModifiedByID: userId,
+          };
+
+          console.log("aaaaaaa", saveAndUpdatePKBalance);
+          if (saveAndUpdatePKBalance) {
+            await transactionalManager.save(
+              PKBalanceEntity,
+              saveAndUpdatePKBalance
+            );
+          }
+          console.log("start");
+          this.UpdateRecommendation.updateRecommendationsForField(
+            soilAnalysis.FieldID,
+            soilAnalysis.Year,
+            request,
+            userId
+          )
+            .then((res) => {
+              if (res === undefined) {
+                console.log(
+                  "updateRecommendationAndOrganicManure returned undefined"
+                );
+              } else {
+                console.log(
+                  "updateRecommendationAndOrganicManure result:",
+                  res
+                );
+              }
+            })
+            .catch((error) => {
+              console.error(
+                "Error updating recommendation and organic manure:",
+                error
+              );
+            });
+        }
+      }
+
+      return { soilAnalysis, PKBalance };
+      // return soilAnalysis;
     });
   }
 
@@ -125,15 +227,6 @@ class SoilAnalysesService extends BaseService {
               saveAndUpdatePKBalance
             );
           }
-          // let PKBalancew33 = await transactionalManager.findOne(
-          //   PKBalanceEntity,
-          //   {
-          //     where: {
-          //       Year: PKBalance.Year,
-          //       FieldID: PKBalance.FieldID,
-          //     },
-          //   }
-          // );
           console.log("start");
           this.UpdateRecommendation.updateRecommendationsForField(
             updatedSoilAnalysisData.FieldID,
