@@ -22,7 +22,11 @@ const CropTypeLinkingEntity = new EntitySchema({
       type: "bit",
       nullable: false,
     },
-    NMaxLimit: {
+    NMaxLimitEngland: {
+      type: "int",
+      nullable: true,
+    },
+    NMaxLimitWales: {
       type: "int",
       nullable: true,
     },

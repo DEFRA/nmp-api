@@ -45,7 +45,8 @@ const PKBalanceDto = Joi.object({
   ModifiedByID: Joi.number().integer().allow(null),
 });
 const CreateSoilAnalysisDto = Joi.object({
-  SoilAnalysis: SoilAnalysisDto.required()
+  SoilAnalysis: SoilAnalysisDto.required(),  
+  PKBalance:PKBalanceDto.optional().allow(null)
 });
 
 const UpdateSoilAnalysisDto = Joi.object({

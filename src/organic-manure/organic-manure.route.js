@@ -45,6 +45,42 @@ module.exports = [
   },
   {
     method: "GET",
+    path: "/organic-manures/total-nitrogen-if-green-food-compost/{managementPeriodID}",
+    options: {
+      tags: ["api", "Organic Manure"],
+      description:
+        "Get Total Nitrogen by ManagementPeriodID,GreenFoodCompost and Application Date Range",
+      validate: {
+        params: Joi.object({
+          managementPeriodID: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          fromDate: Joi.date().iso().required(),
+          toDate: Joi.date().iso().required(),
+          confirm: Joi.boolean().required(),
+          isGreenFoodCompost: Joi.boolean().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+      handler: async (request, h) => {
+        return getController(request, h).getTotalNitrogenIfIsGreenFoodCompost();
+      },
+    },
+  },
+  {
+    method: "GET",
     path: "/organic-manures/manure-type/{fieldId}",
     options: {
       tags: ["api", "Organic Manure"],
