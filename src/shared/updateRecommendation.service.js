@@ -440,8 +440,7 @@ class UpdateRecommendation {
       console.log("WITHOUT MANURE STARTED INSIDE LOOP");
 
       const errors = await this.handleCropValidation(crop);
-      const fieldId = crop.FieldID;
-      console.log("aaaaaaaaaaaaaaaaaaaaaaaa");
+      const fieldId = crop.FieldID;      
       const pkBalanceData = await this.getPKBalanceData(
         crop?.Year - 1,
         fieldId
