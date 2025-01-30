@@ -174,6 +174,11 @@ const RecommendationEntity = new EntitySchema({
       length: 30,
       nullable: true,
     },
+    NIndex: {
+      type: "nvarchar",
+      length: 30,
+      nullable: true,
+    },
     Comments: {
       type: "nvarchar",
       nullable: true,
