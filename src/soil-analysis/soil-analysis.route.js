@@ -128,4 +128,35 @@ module.exports = [
       },
     },
   },
+
+  {
+    method: "DELETE",
+    path: "/soilAnalysis/{soilAnalysisId}",
+    options: {
+      tags: ["api", "Soil Analysis"],
+      description: "Delete SoilAnalysis by SoilAnalysis Id",
+      validate: {
+        params: Joi.object({
+          soilAnalysisId: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new SoilAnalysesController(request, h);
+      return controller.deleteSoilAnalysisById();
+    },
+  },
 ];

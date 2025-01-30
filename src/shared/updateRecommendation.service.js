@@ -261,7 +261,7 @@ class UpdateRecommendation {
         await this.CropTypeLinkingRepository.findOneBy({
           CropTypeID: cropData.CropTypeID,
         });
-          const soilTypeTextureData = this.soilTypeTextureRepository.findOneBy({
+          const soilTypeTextureData = await this.soilTypeTextureRepository.findOneBy({
             SoilTypeID: fieldData.SoilTypeID,
           });
       const Errors = [];
@@ -441,6 +441,7 @@ class UpdateRecommendation {
 
       const errors = await this.handleCropValidation(crop);
       const fieldId = crop.FieldID;
+      console.log("aaaaaaaaaaaaaaaaaaaaaaaa");
       const pkBalanceData = await this.getPKBalanceData(
         crop?.Year - 1,
         fieldId
@@ -553,11 +554,11 @@ class UpdateRecommendation {
         nutrientRecommendationsData = await this.getNutrientRecommendationsData(
           nutrientRecommendationnReqBody
         );
-         console.log(
-           "nutrientRecommendationsDataWithout",
-          nutrientRecommendationsData
-        );
-        console.log("periviousYearPkBalnce", pkBalanceData);
+        //  console.log(
+        //    "nutrientRecommendationsDataWithout",
+        //   nutrientRecommendationsData
+        // );
+        //console.log("periviousYearPkBalnce", pkBalanceData);
         
         try {
           let saveAndUpdatePKBalance = await this.UpdatePKBalance(
@@ -2217,7 +2218,8 @@ console.log('soilAnalysis',soilAnalysis)
     cropData,
     farmData,
     fieldData,
-    cropTypeLinkingData
+    cropTypeLinkingData,
+    soilTypeTextureData
   ) {
     return {
       runType: farmData.EnglishRules ? 3 : 4,
@@ -2227,8 +2229,8 @@ console.log('soilAnalysis',soilAnalysis)
         fieldID: fieldData.ID,
         fieldName: fieldData.Name,
         MannerCropTypeID: cropTypeLinkingData.MannerCropTypeID,
-        topsoilID: soilTypeTextureData.TopSoilID,
-        subsoilID: soilTypeTextureData.SubSoilID,
+        topsoilID: soilTypeTextureData?.TopSoilID,
+        subsoilID: soilTypeTextureData?.SubSoilID,
         isInNVZ: fieldData.IsWithinNVZ,
       },
       manureApplications,
