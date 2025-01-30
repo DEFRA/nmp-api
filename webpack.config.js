@@ -10,12 +10,12 @@ module.exports = {
     path: path.resolve(__dirname, "dist"), // Output directory
   },
   target: "node", // Target environment
-  externals: [nodeExternals()], // Ignore node_modules in the bundle
+  //externals: [nodeExternals()], // Ignore node_modules in the bundle
   module: {
     rules: [
       {
         test: /\.js$/,
-        exclude: /node_modules/,
+        //exclude: /node_modules/,
         use: {
           loader: "babel-loader",
           options: {
