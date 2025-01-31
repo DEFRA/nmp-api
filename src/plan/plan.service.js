@@ -1001,11 +1001,11 @@ console.log("cropOrder1Data", cropOrder1Data);
       ManureLime: null,
       FertilizerLime: null,
       PH: latestSoilAnalysis?.PH?.toString(),
-      SNSIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString(),
-      PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString(),
-      KIndex: latestSoilAnalysis?.PotassiumIndex?.toString(),
-      MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString(),
-      SIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString(),
+      SNSIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString() || null,
+      PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
+      KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
+      MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
+      SIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
       NIndex: null,
     };
     let nIndex
