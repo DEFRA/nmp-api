@@ -258,6 +258,59 @@ class SoilAnalysesService extends BaseService {
       return { SoilAnalysis, PKBalance };
     });
   }
+
+  async deleteSoilAnalysis(soilAnalysisId,userId,request) {
+
+    return await AppDataSource.transaction(async (transactionalManager) => {
+      // Check if the soilAnalysis exists
+      const soilAnalysisToDelete = await await transactionalManager.findOne(
+        SoilAnalysisEntity,
+        {
+          where: { ID: soilAnalysisId },
+       });
+
+      // If the soilAnalysis does not exist, throw a not found error    
+      if (soilAnalysisToDelete == null) {
+        console.log(`soilAnalysis with ID ${soilAnalysisId} not found`);
+      }
+  
+      try {
+        // Call the stored procedure to delete the soilAnalysisId and related entities
+        const storedProcedure = "EXEC spSoilAnalyses_DeleteSoilAnalyses @SoilAnalysesID = @0";
+        await AppDataSource.query(storedProcedure, [soilAnalysisId]);
+
+        console.log("start");
+        this.UpdateRecommendation.updateRecommendationsForField(
+          soilAnalysisToDelete.FieldID,
+          soilAnalysisToDelete.Year,
+          request,
+          userId
+        )
+          .then((res) => {
+            if (res === undefined) {
+              console.log(
+                "updateRecommendationAndOrganicManure returned undefined"
+              );
+            } else {
+              console.log(
+                "updateRecommendationAndOrganicManure result:",
+                res
+              );
+            }
+          })
+          .catch((error) => {
+            console.error(
+              "Error updating recommendation and organic manure:",
+              error
+            );
+          });
+
+      } catch (error) {
+        // Log the error and throw an internal server error
+        console.error("Error deleting SoilAnalyses:", error);
+      }
+    });
+  }
 }
 
 module.exports = { SoilAnalysesService };

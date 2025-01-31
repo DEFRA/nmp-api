@@ -150,11 +150,11 @@ class RecommendationService extends BaseService {
   async findAndSumFertiliserManuresByManagementPeriodID(managementPeriodID) {
     // Ensure the managementPeriodID is provided
     if (!managementPeriodID) {
-      console.error("ManagementPeriodID is required");
+      console.log("ManagementPeriodID is required");
     }
 
     // Fetch all fertiliser manures data for the given ManagementPeriodID
-    const fertiliserManuresData = await this.fertiliserManuresRepository.find({
+    const fertiliserManures = await this.fertiliserManuresRepository.find({
       where: {
         ManagementPeriodID: managementPeriodID,
       },
@@ -164,15 +164,15 @@ class RecommendationService extends BaseService {
     });
 
     // Check if any fertiliser manures data is found
-    if (!fertiliserManuresData || fertiliserManuresData.length === 0) {
-      console.error(
+    if (!fertiliserManures || fertiliserManures.length === 0) {
+      console.log(
         `No fertiliser manures data found for ManagementPeriodID ${managementPeriodID}`
       );
       return 0; // Exit if no fertiliser data is found
     }
 
     // Sum up the Lime values from the list of fertiliser manures data
-    const totalLime = fertiliserManuresData.reduce((total, item) => {
+    const totalLime = fertiliserManures.reduce((total, item) => {
       return total + (item.Lime || 0); // Add Lime value if available, otherwise 0
     }, 0);
 
@@ -213,7 +213,7 @@ class RecommendationService extends BaseService {
       const fiveYearsAgo = currentYear - 5;
 
       // Step 1: Fetch soil recommendations (before fertiliser apply)
-      const soilRecommendations = await this.soilAnalysisRepository.find({
+      const soilAnalyses = await this.soilAnalysisRepository.find({
         where: {
           FieldID: fieldId,
           Year: Between(fiveYearsAgo, currentYear),
@@ -221,17 +221,15 @@ class RecommendationService extends BaseService {
       });
 
       // Step 2: Check if any year has pH value > 0
-      const recommendationWithPH = soilRecommendations.find(
-        (rec) => rec.PH > 0
-      );
+      const soilAnalysisWithPH = soilAnalyses.find((rec) => rec.PH > 0);
 
       // If no pH > 0 is found, return early without doing any further processing
-      if (!recommendationWithPH) {
+      if (!soilAnalysisWithPH) {
         return 0; // Exit if no recommendation with pH > 0 is found
       }
 
       // Get the soilAnalysisYear from the recommendation with pH > 0
-      const soilAnalysisYear = recommendationWithPH.Year;
+      const soilAnalysisWithPhYear = soilAnalysisWithPH.Year;
       // console.log(
       //   "RecommendationData",
       //   Recommendation.Crop_ID
@@ -258,7 +256,7 @@ class RecommendationService extends BaseService {
             await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
               fieldId,
               cropData.Year - 1,
-              soilAnalysisYear,
+              soilAnalysisWithPhYear,
               1
             );
           console.log("CropOrderDataList", firstCropOrderDataList);
@@ -280,7 +278,7 @@ class RecommendationService extends BaseService {
             await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
               fieldId,
               cropData.Year - 1,
-              soilAnalysisYear
+              soilAnalysisWithPhYear
             );
 
           if (CropOrderDataList != null) {
