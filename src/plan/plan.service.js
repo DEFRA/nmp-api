@@ -27,6 +27,9 @@ const {
 const {
   UpdateRecommendation,
 } = require("../shared/updateRecommendation.service");
+const RB209SoilService = require("../vendors/rb209/soil/soil.service");
+const RB209FieldService = require("../vendors/rb209/field/field.service");
+const { CountryEntity } = require("../db/entity/country.entity");
 
 class PlanService extends BaseService {
   constructor() {
@@ -45,11 +48,14 @@ class PlanService extends BaseService {
       AppDataSource.getRepository(SoilAnalysisEntity);
     this.rB209ArableService = new RB209ArableService();
     this.rB209RecommendationService = new RB209RecommendationService();
+    this.RB209SoilService = new RB209SoilService();
+    this.RB209FieldService = new RB209FieldService();
     this.snsAnalysisRepository = AppDataSource.getRepository(SnsAnalysesEntity);
     this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
     this.fertiliserRepository = AppDataSource.getRepository(
       FertiliserManuresEntity
     );
+    this.countryRepository = AppDataSource.getRepository(CountryEntity);
     this.UpdateRecommendation = new UpdateRecommendation();
   }
 
@@ -328,6 +334,7 @@ class PlanService extends BaseService {
       "Postcode",
       "Rainfall",
       "EnglishRules",
+      "CountryID",
     ];
     farmRequiredKeys.forEach((key) => {
       if (farm[key] === null) {
@@ -337,12 +344,40 @@ class PlanService extends BaseService {
     return { farm, errors };
   }
 
-  async handleSoilAnalysisValidation(fieldId, fieldName, year) {
+  // async handleSoilAnalysisValidation(fieldId, fieldName, year) {
+  //   const errors = [];
+  //   const fiveYearsAgo = year - 4;
+
+  //   // Fetch all soil analyses for the last 5 years
+  //   const soilAnalysisRecords = await this.soilAnalysisRepository.find({
+  //     where: {
+  //       FieldID: fieldId,
+  //       Year: Between(fiveYearsAgo, year), // Fetch records within 5 years
+  //     },
+  //     order: { Date: "DESC" }, // Order by date, most recent first
+  //   });
+
+  //   const soilRequiredKeys = [
+  //     "Date",
+  //     "PH",
+  //     "SulphurDeficient",
+  //     "SoilNitrogenSupplyIndex",
+  //     "PhosphorusIndex",
+  //     "PotassiumIndex",
+  //     "MagnesiumIndex",
+  //   ];
+
+  //   const latestSoilAnalysis = soilAnalysisRecords[0];
+
+  //   return { latestSoilAnalysis, errors, soilAnalysisRecords };
+  // }
+
+  async handleSoilAnalysisValidation(fieldId, fieldName, year, CountryID) {
     const errors = [];
     const fiveYearsAgo = year - 4;
 
     // Fetch all soil analyses for the last 5 years
-    const soilAnalysisRecords = await this.soilAnalysisRepository.find({
+    const soilAnalysisRecordsFiveYears = await this.soilAnalysisRepository.find({
       where: {
         FieldID: fieldId,
         Year: Between(fiveYearsAgo, year), // Fetch records within 5 years
@@ -350,18 +385,46 @@ class PlanService extends BaseService {
       order: { Date: "DESC" }, // Order by date, most recent first
     });
 
-    const soilRequiredKeys = [
-      "Date",
+    //phosphate, potash,magnissium
+    //loop {
+    //get nurtient id from NutrientData
+    //call api for methodlogy(nutrientId,Country)
+    //call api for IndexId (NutrintId,MethoId,County)=List(IndexId,IndexValue)
+    //
+    //}
+
+    // Define the fields we want the latest values for
+    const fieldsToTrack = [
       "PH",
-      "SulphurDeficient",
       "SoilNitrogenSupplyIndex",
       "PhosphorusIndex",
       "PotassiumIndex",
       "MagnesiumIndex",
     ];
 
-    const latestSoilAnalysis = soilAnalysisRecords[0];
+    // Initialize the latest values object
+    const latestSoilAnalysis = {};
+    if (soilAnalysisRecordsFiveYears.length > 0) {
+      fieldsToTrack.forEach((field) => {
+        // Find the first record in descending date order where the field has a value
+        const latestRecordWithFieldValue = soilAnalysisRecordsFiveYears.find(
+          (record) => record[field] !== null && record[field] !== undefined
+        );
 
+        // if (latestRecordWithFieldValue) {
+        latestSoilAnalysis[field] = latestRecordWithFieldValue[field];
+        //} //else {
+        //   errors.push(`${field} value not found in the last 5 years.`);
+        // }
+      });
+    }
+    // Iterate over the fields and find the latest value for each field
+
+    const soilAnalysisRecords = await this.assignIndexIdToLatestSoilAnalysis(
+      soilAnalysisRecordsFiveYears,
+      CountryID
+    );
+    console.log("testing", soilAnalysisRecords);
     return { latestSoilAnalysis, errors, soilAnalysisRecords };
   }
 
@@ -387,12 +450,13 @@ class PlanService extends BaseService {
   }
 
   async getSnsAnalysesData(id) {
-    const data = await this.snsAnalysisRepository.findOne({
-      where: { FieldID: id }, // This line is correct as per your entity definition
+    const data = await this.snsAnalysisRepository.findOneBy({
+      FieldID: id, // Assuming FieldID is the correct field
     });
 
     return data;
   }
+
   async saveRecommendationForMutipleCrops(
     transactionalManager,
     nutrientRecommendationsData,
@@ -433,6 +497,7 @@ class PlanService extends BaseService {
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString(),
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString(),
       SIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString(),
+      NIndex: null,
     };
 
     let cropOrder2Data = {
@@ -463,12 +528,21 @@ class PlanService extends BaseService {
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString(),
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString(),
       SIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString(),
+      NIndex:null,
     };
-
+    let nIndex
     // Iterate through the nutrient recommendations data
-    nutrientRecommendationsData.calculations.forEach((calculation) => {
+    for (const calculation of nutrientRecommendationsData.calculations) {
       const nutrientId = calculation.nutrientId;
       const sequenceId = calculation.sequenceId;
+      let nIndex;
+
+      // if (calculation.nutrientId === 1) {
+      //   nIndex = await this.convertIndexValueToId(
+      //     calculation.indexpH,
+      //     nutrientId
+      //   );
+      // }
 
       switch (nutrientId) {
         case 0:
@@ -477,12 +551,23 @@ class PlanService extends BaseService {
             cropOrder1Data.CropN = calculation.recommendation;
             cropOrder1Data.ManureN = calculation.applied;
             cropOrder1Data.FertilizerN = calculation.cropNeed;
+            cropOrder1Data.NIndex = await this.convertIndexValueToId(
+              calculation.indexpH,
+              nutrientId
+            );;
+            console.log("cropOrder1Data.NIndex2", cropOrder1Data.NIndex);
           } else if (sequenceId === 2) {
             cropOrder2Data.CropN = calculation.recommendation;
             cropOrder2Data.ManureN = calculation.applied;
             cropOrder2Data.FertilizerN = calculation.cropNeed;
+            cropOrder2Data.NIndex = await this.convertIndexValueToId(
+              calculation.indexpH,
+              nutrientId
+            );;
+            console.log("cropOrder1Data.NIndex2 crop", cropOrder1Data.NIndex);
           }
           break;
+
         case 1:
           // Phosphorus (P2O5) handling
           if (sequenceId === 1) {
@@ -495,6 +580,7 @@ class PlanService extends BaseService {
             cropOrder2Data.FertilizerP2O5 = calculation.cropNeed;
           }
           break;
+
         case 2:
           // Potassium (K2O) handling
           if (sequenceId === 1) {
@@ -507,6 +593,7 @@ class PlanService extends BaseService {
             cropOrder2Data.FertilizerK2O = calculation.cropNeed;
           }
           break;
+
         case 3:
           // Magnesium (MgO) handling
           if (sequenceId === 1) {
@@ -519,19 +606,8 @@ class PlanService extends BaseService {
             cropOrder2Data.FertilizerMgO = calculation.cropNeed;
           }
           break;
+
         case 4:
-          // Sodium (Na2O) handling
-          if (sequenceId === 1) {
-            cropOrder1Data.CropNa2O = calculation.recommendation;
-            cropOrder1Data.ManureNa2O = calculation.applied;
-            cropOrder1Data.FertilizerNa2O = calculation.cropNeed;
-          } else if (sequenceId === 2) {
-            cropOrder2Data.CropNa2O = calculation.recommendation;
-            cropOrder2Data.ManureNa2O = calculation.applied;
-            cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
-          }
-          break;
-        case 5:
           // Sulfur (SO3) handling
           if (sequenceId === 1) {
             cropOrder1Data.CropSO3 = calculation.recommendation;
@@ -541,6 +617,19 @@ class PlanService extends BaseService {
             cropOrder2Data.CropSO3 = calculation.recommendation;
             cropOrder2Data.ManureSO3 = calculation.applied;
             cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
+          }
+          break;
+
+        case 5:
+          // Sodium (Na2O) handling
+          if (sequenceId === 1) {
+            cropOrder1Data.CropNa2O = calculation.recommendation;
+            cropOrder1Data.ManureNa2O = calculation.applied;
+            cropOrder1Data.FertilizerNa2O = calculation.cropNeed;
+          } else if (sequenceId === 2) {
+            cropOrder2Data.CropNa2O = calculation.recommendation;
+            cropOrder2Data.ManureNa2O = calculation.applied;
+            cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
           }
           break;
 
@@ -556,16 +645,17 @@ class PlanService extends BaseService {
             cropOrder2Data.FertilizerLime = calculation.cropNeed;
           }
           break;
+
         default:
           break;
       }
-    });
+    }
 
     // Save or update for Crop Order 1
     let firstCropSaveData = await this.repository.findOne({
       where: { ManagementPeriodID: managementPeriodData.ID },
     });
-
+console.log("cropOrder1Data", cropOrder1Data);
     if (firstCropSaveData) {
       // Update existing recommendation
       firstCropSaveData = {
@@ -775,6 +865,7 @@ class PlanService extends BaseService {
       KIndex: null,
       MgIndex: null,
       SIndex: null,
+      NIndex: null,
     };
     console.log("managementPeriodIDkkkk", managementPeriodID);
     await transactionalManager.save(
@@ -838,70 +929,71 @@ class PlanService extends BaseService {
   ) {
     // Initialize variables for recommendations for both Crop Orders
     let cropOrder1Data = {
-      CropN: 0,
-      ManureN: 0,
-      FertilizerN: 0,
-      CropP2O5: 0,
-      ManureP2O5: 0,
-      FertilizerP2O5: 0,
-      CropK2O: 0,
-      ManureK2O: 0,
-      FertilizerK2O: 0,
-      CropMgO: 0,
-      ManureMgO: 0,
-      FertilizerMgO: 0,
-      CropSO3: 0,
-      ManureSO3: 0,
-      FertilizerSO3: 0,
-      CropNa2O: 0,
-      ManureNa2O: 0,
-      FertilizerNa2O: 0,
-      CropLime: 0,
-      ManureLime: 0,
-      FertilizerLime: 0,
+      CropN: null,
+      ManureN: null,
+      FertilizerN: null,
+      CropP2O5: null,
+      ManureP2O5: null,
+      FertilizerP2O5: null,
+      CropK2O: null,
+      ManureK2O: null,
+      FertilizerK2O: null,
+      CropMgO: null,
+      ManureMgO: null,
+      FertilizerMgO: null,
+      CropSO3: null,
+      ManureSO3: null,
+      FertilizerSO3: null,
+      CropNa2O: null,
+      ManureNa2O: null,
+      FertilizerNa2O: null,
+      CropLime: null,
+      ManureLime: null,
+      FertilizerLime: null,
       PH: latestSoilAnalysis?.PH?.toString(),
       SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString(),
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString(),
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString(),
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString(),
       SIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString(),
+      NIndex: null,
     };
 
     let cropOrder2Data = {
-      CropN: 0,
-      ManureN: 0,
-      FertilizerN: 0,
-      CropP2O5: 0,
-      ManureP2O5: 0,
-      FertilizerP2O5: 0,
-      CropK2O: 0,
-      ManureK2O: 0,
-      FertilizerK2O: 0,
-      CropMgO: 0,
-      ManureMgO: 0,
-      FertilizerMgO: 0,
-      CropSO3: 0,
-      ManureSO3: 0,
-      FertilizerSO3: 0,
-      CropNa2O: 0,
-      ManureNa2O: 0,
-      FertilizerNa2O: 0,
-      CropLime: 0,
-      ManureLime: 0,
-      FertilizerLime: 0,
+      CropN: null,
+      ManureN: null,
+      FertilizerN: null,
+      CropP2O5: null,
+      ManureP2O5: null,
+      FertilizerP2O5: null,
+      CropK2O: null,
+      ManureK2O: null,
+      FertilizerK2O: null,
+      CropMgO: null,
+      ManureMgO: null,
+      FertilizerMgO: null,
+      CropSO3: null,
+      ManureSO3: null,
+      FertilizerSO3: null,
+      CropNa2O: null,
+      ManureNa2O: null,
+      FertilizerNa2O: null,
+      CropLime: null,
+      ManureLime: null,
+      FertilizerLime: null,
       PH: latestSoilAnalysis?.PH?.toString(),
-      SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString(),
+      SNSIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString(),
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString(),
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString(),
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString(),
-      SIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString(),
+      SIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString(),
+      NIndex: null,
     };
-
+    let nIndex
     // Iterate through the nutrient recommendations data
-    nutrientRecommendationsData.calculations.forEach((calculation) => {
+    for (const calculation of nutrientRecommendationsData.calculations) {
       const nutrientId = calculation.nutrientId;
       const sequenceId = calculation.sequenceId;
-
       switch (nutrientId) {
         case 0:
           // Nitrogen (N) handling
@@ -909,12 +1001,22 @@ class PlanService extends BaseService {
             cropOrder1Data.CropN = calculation.recommendation;
             cropOrder1Data.ManureN = calculation.applied;
             cropOrder1Data.FertilizerN = calculation.cropNeed;
+            cropOrder1Data.NIndex = await this.convertIndexValueToId(
+              calculation.indexpH,
+              nutrientId
+            );
+            console.log("cropOrder1Data.NIndex2", cropOrder1Data.NIndex);
           } else if (sequenceId === 2) {
             cropOrder2Data.CropN = calculation.recommendation;
             cropOrder2Data.ManureN = calculation.applied;
             cropOrder2Data.FertilizerN = calculation.cropNeed;
+            cropOrder2Data.NIndex = await this.convertIndexValueToId(
+              calculation.indexpH,
+              nutrientId
+            );
           }
           break;
+
         case 1:
           // Phosphorus (P2O5) handling
           if (sequenceId === 1) {
@@ -927,6 +1029,7 @@ class PlanService extends BaseService {
             cropOrder2Data.FertilizerP2O5 = calculation.cropNeed;
           }
           break;
+
         case 2:
           // Potassium (K2O) handling
           if (sequenceId === 1) {
@@ -939,6 +1042,7 @@ class PlanService extends BaseService {
             cropOrder2Data.FertilizerK2O = calculation.cropNeed;
           }
           break;
+
         case 3:
           // Magnesium (MgO) handling
           if (sequenceId === 1) {
@@ -951,19 +1055,8 @@ class PlanService extends BaseService {
             cropOrder2Data.FertilizerMgO = calculation.cropNeed;
           }
           break;
+
         case 4:
-          // Sodium (Na2O) handling
-          if (sequenceId === 1) {
-            cropOrder1Data.CropNa2O = calculation.recommendation;
-            cropOrder1Data.ManureNa2O = calculation.applied;
-            cropOrder1Data.FertilizerNa2O = calculation.cropNeed;
-          } else if (sequenceId === 2) {
-            cropOrder2Data.CropNa2O = calculation.recommendation;
-            cropOrder2Data.ManureNa2O = calculation.applied;
-            cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
-          }
-          break;
-        case 5:
           // Sulfur (SO3) handling
           if (sequenceId === 1) {
             cropOrder1Data.CropSO3 = calculation.recommendation;
@@ -975,6 +1068,20 @@ class PlanService extends BaseService {
             cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
           }
           break;
+
+        case 5:
+          // Sodium (Na2O) handling
+          if (sequenceId === 1) {
+            cropOrder1Data.CropNa2O = calculation.recommendation;
+            cropOrder1Data.ManureNa2O = calculation.applied;
+            cropOrder1Data.FertilizerNa2O = calculation.cropNeed;
+          } else if (sequenceId === 2) {
+            cropOrder2Data.CropNa2O = calculation.recommendation;
+            cropOrder2Data.ManureNa2O = calculation.applied;
+            cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
+          }
+          break;
+
         case 6:
           // Lime handling
           if (sequenceId === 1) {
@@ -987,10 +1094,12 @@ class PlanService extends BaseService {
             cropOrder2Data.FertilizerLime = calculation.cropNeed;
           }
           break;
+
         default:
           break;
       }
-    });
+    }
+ 
 
     // Save or update for Crop Order 1
     // let firstCropSaveData = await this.repository.findOne({
@@ -1089,7 +1198,119 @@ class PlanService extends BaseService {
       where: { Year: cropYear, FieldID: fieldId },
     });
   }
+  // Function to find indexId by matching index values
+  async findIndexId(nutrient, indexValue, nutrientIndicesData) {
+    const nutrientData = nutrientIndicesData[nutrient];
+    console.log("nutrientData", nutrientData);
 
+    // if (nutrient === "Potassium" && indexValue === 2) {
+    //   // Check only for "2+"
+    //   for (const data of nutrientData) {
+    //     console.log("data.index", data.index);
+    //     if (data.index.trim() === "2+") {
+    //       console.log("data.indexId", data.indexId);
+    //       return data.indexId;
+    //     }
+    //   }
+    // } //-2 == 2-
+    // Special case for Potassium (nutrientId = 2)
+    if (nutrient === "Potassium") {
+      // Check if indexValue is 2 and match with "2+"
+      if (indexValue === 2) {
+        for (const data of nutrientData) {
+          console.log("data.index", data.index);
+          if (data.index.trim() === "2+") {
+            console.log("data.indexId", data.indexId);
+            return data.indexId;
+          }
+        }
+      }
+
+      // Check if indexValue is -2 and match with "2-"
+      if (indexValue === -2) {
+        for (const data of nutrientData) {
+          console.log("data.index", data.index);
+          if (data.index.trim() === "2-") {
+            console.log("data.indexId", data.indexId);
+            return data.indexId;
+          }
+        }
+      }
+    }
+
+    for (const data of nutrientData) {
+      console.log("data.index", data.index);
+      if (data.index.trim() === indexValue.toString()) {
+        console.log("data.indexId", data.indexId);
+        return data.indexId;
+      }
+    }
+    return null; // Return null if no match is found
+  }
+
+  async assignIndexIdToLatestSoilAnalysis(soilAnalysisRecords, CountryID) {
+    const nutrientIndicesData = {};
+
+    // Nutrient Enum values
+    const NutrientEnum = {
+      Phosphorus: 1,
+      Potassium: 2,
+      Magnesium: 3,
+    };
+
+    // Fetch index data for each nutrient (Phosphorus, Potassium, Magnesium)
+    for (const [nutrient, nutrientId] of Object.entries(NutrientEnum)) {
+      // Use countryId = 3 only for this API call
+      const countryIdForMethodology = 3;
+      const getNutrientData = await this.RB209SoilService.getData(
+        `Soil/Methodologies/${nutrientId}/${countryIdForMethodology}`
+      );
+
+      // Select the first methodologyId if multiple exist
+      const methodologyId = getNutrientData[0]?.methodologyId;
+
+      if (methodologyId != null) {
+        // Use dynamic countryId for the NutrientIndices API call
+        nutrientIndicesData[nutrient] = await this.RB209SoilService.getData(
+          `Soil/NutrientIndices/${nutrientId}/${methodologyId}/${CountryID}`
+        );
+      }
+    }
+
+    // Iterate over each soil analysis record
+    for (const record of soilAnalysisRecords) {
+      // Loop through each nutrient to update its indexId
+      for (const [nutrient, nutrientId] of Object.entries(NutrientEnum)) {
+        const nutrientIndexKey = `${nutrient}Index`; // Construct key dynamically (e.g., PhosphorusIndex)
+        if (record[nutrientIndexKey] !== undefined) {
+          const nutrientIndexId = await this.findIndexId(
+            nutrient,
+            record[nutrientIndexKey],
+            nutrientIndicesData
+          );
+          console.log("nutrientIndexId for record", nutrientIndexId);
+
+          // Assign the indexId back to the nutrient index key, or retain the original value
+          record[nutrientIndexKey] =
+            nutrientIndexId || record[nutrientIndexKey];
+        }
+      }
+    }
+
+    console.log("updated soilAnalysisRecords", soilAnalysisRecords);
+    return soilAnalysisRecords; // Return the updated records
+  }
+ async convertIndexValueToId(indexId,nutrientId){
+   const numericIndexId = Number(indexId);
+   // Convert nutrientId to a string
+   const numericNutrientId = Number(nutrientId);
+   const indexValue = await this.RB209SoilService.getData(
+     `Soil/NutrientIndex/${numericIndexId}/${numericNutrientId}`
+   );
+   const trimmedIndexValue = indexValue.index.trim();
+   console.log("indexValueeee", trimmedIndexValue);
+   return trimmedIndexValue;
+ }
   async createNutrientsRecommendationForField(crops, userId, request) {
     const allManagementPeriods = await this.managementPeriodRepository.find();
     const allPKBalanceData = await this.pkBalanceRepository.find();
@@ -1141,6 +1362,9 @@ class PlanService extends BaseService {
           field.FarmID
         );
         Errors.push(...farmErrors);
+        const countryData = await this.countryRepository.findOneBy({
+          ID: farm.CountryID,
+        });
         // const dataMultipleCrops = await this.cropRepository.find({
         //   where: {
         //     FieldID: field.ID,
@@ -1148,6 +1372,10 @@ class PlanService extends BaseService {
         //     Confirm: false,
         //   },
         // });
+        // const getNutrientData = await this.RB209FieldService.getData(`Soil/Methodologies/${nutrientId}/${countryId}`)
+        // const getNutrientIndicesData = await this.RB209FieldService.getData(
+        //   `Soil/NutrientIndices/${nutrientId}/${methodologyId}/${countryId}`
+        // );
         const {
           latestSoilAnalysis,
           errors: soilAnalysisErrors,
@@ -1155,13 +1383,20 @@ class PlanService extends BaseService {
         } = await this.handleSoilAnalysisValidation(
           fieldId,
           field.Name,
-          crop?.Year
+          crop?.Year,
+          countryData.RB209CountryID
         );
+        console.log("idsoil", latestSoilAnalysis);
         Errors.push(...soilAnalysisErrors);
         if (Errors.length > 0) {
           throw new Error(JSON.stringify(Errors));
         }
+        
+       
         const snsAnalysesData = await this.getSnsAnalysesData(fieldId);
+        
+
+
         if (crop.CropTypeID === 170) {
           console.log("basicPlan", cropData);
           await this.savedDefault(cropData, userId, transactionalManager);
@@ -1251,6 +1486,10 @@ class PlanService extends BaseService {
           "nutrientRecommendationnReqBodddddyggggg",
           nutrientRecommendationnReqBody.field.soil.pkBalance
         );
+         console.log(
+           "nutrientRecommendationnReqBodddddygggggsoilAnalyses",
+           nutrientRecommendationnReqBody.field.soil.soilAnalyses
+         );
         const nutrientRecommendationsData =
           await this.rB209RecommendationService.postData(
             "Recommendation/Recommendations",
@@ -1365,6 +1604,7 @@ class PlanService extends BaseService {
             snsAnalysesData,
             userId
           );
+      console.log("savesssdCrop", savedCrop);
 
           savedRecommendation = savedData.firstCropSaveData;
 

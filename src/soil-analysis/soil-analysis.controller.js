@@ -77,5 +77,22 @@ const pKBalanceData=this.#request.payload.PKBalance;
       return this.#h.response({ error });
     }
   }
+  async deleteSoilAnalysisById() {
+      const { soilAnalysisId } = this.#request.params;
+      const userId = this.#request.userId;
+      try {
+        const result = await this.#soilAnalysisService.deleteSoilAnalysis(
+          soilAnalysisId,
+          userId,
+          this.#request
+        );
+        if (result?.affectedRows === 0) {
+          throw boom.notFound(`Soilanalysis with ID ${soilAnalysisId} not found.`);
+        }
+        return this.#h.response({ message: "Soilanalysis deleted successfully." });
+      } catch (error) {
+        return this.#h.response({ error: error.message });
+      }
+    }
 }
 module.exports = { SoilAnalysesController };

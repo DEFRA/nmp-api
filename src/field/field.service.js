@@ -336,9 +336,18 @@ class FieldService extends BaseService {
       ID: fieldId,
     });
 
-    const soilAnalysisData = await this.soilAnalysisRepository.findOneBy({
-      FieldID: fieldId,
+    const soilAnalysisData = await this.soilAnalysisRepository.findOne({
+      where: {  FieldID: fieldId },
+      
+      order: { Year: 'DESC' ,   
+         Date: 'DESC' },
+      
     });
+    // const latestSoilAnalysis = await this.soilAnalysisRepository.findOne({
+    //   where: { FieldID: field.ID},
+    //   order: { ModifiedOn: "DESC" }, // Sort by ModifiedOn descending
+    //   take: 1, // Retrieve only the latest entry
+    // });
     const snsAnalysisData = await this.snsAnalysisRepository.findOneBy({
       FieldID: fieldId,
     });
