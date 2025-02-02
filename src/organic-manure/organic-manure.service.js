@@ -498,7 +498,13 @@ class OrganicManureService extends BaseService {
         );
 
         // if (latestRecordWithFieldValue) {
-        latestSoilAnalysis[field] = latestRecordWithFieldValue[field];
+         if (latestRecordWithFieldValue) {
+           latestSoilAnalysis[field] = latestRecordWithFieldValue[field];
+         } else {
+           // Explicitly set the field to null if no value was found
+           latestSoilAnalysis[field] = null;
+         }
+        
         //} //else {
         //   errors.push(`${field} value not found in the last 5 years.`);
         // }
