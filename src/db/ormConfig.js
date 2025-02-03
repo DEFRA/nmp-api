@@ -68,6 +68,7 @@ const { PreviousGrassesEntity } = require("./entity/previous-grasses-entity.js")
 const { SNSCategoriesEntity } = require("./entity/snsCategories.entity.js");
 const { InprogressCalculationsEntity } = require("./entity/inprogress-calculations-entity.js");
 const { CropInfoQuestionsEntity } = require("./entity/crop-info-questions.entity.js");
+const { ExcessRainfallsEntity } = require("./entity/excess-rainfalls.entity.js");
 
 
 dotven.config();
@@ -121,7 +122,8 @@ const baseConfig = {
     PreviousGrassesEntity,
     SNSCategoriesEntity,
     InprogressCalculationsEntity,
-    CropInfoQuestionsEntity
+    CropInfoQuestionsEntity,
+    ExcessRainfallsEntity
   ],
 };
 
