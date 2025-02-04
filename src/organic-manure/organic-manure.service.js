@@ -247,6 +247,23 @@ class OrganicManureService extends BaseService {
       throw error; // Re-throw the error or handle it as needed
     }
   }
+  async findPreviousCrop(fieldID, currentYear) {
+    // Find all crops matching the previous year and field ID
+    const previousCrops = await this.cropRepository.find({
+      where: {
+        FieldID: fieldID,
+        Year: currentYear - 1,
+      },
+    });
+
+    // If more than one crop is found, filter for CropOrder = 2
+    if (previousCrops.length > 1) {
+      return previousCrops.find((crop) => crop.CropOrder === 2);
+    }
+
+    // Otherwise, return the first crop (or null if none are found)
+    return previousCrops[0] || null;
+  }
 
   async buildNutrientRecommendationReqBody(
     field,
@@ -280,14 +297,8 @@ class OrganicManureService extends BaseService {
         HttpStatus.BAD_REQUEST
       );
     }
-    const previousCrop = await this.cropRepository.find({
-      where: {
-        FieldID: field.ID,
-        Year: crop.Year - 1,
-        Confirm: true,
-      },
-      take: 1,
-    })[0];
+    const previousCrop = await this.findPreviousCrop(field.ID, crop.Year);
+
     const pkBalanceData = await this.getPKBalanceData(
       field.ID,
       crop.Year - 1,
@@ -415,15 +426,36 @@ class OrganicManureService extends BaseService {
       });
     }
 
-    if (previousCrop) {
-      const cropType = cropTypesList.find(
-        (cropType) => cropType.cropTypeId === previousCrop.CropTypeID
-      );
-      nutrientRecommendationnReqBody.field.previousCropping = {
-        previousCropGroupId: cropType.cropGroupId,
-        previousCropTypeId: previousCrop.CropTypeID,
-      };
-    }
+     if (previousCrop) {
+       const cropType = cropTypesList.find(
+         (cropType) => cropType.cropTypeId === previousCrop.CropTypeID
+       );
+       nutrientRecommendationnReqBody.field.previousCropping = {
+         previousGrassId: 1,
+         previousCropGroupId:
+           cropType.cropGroupId !== undefined && cropType.cropGroupId !== null
+             ? cropType.cropGroupId
+             : null,
+         previousCropTypeId:
+           previousCrop.CropTypeID !== undefined &&
+           previousCrop.CropTypeID !== null
+             ? previousCrop.CropTypeID
+             : null,
+         snsId: null,
+         smnDepth: null,
+         measuredSmn: null,
+       };
+     } else {
+       // If no previousCrop found, assign null except for previousGrassId
+       nutrientRecommendationnReqBody.field.previousCropping = {
+         previousCropGroupId: null,
+         previousCropTypeId: null,
+         previousGrassId: 1,
+         snsId: null,
+         smnDepth: null,
+         measuredSmn: null,
+       };
+     }
     nutrientRecommendationnReqBody.referenceValue = `${field.ID}-${crop.ID}-${crop.Year}`;
 
     return nutrientRecommendationnReqBody;
@@ -498,13 +530,13 @@ class OrganicManureService extends BaseService {
         );
 
         // if (latestRecordWithFieldValue) {
-         if (latestRecordWithFieldValue) {
-           latestSoilAnalysis[field] = latestRecordWithFieldValue[field];
-         } else {
-           // Explicitly set the field to null if no value was found
-           latestSoilAnalysis[field] = null;
-         }
-        
+        if (latestRecordWithFieldValue) {
+          latestSoilAnalysis[field] = latestRecordWithFieldValue[field];
+        } else {
+          // Explicitly set the field to null if no value was found
+          latestSoilAnalysis[field] = null;
+        }
+
         //} //else {
         //   errors.push(`${field} value not found in the last 5 years.`);
         // }
@@ -967,6 +999,10 @@ class OrganicManureService extends BaseService {
   }
 
   async findIndexId(nutrient, indexValue, nutrientIndicesData) {
+    // Return null immediately if indexValue is null
+    if (indexValue === null) {
+      return null;
+    }
     const nutrientData = nutrientIndicesData[nutrient];
     console.log("nutrientData", nutrientData);
 

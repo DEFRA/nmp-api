@@ -80,7 +80,6 @@ class UpdateRecommendation {
     this.excessRainfallRepository = AppDataSource.getRepository(
       ExcessRainfallsEntity
     );
-
   }
 
   async getYearsGreaterThanGivenYear(fieldID, year) {
@@ -1841,20 +1840,14 @@ class UpdateRecommendation {
         HttpStatus.BAD_REQUEST
       );
     }
-    const previousCrop = await this.cropRepository.find({
-      where: {
-        FieldID: field.ID,
-        Year: crop.Year - 1,
-        Confirm: true,
-      },
-      take: 1,
-    })[0];
+    const previousCrop = await this.findPreviousCrop(field.ID, crop.Year);
+
     // console.log("dataMultipleCropsss", dataMultipleCrops);
     const arableBody = await this.buildArableBody(dataMultipleCrops, field);
-      const excessRainfall = await this.getWinterExcessRainfall(
-        farm.ID,
-        crop.Year
-      );
+    const excessRainfall = await this.getWinterExcessRainfall(
+      farm.ID,
+      crop.Year
+    );
 
     const nutrientRecommendationnReqBody = {
       field: {
@@ -1897,7 +1890,10 @@ class UpdateRecommendation {
         postcode: farm.ClimateDataPostCode,
         altitude: farm.AverageAltitude,
         rainfallAverage: farm.Rainfall,
-        excessWinterRainfall: excessRainfall?.WinterRainfall !=null ? excessRainfall.WinterRainfall:0, //TODO:: need to find it
+        excessWinterRainfall:
+          excessRainfall?.WinterRainfall != null
+            ? excessRainfall.WinterRainfall
+            : 0, //TODO:: need to find it
         mannerManures: true,
         organicMaterials: [],
         mannerOutputs: [
@@ -1964,13 +1960,52 @@ class UpdateRecommendation {
         (cropType) => cropType.cropTypeId === previousCrop.CropTypeID
       );
       nutrientRecommendationnReqBody.field.previousCropping = {
-        previousCropGroupId: cropType.cropGroupId,
-        previousCropTypeId: previousCrop.CropTypeID,
+        previousGrassId: 1,
+        previousCropGroupId:
+          cropType.cropGroupId !== undefined && cropType.cropGroupId !== null
+            ? cropType.cropGroupId
+            : null,
+        previousCropTypeId:
+          previousCrop.CropTypeID !== undefined &&
+          previousCrop.CropTypeID !== null
+            ? previousCrop.CropTypeID
+            : null,
+        snsId: null,
+        smnDepth: null,
+        measuredSmn: null,
+      };
+    } else {
+      // If no previousCrop found, assign null except for previousGrassId
+      nutrientRecommendationnReqBody.field.previousCropping = {
+        previousCropGroupId: null,
+        previousCropTypeId: null,
+        previousGrassId: 1,
+        snsId: null,
+        smnDepth: null,
+        measuredSmn: null,
       };
     }
     nutrientRecommendationnReqBody.referenceValue = `${field.ID}-${crop.ID}-${crop.Year}`;
 
     return nutrientRecommendationnReqBody;
+  }
+
+  async findPreviousCrop(fieldID, currentYear) {
+    // Find all crops matching the previous year and field ID
+    const previousCrops = await this.cropRepository.find({
+      where: {
+        FieldID: fieldID,
+        Year: currentYear - 1,
+      },
+    });
+
+    // If more than one crop is found, filter for CropOrder = 2
+    if (previousCrops.length > 1) {
+      return previousCrops.find((crop) => crop.CropOrder === 2);
+    }
+
+    // Otherwise, return the first crop (or null if none are found)
+    return previousCrops[0] || null;
   }
 
   async buildNutrientWithoutMannerRecommendationReqBody(
@@ -1995,19 +2030,13 @@ class UpdateRecommendation {
         HttpStatus.BAD_REQUEST
       );
     }
-    const previousCrop = await this.cropRepository.find({
-      where: {
-        FieldID: field.ID,
-        Year: crop.Year - 1,
-        Confirm: true,
-      },
-      take: 1,
-    })[0];
-   const excessRainfall = await this.getWinterExcessRainfall(
-     farm.ID,
-     crop.Year
-   );
-  
+      const previousCrop = await this.findPreviousCrop(field.ID, crop.Year);
+
+    const excessRainfall = await this.getWinterExcessRainfall(
+      farm.ID,
+      crop.Year
+    );
+
     // Use the buildArableBody function to get the arable array
     const arableBody = await this.buildArableBody(dataMultipleCrops, field);
     const nutrientRecommendationnReqBody = {
@@ -2051,7 +2080,10 @@ class UpdateRecommendation {
         postcode: farm.ClimateDataPostCode,
         altitude: farm.AverageAltitude,
         rainfallAverage: farm.Rainfall,
-        excessWinterRainfall: excessRainfall?.WinterRainfall !=null ? excessRainfall.WinterRainfall:0, //TODO:: need to find it
+        excessWinterRainfall:
+          excessRainfall?.WinterRainfall != null
+            ? excessRainfall.WinterRainfall
+            : 0, //TODO:: need to find it
         organicMaterials: [],
         previousCropping: {},
         countryId: farm.EnglishRules ? 1 : 2,
@@ -2103,8 +2135,29 @@ class UpdateRecommendation {
         (cropType) => cropType.cropTypeId === previousCrop.CropTypeID
       );
       nutrientRecommendationnReqBody.field.previousCropping = {
-        previousCropGroupId: cropType.cropGroupId,
-        previousCropTypeId: previousCrop.CropTypeID,
+        previousGrassId: 1,
+        previousCropGroupId:
+          cropType.cropGroupId !== undefined && cropType.cropGroupId !== null
+            ? cropType.cropGroupId
+            : null,
+        previousCropTypeId:
+          previousCrop.CropTypeID !== undefined &&
+          previousCrop.CropTypeID !== null
+            ? previousCrop.CropTypeID
+            : null,
+        snsId: null,
+        smnDepth: null,
+        measuredSmn: null,
+      };
+    } else {
+      // If no previousCrop found, assign null except for previousGrassId
+      nutrientRecommendationnReqBody.field.previousCropping = {
+        previousCropGroupId: null,
+        previousCropTypeId: null,
+        previousGrassId: 1,
+        snsId: null,
+        smnDepth: null,
+        measuredSmn: null,
       };
     }
     nutrientRecommendationnReqBody.referenceValue = `${field.ID}-${crop.ID}-${crop.Year}`;
@@ -2129,6 +2182,10 @@ class UpdateRecommendation {
     });
   }
   async findIndexId(nutrient, indexValue, nutrientIndicesData) {
+    // Return null immediately if indexValue is null
+    if (indexValue === null) {
+      return null;
+    }
     const nutrientData = nutrientIndicesData[nutrient];
     console.log("nutrientData", nutrientData);
 
