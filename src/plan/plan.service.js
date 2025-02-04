@@ -175,15 +175,12 @@ class PlanService extends BaseService {
 
     return arableBody;
   }
-  async findPreviousCrop(fieldID, currentYear) {
+  async findPreviousCrop(fieldID, currentYear, allCropData) {
     // Find all crops matching the previous year and field ID
-    const previousCrops = await this.cropRepository.find({
-      where: {
-        FieldID: fieldID,
-        Year: currentYear - 1,
-      },
-    });
-
+    // Filter all crops to find those matching the previous year and field ID
+    const previousCrops = allCropData.filter(
+      (crop) => crop.FieldID === fieldID && crop.Year === currentYear - 1
+    );
     // If more than one crop is found, filter for CropOrder = 2
     if (previousCrops.length > 1) {
       return previousCrops.find((crop) => crop.CropOrder === 2);
@@ -199,7 +196,8 @@ class PlanService extends BaseService {
     soilAnalysis,
     snsAnalysesData,
     crop,
-    allPKBalanceData
+    allPKBalanceData,
+    allCropData
   ) {
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
@@ -214,9 +212,12 @@ class PlanService extends BaseService {
         HttpStatus.BAD_REQUEST
       );
     }
-   
-    const previousCrop = await this.findPreviousCrop(field.ID, crop.Year);
 
+    const previousCrop = await this.findPreviousCrop(
+      field.ID,
+      crop.Year,
+      allCropData
+    );
 
     // Use the buildArableBody function to get the arable array
     const arableBody = await this.buildArableBody(crop, field);
@@ -349,7 +350,7 @@ class PlanService extends BaseService {
       nutrientRecommendationnReqBody.field.previousCropping = {
         previousCropGroupId: null,
         previousCropTypeId: null,
-        previousGrassId: 1, 
+        previousGrassId: 1,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -1310,7 +1311,6 @@ class PlanService extends BaseService {
   }
 
   async assignIndexIdToSoilRecords(soilAnalysisRecords, CountryID) {
-
     const nutrientIndicesData = {};
 
     // Loop through each soil analysis record
@@ -1526,7 +1526,8 @@ class PlanService extends BaseService {
             soilAnalysisRecords,
             snsAnalysesData,
             crop,
-            allPKBalanceData
+            allPKBalanceData,
+            allCropData
           );
         console.log(
           "nutrientRecommendationnReqBodyggggg",
