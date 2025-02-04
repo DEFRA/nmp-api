@@ -36,7 +36,6 @@ class CropService extends BaseService {
       FertiliserManuresEntity
     );
     this.MannerManureTypesService = new MannerManureTypesService();
-    this.fieldRepository = AppDataSource.getRepository(FieldEntity)
   }
 
   async createCropWithManagementPeriods(
