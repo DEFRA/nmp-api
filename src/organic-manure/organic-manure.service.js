@@ -1844,9 +1844,19 @@ class OrganicManureService extends BaseService {
       }
 
       // Filter manure types: IsLiquid is true OR ManureTypeID = 8 (for Poultry manure)
-      const liquidManureTypes = allManureTypes.data.filter(
-        (manure) => manure.IsLiquid === true || manure.ID === 8
-      );
+      const ManureTypes = Object.freeze({
+        PoultryManure: 8,
+        PigSlurry: 12,
+        SeparatedCattleSlurryStrainerBox: 13,
+        SeparatedCattleSlurryWeepingWall: 14,
+        SeparatedCattleSlurryMechanicalSeparator: 15,
+        SeparatedPigSlurryLiquidPortion: 18,
+        CattleSlurry: 45
+    });
+    
+      const liquidManureTypes  = allManureTypes.data.filter(
+        (manure) => Object.values(ManureTypes).includes(manure.id)
+    );
 
       if (!liquidManureTypes || liquidManureTypes.length === 0) {
         // Log a warning if no liquid or poultry manure types are found
@@ -1854,7 +1864,7 @@ class OrganicManureService extends BaseService {
       }
 
       // Extract manureTypeIds from the filtered result
-      const manureTypeIds = liquidManureTypes.map((manure) => manure.ID);
+      const manureTypeIds = liquidManureTypes.map((manure) => manure.id);
 
       // If no valid manureTypeIds, return false
       if (!manureTypeIds || manureTypeIds.length === 0) {
