@@ -13,6 +13,7 @@ const CropDto = Joi.object({
   CropInfo2: Joi.number().integer().allow(null),
   SowingDate: Joi.date().iso().allow(null),
   Yield: Joi.number().precision(3).allow(null),
+  CropGroupName: Joi.string().max(120).allow(null),
   Confirm: Joi.boolean().required(),
   PreviousGrass: Joi.number().integer().allow(null),
   GrassHistory: Joi.number().integer().allow(null),
