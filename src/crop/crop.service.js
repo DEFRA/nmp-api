@@ -305,12 +305,12 @@ class CropService extends BaseService {
    console.log("plansWithNames", plansWithNames);
     const cropDetails = await Promise.all(
       plansWithNames.map(async (plan) => {
-        const cropGroupId = findCropGroupId(plan.CropTypeID);
-        console.log("cropGroupId", cropGroupId);
-        const cropGroupName = cropGroupId
-          ? await findCropGroupName(cropGroupId)
-          : "Unknown";
-         console.log("cropGroupName", cropGroupName);
+        // const cropGroupId = findCropGroupId(plan.CropTypeID);
+        // console.log("cropGroupId", cropGroupId);
+        // const cropGroupName = cropGroupId
+        //   ? await findCropGroupName(cropGroupId)
+        //   : "Unknown";
+        // console.log("cropGroupName", cropGroupName);
           console.log("plansWithNames", plansWithNames);
         const { PlantingDate } = await findCropDetailsFromRepo(
           plan.CropID
@@ -320,8 +320,8 @@ class CropService extends BaseService {
           CropId: plan.CropID,
           CropTypeID: plan.CropTypeID,
           CropTypeName: plan.CropTypeName,
-          CropGroupID: cropGroupId,
-          CropGroupName: cropGroupName,
+          // CropGroupID: cropGroupId,
+          CropGroupName: plan.CropGroupName,
           FieldID: plan.FieldID,
           FieldName: plan.FieldName,
           CropVariety: plan.CropVariety,
