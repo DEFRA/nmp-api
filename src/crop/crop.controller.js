@@ -262,11 +262,36 @@ class CropController {
     try {
       const { id } = this.#request.params;
       const { records } = await this.#cropService.getById(id);
-     
+
       return this.#h.response(records);
     } catch (error) {
       console.error("Error in getCropsDataByCropId controller:", error);
       return this.#h.response({ error });
+    }
+  }
+  async deleteCropsByIds() {
+    const { cropIds } = this.#request.payload;
+ const userId = this.#request.userId;
+
+    try {
+     
+
+      // Loop through each cropId and call the service method to delete it
+      for (let cropId of cropIds) {
+        const result = await this.#cropService.deleteCropById(
+          cropId,
+          userId,
+          this.#request
+        );
+
+        if (result?.affectedRows === 0) {
+          throw boom.notFound(`Crop with ID ${cropId} not found.`);
+        }
+      }
+
+      return this.#h.response({ message: "Crops deleted successfully." });
+    } catch (error) {
+      return this.#h.response({ error: error.message });
     }
   }
 }
