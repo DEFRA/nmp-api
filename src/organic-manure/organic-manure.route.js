@@ -148,6 +148,7 @@ module.exports = [
         "Check if liquid manure or ManureTypeID = 8 exists within the date range",
       validate: {
         query: Joi.object({
+          managementPeriodID: Joi.number().integer().required(),
           dateFrom: Joi.date().iso().required(),
           dateTo: Joi.date().iso().required(),
           confirm: Joi.boolean(),
