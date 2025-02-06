@@ -1830,7 +1830,7 @@ class OrganicManureService extends BaseService {
     }
   }
 
-  async checkManureExists(dateFrom, dateTo, confirm, request) {
+  async checkManureExists(managementPeriodID, dateFrom, dateTo, confirm, request) {
     try {
       // Fetch all manure types from the API
       const allManureTypes = await this.MannerManureTypesService.getData(
@@ -1884,6 +1884,7 @@ class OrganicManureService extends BaseService {
             dateTo,
           }
         )
+        .andWhere("organicManure.ManagementPeriodID = :managementPeriodID", { managementPeriodID })
         .andWhere("organicManure.Confirm = :confirm", { confirm })
         .getCount();
 
