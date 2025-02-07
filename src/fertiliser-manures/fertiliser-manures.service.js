@@ -15,6 +15,7 @@ const {
   UpdateRecommendation,
 } = require("../shared/updateRecommendation.service");
 const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
+const { MoreThan } = require("typeorm");
 
 class FertiliserManuresService extends BaseService {
   constructor() {
@@ -310,10 +311,8 @@ class FertiliserManuresService extends BaseService {
   
       return await AppDataSource.transaction(async (transactionalManager) => {
         // Check if the fertiliser exists
-        const fertiliserToDelete = await await transactionalManager.findOne(
-          FertiliserManuresEntity,
-          {
-            where: { ID: fertiliserId },
+        const fertiliserToDelete = await this.repository.findOneBy({
+          ID: fertiliserId 
          });
          
         // If the fertiliser does not exist, throw a not found error    
@@ -331,43 +330,53 @@ class FertiliserManuresService extends BaseService {
         }
         const crop = await this.cropRepository.findOne({
           where: { ID: managementPeriod.CropID },
-          select: ["ID"],
+
         });
-        console.log('crop',crop)
+      
+
         // If the crop does not exist, throw a not found error    
         if (crop == null) {
           console.log(`crop with ID ${managementPeriod.CropID} not found`);
         }
+          // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
+            const nextAvailableCrop = await this.cropRepository.findOne({
+              where: {
+                FieldID: crop.FieldID,
+                Year: MoreThan(crop.Year), // Find the next available year greater than the current crop.Year
+              },
+              order: {
+                Year: "ASC", // Ensure we get the next immediate year
+              },
+            });
         try {
           // Call the stored procedure to delete the fertiliserId and related entities
           const storedProcedure = "EXEC [spFertiliserManures_DeleteFertiliserManures] @ID = @0";
           await AppDataSource.query(storedProcedure, [fertiliserId]);
   
           console.log("start");
-          this.UpdateRecommendation.updateRecommendationsForField(
-            crop.FieldID,
-            crop.Year,
-            request,
-            userId
-          )
-            .then((res) => {
-              if (res === undefined) {
-                console.log(
-                  "updateRecommendationAndOrganicManure returned undefined"
-                );
-              } else {
-                console.log(
-                  "updateRecommendationAndOrganicManure result:",
-                  res
-                );
-              }
-            })
-            .catch((error) => {
-              console.error(
-                "Error updating recommendation and organic manure:",
-                error
-              );
-            });
+          if (nextAvailableCrop) {
+               this.UpdateRecommendation.updateRecommendationsForField(
+                 crop.FieldID,
+                 nextAvailableCrop.Year,
+                 request,
+                 userId
+               )
+                 .then((res) => {
+                   if (res === undefined) {
+                     console.log(
+                       "updateRecommendationAndOrganicManure returned undefined"
+                     );
+                   } else {
+                     console.log("updateRecommendationAndOrganicManure result:", res);
+                   }
+                 })
+                 .catch((error) => {
+                   console.error(
+                     "Error updating recommendation and organic manure:",
+                     error
+                   );
+                 });
+             }
   
         } catch (error) {
           // Log the error and throw an internal server error
