@@ -106,4 +106,35 @@ module.exports = [
       },
     },
   },
+
+  {
+    method: "DELETE",
+    path: "/fertiliser-manures/{fertiliserId}",
+    options: {
+      tags: ["api", "Fertiliser Manures"],
+      description: "Delete Fertiliser by Fertiliser Id",
+      validate: {
+        params: Joi.object({
+          fertiliserId: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new FertiliserManuresController(request, h);
+      return controller.deleteFertiliserById();
+    },
+  },
 ];

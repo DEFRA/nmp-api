@@ -306,6 +306,75 @@ class FertiliserManuresService extends BaseService {
 
     return { p205: sumOfFertliserP205, k20: sumOfFertiliserK20 };
   }
+  async deleteFertiliser(fertiliserId,userId,request) {
+  
+      return await AppDataSource.transaction(async (transactionalManager) => {
+        // Check if the fertiliser exists
+        const fertiliserToDelete = await await transactionalManager.findOne(
+          FertiliserManuresEntity,
+          {
+            where: { ID: fertiliserId },
+         });
+         
+        // If the fertiliser does not exist, throw a not found error    
+        if (fertiliserToDelete == null) {
+          console.log(`fertiliser with ID ${fertiliserId} not found`);
+        }
+        const managementPeriod = await this.managementPeriodRepository.findOne({
+          where: { ID: fertiliserToDelete.ManagementPeriodID },
+          select: ["CropID"],
+        });
+        
+        // If the managementPeriod does not exist, throw a not found error    
+        if (managementPeriod == null) {
+          console.log(`managementPeriod with ID ${fertiliserToDelete.ManagementPeriodID} not found`);
+        }
+        const crop = await this.cropRepository.findOne({
+          where: { ID: managementPeriod.CropID },
+          select: ["ID"],
+        });
+        console.log('crop',crop)
+        // If the crop does not exist, throw a not found error    
+        if (crop == null) {
+          console.log(`crop with ID ${managementPeriod.CropID} not found`);
+        }
+        try {
+          // Call the stored procedure to delete the fertiliserId and related entities
+          const storedProcedure = "EXEC [spFertiliserManures_DeleteFertiliserManures] @ID = @0";
+          await AppDataSource.query(storedProcedure, [fertiliserId]);
+  
+          console.log("start");
+          this.UpdateRecommendation.updateRecommendationsForField(
+            crop.FieldID,
+            crop.Year,
+            request,
+            userId
+          )
+            .then((res) => {
+              if (res === undefined) {
+                console.log(
+                  "updateRecommendationAndOrganicManure returned undefined"
+                );
+              } else {
+                console.log(
+                  "updateRecommendationAndOrganicManure result:",
+                  res
+                );
+              }
+            })
+            .catch((error) => {
+              console.error(
+                "Error updating recommendation and organic manure:",
+                error
+              );
+            });
+  
+        } catch (error) {
+          // Log the error and throw an internal server error
+          console.error("Error deleting fertilisers:", error);
+        }
+      });
+    }
 }
 
 module.exports = { FertiliserManuresService };
