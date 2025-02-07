@@ -406,7 +406,7 @@ module.exports = [
   },
   {
     method: "DELETE",
-    path: "/crops/{cropIds}",
+    path: "/crops/",
     options: {
       tags: ["api", "Crop"],
       description: "Delete Crop(s) by Crop Id(s)",
