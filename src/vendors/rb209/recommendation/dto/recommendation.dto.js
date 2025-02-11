@@ -14,9 +14,9 @@ const RecommendationPreviousCroppingDto = Joi.object({
   previousGrassId: Joi.number(),
   previousCropGroupId: Joi.number(),
   previousCropTypeId: Joi.number(),
-  snsId: Joi.number(),
-  smnDepth: Joi.number(),
-  measuredSmn: Joi.number(),
+  snsId: Joi.number().allow(null),
+  smnDepth: Joi.number().allow(null),
+  measuredSmn: Joi.number().allow(null),
 });
 
 const RecommendationOrganicMaterialDto = Joi.object({
@@ -39,7 +39,7 @@ const RecommendationSoilAnalysisDto = Joi.object({
   pIndexId: Joi.number().required().allow(null),
   kIndexId: Joi.number().required().allow(null),
   mgIndexId: Joi.number().required().allow(null),
-  snsMethodologyId: Joi.number().required(),
+  snsMethodologyId: Joi.number().required().allow(null),
   pMethodologyId: Joi.number().required().allow(null),
   kMethodologyId: Joi.number().required().allow(null),
   mgMethodologyId: Joi.number().required().allow(null),
@@ -51,8 +51,8 @@ const RecommendationGrasslandSequenceDto = Joi.object({
   yield: Joi.number(),
 });
 const PKBalanceDto = Joi.object({
-  phosphate: Joi.number().required(),
-  potash: Joi.number().required(),
+  phosphate: Joi.number().required().allow(null),
+  potash: Joi.number().required().allow(null),
 });
 const RecommendationSoilDto = Joi.object({
   soilTypeId: Joi.number().required(),
@@ -98,6 +98,7 @@ const RecommendationFieldDto = Joi.object({
   altitude: Joi.number().required(),
   rainfallAverage: Joi.number().required(),
   excessWinterRainfall: Joi.number().required(),
+  mannerManures: Joi.boolean().optional().allow(null),
   organicMaterials: Joi.array()
     .items(RecommendationOrganicMaterialDto)
     .required(),
