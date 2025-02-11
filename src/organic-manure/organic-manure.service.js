@@ -1758,7 +1758,7 @@ class OrganicManureService extends BaseService {
       );
 
       for (const nutrientId in notesByNutrientId) {
-        const concatenatedNote = notesByNutrientId[nutrientId].join(" ");
+        const concatenatedNote = notesByNutrientId[nutrientId].join(" <br/>");
 
         const existingComment = existingComments.find(
           (comment) => comment.Nutrient === Number(nutrientId)
