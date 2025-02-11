@@ -106,8 +106,8 @@ class RecommendationService extends BaseService {
   ) {
     // Ensure both fieldID and year are provided
     if (!fieldID || !year) {
-      console.error("FieldID and Year are required");
-      return 0; // Return null if required parameters are missing
+      console.log("FieldID and Year are required");
+      return null; 
     }
 
     // Build the query object
@@ -187,7 +187,7 @@ class RecommendationService extends BaseService {
     const cropsToProcess = Array.isArray(cropDataList)
       ? cropDataList
       : [cropDataList];
-
+   
     // Loop through each crop in the cropsToProcess (which is always an array)
     for (const cropData of cropsToProcess) {
       // Fetch the ManagementPeriod data for the current crop
@@ -225,7 +225,7 @@ class RecommendationService extends BaseService {
 
       // If no pH > 0 is found, return early without doing any further processing
       if (!soilAnalysisWithPH) {
-        return 0; // Exit if no recommendation with pH > 0 is found
+        return null; // Exit if no recommendation with pH > 0 is found
       }
 
       // Get the soilAnalysisYear from the recommendation with pH > 0
@@ -264,7 +264,7 @@ class RecommendationService extends BaseService {
             totalLime1 = await this.getApplyLimeInCaseOfMultipleCrops(
               firstCropOrderDataList
             );
-          }
+          } 
 
           // Now, totalLime1 contains the sum of lime for all crops found in the list
           console.log(`Total Lime from all firstCropOrderData: ${totalLime1}`);
@@ -315,7 +315,11 @@ class RecommendationService extends BaseService {
         }
       }
       // Return the result of the calculation
-      return result;
+      if(result < 0){
+        return 0
+      }else{
+        return result;
+      }
     } catch (error) {
       console.error("Error in processSoilRecommendations:", error);
       throw error;
