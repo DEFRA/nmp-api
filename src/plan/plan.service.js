@@ -334,12 +334,12 @@ class PlanService extends BaseService {
         previousGrassId: 1,
         previousCropGroupId:
           cropType?.cropGroupId !== undefined && cropType?.cropGroupId !== null
-            ? cropType.cropGroupId
+            ? cropType?.cropGroupId
             : null,
         previousCropTypeId:
-          previousCrop.CropTypeID !== undefined &&
-          previousCrop.CropTypeID !== null
-            ? previousCrop.CropTypeID
+          previousCrop?.CropTypeID !== undefined &&
+          previousCrop?.CropTypeID !== null
+            ? previousCrop?.CropTypeID
             : null,
         snsId: null,
         smnDepth: null,
