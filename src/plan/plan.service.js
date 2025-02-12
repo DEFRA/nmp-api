@@ -825,7 +825,7 @@ class PlanService extends BaseService {
       );
 
       for (const nutrientId in notesByNutrientId) {
-        const concatenatedNote = notesByNutrientId[nutrientId].join(" "); // Concatenate notes for the same nutrientId
+        const concatenatedNote = notesByNutrientId[nutrientId].join(" <br/>"); // Concatenate notes for the same nutrientId
 
         // Add nutrientId to the processed list
         nutrientIdsInData.push(parseInt(nutrientId));
@@ -1740,7 +1740,7 @@ class PlanService extends BaseService {
               {}
             );
           for (const nutrientId in notesByNutrient) {
-            const concatenatedNote = notesByNutrient[nutrientId]?.join(" "); // Concatenate notes for the same nutrientId
+            const concatenatedNote = notesByNutrient[nutrientId]?.join(" <br/>"); // Concatenate notes for the same nutrientId
 
             // Create a new recommendation comment with the concatenated notes
             // const newComment = this.recommendationCommentRepository?.create({
