@@ -731,7 +731,7 @@ class OrganicManureService extends BaseService {
             case 0:
               cropOrder1Data.CropN = calculation.recommendation;
               cropOrder1Data.ManureN = mannerOutputs
-                ? mannerOutputs.data.availableN
+                ? mannerOutputs.data.currentCropAvailableN
                 : OrganicManure.AvailableN;
               cropOrder1Data.FertilizerN = calculation.cropNeed;
               cropOrder1Data.NIndex = calculation.indexpH;
@@ -823,7 +823,7 @@ class OrganicManureService extends BaseService {
               case 0:
                 cropOrder2Data.CropN = calculation.recommendation;
                 cropOrder2Data.ManureN = mannerOutputs
-                  ? mannerOutputs.data.availableN
+                  ? mannerOutputs.data.currentCropAvailableN
                   : OrganicManure.AvailableN;
                 cropOrder2Data.FertilizerN = calculation.cropNeed;
                 cropOrder2Data.NIndex = calculation.indexpH;
