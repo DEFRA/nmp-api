@@ -85,7 +85,8 @@ class OrganicManureController {
     }
   }
   async checkManureExists() {
-    const { managementPeriodID, dateFrom, dateTo, confirm } = this.#request.query;
+    const { managementPeriodID, dateFrom, dateTo, confirm } =
+      this.#request.query;
 
     try {
       const manureExists = await this.#organicManureService.checkManureExists(
@@ -98,6 +99,29 @@ class OrganicManureController {
       return this.#h.response({ exists: manureExists });
     } catch (error) {
       return this.#h.response({ error });
+    }
+  }
+
+  async deleteOrganicManureById() {
+    const { organicManureId } = this.#request.params;
+    const userId = this.#request.userId;
+    try {
+      console.log("DeleteorganicManure");
+      const result = await this.#organicManureService.deleteOrganicManure(
+        organicManureId,
+        userId,
+        this.#request
+      );
+      if (result?.affectedRows === 0) {
+        throw boom.notFound(
+          `organicManure with ID ${organicManureId} not found.`
+        );
+      }
+      return this.#h.response({
+        message: "organicManure deleted successfully.",
+      });
+    } catch (error) {
+      return this.#h.response({ error: error.message });
     }
   }
 }

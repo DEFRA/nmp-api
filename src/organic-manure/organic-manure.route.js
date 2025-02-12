@@ -172,4 +172,33 @@ module.exports = [
       },
     },
   },
+  {
+    method: "DELETE",
+    path: "/organic-manures/{organicManureId}",
+    options: {
+      tags: ["api", "Organic Manure"],
+      description: "Delete Organic Manure by OrganicManure Id",
+      validate: {
+        params: Joi.object({
+          organicManureId: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      return getController(request, h).deleteOrganicManureById();
+    },
+  },
 ];
