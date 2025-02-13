@@ -531,6 +531,7 @@ class PlanService extends BaseService {
   async saveRecommendationForMutipleCrops(
     transactionalManager,
     nutrientRecommendationsData,
+    allcropData,
     savedCrop,
     firstCropData,
     managementPeriodData,
@@ -716,10 +717,13 @@ class PlanService extends BaseService {
       }
     }
 
-    // Save or update for Crop Order 1
-    let firstCropSaveData = await this.repository.findOne({
-      where: { ManagementPeriodID: managementPeriodData.ID },
-    });
+    // // Save or update for Crop Order 1
+    // let firstCropSaveData = await this.repository.findOne({
+    //   where: { ManagementPeriodID: managementPeriodData.ID },
+    // });
+    let firstCropSaveData = allcropData.find(
+      (crop) => crop.ManagementPeriodID === managementPeriodData.ID
+    );
     console.log("cropOrder1Data", cropOrder1Data);
     if (firstCropSaveData) {
       // Update existing recommendation
@@ -1603,6 +1607,7 @@ class PlanService extends BaseService {
             await this.saveRecommendationForMutipleCrops(
               transactionalManager,
               nutrientRecommendationsData,
+              allCropData,
               savedCrop,
               firstCropData,
               managementPeriodData,
