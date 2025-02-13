@@ -201,4 +201,33 @@ module.exports = [
       return getController(request, h).deleteOrganicManureById();
     },
   },
+  {
+    method: "GET",
+    path: "/organic-manures/{organicManureID}",
+    options: {
+      tags: ["api", "Organic Manure"],
+      description: "Get organicManure Data By ID",
+      validate: {
+        params: Joi.object({
+          organicManureID: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+      handler: async (request, h) => {
+        return getController(request, h).getOrganicManureDataById();
+      },
+    },
+  },
 ];

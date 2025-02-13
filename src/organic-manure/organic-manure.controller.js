@@ -124,6 +124,19 @@ class OrganicManureController {
       return this.#h.response({ error: error.message });
     }
   }
+  async getOrganicManureDataById() {
+    try {
+      const { organicManureID } = this.#request.params;
+      const { records } = await this.#organicManureService.getById(
+        organicManureID
+      );
+
+      return this.#h.response(records);
+    } catch (error) {
+      console.error("Error in getOrganicManureDataById controller:", error);
+      return this.#h.response({ error });
+    }
+  }
 }
 
 module.exports = { OrganicManureController };
