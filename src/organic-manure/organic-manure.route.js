@@ -174,7 +174,7 @@ module.exports = [
   },
   {
     method: "DELETE",
-    path: "/organic-manures/{organicManureId}",
+    path: "/organic-manures/",
     options: {
       tags: ["api", "Organic Manure"],
       description: "Delete Organic Manures by OrganicManure Ids",
