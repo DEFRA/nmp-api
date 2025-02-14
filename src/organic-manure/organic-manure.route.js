@@ -177,10 +177,16 @@ module.exports = [
     path: "/organic-manures/{organicManureId}",
     options: {
       tags: ["api", "Organic Manure"],
-      description: "Delete Organic Manure by OrganicManure Id",
+      description: "Delete Organic Manures by OrganicManure Ids",
       validate: {
-        params: Joi.object({
-          organicManureId: Joi.number().integer().required(),
+        payload: Joi.object({
+          organicManureIds: Joi.array()
+            .items(Joi.number().integer().required())
+            .min(1)
+            .required()
+            .description(
+              "Array of organicManure IDs to delete, e.g., [1, 2, 3]"
+            ),
         }),
         failAction: (request, h, err) => {
           return h
@@ -198,7 +204,7 @@ module.exports = [
       },
     },
     handler: async (request, h) => {
-      return getController(request, h).deleteOrganicManureById();
+      return getController(request, h).deleteOrganicManureByIds();
     },
   },
   {
