@@ -428,13 +428,13 @@ class OrganicManureService extends BaseService {
 
     if (previousCrop) {
       const cropType = cropTypesList.find(
-        (cropType) => cropType.cropTypeId === previousCrop.CropTypeID
+        (cropType) => cropType?.cropTypeId === previousCrop?.CropTypeID
       );
       nutrientRecommendationnReqBody.field.previousCropping = {
         previousGrassId: 1,
         previousCropGroupId:
-          cropType.cropGroupId !== undefined && cropType.cropGroupId !== null
-            ? cropType.cropGroupId
+          cropType?.cropGroupId !== undefined && cropType?.cropGroupId !== null
+            ? cropType?.cropGroupId
             : null,
         previousCropTypeId:
           previousCrop.CropTypeID !== undefined &&
@@ -661,6 +661,8 @@ class OrganicManureService extends BaseService {
   async saveRecommendationForMultipleCrops(
     transactionalManager,
     nutrientRecommendationsData,
+    mannerOutputs,
+    OrganicManure,
     userId,
     cropData,
     dataMultipleCrops,
@@ -728,18 +730,24 @@ class OrganicManureService extends BaseService {
           switch (calculation.nutrientId) {
             case 0:
               cropOrder1Data.CropN = calculation.recommendation;
-              cropOrder1Data.ManureN = calculation.applied;
+              cropOrder1Data.ManureN = mannerOutputs
+                ? mannerOutputs.data.currentCropAvailableN
+                : OrganicManure.AvailableN;
               cropOrder1Data.FertilizerN = calculation.cropNeed;
               cropOrder1Data.NIndex = calculation.indexpH;
               break;
             case 1:
               cropOrder1Data.CropP2O5 = calculation.recommendation;
-              cropOrder1Data.ManureP2O5 = calculation.applied;
+              cropOrder1Data.ManureP2O5 = mannerOutputs
+                ? mannerOutputs.data.cropAvailableP2O5
+                : OrganicManure.AvailableP2O5;
               cropOrder1Data.FertilizerP2O5 = calculation.cropNeed;
               break;
             case 2:
               cropOrder1Data.CropK2O = calculation.recommendation;
-              cropOrder1Data.ManureK2O = calculation.applied;
+              cropOrder1Data.ManureK2O = mannerOutputs
+                ? mannerOutputs.data.cropAvailableK2O
+                : OrganicManure.AvailableK2O;
               cropOrder1Data.FertilizerK2O = calculation.cropNeed;
               break;
             case 3:
@@ -749,12 +757,14 @@ class OrganicManureService extends BaseService {
               break;
             case 4:
               cropOrder1Data.CropNa2O = calculation.recommendation;
-              cropOrder1Data.ManureNa2O = calculation.applied;
+              // cropOrder1Data.ManureNa2O = calculation.applied;
               cropOrder1Data.FertilizerNa2O = calculation.cropNeed;
               break;
             case 5:
               cropOrder1Data.CropSO3 = calculation.recommendation;
-              cropOrder1Data.ManureSO3 = calculation.applied;
+              cropOrder1Data.ManureSO3 = mannerOutputs
+                ? mannerOutputs.data.cropAvailableSO3
+                : OrganicManure.AvailableSO3;
               cropOrder1Data.FertilizerSO3 = calculation.cropNeed;
               break;
             case 6:
@@ -812,18 +822,24 @@ class OrganicManureService extends BaseService {
             switch (calculation.nutrientId) {
               case 0:
                 cropOrder2Data.CropN = calculation.recommendation;
-                cropOrder2Data.ManureN = calculation.applied;
+                cropOrder2Data.ManureN = mannerOutputs
+                  ? mannerOutputs.data.currentCropAvailableN
+                  : OrganicManure.AvailableN;
                 cropOrder2Data.FertilizerN = calculation.cropNeed;
                 cropOrder2Data.NIndex = calculation.indexpH;
                 break;
               case 1:
                 cropOrder2Data.CropP2O5 = calculation.recommendation;
-                cropOrder2Data.ManureP2O5 = calculation.applied;
+                cropOrder2Data.ManureP2O5 = mannerOutputs
+                  ? mannerOutputs.data.cropAvailableP2O5
+                  : OrganicManure.AvailableP2O5;
                 cropOrder2Data.FertilizerP2O5 = calculation.cropNeed;
                 break;
               case 2:
                 cropOrder2Data.CropK2O = calculation.recommendation;
-                cropOrder2Data.ManureK2O = calculation.applied;
+                cropOrder2Data.ManureK2O = mannerOutputs
+                  ? mannerOutputs.data.cropAvailableK2O
+                  : OrganicManure.AvailableK2O;
                 cropOrder2Data.FertilizerK2O = calculation.cropNeed;
                 break;
               case 3:
@@ -833,12 +849,14 @@ class OrganicManureService extends BaseService {
                 break;
               case 4:
                 cropOrder2Data.CropNa2O = calculation.recommendation;
-                cropOrder2Data.ManureNa2O = calculation.applied;
+                // cropOrder2Data.ManureNa2O = calculation.applied;
                 cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
                 break;
               case 5:
                 cropOrder2Data.CropSO3 = calculation.recommendation;
-                cropOrder2Data.ManureSO3 = calculation.applied;
+                cropOrder2Data.ManureSO3 = mannerOutputs
+                  ? mannerOutputs.data.cropAvailableSO3
+                  : OrganicManure.AvailableSO3;
                 cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
                 break;
               case 6:
@@ -1468,7 +1486,10 @@ class OrganicManureService extends BaseService {
             "nutrientRecommensssdationnReqBody",
             nutrientRecommendationnReqBody
           );
-
+          console.log(
+            "nutrientRecommensssdationnReqBodymannerOutputs:",
+            nutrientRecommendationnReqBody.field.mannerOutputs[0].availableN
+          );
           const nutrientRecommendationsData =
             await this.rB209RecommendationService.postData(
               "Recommendation/Recommendations",
@@ -1504,6 +1525,8 @@ class OrganicManureService extends BaseService {
           const savedData = await this.saveRecommendationForMultipleCrops(
             transactionalManager,
             nutrientRecommendationsData,
+            mannerOutputs,
+            OrganicManure,
             userId,
             cropData,
             dataMultipleCrops,

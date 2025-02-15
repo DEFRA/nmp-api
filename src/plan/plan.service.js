@@ -328,18 +328,18 @@ class PlanService extends BaseService {
 
     if (previousCrop) {
       const cropType = cropTypesList.find(
-        (cropType) => cropType.cropTypeId === previousCrop.CropTypeID
+        (cropType) => cropType?.cropTypeId === previousCrop?.CropTypeID
       );
       nutrientRecommendationnReqBody.field.previousCropping = {
         previousGrassId: 1,
         previousCropGroupId:
-          cropType.cropGroupId !== undefined && cropType.cropGroupId !== null
-            ? cropType.cropGroupId
+          cropType?.cropGroupId !== undefined && cropType?.cropGroupId !== null
+            ? cropType?.cropGroupId
             : null,
         previousCropTypeId:
-          previousCrop.CropTypeID !== undefined &&
-          previousCrop.CropTypeID !== null
-            ? previousCrop.CropTypeID
+          previousCrop?.CropTypeID !== undefined &&
+          previousCrop?.CropTypeID !== null
+            ? previousCrop?.CropTypeID
             : null,
         snsId: null,
         smnDepth: null,
@@ -531,6 +531,7 @@ class PlanService extends BaseService {
   async saveRecommendationForMutipleCrops(
     transactionalManager,
     nutrientRecommendationsData,
+    allcropData,
     savedCrop,
     firstCropData,
     managementPeriodData,
@@ -620,13 +621,13 @@ class PlanService extends BaseService {
           // Nitrogen (N) handling
           if (sequenceId === 1) {
             cropOrder1Data.CropN = calculation.recommendation;
-            cropOrder1Data.ManureN = calculation.applied;
+            cropOrder1Data.ManureN = null;
             cropOrder1Data.FertilizerN = calculation.cropNeed;
             cropOrder1Data.NIndex = calculation.indexpH;
             console.log("cropOrder1Data.NIndex2", cropOrder1Data.NIndex);
           } else if (sequenceId === 2) {
             cropOrder2Data.CropN = calculation.recommendation;
-            cropOrder2Data.ManureN = calculation.applied;
+            cropOrder2Data.ManureN = null;
             cropOrder2Data.FertilizerN = calculation.cropNeed;
             cropOrder2Data.NIndex = calculation.indexpH;
             console.log("cropOrder1Data.NIndex2 crop", cropOrder1Data.NIndex);
@@ -637,11 +638,11 @@ class PlanService extends BaseService {
           // Phosphorus (P2O5) handling
           if (sequenceId === 1) {
             cropOrder1Data.CropP2O5 = calculation.recommendation;
-            cropOrder1Data.ManureP2O5 = calculation.applied;
+            cropOrder1Data.ManureP2O5 = null;
             cropOrder1Data.FertilizerP2O5 = calculation.cropNeed;
           } else if (sequenceId === 2) {
             cropOrder2Data.CropP2O5 = calculation.recommendation;
-            cropOrder2Data.ManureP2O5 = calculation.applied;
+            cropOrder2Data.ManureP2O5 = null;
             cropOrder2Data.FertilizerP2O5 = calculation.cropNeed;
           }
           break;
@@ -650,11 +651,11 @@ class PlanService extends BaseService {
           // Potassium (K2O) handling
           if (sequenceId === 1) {
             cropOrder1Data.CropK2O = calculation.recommendation;
-            cropOrder1Data.ManureK2O = calculation.applied;
+            cropOrder1Data.ManureK2O = null;
             cropOrder1Data.FertilizerK2O = calculation.cropNeed;
           } else if (sequenceId === 2) {
             cropOrder2Data.CropK2O = calculation.recommendation;
-            cropOrder2Data.ManureK2O = calculation.applied;
+            cropOrder2Data.ManureK2O = null;
             cropOrder2Data.FertilizerK2O = calculation.cropNeed;
           }
           break;
@@ -663,11 +664,11 @@ class PlanService extends BaseService {
           // Magnesium (MgO) handling
           if (sequenceId === 1) {
             cropOrder1Data.CropMgO = calculation.recommendation;
-            cropOrder1Data.ManureMgO = calculation.applied;
+            cropOrder1Data.ManureMgO = null;
             cropOrder1Data.FertilizerMgO = calculation.cropNeed;
           } else if (sequenceId === 2) {
             cropOrder2Data.CropMgO = calculation.recommendation;
-            cropOrder2Data.ManureMgO = calculation.applied;
+            cropOrder2Data.ManureMgO = null;
             cropOrder2Data.FertilizerMgO = calculation.cropNeed;
           }
           break;
@@ -676,11 +677,11 @@ class PlanService extends BaseService {
           // Sulfur (SO3) handling
           if (sequenceId === 1) {
             cropOrder1Data.CropSO3 = calculation.recommendation;
-            cropOrder1Data.ManureSO3 = calculation.applied;
+            cropOrder1Data.ManureSO3 = null;
             cropOrder1Data.FertilizerSO3 = calculation.cropNeed;
           } else if (sequenceId === 2) {
             cropOrder2Data.CropSO3 = calculation.recommendation;
-            cropOrder2Data.ManureSO3 = calculation.applied;
+            cropOrder2Data.ManureSO3 = null;
             cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
           }
           break;
@@ -689,11 +690,11 @@ class PlanService extends BaseService {
           // Sodium (Na2O) handling
           if (sequenceId === 1) {
             cropOrder1Data.CropNa2O = calculation.recommendation;
-            cropOrder1Data.ManureNa2O = calculation.applied;
+            cropOrder1Data.ManureNa2O = null;
             cropOrder1Data.FertilizerNa2O = calculation.cropNeed;
           } else if (sequenceId === 2) {
             cropOrder2Data.CropNa2O = calculation.recommendation;
-            cropOrder2Data.ManureNa2O = calculation.applied;
+            cropOrder2Data.ManureNa2O = null;
             cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
           }
           break;
@@ -702,11 +703,11 @@ class PlanService extends BaseService {
           // Lime handling
           if (sequenceId === 1) {
             cropOrder1Data.CropLime = calculation.recommendation;
-            cropOrder1Data.ManureLime = calculation.applied;
+            cropOrder1Data.ManureLime = null;
             cropOrder1Data.FertilizerLime = calculation.cropNeed;
           } else if (sequenceId === 2) {
             cropOrder2Data.CropLime = calculation.recommendation;
-            cropOrder2Data.ManureLime = calculation.applied;
+            cropOrder2Data.ManureLime = null;
             cropOrder2Data.FertilizerLime = calculation.cropNeed;
           }
           break;
@@ -716,10 +717,13 @@ class PlanService extends BaseService {
       }
     }
 
-    // Save or update for Crop Order 1
-    let firstCropSaveData = await this.repository.findOne({
-      where: { ManagementPeriodID: managementPeriodData.ID },
-    });
+    // // Save or update for Crop Order 1
+    // let firstCropSaveData = await this.repository.findOne({
+    //   where: { ManagementPeriodID: managementPeriodData.ID },
+    // });
+    let firstCropSaveData = allcropData.find(
+      (crop) => crop.ManagementPeriodID === managementPeriodData.ID
+    );
     console.log("cropOrder1Data", cropOrder1Data);
     if (firstCropSaveData) {
       // Update existing recommendation
@@ -1064,13 +1068,13 @@ class PlanService extends BaseService {
           // Nitrogen (N) handling
           if (sequenceId === 1) {
             cropOrder1Data.CropN = calculation.recommendation;
-            cropOrder1Data.ManureN = calculation.applied;
+            // cropOrder1Data.ManureN = calculation.applied;
             cropOrder1Data.FertilizerN = calculation.cropNeed;
             cropOrder1Data.NIndex = calculation.indexpH;
             console.log("cropOrder1Data.NIndex2", cropOrder1Data.NIndex);
           } else if (sequenceId === 2) {
             cropOrder2Data.CropN = calculation.recommendation;
-            cropOrder2Data.ManureN = calculation.applied;
+            // cropOrder2Data.ManureN = calculation.applied;
             cropOrder2Data.FertilizerN = calculation.cropNeed;
             cropOrder2Data.NIndex = calculation.indexpH;
           }
@@ -1080,11 +1084,11 @@ class PlanService extends BaseService {
           // Phosphorus (P2O5) handling
           if (sequenceId === 1) {
             cropOrder1Data.CropP2O5 = calculation.recommendation;
-            cropOrder1Data.ManureP2O5 = calculation.applied;
+            // cropOrder1Data.ManureP2O5 = calculation.applied;
             cropOrder1Data.FertilizerP2O5 = calculation.cropNeed;
           } else if (sequenceId === 2) {
             cropOrder2Data.CropP2O5 = calculation.recommendation;
-            cropOrder2Data.ManureP2O5 = calculation.applied;
+            // cropOrder2Data.ManureP2O5 = calculation.applied;
             cropOrder2Data.FertilizerP2O5 = calculation.cropNeed;
           }
           break;
@@ -1093,11 +1097,11 @@ class PlanService extends BaseService {
           // Potassium (K2O) handling
           if (sequenceId === 1) {
             cropOrder1Data.CropK2O = calculation.recommendation;
-            cropOrder1Data.ManureK2O = calculation.applied;
+            // cropOrder1Data.ManureK2O = calculation.applied;
             cropOrder1Data.FertilizerK2O = calculation.cropNeed;
           } else if (sequenceId === 2) {
             cropOrder2Data.CropK2O = calculation.recommendation;
-            cropOrder2Data.ManureK2O = calculation.applied;
+            // cropOrder2Data.ManureK2O = calculation.applied;
             cropOrder2Data.FertilizerK2O = calculation.cropNeed;
           }
           break;
@@ -1106,11 +1110,11 @@ class PlanService extends BaseService {
           // Magnesium (MgO) handling
           if (sequenceId === 1) {
             cropOrder1Data.CropMgO = calculation.recommendation;
-            cropOrder1Data.ManureMgO = calculation.applied;
+            // cropOrder1Data.ManureMgO = calculation.applied;
             cropOrder1Data.FertilizerMgO = calculation.cropNeed;
           } else if (sequenceId === 2) {
             cropOrder2Data.CropMgO = calculation.recommendation;
-            cropOrder2Data.ManureMgO = calculation.applied;
+            // cropOrder2Data.ManureMgO = calculation.applied;
             cropOrder2Data.FertilizerMgO = calculation.cropNeed;
           }
           break;
@@ -1119,11 +1123,11 @@ class PlanService extends BaseService {
           // Sulfur (SO3) handling
           if (sequenceId === 1) {
             cropOrder1Data.CropSO3 = calculation.recommendation;
-            cropOrder1Data.ManureSO3 = calculation.applied;
+            // cropOrder1Data.ManureSO3 = calculation.applied;
             cropOrder1Data.FertilizerSO3 = calculation.cropNeed;
           } else if (sequenceId === 2) {
             cropOrder2Data.CropSO3 = calculation.recommendation;
-            cropOrder2Data.ManureSO3 = calculation.applied;
+            // cropOrder2Data.ManureSO3 = calculation.applied;
             cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
           }
           break;
@@ -1132,11 +1136,11 @@ class PlanService extends BaseService {
           // Sodium (Na2O) handling
           if (sequenceId === 1) {
             cropOrder1Data.CropNa2O = calculation.recommendation;
-            cropOrder1Data.ManureNa2O = calculation.applied;
+            // cropOrder1Data.ManureNa2O = calculation.applied;
             cropOrder1Data.FertilizerNa2O = calculation.cropNeed;
           } else if (sequenceId === 2) {
             cropOrder2Data.CropNa2O = calculation.recommendation;
-            cropOrder2Data.ManureNa2O = calculation.applied;
+            // cropOrder2Data.ManureNa2O = calculation.applied;
             cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
           }
           break;
@@ -1145,11 +1149,11 @@ class PlanService extends BaseService {
           // Lime handling
           if (sequenceId === 1) {
             cropOrder1Data.CropLime = calculation.recommendation;
-            cropOrder1Data.ManureLime = calculation.applied;
+            // cropOrder1Data.ManureLime = calculation.applied;
             cropOrder1Data.FertilizerLime = calculation.cropNeed;
           } else if (sequenceId === 2) {
             cropOrder2Data.CropLime = calculation.recommendation;
-            cropOrder2Data.ManureLime = calculation.applied;
+            // cropOrder2Data.ManureLime = calculation.applied;
             cropOrder2Data.FertilizerLime = calculation.cropNeed;
           }
           break;
@@ -1603,6 +1607,7 @@ class PlanService extends BaseService {
             await this.saveRecommendationForMutipleCrops(
               transactionalManager,
               nutrientRecommendationsData,
+              allCropData,
               savedCrop,
               firstCropData,
               managementPeriodData,

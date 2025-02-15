@@ -102,26 +102,45 @@ class OrganicManureController {
     }
   }
 
-  async deleteOrganicManureById() {
-    const { organicManureId } = this.#request.params;
+  async deleteOrganicManureByIds() {
+    const { organicManureIds } = this.#request.payload; // assuming an array of IDs is passed in the payload
     const userId = this.#request.userId;
+
     try {
-      console.log("DeleteorganicManure");
-      const result = await this.#organicManureService.deleteOrganicManure(
-        organicManureId,
-        userId,
-        this.#request
-      );
-      if (result?.affectedRows === 0) {
-        throw boom.notFound(
-          `organicManure with ID ${organicManureId} not found.`
+      // Loop through each organicManureId and call the service method to delete it
+      for (let organicManureId of organicManureIds) {
+        const result = await this.#organicManureService.deleteOrganicManure(
+          organicManureId,
+          userId,
+          this.#request
         );
+
+        if (result?.affectedRows === 0) {
+          throw boom.notFound(
+            `Organic manure with ID ${organicManureId} not found.`
+          );
+        }
       }
+
       return this.#h.response({
-        message: "organicManure deleted successfully.",
+        message: "Organic manures deleted successfully.",
       });
     } catch (error) {
       return this.#h.response({ error: error.message });
+    }
+  }
+
+  async getOrganicManureDataById() {
+    try {
+      const { organicManureID } = this.#request.params;
+      const { records } = await this.#organicManureService.getById(
+        organicManureID
+      );
+
+      return this.#h.response(records);
+    } catch (error) {
+      console.error("Error in getOrganicManureDataById controller:", error);
+      return this.#h.response({ error });
     }
   }
 }

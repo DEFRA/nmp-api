@@ -375,6 +375,7 @@ class CropService extends BaseService {
               OrganicMaterialId: organicManure.ID,
               ApplicationDate: organicManure.ApplicationDate,
               Field: crop.FieldName,
+              FieldId: crop.FieldID,
               Crop: crop.CropTypeName,
               TypeOfManure: mannerManureTypeData.name, // Set the fetched manure type name here
               Rate: organicManure.ApplicationRate,
