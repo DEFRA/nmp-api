@@ -174,13 +174,19 @@ module.exports = [
   },
   {
     method: "DELETE",
-    path: "/organic-manures/{organicManureId}",
+    path: "/organic-manures/",
     options: {
       tags: ["api", "Organic Manure"],
-      description: "Delete Organic Manure by OrganicManure Id",
+      description: "Delete Organic Manures by OrganicManure Ids",
       validate: {
-        params: Joi.object({
-          organicManureId: Joi.number().integer().required(),
+        payload: Joi.object({
+          organicManureIds: Joi.array()
+            .items(Joi.number().integer().required())
+            .min(1)
+            .required()
+            .description(
+              "Array of organicManure IDs to delete, e.g., [1, 2, 3]"
+            ),
         }),
         failAction: (request, h, err) => {
           return h
@@ -198,7 +204,36 @@ module.exports = [
       },
     },
     handler: async (request, h) => {
-      return getController(request, h).deleteOrganicManureById();
+      return getController(request, h).deleteOrganicManureByIds();
+    },
+  },
+  {
+    method: "GET",
+    path: "/organic-manures/{organicManureID}",
+    options: {
+      tags: ["api", "Organic Manure"],
+      description: "Get organicManure Data By ID",
+      validate: {
+        params: Joi.object({
+          organicManureID: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+      handler: async (request, h) => {
+        return getController(request, h).getOrganicManureDataById();
+      },
     },
   },
 ];
