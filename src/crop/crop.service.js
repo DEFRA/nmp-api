@@ -9,8 +9,15 @@ const boom = require("@hapi/boom");
 const { StaticStrings } = require("../shared/static.string");
 const { FarmEntity } = require("../db/entity/farm.entity");
 const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
-const { FertiliserManuresEntity } = require("../db/entity/fertiliser-manures.entity");
+const {
+  FertiliserManuresEntity,
+} = require("../db/entity/fertiliser-manures.entity");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
+const {
+  UpdateRecommendation,
+} = require("../shared/updateRecommendation.service");
+const { FieldEntity } = require("../db/entity/field.entity");
+const { MoreThan } = require("typeorm");
 
 class CropService extends BaseService {
   constructor() {
@@ -20,6 +27,8 @@ class CropService extends BaseService {
       ManagementPeriodEntity
     );
     this.rB209ArableService = new RB209ArableService();
+    this.UpdateRecommendation = new UpdateRecommendation();
+
     this.farmRepository = AppDataSource.getRepository(FarmEntity);
     this.organicManureRepository =
       AppDataSource.getRepository(OrganicManureEntity);
@@ -27,7 +36,6 @@ class CropService extends BaseService {
       FertiliserManuresEntity
     );
     this.MannerManureTypesService = new MannerManureTypesService();
-
   }
 
   async createCropWithManagementPeriods(
@@ -80,7 +88,7 @@ class CropService extends BaseService {
     });
     const cropTypeId = cropData?.CropTypeID;
 
-    if ( cropTypeId == null || cropTypeId == undefined) {
+    if (cropTypeId == null || cropTypeId == undefined) {
       throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
     }
     const cropTypesList = await this.rB209ArableService.getData(
@@ -185,15 +193,15 @@ class CropService extends BaseService {
       throw error;
     }
   }
-  async getOrganicAndInorganicDetails(farmId, harvestYear,request) {
+  async getOrganicAndInorganicDetails(farmId, harvestYear, request) {
     const storedProcedure =
       "EXEC dbo.spCrops_GetPlansByHarvestYear @farmId = @0, @harvestYear = @1";
     const plans = await this.executeQuery(storedProcedure, [
       farmId,
       harvestYear,
     ]);
-    console.log("planssss",plans)
-    
+    console.log("planssss", plans);
+
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
     );
@@ -210,7 +218,7 @@ class CropService extends BaseService {
         const cropGroupResponse = await this.rB209ArableService.getData(
           `/Arable/CropGroup/${cropGroupId}`
         );
-        
+
         return cropGroupResponse.cropGroupName;
       } catch (error) {
         console.error(
@@ -302,26 +310,24 @@ class CropService extends BaseService {
 
     const rainfall = await findFarmRainfall(farmId);
     const plansWithNames = await this.mapCropTypeIdWithTheirNames(plans);
-   console.log("plansWithNames", plansWithNames);
+    console.log("plansWithNames", plansWithNames);
     const cropDetails = await Promise.all(
       plansWithNames.map(async (plan) => {
-        const cropGroupId = findCropGroupId(plan.CropTypeID);
-        console.log("cropGroupId", cropGroupId);
-        const cropGroupName = cropGroupId
-          ? await findCropGroupName(cropGroupId)
-          : "Unknown";
-         console.log("cropGroupName", cropGroupName);
-          console.log("plansWithNames", plansWithNames);
-        const { PlantingDate } = await findCropDetailsFromRepo(
-          plan.CropID
-        );
+        // const cropGroupId = findCropGroupId(plan.CropTypeID);
+        // console.log("cropGroupId", cropGroupId);
+        // const cropGroupName = cropGroupId
+        //   ? await findCropGroupName(cropGroupId)
+        //   : "Unknown";
+        // console.log("cropGroupName", cropGroupName);
+        console.log("plansWithNames", plansWithNames);
+        const { PlantingDate } = await findCropDetailsFromRepo(plan.CropID);
 
         return {
           CropId: plan.CropID,
           CropTypeID: plan.CropTypeID,
           CropTypeName: plan.CropTypeName,
-          CropGroupID: cropGroupId,
-          CropGroupName: cropGroupName,
+          // CropGroupID: cropGroupId,
+          CropGroupName: plan.CropGroupName,
           FieldID: plan.FieldID,
           FieldName: plan.FieldName,
           CropVariety: plan.CropVariety,
@@ -334,57 +340,56 @@ class CropService extends BaseService {
       })
     );
     console.log("cropDetails", cropDetails);
-   const organicMaterials = await Promise.all(
-     cropDetails.map(async (crop) => {
-       // Fetch the management period ID for the crop
-       const managementPeriodId = await findManagementPeriodId(crop.CropId);
+    const organicMaterials = await Promise.all(
+      cropDetails.map(async (crop) => {
+        // Fetch the management period ID for the crop
+        const managementPeriodId = await findManagementPeriodId(crop.CropId);
 
-       // Fetch the organic manure data if management period ID exists
-       const organicManureData = managementPeriodId
-         ? await findOrganicManureData(managementPeriodId)
-         : [];
+        // Fetch the organic manure data if management period ID exists
+        const organicManureData = managementPeriodId
+          ? await findOrganicManureData(managementPeriodId)
+          : [];
 
-       // Process each organicManure entry asynchronously
-       return Promise.all(
-         organicManureData.map(async (organicManure) => {
-           // Fetch the manure type data from MannerManureTypesService
-           let mannerManureTypeData = {};
-           try {
-             const manureTypeResponse =
-               await this.MannerManureTypesService.getData(
-                 `/manure-types/${organicManure.ManureTypeID}`,
-                 request
-               );
-  
-             mannerManureTypeData = manureTypeResponse.data;
-           } catch (error) {
-             console.error(
-               `Error fetching manure type for ID: ${organicManure.ManureTypeID}`,
-               error
-             );
-              
-           }
+        // Process each organicManure entry asynchronously
+        return Promise.all(
+          organicManureData.map(async (organicManure) => {
+            // Fetch the manure type data from MannerManureTypesService
+            let mannerManureTypeData = {};
+            try {
+              const manureTypeResponse =
+                await this.MannerManureTypesService.getData(
+                  `/manure-types/${organicManure.ManureTypeID}`,
+                  request
+                );
 
-           // Return the organic manure data with TypeOfManure fetched from the API
-           return {
-             OrganicMaterialId: organicManure.ID,
-             ApplicationDate: organicManure.ApplicationDate,
-             Field: crop.FieldName,
-             Crop: crop.CropTypeName,
-             TypeOfManure: mannerManureTypeData.name, // Set the fetched manure type name here
-             Rate: organicManure.ApplicationRate,
-           };
-         })
-       );
-     })
-   );
+              mannerManureTypeData = manureTypeResponse.data;
+            } catch (error) {
+              console.error(
+                `Error fetching manure type for ID: ${organicManure.ManureTypeID}`,
+                error
+              );
+            }
 
-   // Flatten the result (since Promise.all returns an array of arrays)
-   const flattenedOrganicMaterials = organicMaterials.flat();
+            // Return the organic manure data with TypeOfManure fetched from the API
+            return {
+              OrganicMaterialId: organicManure.ID,
+              ApplicationDate: organicManure.ApplicationDate,
+              Field: crop.FieldName,
+              FieldId: crop.FieldID,
+              Crop: crop.CropTypeName,
+              TypeOfManure: mannerManureTypeData.name, // Set the fetched manure type name here
+              Rate: organicManure.ApplicationRate,
+            };
+          })
+        );
+      })
+    );
 
+    // Flatten the result (since Promise.all returns an array of arrays)
+    const flattenedOrganicMaterials = organicMaterials.flat();
 
     const inorganicFertiliserApplications = await Promise.all(
-      cropDetails.map(async (crop) => { 
+      cropDetails.map(async (crop) => {
         const managementPeriodId = await findManagementPeriodId(crop.CropId);
         const fertiliserData = managementPeriodId
           ? await findInorganicFertiliserData(managementPeriodId)
@@ -416,7 +421,51 @@ class CropService extends BaseService {
       InorganicFertiliserApplication: inorganicFertiliserApplications.flat(),
     };
   }
-}
+  async deleteCropById(CropsID, userId, request) {
+    const crop = await this.repository.findOneBy({
+      ID: CropsID,
+    });
 
+    // Construct the stored procedure to delete a single crop by its ID
+    const storedProcedure = "EXEC dbo.spCrops_DeleteCrops @CropsID = @0";
+
+    // Pass the individual cropId to the stored procedure
+    await AppDataSource.query(storedProcedure, [CropsID]);
+
+    // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
+    const nextAvailableCrop = await this.repository.findOne({
+      where: {
+        FieldID: crop.FieldID,
+        Year: MoreThan(crop.Year), // Find the next available year greater than the current crop.Year
+      },
+      order: {
+        Year: "ASC", // Ensure we get the next immediate year
+      },
+    });
+    if (nextAvailableCrop) {
+      this.UpdateRecommendation.updateRecommendationsForField(
+        crop.FieldID,
+        nextAvailableCrop.Year,
+        request,
+        userId
+      )
+        .then((res) => {
+          if (res === undefined) {
+            console.log(
+              "updateRecommendationAndOrganicManure returned undefined"
+            );
+          } else {
+            console.log("updateRecommendationAndOrganicManure result:", res);
+          }
+        })
+        .catch((error) => {
+          console.error(
+            "Error updating recommendation and organic manure:",
+            error
+          );
+        });
+    }
+  }
+}
 
 module.exports = { CropService };

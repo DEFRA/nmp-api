@@ -106,8 +106,8 @@ class RecommendationService extends BaseService {
   ) {
     // Ensure both fieldID and year are provided
     if (!fieldID || !year) {
-      console.error("FieldID and Year are required");
-      return 0; // Return null if required parameters are missing
+      console.log("FieldID and Year are required");
+      return null; 
     }
 
     // Build the query object
@@ -150,11 +150,11 @@ class RecommendationService extends BaseService {
   async findAndSumFertiliserManuresByManagementPeriodID(managementPeriodID) {
     // Ensure the managementPeriodID is provided
     if (!managementPeriodID) {
-      console.error("ManagementPeriodID is required");
+      console.log("ManagementPeriodID is required");
     }
 
     // Fetch all fertiliser manures data for the given ManagementPeriodID
-    const fertiliserManuresData = await this.fertiliserManuresRepository.find({
+    const fertiliserManures = await this.fertiliserManuresRepository.find({
       where: {
         ManagementPeriodID: managementPeriodID,
       },
@@ -164,15 +164,15 @@ class RecommendationService extends BaseService {
     });
 
     // Check if any fertiliser manures data is found
-    if (!fertiliserManuresData || fertiliserManuresData.length === 0) {
-      console.error(
+    if (!fertiliserManures || fertiliserManures.length === 0) {
+      console.log(
         `No fertiliser manures data found for ManagementPeriodID ${managementPeriodID}`
       );
       return 0; // Exit if no fertiliser data is found
     }
 
     // Sum up the Lime values from the list of fertiliser manures data
-    const totalLime = fertiliserManuresData.reduce((total, item) => {
+    const totalLime = fertiliserManures.reduce((total, item) => {
       return total + (item.Lime || 0); // Add Lime value if available, otherwise 0
     }, 0);
 
@@ -187,7 +187,7 @@ class RecommendationService extends BaseService {
     const cropsToProcess = Array.isArray(cropDataList)
       ? cropDataList
       : [cropDataList];
-
+   
     // Loop through each crop in the cropsToProcess (which is always an array)
     for (const cropData of cropsToProcess) {
       // Fetch the ManagementPeriod data for the current crop
@@ -213,7 +213,7 @@ class RecommendationService extends BaseService {
       const fiveYearsAgo = currentYear - 5;
 
       // Step 1: Fetch soil recommendations (before fertiliser apply)
-      const soilRecommendations = await this.soilAnalysisRepository.find({
+      const soilAnalyses = await this.soilAnalysisRepository.find({
         where: {
           FieldID: fieldId,
           Year: Between(fiveYearsAgo, currentYear),
@@ -221,17 +221,15 @@ class RecommendationService extends BaseService {
       });
 
       // Step 2: Check if any year has pH value > 0
-      const recommendationWithPH = soilRecommendations.find(
-        (rec) => rec.PH > 0
-      );
+      const soilAnalysisWithPH = soilAnalyses.find((rec) => rec.PH > 0);
 
       // If no pH > 0 is found, return early without doing any further processing
-      if (!recommendationWithPH) {
-        return 0; // Exit if no recommendation with pH > 0 is found
+      if (!soilAnalysisWithPH) {
+        return null; // Exit if no recommendation with pH > 0 is found
       }
 
       // Get the soilAnalysisYear from the recommendation with pH > 0
-      const soilAnalysisYear = recommendationWithPH.Year;
+      const soilAnalysisWithPhYear = soilAnalysisWithPH.Year;
       // console.log(
       //   "RecommendationData",
       //   Recommendation.Crop_ID
@@ -258,7 +256,7 @@ class RecommendationService extends BaseService {
             await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
               fieldId,
               cropData.Year - 1,
-              soilAnalysisYear,
+              soilAnalysisWithPhYear,
               1
             );
           console.log("CropOrderDataList", firstCropOrderDataList);
@@ -266,7 +264,7 @@ class RecommendationService extends BaseService {
             totalLime1 = await this.getApplyLimeInCaseOfMultipleCrops(
               firstCropOrderDataList
             );
-          }
+          } 
 
           // Now, totalLime1 contains the sum of lime for all crops found in the list
           console.log(`Total Lime from all firstCropOrderData: ${totalLime1}`);
@@ -280,7 +278,7 @@ class RecommendationService extends BaseService {
             await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
               fieldId,
               cropData.Year - 1,
-              soilAnalysisYear
+              soilAnalysisWithPhYear
             );
 
           if (CropOrderDataList != null) {
@@ -306,16 +304,22 @@ class RecommendationService extends BaseService {
         }
 
         // Step 6: Sum total lime values for both crops
-        const totalLime = totalLime1 + totalLime2;
-        console.log("totalLime", totalLime);
+        
+        console.log("totalLime", totalLime1);
 
         // Step 7: Subtract the total lime from cropN in the recommendation
         const cropNeedValue = Recommendation.Recommendation_CropN;
         console.log("cropNeedValue", cropNeedValue);
-        result = cropNeedValue - totalLime;
+        if (totalLime1 > 0) {
+          result = cropNeedValue - totalLime1;
+        }
       }
       // Return the result of the calculation
-      return result;
+      if(result < 0){
+        return 0
+      }else{
+        return result;
+      }
     } catch (error) {
       console.error("Error in processSoilRecommendations:", error);
       throw error;
@@ -338,7 +342,7 @@ class RecommendationService extends BaseService {
           ManagementPeriod: {},
           FertiliserManure: {},
         };
-        
+
         const previousAppliedLime = await this.processSoilRecommendations(
           harvestYear,
           fieldId,
@@ -346,7 +350,7 @@ class RecommendationService extends BaseService {
         );
         // Add previousAppliedLime to Recommendation object
         data.Recommendation.PreviousAppliedLime = previousAppliedLime || 0;
-        
+
         Object.keys(r).forEach((recDataKey) => {
           if (recDataKey.startsWith("Crop_"))
             data.Crop[recDataKey.slice(5)] = r[recDataKey];

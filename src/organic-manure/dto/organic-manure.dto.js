@@ -39,6 +39,7 @@ const OrganicManureEntitySchema = Joi.object({
   MoistureID: Joi.number().integer().allow(null),
   AutumnCropNitrogenUptake: Joi.number().precision(2).default(0),
   SoilDrainageEndDate: Joi.date().iso().allow(null),
+  AvailableNForNMax: Joi.number().precision(3).allow(null),
 });
 
 // Define the validation schema for OrganicManureDto

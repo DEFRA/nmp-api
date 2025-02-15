@@ -53,6 +53,10 @@ const CropEntity = new EntitySchema({
       scale: 3,
       nullable: true,
     },
+    CropGroupName: {
+      type: "nvarchar",
+      nullable: true,
+    },
     Confirm: {
       type: "bit",
       default: 0,

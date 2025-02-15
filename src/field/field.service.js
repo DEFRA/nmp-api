@@ -172,15 +172,13 @@ class FieldService extends BaseService {
       throw boom.conflict("Field already exists with this Farm Id and Name");
     }
 
-    const { TopSoilID, SubSoilID } = await this.getSoilTextureBySoilTypeId(
-      body.Field.SoilTypeID
-    );
+    // const { TopSoilID, SubSoilID } = await this.getSoilTextureBySoilTypeId(
+    //   body.Field.SoilTypeID
+    // );
 
     return await AppDataSource.transaction(async (transactionalManager) => {
       const field = this.repository.create({
         ...body.Field,
-        TopSoilID,
-        SubSoilID,
         FarmID: farmId,
         CreatedByID: userId,
       });
@@ -292,14 +290,12 @@ class FieldService extends BaseService {
     const { ID, CreatedByID, CreatedOn, EncryptedFieldId, ...dataToUpdate } =
       updatedFieldData;
 
-    const { TopSoilID, SubSoilID } = await this.getSoilTextureBySoilTypeId(
-      updatedFieldData.SoilTypeID
-    );
+    // const { TopSoilID, SubSoilID } = await this.getSoilTextureBySoilTypeId(
+    //   updatedFieldData.SoilTypeID
+    // );
 
     const result = await this.repository.update(fieldId, {
       ...dataToUpdate,
-      TopSoilID,
-      SubSoilID,
       ModifiedByID: userId,
       ModifiedOn: new Date(),
     });
@@ -340,9 +336,18 @@ class FieldService extends BaseService {
       ID: fieldId,
     });
 
-    const soilAnalysisData = await this.soilAnalysisRepository.findOneBy({
-      FieldID: fieldId,
+    const soilAnalysisData = await this.soilAnalysisRepository.findOne({
+      where: {  FieldID: fieldId },
+      
+      order: { Year: 'DESC' ,   
+         Date: 'DESC' },
+      
     });
+    // const latestSoilAnalysis = await this.soilAnalysisRepository.findOne({
+    //   where: { FieldID: field.ID},
+    //   order: { ModifiedOn: "DESC" }, // Sort by ModifiedOn descending
+    //   take: 1, // Retrieve only the latest entry
+    // });
     const snsAnalysisData = await this.snsAnalysisRepository.findOneBy({
       FieldID: fieldId,
     });

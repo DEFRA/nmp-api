@@ -58,7 +58,24 @@ class FertiliserManuresController {
         }
     }
 
-
+    async deleteFertiliserById() {
+        const { fertiliserId } = this.#request.params;
+        const userId = this.#request.userId;
+        try {
+            console.log('Deletefertliser')
+          const result = await this.#fertiliserManuresService.deleteFertiliser(
+            fertiliserId,
+            userId,
+            this.#request
+          );
+          if (result?.affectedRows === 0) {
+            throw boom.notFound(`fertiliser with ID ${fertiliserId} not found.`);
+          }
+          return this.#h.response({ message: "fertiliser deleted successfully." });
+        } catch (error) {
+          return this.#h.response({ error: error.message });
+        }
+      }
 }
 
 module.exports = { FertiliserManuresController };

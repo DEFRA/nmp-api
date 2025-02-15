@@ -127,8 +127,8 @@ module.exports = [
         "Individual Nutrient Index Item - filtered by Nutrient Id and Index Id",
       validate: {
         params: Joi.object({
-          nutrientId: Joi.string().required(),
-          indexId: Joi.string().required(),
+          nutrientId: Joi.number().integer().required(), // Ensure nutrientId is an integer
+          indexId: Joi.number().integer().required(), // Ensure indexId is an integer
         }),
         failAction: (request, h, err) => {
           return h

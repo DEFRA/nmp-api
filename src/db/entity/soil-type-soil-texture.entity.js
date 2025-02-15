@@ -21,20 +21,7 @@ const SoilTypeSoilTextureEntity = new EntitySchema({
       name: "SubSoilID",
     },
   },
-  relations: {
-    TopSoil: {
-      target: "TopSoil",
-      type: "many-to-one",
-      inverseSide: "SoilTypeSoilTextures",
-      joinColumn: { name: "TopSoilID" },
-    },
-    SubSoil: {
-      target: "SubSoil",
-      type: "many-to-one",
-      inverseSide: "SoilTypeSoilTextures",
-      joinColumn: { name: "SubSoilID" },
-    },
-  },
+  
 });
 
 module.exports = { SoilTypeSoilTextureEntity };

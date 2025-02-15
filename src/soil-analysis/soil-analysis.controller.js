@@ -43,13 +43,15 @@ class SoilAnalysesController {
   async createSoilAnalysis() {
     const soilAnalysisBody = this.#request.payload.SoilAnalysis;
     const userId = this.#request.userId;
-
+const pKBalanceData=this.#request.payload.PKBalance;
     try {
       const data = await this.#soilAnalysisService.createSoilAnalysis(
         soilAnalysisBody,
-        userId
+        userId,
+        pKBalanceData,
+        this.#request
       );
-      return this.#h.response({ SoilAnalysis: data });
+      return this.#h.response({  data });
     } catch (error) {
       return this.#h.response({ error });
     }
@@ -75,5 +77,22 @@ class SoilAnalysesController {
       return this.#h.response({ error });
     }
   }
+  async deleteSoilAnalysisById() {
+      const { soilAnalysisId } = this.#request.params;
+      const userId = this.#request.userId;
+      try {
+        const result = await this.#soilAnalysisService.deleteSoilAnalysis(
+          soilAnalysisId,
+          userId,
+          this.#request
+        );
+        if (result?.affectedRows === 0) {
+          throw boom.notFound(`Soilanalysis with ID ${soilAnalysisId} not found.`);
+        }
+        return this.#h.response({ message: "Soilanalysis deleted successfully." });
+      } catch (error) {
+        return this.#h.response({ error: error.message });
+      }
+    }
 }
 module.exports = { SoilAnalysesController };

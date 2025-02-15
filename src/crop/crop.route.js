@@ -379,8 +379,7 @@ module.exports = [
     path: "/crops/{id}",
     options: {
       tags: ["api", "Crop"],
-      description:
-        "Get crop data by cropId",
+      description: "Get crop data by cropId",
       validate: {
         params: Joi.object({
           id: Joi.number().integer().required(),
@@ -403,6 +402,40 @@ module.exports = [
     handler: async (request, h) => {
       const controller = new CropController(request, h);
       return controller.getCropDataById();
+    },
+  },
+  {
+    method: "DELETE",
+    path: "/crops/",
+    options: {
+      tags: ["api", "Crop"],
+      description: "Delete Crop(s) by Crop Id(s)",
+      validate: {
+        payload: Joi.object({
+          cropIds: Joi.array()
+            .items(Joi.number().integer().required())
+            .min(1)
+            .required()
+            .description("Array of Crop IDs to delete, e.g., [1, 2, 3]"),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new CropController(request, h);
+      return controller.deleteCropsByIds();
     },
   },
 ];

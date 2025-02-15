@@ -13,15 +13,11 @@ class FarmManureTypeController {
     this.#farmManureTypeService = new FarmManureTypeService();
   }
 
-  
-
   async getFarmManureTypeByFarmId() {
     const { farmId } = this.#request.params;
     try {
       const records =
-        await this.#farmManureTypeService.getFarmManureTypebyFarmId(
-          farmId,
-        );
+        await this.#farmManureTypeService.getFarmManureTypebyFarmId(farmId);
       if (!records) {
         throw boom.notFound("No Farm manure types found.");
       }
@@ -30,8 +26,20 @@ class FarmManureTypeController {
       return this.#h.response({ error });
     }
   }
-
-  
+  async checkFarmManureTypeExists() {
+    const { farmId, manureTypeId, manureTypeName } = this.#request.query;
+    try {
+      const exists =
+        await this.#farmManureTypeService.checkFarmManureTypeExists(
+          farmId,
+          manureTypeId,
+          manureTypeName
+        );
+      return this.#h.response({ exists }).code(200);
+    } catch (error) {
+      return this.#h.response({ error }).code(500);
+    }
+  }
 }
 
 module.exports = { FarmManureTypeController };
