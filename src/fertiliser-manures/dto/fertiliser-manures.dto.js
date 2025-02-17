@@ -21,6 +21,8 @@ const FertiliserManureDto = Joi.object({
   Lime: Joi.number().precision(3).required(),
   NH4N: Joi.number().precision(3).required(),
   NO3N: Joi.number().precision(3).required(),
+  EncryptedId: Joi.string().optional().allow(null),
+  EncryptedFieldName: Joi.string().optional().allow(null)
 }).required();
 
 const CreateFertiliserManuresDto = Joi.object({
