@@ -20,7 +20,7 @@ const FertiliserManureDto = Joi.object({
   Na2OFertAnalysisPercent: Joi.number().precision(3).required(),
   Lime: Joi.number().precision(3).required(),
   NH4N: Joi.number().precision(3).required(),
-  NO3N: Joi.number().precision(3).required()
+  NO3N: Joi.number().precision(3).required(),
 }).required();
 
 const CreateFertiliserManuresDto = Joi.object({
