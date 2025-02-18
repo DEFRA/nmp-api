@@ -25,7 +25,7 @@ class ExcessRainfallController {
       if (!records) {
         throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
       }
-      return this.#h.response({ ExcessRainfallDetails: records });
+      return this.#h.response(records );
     } catch (error) {
       return this.#h.response({ error });
     }
