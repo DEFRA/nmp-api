@@ -181,6 +181,7 @@ class FieldService extends BaseService {
         ...body.Field,
         FarmID: farmId,
         CreatedByID: userId,
+        CreatedOn:new Date()
       });
       const Field = await transactionalManager.save(FieldEntity, field);
 
@@ -192,6 +193,7 @@ class FieldService extends BaseService {
             ...body?.SoilAnalysis,
             FieldID: Field.ID,
             CreatedByID: userId,
+            CreatedOn:new Date()
           })
         );
       }
@@ -212,6 +214,7 @@ class FieldService extends BaseService {
                 ...createdData,
                 FieldID: Field.ID,
                 CreatedByID: userId,
+                CreatedOn:new Date()
               })
             );
           }
@@ -225,6 +228,7 @@ class FieldService extends BaseService {
             ...body?.SnsAnalysis,
             FieldID: Field.ID,
             CreatedByID: userId,
+            CreatedOn:new Date()
           })
         );
       }
@@ -253,6 +257,7 @@ class FieldService extends BaseService {
             ...cropData.Crop,
             FieldID: Field.ID,
             CreatedByID: userId,
+            CreatedOn: new Date(),
           })
         );
         const ManagementPeriods = [];
@@ -264,6 +269,7 @@ class FieldService extends BaseService {
               ...managementPeriod,
               CropID: savedCrop.ID,
               CreatedByID: userId,
+              CreatedOn:new Date()
             })
           );
           ManagementPeriods.push(savedManagementPeriod);
