@@ -32,4 +32,5 @@ module.exports = [
   ...require("./inprogress-calculations/Inprogress-calculations.route"),
   ...require("./soil-type-soil-texture/soil-type-soil-texture.route"),
   ...require("./excess-winter-rainfall-options/excess-winter-rainfall-options.route"),
+  ...require("./excess-rainfall/excess-rainfall.route"),
 ];
