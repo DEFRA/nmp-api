@@ -37,7 +37,23 @@ class UserExtensionController {
           body,
           userId
         );
-      return this.#h.response({ UserExtension: updatedDoNotShowAboutThisService});
+      return this.#h.response({
+        UserExtension: updatedDoNotShowAboutThisService,
+      });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+  async getUserExtensionByUserId() {
+    const userId = this.#request.userId;
+    try {
+      const records = await this.#userExtensionService.getUserExtensionByUserId(
+        userId
+      );
+      if (!records) {
+        throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
+      }
+      return this.#h.response(records);
     } catch (error) {
       return this.#h.response({ error });
     }

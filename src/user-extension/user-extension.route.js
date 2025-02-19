@@ -6,7 +6,7 @@ const { updateIsTermsOfUseAcceptedDto, updateDoNotShowAboutThisServiceDto } = re
 module.exports = [
   {
     method: "PUT",
-    path: "/userExtension/AcceptTermsOfUse",
+    path: "/user-extension/accept-terms-of-use",
     options: {
       tags: ["api", "UserExtension"],
       description: "Update IsTermsOfUseAccepted in UserExtension",
@@ -34,7 +34,7 @@ module.exports = [
   },
   {
     method: "PUT",
-    path: "/userExtension/ShowAboutService",
+    path: "/user-extension/show-about-service",
     options: {
       tags: ["api", "UserExtension"],
       description: "Update DoNotShowAboutThisService in UserExtension",
@@ -58,6 +58,33 @@ module.exports = [
     handler: async (request, h) => {
       const controller = new UserExtensionController(request, h);
       return controller.updateDoNotShowAboutThisService();
+    },
+  },
+  {
+    method: "GET",
+    path: "/user-extension",
+    options: {
+      tags: ["api", "UserExtension"],
+      description: "Get UserExtension by UserID",
+      validate: {
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new UserExtensionController(request, h);
+      return controller.getUserExtensionByUserId();
     },
   },
 ];
