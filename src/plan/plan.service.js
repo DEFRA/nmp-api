@@ -723,7 +723,7 @@ class PlanService extends BaseService {
     //   where: { ManagementPeriodID: managementPeriodData.ID },
     // });
     let firstCropSaveData = allRecommendations.find(
-      (recommendations) => recommendations.ManagementPeriodID === managementPeriodData.ID
+      (recommendation) => recommendation.ManagementPeriodID === managementPeriodData.ID
     );
    
     if (firstCropSaveData) {
