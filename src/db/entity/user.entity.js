@@ -147,13 +147,19 @@ const UserEntity = new EntitySchema({
     CreatedExcessRainfalls: {
       type: "one-to-many",
       target: "ExcessRainfalls",
-      inverseSide: "CreatedByUser", 
+      inverseSide: "CreatedByUser",
       joinColumn: { name: "ID" },
     },
     ModifiedExcessRainfalls: {
       type: "one-to-many",
       target: "ExcessRainfalls",
-      inverseSide: "ModifiedByUser", 
+      inverseSide: "ModifiedByUser",
+      joinColumn: { name: "ID" },
+    },
+    UserExtensions: {
+      target: "UserExtensions",
+      type: "one-to-many",
+      inverseSide: "User",
       joinColumn: { name: "ID" },
     },
   },
