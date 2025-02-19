@@ -12,12 +12,12 @@ class UserExtensionService extends BaseService {
   async updateIsTermsOfUseAccepted(updatedIsTermsOfUseAccepted, userId) {
     return await AppDataSource.transaction(async (transactionalManager) => {
       // Check if record exists within the transaction
-        const existingRecord = await this.repository.findOne({
-            where: { UserID: userId },  
-        });
+      const existingRecord = await this.repository.findOne({
+        where: { UserID: userId },
+      });
       if (existingRecord) {
         // Update the existing record
-         const { DoNotShowAboutThisService } = existingRecord;
+        const { DoNotShowAboutThisService } = existingRecord;
         await transactionalManager.update(
           UserExtensionsEntity,
           { UserID: userId }, // Where clause
@@ -47,13 +47,12 @@ class UserExtensionService extends BaseService {
     userId
   ) {
     return await AppDataSource.transaction(async (transactionalManager) => {
-
       // Check if record exists within the transaction
       const existingRecord = await this.repository.findOne({
         where: { UserID: userId },
       });
       if (existingRecord) {
-         const { IsTermsOfUseAccepted } = existingRecord;
+        const { IsTermsOfUseAccepted } = existingRecord;
         // Update the existing record
         await transactionalManager.update(
           UserExtensionsEntity,
@@ -78,6 +77,14 @@ class UserExtensionService extends BaseService {
         where: { UserID: userId },
       });
     });
+  }
+  async getUserExtensionByUserId(userId) {
+    const userExtension = await this.repository.findOneBy({
+      UserID: userId,
+    });
+    return {
+      UserExtension: userExtension,
+    };
   }
 }
 
