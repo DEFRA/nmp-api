@@ -70,6 +70,7 @@ const { InprogressCalculationsEntity } = require("./entity/inprogress-calculatio
 const { CropInfoQuestionsEntity } = require("./entity/crop-info-questions.entity.js");
 const { ExcessRainfallsEntity } = require("./entity/excess-rainfalls.entity.js");
 const { ExcessWinterRainfallOptionsEntity } = require("./entity/excess-winter-rainfall-options.js");
+const { UserExtensionsEntity } = require("./entity/user-extension.entity.js");
 
 
 dotven.config();
@@ -125,7 +126,8 @@ const baseConfig = {
     InprogressCalculationsEntity,
     CropInfoQuestionsEntity,
     ExcessRainfallsEntity,
-    ExcessWinterRainfallOptionsEntity
+    ExcessWinterRainfallOptionsEntity,
+    UserExtensionsEntity
   ],
 };
 
