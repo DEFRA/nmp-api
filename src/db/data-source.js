@@ -68,6 +68,8 @@ const { SNSCategoriesEntity } = require("./entity/snsCategories.entity.js");
 const { InprogressCalculationsEntity } = require("./entity/inprogress-calculations-entity.js");
 const { CropInfoQuestionsEntity } = require("./entity/crop-info-questions.entity.js");
 const { ExcessRainfallsEntity } = require("./entity/excess-rainfalls.entity.js");
+const { ExcessWinterRainfallOptionsEntity } = require("./entity/excess-winter-rainfall-options.js");
+const { UserExtensionsEntity } = require("./entity/user-extension.entity.js");
 
 
 
@@ -124,7 +126,9 @@ const baseConfig = {
     SNSCategoriesEntity,
     InprogressCalculationsEntity,
     CropInfoQuestionsEntity,
-    ExcessRainfallsEntity
+    ExcessRainfallsEntity,
+    ExcessWinterRainfallOptionsEntity,
+    UserExtensionsEntity
   ],
   migrations: [],
   subscribers: [],

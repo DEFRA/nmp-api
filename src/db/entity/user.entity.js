@@ -144,6 +144,24 @@ const UserEntity = new EntitySchema({
       inverseSide: "ModifiedByUser", // Matches the relation in SnsAnalysesEntity
       joinColumn: { name: "ID" },
     },
+    CreatedExcessRainfalls: {
+      type: "one-to-many",
+      target: "ExcessRainfalls",
+      inverseSide: "CreatedByUser",
+      joinColumn: { name: "ID" },
+    },
+    ModifiedExcessRainfalls: {
+      type: "one-to-many",
+      target: "ExcessRainfalls",
+      inverseSide: "ModifiedByUser",
+      joinColumn: { name: "ID" },
+    },
+    UserExtensions: {
+      target: "UserExtensions",
+      type: "one-to-many",
+      inverseSide: "User",
+      joinColumn: { name: "ID" },
+    },
   },
 });
 

@@ -48,17 +48,17 @@ const ExcessRainfallsEntity = new EntitySchema({
       joinColumn: { name: "FarmID" },
       inverseSide: "ExcessRainfalls", // Adjust this based on inverse side in Farms entity
     },
-    CreatedBy: {
+    CreatedByUser: {
       type: "many-to-one",
-      target: "Users",
+      target: "User",
       joinColumn: { name: "CreatedByID" },
-      inverseSide: "ExcessRainfallsCreatedBy", // Adjust this based on inverse side in Users entity
+      inverseSide: "CreatedExcessRainfalls", // Adjust this based on inverse side in Users entity
     },
-    ModifiedBy: {
+    ModifiedByUser: {
       type: "many-to-one",
-      target: "Users",
+      target: "User",
       joinColumn: { name: "ModifiedByID" },
-      inverseSide: "ExcessRainfallsModifiedBy", // Adjust this based on inverse side in Users entity
+      inverseSide: "ModifiedExcessRainfalls", // Adjust this based on inverse side in Users entity
     },
   },
 });
