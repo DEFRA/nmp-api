@@ -42,7 +42,8 @@ class ExcessRainfallController {
         farmId,
         year, // Pass the year to the service
         body,
-        userId
+        userId,
+        this.#request
       );
       return this.#h.response(data);
     } catch (error) {
@@ -62,7 +63,8 @@ class ExcessRainfallController {
           body,
           userId,
           farmId,
-          year // Pass the year to the service
+          year,
+          this.#request 
         );
       return this.#h.response({ ExcessRainfall: updatedExcessRainfall });
     } catch (error) {
