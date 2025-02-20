@@ -1451,7 +1451,6 @@ class PlanService extends BaseService {
         }
 
         const snsAnalysesData = await this.getSnsAnalysesData(fieldId);
-
         if (crop.CropTypeID === 170) {
           console.log("basicPlan", cropData);
           await this.savedDefault(cropData, userId, transactionalManager);
@@ -1592,7 +1591,6 @@ class PlanService extends BaseService {
         //   fieldId,
         //   crop?.Year
         // );
-
         let savedRecommendation;
         if (crop.CropOrder == 2) {
           const firstCropData = await this.getFirstCropData(
@@ -1780,7 +1778,6 @@ class PlanService extends BaseService {
           });
         }
         if (isSoilAnalysisHavePAndK) {
-          console.log("cropPlanOfNextYear", cropPlanOfNextYear);
           if (cropPlanOfNextYear.length == 0) {
             try {
               let saveAndUpdatePKBalance = await this.createOrUpdatePKBalance(
