@@ -122,8 +122,7 @@ class UpdateRecommendation {
   }
 
   async processRemainingYearsInBackground(fieldID, years, request, userId) {
-    console.log("multiple years started", years);
-
+  
     for (const yearToSave of years) {
       try {
         // Check if FieldID and Year combination already exists
@@ -181,8 +180,7 @@ class UpdateRecommendation {
       const crops = await this.getCrops(fieldID, year);
       const pKBalanceAllData = await this.pkBalanceRepository.find();
       if (crops.length > 0) {
-        // console.error("No crops found for the given Year and FieldID");
-        //}
+       
         const cropIds = crops.map((crop) => crop.ID);
 
         const managementPeriods = await this.getManagementPeriods(cropIds);
@@ -208,7 +206,7 @@ class UpdateRecommendation {
             year
           );
         } else {
-          console.log("line no 167");
+       
           await this.saveRecommendationWithoutManure(
             crops,
             organicManures,
@@ -549,7 +547,7 @@ class UpdateRecommendation {
           Recommendations,
         };
       } else {
-        console.log("forOtherCrop");
+   
 
         const nutrientRecommendationnReqBody =
           await this.buildNutrientWithoutMannerRecommendationReqBody(
@@ -792,23 +790,18 @@ class UpdateRecommendation {
           kBalance = fertiliserData == null ? 0 : fertiliserData.k20;
         }
       } else {
-        console.log("fertiliserData", fertiliserData);
+       
         for (const recommendation of nutrientRecommendationsData.calculations) {
           switch (recommendation.nutrientId) {
             case 1:
               pBalance =
                 (fertiliserData == null ? 0 : fertiliserData.p205) -
                 recommendation.cropNeed;
-              console.log("pBalance", pBalance);
-              console.log("recommendation.cropNeedP", recommendation.cropNeed);
               break;
             case 2:
               kBalance =
                 (fertiliserData == null ? 0 : fertiliserData.k20) -
                 recommendation.cropNeed;
-
-              console.log("kBalance", kBalance);
-              console.log("recommendation.cropNeedK", recommendation.cropNeed);
               break;
           }
         }
@@ -1043,7 +1036,7 @@ class UpdateRecommendation {
       };
       await transactionalManager.save(RecommendationEntity, firstCropSaveData);
     }
-    console.log("aaaaaaaa");
+
     // Save or update for Crop Order 2
     let secondCropSaveData = await this.getRecommendationByManagementPeriodID(
       secondCropManagementData.ID,
@@ -1166,7 +1159,7 @@ class UpdateRecommendation {
   }
   async savedDefault(cropData, userId, transactionalManager) {
     const ManagementPeriods = [];
-    console.log("kckcknn", cropData);
+  
     // Save the Crop first (assumed as savedCrop)
     const savedCrop = await transactionalManager.save(
       CropEntity,
@@ -1595,7 +1588,7 @@ class UpdateRecommendation {
       }
 
       firstCropSaveData = recommendationMap[firstCropManagementPeriodId.ID];
-      // console.log('firstCropSaveData',firstCropSaveData)
+   
       if (firstCropSaveData) {
         firstCropSaveData = {
           ...firstCropSaveData,
@@ -1814,7 +1807,6 @@ class UpdateRecommendation {
     }
     const previousCrop = await this.findPreviousCrop(field.ID, crop.Year);
 
-    // console.log("dataMultipleCropsss", dataMultipleCrops);
     const arableBody = await this.buildArableBody(dataMultipleCrops, field);
     const excessRainfall = await this.getWinterExcessRainfall(
       farm.ID,
@@ -1914,7 +1906,7 @@ class UpdateRecommendation {
         });
       });
     }
-    console.log("soilAnalysis", soilAnalysis);
+ 
     // Add SnsAnalyses data
     if (snsAnalysesData) {
       nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
@@ -2089,7 +2081,7 @@ class UpdateRecommendation {
         });
       });
     }
-    console.log("soilAnalysis", soilAnalysis);
+   
     // Add SnsAnalyses data
     if (snsAnalysesData) {
       nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
@@ -2159,26 +2151,14 @@ class UpdateRecommendation {
       return null;
     }
     const nutrientData = nutrientIndicesData[nutrient];
-    console.log("nutrientData", nutrientData);
-
-    // if (nutrient === "Potassium" && indexValue === 2) {
-    //   // Check only for "2+"
-    //   for (const data of nutrientData) {
-    //     console.log("data.index", data.index);
-    //     if (data.index.trim() === "2+") {
-    //       console.log("data.indexId", data.indexId);
-    //       return data.indexId;
-    //     }
-    //   }
-    // } //-2 == 2-
-    // Special case for Potassium (nutrientId = 2)
+  
     if (nutrient === "Potassium") {
       // Check if indexValue is 2 and match with "2+"
       if (indexValue === 2) {
         for (const data of nutrientData) {
-          console.log("data.index", data.index);
+     
           if (data.index.trim() === "2+") {
-            console.log("data.indexId", data.indexId);
+          
             return data.indexId;
           }
         }
@@ -2187,9 +2167,9 @@ class UpdateRecommendation {
       // Check if indexValue is -2 and match with "2-"
       if (indexValue === -2) {
         for (const data of nutrientData) {
-          console.log("data.index", data.index);
+        
           if (data.index.trim() === "2-") {
-            console.log("data.indexId", data.indexId);
+           
             return data.indexId;
           }
         }
@@ -2197,9 +2177,9 @@ class UpdateRecommendation {
     }
 
     for (const data of nutrientData) {
-      console.log("data.index", data.index);
+   
       if (data.index.trim() === indexValue.toString()) {
-        console.log("data.indexId", data.indexId);
+        
         return data.indexId;
       }
     }
@@ -2266,14 +2246,13 @@ class UpdateRecommendation {
             record[nutrientIndexKey],
             nutrientIndicesData
           );
-          console.log(`${nutrientName}IndexId`, nutrientIndexId);
+
           record[nutrientIndexKey] =
             nutrientIndexId || record[nutrientIndexKey]; // Update the index with indexId
         }
       }
     }
 
-    console.log("Updated soilAnalysisRecords:", soilAnalysisRecords);
     return soilAnalysisRecords;
   }
   async convertIndexValueToId(indexId, nutrientId) {
@@ -2284,7 +2263,7 @@ class UpdateRecommendation {
       `Soil/NutrientIndex/${numericIndexId}/${numericNutrientId}`
     );
     const trimmedIndexValue = indexValue.index.trim();
-    console.log("indexValueeee", trimmedIndexValue);
+   
     return trimmedIndexValue;
   }
   async handleSoilAnalysisValidation(fieldId, fieldName, year, CountryID) {
@@ -2355,7 +2334,7 @@ class UpdateRecommendation {
       soilAnalysisRecordsFiveYears,
       CountryID
     );
-    console.log("testing", soilAnalysisRecords);
+   
     return { latestSoilAnalysis, errors, soilAnalysisRecords };
   }
   async getWinterExcessRainfall(farmId, year) {
@@ -2421,12 +2400,12 @@ class UpdateRecommendation {
     const mulOrganicManuresData = organicManureAllData.filter(
       (manure) => manure.ManagementPeriodID === managementPeriodID
     );
-    console.log("mulOrganicManuresData", mulOrganicManuresData);
+   
     const manureTypeData = await this.getManureTypeData(
       mulOrganicManuresData[0].ManureTypeID,
       request
     );
-    console.log("manureTypeDataddd", manureTypeData);
+   
 
     return mulOrganicManuresData.map((manure) => ({
       manureDetails: {
