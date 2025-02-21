@@ -338,26 +338,13 @@ class FertiliserManuresService extends BaseService {
         if (crop == null) {
           console.log(`crop with ID ${managementPeriod.CropID} not found`);
         }
-          // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
-            const nextAvailableCrop = await this.cropRepository.findOne({
-              where: {
-                FieldID: crop.FieldID,
-                Year: MoreThan(crop.Year), // Find the next available year greater than the current crop.Year
-              },
-              order: {
-                Year: "ASC", // Ensure we get the next immediate year
-              },
-            });
         try {
           // Call the stored procedure to delete the fertiliserId and related entities
           const storedProcedure = "EXEC [spFertiliserManures_DeleteFertiliserManures] @ID = @0";
           await AppDataSource.query(storedProcedure, [fertiliserId]);
-  
-          console.log("start");
-          if (nextAvailableCrop) {
                this.UpdateRecommendation.updateRecommendationsForField(
                  crop.FieldID,
-                 nextAvailableCrop.Year,
+                 crop.Year.Year,
                  request,
                  userId
                )
@@ -367,7 +354,10 @@ class FertiliserManuresService extends BaseService {
                        "updateRecommendationAndOrganicManure returned undefined"
                      );
                    } else {
-                     console.log("updateRecommendationAndOrganicManure result:", res);
+                     console.log(
+                       "updateRecommendationAndOrganicManure result:",
+                       res
+                     );
                    }
                  })
                  .catch((error) => {
@@ -376,8 +366,6 @@ class FertiliserManuresService extends BaseService {
                      error
                    );
                  });
-             }
-  
         } catch (error) {
           // Log the error and throw an internal server error
           console.error("Error deleting fertilisers:", error);

@@ -1997,12 +1997,9 @@ class OrganicManureService extends BaseService {
         const storedProcedure =
           "EXEC [spOrganicManures_DeleteOrganicManures] @OrganicManureID = @0";
         await transactionalManager.query(storedProcedure, [organicManureId]);
-
-        console.log("start");
-        if (nextAvailableCrop) {
           this.UpdateRecommendation.updateRecommendationsForField(
             crop.FieldID,
-            nextAvailableCrop.Year,
+            crop.Year,
             request,
             userId
           )
@@ -2024,7 +2021,7 @@ class OrganicManureService extends BaseService {
                 error
               );
             });
-        }
+        
       } catch (error) {
         // Log the error and throw an internal server error
         console.error("Error deleting organicManure:", error);
