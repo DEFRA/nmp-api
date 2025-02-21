@@ -164,7 +164,8 @@ class CropController {
       const data =
         await this.#planService.createNutrientsRecommendationForField(
           body.Crops,
-          userId
+          userId,
+          this.#request
         );
       return this.#h.response(data);
     } catch (error) {
