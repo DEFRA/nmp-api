@@ -100,25 +100,13 @@ class UpdateRecommendation {
       fieldID,
       year
     );
-    console.log("yearsGreaterThanGivenYear", yearsGreaterThanGivenYear);
     const allYearsTogether = [year, ...yearsGreaterThanGivenYear];
-    // Execute the original year synchronously and return its result
-    // const originalYearResult = await this.updateRecommendationAndOrganicManure(
-    //   fieldID,
-    //   year,
-    //   request,
-    //   userId
-    // );
-    // if (yearsGreaterThanGivenYear) {
-    // Execute the remaining years asynchronously (background process)
     this.processRemainingYearsInBackground(
       fieldID,
       allYearsTogether,
       request,
       userId
     );
-    //  }
-    // Return the result for the original year
   }
 
   async processRemainingYearsInBackground(fieldID, years, request, userId) {
@@ -1346,18 +1334,6 @@ class UpdateRecommendation {
       };
       await transactionalManager.save(RecommendationEntity, recommendation);
     }
-    // else {
-    //   // If no recommendation exists, create a new one
-    //   recommendation = this.RecommendationRepository.create({
-    //     ...cropOrderData,
-    //     ManagementPeriodID: OrganicManure.ManagementPeriodID,
-    //     Comments: "New recommendation created",
-    //     CreatedOn: new Date(),
-    //     CreatedByID: userId,
-    //   });
-    //   await transactionalManager.save(RecommendationEntity, recommendation);
-    // }
-
     return recommendation;
   }
 
@@ -2186,34 +2162,6 @@ class UpdateRecommendation {
     return null; // Return null if no match is found
   }
 
-  // async handleSoilAnalysisValidation(fieldId, fieldName, year) {
-  //   const errors = [];
-  //   const fiveYearsAgo = year - 4;
-
-  //   // Fetch all soil analyses for the last 5 years
-  //   const soilAnalysisRecords = await this.soilAnalysisRepository.find({
-  //     where: {
-  //       FieldID: fieldId,
-  //       Year: Between(fiveYearsAgo, year), // Fetch records within 5 years
-  //     },
-  //     order: { Date: "DESC" }, // Order by date, most recent first
-  //   });
-
-  //   const soilRequiredKeys = [
-  //     "Date",
-  //     "PH",
-  //     "SulphurDeficient",
-  //     "SoilNitrogenSupplyIndex",
-  //     "PhosphorusIndex",
-  //     "PotassiumIndex",
-  //     "MagnesiumIndex",
-  //   ];
-
-  //   // Validate the most recent soil analysis (first record in the sorted array)
-  //   const latestSoilAnalysis = soilAnalysisRecords[0];
-
-  //   return { latestSoilAnalysis, errors, soilAnalysisRecords };
-  // }
   async assignIndexIdToSoilRecords(soilAnalysisRecords, CountryID) {
     const nutrientIndicesData = {};
 
@@ -2281,13 +2229,6 @@ class UpdateRecommendation {
       }
     );
 
-    //phosphate, potash,magnissium
-    //loop {
-    //get nurtient id from NutrientData
-    //call api for methodlogy(nutrientId,Country)
-    //call api for IndexId (NutrintId,MethoId,County)=List(IndexId,IndexValue)
-    //
-    //}
 
     // Define the fields we want the latest values for
     const fieldsToTrack = [
@@ -2309,7 +2250,7 @@ class UpdateRecommendation {
           (record) => record[field] !== null && record[field] !== undefined
         );
 
-        // if (latestRecordWithFieldValue) {
+       
         // If a valid record with the field is found, assign the value; otherwise, leave it as null
         if (latestRecordWithFieldValue) {
           latestSoilAnalysis[field] = latestRecordWithFieldValue[field];
@@ -2323,9 +2264,7 @@ class UpdateRecommendation {
           console.log("Records:", soilAnalysisRecordsFiveYears);
           console.log("Latest Record with Value:", latestRecordWithFieldValue);
         }
-        //} //else {
-        //   errors.push(`${field} value not found in the last 5 years.`);
-        // }
+      
       });
     }
     // Iterate over the fields and find the latest value for each field
