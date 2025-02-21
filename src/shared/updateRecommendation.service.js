@@ -300,7 +300,6 @@ class UpdateRecommendation {
         fieldData.ID,
         pKBalanceAllData
       );
-      console.log("Previous", pkBalanceData);
       const mannerOutputReq = await this.buildMannerOutputReq(
         fieldID,
         manureApplications,
@@ -332,21 +331,12 @@ class UpdateRecommendation {
         organicManure.ManagementPeriodID
       );
 
-      //console.log("organicManuresDatamkmkmk", organicManuresData);
-      //get PKBalance data
       let pkBalance = await this.getPKBalanceData(
         cropData?.Year,
         fieldData.ID,
         pKBalanceAllData
       );
       if (cropData.CropTypeID === 170 || cropData.CropInfo1 === null) {
-        // await this.saveOrganicManureForOtherCropType(
-        //   organicManure,
-        //   mannerOutputs,
-        //   transactionalManager,
-        //   userId,
-        //   organicManuresData
-        // );
         const otherRecommendations = await this.saveRecommendationForOtherCrops(
           transactionalManager,
           organicManure,
