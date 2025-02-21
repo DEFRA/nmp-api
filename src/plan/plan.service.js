@@ -221,13 +221,7 @@ class PlanService extends BaseService {
 
     // Use the buildArableBody function to get the arable array
     const arableBody = await this.buildArableBody(crop, field);
-    console.log("arableBody", arableBody);
-    // const pkBalanceData = await this.pkBalanceRepository.findOne({
-    //   where: {
-    //     FieldID: field.ID,
-    //     Year: crop.Year - 1,
-    //   },
-    // });
+
     const pkBalanceData = allPKBalanceData.find(
       (data) => data.FieldID === field.ID && data.Year === crop.Year - 1
     );
@@ -272,7 +266,7 @@ class PlanService extends BaseService {
           soilAnalyses: [],
         },
         harvestYear: crop.Year,
-        area: farm.TotalFarmArea,
+        area: field.TotalArea,
         postcode: farm.ClimateDataPostCode,
         altitude: farm.AverageAltitude,
         rainfallAverage: farm.Rainfall,
@@ -282,6 +276,7 @@ class PlanService extends BaseService {
             : 0, //TODO:: need to find it
         organicMaterials: [],
         previousCropping: {},
+        //countryId: farm.EnglishRules ? 1 : 2,
         countryId: farm.EnglishRules ? 1 : 2,
       },
       nutrients: {
@@ -495,7 +490,7 @@ class PlanService extends BaseService {
       soilAnalysisRecordsFiveYears,
       CountryID
     );
-    console.log("testing", soilAnalysisRecords);
+  
     return { latestSoilAnalysis, errors, soilAnalysisRecords };
   }
 
@@ -625,13 +620,13 @@ class PlanService extends BaseService {
             cropOrder1Data.ManureN = null;
             cropOrder1Data.FertilizerN = calculation.cropNeed;
             cropOrder1Data.NIndex = calculation.indexpH;
-            console.log("cropOrder1Data.NIndex2", cropOrder1Data.NIndex);
+   
           } else if (sequenceId === 2) {
             cropOrder2Data.CropN = calculation.recommendation;
             cropOrder2Data.ManureN = null;
             cropOrder2Data.FertilizerN = calculation.cropNeed;
             cropOrder2Data.NIndex = calculation.indexpH;
-            console.log("cropOrder1Data.NIndex2 crop", cropOrder1Data.NIndex);
+        
           }
           break;
 
@@ -1533,15 +1528,15 @@ class PlanService extends BaseService {
             allCropData
           );
         console.log(
-          "nutrientRecommendationnReqBodyggggg",
+          "nutrientRecommendationRequestBody",
           nutrientRecommendationnReqBody
         );
         console.log(
-          "nutrientRecommendationnReqBodddddyggggg",
+          "nutrientRecommendationBodyPKBalance",
           nutrientRecommendationnReqBody.field.soil.pkBalance
         );
         console.log(
-          "nutrientRecommendationnReqBodddddygggggsoilAnalyses",
+          "nutrientRecommendationRequestBodySoilAnalysis",
           nutrientRecommendationnReqBody.field.soil.soilAnalyses
         );
         const nutrientRecommendationsData =
@@ -1549,20 +1544,20 @@ class PlanService extends BaseService {
             "Recommendation/Recommendations",
             nutrientRecommendationnReqBody
           );
-        console.log(
-          "nutrientRecommendationnReqBody",
-          nutrientRecommendationnReqBody
-        );
-        console.log("nutrientRecommendationsData", nutrientRecommendationsData);
+       console.log("nutrientRecommendationsData", nutrientRecommendationsData);
+        if (
+          !nutrientRecommendationsData ||
+          !nutrientRecommendationsData.calculations == null ||
+          !nutrientRecommendationsData.adviceNotes == null ||
+          nutrientRecommendationsData.data?.error
+        ) {
+          throw boom.badData(`${nutrientRecommendationsData.data.error}`);    
+        }else if (nutrientRecommendationsData.data?.Invalid) {
+          throw boom.badRequest(`${nutrientRecommendationsData.data?.Invalid[0]}`);
+        }else if (nutrientRecommendationsData.data?.missing) {
+          throw boom.badRequest(`${nutrientRecommendationsData.data?.missing[0]}`);
+        }
 
-        // if (
-        //   !nutrientRecommendationsData.recommendations ||
-        //   !nutrientRecommendationsData.adviceNotes ||
-        //   nutrientRecommendationsData.errors ||
-        //   nutrientRecommendationsData.error
-        // ) {
-        //   throw new Error(JSON.stringify(nutrientRecommendationsData));
-        // }
         const savedCrop = await transactionalManager.save(
           CropEntity,
           this.cropRepository.create({
@@ -1585,7 +1580,7 @@ class PlanService extends BaseService {
           );
           ManagementPeriods.push(savedManagementPeriod);
         }
-        console.log("ManagementPeriods", cropData.ManagementPeriods);
+        
         // const cropPlanOfNextYear = await this.cropPlanOfNextYearIsExist(
         //   fieldId,
         //   crop?.Year
@@ -1600,7 +1595,7 @@ class PlanService extends BaseService {
           const managementPeriodData = await this.getManagementPeriods(
             firstCropData.ID
           );
-          console.log("managementPeriodData", managementPeriodData.ID);
+         
           const savedMultipleCropRecommendation =
             await this.saveRecommendationForMutipleCrops(
               transactionalManager,
@@ -1744,7 +1739,8 @@ class PlanService extends BaseService {
               {}
             );
           for (const nutrientId in notesByNutrient) {
-            const concatenatedNote = notesByNutrient[nutrientId]?.join(" <br/>"); // Concatenate notes for the same nutrientId
+            const concatenatedNote =
+              notesByNutrient[nutrientId]?.join(" <br/>"); // Concatenate notes for the same nutrientId
 
             // Create a new recommendation comment with the concatenated notes
             // const newComment = this.recommendationCommentRepository?.create({
@@ -2044,7 +2040,6 @@ class PlanService extends BaseService {
           CreatedByID: userId,
         };
       }
-      console.log("saveAndUpdatePKBalance", saveAndUpdatePKBalance);
       return { saveAndUpdatePKBalance };
     } catch (error) {
       console.error("Error while saving pkBalance data", error);
