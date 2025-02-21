@@ -12,8 +12,7 @@ const formatSuccessResponse = (response) => {
   };
 };
 
-const formatErrorResponse = (errorResponse) => {
-  console.log("errorResponse", errorResponse);
+const formatErrorResponse =  (errorResponse) => {
   const error = errorResponse?.source?.error || errorResponse;
   return {
     message: "fail",
@@ -26,6 +25,7 @@ const formatErrorResponse = (errorResponse) => {
       message:
         errorResponse?.source?.Errors ||
         errorResponse?.source?.data?.errorMessage ||
+        errorResponse?.source?.data?.message ||
         errorResponse?.source?.data?.Invalid ||
         errorResponse?.source?.data?.error ||
         error?.message ||
