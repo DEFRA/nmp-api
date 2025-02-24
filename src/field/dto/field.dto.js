@@ -84,7 +84,7 @@ const SnsAnalysisSchema = Joi.object({
   SeasonId: Joi.number().integer().allow(null),
   CurrentCropTypeID: Joi.number().integer(),
   PercentageOfOrganicMatter: Joi.number().integer().allow(null),
-  AdjustmentValue: Joi.number().integer().allow(null),
+  AdjustmentValue: Joi.number().allow(null),
   SoilNitrogenSupplyValue: Joi.number().integer().allow(null),
   SoilNitrogenSupplyIndex: Joi.number().integer().min(0).max(255).allow(null),
   CreatedOn: Joi.date().iso().allow(null),
