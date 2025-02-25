@@ -74,7 +74,9 @@ const OrganicManureEntity = new EntitySchema({
       nullable: false,
     },
     ApplicationRate: {
-      type: "int",
+      type: "decimal",
+      precision: 18,
+      scale: 1,
       nullable: false,
     },
     DryMatterPercent: {
