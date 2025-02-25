@@ -525,7 +525,7 @@ class PlanService extends BaseService {
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString() || null,
+      SIndex:  null,
       NIndex: null,
     };
 
@@ -556,7 +556,7 @@ class PlanService extends BaseService {
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString() || null,
+      SIndex:  null,
       NIndex: null,
     };
     let nIndex;
@@ -1326,7 +1326,7 @@ class PlanService extends BaseService {
                 );
               }
             } else {
-              //call shreyash's function
+              //call UpdateRecommendation function
               this.UpdateRecommendation.updateRecommendationsForField(
                 crop.FieldID,
                 crop.Year,

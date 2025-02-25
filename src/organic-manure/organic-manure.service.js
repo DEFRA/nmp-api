@@ -460,34 +460,7 @@ class OrganicManureService extends BaseService {
 
     return nutrientRecommendationnReqBody;
   }
-  // async handleSoilAnalysisValidation(fieldId, fieldName, year) {
-  //   const errors = [];
-  //   const fiveYearsAgo = year - 4;
-
-  //   // Fetch all soil analyses for the last 5 years
-  //   const soilAnalysisRecords = await this.soilAnalysisRepository.find({
-  //     where: {
-  //       FieldID: fieldId,
-  //       Year: Between(fiveYearsAgo, year), // Fetch records within 5 years
-  //     },
-  //     order: { Date: "DESC" }, // Order by date, most recent first
-  //   });
-
-  //   const soilRequiredKeys = [
-  //     "Date",
-  //     "PH",
-  //     "SulphurDeficient",
-  //     "SoilNitrogenSupplyIndex",
-  //     "PhosphorusIndex",
-  //     "PotassiumIndex",
-  //     "MagnesiumIndex",
-  //   ];
-
-  //   // Validate the most recent soil analysis (first record in the sorted array)
-  //   const latestSoilAnalysis = soilAnalysisRecords[0];
-
-  //   return { latestSoilAnalysis, errors, soilAnalysisRecords };
-  // }
+ 
   async handleSoilAnalysisValidation(fieldId, fieldName, year, CountryID) {
     const errors = [];
     const fiveYearsAgo = year - 4;
@@ -503,14 +476,7 @@ class OrganicManureService extends BaseService {
       }
     );
 
-    //phosphate, potash,magnissium
-    //loop {
-    //get nurtient id from NutrientData
-    //call api for methodlogy(nutrientId,Country)
-    //call api for IndexId (NutrintId,MethoId,County)=List(IndexId,IndexValue)
-    //
-    //}
-
+   
     // Define the fields we want the latest values for
     const fieldsToTrack = [
       "PH",
@@ -537,9 +503,6 @@ class OrganicManureService extends BaseService {
           latestSoilAnalysis[field] = null;
         }
 
-        //} //else {
-        //   errors.push(`${field} value not found in the last 5 years.`);
-        // }
       });
     }
     // Iterate over the fields and find the latest value for each field
@@ -745,7 +708,7 @@ class OrganicManureService extends BaseService {
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString() || null,
+      SIndex:  null,
       NIndex: null,
     };
 
@@ -1000,7 +963,7 @@ class OrganicManureService extends BaseService {
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString() || null,
+      SIndex:  null,
       NIndex: null,
     };
 
@@ -1560,39 +1523,35 @@ class OrganicManureService extends BaseService {
             snsAnalysesData,
             allRecommendations
           );
-          console.log("savedDataaa", savedData);
           if (isSoilAnalysisHavePAndK) {
-            if (
-              (isNextYearPlanExist == true &&
-                isNextYearOrganicManureExist == true) ||
-              (isNextYearPlanExist == true && isNextYearFertiliserExist == true)
-            ) {
-              //shreaysh coddedddd
-              this.UpdateRecommendation.updateRecommendationsForField(
-                cropData.FieldID,
-                cropData?.Year,
-                request,
-                userId
-              )
-                .then((res) => {
-                  if (res === undefined) {
-                    console.log(
-                      "updateRecommendationAndOrganicManure returned undefined"
-                    );
-                  } else {
-                    console.log(
-                      "updateRecommendationAndOrganicManure result:",
-                      res
-                    );
-                  }
-                })
-                .catch((error) => {
-                  console.error(
-                    "Error updating recommendation and organic manure:",
-                    error
-                  );
-                });
-            } else {
+            if (isNextYearPlanExist == true || isNextYearOrganicManureExist == true || isNextYearFertiliserExist == true)
+             {
+               // UpdateRecommendation
+               this.UpdateRecommendation.updateRecommendationsForField(
+                 cropData.FieldID,
+                 cropData?.Year,
+                 request,
+                 userId
+               )
+                 .then((res) => {
+                   if (res === undefined) {
+                     console.log(
+                       "updateRecommendationAndOrganicManure returned undefined"
+                     );
+                   } else {
+                     console.log(
+                       "updateRecommendationAndOrganicManure result:",
+                       res
+                     );
+                   }
+                 })
+                 .catch((error) => {
+                   console.error(
+                     "Error updating recommendation and organic manure:",
+                     error
+                   );
+                 });
+             } else {
               let pBalance = 0;
               let kBalance = 0;
               console.log(
@@ -1605,7 +1564,7 @@ class OrganicManureService extends BaseService {
               );
               let updatePKBalance;
               if (fertiliserData.p205 > 0 || fertiliserData.k20 > 0) {
-                console.log("fertiliserData", fertiliserData);
+              
                 for (const recommendation of nutrientRecommendationsData.calculations) {
                   switch (recommendation.nutrientId) {
                     case 1:
