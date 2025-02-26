@@ -243,14 +243,14 @@ class RecommendationService extends BaseService {
       // );
       // Step 3: Proceed with the process only if pH > 0 is found
       const cropData = await this.findCropDataByID(Recommendation.Crop_ID); // check order 1 or 2
-      console.log("cropData", cropData);
+    
       let totalLime1 = 0;
       let totalLime2 = 0;
       let result = 0;
       if (cropData != null) {
         // Step 4: Handle CropOrder 1 (first crop)
         if (cropData.CropOrder === 1) {
-          console.log("croporder1");
+      
           // Step: Fetch multiple firstCropOrderData based on fieldID, year, and soilAnalysisYear
           const firstCropOrderDataList =
             await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
@@ -259,7 +259,7 @@ class RecommendationService extends BaseService {
               soilAnalysisWithPhYear,
               1
             );
-          console.log("CropOrderDataList", firstCropOrderDataList);
+         
           if (firstCropOrderDataList != null) {
             totalLime1 = await this.getApplyLimeInCaseOfMultipleCrops(
               firstCropOrderDataList
@@ -272,7 +272,7 @@ class RecommendationService extends BaseService {
 
         // Step 5: Handle CropOrder 2 (second crop)
         if (cropData.CropOrder === 2) {
-          console.log("croporder2");
+      
           totalLime1 = 0;
           const CropOrderDataList =
             await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
@@ -282,7 +282,7 @@ class RecommendationService extends BaseService {
             );
 
           if (CropOrderDataList != null) {
-            console.log("CropOrderDataList", CropOrderDataList);
+            
             totalLime1 = await this.getApplyLimeInCaseOfMultipleCrops(
               CropOrderDataList
             );
@@ -305,7 +305,7 @@ class RecommendationService extends BaseService {
 
         // Step 6: Sum total lime values for both crops
         
-        console.log("totalLime", totalLime1);
+      
 
         // Step 7: Subtract the total lime from cropN in the recommendation
         const cropNeedValue = Recommendation.Recommendation_CropN;
