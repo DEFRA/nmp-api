@@ -344,7 +344,7 @@ class FertiliserManuresService extends BaseService {
           await AppDataSource.query(storedProcedure, [fertiliserId]);
                this.UpdateRecommendation.updateRecommendationsForField(
                  crop.FieldID,
-                 crop.Year.Year,
+                 crop.Year,
                  request,
                  userId
                )
