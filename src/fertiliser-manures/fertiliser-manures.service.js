@@ -74,7 +74,7 @@ class FertiliserManuresService extends BaseService {
     const organicManuresResult = await this.organicManureRepository
       .createQueryBuilder("organicManures")
       .select(
-        "SUM(organicManures.N * organicManures.ApplicationRate)",
+        "SUM(organicManures.AvailableNForNMax)",
         "totalN"
       )
       .where("organicManures.ManagementPeriodID = :managementPeriodID", {
