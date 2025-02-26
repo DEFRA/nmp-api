@@ -13,7 +13,7 @@ const Step1VegDto = Joi.object({
 
 const Step2Dto = Joi.object({
   ShootNumber: Joi.number().optional().allow(null),
-  GreenAreaIndex: Joi.number().optional().allow(null),
+  GreenAreaIndex: Joi.number().precision(2).optional().allow(null),
   CropHeight: Joi.number().optional().allow(null),
 }).optional().allow(null);
 
