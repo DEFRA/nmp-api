@@ -114,7 +114,7 @@ class OrganicManureService extends BaseService {
   ) {
     const query = this.repository
       .createQueryBuilder("organicManures")
-      .select("SUM(organicManures.AvailableNForNMax)", "totalN")
+      .select("SUM(organicManures.N * organicManures.ApplicationRate)", "totalN")
       .where("organicManures.ManagementPeriodID = :managementPeriodID", {
         managementPeriodID,
       })
