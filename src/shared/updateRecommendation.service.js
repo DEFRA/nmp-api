@@ -9,6 +9,7 @@ const { FieldEntity } = require("../db/entity/field.entity");
 const {
   ManagementPeriodEntity,
 } = require("../db/entity/management-period.entity");
+const boom = require("@hapi/boom");
 const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
@@ -551,6 +552,19 @@ class UpdateRecommendation {
         nutrientRecommendationsData = await this.getNutrientRecommendationsData(
           nutrientRecommendationnReqBody
         );
+            if (
+                  !nutrientRecommendationsData ||
+                  !nutrientRecommendationsData.calculations == null ||
+                  !nutrientRecommendationsData.adviceNotes == null ||
+                  nutrientRecommendationsData.data?.error
+                ) {
+                  throw boom.badData(`${nutrientRecommendationsData.data.error}`);    
+                }else if (nutrientRecommendationsData.data?.Invalid) {
+                  throw boom.badRequest(`${nutrientRecommendationsData.data?.Invalid[0]}`);
+                }else if (nutrientRecommendationsData.data?.missing) {
+                  throw boom.badRequest(`${nutrientRecommendationsData.data?.missing[0]}`);
+                }
+        
      
 
         try {
@@ -869,7 +883,7 @@ class UpdateRecommendation {
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString() || null,
+      SIndex:  null,
       NIndex: null,
     };
 
@@ -900,7 +914,7 @@ class UpdateRecommendation {
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString() || null,
+      SIndex: null,
       NIndex: null,
     };
 
@@ -1316,7 +1330,7 @@ class UpdateRecommendation {
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString() || null,
+      SIndex:  null,
     };
 
     // Check if there's an existing recommendation for the current OrganicManure.ManagementPeriodID
@@ -1480,7 +1494,7 @@ class UpdateRecommendation {
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString() || null,
+      SIndex: null,
       NIndex: null,
     };
 

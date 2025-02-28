@@ -74,7 +74,7 @@ class FertiliserManuresService extends BaseService {
     const organicManuresResult = await this.organicManureRepository
       .createQueryBuilder("organicManures")
       .select(
-        "SUM(organicManures.N * organicManures.ApplicationRate)",
+        "SUM(organicManures.AvailableNForNMax)",
         "totalN"
       )
       .where("organicManures.ManagementPeriodID = :managementPeriodID", {
@@ -344,7 +344,7 @@ class FertiliserManuresService extends BaseService {
           await AppDataSource.query(storedProcedure, [fertiliserId]);
                this.UpdateRecommendation.updateRecommendationsForField(
                  crop.FieldID,
-                 crop.Year.Year,
+                 crop.Year,
                  request,
                  userId
                )
