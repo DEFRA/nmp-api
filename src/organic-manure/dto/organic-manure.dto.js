@@ -14,7 +14,7 @@ const OrganicManureEntitySchema = Joi.object({
   MgO: Joi.number().precision(3).required(),
   SO3: Joi.number().precision(3).required(),
   AvailableN: Joi.number().precision(3).required(),
-  ApplicationRate: Joi.number().integer().required(),
+  ApplicationRate: Joi.number().precision(1).required(),
   DryMatterPercent: Joi.number().precision(2).required(),
   UricAcid: Joi.number().precision(2).required(),
   EndOfDrain: Joi.date().iso().allow(null),
