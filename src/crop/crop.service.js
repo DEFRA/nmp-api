@@ -425,6 +425,23 @@ class CropService extends BaseService {
 
     // Construct the stored procedure to delete a single crop by its ID
     const storedProcedure = "EXEC dbo.spCrops_DeleteCrops @CropsID = @0";
+    // If the crop's CropOrder is 1, check for a second crop (CropOrder = 2) in the same year
+    if (crop.CropOrder === 1) {
+      const secondCrop = await this.repository.findOne({
+        where: {
+          Year: crop.Year,
+          CropOrder: 2, // Find the second crop with CropOrder 2
+          FieldID: crop.FieldID,
+        },
+      });
+
+      // If the second crop exists, delete it
+      if (secondCrop) {
+        const storedProcedureSecondCrop =
+          "EXEC dbo.spCrops_DeleteCrops @CropsID = @0";
+        await AppDataSource.query(storedProcedureSecondCrop, [secondCrop.ID]);
+      }
+    }
 
     // Pass the individual cropId to the stored procedure
     await AppDataSource.query(storedProcedure, [CropsID]);
