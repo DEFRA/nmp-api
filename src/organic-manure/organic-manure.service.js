@@ -114,7 +114,10 @@ class OrganicManureService extends BaseService {
   ) {
     const query = this.repository
       .createQueryBuilder("organicManures")
-      .select("SUM(organicManures.N * organicManures.ApplicationRate)", "totalN")
+      .select(
+        "SUM(organicManures.N * organicManures.ApplicationRate)",
+        "totalN"
+      )
       .where("organicManures.ManagementPeriodID = :managementPeriodID", {
         managementPeriodID,
       })
@@ -273,6 +276,8 @@ class OrganicManureService extends BaseService {
     dataMultipleCrops,
     crop,
     mannerOutputs,
+    firstCropMannerOutput,
+    firstCropData,
     organicManureData,
     OrganicManure,
     allPKBalanceData
@@ -350,38 +355,7 @@ class OrganicManureService extends BaseService {
         excessWinterRainfall: 0, //TODO:: need to find it
         mannerManures: true,
         organicMaterials: [],
-        mannerOutputs: [
-          {
-            id: crop.CropOrder,
-            totalN: mannerOutputs
-              ? mannerOutputs.data.totalN
-              : OrganicManure.TotalN,
-            availableN: mannerOutputs
-              ? mannerOutputs.data.currentCropAvailableN
-              : OrganicManure.AvailableN,
-            totalP: mannerOutputs
-              ? mannerOutputs.data.totalP2O5
-              : OrganicManure.TotalP2O5,
-            availableP: mannerOutputs
-              ? mannerOutputs.data.cropAvailableP2O5
-              : OrganicManure.AvailableP2O5,
-            totalK: mannerOutputs
-              ? mannerOutputs.data.totalK2O
-              : OrganicManure.TotalK2O,
-            availableK: mannerOutputs
-              ? mannerOutputs.data.cropAvailableK2O
-              : OrganicManure.AvailableK2O,
-            totalS: mannerOutputs
-              ? mannerOutputs.data.totalSO3
-              : OrganicManure.TotalSO3,
-            availableS: mannerOutputs
-              ? mannerOutputs.data.cropAvailableSO3
-              : OrganicManure.AvailableSO3,
-            totalM: mannerOutputs
-              ? mannerOutputs.data.totalMgO
-              : OrganicManure.TotalMgO,
-          },
-        ],
+        mannerOutputs: [],
         previousCropping: {},
         countryId: farm.EnglishRules ? 1 : 2,
       },
@@ -397,6 +371,89 @@ class OrganicManureService extends BaseService {
       totals: true,
       referenceValue: `${field.ID}-${crop.ID}-${crop.Year}`,
     };
+    // If firstCropMannerOutput and firstCropData are available, add them to mannerOutputs array
+    if (firstCropMannerOutput && firstCropData) {
+      nutrientRecommendationnReqBody.field.mannerOutputs.push({
+        id: firstCropData.CropOrder,
+        totalN: firstCropMannerOutput.data.totalN,
+        availableN: firstCropMannerOutput.data.currentCropAvailableN,
+        totalP: firstCropMannerOutput.data.totalP2O5,
+        availableP: firstCropMannerOutput.data.cropAvailableP2O5,
+        totalK: firstCropMannerOutput.data.totalK2O,
+        availableK: firstCropMannerOutput.data.cropAvailableK2O,
+        totalS: firstCropMannerOutput.data.totalSO3,
+        availableS: firstCropMannerOutput.data.cropAvailableSO3,
+        totalM: firstCropMannerOutput.data.totalMgO,
+      });
+    }
+
+
+    if(dataMultipleCrops.length > 1 && mannerOutputs?.data){
+      // Add current crop mannerOutputs or OrganicManure data
+      nutrientRecommendationnReqBody.field.mannerOutputs.push({
+        id: firstCropMannerOutput ? 2 : 1,
+        totalN: mannerOutputs.data
+          ? mannerOutputs.data.totalN
+          : OrganicManure.TotalN,
+        availableN: mannerOutputs.data
+          ? mannerOutputs.data.currentCropAvailableN
+          : OrganicManure.AvailableN,
+        totalP: mannerOutputs.data
+          ? mannerOutputs.data.totalP2O5
+          : OrganicManure.TotalP2O5,
+        availableP: mannerOutputs.data
+          ? mannerOutputs.data.cropAvailableP2O5
+          : OrganicManure.AvailableP2O5,
+        totalK: mannerOutputs.data
+          ? mannerOutputs.data.totalK2O
+          : OrganicManure.TotalK2O,
+        availableK: mannerOutputs.data
+          ? mannerOutputs.data.cropAvailableK2O
+          : OrganicManure.AvailableK2O,
+        totalS: mannerOutputs.data
+          ? mannerOutputs.data.totalSO3
+          : OrganicManure.TotalSO3,
+        availableS: mannerOutputs.data
+          ? mannerOutputs.data.cropAvailableSO3
+          : OrganicManure.AvailableSO3,
+        totalM: mannerOutputs.data
+          ? mannerOutputs.data.totalMgO
+          : OrganicManure.TotalMgO,
+      });
+    }else if (dataMultipleCrops.length < 1) {
+      // Add current crop mannerOutputs or OrganicManure data
+      nutrientRecommendationnReqBody.field.mannerOutputs.push({
+        id: crop.CropOrder,
+        totalN: mannerOutputs
+          ? mannerOutputs.data.totalN
+          : OrganicManure.TotalN,
+        availableN: mannerOutputs
+          ? mannerOutputs.data.currentCropAvailableN
+          : OrganicManure.AvailableN,
+        totalP: mannerOutputs
+          ? mannerOutputs.data.totalP2O5
+          : OrganicManure.TotalP2O5,
+        availableP: mannerOutputs
+          ? mannerOutputs.data.cropAvailableP2O5
+          : OrganicManure.AvailableP2O5,
+        totalK: mannerOutputs
+          ? mannerOutputs.data.totalK2O
+          : OrganicManure.TotalK2O,
+        availableK: mannerOutputs
+          ? mannerOutputs.data.cropAvailableK2O
+          : OrganicManure.AvailableK2O,
+        totalS: mannerOutputs
+          ? mannerOutputs.data.totalSO3
+          : OrganicManure.TotalSO3,
+        availableS: mannerOutputs
+          ? mannerOutputs.data.cropAvailableSO3
+          : OrganicManure.AvailableSO3,
+        totalM: mannerOutputs
+          ? mannerOutputs.data.totalMgO
+          : OrganicManure.TotalMgO,
+      });
+    }
+
     if (soilAnalysis) {
       soilAnalysis?.forEach((soilAnalysis) => {
         nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
@@ -460,7 +517,7 @@ class OrganicManureService extends BaseService {
 
     return nutrientRecommendationnReqBody;
   }
- 
+
   async handleSoilAnalysisValidation(fieldId, fieldName, year, CountryID) {
     const errors = [];
     const fiveYearsAgo = year - 4;
@@ -476,7 +533,6 @@ class OrganicManureService extends BaseService {
       }
     );
 
-   
     // Define the fields we want the latest values for
     const fieldsToTrack = [
       "PH",
@@ -502,7 +558,6 @@ class OrganicManureService extends BaseService {
           // Explicitly set the field to null if no value was found
           latestSoilAnalysis[field] = null;
         }
-
       });
     }
     // Iterate over the fields and find the latest value for each field
@@ -517,26 +572,32 @@ class OrganicManureService extends BaseService {
 
   async buildManureApplications(
     managementPeriodID,
-    manureTypeData,
     organicManureData,
-    organicManureAllData
+    organicManureAllData,
+    request
   ) {
-    // const mulOrganicManuresData = await this.repository.find({
-    //   where: { ManagementPeriodID: managementPeriodID },
-    // });
+    // Filter the organicManureAllData for the given managementPeriodID
     const mulOrganicManuresData = organicManureAllData.filter(
       (manure) => manure.ManagementPeriodID === managementPeriodID
     );
+
     // Initialize an empty array for storing results
     const manureApplications = [];
-   
-    // Map through the mulOrganicManuresData (array of objects)
-    mulOrganicManuresData.forEach((manure) => {
+
+    // Loop through the mulOrganicManuresData (array of objects)
+    for (const manure of mulOrganicManuresData) {
+      // Fetch manure type data for each manure by its ManureTypeID
+      const manureTypeData = await this.getManureTypeData(
+        manure.ManureTypeID,
+        request
+      );
+
+      // Push each manure application details into the array
       manureApplications.push({
         manureDetails: {
           manureID: manure.ManureTypeID,
-          name: manureTypeData.Name,
-          isLiquid: manureTypeData.IsLiquid,
+          name: manureTypeData.data.name,
+          isLiquid: manureTypeData.data.isLiquid,
           dryMatter: manure.DryMatterPercent,
           totalN: manure.N,
           nH4N: manure.NH4N,
@@ -570,14 +631,21 @@ class OrganicManureService extends BaseService {
         rainTypeID: manure.RainfallWithinSixHoursID,
         topsoilMoistureID: manure.MoistureID,
       });
-    });
+    }
+
     // Handle the single organicManureData object and push its values into the array
-    if (organicManureData) {
+    if (Object.keys(organicManureData).length !== 0) {
+      // Fetch manure type data for the single organicManureData object
+      const manureTypeData = await this.getManureTypeData(
+        organicManureData.ManureTypeID,
+        request
+      );
+
       manureApplications.push({
         manureDetails: {
           manureID: organicManureData.ManureTypeID,
-          name: manureTypeData.Name,
-          isLiquid: manureTypeData.IsLiquid,
+          name: manureTypeData.data.name,
+          isLiquid: manureTypeData.data.isLiquid,
           dryMatter: organicManureData.DryMatterPercent,
           totalN: organicManureData.N,
           nH4N: organicManureData.NH4N,
@@ -612,6 +680,8 @@ class OrganicManureService extends BaseService {
         topsoilMoistureID: organicManureData.MoistureID,
       });
     }
+
+    // Return the manure applications array
     return manureApplications;
   }
 
@@ -639,14 +709,14 @@ class OrganicManureService extends BaseService {
     };
   }
   async checkIfManagementPeriodExistsInOrganicManure(
-    organicManure,
+    ManagementPeriodID,
     organicManureAllData
   ) {
     // const managementPeriodExists = await this.repository.findOne({
     //   where: { ManagementPeriodID: organicManure.ManagementPeriodID },
     // });
     const managementPeriodExists = organicManureAllData.some(
-      (data) => data.ManagementPeriodID === organicManure.ManagementPeriodID
+      (data) => data.ManagementPeriodID === ManagementPeriodID
     );
 
     if (managementPeriodExists) {
@@ -673,6 +743,8 @@ class OrganicManureService extends BaseService {
     transactionalManager,
     nutrientRecommendationsData,
     mannerOutputs,
+    firstCropMannerOutput,
+    nutrientRecommendationnReqBody,
     OrganicManure,
     userId,
     cropData,
@@ -708,7 +780,7 @@ class OrganicManureService extends BaseService {
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex:  null,
+      SIndex: null,
       NIndex: null,
     };
 
@@ -734,31 +806,25 @@ class OrganicManureService extends BaseService {
         await this.managementPeriodRepository.findOneBy({
           CropID: firstCrop.ID,
         });
-
+  // mannerOutputs 2nd crop when 
       for (const calculation of nutrientRecommendationsData?.calculations ||
         []) {
         if (calculation.sequenceId === 1) {
           switch (calculation.nutrientId) {
             case 0:
               cropOrder1Data.CropN = calculation.recommendation;
-              cropOrder1Data.ManureN = mannerOutputs
-                ? mannerOutputs.data.currentCropAvailableN
-                : OrganicManure.AvailableN;
+              cropOrder1Data.ManureN = (firstCropMannerOutput || (mannerOutputs && cropData.CropOrder == 1 )) ? nutrientRecommendationnReqBody.field.mannerOutputs[0]?.availableN : (cropData.CropOrder==1 ? OrganicManure.AvailableN : null);
               cropOrder1Data.FertilizerN = calculation.cropNeed;
               cropOrder1Data.NIndex = calculation.indexpH;
               break;
             case 1:
               cropOrder1Data.CropP2O5 = calculation.recommendation;
-              cropOrder1Data.ManureP2O5 = mannerOutputs
-                ? mannerOutputs.data.cropAvailableP2O5
-                : OrganicManure.AvailableP2O5;
+              cropOrder1Data.ManureP2O5 = (firstCropMannerOutput || (mannerOutputs && cropData.CropOrder == 1 ))  ? nutrientRecommendationnReqBody.field.mannerOutputs[0]?.availableP:( cropData.CropOrder==1 ? OrganicManure.AvailableP2O5 : null );
               cropOrder1Data.FertilizerP2O5 = calculation.cropNeed;
               break;
             case 2:
               cropOrder1Data.CropK2O = calculation.recommendation;
-              cropOrder1Data.ManureK2O = mannerOutputs
-                ? mannerOutputs.data.cropAvailableK2O
-                : OrganicManure.AvailableK2O;
+              cropOrder1Data.ManureK2O = (firstCropMannerOutput || (mannerOutputs && cropData.CropOrder == 1 ))  ? nutrientRecommendationnReqBody.field.mannerOutputs[0]?.availableK: (cropData.CropOrder==1 ? OrganicManure.AvailableK2O : null);
               cropOrder1Data.FertilizerK2O = calculation.cropNeed;
               break;
             case 3:
@@ -773,9 +839,7 @@ class OrganicManureService extends BaseService {
               break;
             case 5:
               cropOrder1Data.CropSO3 = calculation.recommendation;
-              cropOrder1Data.ManureSO3 = mannerOutputs
-                ? mannerOutputs.data.cropAvailableSO3
-                : OrganicManure.AvailableSO3;
+              cropOrder1Data.ManureSO3 = (firstCropMannerOutput || (mannerOutputs && cropData.CropOrder == 1 ))  ? nutrientRecommendationnReqBody.field.mannerOutputs[0]?.availableS: (cropData.CropOrder==1 ? OrganicManure.AvailableSO3 : null);
               cropOrder1Data.FertilizerSO3 = calculation.cropNeed;
               break;
             case 6:
@@ -833,24 +897,18 @@ class OrganicManureService extends BaseService {
             switch (calculation.nutrientId) {
               case 0:
                 cropOrder2Data.CropN = calculation.recommendation;
-                cropOrder2Data.ManureN = mannerOutputs
-                  ? mannerOutputs.data.currentCropAvailableN
-                  : OrganicManure.AvailableN;
+                cropOrder2Data.ManureN =(mannerOutputs?.data  ) ? ((firstCropMannerOutput?.data && mannerOutputs?.data) ? nutrientRecommendationnReqBody.field.mannerOutputs[1].availableN : (nutrientRecommendationnReqBody.field.mannerOutputs[0].availableN)):(cropData.CropOrder==2 ? OrganicManure.AvailableN : null);
                 cropOrder2Data.FertilizerN = calculation.cropNeed;
                 cropOrder2Data.NIndex = calculation.indexpH;
                 break;
               case 1:
                 cropOrder2Data.CropP2O5 = calculation.recommendation;
-                cropOrder2Data.ManureP2O5 = mannerOutputs
-                  ? mannerOutputs.data.cropAvailableP2O5
-                  : OrganicManure.AvailableP2O5;
+                cropOrder2Data.ManureP2O5 =(mannerOutputs?.data  ) ? ((firstCropMannerOutput?.data && mannerOutputs?.data) ? nutrientRecommendationnReqBody.field.mannerOutputs[1]?.availableP : (nutrientRecommendationnReqBody.field.mannerOutputs[0]?.availableP)):(cropData.CropOrder==2 ? OrganicManure.AvailableP2O5 : null);
                 cropOrder2Data.FertilizerP2O5 = calculation.cropNeed;
                 break;
               case 2:
                 cropOrder2Data.CropK2O = calculation.recommendation;
-                cropOrder2Data.ManureK2O = mannerOutputs
-                  ? mannerOutputs.data.cropAvailableK2O
-                  : OrganicManure.AvailableK2O;
+                cropOrder2Data.ManureK2O =(mannerOutputs?.data  ) ? ((firstCropMannerOutput?.data && mannerOutputs?.data) ? nutrientRecommendationnReqBody.field.mannerOutputs[1]?.availableK : (nutrientRecommendationnReqBody.field.mannerOutputs[0]?.availableK)):(cropData.CropOrder==2 ? OrganicManure.AvailableK2O : null);
                 cropOrder2Data.FertilizerK2O = calculation.cropNeed;
                 break;
               case 3:
@@ -865,9 +923,7 @@ class OrganicManureService extends BaseService {
                 break;
               case 5:
                 cropOrder2Data.CropSO3 = calculation.recommendation;
-                cropOrder2Data.ManureSO3 = mannerOutputs
-                  ? mannerOutputs.data.cropAvailableSO3
-                  : OrganicManure.AvailableSO3;
+                cropOrder2Data.ManureSO3 =(mannerOutputs?.data  ) ? ((firstCropMannerOutput?.data && mannerOutputs?.data) ? nutrientRecommendationnReqBody.field.mannerOutputs[1]?.availableS : (nutrientRecommendationnReqBody.field.mannerOutputs[0]?.availableS)):(cropData.CropOrder==2 ? OrganicManure.AvailableSO3 : null);
                 cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
                 break;
               case 6:
@@ -963,7 +1019,7 @@ class OrganicManureService extends BaseService {
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex:  null,
+      SIndex: null,
       NIndex: null,
     };
 
@@ -1023,7 +1079,7 @@ class OrganicManureService extends BaseService {
       `Soil/NutrientIndex/${numericIndexId}/${numericNutrientId}`
     );
     const trimmedIndexValue = indexValue.index.trim();
-   
+
     return trimmedIndexValue;
   }
 
@@ -1033,7 +1089,6 @@ class OrganicManureService extends BaseService {
       return null;
     }
     const nutrientData = nutrientIndicesData[nutrient];
-
 
     // if (nutrient === "Potassium" && indexValue === 2) {
     //   // Check only for "2+"
@@ -1050,9 +1105,7 @@ class OrganicManureService extends BaseService {
       // Check if indexValue is 2 and match with "2+"
       if (indexValue === 2) {
         for (const data of nutrientData) {
-       
           if (data.index.trim() === "2+") {
-           
             return data.indexId;
           }
         }
@@ -1061,9 +1114,7 @@ class OrganicManureService extends BaseService {
       // Check if indexValue is -2 and match with "2-"
       if (indexValue === -2) {
         for (const data of nutrientData) {
-        
           if (data.index.trim() === "2-") {
-          
             return data.indexId;
           }
         }
@@ -1071,9 +1122,7 @@ class OrganicManureService extends BaseService {
     }
 
     for (const data of nutrientData) {
-      
       if (data.index.trim() === indexValue.toString()) {
-       
         return data.indexId;
       }
     }
@@ -1119,6 +1168,18 @@ class OrganicManureService extends BaseService {
     }
     return soilAnalysisRecords;
   }
+  async getManureTypeData(ManureTypeID, request) {
+    try {
+      const manureTypeData = await this.MannerManureTypesService.getData(
+        `/manure-types/${ManureTypeID}`,
+        request
+      );
+      return manureTypeData;
+    } catch (error) {
+      console.error("Error fetching manure type data:", error);
+      throw new Error("Failed to get manure type data");
+    }
+  }
   async createOrganicManuresWithFarmManureType(request, body, userId) {
     return await AppDataSource.transaction(async (transactionalManager) => {
       let savedFarmManureType;
@@ -1146,7 +1207,7 @@ class OrganicManureService extends BaseService {
         }
         const newOrganicManure =
           await this.checkIfManagementPeriodExistsInOrganicManure(
-            OrganicManure,
+            OrganicManure.ManagementPeriodID,
             organicManureAllData
           );
 
@@ -1206,14 +1267,146 @@ class OrganicManureService extends BaseService {
             ? true
             : false;
         }
-        const manureApplications = await this.buildManureApplications(
-          OrganicManure.ManagementPeriodID,
-          manureTypeData,
-          OrganicManure,
-          organicManureAllData
-        );
+        let firstCrop,
+          manureApplicationsFirstCrop = null,
+          mannerOutputFirstReq = null,
+          firstCropMannerOutput = null,
+          mannerOutputs=null,
+          mannerOutputReq=null
+        let firstCropOrganicManure = {};
+        let firstCropManagementPeriods;
+        const dataMultipleCrops = await this.cropRepository.find({
+          where: {
+            FieldID: fieldData.ID,
+            Year: cropData.Year,
+            Confirm: false,
+          },
+        });
 
-        let mannerOutputReq;
+        let manureApplications=null;
+        if (dataMultipleCrops.length > 1) {
+          firstCrop = await this.getFirstCropData(fieldData.ID, cropData.Year);
+          firstCropManagementPeriods = managementPeriodAllData.find(
+            (mp) => mp.CropID == firstCrop.ID
+          );
+         
+          const checkFirstCropOrganicManure =
+            await this.checkIfManagementPeriodExistsInOrganicManure(
+              firstCropManagementPeriods.ID,
+              organicManureAllData
+            );
+          if (cropData.CropOrder == 1 && checkFirstCropOrganicManure) {
+            manureApplicationsFirstCrop = await this.buildManureApplications(
+              firstCropManagementPeriods.ID,
+              OrganicManure,
+              organicManureAllData,
+              request
+            );
+          } else if (checkFirstCropOrganicManure) {
+            manureApplicationsFirstCrop = await this.buildManureApplications(
+              firstCropManagementPeriods.ID,
+              firstCropOrganicManure,
+              organicManureAllData,
+              request
+            );
+              
+           
+          }else if (cropData.CropOrder == 1) {
+            manureApplicationsFirstCrop = await this.buildManureApplications(
+              firstCropManagementPeriods.ID,
+              OrganicManure,
+              organicManureAllData,
+              request
+            );
+          }
+          console.log(
+            "manureApplicationsFirstCrop",
+            manureApplicationsFirstCrop
+          );
+           if (manureApplicationsFirstCrop != null) {
+             mannerOutputFirstReq = await this.buildMannerOutputReq(
+               farmData,
+               fieldData,
+               cropTypeLinkingData,
+               organicManureData,
+               manureApplicationsFirstCrop,
+               soilTypeTextureData
+             );
+           }
+           console.log("mannerOutputFirstReq", mannerOutputFirstReq);
+           if (mannerOutputFirstReq != null) {
+             firstCropMannerOutput =
+               await this.MannerCalculateNutrientsService.postData(
+                 "/calculate-nutrients",
+                 mannerOutputFirstReq,
+                 request
+               );
+           }
+           console.log("firstCropMannerOutput", firstCropMannerOutput);
+          // Find the crop where CropOrder == 2
+          const secondCrop = dataMultipleCrops.find(
+            (crop) => crop.CropOrder == 2
+          );
+          const secondCropManagementPeriods = managementPeriodAllData.find(
+            (mp) => mp.CropID == secondCrop.ID
+          );
+
+           const checkSecondCropOrganicManure =
+             await this.checkIfManagementPeriodExistsInOrganicManure(
+               secondCropManagementPeriods.ID,
+               organicManureAllData
+             );
+          if (cropData.CropOrder == 2 && checkSecondCropOrganicManure) {
+            manureApplications = await this.buildManureApplications(
+              secondCropManagementPeriods.ID,
+              OrganicManure,
+              organicManureAllData,
+              request
+            );
+          } else if (checkSecondCropOrganicManure) {
+            manureApplications = await this.buildManureApplications(
+              secondCropManagementPeriods.ID,
+              firstCropOrganicManure,
+              organicManureAllData,
+              request
+            );
+          }else if (cropData.CropOrder == 2){
+              manureApplications = await this.buildManureApplications(
+                secondCropManagementPeriods.ID,
+                OrganicManure,
+                organicManureAllData,
+                request
+              );
+          }
+            if (manureApplications != null) {
+              mannerOutputReq = await this.buildMannerOutputReq(
+                farmData,
+                fieldData,
+                cropTypeLinkingData,
+                organicManureData,
+                manureApplications,
+                soilTypeTextureData
+              );
+            }
+             if (mannerOutputReq != null) {
+               mannerOutputs =
+                 await this.MannerCalculateNutrientsService.postData(
+                   "/calculate-nutrients",
+                   mannerOutputReq,
+                   request
+                 );
+             }
+        } else {
+          manureApplications = await this.buildManureApplications(
+            OrganicManure.ManagementPeriodID,
+            OrganicManure,
+            organicManureAllData,
+            request
+          );
+        }
+        console.log("manureApplications", manureApplications)
+
+      
         if (newOrganicManure == true) {
           mannerOutputReq = await this.buildMannerOutputReq(
             farmData,
@@ -1274,7 +1467,7 @@ class OrganicManureService extends BaseService {
           // };
           mannerOutputReq = null;
         }
-        let mannerOutputs;
+        
         if (mannerOutputReq != null) {
           mannerOutputs = await this.MannerCalculateNutrientsService.postData(
             "/calculate-nutrients",
@@ -1304,14 +1497,6 @@ class OrganicManureService extends BaseService {
             HttpStatus.BAD_REQUEST
           );
 
-        const dataMultipleCrops = await this.cropRepository.find({
-          where: {
-            FieldID: fieldData.ID,
-            Year: cropData.Year,
-            Confirm: false,
-          },
-        });
-
         const snsAnalysesData = await this.getSnsAnalysesData(fieldData.ID);
 
         let isNextYearPlanExist = false;
@@ -1326,7 +1511,7 @@ class OrganicManureService extends BaseService {
 
           console.log("cropPlanForNextYear", cropPlanForNextYear);
 
-          if (cropPlanForNextYear) {
+          if (cropPlanForNextYear.length > 0) {
             isNextYearPlanExist = true;
             for (const crop of cropPlanForNextYear) {
               console.log("CropID", crop.ID);
@@ -1419,7 +1604,7 @@ class OrganicManureService extends BaseService {
             } else {
               let pBalance = 0;
               let kBalance = 0;
-             
+
               const pkBalanceData = await this.getPKBalanceData(
                 fieldData.ID,
                 cropData?.Year,
@@ -1477,6 +1662,8 @@ class OrganicManureService extends BaseService {
               dataMultipleCrops,
               cropData,
               mannerOutputs,
+              firstCropMannerOutput,
+              firstCrop,
               organicManureData,
               OrganicManure,
               allPKBalanceData
@@ -1515,6 +1702,8 @@ class OrganicManureService extends BaseService {
             transactionalManager,
             nutrientRecommendationsData,
             mannerOutputs,
+            firstCropMannerOutput,
+            nutrientRecommendationnReqBody,
             OrganicManure,
             userId,
             cropData,
@@ -1523,35 +1712,40 @@ class OrganicManureService extends BaseService {
             snsAnalysesData,
             allRecommendations
           );
+          console.log("savedData", savedData);
+
           if (isSoilAnalysisHavePAndK) {
-            if (isNextYearPlanExist == true || isNextYearOrganicManureExist == true || isNextYearFertiliserExist == true)
-             {
-               // UpdateRecommendation
-               this.UpdateRecommendation.updateRecommendationsForField(
-                 cropData.FieldID,
-                 cropData?.Year,
-                 request,
-                 userId
-               )
-                 .then((res) => {
-                   if (res === undefined) {
-                     console.log(
-                       "updateRecommendationAndOrganicManure returned undefined"
-                     );
-                   } else {
-                     console.log(
-                       "updateRecommendationAndOrganicManure result:",
-                       res
-                     );
-                   }
-                 })
-                 .catch((error) => {
-                   console.error(
-                     "Error updating recommendation and organic manure:",
-                     error
-                   );
-                 });
-             } else {
+            if (
+              isNextYearPlanExist == true ||
+              isNextYearOrganicManureExist == true ||
+              isNextYearFertiliserExist == true
+            ) {
+              // UpdateRecommendation
+              this.UpdateRecommendation.updateRecommendationsForField(
+                cropData.FieldID,
+                cropData?.Year,
+                request,
+                userId
+              )
+                .then((res) => {
+                  if (res === undefined) {
+                    console.log(
+                      "updateRecommendationAndOrganicManure returned undefined"
+                    );
+                  } else {
+                    console.log(
+                      "updateRecommendationAndOrganicManure result:",
+                      res
+                    );
+                  }
+                })
+                .catch((error) => {
+                  console.error(
+                    "Error updating recommendation and organic manure:",
+                    error
+                  );
+                });
+            } else {
               let pBalance = 0;
               let kBalance = 0;
               console.log(
@@ -1564,7 +1758,6 @@ class OrganicManureService extends BaseService {
               );
               let updatePKBalance;
               if (fertiliserData.p205 > 0 || fertiliserData.k20 > 0) {
-              
                 for (const recommendation of nutrientRecommendationsData.calculations) {
                   switch (recommendation.nutrientId) {
                     case 1:
@@ -1967,19 +2160,19 @@ class OrganicManureService extends BaseService {
       if (crop == null) {
         console.log(`crop with ID ${managementPeriod.CropID} not found`);
       }
-    
+
       try {
         // Call the stored procedure to delete the organicManureId and related entities
         const storedProcedure =
           "EXEC [spOrganicManures_DeleteOrganicManures] @OrganicManureID = @0";
-         await transactionalManager.query(storedProcedure, [organicManureId]);
+        await transactionalManager.query(storedProcedure, [organicManureId]);
 
-           this.UpdateRecommendation.updateRecommendationAndOrganicManure(
-             crop.FieldID,
-             crop.Year,
-             request,
-             userId
-           );
+        this.UpdateRecommendation.updateRecommendationAndOrganicManure(
+          crop.FieldID,
+          crop.Year,
+          request,
+          userId
+        );
         // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
         const nextAvailableCrop = await this.cropRepository.findOne({
           where: {
@@ -1990,8 +2183,8 @@ class OrganicManureService extends BaseService {
             Year: "ASC", // Ensure we get the next immediate year
           },
         });
-     
-        if (nextAvailableCrop){
+
+        if (nextAvailableCrop) {
           this.UpdateRecommendation.updateRecommendationsForField(
             crop.FieldID,
             nextAvailableCrop.Year,
@@ -2016,9 +2209,8 @@ class OrganicManureService extends BaseService {
                 error
               );
             });
-
-          }
-       return { affectedRows: 1 }; // Success response
+        }
+        return { affectedRows: 1 }; // Success response
       } catch (error) {
         // Log the error and throw an internal server error
         console.error("Error deleting organicManure:", error);
