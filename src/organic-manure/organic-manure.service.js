@@ -420,36 +420,36 @@ class OrganicManureService extends BaseService {
           ? mannerOutputs.data.totalMgO
           : OrganicManure.TotalMgO,
       });
-    }else if (dataMultipleCrops.length < 1) {
+    }else if (dataMultipleCrops.length < 2) {
       // Add current crop mannerOutputs or OrganicManure data
       nutrientRecommendationnReqBody.field.mannerOutputs.push({
         id: crop.CropOrder,
         totalN: mannerOutputs
-          ? mannerOutputs.data.totalN
+          ? mannerOutputs?.data.totalN
           : OrganicManure.TotalN,
         availableN: mannerOutputs
-          ? mannerOutputs.data.currentCropAvailableN
+          ? mannerOutputs?.data.currentCropAvailableN
           : OrganicManure.AvailableN,
         totalP: mannerOutputs
-          ? mannerOutputs.data.totalP2O5
+          ? mannerOutputs?.data.totalP2O5
           : OrganicManure.TotalP2O5,
         availableP: mannerOutputs
-          ? mannerOutputs.data.cropAvailableP2O5
+          ? mannerOutputs?.data.cropAvailableP2O5
           : OrganicManure.AvailableP2O5,
         totalK: mannerOutputs
-          ? mannerOutputs.data.totalK2O
+          ? mannerOutputs?.data.totalK2O
           : OrganicManure.TotalK2O,
         availableK: mannerOutputs
-          ? mannerOutputs.data.cropAvailableK2O
+          ? mannerOutputs?.data.cropAvailableK2O
           : OrganicManure.AvailableK2O,
         totalS: mannerOutputs
-          ? mannerOutputs.data.totalSO3
+          ? mannerOutputs?.data.totalSO3
           : OrganicManure.TotalSO3,
         availableS: mannerOutputs
-          ? mannerOutputs.data.cropAvailableSO3
+          ? mannerOutputs?.data.cropAvailableSO3
           : OrganicManure.AvailableSO3,
         totalM: mannerOutputs
-          ? mannerOutputs.data.totalMgO
+          ? mannerOutputs?.data.totalMgO
           : OrganicManure.TotalMgO,
       });
     }
