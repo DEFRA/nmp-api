@@ -478,7 +478,7 @@ class PlanService extends BaseService {
 
   async getSnsAnalysesData(id) {
     const data = await this.snsAnalysisRepository.findOneBy({
-      FieldID: id, // Assuming FieldID is the correct field
+      CropID: id, // Assuming FieldID is the correct field
     });
 
     return data;
@@ -1297,7 +1297,7 @@ class PlanService extends BaseService {
           throw new Error(JSON.stringify(Errors));
         }
 
-        const snsAnalysesData = await this.getSnsAnalysesData(fieldId);
+        const snsAnalysesData = await this.getSnsAnalysesData(crop?.ID);
         if (crop.CropTypeID === 170) {
           console.log("basicPlan", cropData);
           await this.savedDefault(cropData, userId, transactionalManager);

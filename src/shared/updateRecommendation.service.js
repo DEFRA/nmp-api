@@ -310,7 +310,7 @@ class UpdateRecommendation {
         },
       });
       let nutrientRecommendationsData;
-      const snsAnalysesData = await this.getSnsAnalysesData(fieldData.ID);
+      const snsAnalysesData = await this.getSnsAnalysesData(cropData.ID);
       const secondCropManagementData = await this.getManagementPeriod(
         cropData.ID
       );
@@ -495,7 +495,7 @@ class UpdateRecommendation {
         secondCropManagementData.ID
       );
   
-      const snsAnalysesData = await this.getSnsAnalysesData(fieldId);
+      const snsAnalysesData = await this.getSnsAnalysesData(crop.ID);
       let nutrientRecommendationsData;
       //get PKBalance data
       let pkBalance = await this.getPKBalanceData(
@@ -2120,7 +2120,7 @@ class UpdateRecommendation {
   }
   async getSnsAnalysesData(id) {
     const data = await this.snsAnalysisRepository.findOne({
-      where: { FieldID: id }, // This line is correct as per your entity definition
+      where: { CropID: id }, // This line is correct as per your entity definition
     });
 
     return data;
