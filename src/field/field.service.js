@@ -36,7 +36,7 @@ const MannerIncorporationDelayService = require("../vendors/manner/incorporation
 const {
   GrassManagementOptionsEntity,
 } = require("../db/entity/grassManagementOptionsEntity");
-
+const { LessThanOrEqual, Between, Not, In } = require("typeorm");
 class FieldService extends BaseService {
   constructor() {
     super(FieldEntity);
@@ -564,198 +564,32 @@ class FieldService extends BaseService {
         });
         const Errors = [];
         // Enrich crops with management periods and their sub-objects
-let soilAnalysis=null;
-let soilAnalysisAndSNSanalysis=null;
-// const cropsWithManagement = await Promise.all(
-//   crops.map(async (crop) => {
-//     try {
-//       // Handle Soil Analysis validation
-//       const { latestSoilAnalysis, errors: soilAnalysisErrors } = await this.handleSoilAnalysisValidation(field.ID, crop?.Year);
-//       soilAnalysis=latestSoilAnalysis;
-//       // Collect any errors and throw if necessary
-//       Errors.push(...soilAnalysisErrors);
-//       if (Errors.length > 0) {
-//         throw new Error(JSON.stringify(Errors));
-//       }
-//       console.log('soilAnalysis', latestSoilAnalysis);
-//       // Fetch SNS analysis
-//       const snsAnalysis = await this.snsAnalysisRepository.find({
-//         where: { CropID: crop.ID },
-//       });
-// console.log('crop.ID',crop.ID);
-//       console.log('snsAnalysis', snsAnalysis);
-//       console.log('snsAnalysis1', snsAnalysis[0]);
-//       console.log('snsAnalysis.length', snsAnalysis.length);
 
-//       // Combine soil analysis and SNS analysis
-//        soilAnalysisAndSNSanalysis =
-//         latestSoilAnalysis || snsAnalysis.length > 0
-//           ? {
-//               PH: latestSoilAnalysis ? latestSoilAnalysis.PH : "Not Entered",
-//               PhosphorusIndex: latestSoilAnalysis ? latestSoilAnalysis.PhosphorusIndex : "Not Entered",
-//               PotassiumIndex: latestSoilAnalysis ? latestSoilAnalysis.PotassiumIndex : "Not Entered",
-//               MagnesiumIndex: latestSoilAnalysis ? latestSoilAnalysis.MagnesiumIndex : "Not Entered",
-//               SNS: snsAnalysis.length > 0 ? snsAnalysis[0].SoilNitrogenSupplyValue : "Not Entered",
-//               SNSIndex: snsAnalysis.length > 0 ? snsAnalysis[0].SoilNitrogenSupplyIndex : "Not Entered",
-//               SNSMethod: "Not Entered", // This seems like a placeholder. You might need to add logic for it
-//             }
-//           : null;
+const { latestSoilAnalysis, errors: soilAnalysisErrors } = await this.handleSoilAnalysisValidation(field.ID, year);
 
-//       // Fetch management periods related to the crop
-//       const managementPeriods = await this.managementPeriodRepository.find({
-//         where: { CropID: crop.ID },
-//       });
+Errors.push(...soilAnalysisErrors);
+if (Errors.length > 0) {
+  throw new Error(JSON.stringify(Errors));
+}
 
-//       // Process management data
-//       const managementWithSubData = await Promise.all(
-//         managementPeriods.map(async (managementPeriod) => {
-//           const organicManures = await this.organicManureRepository.find({
-//             where: { ManagementPeriodID: managementPeriod.ID },
-//           });
-
-//           // Add manure-related names to each OrganicManure object
-//           const organicManuresWithNames = await Promise.all(
-//             organicManures.map(async (manure) => {
-//               const manureTypeName = await this.ManureTypeName(manure.ManureTypeID, request);
-//               const applicationMethodName = await this.getApplicationMethodName(manure.ApplicationMethodID, request);
-//               const incorporationMethodName = await this.getIncorporationMethodName(manure.IncorporationMethodID, request);
-//               const incorporationDelayName = await this.getIncorporationDelayName(manure.IncorporationDelayID, request);
-
-//               return {
-//                 ...manure,
-//                 ManureTypeName: manureTypeName,
-//                 ApplicationMethodName: applicationMethodName,
-//                 IncorporationMethodName: incorporationMethodName,
-//                 IncorporationDelayName: incorporationDelayName,
-//               };
-//             })
-//           );
-
-//           // Fetch recommendation based on management period
-//           const recommendation = await this.recommendationRepository.findOne({
-//             where: { ManagementPeriodID: managementPeriod.ID },
-//           });
-
-//           // Fetch recommendations using stored procedure
-//           const storedProcedure = "EXEC dbo.spRecommendations_GetRecommendations @fieldId = @0, @harvestYear = @1";
-//           const recommendations = await this.executeQuery(storedProcedure, [field.ID, year]);
-
-//           let mergedRecommendation = null;
-//           if (recommendations != null) {
-//             const recBasedOnManId = recommendations.filter(
-//               (rec) => rec.ManagementPeriod_ID === managementPeriod.ID
-//             );
-//             if (recBasedOnManId != null) {
-//               const mappedRecommendations = await Promise.all(
-//                 recBasedOnManId.map(async (r) => {
-//                   const data = {
-//                     Crop: {},
-//                     Recommendation: {},
-//                     ManagementPeriod: {},
-//                     FertiliserManure: {},
-//                   };
-
-//                   const previousAppliedLime = await this.processSoilRecommendations(year, field.ID, r);
-//                   data.Recommendation.PreviousAppliedLime = previousAppliedLime || 0;
-
-//                   Object.keys(r).forEach((recDataKey) => {
-//                     if (recDataKey.startsWith("Crop_")) data.Crop[recDataKey.slice(5)] = r[recDataKey];
-//                     else if (recDataKey.startsWith("Recommendation_")) data.Recommendation[recDataKey.slice(15)] = r[recDataKey];
-//                     else if (recDataKey.startsWith("ManagementPeriod_")) data.ManagementPeriod[recDataKey.slice(17)] = r[recDataKey];
-//                     else if (recDataKey.startsWith("FertiliserManure_")) data.FertiliserManure[recDataKey.slice(17)] = r[recDataKey];
-//                   });
-
-//                   mergedRecommendation = {
-//                     ...data.Recommendation,
-//                     ...data.FertiliserManure, // Add FertiliserManure properties to Recommendation
-//                   };
-
-//                   return data;
-//                 })
-//               );
-//             }
-//           }
-
-//           // Fetch comments for the recommendation
-//           const recommendationComments = recommendation
-//             ? await this.recommendationCommentsRepository.find({
-//                 where: { RecommendationID: recommendation.ID },
-//               })
-//             : [];
-
-//           // Fetch fertiliser manures for the management period
-//           const fertiliserManures = await this.fertiliserManureRepository.find({
-//             where: { ManagementPeriodID: managementPeriod.ID },
-//           });
-
-//           return {
-//             ...managementPeriod,
-//             OrganicManures: organicManuresWithNames,
-//             Recommendation: recommendation
-//               ? {
-//                   ...(mergedRecommendation != null ? mergedRecommendation : recommendation),
-//                   RecommendationComments: recommendationComments,
-//                 }
-//               : null,
-//             FertiliserManures: fertiliserManures,
-//           };
-//         })
-//       );
-
-//       // Fetch crop type and other crop-related information
-//       const cropTypeName = await this.getCropTypeName(crop.CropTypeID, cropTypeAllData);
-//       const cropInfo1Name = crop.CropInfo1 ? await this.getCropInfo1Name(crop.CropTypeID, crop.CropInfo1) : "";
-//       const cropInfo2Name = crop.CropInfo2 ? await this.getCropInfo2Name(crop.CropInfo2) : "";
-// console.log('soilAnalysisAndSNSanalysis',soilAnalysisAndSNSanalysis);
-//       return {
-//         ...crop,
-//         CropTypeName: cropTypeName,
-//         CropInfo1Name: cropInfo1Name,
-//         CropInfo2Name: cropInfo2Name,
-//         ManagementPeriods: managementWithSubData,
-//         soilAnalysisAndSNSanalysis: soilAnalysisAndSNSanalysis,
-//       };
-//     } catch (error) {
-//       console.error("Error processing crop", crop.ID, error);
-//       return {
-//         ...crop,
-//         error: error.message,
-//       };
-//     }
-//   })
-// );
-
+const soilAnalysis =latestSoilAnalysis?latestSoilAnalysis:null;
+    
 const cropsWithManagement = [];
 for (const crop of crops) {
-  try {
-    // Handle Soil Analysis validation
-    const { latestSoilAnalysis, errors: soilAnalysisErrors } = await this.handleSoilAnalysisValidation(field.ID, crop?.Year);
-    soilAnalysis = latestSoilAnalysis;
-    // Collect any errors and throw if necessary
-    Errors.push(...soilAnalysisErrors);
-    if (Errors.length > 0) {
-      throw new Error(JSON.stringify(Errors));
-    }
-    console.log('soilAnalysis', latestSoilAnalysis);
+  try {  
 
     // Fetch SNS analysis
-    const snsAnalysis = await this.snsAnalysisRepository.find({
+    const snsAnalysis = await this.snsAnalysisRepository.findOne({
       where: { CropID: crop.ID },
     });
-    // Combine soil analysis and SNS analysis
-    const soilAnalysisAndSNSanalysis =
-      latestSoilAnalysis || snsAnalysis.length > 0
+    const SNSAnalysis =
+    (snsAnalysis)
         ? {
-            PH: latestSoilAnalysis ? latestSoilAnalysis.PH : "Not Entered",
-            PhosphorusIndex: latestSoilAnalysis ? latestSoilAnalysis.PhosphorusIndex : "Not Entered",
-            PotassiumIndex: latestSoilAnalysis ? latestSoilAnalysis.PotassiumIndex : "Not Entered",
-            MagnesiumIndex: latestSoilAnalysis ? latestSoilAnalysis.MagnesiumIndex : "Not Entered",
-            SNS: snsAnalysis.length > 0 ? snsAnalysis[0].SoilNitrogenSupplyValue : "Not Entered",
-            SNSIndex: snsAnalysis.length > 0 ? snsAnalysis[0].SoilNitrogenSupplyIndex : "Not Entered",
-            SNSMethod: "Not Entered", // This seems like a placeholder. You might need to add logic for it
+            SNSValue: snsAnalysis.SoilNitrogenSupplyValue,
+            SNSIndex: snsAnalysis.SoilNitrogenSupplyIndex,
+            SNSMethod: "Not Entered",
           }
         : null;
-
     // Fetch management periods related to the crop
     const managementPeriods = await this.managementPeriodRepository.find({
       where: { CropID: crop.ID },
@@ -855,7 +689,6 @@ for (const crop of crops) {
     const cropTypeName = await this.getCropTypeName(crop.CropTypeID, cropTypeAllData);
     const cropInfo1Name = crop.CropInfo1 ? await this.getCropInfo1Name(crop.CropTypeID, crop.CropInfo1) : "";
     const cropInfo2Name = crop.CropInfo2 ? await this.getCropInfo2Name(crop.CropInfo2) : "";
-    console.log('soilAnalysisAndSNSanalysis', soilAnalysisAndSNSanalysis);
 
     cropsWithManagement.push({
       ...crop,
@@ -863,7 +696,7 @@ for (const crop of crops) {
       CropInfo1Name: cropInfo1Name,
       CropInfo2Name: cropInfo2Name,
       ManagementPeriods: managementWithSubData,
-      soilAnalysisAndSNSanalysis: soilAnalysisAndSNSanalysis,
+      SNSAnalysis:  SNSAnalysis,
     });
   } catch (error) {
     console.error("Error processing crop", crop.ID, error);
@@ -899,11 +732,7 @@ console.log('soilDetails',soilDetails);
           PreviousCrop: previousCropTypename,
           Crops: cropsWithManagement,
           // PreviousGrasses: previousGrasses,
-          SoilAnalysis: {
-            LastModify:
-            soilAnalysis?.ModifiedOn || soilAnalysis?.CreatedOn, // Latest ModifiedOn date from SoilAnalysis
-            SoilAnalysisAndSNSanalysis: soilAnalysisAndSNSanalysis, // Combined data from both Soil and SNS analysis
-          },
+           SoilAnalysis: soilAnalysis,
           SoilDetails: soilDetails,
         };
 
@@ -1195,6 +1024,7 @@ console.log('soilDetails',soilDetails);
 
     // Define the fields we want the latest values for
     const fieldsToTrack = [
+      "Date",
       "PH",
       "SoilNitrogenSupplyIndex",
       "PhosphorusIndex",
@@ -1204,7 +1034,7 @@ console.log('soilDetails',soilDetails);
       "CreatedOn",
       "ModifiedOn",
     ];
-
+    console.log('soilAnalysisRecordsFiveYears',soilAnalysisRecordsFiveYears)
     // Initialize the latest values object
     const latestSoilAnalysis = {};
     if (soilAnalysisRecordsFiveYears.length > 0) {
@@ -1226,7 +1056,11 @@ console.log('soilDetails',soilDetails);
         }
       });
     }
-
+    const isEmpty = Object.values(latestSoilAnalysis).every((value) => value === null);
+    if (isEmpty) {
+      return { latestSoilAnalysis: null, errors };
+    }
+    
     return { latestSoilAnalysis, errors };
   }
 }
