@@ -25,6 +25,7 @@ const {
   FertiliserManuresEntity,
 } = require("../db/entity/fertiliser-manures.entity");
 const { FarmEntity } = require("../db/entity/farm.entity");
+const { Between } = require("typeorm");
 const RB209ArableService = require("../vendors/rb209/arable/arable.service");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
 const MannerApplicationMethodService = require("../vendors/manner/application-method/application-method.service");
@@ -36,7 +37,6 @@ const MannerIncorporationDelayService = require("../vendors/manner/incorporation
 const {
   GrassManagementOptionsEntity,
 } = require("../db/entity/grassManagementOptionsEntity");
-const { LessThanOrEqual, Between, Not, In } = require("typeorm");
 class FieldService extends BaseService {
   constructor() {
     super(FieldEntity);
@@ -181,7 +181,7 @@ class FieldService extends BaseService {
         ...body.Field,
         FarmID: farmId,
         CreatedByID: userId,
-        CreatedOn:new Date()
+        CreatedOn: new Date(),
       });
       const Field = await transactionalManager.save(FieldEntity, field);
 
@@ -193,7 +193,7 @@ class FieldService extends BaseService {
             ...body?.SoilAnalysis,
             FieldID: Field.ID,
             CreatedByID: userId,
-            CreatedOn:new Date()
+            CreatedOn: new Date(),
           })
         );
       }
@@ -214,7 +214,7 @@ class FieldService extends BaseService {
                 ...createdData,
                 FieldID: Field.ID,
                 CreatedByID: userId,
-                CreatedOn:new Date()
+                CreatedOn: new Date(),
               })
             );
           }
@@ -269,7 +269,7 @@ class FieldService extends BaseService {
               ...managementPeriod,
               CropID: savedCrop.ID,
               CreatedByID: userId,
-              CreatedOn:new Date()
+              CreatedOn: new Date(),
             })
           );
           ManagementPeriods.push(savedManagementPeriod);
@@ -343,11 +343,9 @@ class FieldService extends BaseService {
     });
 
     const soilAnalysisData = await this.soilAnalysisRepository.findOne({
-      where: {  FieldID: fieldId },
-      
-      order: { Year: 'DESC' ,   
-         Date: 'DESC' },
-      
+      where: { FieldID: fieldId },
+
+      order: { Year: "DESC", Date: "DESC" },
     });
     // const latestSoilAnalysis = await this.soilAnalysisRepository.findOne({
     //   where: { FieldID: field.ID},
@@ -497,25 +495,18 @@ class FieldService extends BaseService {
             previousGrasses.GrassManagementOptionID != null
               ? previousGrasses.GrassManagementOptionID
               : null;
-     
-        
+
           if (grassManagementOptionID) {
             const grassManagementOption =
               await this.grassManagementOptionsRepository.findOne({
                 where: { ID: grassManagementOptionID },
                 select: ["Name"],
               });
-              console.log(
-                "grassManagementOption",
-                grassManagementOption
-              );
+            console.log("grassManagementOption", grassManagementOption);
             grassManagementOptionName = grassManagementOption
               ? grassManagementOption.Name
               : null;
-
-             
           }
-
         }
         // const snsAnalysis = await this.snsAnalysisRepository.find({
         //   where: { FieldID: field.ID },
@@ -720,8 +711,10 @@ for (const crop of crops) {
           SoilTypeName: soilTypeName,
           PotashReleasingClay: field.SoilReleasingClay,
           SulphurDeficient: sulphurDeficient,
-          StartingP: (pkBalance && pkBalance.PBalance != null) ? pkBalance.PBalance : null,
-          Startingk: (pkBalance && pkBalance.KBalance != null) ? pkBalance.KBalance : null,
+          StartingP:
+            pkBalance && pkBalance.PBalance != null ? pkBalance.PBalance : null,
+          Startingk:
+            pkBalance && pkBalance.KBalance != null ? pkBalance.KBalance : null,
         };
 console.log('soilDetails',soilDetails);
         // Build the full field object with all associated sub-objects
