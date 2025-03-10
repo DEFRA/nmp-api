@@ -478,7 +478,7 @@ class PlanService extends BaseService {
 
   async getSnsAnalysesData(id) {
     const data = await this.snsAnalysisRepository.findOneBy({
-      CropID: id, // Assuming FieldID is the correct field
+      CropID: id, 
     });
 
     return data;

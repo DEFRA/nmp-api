@@ -6,12 +6,11 @@ const SnsAnalysesEntity = new EntitySchema({
   name: "SnsAnalyses",
   tableName: "SnsAnalyses",
   columns: {
-    Id: {
+    ID: {
       type: "int",
       primary: true,
       generated: true,
       generationStrategy: "identity",
-      primaryKeyConstraintName: "PK_SnsAnalyses",
     },
     CropID: {
       type: "int",

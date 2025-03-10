@@ -2120,7 +2120,7 @@ class UpdateRecommendation {
   }
   async getSnsAnalysesData(id) {
     const data = await this.snsAnalysisRepository.findOne({
-      where: { CropID: id }, // This line is correct as per your entity definition
+      where: { CropID: id }, 
     });
 
     return data;
