@@ -1,19 +1,18 @@
 const { EntitySchema } = require("typeorm");
-const FieldEntity = require("./field.entity");
+//const CropEntity = require("./crop.entity");
 const UserEntity = require("./user.entity");
 
 const SnsAnalysesEntity = new EntitySchema({
   name: "SnsAnalyses",
   tableName: "SnsAnalyses",
   columns: {
-    Id: {
+    ID: {
       type: "int",
       primary: true,
       generated: true,
       generationStrategy: "identity",
-      primaryKeyConstraintName: "PK_SnsAnalyses",
     },
-    FieldID: {
+    CropID: {
       type: "int",
     },
     SampleDate: {
@@ -99,13 +98,11 @@ const SnsAnalysesEntity = new EntitySchema({
     },
   },
   relations: {
-    Field: {
+    Crops: {
       type: "many-to-one",
-      target: "Field", // reference to FieldEntity
-      inverseSide: "SnsAnalyses",
-      joinColumn: {
-        name: "FieldID", // the one-to-many relation defined in FieldEntity
-      },
+      target: "Crop",
+      joinColumn: { name: "CropID" },
+      inverseSide: "CropIDSnsAnalyses",
     },
     CreatedByUser: {
       type: "many-to-one",

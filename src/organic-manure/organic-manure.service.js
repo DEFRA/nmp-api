@@ -728,7 +728,7 @@ class OrganicManureService extends BaseService {
 
   async getSnsAnalysesData(id) {
     const data = await this.snsAnalysisRepository.findOne({
-      where: { FieldID: id }, // This line is correct as per your entity definition
+      where: { CropID: id },
     });
 
     return data;
@@ -1497,7 +1497,7 @@ class OrganicManureService extends BaseService {
             HttpStatus.BAD_REQUEST
           );
 
-        const snsAnalysesData = await this.getSnsAnalysesData(fieldData.ID);
+        const snsAnalysesData = await this.getSnsAnalysesData(cropData.ID);
 
         let isNextYearPlanExist = false;
         let isNextYearOrganicManureExist = false;
