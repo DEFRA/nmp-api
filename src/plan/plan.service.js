@@ -293,21 +293,30 @@ class PlanService extends BaseService {
     };
     if (soilAnalysis) {
       soilAnalysis?.forEach((soilAnalysis) => {
-        nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
-          soilAnalysisDate: soilAnalysis.Date,
-          soilpH: soilAnalysis.PH,
-          sulphurDeficient: soilAnalysis.SulphurDeficient,
-          snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
-          pIndexId: soilAnalysis.PhosphorusIndex,
-          kIndexId: soilAnalysis.PotassiumIndex,
-          mgIndexId: soilAnalysis.MagnesiumIndex,
-          snsMethodologyId: 4,
-          pMethodologyId: 0,
-          kMethodologyId: 4,
-          mgMethodologyId: 4,
-        });
+        const soilAnalysisData = {
+          ...(soilAnalysis.Date && { soilAnalysisDate: soilAnalysis.Date }),
+          ...(soilAnalysis.PH && { soilpH: soilAnalysis.PH }),
+          ...(soilAnalysis.SulphurDeficient && {
+            sulphurDeficient: soilAnalysis.SulphurDeficient,
+          }),
+          ...(soilAnalysis.PhosphorusIndex && {
+            pIndexId: soilAnalysis.PhosphorusIndex,
+          }),
+          ...(soilAnalysis.PotassiumIndex && {
+            kIndexId: soilAnalysis.PotassiumIndex,
+          }),
+          ...(soilAnalysis.MagnesiumIndex && {
+            mgIndexId: soilAnalysis.MagnesiumIndex,
+          }),
+          pMethodologyId: 0
+        };
+
+        nutrientRecommendationnReqBody.field.soil.soilAnalyses.push(
+          soilAnalysisData
+        );
       });
     }
+
 
     // Add SnsAnalyses data
     if (snsAnalysesData) {
@@ -1413,7 +1422,10 @@ class PlanService extends BaseService {
             allPKBalanceData,
             allCropData
           );
-       
+       console.log(
+         "nutrientRecommendationnReqBodysoil",
+         nutrientRecommendationnReqBody.field.soil.soilAnalyses
+       );
         const nutrientRecommendationsData =
           await this.rB209RecommendationService.postData(
             "Recommendation/Recommendations",

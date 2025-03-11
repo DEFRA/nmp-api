@@ -11,8 +11,6 @@ class SNSAnalysesController {
     this.#snsAnalysisService = new SnsAnalysisService();
   }
 
-
-
   async getSNSAnalysesByCropId() {
     const { cropId } = this.#request.params;
     let selectOptions = {};
@@ -38,6 +36,46 @@ class SNSAnalysesController {
         userId,
         this.#request
       );
+      return this.#h.response({ data });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+
+  async deleteSnsAnalysisById() {
+    const { snsAnalysisId } = this.#request.params;
+    const userId = this.#request.userId;
+    try {
+      const result = await this.#snsAnalysisService.deleteSnsAnalysis(
+        snsAnalysisId,
+        userId,
+        this.#request
+      );
+      if (result?.affectedRows === 0) {
+        throw boom.notFound(`Snsanalysis with ID ${snsAnalysisId} not found.`);
+      }
+      return this.#h.response({
+        message: "Snsanalysis deleted successfully.",
+      });
+    } catch (error) {
+      return this.#h.response({ error: error.message });
+    }
+  }
+
+  async updateSnsAnalysis() {
+    const { snsAnalysisId } = this.#request.params;
+    const updatedSnsAnalysisData = this.#request.payload;
+    const userId = this.#request.userId;
+  
+console.log("updatedSnsAnalysisData", updatedSnsAnalysisData);
+    try {
+      const data = await this.#snsAnalysisService.updateSnsAnalysis(
+        updatedSnsAnalysisData,
+        userId,
+        parseInt(snsAnalysisId),
+        this.#request
+      );
+
       return this.#h.response({ data });
     } catch (error) {
       return this.#h.response({ error });
