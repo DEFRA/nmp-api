@@ -136,7 +136,7 @@ class SnsAnalysisService extends BaseService {
       const { CreatedByID, CreatedOn,CropID, ...updatedData } =
         updatedSnsAnalysisData.SnsAnalysis;
 
-      // Update SoilAnalysis
+      // Update snsAnalyses
       const result = await transactionalManager.update(
         SnsAnalysesEntity,
         snsAnalysisId,
@@ -148,7 +148,7 @@ class SnsAnalysisService extends BaseService {
       );
 
       if (result.affected === 0) {
-        throw new Error(`Soil Analysis with ID ${snsAnalysisId} not found`);
+        throw new Error(`Sns Analysis with ID ${snsAnalysisId} not found`);
       }
 
       const SnsAnalysis = await transactionalManager.findOne(
