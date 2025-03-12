@@ -438,4 +438,72 @@ module.exports = [
       return controller.deleteCropsByIds();
     },
   },
+  {
+    method: "GET",
+    path: "/crops/GroupNameExist/{cropIds}",
+    options: {
+      tags: ["api", "Crop"],
+      description: "Crop group name already exist or not",
+      validate: {
+        params: Joi.object({
+          cropIds: Joi.string().required(),
+        }),
+        query: Joi.object({
+          newGroupName: Joi.string().required(),
+          year:Joi.number().integer().required()
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new CropController(request, h);
+      return controller.CropGroupNameExists();
+    },
+  },
+  {
+    method: "PUT",
+    path: "/crops/CropGroupName/{cropIds}",
+    options: {
+      tags: ["api", "Crop"],
+      description: "Update crop group name by crop ID",
+      validate: {
+        params: Joi.object({
+          cropIds: Joi.string().required(),
+        }),
+        query: Joi.object({
+          cropGroupName: Joi.string().required(),
+          year:Joi.number().integer().required()
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new CropController(request, h);
+      return controller.updateCropGroupName(); // Assuming this method exists in your controller
+    },
+  },
 ];
