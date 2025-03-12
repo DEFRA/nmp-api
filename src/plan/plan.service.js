@@ -301,6 +301,7 @@ class PlanService extends BaseService {
           }),
           ...(soilAnalysis.PhosphorusIndex && {
             pIndexId: soilAnalysis.PhosphorusIndex,
+            pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
           }),
           ...(soilAnalysis.PotassiumIndex && {
             kIndexId: soilAnalysis.PotassiumIndex,
@@ -308,7 +309,7 @@ class PlanService extends BaseService {
           ...(soilAnalysis.MagnesiumIndex && {
             mgIndexId: soilAnalysis.MagnesiumIndex,
           }),
-          pMethodologyId: 0
+      
         };
 
         nutrientRecommendationnReqBody.field.soil.soilAnalyses.push(
@@ -319,16 +320,16 @@ class PlanService extends BaseService {
 
 
     // Add SnsAnalyses data
-    if (snsAnalysesData) {
-      nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
-        soilAnalysisDate: snsAnalysesData.SampleDate, // Using snsAnalysesData.SampleDate
-        snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex, // Using snsAnalysesData.SoilNitrogenSupplyIndex
-        snsMethodologyId: 4,
-        pMethodologyId: 0,
-        kMethodologyId: 4,
-        mgMethodologyId: 4,
-      });
-    }
+    // if (snsAnalysesData) {
+    //   nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
+    //     soilAnalysisDate: snsAnalysesData.SampleDate, // Using snsAnalysesData.SampleDate
+    //     snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex, // Using snsAnalysesData.SoilNitrogenSupplyIndex
+    //     snsMethodologyId: 4,
+    //     pMethodologyId: 0,
+    //     kMethodologyId: 4,
+    //     mgMethodologyId: 4,
+    //   });
+    // }
 
     if (previousCrop) {
       const cropType = cropTypesList.find(
