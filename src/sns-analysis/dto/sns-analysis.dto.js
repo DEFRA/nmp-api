@@ -1,8 +1,9 @@
 const Joi = require("joi");
 
 const SnsAnalysisDto = Joi.object({
+  ID: Joi.number().integer().allow(null),
   CropID: Joi.number().integer().required(),
-  CurrentCropTypeID: Joi.number().integer().required(),
+  CropTypeID: Joi.number().integer().required(),
   SampleDate: Joi.date().iso().optional().allow(null),
   SnsAt0to30cm: Joi.number().integer().optional().allow(null),
   SnsAt30to60cm: Joi.number().integer().optional().allow(null),
