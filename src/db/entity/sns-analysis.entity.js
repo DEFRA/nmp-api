@@ -44,12 +44,6 @@ const SnsAnalysesEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
-    GreenAreaIndex: {
-      type: "decimal",
-      precision: 18,
-      scale: 3,
-      nullable: true,
-    },
     CropHeight: {
       type: "decimal",
       precision: 18,
@@ -60,7 +54,7 @@ const SnsAnalysesEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
-    CropTypeID: {
+    CurrentCropTypeID: {
       type: "int",
     },
     PercentageOfOrganicMatter: {

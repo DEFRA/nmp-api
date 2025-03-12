@@ -1,6 +1,7 @@
 const Joi = require("joi");
 
 const SnsAnalysisDto = Joi.object({
+  ID: Joi.number().integer().allow(null),
   CropID: Joi.number().integer().required(),
   CropTypeID: Joi.number().integer().required(),
   SampleDate: Joi.date().iso().optional().allow(null),
@@ -10,7 +11,6 @@ const SnsAnalysisDto = Joi.object({
   SampleDepth: Joi.number().integer().optional().allow(null),
   SoilMineralNitrogen: Joi.number().integer().optional().allow(null),
   NumberOfShoots: Joi.number().integer().optional().allow(null),
-  GreenAreaIndex: Joi.number().precision(3).optional().allow(null),
   CropHeight: Joi.number().precision(3).optional().allow(null),
   SeasonId: Joi.number().integer().optional().allow(null),
   PercentageOfOrganicMatter: Joi.number().precision(3).optional().allow(null),
