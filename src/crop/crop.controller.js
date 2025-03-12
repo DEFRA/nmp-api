@@ -295,6 +295,47 @@ class CropController {
       return this.#h.response({ error: error.message });
     }
   }
+  async CropGroupNameExists() {
+    const { cropIds } = this.#request.params;
+    const { newGroupName} = this.#request.query;
+    const { year} = this.#request.query;
+
+    try {
+      const cropIdsArray = cropIds.split(",").map((id) => parseInt(id));
+      const cropGroupNameAlreadyExist =
+        await this.#cropService.CropGroupNameExists(
+          cropIdsArray,
+          newGroupName,
+          year
+        );
+      return this.#h.response(cropGroupNameAlreadyExist);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+  async updateCropGroupName() {
+    try {
+      const { cropIds } = this.#request.params;
+      const { cropGroupName} = this.#request.query;
+      const { year} = this.#request.query;
+      const userId = this.#request.userId;
+      const cropIdsArray = cropIds.split(",").map((id) => parseInt(id));
+      const updateCropGroupName =
+      await this.#cropService.updateCropGroupName(
+        cropIdsArray,
+        cropGroupName,
+        year,
+        userId
+      );
+      return this.#h.response(updateCropGroupName); // Return the updated crop
+    } catch (error) {
+      console.error(
+        "Error in updateCropGroupName controller:",
+        error
+      );
+      return this.#h.response({ error }); // Return error response
+    }
+  }
 }
 
 module.exports = { CropController };
