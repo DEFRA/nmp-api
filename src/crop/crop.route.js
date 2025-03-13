@@ -483,7 +483,8 @@ module.exports = [
           cropIds: Joi.string().required(),
         }),
         query: Joi.object({
-          cropGroupName: Joi.string().required(),
+          cropGroupName: Joi.string(),
+          variety: Joi.string(),
           year:Joi.number().integer().required()
         }),
         failAction: (request, h, err) => {
