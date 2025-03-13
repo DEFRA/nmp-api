@@ -499,7 +499,7 @@ class CropService extends BaseService {
     return await existingGroupNameCount.getCount();
   }
 
-  async updateCropGroupName(cropIds, cropGroupName, year, userId) {
+  async updateCropGroupName(cropIds, cropGroupName,variety, year, userId) {
     console.log('cropGroupName',cropGroupName)
     const result = await AppDataSource.transaction(
       async (transactionalManager) => {
@@ -520,6 +520,7 @@ class CropService extends BaseService {
             { ID: crop.ID },
             {
               CropGroupName: cropGroupName,
+              Variety:variety,
               ModifiedByID: userId,
               ModifiedOn: new Date(),
             }

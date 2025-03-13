@@ -317,6 +317,7 @@ class CropController {
     try {
       const { cropIds } = this.#request.params;
       const { cropGroupName} = this.#request.query;
+      const {variety} = this.#request.query;
       const { year} = this.#request.query;
       const userId = this.#request.userId;
       const cropIdsArray = cropIds.split(",").map((id) => parseInt(id));
@@ -324,6 +325,7 @@ class CropController {
       await this.#cropService.updateCropGroupName(
         cropIdsArray,
         cropGroupName,
+        variety,
         year,
         userId
       );
