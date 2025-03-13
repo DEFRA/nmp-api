@@ -1,6 +1,7 @@
 const Joi = require("joi");
 
 const SnsAnalysisDto = Joi.object({
+  ID: Joi.number().integer().allow(null),
   CropID: Joi.number().integer().required(),
   CropTypeID: Joi.number().integer().required(),
   SampleDate: Joi.date().iso().optional().allow(null),
