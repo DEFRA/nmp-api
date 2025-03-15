@@ -86,7 +86,7 @@ class SoilAnalysesService extends BaseService {
             ModifiedByID: userId,
           };
 
-          console.log("aaaaaaa", saveAndUpdatePKBalance);
+       
           if (saveAndUpdatePKBalance) {
             await transactionalManager.save(
               PKBalanceEntity,
@@ -279,7 +279,6 @@ class SoilAnalysesService extends BaseService {
         const storedProcedure = "EXEC spSoilAnalyses_DeleteSoilAnalyses @SoilAnalysesID = @0";
         await AppDataSource.query(storedProcedure, [soilAnalysisId]);
 
-        console.log("start");
         this.UpdateRecommendation.updateRecommendationsForField(
           soilAnalysisToDelete.FieldID,
           soilAnalysisToDelete.Year,

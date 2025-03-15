@@ -387,8 +387,7 @@ class OrganicManureService extends BaseService {
       });
     }
 
-
-    if(dataMultipleCrops.length > 1 && mannerOutputs?.data){
+    if (dataMultipleCrops.length > 1 && mannerOutputs?.data) {
       // Add current crop mannerOutputs or OrganicManure data
       nutrientRecommendationnReqBody.field.mannerOutputs.push({
         id: firstCropMannerOutput ? 2 : 1,
@@ -420,7 +419,7 @@ class OrganicManureService extends BaseService {
           ? mannerOutputs.data.totalMgO
           : OrganicManure.TotalMgO,
       });
-    }else if (dataMultipleCrops.length < 2) {
+    } else if (dataMultipleCrops.length < 2) {
       // Add current crop mannerOutputs or OrganicManure data
       nutrientRecommendationnReqBody.field.mannerOutputs.push({
         id: crop.CropOrder,
@@ -454,33 +453,72 @@ class OrganicManureService extends BaseService {
       });
     }
 
+    // Add SoilAnalyses data
     if (soilAnalysis) {
-      soilAnalysis?.forEach((soilAnalysis) => {
-        nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
-          soilAnalysisDate: soilAnalysis.Date,
-          soilpH: soilAnalysis.PH,
-          sulphurDeficient: soilAnalysis.SulphurDeficient,
-          snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
-          pIndexId: soilAnalysis.PhosphorusIndex,
-          kIndexId: soilAnalysis.PotassiumIndex,
-          mgIndexId: soilAnalysis.MagnesiumIndex,
-          snsMethodologyId: 4,
-          pMethodologyId: 0,
-          kMethodologyId: 4,
-          mgMethodologyId: 4,
-        });
+      soilAnalysis.forEach((soilAnalysis) => {
+        const soilAnalysisData = {
+          ...(soilAnalysis.Date && { soilAnalysisDate: soilAnalysis.Date }),
+          ...(soilAnalysis.PH && { soilpH: soilAnalysis.PH }),
+          ...(soilAnalysis.SulphurDeficient && {
+            sulphurDeficient: soilAnalysis.SulphurDeficient,
+          }),
+          ...(soilAnalysis.SoilNitrogenSupplyIndex && {
+            snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
+          }),
+          ...(soilAnalysis.PhosphorusIndex && {
+            pIndexId: soilAnalysis.PhosphorusIndex,
+            pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
+          }),
+          ...(soilAnalysis.PotassiumIndex && {
+            kIndexId: soilAnalysis.PotassiumIndex,
+          }),
+          ...(soilAnalysis.MagnesiumIndex && {
+            mgIndexId: soilAnalysis.MagnesiumIndex,
+          }),
+        };
+
+        // Only push if there's actual data
+        if (Object.keys(soilAnalysisData).length > 0) {
+          nutrientRecommendationnReqBody.field.soil.soilAnalyses.push(
+            soilAnalysisData
+          );
+        }
       });
     }
+
     // Add SnsAnalyses data
-    if (snsAnalysesData) {
-      nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
-        soilAnalysisDate: snsAnalysesData.SampleDate, // Using snsAnalysesData.SampleDate
-        snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex, // Using snsAnalysesData.SoilNitrogenSupplyIndex
-        snsMethodologyId: 4,
-        pMethodologyId: 0,
-        kMethodologyId: 4,
-        mgMethodologyId: 4,
+    if (Array.isArray(snsAnalysesData)) {
+      snsAnalysesData.forEach((analysis) => {
+        const snsAnalysisData = {
+          ...(analysis.SampleDate && { soilAnalysisDate: analysis.SampleDate }),
+          ...(analysis.SoilNitrogenSupplyIndex && {
+            snsIndexId: analysis.SoilNitrogenSupplyIndex,
+          }),
+        };
+
+        // Only push if there's actual data
+        if (Object.keys(snsAnalysisData).length > 0) {
+          nutrientRecommendationnReqBody.field.soil.soilAnalyses.push(
+            snsAnalysisData
+          );
+        }
       });
+    } else if (snsAnalysesData) {
+      const snsAnalysisData = {
+        ...(snsAnalysesData.SampleDate && {
+          soilAnalysisDate: snsAnalysesData.SampleDate,
+        }),
+        ...(snsAnalysesData.SoilNitrogenSupplyIndex && {
+          snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex,
+        }),
+      };
+
+      // Only push if there's actual data
+      if (Object.keys(snsAnalysisData).length > 0) {
+        nutrientRecommendationnReqBody.field.soil.soilAnalyses.push(
+          snsAnalysisData
+        );
+      }
     }
 
     if (previousCrop) {
@@ -728,7 +766,7 @@ class OrganicManureService extends BaseService {
 
   async getSnsAnalysesData(id) {
     const data = await this.snsAnalysisRepository.findOne({
-      where: { FieldID: id }, // This line is correct as per your entity definition
+      where: { CropID: id },
     });
 
     return data;
@@ -1497,7 +1535,36 @@ class OrganicManureService extends BaseService {
             HttpStatus.BAD_REQUEST
           );
 
-        const snsAnalysesData = await this.getSnsAnalysesData(fieldData.ID);
+
+
+        let snsAnalysesData = null;
+
+        // Check if more than one crop exists in dataMultipleCrops
+        if (dataMultipleCrops.length > 1) {
+          // Initialize snsAnalysesData as an array if multiple crops are found
+          snsAnalysesData = [];
+
+          // Loop through each crop in dataMultipleCrops
+          for (const singleCrop of dataMultipleCrops) {
+            // Retrieve snsAnalysesData for each crop by crop.ID
+            const analysisData = await this.getSnsAnalysesData(singleCrop.ID);
+
+            // Check if snsAnalysesData exists (not null or empty)
+            if (analysisData && analysisData.length > 0) {
+              // Push to snsAnalysesData array if snsAnalysesData is found
+              snsAnalysesData.push(analysisData);
+            }
+          }
+        } else if (dataMultipleCrops.length === 1) {
+          // If there is only one crop, get snsAnalysesData for that crop
+          const analysisData = await this.getSnsAnalysesData(crop.ID);
+
+          // Check if snsAnalysesData exists and assign directly as an object
+          if (analysisData && analysisData.length > 0) {
+            snsAnalysesData = analysisData; // Assign snsAnalysesData directly as an object
+          }
+        }
+
 
         let isNextYearPlanExist = false;
         let isNextYearOrganicManureExist = false;

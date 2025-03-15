@@ -34,4 +34,5 @@ module.exports = [
   ...require("./excess-winter-rainfall-options/excess-winter-rainfall-options.route"),
   ...require("./excess-rainfall/excess-rainfall.route"),
   ...require("./user-extension/user-extension.route"),
+  ...require("./sns-analysis/sns-analysis.route"),
 ];

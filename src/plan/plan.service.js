@@ -293,33 +293,43 @@ class PlanService extends BaseService {
     };
     if (soilAnalysis) {
       soilAnalysis?.forEach((soilAnalysis) => {
-        nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
-          soilAnalysisDate: soilAnalysis.Date,
-          soilpH: soilAnalysis.PH,
-          sulphurDeficient: soilAnalysis.SulphurDeficient,
-          snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
-          pIndexId: soilAnalysis.PhosphorusIndex,
-          kIndexId: soilAnalysis.PotassiumIndex,
-          mgIndexId: soilAnalysis.MagnesiumIndex,
-          snsMethodologyId: 4,
-          pMethodologyId: 0,
-          kMethodologyId: 4,
-          mgMethodologyId: 4,
-        });
+        const soilAnalysisData = {
+          ...(soilAnalysis.Date && { soilAnalysisDate: soilAnalysis.Date }),
+          ...(soilAnalysis.PH && { soilpH: soilAnalysis.PH }),
+          ...(soilAnalysis.SulphurDeficient && {
+            sulphurDeficient: soilAnalysis.SulphurDeficient,
+          }),
+          ...(soilAnalysis.PhosphorusIndex && {
+            pIndexId: soilAnalysis.PhosphorusIndex,
+            pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
+          }),
+          ...(soilAnalysis.PotassiumIndex && {
+            kIndexId: soilAnalysis.PotassiumIndex,
+          }),
+          ...(soilAnalysis.MagnesiumIndex && {
+            mgIndexId: soilAnalysis.MagnesiumIndex,
+          }),
+      
+        };
+
+        nutrientRecommendationnReqBody.field.soil.soilAnalyses.push(
+          soilAnalysisData
+        );
       });
     }
 
+
     // Add SnsAnalyses data
-    if (snsAnalysesData) {
-      nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
-        soilAnalysisDate: snsAnalysesData.SampleDate, // Using snsAnalysesData.SampleDate
-        snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex, // Using snsAnalysesData.SoilNitrogenSupplyIndex
-        snsMethodologyId: 4,
-        pMethodologyId: 0,
-        kMethodologyId: 4,
-        mgMethodologyId: 4,
-      });
-    }
+    // if (snsAnalysesData) {
+    //   nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
+    //     soilAnalysisDate: snsAnalysesData.SampleDate, // Using snsAnalysesData.SampleDate
+    //     snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex, // Using snsAnalysesData.SoilNitrogenSupplyIndex
+    //     snsMethodologyId: 4,
+    //     pMethodologyId: 0,
+    //     kMethodologyId: 4,
+    //     mgMethodologyId: 4,
+    //   });
+    // }
 
     if (previousCrop) {
       const cropType = cropTypesList.find(
@@ -478,7 +488,7 @@ class PlanService extends BaseService {
 
   async getSnsAnalysesData(id) {
     const data = await this.snsAnalysisRepository.findOneBy({
-      FieldID: id, // Assuming FieldID is the correct field
+      CropID: id, 
     });
 
     return data;
@@ -1345,7 +1355,7 @@ class PlanService extends BaseService {
           throw new Error(JSON.stringify(Errors));
         }
 
-        const snsAnalysesData = await this.getSnsAnalysesData(fieldId);
+        const snsAnalysesData = await this.getSnsAnalysesData(crop?.ID);
         if (crop.CropTypeID === 170) {
           await this.savedDefault(cropData, userId, transactionalManager);
           if (isSoilAnalysisHavePAndK) {
@@ -1413,7 +1423,10 @@ class PlanService extends BaseService {
             allPKBalanceData,
             allCropData
           );
-       
+       console.log(
+         "nutrientRecommendationnReqBodysoil",
+         nutrientRecommendationnReqBody.field.soil.soilAnalyses
+       );
         const nutrientRecommendationsData =
           await this.rB209RecommendationService.postData(
             "Recommendation/Recommendations",

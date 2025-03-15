@@ -128,7 +128,8 @@ const baseConfig = {
     CropInfoQuestionsEntity,
     ExcessRainfallsEntity,
     ExcessWinterRainfallOptionsEntity,
-    UserExtensionsEntity
+    UserExtensionsEntity,
+
   ],
   migrations: [],
   subscribers: [],
