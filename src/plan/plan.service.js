@@ -966,9 +966,9 @@ class PlanService extends BaseService {
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString() || null,
-      NIndex: null,
-    };
+      SIndex: null,
+      NIndex: null
+    }
 
     let cropOrder2Data = {
       CropN: null,
@@ -997,8 +997,8 @@ class PlanService extends BaseService {
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
-      NIndex: null,
+      SIndex: null,
+      NIndex: null
     };
     let nIndex;
     // Iterate through the nutrient recommendations data
