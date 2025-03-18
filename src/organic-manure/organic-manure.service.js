@@ -1556,8 +1556,9 @@ class OrganicManureService extends BaseService {
             }
           }
         } else if (dataMultipleCrops.length === 1) {
+     
           // If there is only one crop, get snsAnalysesData for that crop
-          const analysisData = await this.getSnsAnalysesData(crop.ID);
+          const analysisData = await this.getSnsAnalysesData(cropData.ID);
 
           // Check if snsAnalysesData exists and assign directly as an object
           if (analysisData && analysisData.length > 0) {
