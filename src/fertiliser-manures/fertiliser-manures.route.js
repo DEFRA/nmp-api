@@ -137,4 +137,68 @@ module.exports = [
       return controller.deleteFertiliserById();
     },
   },
+
+  {
+    method: "GET",
+    path: "/fertiliser-manures/{fertiliserId}",
+    options: {
+      tags: ["api", "Fertiliser Manures"],
+      description: "Get fertliser by ID",
+      validate: {
+        params: Joi.object({
+          fertiliserId: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      return getController(request, h).getFertiliserById();
+    },
+  },
+  {
+    method: "GET",
+    path: "/fertiliser-manures/FertliserData/{fertiliserId}",
+    options: {
+      tags: ["api", "Fertiliser Manures"],
+      description: "Get fertliser by farmId and harvest year",
+      validate: {
+        params: Joi.object({
+          fertiliserId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          farmId: Joi.number().integer().required(),
+          harvestYear: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new FertiliserManuresController(request, h);
+      return controller.getFertiliserByFarmIdAndYear();
+    },
+  }
 ];
