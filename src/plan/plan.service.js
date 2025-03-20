@@ -299,6 +299,7 @@ class PlanService extends BaseService {
           ...(soilAnalysis.SulphurDeficient && {
             sulphurDeficient: soilAnalysis.SulphurDeficient,
           }),
+          snsMethodologyId: 4,
           ...(soilAnalysis.PhosphorusIndex && {
             pIndexId: soilAnalysis.PhosphorusIndex,
             pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
@@ -309,7 +310,8 @@ class PlanService extends BaseService {
           ...(soilAnalysis.MagnesiumIndex && {
             mgIndexId: soilAnalysis.MagnesiumIndex,
           }),
-      
+          kMethodologyId: 4,
+          mgMethodologyId: 4,
         };
 
         nutrientRecommendationnReqBody.field.soil.soilAnalyses.push(

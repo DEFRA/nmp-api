@@ -462,6 +462,7 @@ class OrganicManureService extends BaseService {
           ...(soilAnalysis.SulphurDeficient && {
             sulphurDeficient: soilAnalysis.SulphurDeficient,
           }),
+          snsMethodologyId: 4,
           ...(soilAnalysis.SoilNitrogenSupplyIndex && {
             snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
           }),
@@ -475,6 +476,8 @@ class OrganicManureService extends BaseService {
           ...(soilAnalysis.MagnesiumIndex && {
             mgIndexId: soilAnalysis.MagnesiumIndex,
           }),
+          kMethodologyId: 4,
+          mgMethodologyId: 4,
         };
 
         // Only push if there's actual data
@@ -511,6 +514,7 @@ class OrganicManureService extends BaseService {
         ...(snsAnalysesData.SoilNitrogenSupplyIndex && {
           snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex,
         }),
+        
       };
 
       // Only push if there's actual data

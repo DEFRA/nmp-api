@@ -798,8 +798,10 @@ class UpdateRecommendation {
         const existingRecommendation = allRecommendations.find(
           (mp) => mp.ManagementPeriodID === secondCropManagementData.ID
         );
-        let mannerOutputs = null,firstCropMannerOutput=null,secondCropMannerOutput=null;
-        const nutrientRecommendationnReqBodywithoutManure=null;
+        let mannerOutputs = null,
+          firstCropMannerOutput = null,
+          secondCropMannerOutput = null;
+        const nutrientRecommendationnReqBodywithoutManure = null;
         let savedData = await this.saveRecommendationsForMultipleCrops(
           transactionalManager,
           nutrientRecommendationsData,
@@ -835,6 +837,19 @@ class UpdateRecommendation {
               RecommendationID: savedRecommendation?.ID,
             },
           });
+
+          for (const existingComment of existingallComments) {
+            const nutrientIdExists = Object.keys(notesByNutrient).some(
+              (nutrientId) => parseInt(nutrientId) === existingComment.Nutrient
+            );
+
+            // If the nutrientId does not exist, delete the comment using transactionalManager
+            if (!nutrientIdExists) {
+              await transactionalManager.delete(RecommendationCommentEntity, {
+                ID: existingComment.ID,
+              });
+            }
+          }
         for (const nutrientId in notesByNutrient) {
           const concatenatedNote = notesByNutrient[nutrientId]?.join(" <br/>"); // Concatenate notes for the same nutrientId
 
@@ -873,6 +888,19 @@ class UpdateRecommendation {
             );
           }
         }
+        // After updating or creating new comments, check for comments in existingallComments
+        // for (const existingComment of existingallComments) {
+        //   const nutrientIdExists = Object.keys(notesByNutrient).some(
+        //     (nutrientId) => parseInt(nutrientId) === existingComment.Nutrient
+        //   );
+
+        //   // If the nutrientId does not exist, delete the comment using transactionalManager
+        //   if (!nutrientIdExists) {
+        //     await transactionalManager.delete(RecommendationCommentEntity, {
+        //       ID: existingComment.ID,
+        //     });
+        //   }
+        // }
         Recommendations.push({
           Recommendation: savedRecommendation,
           RecommendationComments,
@@ -2118,6 +2146,7 @@ class UpdateRecommendation {
           ...(soilAnalysis.SoilNitrogenSupplyIndex && {
             snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
           }),
+             snsMethodologyId: 4,
           ...(soilAnalysis.PhosphorusIndex && {
             pIndexId: soilAnalysis.PhosphorusIndex,
             pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
@@ -2128,6 +2157,8 @@ class UpdateRecommendation {
           ...(soilAnalysis.MagnesiumIndex && {
             mgIndexId: soilAnalysis.MagnesiumIndex,
           }),
+          kMethodologyId: 4,
+          mgMethodologyId: 4,
         };
 
         // Only push if there's actual data
@@ -2331,6 +2362,7 @@ class UpdateRecommendation {
           ...(soilAnalysis.SoilNitrogenSupplyIndex && {
             snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
           }),
+          snsMethodologyId: 4,
           ...(soilAnalysis.PhosphorusIndex && {
             pIndexId: soilAnalysis.PhosphorusIndex,
             pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
@@ -2341,7 +2373,8 @@ class UpdateRecommendation {
           ...(soilAnalysis.MagnesiumIndex && {
             mgIndexId: soilAnalysis.MagnesiumIndex,
           }),
-        
+          kMethodologyId: 4,
+          mgMethodologyId: 4,
         };
 
         // Only push if there's actual data
