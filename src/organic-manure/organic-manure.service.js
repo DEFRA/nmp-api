@@ -496,6 +496,7 @@ class OrganicManureService extends BaseService {
           ...(analysis.SampleDate && { soilAnalysisDate: analysis.SampleDate }),
           ...(analysis.SoilNitrogenSupplyIndex && {
             snsIndexId: analysis.SoilNitrogenSupplyIndex,
+            snsMethodologyId: 4,
           }),
         };
 
@@ -513,8 +514,8 @@ class OrganicManureService extends BaseService {
         }),
         ...(snsAnalysesData.SoilNitrogenSupplyIndex && {
           snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex,
+          snsMethodologyId: 4,
         }),
-        
       };
 
       // Only push if there's actual data

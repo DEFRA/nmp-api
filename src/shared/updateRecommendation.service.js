@@ -2394,6 +2394,7 @@ class UpdateRecommendation {
           ...(analysis.SampleDate && { soilAnalysisDate: analysis.SampleDate }),
           ...(analysis.SoilNitrogenSupplyIndex && {
             snsIndexId: analysis.SoilNitrogenSupplyIndex,
+            snsMethodologyId: 4,
           }),
         };
 
@@ -2411,6 +2412,7 @@ class UpdateRecommendation {
         }),
         ...(snsAnalysesData.SoilNitrogenSupplyIndex && {
           snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex,
+          snsMethodologyId: 4,
         }),
       };
 
