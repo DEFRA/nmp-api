@@ -464,6 +464,7 @@ class OrganicManureService extends BaseService {
           }),
           ...(soilAnalysis.SoilNitrogenSupplyIndex && {
             snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
+            snsMethodologyId: 4,
           }),
           ...(soilAnalysis.PhosphorusIndex && {
             pIndexId: soilAnalysis.PhosphorusIndex,
@@ -471,9 +472,11 @@ class OrganicManureService extends BaseService {
           }),
           ...(soilAnalysis.PotassiumIndex && {
             kIndexId: soilAnalysis.PotassiumIndex,
+            kMethodologyId: 4,
           }),
           ...(soilAnalysis.MagnesiumIndex && {
             mgIndexId: soilAnalysis.MagnesiumIndex,
+            mgMethodologyId: 4,
           }),
         };
 
@@ -493,6 +496,7 @@ class OrganicManureService extends BaseService {
           ...(analysis.SampleDate && { soilAnalysisDate: analysis.SampleDate }),
           ...(analysis.SoilNitrogenSupplyIndex && {
             snsIndexId: analysis.SoilNitrogenSupplyIndex,
+            snsMethodologyId: 4,
           }),
         };
 
@@ -510,6 +514,7 @@ class OrganicManureService extends BaseService {
         }),
         ...(snsAnalysesData.SoilNitrogenSupplyIndex && {
           snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex,
+          snsMethodologyId: 4,
         }),
       };
 
