@@ -2145,20 +2145,21 @@ class UpdateRecommendation {
           }),
           ...(soilAnalysis.SoilNitrogenSupplyIndex && {
             snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
+            snsMethodologyId: 4,
           }),
-             snsMethodologyId: 4,
+          snsMethodologyId: 4,
           ...(soilAnalysis.PhosphorusIndex && {
             pIndexId: soilAnalysis.PhosphorusIndex,
             pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
           }),
           ...(soilAnalysis.PotassiumIndex && {
             kIndexId: soilAnalysis.PotassiumIndex,
+            kMethodologyId: 4,
           }),
           ...(soilAnalysis.MagnesiumIndex && {
             mgIndexId: soilAnalysis.MagnesiumIndex,
+            mgMethodologyId: 4,
           }),
-          kMethodologyId: 4,
-          mgMethodologyId: 4,
         };
 
         // Only push if there's actual data
@@ -2361,20 +2362,20 @@ class UpdateRecommendation {
           }),
           ...(soilAnalysis.SoilNitrogenSupplyIndex && {
             snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
+            snsMethodologyId: 4,
           }),
-          snsMethodologyId: 4,
           ...(soilAnalysis.PhosphorusIndex && {
             pIndexId: soilAnalysis.PhosphorusIndex,
             pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
           }),
           ...(soilAnalysis.PotassiumIndex && {
             kIndexId: soilAnalysis.PotassiumIndex,
+            kMethodologyId: 4,
           }),
           ...(soilAnalysis.MagnesiumIndex && {
             mgIndexId: soilAnalysis.MagnesiumIndex,
+            mgMethodologyId: 4,
           }),
-          kMethodologyId: 4,
-          mgMethodologyId: 4,
         };
 
         // Only push if there's actual data

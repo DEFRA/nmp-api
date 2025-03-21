@@ -299,19 +299,22 @@ class PlanService extends BaseService {
           ...(soilAnalysis.SulphurDeficient && {
             sulphurDeficient: soilAnalysis.SulphurDeficient,
           }),
-          snsMethodologyId: 4,
+          ...(soilAnalysis.SoilNitrogenSupplyIndex && {
+            snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
+            snsMethodologyId: 4,
+          }),
           ...(soilAnalysis.PhosphorusIndex && {
             pIndexId: soilAnalysis.PhosphorusIndex,
             pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
           }),
           ...(soilAnalysis.PotassiumIndex && {
             kIndexId: soilAnalysis.PotassiumIndex,
+            kMethodologyId: 4,
           }),
           ...(soilAnalysis.MagnesiumIndex && {
             mgIndexId: soilAnalysis.MagnesiumIndex,
+            mgMethodologyId: 4,
           }),
-          kMethodologyId: 4,
-          mgMethodologyId: 4,
         };
 
         nutrientRecommendationnReqBody.field.soil.soilAnalyses.push(
