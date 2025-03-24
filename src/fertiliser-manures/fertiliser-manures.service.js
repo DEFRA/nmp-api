@@ -370,14 +370,15 @@ class FertiliserManuresService extends BaseService {
   async updateFertiliser(
     updatedFertiliserManureData,
     userId,
-    fertiliserId,
     request
   ) {
     return await AppDataSource.transaction(async (transactionalManager) => {
+      const updatedFertilisers = [];
+      for (const manure of updatedFertiliserManureData) {
       console.log("updatedFertiliserManureData", updatedFertiliserManureData);
-      const { ID, CreatedByID, CreatedOn, ManagementPeriodID, ...updatedData } =
-        updatedFertiliserManureData;
 
+      const { ID, CreatedByID, CreatedOn, ManagementPeriodID, ...updatedData } =
+      manure;
       // Update fertiliseremanure
       const result = await transactionalManager.update(
         FertiliserManuresEntity,
@@ -399,6 +400,9 @@ class FertiliserManuresService extends BaseService {
           where: { ID: ID },
         }
       );
+      if (fertiliserManure) {
+        updatedFertilisers.push(fertiliserManure);
+      }
       const managementPeriod = await this.managementPeriodRepository.findOne({
         where: { ID: fertiliserManure.ManagementPeriodID },
       });
@@ -446,8 +450,9 @@ class FertiliserManuresService extends BaseService {
             );
           });
       }
-
-      return { fertiliserManure };
+    }
+    return {FertiliserManure:updatedFertilisers};
+      // return { fertiliserManure };
     });
   }
 
@@ -462,7 +467,8 @@ class FertiliserManuresService extends BaseService {
       const fertiliser = await this.repository.findOne({
         where: { ID: fertiliserId },
       });
-
+console.log('fertiliserData222',fertiliserData)
+  console.log('fertiliser123',fertiliser)
       const records =
         fertiliserData.length > 0 && fertiliser != null
           ? fertiliserData.filter((item) => {
@@ -480,7 +486,7 @@ class FertiliserManuresService extends BaseService {
               return isMatching;
             })
           : null;
-
+console.log('records',records)
       return records;
     } catch (error) {
       console.error("Error occurred while fetching fertiliser records:", error);

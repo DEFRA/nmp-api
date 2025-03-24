@@ -85,19 +85,19 @@ class FertiliserManuresController {
     console.log("updatedFertiliserManureData", updatedFertiliserManureData);
 
     try {
-      const results = []; // Array to store the results for each manure item
-      for (const manure of updatedFertiliserManureData) {
+      // const results = []; // Array to store the results for each manure item
+      // for (const manure of updatedFertiliserManureData) {
         // Process each manure object
         const data = await this.#fertiliserManuresService.updateFertiliser(
-          manure, // Pass the current manure object
+          updatedFertiliserManureData, // Pass the current manure object
           userId, // User ID
-          parseInt(fertiliserId), // Fertiliser ID
+          // parseInt(fertiliserId), // Fertiliser ID
           this.#request // Original request
         );
-        results.push(data); // Store result of each update
-      }
+        // results.push(data); // Store result of each update
+      // }
 
-      return this.#h.response({ data: results }); // Respond with the aggregated results
+      return this.#h.response({ data }); // Respond with the aggregated results
     } catch (error) {
       return this.#h.response({ error });
     }
