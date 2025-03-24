@@ -23,10 +23,13 @@ const FertiliserManureDto = Joi.object({
   NO3N: Joi.number().precision(3).required(),
 }).required();
 
+
+
 const CreateFertiliserManuresDto = Joi.object({
     FertiliserManure: Joi.array().items(FertiliserManureDto).required(),
 });
 
+
 module.exports = {
-    CreateFertiliserManuresDto,
+  CreateFertiliserManuresDto
 };
