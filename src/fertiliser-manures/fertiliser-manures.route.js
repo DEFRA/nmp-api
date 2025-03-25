@@ -2,7 +2,7 @@ const Joi = require("joi");
 const {
   FertiliserManuresController,
 } = require("./fertiliser-manures.controller");
-const { CreateFertiliserManuresDto } = require("./dto/fertiliser-manures.dto");
+const { CreateFertiliserManuresDto, updateFertiliserManuresDto } = require("./dto/fertiliser-manures.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 
 const getController = (request, h) =>
@@ -200,5 +200,33 @@ module.exports = [
       const controller = new FertiliserManuresController(request, h);
       return controller.getFertiliserByFarmIdAndYear();
     },
-  }
+  },
+  {
+    method: "PUT",
+    path: "/fertiliser-manures",
+    handler: async (request, h) => {
+      const controller = new FertiliserManuresController(request, h);
+      return controller.updateFertiliser();
+    },
+    options: {
+      tags: ["api", "Fertiliser Manures"],
+      description: "Update Fertiliser Manures by Id",
+      validate: {
+        payload: CreateFertiliserManuresDto,
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+  },
 ];
