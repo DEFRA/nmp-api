@@ -367,91 +367,95 @@ class FertiliserManuresService extends BaseService {
     });
   }
 
-  async updateFertiliser(
-    updatedFertiliserManureData,
-    userId,
-    request
-  ) {
+  async updateFertiliser(updatedFertiliserManureData, userId, request) {
     return await AppDataSource.transaction(async (transactionalManager) => {
       const updatedFertilisers = [];
       for (const manure of updatedFertiliserManureData) {
-      console.log("updatedFertiliserManureData", updatedFertiliserManureData);
+        console.log("updatedFertiliserManureData", updatedFertiliserManureData);
 
-      const { ID, CreatedByID, CreatedOn, ManagementPeriodID, ...updatedData } =
-      manure;
-      // Update fertiliseremanure
-      const result = await transactionalManager.update(
-        FertiliserManuresEntity,
-        ID,
-        {
-          ...updatedData,
-          ModifiedByID: userId,
-          ModifiedOn: new Date(),
+        const {
+          ID,
+          CreatedByID,
+          CreatedOn,
+          ManagementPeriodID,
+          ...updatedData
+        } = manure;
+        // Update fertiliseremanure
+        const result = await transactionalManager.update(
+          FertiliserManuresEntity,
+          ID,
+          {
+            ...updatedData,
+            ModifiedByID: userId,
+            ModifiedOn: new Date(),
+          }
+        );
+
+        if (result.affected === 0) {
+          throw new Error(`Fertiliser Manures with ID ${ID} not found`);
         }
-      );
 
-      if (result.affected === 0) {
-        throw new Error(`Fertiliser Manures with ID ${ID} not found`);
-      }
-
-      const fertiliserManure = await transactionalManager.findOne(
-        FertiliserManuresEntity,
-        {
-          where: { ID: ID },
+        const fertiliserManure = await transactionalManager.findOne(
+          FertiliserManuresEntity,
+          {
+            where: { ID: ID },
+          }
+        );
+        if (fertiliserManure) {
+          updatedFertilisers.push(fertiliserManure);
         }
-      );
-      if (fertiliserManure) {
-        updatedFertilisers.push(fertiliserManure);
-      }
-      const managementPeriod = await this.managementPeriodRepository.findOne({
-        where: { ID: fertiliserManure.ManagementPeriodID },
-      });
-      const crop = await this.cropRepository.findOne({
-        where: { ID: managementPeriod.CropID },
-      });
+        const managementPeriod = await this.managementPeriodRepository.findOne({
+          where: { ID: fertiliserManure.ManagementPeriodID },
+        });
+        const crop = await this.cropRepository.findOne({
+          where: { ID: managementPeriod.CropID },
+        });
 
-      this.UpdateRecommendation.updateRecommendationAndOrganicManure(
-        crop.FieldID,
-        crop.Year,
-        request,
-        userId
-      );
-      // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
-      const nextAvailableCrop = await this.cropRepository.findOne({
-        where: {
-          FieldID: crop.FieldID,
-          Year: MoreThan(crop.Year), // Find the next available year greater than the current crop.Year
-        },
-        order: {
-          Year: "ASC", // Ensure we get the next immediate year
-        },
-      });
-
-      if (nextAvailableCrop) {
-        this.UpdateRecommendation.updateRecommendationsForField(
+        this.UpdateRecommendation.updateRecommendationAndOrganicManure(
           crop.FieldID,
-          nextAvailableCrop.Year,
+          crop.Year,
           request,
           userId
-        )
-          .then((res) => {
-            if (res === undefined) {
-              console.log(
-                "updateRecommendationAndOrganicManure returned undefined"
+        );
+        // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
+        const nextAvailableCrop = await this.cropRepository.findOne({
+          where: {
+            FieldID: crop.FieldID,
+            Year: MoreThan(crop.Year), // Find the next available year greater than the current crop.Year
+          },
+          order: {
+            Year: "ASC", // Ensure we get the next immediate year
+          },
+        });
+
+        if (nextAvailableCrop) {
+          this.UpdateRecommendation.updateRecommendationsForField(
+            crop.FieldID,
+            nextAvailableCrop.Year,
+            request,
+            userId
+          )
+            .then((res) => {
+              if (res === undefined) {
+                console.log(
+                  "updateRecommendationAndOrganicManure returned undefined"
+                );
+              } else {
+                console.log(
+                  "updateRecommendationAndOrganicManure result:",
+                  res
+                );
+              }
+            })
+            .catch((error) => {
+              console.error(
+                "Error updating recommendation and organic manure:",
+                error
               );
-            } else {
-              console.log("updateRecommendationAndOrganicManure result:", res);
-            }
-          })
-          .catch((error) => {
-            console.error(
-              "Error updating recommendation and organic manure:",
-              error
-            );
-          });
+            });
+        }
       }
-    }
-    return {FertiliserManure:updatedFertilisers};
+      return { FertiliserManure: updatedFertilisers };
       // return { fertiliserManure };
     });
   }
@@ -467,8 +471,7 @@ class FertiliserManuresService extends BaseService {
       const fertiliser = await this.repository.findOne({
         where: { ID: fertiliserId },
       });
-console.log('fertiliserData222',fertiliserData)
-  console.log('fertiliser123',fertiliser)
+
       const records =
         fertiliserData.length > 0 && fertiliser != null
           ? fertiliserData.filter((item) => {
@@ -486,12 +489,100 @@ console.log('fertiliserData222',fertiliserData)
               return isMatching;
             })
           : null;
-console.log('records',records)
+
       return records;
     } catch (error) {
       console.error("Error occurred while fetching fertiliser records:", error);
       return null;
     }
+  }
+
+  async deleteFertiliserManure(fertliserManureId, userId, request) {
+    return await AppDataSource.transaction(async (transactionalManager) => {
+      // Check if the Organic Manure exists
+      const fertiliserManureToDelete = await this.repository.findOneBy({
+        ID: fertliserManureId,
+      });
+
+      // If the fertiliserManure does not exist, throw a not found error
+      if (fertiliserManureToDelete == null) {
+        console.log(`Fertiliser Manure with ID ${fertliserManureId} not found`);
+      }
+      const managementPeriod = await this.managementPeriodRepository.findOne({
+        where: { ID: fertiliserManureToDelete.ManagementPeriodID },
+        select: ["CropID"],
+      });
+
+      // If the managementPeriod does not exist, throw a not found error
+      if (managementPeriod == null) {
+        console.log(
+          `managementPeriod with ID ${fertiliserManureToDelete.ManagementPeriodID} not found`
+        );
+      }
+      const crop = await this.cropRepository.findOne({
+        where: { ID: managementPeriod.CropID },
+      });
+
+      // If the crop does not exist, throw a not found error
+      if (crop == null) {
+        console.log(`crop with ID ${managementPeriod.CropID} not found`);
+      }
+
+      try {
+        // Call the stored procedure to delete the fertliserManureId and related entities
+        const storedProcedure =
+          "EXEC [spFertiliserManures_DeleteFertiliserManures] @ID = @0";
+        await transactionalManager.query(storedProcedure, [fertliserManureId]);
+
+        this.UpdateRecommendation.updateRecommendationAndOrganicManure(
+          crop.FieldID,
+          crop.Year,
+          request,
+          userId
+        );
+        // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
+        const nextAvailableCrop = await this.cropRepository.findOne({
+          where: {
+            FieldID: crop.FieldID,
+            Year: MoreThan(crop.Year), // Find the next available year greater than the current crop.Year
+          },
+          order: {
+            Year: "ASC", // Ensure we get the next immediate year
+          },
+        });
+
+        if (nextAvailableCrop) {
+          this.UpdateRecommendation.updateRecommendationsForField(
+            crop.FieldID,
+            nextAvailableCrop.Year,
+            request,
+            userId
+          )
+            .then((res) => {
+              if (res === undefined) {
+                console.log(
+                  "updateRecommendationAndOrganicManure returned undefined"
+                );
+              } else {
+                console.log(
+                  "updateRecommendationAndOrganicManure result:",
+                  res
+                );
+              }
+            })
+            .catch((error) => {
+              console.error(
+                "Error updating recommendation and organic manure:",
+                error
+              );
+            });
+        }
+        return { affectedRows: 1 }; // Success response
+      } catch (error) {
+        // Log the error and throw an internal server error
+        console.error("Error deleting fertiliserManure:", error);
+      }
+    });
   }
 }
 

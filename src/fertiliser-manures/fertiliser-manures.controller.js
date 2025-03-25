@@ -87,14 +87,14 @@ class FertiliserManuresController {
     try {
       // const results = []; // Array to store the results for each manure item
       // for (const manure of updatedFertiliserManureData) {
-        // Process each manure object
-        const data = await this.#fertiliserManuresService.updateFertiliser(
-          updatedFertiliserManureData, // Pass the current manure object
-          userId, // User ID
-          // parseInt(fertiliserId), // Fertiliser ID
-          this.#request // Original request
-        );
-        // results.push(data); // Store result of each update
+      // Process each manure object
+      const data = await this.#fertiliserManuresService.updateFertiliser(
+        updatedFertiliserManureData, // Pass the current manure object
+        userId, // User ID
+        // parseInt(fertiliserId), // Fertiliser ID
+        this.#request // Original request
+      );
+      // results.push(data); // Store result of each update
       // }
 
       return this.#h.response({ data }); // Respond with the aggregated results
@@ -133,6 +133,35 @@ class FertiliserManuresController {
     } catch (error) {
       console.error("Error in getFertiliserByFarmIdAndYear controller:", error);
       return this.#h.response({ error });
+    }
+  }
+
+  async deleteFertiliserManureByIds() {
+    const { fertliserManureIds } = this.#request.payload; // assuming an array of IDs is passed in the payload
+    const userId = this.#request.userId;
+
+    try {
+      // Loop through each fertliserManureIds and call the service method to delete it
+      for (let fertliserManureId of fertliserManureIds) {
+        const result =
+          await this.#fertiliserManuresService.deleteFertiliserManure(
+            fertliserManureId,
+            userId,
+            this.#request
+          );
+
+        if (result?.affectedRows === 0) {
+          console.log(
+            `Fertiliser manure with ID ${fertliserManureId} not found.`
+          );
+        }
+      }
+
+      return this.#h.response({
+        message: "Fertiliser manures deleted successfully.",
+      });
+    } catch (error) {
+      return this.#h.response({ error: error.message });
     }
   }
 }
