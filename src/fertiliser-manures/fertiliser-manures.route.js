@@ -107,36 +107,7 @@ module.exports = [
     },
   },
 
-  {
-    method: "DELETE",
-    path: "/fertiliser-manures/{fertiliserId}",
-    options: {
-      tags: ["api", "Fertiliser Manures"],
-      description: "Delete Fertiliser by Fertiliser Id",
-      validate: {
-        params: Joi.object({
-          fertiliserId: Joi.number().integer().required(),
-        }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
-      },
-    },
-    handler: async (request, h) => {
-      const controller = new FertiliserManuresController(request, h);
-      return controller.deleteFertiliserById();
-    },
-  },
+  
 
   {
     method: "GET",
@@ -227,6 +198,41 @@ module.exports = [
             .takeover();
         },
       },
+    },
+  },
+  {
+    method: "DELETE",
+    path: "/fertiliser-manures/",
+    options: {
+      tags: ["api", "Fertiliser Manures"],
+      description: "Delete Fertiliser Manures by fertiliserManure Ids",
+      validate: {
+        payload: Joi.object({
+          fertliserManureIds: Joi.array()
+            .items(Joi.number().integer().required())
+            .min(1)
+            .required()
+            .description(
+              "Array of fertiliserManure IDs to delete, e.g., [1, 2, 3]"
+            ),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      return getController(request, h).deleteFertiliserManureByIds();
     },
   },
 ];
