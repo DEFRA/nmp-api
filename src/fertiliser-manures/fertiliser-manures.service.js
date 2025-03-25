@@ -103,7 +103,7 @@ class FertiliserManuresService extends BaseService {
         FertiliserManuresEntity,
         fertiliserManures
       );
-      console.log("fertiliserManures", fertiliserManures);
+
       // const managementPeriodData =
       //   await this.managementPeriodRepository.findOneBy({
       //     ID: fertiliserManureData[0].ManagementPeriodID,
@@ -168,13 +168,13 @@ class FertiliserManuresService extends BaseService {
                     fertData.ManagementPeriodID ===
                     fertManure.ManagementPeriodID
                 );
-                console.log("fertiliserId", filterFertiliserData);
+          
 
                 if (
                   filterFertiliserData != null &&
                   filterFertiliserData.length > 0
                 ) {
-                  console.log("filterOrganicManure", filterFertiliserData);
+                
                   isNextYearFertiliserExist = true;
                 }
               }
@@ -210,7 +210,7 @@ class FertiliserManuresService extends BaseService {
                 );
               });
           } else {
-            console.log("pkBalanceData", pkBalanceData);
+         
             if (pkBalanceData.length > 0) {
               let updatePKBalance;
               const totalP205AndK20 = await this.getTotalP205AndK20(
@@ -246,7 +246,7 @@ class FertiliserManuresService extends BaseService {
                   ModifiedOn: new Date(),
                   ModifiedByID: userId,
                 };
-                console.log("updatePKBalance", updatePKBalance);
+             
               }
               if (updatePKBalance) {
                 await transactionalManager.save(
