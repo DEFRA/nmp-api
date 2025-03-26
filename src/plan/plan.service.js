@@ -294,24 +294,26 @@ class PlanService extends BaseService {
     if (soilAnalysis) {
       soilAnalysis?.forEach((soilAnalysis) => {
         const soilAnalysisData = {
-          ...(soilAnalysis.Date && { soilAnalysisDate: soilAnalysis.Date }),
-          ...(soilAnalysis.PH && { soilpH: soilAnalysis.PH }),
+          ...(soilAnalysis.Date != null && {
+            soilAnalysisDate: soilAnalysis.Date,
+          }),
+          ...(soilAnalysis.PH != null && { soilpH: soilAnalysis.PH }),
           ...(soilAnalysis.SulphurDeficient && {
             sulphurDeficient: soilAnalysis.SulphurDeficient,
           }),
-          ...(soilAnalysis.SoilNitrogenSupplyIndex && {
+          ...(soilAnalysis.SoilNitrogenSupplyIndex != null && {
             snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
             snsMethodologyId: 4,
           }),
-          ...(soilAnalysis.PhosphorusIndex && {
+          ...(soilAnalysis.PhosphorusIndex != null && {
             pIndexId: soilAnalysis.PhosphorusIndex,
             pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
           }),
-          ...(soilAnalysis.PotassiumIndex && {
+          ...(soilAnalysis.PotassiumIndex != null && {
             kIndexId: soilAnalysis.PotassiumIndex,
             kMethodologyId: 4,
           }),
-          ...(soilAnalysis.MagnesiumIndex && {
+          ...(soilAnalysis.MagnesiumIndex != null && {
             mgIndexId: soilAnalysis.MagnesiumIndex,
             mgMethodologyId: 4,
           }),

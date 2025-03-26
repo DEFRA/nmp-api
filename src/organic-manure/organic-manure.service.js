@@ -457,24 +457,26 @@ class OrganicManureService extends BaseService {
     if (soilAnalysis) {
       soilAnalysis.forEach((soilAnalysis) => {
         const soilAnalysisData = {
-          ...(soilAnalysis.Date && { soilAnalysisDate: soilAnalysis.Date }),
-          ...(soilAnalysis.PH && { soilpH: soilAnalysis.PH }),
+          ...(soilAnalysis.Date != null && {
+            soilAnalysisDate: soilAnalysis.Date,
+          }),
+          ...(soilAnalysis.PH != null && { soilpH: soilAnalysis.PH }),
           ...(soilAnalysis.SulphurDeficient && {
             sulphurDeficient: soilAnalysis.SulphurDeficient,
           }),
-          ...(soilAnalysis.SoilNitrogenSupplyIndex && {
+          ...(soilAnalysis.SoilNitrogenSupplyIndex != null && {
             snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
             snsMethodologyId: 4,
           }),
-          ...(soilAnalysis.PhosphorusIndex && {
+          ...(soilAnalysis.PhosphorusIndex != null && {
             pIndexId: soilAnalysis.PhosphorusIndex,
             pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
           }),
-          ...(soilAnalysis.PotassiumIndex && {
+          ...(soilAnalysis.PotassiumIndex != null && {
             kIndexId: soilAnalysis.PotassiumIndex,
             kMethodologyId: 4,
           }),
-          ...(soilAnalysis.MagnesiumIndex && {
+          ...(soilAnalysis.MagnesiumIndex != null && {
             mgIndexId: soilAnalysis.MagnesiumIndex,
             mgMethodologyId: 4,
           }),
@@ -493,8 +495,10 @@ class OrganicManureService extends BaseService {
     if (Array.isArray(snsAnalysesData)) {
       snsAnalysesData.forEach((analysis) => {
         const snsAnalysisData = {
-          ...(analysis.SampleDate && { soilAnalysisDate: analysis.SampleDate }),
-          ...(analysis.SoilNitrogenSupplyIndex && {
+          ...(analysis.SampleDate != null && {
+            soilAnalysisDate: analysis.SampleDate,
+          }),
+          ...(analysis.SoilNitrogenSupplyIndex != null && {
             snsIndexId: analysis.SoilNitrogenSupplyIndex,
             snsMethodologyId: 4,
           }),
@@ -509,10 +513,10 @@ class OrganicManureService extends BaseService {
       });
     } else if (snsAnalysesData) {
       const snsAnalysisData = {
-        ...(snsAnalysesData.SampleDate && {
+        ...(snsAnalysesData.SampleDate != null && {
           soilAnalysisDate: snsAnalysesData.SampleDate,
         }),
-        ...(snsAnalysesData.SoilNitrogenSupplyIndex && {
+        ...(snsAnalysesData.SoilNitrogenSupplyIndex != null && {
           snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex,
           snsMethodologyId: 4,
         }),
