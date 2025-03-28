@@ -7,8 +7,8 @@ const PKBalanceDto = Joi.object({
   PBalance: Joi.number().required(),
   KBalance: Joi.number().required(),
   PreviousID:Joi.number().optional().allow(null),
-  CreatedOn: Joi.date().required(),
-  CreatedByID: Joi.number().required().allow(null),
+  CreatedOn: Joi.date().allow(null),
+  CreatedByID: Joi.number().allow(null),
   ModifiedOn: Joi.date().optional().allow(null),
   ModifiedByID: Joi.number().optional().allow(null),
 });
