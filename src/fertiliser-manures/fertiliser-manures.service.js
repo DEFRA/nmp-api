@@ -39,27 +39,37 @@ class FertiliserManuresService extends BaseService {
     managementPeriodID,
     fromDate,
     toDate,
-    confirm
+    confirm,    
+    fertiliserId
   ) {
-    const result = await this.repository
-      .createQueryBuilder("fertiliserManures")
-      .select(
-        "SUM(fertiliserManures.N * fertiliserManures.ApplicationRate)",
-        "totalN"
-      )
-      .where("fertiliserManures.ManagementPeriodID = :managementPeriodID", {
-        managementPeriodID,
-      })
-      .andWhere(
-        "fertiliserManures.ApplicationDate BETWEEN :fromDate AND :toDate",
-        { fromDate, toDate }
-      )
-      .andWhere("fertiliserManures.Confirm = :confirm", { confirm })
-      .getRawOne();
+     
+    const queryBuilder = this.repository
+  .createQueryBuilder("fertiliserManures")
+  .select(
+    "SUM(fertiliserManures.N * fertiliserManures.ApplicationRate)",
+    "totalN"
+  )
+  .where("fertiliserManures.ManagementPeriodID = :managementPeriodID", {
+    managementPeriodID,
+  })
+  .andWhere(
+    "fertiliserManures.ApplicationDate BETWEEN :fromDate AND :toDate",
+    { fromDate, toDate }
+  )
+  .andWhere("fertiliserManures.Confirm = :confirm", { confirm });
+
+if (fertiliserId !== null && fertiliserId !== undefined) {
+  queryBuilder.andWhere("fertiliserManures.ID != :fertiliserId", {
+    fertiliserId,
+  });
+}
+
+    const result = await queryBuilder.getRawOne();
     return result.totalN;
   }
 
-  async getTotalNitrogen(managementPeriodID, confirm) {
+  async getTotalNitrogen(managementPeriodID, confirm,fertiliserId) {
+    
     const fertiliserManuresResult = await this.repository
       .createQueryBuilder("fertiliserManures")
       .select(
@@ -69,8 +79,19 @@ class FertiliserManuresService extends BaseService {
       .where("fertiliserManures.ManagementPeriodID = :managementPeriodID", {
         managementPeriodID,
       })
-      .andWhere("fertiliserManures.Confirm = :confirm", { confirm })
-      .getRawOne();
+      .andWhere("fertiliserManures.Confirm = :confirm", { confirm });
+    if (fertiliserId !== null && fertiliserId !== undefined) {
+      fertiliserManuresResult.andWhere(
+        "fertiliserManures.ID != :fertiliserId",
+        {
+          fertiliserId,
+        }
+      );
+    }
+
+    const fertiliserResult = await fertiliserManuresResult.getRawOne();
+    // return result.totalN;
+    // .getRawOne();
     const organicManuresResult = await this.organicManureRepository
       .createQueryBuilder("organicManures")
       .select("SUM(organicManures.AvailableNForNMax)", "totalN")
@@ -79,7 +100,7 @@ class FertiliserManuresService extends BaseService {
       })
       .andWhere("organicManures.Confirm = :confirm", { confirm })
       .getRawOne();
-    return fertiliserManuresResult.totalN + organicManuresResult.totalN;
+    return fertiliserResult.totalN + organicManuresResult.totalN;
   }
 
   async createFertiliserManures(fertiliserManureData, userId, request) {
@@ -168,13 +189,11 @@ class FertiliserManuresService extends BaseService {
                     fertData.ManagementPeriodID ===
                     fertManure.ManagementPeriodID
                 );
-          
 
                 if (
                   filterFertiliserData != null &&
                   filterFertiliserData.length > 0
                 ) {
-                
                   isNextYearFertiliserExist = true;
                 }
               }
@@ -210,7 +229,6 @@ class FertiliserManuresService extends BaseService {
                 );
               });
           } else {
-         
             if (pkBalanceData.length > 0) {
               let updatePKBalance;
               const totalP205AndK20 = await this.getTotalP205AndK20(
@@ -246,7 +264,6 @@ class FertiliserManuresService extends BaseService {
                   ModifiedOn: new Date(),
                   ModifiedByID: userId,
                 };
-             
               }
               if (updatePKBalance) {
                 await transactionalManager.save(
@@ -304,7 +321,6 @@ class FertiliserManuresService extends BaseService {
 
     return { p205: sumOfFertliserP205, k20: sumOfFertiliserK20 };
   }
- 
 
   async updateFertiliser(updatedFertiliserManureData, userId, request) {
     return await AppDataSource.transaction(async (transactionalManager) => {
@@ -393,7 +409,6 @@ class FertiliserManuresService extends BaseService {
         }
       }
       return { FertiliserManure: updatedFertilisers };
-    
     });
   }
 
