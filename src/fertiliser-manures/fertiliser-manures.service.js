@@ -39,37 +39,43 @@ class FertiliserManuresService extends BaseService {
     managementPeriodID,
     fromDate,
     toDate,
-    confirm,    
+    confirm,
     fertiliserId
   ) {
-     
-    const queryBuilder = this.repository
-  .createQueryBuilder("fertiliserManures")
-  .select(
-    "SUM(fertiliserManures.N * fertiliserManures.ApplicationRate)",
-    "totalN"
-  )
-  .where("fertiliserManures.ManagementPeriodID = :managementPeriodID", {
-    managementPeriodID,
-  })
-  .andWhere(
-    "fertiliserManures.ApplicationDate BETWEEN :fromDate AND :toDate",
-    { fromDate, toDate }
-  )
-  .andWhere("fertiliserManures.Confirm = :confirm", { confirm });
+    // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
+    const fromDateFormatted = new Date(fromDate);
+    fromDateFormatted.setHours(0, 0, 0, 0); // Set time to start of the day
 
-if (fertiliserId !== null && fertiliserId !== undefined) {
-  queryBuilder.andWhere("fertiliserManures.ID != :fertiliserId", {
-    fertiliserId,
-  });
-}
+    const toDateFormatted = new Date(toDate);
+    toDateFormatted.setHours(23, 59, 59, 999); // Set time to end of the day
+
+    const queryBuilder = this.repository
+      .createQueryBuilder("fertiliserManures")
+      .select(
+        "SUM(fertiliserManures.N * fertiliserManures.ApplicationRate)",
+        "totalN"
+      )
+      .where("fertiliserManures.ManagementPeriodID = :managementPeriodID", {
+        managementPeriodID,
+      })
+      .andWhere(
+        "fertiliserManures.ApplicationDate BETWEEN :fromDate AND :toDate",
+        { fromDate: fromDateFormatted, toDate: toDateFormatted }
+      )
+      .andWhere("fertiliserManures.Confirm = :confirm", { confirm });
+
+    // Only apply the fertiliserId condition if it's not null or undefined
+    if (fertiliserId !== null && fertiliserId !== undefined) {
+      queryBuilder.andWhere("fertiliserManures.ID != :fertiliserId", {
+        fertiliserId,
+      });
+    }
 
     const result = await queryBuilder.getRawOne();
     return result.totalN;
   }
 
-  async getTotalNitrogen(managementPeriodID, confirm,fertiliserId) {
-    
+  async getTotalNitrogen(managementPeriodID, confirm, fertiliserId) {
     const fertiliserManuresResult = await this.repository
       .createQueryBuilder("fertiliserManures")
       .select(
