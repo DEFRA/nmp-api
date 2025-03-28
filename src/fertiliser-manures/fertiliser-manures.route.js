@@ -27,6 +27,7 @@ module.exports = [
           fromDate: Joi.date().iso().required(),
           toDate: Joi.date().iso().required(),
           confirm: Joi.boolean().required(),
+          fertiliserId: Joi.number().optional().allow(null),
         }),
         failAction: (request, h, err) => {
           return h
@@ -60,7 +61,8 @@ module.exports = [
           managementPeriodID: Joi.number().required(),
         }),
         query: Joi.object({
-          confirm: Joi.boolean().required(),
+          confirm: Joi.boolean().required(),          
+          fertiliserId: Joi.number().integer().allow(null).optional()
         }),
         failAction: (request, h, err) => {
           return h
