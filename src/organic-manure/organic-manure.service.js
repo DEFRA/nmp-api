@@ -87,6 +87,12 @@ class OrganicManureService extends BaseService {
   }
 
   async getTotalNitrogen(managementPeriodID, fromDate, toDate, confirm) {
+    // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
+    const fromDateFormatted = new Date(fromDate);
+    fromDateFormatted.setHours(0, 0, 0, 0); // Set time to start of the day
+
+    const toDateFormatted = new Date(toDate);
+    toDateFormatted.setHours(23, 59, 59, 999); // Set time to end of the day
     const result = await this.repository
       .createQueryBuilder("organicManures")
       .select(
@@ -98,7 +104,7 @@ class OrganicManureService extends BaseService {
       })
       .andWhere(
         "organicManures.ApplicationDate BETWEEN :fromDate AND :toDate",
-        { fromDate, toDate }
+        { fromDate: fromDateFormatted, toDate: toDateFormatted }
       )
       .andWhere("organicManures.Confirm =:confirm", { confirm })
       .getRawOne();
