@@ -87,6 +87,12 @@ class OrganicManureService extends BaseService {
   }
 
   async getTotalNitrogen(managementPeriodID, fromDate, toDate, confirm) {
+    // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
+    const fromDateFormatted = new Date(fromDate);
+    fromDateFormatted.setHours(0, 0, 0, 0); // Set time to start of the day
+
+    const toDateFormatted = new Date(toDate);
+    toDateFormatted.setHours(23, 59, 59, 999); // Set time to end of the day
     const result = await this.repository
       .createQueryBuilder("organicManures")
       .select(
@@ -98,7 +104,7 @@ class OrganicManureService extends BaseService {
       })
       .andWhere(
         "organicManures.ApplicationDate BETWEEN :fromDate AND :toDate",
-        { fromDate, toDate }
+        { fromDate: fromDateFormatted, toDate: toDateFormatted }
       )
       .andWhere("organicManures.Confirm =:confirm", { confirm })
       .getRawOne();
@@ -457,23 +463,28 @@ class OrganicManureService extends BaseService {
     if (soilAnalysis) {
       soilAnalysis.forEach((soilAnalysis) => {
         const soilAnalysisData = {
-          ...(soilAnalysis.Date && { soilAnalysisDate: soilAnalysis.Date }),
-          ...(soilAnalysis.PH && { soilpH: soilAnalysis.PH }),
+          ...(soilAnalysis.Date != null && {
+            soilAnalysisDate: soilAnalysis.Date,
+          }),
+          ...(soilAnalysis.PH != null && { soilpH: soilAnalysis.PH }),
           ...(soilAnalysis.SulphurDeficient && {
             sulphurDeficient: soilAnalysis.SulphurDeficient,
           }),
-          ...(soilAnalysis.SoilNitrogenSupplyIndex && {
+          ...(soilAnalysis.SoilNitrogenSupplyIndex != null && {
             snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
+            snsMethodologyId: 4,
           }),
-          ...(soilAnalysis.PhosphorusIndex && {
+          ...(soilAnalysis.PhosphorusIndex != null && {
             pIndexId: soilAnalysis.PhosphorusIndex,
             pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
           }),
-          ...(soilAnalysis.PotassiumIndex && {
+          ...(soilAnalysis.PotassiumIndex != null && {
             kIndexId: soilAnalysis.PotassiumIndex,
+            kMethodologyId: 4,
           }),
-          ...(soilAnalysis.MagnesiumIndex && {
+          ...(soilAnalysis.MagnesiumIndex != null && {
             mgIndexId: soilAnalysis.MagnesiumIndex,
+            mgMethodologyId: 4,
           }),
         };
 
@@ -490,9 +501,12 @@ class OrganicManureService extends BaseService {
     if (Array.isArray(snsAnalysesData)) {
       snsAnalysesData.forEach((analysis) => {
         const snsAnalysisData = {
-          ...(analysis.SampleDate && { soilAnalysisDate: analysis.SampleDate }),
-          ...(analysis.SoilNitrogenSupplyIndex && {
+          ...(analysis.SampleDate != null && {
+            soilAnalysisDate: analysis.SampleDate,
+          }),
+          ...(analysis.SoilNitrogenSupplyIndex != null && {
             snsIndexId: analysis.SoilNitrogenSupplyIndex,
+            snsMethodologyId: 4,
           }),
         };
 
@@ -505,11 +519,12 @@ class OrganicManureService extends BaseService {
       });
     } else if (snsAnalysesData) {
       const snsAnalysisData = {
-        ...(snsAnalysesData.SampleDate && {
+        ...(snsAnalysesData.SampleDate != null && {
           soilAnalysisDate: snsAnalysesData.SampleDate,
         }),
-        ...(snsAnalysesData.SoilNitrogenSupplyIndex && {
+        ...(snsAnalysesData.SoilNitrogenSupplyIndex != null && {
           snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex,
+          snsMethodologyId: 4,
         }),
       };
 
@@ -1556,8 +1571,9 @@ class OrganicManureService extends BaseService {
             }
           }
         } else if (dataMultipleCrops.length === 1) {
+     
           // If there is only one crop, get snsAnalysesData for that crop
-          const analysisData = await this.getSnsAnalysesData(crop.ID);
+          const analysisData = await this.getSnsAnalysesData(cropData.ID);
 
           // Check if snsAnalysesData exists and assign directly as an object
           if (analysisData && analysisData.length > 0) {

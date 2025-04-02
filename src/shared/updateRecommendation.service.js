@@ -798,8 +798,10 @@ class UpdateRecommendation {
         const existingRecommendation = allRecommendations.find(
           (mp) => mp.ManagementPeriodID === secondCropManagementData.ID
         );
-        let mannerOutputs = null,firstCropMannerOutput=null,secondCropMannerOutput=null;
-        const nutrientRecommendationnReqBodywithoutManure=null;
+        let mannerOutputs = null,
+          firstCropMannerOutput = null,
+          secondCropMannerOutput = null;
+        const nutrientRecommendationnReqBodywithoutManure = null;
         let savedData = await this.saveRecommendationsForMultipleCrops(
           transactionalManager,
           nutrientRecommendationsData,
@@ -835,6 +837,19 @@ class UpdateRecommendation {
               RecommendationID: savedRecommendation?.ID,
             },
           });
+
+          for (const existingComment of existingallComments) {
+            const nutrientIdExists = Object.keys(notesByNutrient).some(
+              (nutrientId) => parseInt(nutrientId) === existingComment.Nutrient
+            );
+
+            // If the nutrientId does not exist, delete the comment using transactionalManager
+            if (!nutrientIdExists) {
+              await transactionalManager.delete(RecommendationCommentEntity, {
+                ID: existingComment.ID,
+              });
+            }
+          }
         for (const nutrientId in notesByNutrient) {
           const concatenatedNote = notesByNutrient[nutrientId]?.join(" <br/>"); // Concatenate notes for the same nutrientId
 
@@ -873,6 +888,19 @@ class UpdateRecommendation {
             );
           }
         }
+        // After updating or creating new comments, check for comments in existingallComments
+        // for (const existingComment of existingallComments) {
+        //   const nutrientIdExists = Object.keys(notesByNutrient).some(
+        //     (nutrientId) => parseInt(nutrientId) === existingComment.Nutrient
+        //   );
+
+        //   // If the nutrientId does not exist, delete the comment using transactionalManager
+        //   if (!nutrientIdExists) {
+        //     await transactionalManager.delete(RecommendationCommentEntity, {
+        //       ID: existingComment.ID,
+        //     });
+        //   }
+        // }
         Recommendations.push({
           Recommendation: savedRecommendation,
           RecommendationComments,
@@ -2110,23 +2138,29 @@ class UpdateRecommendation {
     if (soilAnalysis) {
       soilAnalysis.forEach((soilAnalysis) => {
         const soilAnalysisData = {
-          ...(soilAnalysis.Date && { soilAnalysisDate: soilAnalysis.Date }),
-          ...(soilAnalysis.PH && { soilpH: soilAnalysis.PH }),
-          ...(soilAnalysis.SulphurDeficient && {
+          ...(soilAnalysis.Date != null && {
+            soilAnalysisDate: soilAnalysis.Date,
+          }),
+          ...(soilAnalysis.PH != null && { soilpH: soilAnalysis.PH }),
+          ...(soilAnalysis.SulphurDeficient != null && {
             sulphurDeficient: soilAnalysis.SulphurDeficient,
           }),
-          ...(soilAnalysis.SoilNitrogenSupplyIndex && {
+          ...(soilAnalysis.SoilNitrogenSupplyIndex != null && {
             snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
+            snsMethodologyId: 4,
           }),
-          ...(soilAnalysis.PhosphorusIndex && {
+
+          ...(soilAnalysis.PhosphorusIndex != null && {
             pIndexId: soilAnalysis.PhosphorusIndex,
             pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
           }),
-          ...(soilAnalysis.PotassiumIndex && {
+          ...(soilAnalysis.PotassiumIndex != null && {
             kIndexId: soilAnalysis.PotassiumIndex,
+            kMethodologyId: 4,
           }),
-          ...(soilAnalysis.MagnesiumIndex && {
+          ...(soilAnalysis.MagnesiumIndex != null && {
             mgIndexId: soilAnalysis.MagnesiumIndex,
+            mgMethodologyId: 4,
           }),
         };
 
@@ -2143,8 +2177,10 @@ class UpdateRecommendation {
     if (Array.isArray(snsAnalysesData)) {
       snsAnalysesData.forEach((analysis) => {
         const snsAnalysisData = {
-          ...(analysis.SampleDate && { soilAnalysisDate: analysis.SampleDate }),
-          ...(analysis.SoilNitrogenSupplyIndex && {
+          ...(analysis.SampleDate != null && {
+            soilAnalysisDate: analysis.SampleDate,
+          }),
+          ...(analysis.SoilNitrogenSupplyIndex != null && {
             snsIndexId: analysis.SoilNitrogenSupplyIndex,
           }),
         };
@@ -2158,10 +2194,10 @@ class UpdateRecommendation {
       });
     } else if (snsAnalysesData) {
       const snsAnalysisData = {
-        ...(snsAnalysesData.SampleDate && {
+        ...(snsAnalysesData.SampleDate != null && {
           soilAnalysisDate: snsAnalysesData.SampleDate,
         }),
-        ...(snsAnalysesData.SoilNitrogenSupplyIndex && {
+        ...(snsAnalysesData.SoilNitrogenSupplyIndex != null && {
           snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex,
         }),
       };
@@ -2323,25 +2359,29 @@ class UpdateRecommendation {
     if (soilAnalysis) {
       soilAnalysis.forEach((soilAnalysis) => {
         const soilAnalysisData = {
-          ...(soilAnalysis.Date && { soilAnalysisDate: soilAnalysis.Date }),
-          ...(soilAnalysis.PH && { soilpH: soilAnalysis.PH }),
-          ...(soilAnalysis.SulphurDeficient && {
+          ...(soilAnalysis.Date != null && {
+            soilAnalysisDate: soilAnalysis.Date,
+          }),
+          ...(soilAnalysis.PH != null && { soilpH: soilAnalysis.PH }),
+          ...(soilAnalysis.SulphurDeficient != null && {
             sulphurDeficient: soilAnalysis.SulphurDeficient,
           }),
-          ...(soilAnalysis.SoilNitrogenSupplyIndex && {
+          ...(soilAnalysis.SoilNitrogenSupplyIndex != null && {
             snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
+            snsMethodologyId: 4,
           }),
-          ...(soilAnalysis.PhosphorusIndex && {
+          ...(soilAnalysis.PhosphorusIndex != null && {
             pIndexId: soilAnalysis.PhosphorusIndex,
             pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
           }),
-          ...(soilAnalysis.PotassiumIndex && {
+          ...(soilAnalysis.PotassiumIndex != null && {
             kIndexId: soilAnalysis.PotassiumIndex,
+            kMethodologyId: 4,
           }),
-          ...(soilAnalysis.MagnesiumIndex && {
+          ...(soilAnalysis.MagnesiumIndex != null && {
             mgIndexId: soilAnalysis.MagnesiumIndex,
+            mgMethodologyId: 4,
           }),
-        
         };
 
         // Only push if there's actual data
@@ -2357,9 +2397,12 @@ class UpdateRecommendation {
     if (Array.isArray(snsAnalysesData)) {
       snsAnalysesData.forEach((analysis) => {
         const snsAnalysisData = {
-          ...(analysis.SampleDate && { soilAnalysisDate: analysis.SampleDate }),
-          ...(analysis.SoilNitrogenSupplyIndex && {
+          ...(analysis.SampleDate != null && {
+            soilAnalysisDate: analysis.SampleDate,
+          }),
+          ...(analysis.SoilNitrogenSupplyIndex != null && {
             snsIndexId: analysis.SoilNitrogenSupplyIndex,
+            snsMethodologyId: 4,
           }),
         };
 
@@ -2372,11 +2415,12 @@ class UpdateRecommendation {
       });
     } else if (snsAnalysesData) {
       const snsAnalysisData = {
-        ...(snsAnalysesData.SampleDate && {
+        ...(snsAnalysesData.SampleDate != null && {
           soilAnalysisDate: snsAnalysesData.SampleDate,
         }),
-        ...(snsAnalysesData.SoilNitrogenSupplyIndex && {
+        ...(snsAnalysesData.SoilNitrogenSupplyIndex != null && {
           snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex,
+          snsMethodologyId: 4,
         }),
       };
 

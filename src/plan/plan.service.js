@@ -294,22 +294,29 @@ class PlanService extends BaseService {
     if (soilAnalysis) {
       soilAnalysis?.forEach((soilAnalysis) => {
         const soilAnalysisData = {
-          ...(soilAnalysis.Date && { soilAnalysisDate: soilAnalysis.Date }),
-          ...(soilAnalysis.PH && { soilpH: soilAnalysis.PH }),
+          ...(soilAnalysis.Date != null && {
+            soilAnalysisDate: soilAnalysis.Date,
+          }),
+          ...(soilAnalysis.PH != null && { soilpH: soilAnalysis.PH }),
           ...(soilAnalysis.SulphurDeficient && {
             sulphurDeficient: soilAnalysis.SulphurDeficient,
           }),
-          ...(soilAnalysis.PhosphorusIndex && {
+          ...(soilAnalysis.SoilNitrogenSupplyIndex != null && {
+            snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
+            snsMethodologyId: 4,
+          }),
+          ...(soilAnalysis.PhosphorusIndex != null && {
             pIndexId: soilAnalysis.PhosphorusIndex,
             pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
           }),
-          ...(soilAnalysis.PotassiumIndex && {
+          ...(soilAnalysis.PotassiumIndex != null && {
             kIndexId: soilAnalysis.PotassiumIndex,
+            kMethodologyId: 4,
           }),
-          ...(soilAnalysis.MagnesiumIndex && {
+          ...(soilAnalysis.MagnesiumIndex != null && {
             mgIndexId: soilAnalysis.MagnesiumIndex,
+            mgMethodologyId: 4,
           }),
-      
         };
 
         nutrientRecommendationnReqBody.field.soil.soilAnalyses.push(
@@ -966,9 +973,9 @@ class PlanService extends BaseService {
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex: snsAnalysesData?.SoilNitrogenSupplyIndex?.toString() || null,
-      NIndex: null,
-    };
+      SIndex: null,
+      NIndex: null
+    }
 
     let cropOrder2Data = {
       CropN: null,
@@ -997,8 +1004,8 @@ class PlanService extends BaseService {
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
-      NIndex: null,
+      SIndex: null,
+      NIndex: null
     };
     let nIndex;
     // Iterate through the nutrient recommendations data
