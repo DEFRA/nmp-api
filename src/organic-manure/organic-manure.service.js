@@ -2300,5 +2300,38 @@ class OrganicManureService extends BaseService {
       }
     });
   }
+
+  async getOrganicManureByFarmIdAndYear(organicManureId, farmId, harvestYear) {
+    try {      
+      const storedProcedure =
+        "EXEC dbo.spOrganicManures_GetByFarmIdAndYear @farmId = @0, @harvestYear = @1";
+      const organicManureList = await this.executeQuery(storedProcedure, [
+        farmId,
+        harvestYear,
+      ]);
+
+      const organicManure = await this.repository.findOne({
+        where: { ID: organicManureId },
+      });
+
+      const records =
+      organicManureList.length > 0 && organicManure != null
+          ? organicManureList.filter((item) => {
+              const itemDate = new Date(item?.ApplicationDate);
+              const organicDate = new Date(organicManure?.ApplicationDate);
+              const isMatching =
+                itemDate.getTime() === organicDate.getTime() &&
+                item?.ManureTypeID === organicManure?.ManureTypeID;
+
+              return isMatching;
+            })
+          : null;
+
+      return records;
+    } catch (error) {
+      console.error("Error occurred while fetching organic records:", error);
+      return null;
+    }
+  }
 }
 module.exports = { OrganicManureService };
