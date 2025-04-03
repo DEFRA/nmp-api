@@ -143,6 +143,25 @@ class OrganicManureController {
       return this.#h.response({ error });
     }
   }
+
+  async getOrganicManureByFarmIdAndYear() {
+    try {
+      const { organicManureId } = this.#request.params;
+      const { farmId } = this.#request.query;
+      const { harvestYear } = this.#request.query;
+      const records =
+        await this.#organicManureService.getOrganicManureByFarmIdAndYear(
+          organicManureId,
+          farmId,
+          harvestYear
+        );
+
+      return this.#h.response(records);
+    } catch (error) {
+      console.error("Error in getOrganicManureByFarmIdAndYear controller:", error);
+      return this.#h.response({ error });
+    }
+  }
 }
 
 module.exports = { OrganicManureController };
