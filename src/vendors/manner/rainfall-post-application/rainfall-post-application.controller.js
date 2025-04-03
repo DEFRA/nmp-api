@@ -20,6 +20,15 @@ class MannerRainfallPostApplicationController {
     // Call the service method to handle the nutrient calculation
     return await this.#service.postData(url, payload, this.#request);
   }
+  async calculateRainfallAprilToSeptemberOfManure() {
+    const postcode = this.#request.params;
+
+    // Extract the relevant part of the URL
+    const url = this.#request.url.pathname.split("/manner")[1];
+
+    // Call the service method to handle the nutrient calculation
+    return await this.#service.getData(url, this.#request);
+  }
 }
 
 module.exports = MannerRainfallPostApplicationController;
