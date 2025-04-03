@@ -236,4 +236,37 @@ module.exports = [
       },
     },
   },
+  {
+    method: "GET",
+    path: "/organic-manures/OrganicManuresData/{organicManureId}",
+    options: {
+      tags: ["api", "Organic Manure"],
+      description: "Get organic manure by farmId and harvest year",
+      validate: {
+        params: Joi.object({
+          organicManureId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          farmId: Joi.number().integer().required(),
+          harvestYear: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      return getController(request, h).getOrganicManureByFarmIdAndYear();
+    },
+  },
 ];
