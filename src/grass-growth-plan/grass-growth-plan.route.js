@@ -7,7 +7,7 @@ const getController = (request, h) => new GrassGrowthController(request, h);
 module.exports = [
   {
     method: "POST",
-    path: "/grass-growth/byFieldIds/{harvestYear}",
+    path: "/grass-growth/byFieldIds",
     handler: async (request, h) => {
       return getController(request, h).getGrassGrowthClass();
     },
@@ -15,14 +15,6 @@ module.exports = [
       tags: ["api", "Grass Growth"],
       description: "Get Grass Growth By FieldIds and Harvest Year",
       validate: {
-        params: Joi.object({
-          harvestYear: Joi.number()
-            .integer()
-            .min(1900)
-            .max(2100)
-            .required()
-            .description("Harvest year, e.g., 2024"),
-        }),
         payload: Joi.object({
           fieldIds: Joi.array()
             .items(Joi.number().integer().required())

@@ -14,20 +14,17 @@ class GrassGrowthController {
 
   async getGrassGrowthClass() {
     const { fieldIds } = this.#request.payload; // Extract fieldIds from payload
-    const { harvestYear } = this.#request.params; // Extract harvestYear from params
+
 
     try {
       const record =
         await this.#grassGrowthService.getGrassGrowthClassByFieldId(
           fieldIds,
-          harvestYear,
           this.#request
         );
-      return this.#h.response(record).code(200); // Ensure success response
+      return this.#h.response(record); // Ensure success response
     } catch (error) {
-      return this.#h
-        .response({ error: error.message || "Internal Server Error" })
-        .code(500);
+      return this.#h.response({ error: error.message || "Internal Server Error" })
     }
   }
 }

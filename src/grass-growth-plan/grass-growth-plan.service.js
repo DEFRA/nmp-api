@@ -15,13 +15,12 @@ class GrassGrowthService extends BaseService {
       new MannerRainfallPostApplicationService();
   }
 
-  async getGrassGrowthClassByFieldId(fieldIds, harvestYear, request) {
+  async getGrassGrowthClassByFieldId(fieldIds, request) {
     const results = [];
 
     for (const fieldId of fieldIds) {
       const fieldResult = await this.calculateGrassGrowthClassByFieldId(
         fieldId,
-        harvestYear,
         request
       );
       results.push(fieldResult);
@@ -30,7 +29,7 @@ class GrassGrowthService extends BaseService {
     return results; // Return array of responses for each fieldId
   }
 
-  async calculateGrassGrowthClassByFieldId(fieldId, harvestYear, request) {
+  async calculateGrassGrowthClassByFieldId(fieldId, request) {
     try {
       // Fetch field details
       const field = await this.fieldRepository.findOne({
@@ -51,30 +50,22 @@ class GrassGrowthService extends BaseService {
       }
 
       // Determine altitude based on IsAbove300SeaLevel
-      const altitude = field.IsAbove300SeaLevel === 1 ? 350 : 150;
+      const altitude = field.IsAbove300SeaLevel === true ? 350 : 150;
 
-      // Determine chalk based on SoilOverChalk
-      const chalk = field.SoilOverChalk === 1; // Boolean conversion
-
-      // Prepare body for rainfall API request
-      const body = {
-        applicationDate: `${harvestYear}-04-01`,
-        endOfSoilDrainageDate: `${harvestYear}-04-30`,
-        climateDataPostcode: farm.ClimateDataPostCode,
-      };
+      // Ensure SoilOverChalk is false if it's null
+      const soilOverChalk = field.SoilOverChalk ?? false;
 
       // Fetch rainfall data
-      const rainfall = await this.MannerRainfallPostApplicationService.postData(
-        `rainfall-post-application`,
-        body,
+      const rainfall = await this.MannerRainfallPostApplicationService.getData(
+        `rainfall-april-to-september/${farm.ClimateDataPostCode}`,
         request
       );
 
-      const summerRainfall = rainfall.data.rainfallPostApplication.value;
+      const summerRainfall = rainfall.data.value;
 
       // Fetch grass growth data
       const grassGrowthData = await this.grassGrowthService.getData(
-        `Grassland/GrassGrowthClass/${field.SoilTypeID}/${summerRainfall}/${altitude}/${chalk}`
+        `Grassland/GrassGrowthClass/${field.SoilTypeID}/${summerRainfall}/${altitude}/${soilOverChalk}`
       );
 
       return { ...grassGrowthData, fieldId };
