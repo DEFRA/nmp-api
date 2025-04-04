@@ -75,7 +75,7 @@ class FertiliserManuresService extends BaseService {
     return result.totalN;
   }
 
-  async getTotalNitrogen(managementPeriodID, confirm, fertiliserId) {
+  async getTotalNitrogen(managementPeriodID, confirm, fertiliserID,organicManureID) {
     const fertiliserManuresResult = await this.repository
       .createQueryBuilder("fertiliserManures")
       .select(
@@ -86,16 +86,17 @@ class FertiliserManuresService extends BaseService {
         managementPeriodID,
       })
       .andWhere("fertiliserManures.Confirm = :confirm", { confirm });
-    if (fertiliserId !== null && fertiliserId !== undefined) {
+    if (fertiliserID !== null && fertiliserID !== undefined) {
       fertiliserManuresResult.andWhere(
-        "fertiliserManures.ID != :fertiliserId",
+        "fertiliserManures.ID != :fertiliserID",
         {
-          fertiliserId,
+          fertiliserID,
         }
       );
     }
 
     const fertiliserResult = await fertiliserManuresResult.getRawOne();
+    console.log('fertiliserResult',fertiliserResult)
     // return result.totalN;
     // .getRawOne();
     const organicManuresResult = await this.organicManureRepository
@@ -104,9 +105,19 @@ class FertiliserManuresService extends BaseService {
       .where("organicManures.ManagementPeriodID = :managementPeriodID", {
         managementPeriodID,
       })
-      .andWhere("organicManures.Confirm = :confirm", { confirm })
-      .getRawOne();
-    return fertiliserResult.totalN + organicManuresResult.totalN;
+      .andWhere("organicManures.Confirm = :confirm", { confirm });
+      if (organicManureID !== null && organicManureID !== undefined) {
+        organicManuresResult.andWhere(
+          "organicManures.ID != :organicManureID",
+          {
+            organicManureID,
+          }
+        );
+      }
+      
+      const organicResult = await organicManuresResult.getRawOne();
+      console.log('organicResult',organicResult)
+    return fertiliserResult.totalN + organicResult.totalN;
   }
 
   async createFertiliserManures(fertiliserManureData, userId, request) {

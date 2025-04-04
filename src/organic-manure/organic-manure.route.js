@@ -23,6 +23,7 @@ module.exports = [
           fromDate: Joi.date().iso().required(),
           toDate: Joi.date().iso().required(),
           confirm: Joi.boolean().required(),
+          organicManureID: Joi.number().integer().allow(null).optional()
         }),
         failAction: (request, h, err) => {
           return h
@@ -59,6 +60,7 @@ module.exports = [
           toDate: Joi.date().iso().required(),
           confirm: Joi.boolean().required(),
           isGreenFoodCompost: Joi.boolean().required(),
+          organicManureID: Joi.number().integer().allow(null).optional()
         }),
         failAction: (request, h, err) => {
           return h
