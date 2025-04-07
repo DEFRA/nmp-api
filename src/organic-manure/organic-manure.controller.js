@@ -14,14 +14,15 @@ class OrganicManureController {
 
   async getTotalNitrogen() {
     const { managementPeriodID } = this.#request.params;
-    const { fromDate, toDate, confirm } = this.#request.query;
+    const { fromDate, toDate, confirm,organicManureID } = this.#request.query;
 
     try {
       const records = await this.#organicManureService.getTotalNitrogen(
         managementPeriodID,
         fromDate,
         toDate,
-        confirm
+        confirm,
+        organicManureID
       );
       return this.#h.response({ TotalN: records });
     } catch (error) {
@@ -30,7 +31,7 @@ class OrganicManureController {
   }
   async getTotalNitrogenIfIsGreenFoodCompost() {
     const { managementPeriodID } = this.#request.params;
-    const { fromDate, toDate, confirm, isGreenFoodCompost } =
+    const { fromDate, toDate, confirm, isGreenFoodCompost,organicManureID } =
       this.#request.query;
 
     try {
@@ -40,7 +41,7 @@ class OrganicManureController {
           fromDate,
           toDate,
           confirm,
-          isGreenFoodCompost
+          isGreenFoodCompost,organicManureID
         );
       return this.#h.response({ TotalN: records });
     } catch (error) {

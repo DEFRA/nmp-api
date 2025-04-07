@@ -86,14 +86,14 @@ class OrganicManureService extends BaseService {
     this.countryRepository = AppDataSource.getRepository(CountryEntity);
   }
 
-  async getTotalNitrogen(managementPeriodID, fromDate, toDate, confirm) {
+  async getTotalNitrogen(managementPeriodID, fromDate, toDate, confirm,organicManureID) {
     // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
     const fromDateFormatted = new Date(fromDate);
     fromDateFormatted.setHours(0, 0, 0, 0); // Set time to start of the day
 
     const toDateFormatted = new Date(toDate);
     toDateFormatted.setHours(23, 59, 59, 999); // Set time to end of the day
-    const result = await this.repository
+    const query = await this.repository
       .createQueryBuilder("organicManures")
       .select(
         "SUM(organicManures.N * organicManures.ApplicationRate)",
@@ -106,8 +106,13 @@ class OrganicManureService extends BaseService {
         "organicManures.ApplicationDate BETWEEN :fromDate AND :toDate",
         { fromDate: fromDateFormatted, toDate: toDateFormatted }
       )
-      .andWhere("organicManures.Confirm =:confirm", { confirm })
-      .getRawOne();
+      .andWhere("organicManures.Confirm =:confirm", { confirm });
+      if (organicManureID!=null) {
+        query.andWhere("organicManures.ID != :organicManureID", {
+          organicManureID,
+        });
+      }
+      const result = await query.getRawOne();
 
     return result.totalN;
   }
@@ -116,7 +121,8 @@ class OrganicManureService extends BaseService {
     fromDate,
     toDate,
     confirm,
-    isGreenFoodCompost
+    isGreenFoodCompost,
+    organicManureID
   ) {
     const query = this.repository
       .createQueryBuilder("organicManures")
@@ -147,8 +153,14 @@ class OrganicManureService extends BaseService {
         manureTypeIDs: [24, 32],
       });
     }
-
+    if (organicManureID!=null) {
+      query.andWhere("organicManures.ID != :organicManureID", {
+        organicManureID,
+      });
+    }
+console.log('organicManureID',organicManureID);
     const result = await query.getRawOne();
+    console.log('organicManureID',result.totalN);
     return result.totalN;
   }
 
