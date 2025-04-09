@@ -2333,7 +2333,16 @@ console.log('organicManureID',organicManureID);
               const organicDate = new Date(organicManure?.ApplicationDate);
               const isMatching =
                 itemDate.getTime() === organicDate.getTime() &&
-                item?.ManureTypeID === organicManure?.ManureTypeID;
+                item?.ManureTypeID === organicManure?.ManureTypeID &&
+                item?.Nitrogen === organicManure?.N &&
+                item?.P2O5 === organicManure?.P2O5 &&
+                item?.SO3 === organicManure?.SO3 &&
+                item?.K2O === organicManure?.K2O &&
+                item?.MgO === organicManure?.MgO&&
+                item?.UricAcid === organicManure?.UricAcid &&
+                item?.DryMatterPercent === organicManure?.DryMatterPercent&&
+                item?.NH4N === organicManure?.NH4N&&
+                item?.NO3N === organicManure?.NO3N;
 
               return isMatching;
             })
