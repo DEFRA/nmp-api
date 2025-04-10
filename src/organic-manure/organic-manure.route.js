@@ -276,7 +276,7 @@ module.exports = [
     method: "PUT",
     path: "/organic-manures",
     options: {
-      tags: ["api", "Organic Manures"],
+      tags: ["api", "Organic Manure"],
       description: "Update Organic Manures",
       validate: {
         payload: UpdateOrganicManuresWithFarmManureTypeDtoSchema,
