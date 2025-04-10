@@ -86,14 +86,17 @@ class SoilAnalysesService extends BaseService {
             ModifiedByID: userId,
           };
 
-          console.log("aaaaaaa", saveAndUpdatePKBalance);
+       
           if (saveAndUpdatePKBalance) {
             await transactionalManager.save(
               PKBalanceEntity,
               saveAndUpdatePKBalance
             );
           }
-          console.log("start");
+  
+        
+        }
+
           this.UpdateRecommendation.updateRecommendationsForField(
             soilAnalysis.FieldID,
             soilAnalysis.Year,
@@ -118,7 +121,6 @@ class SoilAnalysesService extends BaseService {
                 error
               );
             });
-        }
       }
 
       return { soilAnalysis, PKBalance };
@@ -220,40 +222,39 @@ class SoilAnalysesService extends BaseService {
             ModifiedByID: userId,
           };
 
-          console.log("aaaaaaa", saveAndUpdatePKBalance);
+
           if (saveAndUpdatePKBalance) {
             await transactionalManager.save(
               PKBalanceEntity,
               saveAndUpdatePKBalance
             );
           }
-          console.log("start");
-          this.UpdateRecommendation.updateRecommendationsForField(
-            updatedSoilAnalysisData.FieldID,
-            updatedSoilAnalysisData.Year,
-            request,
-            userId
-          )
-            .then((res) => {
-              if (res === undefined) {
-                console.log(
-                  "updateRecommendationAndOrganicManure returned undefined"
-                );
-              } else {
-                console.log(
-                  "updateRecommendationAndOrganicManure result:",
-                  res
-                );
-              }
-            })
-            .catch((error) => {
-              console.error(
-                "Error updating recommendation and organic manure:",
-                error
-              );
-            });
+     
+          
         }
       }
+
+      this.UpdateRecommendation.updateRecommendationsForField(
+        updatedSoilAnalysisData.FieldID,
+        updatedSoilAnalysisData.Year,
+        request,
+        userId
+      )
+        .then((res) => {
+          if (res === undefined) {
+            console.log(
+              "updateRecommendationAndOrganicManure returned undefined"
+            );
+          } else {
+            console.log("updateRecommendationAndOrganicManure result:", res);
+          }
+        })
+        .catch((error) => {
+          console.error(
+            "Error updating recommendation and organic manure:",
+            error
+          );
+        });
 
       return { SoilAnalysis, PKBalance };
     });
@@ -263,7 +264,7 @@ class SoilAnalysesService extends BaseService {
 
     return await AppDataSource.transaction(async (transactionalManager) => {
       // Check if the soilAnalysis exists
-      const soilAnalysisToDelete = await await transactionalManager.findOne(
+      const soilAnalysisToDelete = await transactionalManager.findOne(
         SoilAnalysisEntity,
         {
           where: { ID: soilAnalysisId },
@@ -279,7 +280,6 @@ class SoilAnalysesService extends BaseService {
         const storedProcedure = "EXEC spSoilAnalyses_DeleteSoilAnalyses @SoilAnalysesID = @0";
         await AppDataSource.query(storedProcedure, [soilAnalysisId]);
 
-        console.log("start");
         this.UpdateRecommendation.updateRecommendationsForField(
           soilAnalysisToDelete.FieldID,
           soilAnalysisToDelete.Year,

@@ -39,9 +39,17 @@ class FertiliserManuresService extends BaseService {
     managementPeriodID,
     fromDate,
     toDate,
-    confirm
+    confirm,
+    fertiliserId
   ) {
-    const result = await this.repository
+    // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
+    const fromDateFormatted = new Date(fromDate);
+    fromDateFormatted.setHours(0, 0, 0, 0); // Set time to start of the day
+
+    const toDateFormatted = new Date(toDate);
+    toDateFormatted.setHours(23, 59, 59, 999); // Set time to end of the day
+
+    const queryBuilder = this.repository
       .createQueryBuilder("fertiliserManures")
       .select(
         "SUM(fertiliserManures.N * fertiliserManures.ApplicationRate)",
@@ -52,14 +60,22 @@ class FertiliserManuresService extends BaseService {
       })
       .andWhere(
         "fertiliserManures.ApplicationDate BETWEEN :fromDate AND :toDate",
-        { fromDate, toDate }
+        { fromDate: fromDateFormatted, toDate: toDateFormatted }
       )
-      .andWhere("fertiliserManures.Confirm = :confirm", { confirm })
-      .getRawOne();
+      .andWhere("fertiliserManures.Confirm = :confirm", { confirm });
+
+    // Only apply the fertiliserId condition if it's not null or undefined
+    if (fertiliserId !== null && fertiliserId !== undefined) {
+      queryBuilder.andWhere("fertiliserManures.ID != :fertiliserId", {
+        fertiliserId,
+      });
+    }
+
+    const result = await queryBuilder.getRawOne();
     return result.totalN;
   }
 
-  async getTotalNitrogen(managementPeriodID, confirm) {
+  async getTotalNitrogen(managementPeriodID, confirm, fertiliserId) {
     const fertiliserManuresResult = await this.repository
       .createQueryBuilder("fertiliserManures")
       .select(
@@ -69,20 +85,28 @@ class FertiliserManuresService extends BaseService {
       .where("fertiliserManures.ManagementPeriodID = :managementPeriodID", {
         managementPeriodID,
       })
-      .andWhere("fertiliserManures.Confirm = :confirm", { confirm })
-      .getRawOne();
+      .andWhere("fertiliserManures.Confirm = :confirm", { confirm });
+    if (fertiliserId !== null && fertiliserId !== undefined) {
+      fertiliserManuresResult.andWhere(
+        "fertiliserManures.ID != :fertiliserId",
+        {
+          fertiliserId,
+        }
+      );
+    }
+
+    const fertiliserResult = await fertiliserManuresResult.getRawOne();
+    // return result.totalN;
+    // .getRawOne();
     const organicManuresResult = await this.organicManureRepository
       .createQueryBuilder("organicManures")
-      .select(
-        "SUM(organicManures.AvailableNForNMax)",
-        "totalN"
-      )
+      .select("SUM(organicManures.AvailableNForNMax)", "totalN")
       .where("organicManures.ManagementPeriodID = :managementPeriodID", {
         managementPeriodID,
       })
       .andWhere("organicManures.Confirm = :confirm", { confirm })
       .getRawOne();
-    return fertiliserManuresResult.totalN + organicManuresResult.totalN;
+    return fertiliserResult.totalN + organicManuresResult.totalN;
   }
 
   async createFertiliserManures(fertiliserManureData, userId, request) {
@@ -91,7 +115,6 @@ class FertiliserManuresService extends BaseService {
     const managementPeriodAllData =
       await this.managementPeriodRepository.find();
     const fieldAllData = await this.fieldRepository.find();
-   
 
     const fertiliserAllData = await this.repository.find();
     return await AppDataSource.transaction(async (transactionalManager) => {
@@ -107,17 +130,15 @@ class FertiliserManuresService extends BaseService {
         FertiliserManuresEntity,
         fertiliserManures
       );
-      console.log("fertiliserManures", fertiliserManures);
+
       // const managementPeriodData =
       //   await this.managementPeriodRepository.findOneBy({
       //     ID: fertiliserManureData[0].ManagementPeriodID,
       //   });
       for (const fertManure of fertiliserManures) {
-        const fertiliserData =fertiliserAllData.filter(
-          (fertData) => {
-            return fertData.ManagementPeriodID === fertManure.ManagementPeriodID;
-          }
-        );
+        const fertiliserData = fertiliserAllData.filter((fertData) => {
+          return fertData.ManagementPeriodID === fertManure.ManagementPeriodID;
+        });
         const managementPeriodData = managementPeriodAllData.filter(
           (manData) => {
             return manData.ID === fertManure.ManagementPeriodID;
@@ -126,16 +147,16 @@ class FertiliserManuresService extends BaseService {
         const cropData = cropPlanAllData.filter((cropData) => {
           return cropData.ID === managementPeriodData[0].CropID;
         });
-        
+
         const fieldData = fieldAllData.filter((fieldData) => {
           return fieldData.ID === cropData[0].FieldID;
         });
-        
+
         const soilAnalsisData = soilAnalysisAllData.filter((soilAnalyses) => {
           return soilAnalyses.FieldID === cropData[0].FieldID;
         });
         let isSoilAnalysisHavePAndK = false;
-        if (soilAnalsisData.length>0) {
+        if (soilAnalsisData.length > 0) {
           isSoilAnalysisHavePAndK = soilAnalsisData.some(
             (item) =>
               item.PhosphorusIndex !== null || item.PotassiumIndex !== null
@@ -148,7 +169,7 @@ class FertiliserManuresService extends BaseService {
           const pkBalanceData = pkBalanceAllData.filter((pkBalance) => {
             return (
               pkBalance.FieldID === fieldData[0].ID &&
-              pkBalance.Year ===cropData[0].Year
+              pkBalance.Year === cropData[0].Year
             );
           });
           // ({
@@ -162,7 +183,7 @@ class FertiliserManuresService extends BaseService {
           });
           let isNextYearPlanExist = false;
           let isNextYearFertiliserExist = false;
-          if (cropPlanForNextYear&&cropPlanForNextYear.length>0) {
+          if (cropPlanForNextYear && cropPlanForNextYear.length > 0) {
             isNextYearPlanExist = true;
             for (const crop of cropPlanForNextYear) {
               const managementPeriodDataId = managementPeriodAllData
@@ -174,13 +195,11 @@ class FertiliserManuresService extends BaseService {
                     fertData.ManagementPeriodID ===
                     fertManure.ManagementPeriodID
                 );
-                console.log("fertiliserId", filterFertiliserData);
 
                 if (
                   filterFertiliserData != null &&
                   filterFertiliserData.length > 0
                 ) {
-                  console.log("filterOrganicManure", filterFertiliserData);
                   isNextYearFertiliserExist = true;
                 }
               }
@@ -216,8 +235,7 @@ class FertiliserManuresService extends BaseService {
                 );
               });
           } else {
-            console.log("pkBalanceData", pkBalanceData);
-            if (pkBalanceData.length>0) {
+            if (pkBalanceData.length > 0) {
               let updatePKBalance;
               const totalP205AndK20 = await this.getTotalP205AndK20(
                 fertiliserData,
@@ -252,7 +270,6 @@ class FertiliserManuresService extends BaseService {
                   ModifiedOn: new Date(),
                   ModifiedByID: userId,
                 };
-                console.log("updatePKBalance", updatePKBalance);
               }
               if (updatePKBalance) {
                 await transactionalManager.save(
@@ -287,11 +304,14 @@ class FertiliserManuresService extends BaseService {
 
     return { p205: sumOfP205, k20: sumOfK20 };
   }
-  async getTotalFertiliserP205AndK20FromRecommandation(managementPeriodID,recommandationAllData) {
+  async getTotalFertiliserP205AndK20FromRecommandation(
+    managementPeriodID,
+    recommandationAllData
+  ) {
     let sumOfFertliserP205 = 0;
     let sumOfFertiliserK20 = 0;
 
-    const recommandationData =recommandationAllData
+    const recommandationData = recommandationAllData
       .filter((item) => item.ManagementPeriodID === managementPeriodID)
       .map((item) => ({
         FertilizerP2O5: item.FertilizerP2O5,
@@ -307,71 +327,221 @@ class FertiliserManuresService extends BaseService {
 
     return { p205: sumOfFertliserP205, k20: sumOfFertiliserK20 };
   }
-  async deleteFertiliser(fertiliserId,userId,request) {
-  
-      return await AppDataSource.transaction(async (transactionalManager) => {
-        // Check if the fertiliser exists
-        const fertiliserToDelete = await this.repository.findOneBy({
-          ID: fertiliserId 
-         });
-         
-        // If the fertiliser does not exist, throw a not found error    
-        if (fertiliserToDelete == null) {
-          console.log(`fertiliser with ID ${fertiliserId} not found`);
+
+  async updateFertiliser(updatedFertiliserManureData, userId, request) {
+    return await AppDataSource.transaction(async (transactionalManager) => {
+      const updatedFertilisers = [];
+      for (const manure of updatedFertiliserManureData) {
+        const {
+          ID,
+          CreatedByID,
+          CreatedOn,
+          ManagementPeriodID,
+          ...updatedData
+        } = manure;
+        // Update fertiliseremanure
+        const result = await transactionalManager.update(
+          FertiliserManuresEntity,
+          ID,
+          {
+            ...updatedData,
+            ModifiedByID: userId,
+            ModifiedOn: new Date(),
+          }
+        );
+
+        if (result.affected === 0) {
+          console.log(`Fertiliser Manures with ID ${ID} not found`);
+        }
+
+        const fertiliserManure = await transactionalManager.findOne(
+          FertiliserManuresEntity,
+          {
+            where: { ID: ID },
+          }
+        );
+        if (fertiliserManure) {
+          updatedFertilisers.push(fertiliserManure);
         }
         const managementPeriod = await this.managementPeriodRepository.findOne({
-          where: { ID: fertiliserToDelete.ManagementPeriodID },
-          select: ["CropID"],
+          where: { ID: fertiliserManure.ManagementPeriodID },
         });
-        
-        // If the managementPeriod does not exist, throw a not found error    
-        if (managementPeriod == null) {
-          console.log(`managementPeriod with ID ${fertiliserToDelete.ManagementPeriodID} not found`);
-        }
         const crop = await this.cropRepository.findOne({
           where: { ID: managementPeriod.CropID },
-
         });
-      
 
-        // If the crop does not exist, throw a not found error    
-        if (crop == null) {
-          console.log(`crop with ID ${managementPeriod.CropID} not found`);
+        this.UpdateRecommendation.updateRecommendationAndOrganicManure(
+          crop.FieldID,
+          crop.Year,
+          request,
+          userId
+        );
+        // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
+        const nextAvailableCrop = await this.cropRepository.findOne({
+          where: {
+            FieldID: crop.FieldID,
+            Year: MoreThan(crop.Year), // Find the next available year greater than the current crop.Year
+          },
+          order: {
+            Year: "ASC", // Ensure we get the next immediate year
+          },
+        });
+
+        if (nextAvailableCrop) {
+          this.UpdateRecommendation.updateRecommendationsForField(
+            crop.FieldID,
+            nextAvailableCrop.Year,
+            request,
+            userId
+          )
+            .then((res) => {
+              if (res === undefined) {
+                console.log(
+                  "updateRecommendationAndOrganicManure returned undefined"
+                );
+              } else {
+                console.log(
+                  "updateRecommendationAndOrganicManure result:",
+                  res
+                );
+              }
+            })
+            .catch((error) => {
+              console.error(
+                "Error updating recommendation and organic manure:",
+                error
+              );
+            });
         }
-        try {
-          // Call the stored procedure to delete the fertiliserId and related entities
-          const storedProcedure = "EXEC [spFertiliserManures_DeleteFertiliserManures] @ID = @0";
-          await AppDataSource.query(storedProcedure, [fertiliserId]);
-               this.UpdateRecommendation.updateRecommendationsForField(
-                 crop.FieldID,
-                 crop.Year,
-                 request,
-                 userId
-               )
-                 .then((res) => {
-                   if (res === undefined) {
-                     console.log(
-                       "updateRecommendationAndOrganicManure returned undefined"
-                     );
-                   } else {
-                     console.log(
-                       "updateRecommendationAndOrganicManure result:",
-                       res
-                     );
-                   }
-                 })
-                 .catch((error) => {
-                   console.error(
-                     "Error updating recommendation and organic manure:",
-                     error
-                   );
-                 });
-        } catch (error) {
-          // Log the error and throw an internal server error
-          console.error("Error deleting fertilisers:", error);
-        }
+      }
+      return { FertiliserManure: updatedFertilisers };
+    });
+  }
+
+  async getFertiliserByFarmIdAndYear(fertiliserId, farmId, harvestYear) {
+    try {
+      const storedProcedure =
+        "EXEC dbo.spFertiliserManures_GetByFarmIdAndYear @farmId = @0, @harvestYear = @1";
+      const fertiliserData = await this.executeQuery(storedProcedure, [
+        farmId,
+        harvestYear,
+      ]);
+      const fertiliser = await this.repository.findOne({
+        where: { ID: fertiliserId },
       });
+
+      const records =
+        fertiliserData.length > 0 && fertiliser != null
+          ? fertiliserData.filter((item) => {
+              const itemDate = new Date(item?.ApplicationDate);
+              const fertiliserDate = new Date(fertiliser?.ApplicationDate);
+              const isMatching =
+                itemDate.getTime() === fertiliserDate.getTime() &&
+                item?.Nitrogen === fertiliser?.N &&
+                item?.P2O5 === fertiliser?.P2O5 &&
+                item?.SO3 === fertiliser?.SO3 &&
+                item?.K2O === fertiliser?.K2O &&
+                item?.Lime === fertiliser?.Lime &&
+                item?.MgO === fertiliser?.MgO;
+
+              return isMatching;
+            })
+          : null;
+
+      return records;
+    } catch (error) {
+      console.error("Error occurred while fetching fertiliser records:", error);
+      return null;
     }
+  }
+
+  async deleteFertiliserManure(fertliserManureId, userId, request) {
+    return await AppDataSource.transaction(async (transactionalManager) => {
+      // Check if the Organic Manure exists
+      const fertiliserManureToDelete = await this.repository.findOneBy({
+        ID: fertliserManureId,
+      });
+
+      // If the fertiliserManure does not exist, throw a not found error
+      if (fertiliserManureToDelete == null) {
+        console.log(`Fertiliser Manure with ID ${fertliserManureId} not found`);
+      }
+      const managementPeriod = await this.managementPeriodRepository.findOne({
+        where: { ID: fertiliserManureToDelete.ManagementPeriodID },
+        select: ["CropID"],
+      });
+
+      // If the managementPeriod does not exist, throw a not found error
+      if (managementPeriod == null) {
+        console.log(
+          `managementPeriod with ID ${fertiliserManureToDelete.ManagementPeriodID} not found`
+        );
+      }
+      const crop = await this.cropRepository.findOne({
+        where: { ID: managementPeriod.CropID },
+      });
+
+      // If the crop does not exist, throw a not found error
+      if (crop == null) {
+        console.log(`crop with ID ${managementPeriod.CropID} not found`);
+      }
+
+      try {
+        // Call the stored procedure to delete the fertliserManureId and related entities
+        const storedProcedure =
+          "EXEC [spFertiliserManures_DeleteFertiliserManures] @ID = @0";
+        await transactionalManager.query(storedProcedure, [fertliserManureId]);
+
+        this.UpdateRecommendation.updateRecommendationAndOrganicManure(
+          crop.FieldID,
+          crop.Year,
+          request,
+          userId
+        );
+        // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
+        const nextAvailableCrop = await this.cropRepository.findOne({
+          where: {
+            FieldID: crop.FieldID,
+            Year: MoreThan(crop.Year), // Find the next available year greater than the current crop.Year
+          },
+          order: {
+            Year: "ASC", // Ensure we get the next immediate year
+          },
+        });
+
+        if (nextAvailableCrop) {
+          this.UpdateRecommendation.updateRecommendationsForField(
+            crop.FieldID,
+            nextAvailableCrop.Year,
+            request,
+            userId
+          )
+            .then((res) => {
+              if (res === undefined) {
+                console.log(
+                  "updateRecommendationAndOrganicManure returned undefined"
+                );
+              } else {
+                console.log(
+                  "updateRecommendationAndOrganicManure result:",
+                  res
+                );
+              }
+            })
+            .catch((error) => {
+              console.error(
+                "Error updating recommendation and organic manure:",
+                error
+              );
+            });
+        }
+        return { affectedRows: 1 }; // Success response
+      } catch (error) {
+        // Log the error and throw an internal server error
+        console.error("Error deleting fertiliserManure:", error);
+      }
+    });
+  }
 }
 
 module.exports = { FertiliserManuresService };

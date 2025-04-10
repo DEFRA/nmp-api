@@ -290,19 +290,29 @@ class UpdateRecommendation {
    
       let firstCrop = null,
         mannerOutputReq = null,
-        mannerOutputs=null,
+        mannerOutputs = null,
         firstCropDataManureApplications = null,
         mannerOutputFirstReq = null,
         firstCropMannerOutput = null,
         secondCrop = null,
-        secondCropDataManureApplications=null,
-        mannerOutputSecondReq=null,
-        secondCropMannerOutput = null
+        secondCropDataManureApplications = null,
+        mannerOutputSecondReq = null,
+        secondCropMannerOutput = null,
+        snsAnalysesData=null
       let firstCropOrganicManure = {};
       let firstCropManagementPeriods;
       let manureApplications;
       if (dataMultipleCrops.length > 1) {
+        snsAnalysesData = []; 
         firstCrop = await this.getFirstCropData(fieldData.ID, cropData.Year);
+         const firstCropSnsAnalysis = await this.getSnsAnalysesData(
+           firstCrop.ID
+         );
+         if (firstCropSnsAnalysis){
+           snsAnalysesData.push(firstCropSnsAnalysis); 
+        } 
+          
+
         firstCropManagementPeriods = managementPeriods.find(
           (mp) => mp.CropID == firstCrop.ID
         );
@@ -344,6 +354,12 @@ class UpdateRecommendation {
         const secondCrop = dataMultipleCrops.find(
           (crop) => crop.CropOrder === 2
         );
+         const secondCropSnsAnalysis = await this.getSnsAnalysesData(
+           secondCrop.ID
+         ); 
+         if (secondCropSnsAnalysis){
+           snsAnalysesData.push(secondCropSnsAnalysis);
+         } 
         const secondCropManagementPeriods = managementPeriods.find(
           (mp) => mp.CropID == secondCrop.ID
         );
@@ -405,10 +421,10 @@ class UpdateRecommendation {
         mannerOutputReq,
         request
       );
+      snsAnalysesData = await this.getSnsAnalysesData(cropData.ID);
     }
  
       let nutrientRecommendationsData;
-      const snsAnalysesData = await this.getSnsAnalysesData(fieldData.ID);
       const secondCropManagementData = await this.getManagementPeriod(
         cropData.ID
       );
@@ -478,6 +494,10 @@ class UpdateRecommendation {
       console.log(
         "nutrientRecommendationnReqBodymanner",
         nutrientRecommendationnReqBody.field.mannerOutputs
+      );
+      console.log(
+        "nutrientRecommendationnReqBodysns",
+        nutrientRecommendationnReqBody.field.soil.soilAnalyses
       );
 
       nutrientRecommendationsData = await this.getNutrientRecommendationsData(
@@ -607,7 +627,33 @@ class UpdateRecommendation {
         secondCropManagementData.ID
       );
 
-      const snsAnalysesData = await this.getSnsAnalysesData(fieldId);
+     let snsAnalysesData = null;
+
+     // Check if more than one crop exists in dataMultipleCrops
+     if (dataMultipleCrops.length > 1) {
+       // Initialize snsAnalysesData as an array if multiple crops are found
+       snsAnalysesData = [];
+
+       // Loop through each crop in dataMultipleCrops
+       for (const singleCrop of dataMultipleCrops) {
+         // Retrieve snsAnalysesData for each crop by crop.ID
+         const analysisData = await this.getSnsAnalysesData(singleCrop.ID);
+
+         // Check if snsAnalysesData exists (not null or empty)
+         if (analysisData && analysisData.length > 0) {
+           // Push to snsAnalysesData array if snsAnalysesData is found
+           snsAnalysesData.push(analysisData);
+         }
+       }
+     } else if (dataMultipleCrops.length === 1) {
+       // If there is only one crop, get snsAnalysesData for that crop
+       const analysisData = await this.getSnsAnalysesData(crop.ID);
+
+       // Check if snsAnalysesData exists and assign directly as an object
+       if (analysisData && analysisData.length > 0) {
+         snsAnalysesData = analysisData; // Assign snsAnalysesData directly as an object
+       }
+     }
       let nutrientRecommendationsData;
       //get PKBalance data
       let pkBalance = await this.getPKBalanceData(
@@ -657,6 +703,10 @@ class UpdateRecommendation {
             dataMultipleCrops,
             crop,
             pkBalanceData
+          );
+          console.log(
+            "nutrientRecommendationnReqBodysns",
+            nutrientRecommendationnReqBody.field.soil.soilAnalyses
           );
 
         nutrientRecommendationsData = await this.getNutrientRecommendationsData(
@@ -748,8 +798,10 @@ class UpdateRecommendation {
         const existingRecommendation = allRecommendations.find(
           (mp) => mp.ManagementPeriodID === secondCropManagementData.ID
         );
-        let mannerOutputs = null,firstCropMannerOutput=null,secondCropMannerOutput=null;
-        const nutrientRecommendationnReqBodywithoutManure=null;
+        let mannerOutputs = null,
+          firstCropMannerOutput = null,
+          secondCropMannerOutput = null;
+        const nutrientRecommendationnReqBodywithoutManure = null;
         let savedData = await this.saveRecommendationsForMultipleCrops(
           transactionalManager,
           nutrientRecommendationsData,
@@ -785,6 +837,19 @@ class UpdateRecommendation {
               RecommendationID: savedRecommendation?.ID,
             },
           });
+
+          for (const existingComment of existingallComments) {
+            const nutrientIdExists = Object.keys(notesByNutrient).some(
+              (nutrientId) => parseInt(nutrientId) === existingComment.Nutrient
+            );
+
+            // If the nutrientId does not exist, delete the comment using transactionalManager
+            if (!nutrientIdExists) {
+              await transactionalManager.delete(RecommendationCommentEntity, {
+                ID: existingComment.ID,
+              });
+            }
+          }
         for (const nutrientId in notesByNutrient) {
           const concatenatedNote = notesByNutrient[nutrientId]?.join(" <br/>"); // Concatenate notes for the same nutrientId
 
@@ -823,6 +888,19 @@ class UpdateRecommendation {
             );
           }
         }
+        // After updating or creating new comments, check for comments in existingallComments
+        // for (const existingComment of existingallComments) {
+        //   const nutrientIdExists = Object.keys(notesByNutrient).some(
+        //     (nutrientId) => parseInt(nutrientId) === existingComment.Nutrient
+        //   );
+
+        //   // If the nutrientId does not exist, delete the comment using transactionalManager
+        //   if (!nutrientIdExists) {
+        //     await transactionalManager.delete(RecommendationCommentEntity, {
+        //       ID: existingComment.ID,
+        //     });
+        //   }
+        // }
         Recommendations.push({
           Recommendation: savedRecommendation,
           RecommendationComments,
@@ -1163,6 +1241,8 @@ class UpdateRecommendation {
       secondCropSaveData = {
         ...secondCropSaveData,
         ...cropOrder2Data,
+        ModifiedByID: userId,
+        ModifiedOn: new Date(),
         Comments: `Reference Value: ${nutrientRecommendationsData.referenceValue}\nVersion: ${nutrientRecommendationsData.versionNumber}`,
       };
       await transactionalManager.save(RecommendationEntity, secondCropSaveData);
@@ -2023,8 +2103,8 @@ class UpdateRecommendation {
         totalM: firstCropMannerOutput.data.totalMgO,
       });
     }
-    
-    if (secondCropMannerOutput?.data){
+
+    if (secondCropMannerOutput?.data) {
       // Add current crop mannerOutputs or OrganicManure data
       nutrientRecommendationnReqBody.field.mannerOutputs.push({
         id: firstCropMannerOutput?.data ? 2 : 1,
@@ -2038,8 +2118,7 @@ class UpdateRecommendation {
         availableS: secondCropMannerOutput?.data.cropAvailableSO3,
         totalM: secondCropMannerOutput?.data.totalMgO,
       });
-
-    }else if (mannerOutputs?.data) {
+    } else if (mannerOutputs?.data) {
       // Add current crop mannerOutputs or OrganicManure data
       nutrientRecommendationnReqBody.field.mannerOutputs.push({
         id: firstCropData ? 2 : crop.CropOrder,
@@ -2055,34 +2134,80 @@ class UpdateRecommendation {
       });
     }
 
+    // Add SoilAnalyses data
     if (soilAnalysis) {
-      soilAnalysis?.forEach((soilAnalysis) => {
-        nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
-          soilAnalysisDate: soilAnalysis.Date,
-          soilpH: soilAnalysis.PH,
-          sulphurDeficient: soilAnalysis.SulphurDeficient,
-          snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
-          pIndexId: soilAnalysis.PhosphorusIndex,
-          kIndexId: soilAnalysis.PotassiumIndex,
-          mgIndexId: soilAnalysis.MagnesiumIndex,
-          snsMethodologyId: 4,
-          pMethodologyId: 0,
-          kMethodologyId: 4,
-          mgMethodologyId: 4,
-        });
+      soilAnalysis.forEach((soilAnalysis) => {
+        const soilAnalysisData = {
+          ...(soilAnalysis.Date != null && {
+            soilAnalysisDate: soilAnalysis.Date,
+          }),
+          ...(soilAnalysis.PH != null && { soilpH: soilAnalysis.PH }),
+          ...(soilAnalysis.SulphurDeficient != null && {
+            sulphurDeficient: soilAnalysis.SulphurDeficient,
+          }),
+          ...(soilAnalysis.SoilNitrogenSupplyIndex != null && {
+            snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
+            snsMethodologyId: 4,
+          }),
+
+          ...(soilAnalysis.PhosphorusIndex != null && {
+            pIndexId: soilAnalysis.PhosphorusIndex,
+            pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
+          }),
+          ...(soilAnalysis.PotassiumIndex != null && {
+            kIndexId: soilAnalysis.PotassiumIndex,
+            kMethodologyId: 4,
+          }),
+          ...(soilAnalysis.MagnesiumIndex != null && {
+            mgIndexId: soilAnalysis.MagnesiumIndex,
+            mgMethodologyId: 4,
+          }),
+        };
+
+        // Only push if there's actual data
+        if (Object.keys(soilAnalysisData).length > 0) {
+          nutrientRecommendationnReqBody.field.soil.soilAnalyses.push(
+            soilAnalysisData
+          );
+        }
       });
     }
 
     // Add SnsAnalyses data
-    if (snsAnalysesData) {
-      nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
-        soilAnalysisDate: snsAnalysesData.SampleDate, // Using snsAnalysesData.SampleDate
-        snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex, // Using snsAnalysesData.SoilNitrogenSupplyIndex
-        snsMethodologyId: 4,
-        pMethodologyId: 0,
-        kMethodologyId: 4,
-        mgMethodologyId: 4,
+    if (Array.isArray(snsAnalysesData)) {
+      snsAnalysesData.forEach((analysis) => {
+        const snsAnalysisData = {
+          ...(analysis.SampleDate != null && {
+            soilAnalysisDate: analysis.SampleDate,
+          }),
+          ...(analysis.SoilNitrogenSupplyIndex != null && {
+            snsIndexId: analysis.SoilNitrogenSupplyIndex,
+          }),
+        };
+
+        // Only push if there's actual data
+        if (Object.keys(snsAnalysisData).length > 0) {
+          nutrientRecommendationnReqBody.field.soil.soilAnalyses.push(
+            snsAnalysisData
+          );
+        }
       });
+    } else if (snsAnalysesData) {
+      const snsAnalysisData = {
+        ...(snsAnalysesData.SampleDate != null && {
+          soilAnalysisDate: snsAnalysesData.SampleDate,
+        }),
+        ...(snsAnalysesData.SoilNitrogenSupplyIndex != null && {
+          snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex,
+        }),
+      };
+
+      // Only push if there's actual data
+      if (Object.keys(snsAnalysisData).length > 0) {
+        nutrientRecommendationnReqBody.field.soil.soilAnalyses.push(
+          snsAnalysisData
+        );
+      }
     }
 
     if (previousCrop) {
@@ -2230,34 +2355,81 @@ class UpdateRecommendation {
       totals: true,
       referenceValue: `${field.ID}-${crop.ID}-${crop.Year}`,
     };
+    // Add SoilAnalyses data
     if (soilAnalysis) {
-      soilAnalysis?.forEach((soilAnalysis) => {
-        nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
-          soilAnalysisDate: soilAnalysis.Date,
-          soilpH: soilAnalysis.PH,
-          sulphurDeficient: soilAnalysis.SulphurDeficient,
-          snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
-          pIndexId: soilAnalysis.PhosphorusIndex,
-          kIndexId: soilAnalysis.PotassiumIndex,
-          mgIndexId: soilAnalysis.MagnesiumIndex,
-          snsMethodologyId: 4,
-          pMethodologyId: 0,
-          kMethodologyId: 4,
-          mgMethodologyId: 4,
-        });
+      soilAnalysis.forEach((soilAnalysis) => {
+        const soilAnalysisData = {
+          ...(soilAnalysis.Date != null && {
+            soilAnalysisDate: soilAnalysis.Date,
+          }),
+          ...(soilAnalysis.PH != null && { soilpH: soilAnalysis.PH }),
+          ...(soilAnalysis.SulphurDeficient != null && {
+            sulphurDeficient: soilAnalysis.SulphurDeficient,
+          }),
+          ...(soilAnalysis.SoilNitrogenSupplyIndex != null && {
+            snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
+            snsMethodologyId: 4,
+          }),
+          ...(soilAnalysis.PhosphorusIndex != null && {
+            pIndexId: soilAnalysis.PhosphorusIndex,
+            pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
+          }),
+          ...(soilAnalysis.PotassiumIndex != null && {
+            kIndexId: soilAnalysis.PotassiumIndex,
+            kMethodologyId: 4,
+          }),
+          ...(soilAnalysis.MagnesiumIndex != null && {
+            mgIndexId: soilAnalysis.MagnesiumIndex,
+            mgMethodologyId: 4,
+          }),
+        };
+
+        // Only push if there's actual data
+        if (Object.keys(soilAnalysisData).length > 0) {
+          nutrientRecommendationnReqBody.field.soil.soilAnalyses.push(
+            soilAnalysisData
+          );
+        }
       });
     }
 
     // Add SnsAnalyses data
-    if (snsAnalysesData) {
-      nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
-        soilAnalysisDate: snsAnalysesData.SampleDate, // Using snsAnalysesData.SampleDate
-        snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex, // Using snsAnalysesData.SoilNitrogenSupplyIndex
-        snsMethodologyId: 4,
-        pMethodologyId: 0,
-        kMethodologyId: 4,
-        mgMethodologyId: 4,
+    if (Array.isArray(snsAnalysesData)) {
+      snsAnalysesData.forEach((analysis) => {
+        const snsAnalysisData = {
+          ...(analysis.SampleDate != null && {
+            soilAnalysisDate: analysis.SampleDate,
+          }),
+          ...(analysis.SoilNitrogenSupplyIndex != null && {
+            snsIndexId: analysis.SoilNitrogenSupplyIndex,
+            snsMethodologyId: 4,
+          }),
+        };
+
+        // Only push if there's actual data
+        if (Object.keys(snsAnalysisData).length > 0) {
+          nutrientRecommendationnReqBody.field.soil.soilAnalyses.push(
+            snsAnalysisData
+          );
+        }
       });
+    } else if (snsAnalysesData) {
+      const snsAnalysisData = {
+        ...(snsAnalysesData.SampleDate != null && {
+          soilAnalysisDate: snsAnalysesData.SampleDate,
+        }),
+        ...(snsAnalysesData.SoilNitrogenSupplyIndex != null && {
+          snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex,
+          snsMethodologyId: 4,
+        }),
+      };
+
+      // Only push if there's actual data
+      if (Object.keys(snsAnalysisData).length > 0) {
+        nutrientRecommendationnReqBody.field.soil.soilAnalyses.push(
+          snsAnalysisData
+        );
+      }
     }
 
     if (previousCrop) {
@@ -2296,7 +2468,7 @@ class UpdateRecommendation {
   }
   async getSnsAnalysesData(id) {
     const data = await this.snsAnalysisRepository.findOne({
-      where: { FieldID: id }, // This line is correct as per your entity definition
+      where: { CropID: id }, 
     });
 
     return data;
