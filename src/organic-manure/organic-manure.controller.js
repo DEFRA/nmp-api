@@ -163,6 +163,31 @@ class OrganicManureController {
       return this.#h.response({ error });
     }
   }
+   async updateOrganicManures() {
+ 
+    const updatedOrganicManureData = this.#request.payload.OrganicManures; // Extract the array from payload
+    const userId = this.#request.userId;
+
+  
+
+    try {
+      // const results = []; // Array to store the results for each manure item
+      // for (const manure of updatedFertiliserManureData) {
+      // Process each manure object
+      const data = await this.#organicManureService.updateOrganicManure(
+        updatedOrganicManureData, // Pass the current manure object
+        userId, // User ID
+        // parseInt(fertiliserId), // Fertiliser ID
+        this.#request // Original request
+      );
+      // results.push(data); // Store result of each update
+      // }
+
+      return this.#h.response({ data }); // Respond with the aggregated results
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
 }
 
 module.exports = { OrganicManureController };

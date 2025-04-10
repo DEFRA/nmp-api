@@ -2,6 +2,7 @@ const Joi = require("joi");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const {
   CreateOrganicManuresWithFarmManureTypeDtoSchema,
+  UpdateOrganicManuresWithFarmManureTypeDtoSchema,
 } = require("./dto/organic-manure.dto");
 const { OrganicManureController } = require("./organic-manure.controller");
 const getController = (request, h) => new OrganicManureController(request, h);
@@ -269,6 +270,33 @@ module.exports = [
     },
     handler: async (request, h) => {
       return getController(request, h).getOrganicManureByFarmIdAndYear();
+    },
+  },
+  {
+    method: "PUT",
+    path: "/organic-manures",
+    options: {
+      tags: ["api", "Organic Manures"],
+      description: "Update Organic Manures",
+      validate: {
+        payload: UpdateOrganicManuresWithFarmManureTypeDtoSchema,
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+      handler: async (request, h) => {
+        return getController(request, h).updateOrganicManures();
+      },
     },
   },
 ];
