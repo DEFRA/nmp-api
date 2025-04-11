@@ -86,7 +86,13 @@ class OrganicManureService extends BaseService {
     this.countryRepository = AppDataSource.getRepository(CountryEntity);
   }
 
-  async getTotalNitrogen(managementPeriodID, fromDate, toDate, confirm,organicManureID) {
+  async getTotalNitrogen(
+    managementPeriodID,
+    fromDate,
+    toDate,
+    confirm,
+    organicManureID
+  ) {
     // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
     const fromDateFormatted = new Date(fromDate);
     fromDateFormatted.setHours(0, 0, 0, 0); // Set time to start of the day
@@ -107,12 +113,12 @@ class OrganicManureService extends BaseService {
         { fromDate: fromDateFormatted, toDate: toDateFormatted }
       )
       .andWhere("organicManures.Confirm =:confirm", { confirm });
-      if (organicManureID!=null) {
-        query.andWhere("organicManures.ID != :organicManureID", {
-          organicManureID,
-        });
-      }
-      const result = await query.getRawOne();
+    if (organicManureID != null) {
+      query.andWhere("organicManures.ID != :organicManureID", {
+        organicManureID,
+      });
+    }
+    const result = await query.getRawOne();
 
     return result.totalN;
   }
@@ -153,14 +159,14 @@ class OrganicManureService extends BaseService {
         manureTypeIDs: [24, 32],
       });
     }
-    if (organicManureID!=null) {
+    if (organicManureID != null) {
       query.andWhere("organicManures.ID != :organicManureID", {
         organicManureID,
       });
     }
-console.log('organicManureID',organicManureID);
+    console.log("organicManureID", organicManureID);
     const result = await query.getRawOne();
-    console.log('organicManureID',result.totalN);
+    console.log("organicManureID", result.totalN);
     return result.totalN;
   }
 
@@ -2330,30 +2336,32 @@ console.log('organicManureID',organicManureID);
             Year: "ASC", // Ensure we get the next immediate year
           },
         });
-     if (nextAvailableCrop){
-       this.UpdateRecommendation.updateRecommendationsForField(
-         crop.FieldID,
-         nextAvailableCrop.Year,
-         request,
-         userId
-       )
-         .then((res) => {
-           if (res === undefined) {
-             console.log(
-               "updateRecommendationAndOrganicManure returned undefined"
-             );
-           } else {
-             console.log("updateRecommendationAndOrganicManure result:", res);
-           }
-         })
-         .catch((error) => {
-           console.error(
-             "Error updating recommendation and organic manure:",
-             error
-           );
-         });
-
-     }
+        if (nextAvailableCrop) {
+          this.UpdateRecommendation.updateRecommendationsForField(
+            crop.FieldID,
+            nextAvailableCrop.Year,
+            request,
+            userId
+          )
+            .then((res) => {
+              if (res === undefined) {
+                console.log(
+                  "updateRecommendationAndOrganicManure returned undefined"
+                );
+              } else {
+                console.log(
+                  "updateRecommendationAndOrganicManure result:",
+                  res
+                );
+              }
+            })
+            .catch((error) => {
+              console.error(
+                "Error updating recommendation and organic manure:",
+                error
+              );
+            });
+        }
 
         return { affectedRows: 1 }; // Success response
       } catch (error) {
@@ -2366,15 +2374,20 @@ console.log('organicManureID',organicManureID);
   async updateOrganicManure(updatedOrganicManureData, userId, request) {
     return await AppDataSource.transaction(async (transactionalManager) => {
       const updatedOrganicManures = [];
-      for (const manure of updatedOrganicManureData) {
+      let savedFarmManureType = null;
+
+      for (const manureEntry of updatedOrganicManureData) {
+        const { OrganicManure, FarmID, FieldTypeID, SaveDefaultForFarm } =
+          manureEntry;
+
         const {
           ID,
           CreatedByID,
           CreatedOn,
           ManagementPeriodID,
           ...updatedData
-        } = manure;
-        // Update organicemanure
+        } = OrganicManure;
+
         const result = await transactionalManager.update(
           OrganicManureEntity,
           ID,
@@ -2391,16 +2404,73 @@ console.log('organicManureID',organicManureID);
 
         const organicManure = await transactionalManager.findOne(
           OrganicManureEntity,
-          {
-            where: { ID: ID },
-          }
+          { where: { ID: ID } }
         );
+
         if (organicManure) {
           updatedOrganicManures.push(organicManure);
         }
+
+        // ✅ Update FarmManureType if SaveDefaultForFarm is true (no creation)
+        if (SaveDefaultForFarm) {
+          const farmManureTypeData = {
+            FarmID,
+            ManureTypeID: OrganicManure.ManureTypeID,
+            ManureTypeName: OrganicManure.ManureTypeName,
+            FieldTypeID,
+            TotalN: OrganicManure.N,
+            DryMatter: OrganicManure.DryMatterPercent,
+            NH4N: OrganicManure.NH4N,
+            Uric: OrganicManure.UricAcid,
+            NO3N: OrganicManure.NO3N,
+            P2O5: OrganicManure.P2O5,
+            SO3: OrganicManure.SO3,
+            K2O: OrganicManure.K2O,
+            MgO: OrganicManure.MgO,
+          };
+
+          const existingFarmManureType =
+            await this.farmManureTypeRepository.findOne({
+              where: {
+                FarmID: farmManureTypeData.FarmID,
+                ManureTypeID: farmManureTypeData.ManureTypeID,
+                ManureTypeName: farmManureTypeData.ManureTypeName,
+              },
+            });
+
+          if (existingFarmManureType) {
+            await this.farmManureTypeRepository.update(
+              existingFarmManureType.ID,
+              {
+                ...farmManureTypeData,
+                ModifiedByID: userId,
+                ModifiedOn: new Date(),
+              }
+            );
+
+            savedFarmManureType = {
+              ...existingFarmManureType,
+              ...farmManureTypeData,
+              ModifiedByID: userId,
+              ModifiedOn: new Date(),
+            };
+          } else {
+            savedFarmManureType = await transactionalManager.save(
+              FarmManureTypeEntity,
+              this.farmManureTypeRepository.create({
+                ...farmManureTypeData,
+                CreatedByID: userId,
+                CreatedOn: new Date(),
+              })
+            );
+          }
+        }
+
+        // 🔄 Update recommendations
         const managementPeriod = await this.managementPeriodRepository.findOne({
           where: { ID: organicManure.ManagementPeriodID },
         });
+
         const crop = await this.cropRepository.findOne({
           where: { ID: managementPeriod.CropID },
         });
@@ -2411,15 +2481,13 @@ console.log('organicManureID',organicManureID);
           request,
           userId
         );
-        // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
+
         const nextAvailableCrop = await this.cropRepository.findOne({
           where: {
             FieldID: crop.FieldID,
-            Year: MoreThan(crop.Year), // Find the next available year greater than the current crop.Year
+            Year: MoreThan(crop.Year),
           },
-          order: {
-            Year: "ASC", // Ensure we get the next immediate year
-          },
+          order: { Year: "ASC" },
         });
 
         if (nextAvailableCrop) {
@@ -2449,7 +2517,11 @@ console.log('organicManureID',organicManureID);
             });
         }
       }
-      return { OrganicManure: updatedOrganicManures };
+
+      return {
+        OrganicManure: updatedOrganicManures,
+        FarmManureType: savedFarmManureType,
+      };
     });
   }
 
@@ -2478,10 +2550,10 @@ console.log('organicManureID',organicManureID);
                 item?.P2O5 === organicManure?.P2O5 &&
                 item?.SO3 === organicManure?.SO3 &&
                 item?.K2O === organicManure?.K2O &&
-                item?.MgO === organicManure?.MgO&&
+                item?.MgO === organicManure?.MgO &&
                 item?.UricAcid === organicManure?.UricAcid &&
-                item?.DryMatterPercent === organicManure?.DryMatterPercent&&
-                item?.NH4N === organicManure?.NH4N&&
+                item?.DryMatterPercent === organicManure?.DryMatterPercent &&
+                item?.NH4N === organicManure?.NH4N &&
                 item?.NO3N === organicManure?.NO3N;
 
               return isMatching;

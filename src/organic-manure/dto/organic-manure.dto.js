@@ -82,8 +82,17 @@ const OrganicManureDtoSchema = Joi.object({
   OrganicManure: OrganicManureEntitySchema.required(),
   FarmID: Joi.number().integer().required(),
   FieldTypeID: Joi.number().integer().required(),
-  SaveDefaultForFarm: Joi.boolean().required(),
+  SaveDefaultForFarm: Joi.boolean().required().default(false),
 });
+
+// Define the validation schema for OrganicManureDto
+const UpdateOrganicManureDtoSchema = Joi.object({
+  OrganicManure: UpdateOrganicManureEntitySchema.required(),
+  FarmID: Joi.number().integer().required(),
+  FieldTypeID: Joi.number().integer().required(),
+  SaveDefaultForFarm: Joi.boolean().required().default(false),
+});
+
 
 // Define the validation schema for CreateOrganicManuresWithFarmManureTypeDto
 const CreateOrganicManuresWithFarmManureTypeDtoSchema = Joi.object({
@@ -92,7 +101,7 @@ const CreateOrganicManuresWithFarmManureTypeDtoSchema = Joi.object({
 
 // Define the validation schema for CreateOrganicManuresWithFarmManureTypeDto
 const UpdateOrganicManuresWithFarmManureTypeDtoSchema = Joi.object({
-  OrganicManures: Joi.array().items(UpdateOrganicManureEntitySchema).required(),
+  OrganicManures: Joi.array().items(UpdateOrganicManureDtoSchema).required(),
 });
 
 module.exports = {
