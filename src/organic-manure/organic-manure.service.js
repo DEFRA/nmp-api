@@ -43,6 +43,7 @@ const { SoilTypeSoilTextureEntity } = require("../db/entity/soil-type-soil-textu
 const { CountryEntity } = require("../db/entity/country.entity");
 const RB209SoilService = require("../vendors/rb209/soil/soil.service");
 const { NutrientMapperNames } = require("../constants/nutrient-mapper-names");
+const { UpdateRecommendationChanges } = require("../shared/updateRecommendationsChanges");
 
 class OrganicManureService extends BaseService {
   constructor() {
@@ -84,6 +85,8 @@ class OrganicManureService extends BaseService {
       SoilTypeSoilTextureEntity
     );
     this.countryRepository = AppDataSource.getRepository(CountryEntity);
+    this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
+    
   }
 
   async getTotalNitrogen(
@@ -2320,12 +2323,13 @@ class OrganicManureService extends BaseService {
           "EXEC [spOrganicManures_DeleteOrganicManures] @OrganicManureID = @0";
         await transactionalManager.query(storedProcedure, [organicManureId]);
 
-        this.UpdateRecommendation.updateRecommendationAndOrganicManure(
-          crop.FieldID,
-          crop.Year,
-          request,
-          userId
-        );
+         await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+           crop.FieldID,
+           crop.Year,
+           request,
+           userId,
+           transactionalManager
+         );
         // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
         const nextAvailableCrop = await this.cropRepository.findOne({
           where: {
