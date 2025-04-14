@@ -2479,11 +2479,12 @@ class OrganicManureService extends BaseService {
           where: { ID: managementPeriod.CropID },
         });
 
-        this.UpdateRecommendation.updateRecommendationAndOrganicManure(
+        await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
           crop.FieldID,
           crop.Year,
           request,
-          userId
+          userId,
+          transactionalManager
         );
 
         const nextAvailableCrop = await this.cropRepository.findOne({
