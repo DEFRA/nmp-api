@@ -14,14 +14,15 @@ class OrganicManureController {
 
   async getTotalNitrogen() {
     const { managementPeriodID } = this.#request.params;
-    const { fromDate, toDate, confirm } = this.#request.query;
+    const { fromDate, toDate, confirm,organicManureID } = this.#request.query;
 
     try {
       const records = await this.#organicManureService.getTotalNitrogen(
         managementPeriodID,
         fromDate,
         toDate,
-        confirm
+        confirm,
+        organicManureID
       );
       return this.#h.response({ TotalN: records });
     } catch (error) {
@@ -30,7 +31,7 @@ class OrganicManureController {
   }
   async getTotalNitrogenIfIsGreenFoodCompost() {
     const { managementPeriodID } = this.#request.params;
-    const { fromDate, toDate, confirm, isGreenFoodCompost } =
+    const { fromDate, toDate, confirm, isGreenFoodCompost,organicManureID } =
       this.#request.query;
 
     try {
@@ -40,7 +41,7 @@ class OrganicManureController {
           fromDate,
           toDate,
           confirm,
-          isGreenFoodCompost
+          isGreenFoodCompost,organicManureID
         );
       return this.#h.response({ TotalN: records });
     } catch (error) {
@@ -140,6 +141,50 @@ class OrganicManureController {
       return this.#h.response(records);
     } catch (error) {
       console.error("Error in getOrganicManureDataById controller:", error);
+      return this.#h.response({ error });
+    }
+  }
+
+  async getOrganicManureByFarmIdAndYear() {
+    try {
+      const { organicManureId } = this.#request.params;
+      const { farmId } = this.#request.query;
+      const { harvestYear } = this.#request.query;
+      const records =
+        await this.#organicManureService.getOrganicManureByFarmIdAndYear(
+          organicManureId,
+          farmId,
+          harvestYear
+        );
+
+      return this.#h.response(records);
+    } catch (error) {
+      console.error("Error in getOrganicManureByFarmIdAndYear controller:", error);
+      return this.#h.response({ error });
+    }
+  }
+   async updateOrganicManures() {
+ 
+    const updatedOrganicManureData = this.#request.payload.OrganicManures; // Extract the array from payload
+    const userId = this.#request.userId;
+
+  
+
+    try {
+      // const results = []; // Array to store the results for each manure item
+      // for (const manure of updatedFertiliserManureData) {
+      // Process each manure object
+      const data = await this.#organicManureService.updateOrganicManure(
+        updatedOrganicManureData, // Pass the current manure object
+        userId, // User ID
+        // parseInt(fertiliserId), // Fertiliser ID
+        this.#request // Original request
+      );
+      // results.push(data); // Store result of each update
+      // }
+
+      return this.#h.response({ data }); // Respond with the aggregated results
+    } catch (error) {
       return this.#h.response({ error });
     }
   }

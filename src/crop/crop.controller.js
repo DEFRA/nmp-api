@@ -25,11 +25,6 @@ class CropController {
         farmId,
         harvestYear
       );
-
-      if (plans.length === 0) {
-        throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
-      }
-
       return this.#h.response(plans);
     } catch (error) {
       console.error("Error in getCropsPlansByHarvestYear controller:", error);

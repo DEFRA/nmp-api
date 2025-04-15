@@ -2,6 +2,7 @@ const Joi = require("joi");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const {
   CreateOrganicManuresWithFarmManureTypeDtoSchema,
+  UpdateOrganicManuresWithFarmManureTypeDtoSchema,
 } = require("./dto/organic-manure.dto");
 const { OrganicManureController } = require("./organic-manure.controller");
 const getController = (request, h) => new OrganicManureController(request, h);
@@ -23,6 +24,7 @@ module.exports = [
           fromDate: Joi.date().iso().required(),
           toDate: Joi.date().iso().required(),
           confirm: Joi.boolean().required(),
+          organicManureID: Joi.number().integer().allow(null).optional()
         }),
         failAction: (request, h, err) => {
           return h
@@ -59,6 +61,7 @@ module.exports = [
           toDate: Joi.date().iso().required(),
           confirm: Joi.boolean().required(),
           isGreenFoodCompost: Joi.boolean().required(),
+          organicManureID: Joi.number().integer().allow(null).optional()
         }),
         failAction: (request, h, err) => {
           return h
@@ -233,6 +236,66 @@ module.exports = [
       },
       handler: async (request, h) => {
         return getController(request, h).getOrganicManureDataById();
+      },
+    },
+  },
+  {
+    method: "GET",
+    path: "/organic-manures/OrganicManuresData/{organicManureId}",
+    options: {
+      tags: ["api", "Organic Manure"],
+      description: "Get organic manure by farmId and harvest year",
+      validate: {
+        params: Joi.object({
+          organicManureId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          farmId: Joi.number().integer().required(),
+          harvestYear: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      return getController(request, h).getOrganicManureByFarmIdAndYear();
+    },
+  },
+  {
+    method: "PUT",
+    path: "/organic-manures",
+    options: {
+      tags: ["api", "Organic Manure"],
+      description: "Update Organic Manures",
+      validate: {
+        payload: UpdateOrganicManuresWithFarmManureTypeDtoSchema,
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+      handler: async (request, h) => {
+        return getController(request, h).updateOrganicManures();
       },
     },
   },

@@ -16,6 +16,9 @@ const {
 } = require("../shared/updateRecommendation.service");
 const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const { MoreThan } = require("typeorm");
+const {
+  UpdateRecommendationChanges,
+} = require("../shared/updateRecommendationsChanges");
 
 class FertiliserManuresService extends BaseService {
   constructor() {
@@ -32,6 +35,7 @@ class FertiliserManuresService extends BaseService {
     );
     this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
     this.UpdateRecommendation = new UpdateRecommendation();
+    this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
     this.soilAnalysisRepository =
       AppDataSource.getRepository(SoilAnalysisEntity);
   }
@@ -75,7 +79,12 @@ class FertiliserManuresService extends BaseService {
     return result.totalN;
   }
 
-  async getTotalNitrogen(managementPeriodID, confirm, fertiliserId) {
+  async getTotalNitrogen(
+    managementPeriodID,
+    confirm,
+    fertiliserID,
+    organicManureID
+  ) {
     const fertiliserManuresResult = await this.repository
       .createQueryBuilder("fertiliserManures")
       .select(
@@ -86,16 +95,17 @@ class FertiliserManuresService extends BaseService {
         managementPeriodID,
       })
       .andWhere("fertiliserManures.Confirm = :confirm", { confirm });
-    if (fertiliserId !== null && fertiliserId !== undefined) {
+    if (fertiliserID !== null && fertiliserID !== undefined) {
       fertiliserManuresResult.andWhere(
-        "fertiliserManures.ID != :fertiliserId",
+        "fertiliserManures.ID != :fertiliserID",
         {
-          fertiliserId,
+          fertiliserID,
         }
       );
     }
 
     const fertiliserResult = await fertiliserManuresResult.getRawOne();
+    console.log("fertiliserResult", fertiliserResult);
     // return result.totalN;
     // .getRawOne();
     const organicManuresResult = await this.organicManureRepository
@@ -104,9 +114,16 @@ class FertiliserManuresService extends BaseService {
       .where("organicManures.ManagementPeriodID = :managementPeriodID", {
         managementPeriodID,
       })
-      .andWhere("organicManures.Confirm = :confirm", { confirm })
-      .getRawOne();
-    return fertiliserResult.totalN + organicManuresResult.totalN;
+      .andWhere("organicManures.Confirm = :confirm", { confirm });
+    if (organicManureID !== null && organicManureID !== undefined) {
+      organicManuresResult.andWhere("organicManures.ID != :organicManureID", {
+        organicManureID,
+      });
+    }
+
+    const organicResult = await organicManuresResult.getRawOne();
+    console.log("organicResult", organicResult);
+    return fertiliserResult.totalN + organicResult.totalN;
   }
 
   async createFertiliserManures(fertiliserManureData, userId, request) {
@@ -370,12 +387,15 @@ class FertiliserManuresService extends BaseService {
           where: { ID: managementPeriod.CropID },
         });
 
-        this.UpdateRecommendation.updateRecommendationAndOrganicManure(
+       
+        await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
           crop.FieldID,
           crop.Year,
           request,
-          userId
+          userId,
+          transactionalManager
         );
+
         // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
         const nextAvailableCrop = await this.cropRepository.findOne({
           where: {
@@ -492,12 +512,13 @@ class FertiliserManuresService extends BaseService {
           "EXEC [spFertiliserManures_DeleteFertiliserManures] @ID = @0";
         await transactionalManager.query(storedProcedure, [fertliserManureId]);
 
-        this.UpdateRecommendation.updateRecommendationAndOrganicManure(
-          crop.FieldID,
-          crop.Year,
-          request,
-          userId
-        );
+         await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+           crop.FieldID,
+           crop.Year,
+           request,
+           userId,
+           transactionalManager
+         );
         // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
         const nextAvailableCrop = await this.cropRepository.findOne({
           where: {
