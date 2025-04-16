@@ -330,6 +330,7 @@ class UpdateRecommendation {
         snsAnalysesData = [];
         firstCrop = await this.getFirstCropData(fieldData.ID, cropData.Year);
         const firstCropSnsAnalysis = await this.getSnsAnalysesData(
+          transactionalManager,
           firstCrop.ID
         );
         if (firstCropSnsAnalysis) {
@@ -379,6 +380,7 @@ class UpdateRecommendation {
           (crop) => crop.CropOrder === 2
         );
         const secondCropSnsAnalysis = await this.getSnsAnalysesData(
+          transactionalManager,
           secondCrop.ID
         );
         if (secondCropSnsAnalysis) {
@@ -443,7 +445,10 @@ class UpdateRecommendation {
           mannerOutputReq,
           request
         );
-        snsAnalysesData = await this.getSnsAnalysesData(cropData.ID);
+        snsAnalysesData = await this.getSnsAnalysesData(
+          transactionalManager,
+          cropData.ID
+        );
       }
 
       let nutrientRecommendationsData;
@@ -665,20 +670,26 @@ class UpdateRecommendation {
         // Loop through each crop in dataMultipleCrops
         for (const singleCrop of dataMultipleCrops) {
           // Retrieve snsAnalysesData for each crop by crop.ID
-          const analysisData = await this.getSnsAnalysesData(singleCrop.ID);
+          const analysisData = await this.getSnsAnalysesData(
+            transactionalManager,
+            singleCrop.ID
+          );
 
           // Check if snsAnalysesData exists (not null or empty)
-          if (analysisData && analysisData.length > 0) {
+          if (analysisData) {
             // Push to snsAnalysesData array if snsAnalysesData is found
             snsAnalysesData.push(analysisData);
           }
         }
       } else if (dataMultipleCrops.length === 1) {
         // If there is only one crop, get snsAnalysesData for that crop
-        const analysisData = await this.getSnsAnalysesData(crop.ID);
+        const analysisData = await this.getSnsAnalysesData(
+          transactionalManager,
+          crop.ID
+        );
 
         // Check if snsAnalysesData exists and assign directly as an object
-        if (analysisData && analysisData.length > 0) {
+        if (analysisData) {
           snsAnalysesData = analysisData; // Assign snsAnalysesData directly as an object
         }
       }
@@ -2494,8 +2505,8 @@ class UpdateRecommendation {
 
     return nutrientRecommendationnReqBody;
   }
-  async getSnsAnalysesData(id) {
-    const data = await this.snsAnalysisRepository.findOne({
+  async getSnsAnalysesData(transactionalManager, id) {
+    const data = await transactionalManager.findOne(SnsAnalysesEntity, {
       where: { CropID: id },
     });
 
@@ -2620,7 +2631,6 @@ class UpdateRecommendation {
         order: { Date: "DESC" },
       }
     );
-
 
     // Define the fields we want the latest values for
     const fieldsToTrack = [
