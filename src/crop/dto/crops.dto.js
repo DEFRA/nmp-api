@@ -23,7 +23,7 @@ const CropDto = Joi.object({
   MilkYield: Joi.number().allow(null).precision(3).default(0).allow(null),
   ConcentrateUse: Joi.number().allow(null).precision(3).default(0).allow(null),
   StockingRate: Joi.number().allow(null).precision(3).default(0).allow(null),
-  DefoliationSequence: Joi.number()
+  DefoliationSequenceID: Joi.number()
     .integer()
     .allow(null)
     .default(0)

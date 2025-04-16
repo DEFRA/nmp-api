@@ -102,7 +102,7 @@ const CropEntity = new EntitySchema({
       default: 0,
       nullable: true,
     },
-    DefoliationSequence: {
+    DefoliationSequenceID: {
       type: "int",
       default: 0,
       nullable: true,
