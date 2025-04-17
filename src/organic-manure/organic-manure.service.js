@@ -1640,7 +1640,7 @@ class OrganicManureService extends BaseService {
             const analysisData = await this.getSnsAnalysesData(singleCrop.ID);
 
             // Check if snsAnalysesData exists (not null or empty)
-            if (analysisData && analysisData.length > 0) {
+            if (analysisData) {
               // Push to snsAnalysesData array if snsAnalysesData is found
               snsAnalysesData.push(analysisData);
             }
@@ -1650,7 +1650,7 @@ class OrganicManureService extends BaseService {
           const analysisData = await this.getSnsAnalysesData(cropData.ID);
 
           // Check if snsAnalysesData exists and assign directly as an object
-          if (analysisData && analysisData.length > 0) {
+          if (analysisData) {
             snsAnalysesData = analysisData; // Assign snsAnalysesData directly as an object
           }
         }
