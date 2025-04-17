@@ -7,6 +7,7 @@ const {
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { MoreThan } = require("typeorm");
+const { UpdateRecommendationChanges } = require("../shared/updateRecommendationsChanges");
 
 class SnsAnalysisService extends BaseService {
   constructor() {
@@ -14,6 +15,8 @@ class SnsAnalysisService extends BaseService {
     this.repository = AppDataSource.getRepository(SnsAnalysesEntity);
     this.cropRepository = AppDataSource.getRepository(CropEntity);
     this.UpdateRecommendation = new UpdateRecommendation();
+    this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
+
   }
 
   async createSnsAnalysis(snsAnalysisBody, userId, request) {
@@ -28,28 +31,48 @@ class SnsAnalysisService extends BaseService {
       const crop = await this.cropRepository.findOne({
         where: { ID: snsAnalysisRequest.CropID },
       });
-      this.UpdateRecommendation.updateRecommendationsForField(
-        crop.FieldID,
-        crop.Year,
-        request,
-        userId
-      )
-        .then((res) => {
-          if (res === undefined) {
-            console.log(
-              "updateRecommendationAndOrganicManure returned undefined"
-            );
-          } else {
-            console.log("updateRecommendationAndOrganicManure result:", res);
-          }
-        })
-        .catch((error) => {
-          console.error(
-            "Error updating recommendation and organic manure:",
-            error
-          );
-        });
+       await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+         crop.FieldID,
+         crop.Year,
+         request,
+         userId,
+         transactionalManager
+       );
 
+       // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
+       const nextAvailableCrop = await this.cropRepository.findOne({
+         where: {
+           FieldID: crop.FieldID,
+           Year: MoreThan(crop.Year), // Find the next available year greater than the current crop.Year
+         },
+         order: {
+           Year: "ASC", // Ensure we get the next immediate year
+         },
+       });
+
+       if (nextAvailableCrop) {
+         this.UpdateRecommendation.updateRecommendationsForField(
+           crop.FieldID,
+           nextAvailableCrop.Year,
+           request,
+           userId
+         )
+           .then((res) => {
+             if (res === undefined) {
+               console.log(
+                 "updateRecommendationAndOrganicManure returned undefined"
+               );
+             } else {
+               console.log("updateRecommendationAndOrganicManure result:", res);
+             }
+           })
+           .catch((error) => {
+             console.error(
+               "Error updating recommendation and organic manure:",
+               error
+             );
+           });
+       }
       return { snsAnalysis };
     });
   }
@@ -76,12 +99,14 @@ class SnsAnalysisService extends BaseService {
         const storedProcedure = "EXEC spSnsAnalyses_DeleteSnsAnalyses @id = @0";
         await AppDataSource.query(storedProcedure, [snsAnalysisId]);
 
-        this.UpdateRecommendation.updateRecommendationAndOrganicManure(
-          crop.FieldID,
-          crop.Year,
-          request,
-          userId
-        );
+          await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+            crop.FieldID,
+            crop.Year,
+            request,
+            userId,
+            transactionalManager
+          );
+
         // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
         const nextAvailableCrop = await this.cropRepository.findOne({
           where: {
@@ -162,12 +187,14 @@ class SnsAnalysisService extends BaseService {
         where: { ID: SnsAnalysis.CropID },
       });
 
-      this.UpdateRecommendation.updateRecommendationAndOrganicManure(
+      await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
         crop.FieldID,
         crop.Year,
         request,
-        userId
+        userId,
+        transactionalManager
       );
+
       // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
       const nextAvailableCrop = await this.cropRepository.findOne({
         where: {
