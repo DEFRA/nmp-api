@@ -395,6 +395,7 @@ class UpdateRecommendationChanges {
           cropData.Year
         );
         const firstCropSnsAnalysis = await this.getSnsAnalysesData(
+          transactionalManager,
           firstCrop.ID
         );
         if (firstCropSnsAnalysis) {
@@ -444,6 +445,7 @@ class UpdateRecommendationChanges {
           (crop) => crop.CropOrder === 2
         );
         const secondCropSnsAnalysis = await this.getSnsAnalysesData(
+          transactionalManager,
           secondCrop.ID
         );
         if (secondCropSnsAnalysis) {
@@ -508,7 +510,10 @@ class UpdateRecommendationChanges {
           mannerOutputReq,
           request
         );
-        snsAnalysesData = await this.getSnsAnalysesData(cropData.ID);
+        snsAnalysesData = await this.getSnsAnalysesData(
+          transactionalManager,
+          cropData.ID
+        );
       }
 
       let nutrientRecommendationsData;
@@ -517,11 +522,11 @@ class UpdateRecommendationChanges {
         cropData.ID
       );
       let fertiliserData;
-      if(organicManure.ManagementPeriodID){
+      if (organicManure.ManagementPeriodID) {
         fertiliserData = await this.getP205AndK20fromfertiliser(
-         transactionalManager,
-         organicManure.ManagementPeriodID
-       );
+          transactionalManager,
+          organicManure.ManagementPeriodID
+        );
       }
 
       let pkBalance = await this.getPKBalanceData(
@@ -731,13 +736,12 @@ class UpdateRecommendationChanges {
         transactionalManager,
         crop.ID
       );
-      let fertiliserData
-      if( secondCropManagementData.ID){
+      let fertiliserData;
+      if (secondCropManagementData.ID) {
         fertiliserData = await this.getP205AndK20fromfertiliser(
           transactionalManager,
           secondCropManagementData.ID
         );
-
       }
 
       let snsAnalysesData = null;
@@ -750,20 +754,26 @@ class UpdateRecommendationChanges {
         // Loop through each crop in dataMultipleCrops
         for (const singleCrop of dataMultipleCrops) {
           // Retrieve snsAnalysesData for each crop by crop.ID
-          const analysisData = await this.getSnsAnalysesData(singleCrop.ID);
+          const analysisData = await this.getSnsAnalysesData(
+            transactionalManager,
+            singleCrop.ID
+          );
 
           // Check if snsAnalysesData exists (not null or empty)
-          if (analysisData && analysisData.length > 0) {
+          if (analysisData) {
             // Push to snsAnalysesData array if snsAnalysesData is found
             snsAnalysesData.push(analysisData);
           }
         }
       } else if (dataMultipleCrops.length === 1) {
         // If there is only one crop, get snsAnalysesData for that crop
-        const analysisData = await this.getSnsAnalysesData(crop.ID);
+        const analysisData = await this.getSnsAnalysesData(
+          transactionalManager,
+          crop.ID
+        );
 
         // Check if snsAnalysesData exists and assign directly as an object
-        if (analysisData && analysisData.length > 0) {
+        if (analysisData) {
           snsAnalysesData = analysisData; // Assign snsAnalysesData directly as an object
         }
       }
@@ -1054,7 +1064,7 @@ class UpdateRecommendationChanges {
       where: { ManagementPeriodID: ID },
     });
   }
-  async getP205AndK20fromfertiliser(transactionalManager,managementPeriodId) {
+  async getP205AndK20fromfertiliser(transactionalManager, managementPeriodId) {
     let sumOfP205 = 0;
     let sumOfK20 = 0;
 
@@ -2592,8 +2602,8 @@ class UpdateRecommendationChanges {
 
     return nutrientRecommendationnReqBody;
   }
-  async getSnsAnalysesData(id) {
-    const data = await this.snsAnalysisRepository.findOne({
+  async getSnsAnalysesData(transactionalManager, id) {
+    const data = await transactionalManager.findOne(SnsAnalysesEntity, {
       where: { CropID: id },
     });
 
