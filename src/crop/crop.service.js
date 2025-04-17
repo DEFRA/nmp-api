@@ -5,6 +5,7 @@ const {
 } = require("../db/entity/management-period.entity");
 const { BaseService } = require("../base/base.service");
 const RB209ArableService = require("../vendors/rb209/arable/arable.service");
+const RB209GrassService = require("../vendors/rb209/grass/grass.service");
 const boom = require("@hapi/boom");
 const { StaticStrings } = require("../shared/static.string");
 const { FarmEntity } = require("../db/entity/farm.entity");
@@ -27,6 +28,7 @@ class CropService extends BaseService {
       ManagementPeriodEntity
     );
     this.rB209ArableService = new RB209ArableService();
+    this.rB209GrassService = new RB209GrassService();
     this.UpdateRecommendation = new UpdateRecommendation();
 
     this.farmRepository = AppDataSource.getRepository(FarmEntity);
@@ -236,7 +238,7 @@ class CropService extends BaseService {
         };
       } catch (error) {
         console.error(
-          `Error fetching crop details for FieldID: ${fieldId}`,
+          `Error fetching crop details for CropID: ${CropID}`,
           error
         );
         return {
@@ -305,37 +307,82 @@ class CropService extends BaseService {
       }
     };
 
+    const findDefoliationSequenceDescription = async (
+      SwardTypeID,
+      PotentialCut,
+      DefoliationSequenceID
+    ) => {
+      try {
+        let defoliationSequenceDescription = null;
+        let defoliationSequenceList = await this.rB209GrassService.getData(
+          `Grass/DefoliationSequence?swardTypeId=${SwardTypeID}&numberOfCuts=${PotentialCut}`
+        );      
+        
+        if (
+          defoliationSequenceList.data &&
+          Array.isArray(defoliationSequenceList.data.list) &&
+          defoliationSequenceList.data.list.length > 0
+        ) {
+          const matchingDefoliation = defoliationSequenceList.data.list.find(
+            (x) => x.defoliationSequenceId === DefoliationSequenceID
+          );
+          if (matchingDefoliation != null) {
+            defoliationSequenceDescription = matchingDefoliation
+              ? matchingDefoliation.defoliationSequenceDescription
+              : null;
+          }
+        }
+        
+        return defoliationSequenceDescription;
+      } catch (error) {
+        console.error(
+          `Error fetching Defoliation Sequence for swardTypeId: ${SwardTypeID}&numberOfCuts=${PotentialCut}`,
+          error
+        );
+        return "Unknown";
+      }
+    };
     const rainfall = await findFarmRainfall(farmId);
     const plansWithNames = await this.mapCropTypeIdWithTheirNames(plans);
-    const cropDetails = await Promise.all(
-      plansWithNames.map(async (plan) => {
-        // const cropGroupId = findCropGroupId(plan.CropTypeID);
-        // console.log("cropGroupId", cropGroupId);
-        // const cropGroupName = cropGroupId
-        //   ? await findCropGroupName(cropGroupId)
-        //   : "Unknown";
-        // console.log("cropGroupName", cropGroupName);
-        const { PlantingDate } = await findCropDetailsFromRepo(plan.CropID);
+    
+    const cropDetails = [];
 
-        return {
-          CropId: plan.CropID,
-          CropTypeID: plan.CropTypeID,
-          CropTypeName: plan.CropTypeName,
-          // CropGroupID: cropGroupId,
-          CropGroupName: plan.CropGroupName,
-          FieldID: plan.FieldID,
-          FieldName: plan.FieldName,
-          CropVariety: plan.CropVariety,
-          OtherCropName: plan.OtherCropName,
-          CropInfo1: plan.CropInfo1,
-          CropInfo2: plan.CropInfo2,
-          Yield: plan.Yield,
-          LastModifiedOn: plan.LastModifiedOn,
-          PlantingDate: PlantingDate,
-        };
-      })
-    );
-    console.log("cropDetails", cropDetails);
+    for (const plan of plansWithNames) {
+      const { PlantingDate } = await findCropDetailsFromRepo(plan.CropID);
+
+      let defoliationSequenceDescription = null;
+      
+      if (
+        plan.SwardTypeID != null &&
+        plan.PotentialCut != null &&
+        plan.DefoliationSequenceID != null
+      ) {
+        defoliationSequenceDescription =
+          await findDefoliationSequenceDescription(
+            plan.SwardTypeID,
+            plan.PotentialCut,
+            plan.DefoliationSequenceID
+          );
+      }
+
+      cropDetails.push({
+        CropId: plan.CropID,
+        CropTypeID: plan.CropTypeID,
+        CropTypeName: plan.CropTypeName,
+        CropGroupName: plan.CropGroupName,
+        FieldID: plan.FieldID,
+        FieldName: plan.FieldName,
+        CropVariety: plan.CropVariety,
+        OtherCropName: plan.OtherCropName,
+        CropInfo1: plan.CropInfo1,
+        CropInfo2: plan.CropInfo2,
+        Yield: plan.Yield,
+        LastModifiedOn: plan.LastModifiedOn,
+        PlantingDate: PlantingDate,
+        Management: defoliationSequenceDescription,
+      });
+    }
+
     const organicMaterials = await Promise.all(
       cropDetails.map(async (crop) => {
         // Fetch the management period ID for the crop
@@ -520,7 +567,7 @@ class CropService extends BaseService {
             { ID: crop.ID },
             {
               CropGroupName: cropGroupName,
-              Variety:variety,
+              Variety: variety,
               ModifiedByID: userId,
               ModifiedOn: new Date(),
             }
@@ -528,7 +575,6 @@ class CropService extends BaseService {
           if (updatedCrop.affected === 0) {
             throw boom.notFound(`Failed to update Crop with ID ${crop.ID}`);
           }
-          
           const cropDetails = await transactionalManager.findOne(CropEntity, {
             where: { ID: crop.ID },
           });
