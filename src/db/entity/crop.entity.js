@@ -111,6 +111,18 @@ const CropEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
+    SwardTypeID: {
+      type: "int",
+      nullable: true,
+    },
+    SwardManagementID: {
+      type: "int",
+      nullable: true,
+    },
+    PotentialCut: {
+      type: "int",
+      nullable: true,
+    },
     PreviousID: {
       type: "int",
       nullable: true,
