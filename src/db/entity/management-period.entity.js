@@ -13,7 +13,7 @@ const ManagementPeriodEntity = new EntitySchema({
     CropID: {
       type: "int",
     },
-    DefoliationID: {
+    Defoliation: {
       type: "int",
       default: 1,
       nullable: true,

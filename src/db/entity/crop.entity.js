@@ -102,12 +102,24 @@ const CropEntity = new EntitySchema({
       default: 0,
       nullable: true,
     },
-    DefoliationSequence: {
+    DefoliationSequenceID: {
       type: "int",
       default: 0,
       nullable: true,
     },
     GrazingIntensity: {
+      type: "int",
+      nullable: true,
+    },
+    SwardTypeID: {
+      type: "int",
+      nullable: true,
+    },
+    SwardManagementID: {
+      type: "int",
+      nullable: true,
+    },
+    PotentialCut: {
       type: "int",
       nullable: true,
     },

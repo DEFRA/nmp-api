@@ -8,5 +8,7 @@ module.exports = [
   ...require("./measurement/measurement.route"),
   ...require("./adviceNote/adviceNote.route"),
   ...require("./previousCropping/previousCropping.route"),
-  ...require("./rainfall/rainfall.route")
+  ...require("./rainfall/rainfall.route"),
+  ...require("./grass/grass.route")
+
 ];

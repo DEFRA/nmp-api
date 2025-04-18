@@ -50,6 +50,7 @@ const ApplicationRateDto = Joi.object({
 
 const AutumnCropNitrogenUptakeDto = Joi.object({
   value: Joi.number()
+    .integer()
     .required()
     .description("Nitrogen uptake value of the autumn crop"),
   unit: Joi.string().required().description("Unit of nitrogen uptake"),

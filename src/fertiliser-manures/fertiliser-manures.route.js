@@ -62,7 +62,8 @@ module.exports = [
         }),
         query: Joi.object({
           confirm: Joi.boolean().required(),          
-          fertiliserId: Joi.number().integer().allow(null).optional()
+          fertiliserID: Joi.number().integer().allow(null).optional(),
+          organicManureID: Joi.number().integer().allow(null).optional()
         }),
         failAction: (request, h, err) => {
           return h
