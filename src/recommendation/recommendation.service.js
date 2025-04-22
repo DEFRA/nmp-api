@@ -17,6 +17,8 @@ const { CropEntity } = require("../db/entity/crop.entity");
 const {
   ManagementPeriodEntity,
 } = require("../db/entity/management-period.entity");
+const RB209GrassService = require("../vendors/rb209/grass/grass.service");
+const RB209GrasslandService = require("../vendors/rb209/grassland/grassland.service");
 
 class RecommendationService extends BaseService {
   constructor() {
@@ -41,7 +43,9 @@ class RecommendationService extends BaseService {
     );
     this.fertiliserManuresRepository = AppDataSource.getRepository(
       FertiliserManuresEntity
-    );
+    );    
+    this.rB209GrassService = new RB209GrassService();
+    this.rB209GrasslandService = new RB209GrasslandService();
   }
   async findManagementPeriodByID(ManagementPeriodID) {
     // Ensure the managementPeriodID is provided
@@ -187,7 +191,6 @@ class RecommendationService extends BaseService {
     const cropsToProcess = Array.isArray(cropDataList)
       ? cropDataList
       : [cropDataList];
-   
     // Loop through each crop in the cropsToProcess (which is always an array)
     for (const cropData of cropsToProcess) {
       // Fetch the ManagementPeriod data for the current crop
@@ -243,14 +246,13 @@ class RecommendationService extends BaseService {
       // );
       // Step 3: Proceed with the process only if pH > 0 is found
       const cropData = await this.findCropDataByID(Recommendation.Crop_ID); // check order 1 or 2
-    
+
       let totalLime1 = 0;
       let totalLime2 = 0;
       let result = 0;
       if (cropData != null) {
         // Step 4: Handle CropOrder 1 (first crop)
         if (cropData.CropOrder === 1) {
-      
           // Step: Fetch multiple firstCropOrderData based on fieldID, year, and soilAnalysisYear
           const firstCropOrderDataList =
             await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
@@ -259,12 +261,12 @@ class RecommendationService extends BaseService {
               soilAnalysisWithPhYear,
               1
             );
-         
+
           if (firstCropOrderDataList != null) {
             totalLime1 = await this.getApplyLimeInCaseOfMultipleCrops(
               firstCropOrderDataList
             );
-          } 
+          }
 
           // Now, totalLime1 contains the sum of lime for all crops found in the list
           console.log(`Total Lime from all firstCropOrderData: ${totalLime1}`);
@@ -272,7 +274,6 @@ class RecommendationService extends BaseService {
 
         // Step 5: Handle CropOrder 2 (second crop)
         if (cropData.CropOrder === 2) {
-      
           totalLime1 = 0;
           const CropOrderDataList =
             await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
@@ -282,7 +283,6 @@ class RecommendationService extends BaseService {
             );
 
           if (CropOrderDataList != null) {
-            
             totalLime1 = await this.getApplyLimeInCaseOfMultipleCrops(
               CropOrderDataList
             );
@@ -304,8 +304,6 @@ class RecommendationService extends BaseService {
         }
 
         // Step 6: Sum total lime values for both crops
-        
-      
 
         // Step 7: Subtract the total lime from cropN in the recommendation
         const cropNeedValue = Recommendation.Recommendation_CropN;
@@ -316,7 +314,7 @@ class RecommendationService extends BaseService {
       }
       // Return the result of the calculation
       if(result < 0){
-        return 0
+        return 0;
       }else{
         return result;
       }
@@ -376,11 +374,107 @@ class RecommendationService extends BaseService {
         },
       });
       const groupedObj = {};
-      console.log("PKBalnceee", PKbalance);
+       const findDefoliationSequenceDescription = async (
+        SwardTypeID,
+        PotentialCut,
+        DefoliationSequenceID
+      ) => {
+        try {
+          let defoliationSequenceDescription = null;
+          let defoliationSequenceList = await this.rB209GrassService.getData(
+            `Grass/DefoliationSequence?swardTypeId=${SwardTypeID}&numberOfCuts=${PotentialCut}`
+          );    
+          console.log('defoliationSequenceList',defoliationSequenceList.data)
+          if (
+            defoliationSequenceList.data &&
+            Array.isArray(defoliationSequenceList.data.list) &&
+            defoliationSequenceList.data.list.length > 0
+          ) {
+            const matchingDefoliation = defoliationSequenceList.data.list.find(
+              (x) => x.defoliationSequenceId == DefoliationSequenceID
+            );
+            if (matchingDefoliation != null) {
+              defoliationSequenceDescription = matchingDefoliation
+                ? matchingDefoliation.defoliationSequenceDescription
+                : null;
+            }
+          }
+
+          return defoliationSequenceDescription;
+        } catch (error) {
+          console.error(
+            `Error fetching Defoliation Sequence for swardTypeId: ${SwardTypeID}&numberOfCuts=${PotentialCut}`,
+            error
+          );
+          return "Unknown";
+        }
+      };
+      const findSwardType = async (SwardTypeID) => {
+        try {
+          let swardTypeName = null;
+          let swardTypeList = await this.rB209GrassService.getData(
+            `Grass/SwardTypes`
+          );
+
+          if (swardTypeList.length > 0) {
+            const matchingSward = swardTypeList.find(
+              (x) => x.swardTypeId === SwardTypeID
+            );
+            if (matchingSward != null) {
+              swardTypeName = matchingSward ? matchingSward.swardType : null;
+            }
+          }
+
+          return swardTypeName;
+        } catch (error) {
+          console.error(`Error fetching sward Type list`, error);
+          return "Unknown";
+        }
+      };
+
+      const findGrassSeason = async (seasonID) => {
+        try {
+          let season = await this.rB209GrasslandService.getData(
+            `Grassland/GrasslandSeason/${seasonID}`
+          );
+          return season.seasonName;
+        } catch (error) {
+          console.error(`Error fetching Grassland Season`, error);
+          return "Unknown";
+        }
+      };
+
+     
+     
       const mappedRecommendationsNew = await Promise.all(mappedRecommendations);
-      mappedRecommendationsNew.forEach((r) => {
+      console.log("mappedRecommendationsNew", mappedRecommendationsNew);
+      
+      for (const r of mappedRecommendationsNew) {
         groupedObj[r.Crop.ID] = {
-          Crop: r.Crop,
+          Crop: {
+            ...r.Crop,
+            EstablishmentName:(r.Crop.CropTypeID==140&&r.Crop.Establishment!=null)?
+            await findGrassSeason(r.Crop.Establishment):null,
+            SwardManagementName:
+              (r.Crop.CropTypeID==140&&r.Crop.SwardManagementID != null)
+                ? await this.findSwardTypeManagment(r.Crop.SwardManagementID)
+                : null,
+            SwardTypeName:
+              (r.Crop.CropTypeID==140&&r.Crop.SwardTypeID != null)
+                ? await findSwardType(r.Crop.SwardTypeID)
+                : null,
+            DefoliationSequenceName:
+            (r.Crop.CropTypeID==140&&
+              r.Crop.SwardTypeID != null &&
+              r.Crop.PotentialCut != null &&
+              r.Crop.DefoliationSequenceID != null)
+                ? await findDefoliationSequenceDescription(
+                    r.Crop.SwardTypeID,
+                    r.Crop.PotentialCut,
+                    r.Crop.DefoliationSequenceID
+                  )
+                : null,
+          },
           PKbalance: PKbalance,
           Recommendations: (
             groupedObj[r.Crop.ID]?.Recommendations || []
@@ -390,7 +484,11 @@ class RecommendationService extends BaseService {
             FertiliserManure: r.FertiliserManure,
           }),
         };
-      });
+      }
+
+      
+     
+console.log('groupedObj',groupedObj)
 
       const dataWithComments = await Promise.all(
         Object.values(groupedObj).map(async (r) => ({
@@ -492,6 +590,30 @@ class RecommendationService extends BaseService {
       throw error;
     }
   }
+  async findSwardTypeManagment(SwardManagementID) {
+    try {
+      let swardManagementsName = null;
+      let swardManagementsList = await this.rB209GrassService.getData(
+        `Grass/SwardManagements`
+      );
+console.log('swardManagementsList',swardManagementsList);
+      if (swardManagementsList.length > 0) {
+        const matchingSward = swardManagementsList.find(
+          (x) => x.swardManagementId === SwardManagementID
+        );
+        if (matchingSward != null) {
+          swardManagementsName = matchingSward
+            ? matchingSward.swardManagement
+            : null;
+        }
+      }
+
+      return swardManagementsName;
+    } catch (error) {
+      console.error(`Error fetching sward Management list`, error);
+      return "Unknown";
+    }
+  };
 }
 
 module.exports = { RecommendationService };
