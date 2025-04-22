@@ -435,20 +435,28 @@ class RecommendationService extends BaseService {
       const mappedRecommendationsNew = await Promise.all(mappedRecommendations);
       console.log("mappedRecommendationsNew", mappedRecommendationsNew);
       
-      mappedRecommendationsNew.forEach(async (r) => {
-                
+      for (const r of mappedRecommendationsNew) {
         groupedObj[r.Crop.ID] = {
           Crop: {
             ...r.Crop,
-            SwardManagementName: r.Crop.SwardManagementID != null?await this.findSwardTypeManagment(r.Crop.SwardManagementID):null,
-            SwardTypeName:r.Crop.SwardTypeID != null?await findSwardType(r.Crop.SwardTypeID):null,
-            DefoliationSequenceName:(r.Crop.SwardTypeID != null &&
+            SwardManagementName:
+              r.Crop.SwardManagementID != null
+                ? await this.findSwardTypeManagment(r.Crop.SwardManagementID)
+                : null,
+            SwardTypeName:
+              r.Crop.SwardTypeID != null
+                ? await findSwardType(r.Crop.SwardTypeID)
+                : null,
+            DefoliationSequenceName:
+              r.Crop.SwardTypeID != null &&
               r.Crop.PotentialCut != null &&
-              r.Crop.DefoliationSequenceID != null)? await findDefoliationSequenceDescription(
-                r.Crop.SwardTypeID,
-                r.Crop.PotentialCut,
-                r.Crop.DefoliationSequenceID
-              ):null,
+              r.Crop.DefoliationSequenceID != null
+                ? await findDefoliationSequenceDescription(
+                    r.Crop.SwardTypeID,
+                    r.Crop.PotentialCut,
+                    r.Crop.DefoliationSequenceID
+                  )
+                : null,
           },
           PKbalance: PKbalance,
           Recommendations: (
@@ -459,7 +467,8 @@ class RecommendationService extends BaseService {
             FertiliserManure: r.FertiliserManure,
           }),
         };
-      });
+      }
+
       
      
 console.log('groupedObj',groupedObj)
