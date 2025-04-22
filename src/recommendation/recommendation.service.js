@@ -18,6 +18,7 @@ const {
   ManagementPeriodEntity,
 } = require("../db/entity/management-period.entity");
 const RB209GrassService = require("../vendors/rb209/grass/grass.service");
+const RB209GrasslandService = require("../vendors/rb209/grassland/grassland.service");
 
 class RecommendationService extends BaseService {
   constructor() {
@@ -44,6 +45,7 @@ class RecommendationService extends BaseService {
       FertiliserManuresEntity
     );    
     this.rB209GrassService = new RB209GrassService();
+    this.rB209GrasslandService = new RB209GrasslandService();
   }
   async findManagementPeriodByID(ManagementPeriodID) {
     // Ensure the managementPeriodID is provided
@@ -382,14 +384,14 @@ class RecommendationService extends BaseService {
           let defoliationSequenceList = await this.rB209GrassService.getData(
             `Grass/DefoliationSequence?swardTypeId=${SwardTypeID}&numberOfCuts=${PotentialCut}`
           );    
-          console.log('defoliationSequenceList',defoliationSequenceList)
+          console.log('defoliationSequenceList',defoliationSequenceList.data)
           if (
             defoliationSequenceList.data &&
             Array.isArray(defoliationSequenceList.data.list) &&
             defoliationSequenceList.data.list.length > 0
           ) {
             const matchingDefoliation = defoliationSequenceList.data.list.find(
-              (x) => x.defoliationSequenceId === DefoliationSequenceID
+              (x) => x.defoliationSequenceId == DefoliationSequenceID
             );
             if (matchingDefoliation != null) {
               defoliationSequenceDescription = matchingDefoliation
@@ -430,6 +432,18 @@ class RecommendationService extends BaseService {
         }
       };
 
+      const findGrassSeason = async (seasonID) => {
+        try {
+          let season = await this.rB209GrasslandService.getData(
+            `Grassland/GrasslandSeason/${seasonID}`
+          );
+          return season.seasonName;
+        } catch (error) {
+          console.error(`Error fetching Grassland Season`, error);
+          return "Unknown";
+        }
+      };
+
      
      
       const mappedRecommendationsNew = await Promise.all(mappedRecommendations);
@@ -439,18 +453,21 @@ class RecommendationService extends BaseService {
         groupedObj[r.Crop.ID] = {
           Crop: {
             ...r.Crop,
+            EstablishmentName:(r.Crop.CropTypeID==140&&r.Crop.Establishment!=null)?
+            await findGrassSeason(r.Crop.Establishment):null,
             SwardManagementName:
-              r.Crop.SwardManagementID != null
+              (r.Crop.CropTypeID==140&&r.Crop.SwardManagementID != null)
                 ? await this.findSwardTypeManagment(r.Crop.SwardManagementID)
                 : null,
             SwardTypeName:
-              r.Crop.SwardTypeID != null
+              (r.Crop.CropTypeID==140&&r.Crop.SwardTypeID != null)
                 ? await findSwardType(r.Crop.SwardTypeID)
                 : null,
             DefoliationSequenceName:
+            (r.Crop.CropTypeID==140&&
               r.Crop.SwardTypeID != null &&
               r.Crop.PotentialCut != null &&
-              r.Crop.DefoliationSequenceID != null
+              r.Crop.DefoliationSequenceID != null)
                 ? await findDefoliationSequenceDescription(
                     r.Crop.SwardTypeID,
                     r.Crop.PotentialCut,
