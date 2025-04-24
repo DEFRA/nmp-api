@@ -116,7 +116,7 @@ class OrganicManureController {
         );
 
         if (result?.affectedRows === 0) {
-          throw boom.notFound(
+          console.log(
             `Organic manure with ID ${organicManureId} not found.`
           );
         }

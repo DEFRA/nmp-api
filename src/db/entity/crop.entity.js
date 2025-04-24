@@ -146,6 +146,12 @@ const CropEntity = new EntitySchema({
       joinColumn: { name: "FieldID" },
       inverseSide: "Crops",
     },
+    CropIDSnsAnalyses: {
+      type: "many-to-one",
+      target: "Field",
+      joinColumn: { name: "ID" },
+      inverseSide: "Crops",
+    },
     CreatedByUser: {
       type: "many-to-one",
       target: "User",

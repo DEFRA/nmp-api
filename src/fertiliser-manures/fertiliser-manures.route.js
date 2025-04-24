@@ -2,7 +2,7 @@ const Joi = require("joi");
 const {
   FertiliserManuresController,
 } = require("./fertiliser-manures.controller");
-const { CreateFertiliserManuresDto } = require("./dto/fertiliser-manures.dto");
+const { CreateFertiliserManuresDto, updateFertiliserManuresDto } = require("./dto/fertiliser-manures.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 
 const getController = (request, h) =>
@@ -27,6 +27,7 @@ module.exports = [
           fromDate: Joi.date().iso().required(),
           toDate: Joi.date().iso().required(),
           confirm: Joi.boolean().required(),
+          fertiliserId: Joi.number().optional().allow(null),
         }),
         failAction: (request, h, err) => {
           return h
@@ -60,7 +61,8 @@ module.exports = [
           managementPeriodID: Joi.number().required(),
         }),
         query: Joi.object({
-          confirm: Joi.boolean().required(),
+          confirm: Joi.boolean().required(),          
+          fertiliserId: Joi.number().integer().allow(null).optional()
         }),
         failAction: (request, h, err) => {
           return h
@@ -107,12 +109,14 @@ module.exports = [
     },
   },
 
+  
+
   {
-    method: "DELETE",
+    method: "GET",
     path: "/fertiliser-manures/{fertiliserId}",
     options: {
       tags: ["api", "Fertiliser Manures"],
-      description: "Delete Fertiliser by Fertiliser Id",
+      description: "Get fertliser by ID",
       validate: {
         params: Joi.object({
           fertiliserId: Joi.number().integer().required(),
@@ -133,8 +137,104 @@ module.exports = [
       },
     },
     handler: async (request, h) => {
+      return getController(request, h).getFertiliserById();
+    },
+  },
+  {
+    method: "GET",
+    path: "/fertiliser-manures/FertliserData/{fertiliserId}",
+    options: {
+      tags: ["api", "Fertiliser Manures"],
+      description: "Get fertliser by farmId and harvest year",
+      validate: {
+        params: Joi.object({
+          fertiliserId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          farmId: Joi.number().integer().required(),
+          harvestYear: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
       const controller = new FertiliserManuresController(request, h);
-      return controller.deleteFertiliserById();
+      return controller.getFertiliserByFarmIdAndYear();
+    },
+  },
+  {
+    method: "PUT",
+    path: "/fertiliser-manures",
+    handler: async (request, h) => {
+      const controller = new FertiliserManuresController(request, h);
+      return controller.updateFertiliser();
+    },
+    options: {
+      tags: ["api", "Fertiliser Manures"],
+      description: "Update Fertiliser Manures by Id",
+      validate: {
+        payload: CreateFertiliserManuresDto,
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+  },
+  {
+    method: "DELETE",
+    path: "/fertiliser-manures/",
+    options: {
+      tags: ["api", "Fertiliser Manures"],
+      description: "Delete Fertiliser Manures by fertiliserManure Ids",
+      validate: {
+        payload: Joi.object({
+          fertliserManureIds: Joi.array()
+            .items(Joi.number().integer().required())
+            .min(1)
+            .required()
+            .description(
+              "Array of fertiliserManure IDs to delete, e.g., [1, 2, 3]"
+            ),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      return getController(request, h).deleteFertiliserManureByIds();
     },
   },
 ];

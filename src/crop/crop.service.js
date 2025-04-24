@@ -18,7 +18,7 @@ const {
 } = require("../shared/updateRecommendation.service");
 const { FieldEntity } = require("../db/entity/field.entity");
 const { MoreThan } = require("typeorm");
-
+const { In } = require("typeorm");
 class CropService extends BaseService {
   constructor() {
     super(CropEntity);
@@ -200,11 +200,9 @@ class CropService extends BaseService {
       farmId,
       harvestYear,
     ]);
-  
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
     );
-
     const findCropGroupId = (cropTypeId) => {
       const cropType = cropTypesList.find(
         (crop) => crop.cropTypeId === cropTypeId
@@ -330,6 +328,7 @@ class CropService extends BaseService {
           CropVariety: plan.CropVariety,
           OtherCropName: plan.OtherCropName,
           CropInfo1: plan.CropInfo1,
+          CropInfo2: plan.CropInfo2,
           Yield: plan.Yield,
           LastModifiedOn: plan.LastModifiedOn,
           PlantingDate: PlantingDate,
@@ -425,6 +424,23 @@ class CropService extends BaseService {
 
     // Construct the stored procedure to delete a single crop by its ID
     const storedProcedure = "EXEC dbo.spCrops_DeleteCrops @CropsID = @0";
+    // If the crop's CropOrder is 1, check for a second crop (CropOrder = 2) in the same year
+    if (crop.CropOrder === 1) {
+      const secondCrop = await this.repository.findOne({
+        where: {
+          Year: crop.Year,
+          CropOrder: 2, // Find the second crop with CropOrder 2
+          FieldID: crop.FieldID,
+        },
+      });
+
+      // If the second crop exists, delete it
+      if (secondCrop) {
+        const storedProcedureSecondCrop =
+          "EXEC dbo.spCrops_DeleteCrops @CropsID = @0";
+        await AppDataSource.query(storedProcedureSecondCrop, [secondCrop.ID]);
+      }
+    }
 
     // Pass the individual cropId to the stored procedure
     await AppDataSource.query(storedProcedure, [CropsID]);
@@ -462,6 +478,73 @@ class CropService extends BaseService {
           );
         });
     }
+  }
+
+  async CropGroupNameExists(cropIds, newGroupName, year) {
+    return (await this.existingGroupNameCount(cropIds, newGroupName, year)) > 0;
+  }
+  async existingGroupNameCount(cropIds, newGroupName, year) {
+    if (!newGroupName) {
+      throw boom.badRequest("Group Name is required");
+    }
+
+    const existingGroupNameCount = await this.repository
+      .createQueryBuilder("Crops")
+      .where("Crops.CropGroupName = :groupName", {
+        groupName: newGroupName.trim(),
+      })
+      .andWhere("Crops.Year = :year", { year })
+      .andWhere("Crops.ID NOT IN (:...cropIds)", { cropIds });
+
+    return await existingGroupNameCount.getCount();
+  }
+
+  async updateCropGroupName(cropIds, cropGroupName,variety, year, userId) {
+    console.log('cropGroupName',cropGroupName)
+    const result = await AppDataSource.transaction(
+      async (transactionalManager) => {
+        const existingCrops = await transactionalManager.find(CropEntity, {
+          where: { ID: In(cropIds), Year: year },
+        });
+
+        if (!existingCrops || existingCrops.length === 0) {
+          throw boom.notFound(
+            `No crops found for cropIds ${cropIds.join(", ")} in Year ${year}`
+          );
+        }
+        console.log("existingCrops", existingCrops);
+        const updatedCrops = [];
+        for (const crop of existingCrops) {
+          const updatedCrop = await transactionalManager.update(
+            CropEntity,
+            { ID: crop.ID },
+            {
+              CropGroupName: cropGroupName,
+              Variety:variety,
+              ModifiedByID: userId,
+              ModifiedOn: new Date(),
+            }
+          );
+          if (updatedCrop.affected === 0) {
+            throw boom.notFound(`Failed to update Crop with ID ${crop.ID}`);
+          }
+          
+          const cropDetails = await transactionalManager.findOne(CropEntity, {
+            where: { ID: crop.ID },
+          });
+
+          if (cropDetails) {
+            updatedCrops.push(cropDetails);
+          }
+
+          console.log("Updated Crop:", cropDetails);
+        }
+
+        return {Crops:updatedCrops};
+      }
+    );
+
+    return result;
   }
 }
 
