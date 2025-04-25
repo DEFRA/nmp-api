@@ -37,6 +37,9 @@ const MannerIncorporationDelayService = require("../vendors/manner/incorporation
 const {
   GrassManagementOptionsEntity,
 } = require("../db/entity/grassManagementOptionsEntity");
+
+const RB209GrassService = require("../vendors/rb209/grass/grass.service");
+const RB209GrasslandService = require("../vendors/rb209/grassland/grassland.service");
 class FieldService extends BaseService {
   constructor() {
     super(FieldEntity);
@@ -77,6 +80,8 @@ class FieldService extends BaseService {
     this.grassManagementOptionsRepository = AppDataSource.getRepository(
       GrassManagementOptionsEntity
     );
+    this.rB209GrassService = new RB209GrassService();
+    this.rB209GrasslandService = new RB209GrasslandService();
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -556,148 +561,226 @@ class FieldService extends BaseService {
         const Errors = [];
         // Enrich crops with management periods and their sub-objects
 
-const { latestSoilAnalysis, errors: soilAnalysisErrors } = await this.handleSoilAnalysisValidation(field.ID, year);
+        const { latestSoilAnalysis, errors: soilAnalysisErrors } =
+          await this.handleSoilAnalysisValidation(field.ID, year);
 
-Errors.push(...soilAnalysisErrors);
-if (Errors.length > 0) {
-  throw new Error(JSON.stringify(Errors));
-}
+        Errors.push(...soilAnalysisErrors);
+        if (Errors.length > 0) {
+          throw new Error(JSON.stringify(Errors));
+        }
 
-const soilAnalysis =latestSoilAnalysis?latestSoilAnalysis:null;
-    
-const cropsWithManagement = [];
-for (const crop of crops) {
-  try {  
+        const soilAnalysis = latestSoilAnalysis ? latestSoilAnalysis : null;
+       
 
-    // Fetch SNS analysis
-    const snsAnalysis = await this.snsAnalysisRepository.findOne({
-      where: { CropID: crop.ID },
-    });
-    const SNSAnalysis =
-    (snsAnalysis)
-        ? {
-            SNSValue: snsAnalysis.SoilNitrogenSupplyValue,
-            SNSIndex: snsAnalysis.SoilNitrogenSupplyIndex,
-            SNSMethod: "Not Entered",
-          }
-        : null;
-    // Fetch management periods related to the crop
-    const managementPeriods = await this.managementPeriodRepository.find({
-      where: { CropID: crop.ID },
-    });
-
-    // Process management data
-    const managementWithSubData = [];
-    for (const managementPeriod of managementPeriods) {
-      const organicManures = await this.organicManureRepository.find({
-        where: { ManagementPeriodID: managementPeriod.ID },
-      });
-
-      // Add manure-related names to each OrganicManure object
-      const organicManuresWithNames = [];
-      for (const manure of organicManures) {
-        const manureTypeName = await this.ManureTypeName(manure.ManureTypeID, request);
-        const applicationMethodName = await this.getApplicationMethodName(manure.ApplicationMethodID, request);
-        const incorporationMethodName = await this.getIncorporationMethodName(manure.IncorporationMethodID, request);
-        const incorporationDelayName = await this.getIncorporationDelayName(manure.IncorporationDelayID, request);
-
-        organicManuresWithNames.push({
-          ...manure,
-          ManureTypeName: manureTypeName,
-          ApplicationMethodName: applicationMethodName,
-          IncorporationMethodName: incorporationMethodName,
-          IncorporationDelayName: incorporationDelayName,
-        });
-      }
-
-      // Fetch recommendation based on management period
-      const recommendation = await this.recommendationRepository.findOne({
-        where: { ManagementPeriodID: managementPeriod.ID },
-      });
-
-      // Fetch recommendations using stored procedure
-      const storedProcedure = "EXEC dbo.spRecommendations_GetRecommendations @fieldId = @0, @harvestYear = @1";
-      const recommendations = await this.executeQuery(storedProcedure, [field.ID, year]);
-
-      let mergedRecommendation = null;
-      if (recommendations != null) {
-        const recBasedOnManId = recommendations.filter(
-          (rec) => rec.ManagementPeriod_ID === managementPeriod.ID
-        );
-        if (recBasedOnManId != null) {
-          for (const r of recBasedOnManId) {
-            const data = {
-              Crop: {},
-              Recommendation: {},
-              ManagementPeriod: {},
-              FertiliserManure: {},
-            };
-
-            const previousAppliedLime = await this.processSoilRecommendations(year, field.ID, r);
-            data.Recommendation.PreviousAppliedLime = previousAppliedLime || 0;
-
-            Object.keys(r).forEach((recDataKey) => {
-              if (recDataKey.startsWith("Crop_")) data.Crop[recDataKey.slice(5)] = r[recDataKey];
-              else if (recDataKey.startsWith("Recommendation_")) data.Recommendation[recDataKey.slice(15)] = r[recDataKey];
-              else if (recDataKey.startsWith("ManagementPeriod_")) data.ManagementPeriod[recDataKey.slice(17)] = r[recDataKey];
-              else if (recDataKey.startsWith("FertiliserManure_")) data.FertiliserManure[recDataKey.slice(17)] = r[recDataKey];
-            });
-
-            mergedRecommendation = {
-              ...data.Recommendation,
-              ...data.FertiliserManure, // Add FertiliserManure properties to Recommendation
-            };
+        if (crops != null) {
+          for (const crop of crops) {
+            if (crop.CropTypeID == 140) {
+              let swardType = null;
+              let defoliationSequenceDescription = null;
+              let swardTypeManagment = null;
+               if (
+                 crop.SwardTypeID != null &&
+                 crop.PotentialCut != null &&
+                 crop.DefoliationSequenceID != null
+               ) {
+                 defoliationSequenceDescription =
+                   await this.findDefoliationSequenceDescription(
+                     crop.SwardTypeID,
+                     crop.PotentialCut,
+                     crop.DefoliationSequenceID
+                   );
+               }
+              crop.DefoliationSequenceName =
+                defoliationSequenceDescription != null
+                  ? defoliationSequenceDescription
+                  : null;
+              if (crop.SwardTypeID != null) {
+                swardType =await this.findSwardType(crop.SwardTypeID);
+              }
+              crop.SwardTypeName = swardType != null ? swardType : null;
+              if (crop.SwardManagementID != null) {
+                swardTypeManagment = await this.findSwardTypeManagment(
+                  crop.SwardManagementID
+                );                
+              }
+              crop.SwardManagementName =
+                  swardTypeManagment != null ? swardTypeManagment : null;
+                  crop.EstablishmentName=(crop.CropTypeID==140&&crop.Establishment!=null)?
+                  await this.findGrassSeason(crop.Establishment):null
+                }
+                
           }
         }
-      }
+        
+        const cropsWithManagement = [];
+        for (const crop of crops) {
+          try {
+            // Fetch SNS analysis
+            const snsAnalysis = await this.snsAnalysisRepository.findOne({
+              where: { CropID: crop.ID },
+            });
+            const SNSAnalysis = snsAnalysis
+              ? {
+                  SNSValue: snsAnalysis.SoilNitrogenSupplyValue,
+                  SNSIndex: snsAnalysis.SoilNitrogenSupplyIndex,
+                  SNSMethod: "Not Entered",
+                }
+              : null;
+            // Fetch management periods related to the crop
+            const managementPeriods = await this.managementPeriodRepository.find({
+                where: { CropID: crop.ID },
+              });
 
-      // Fetch comments for the recommendation
-      const recommendationComments = recommendation
-        ? await this.recommendationCommentsRepository.find({
-            where: { RecommendationID: recommendation.ID },
-          })
-        : [];
+            // Process management data
+            const managementWithSubData = [];
+            for (const managementPeriod of managementPeriods) {
+              const organicManures = await this.organicManureRepository.find({
+                where: { ManagementPeriodID: managementPeriod.ID },
+              });
 
-      // Fetch fertiliser manures for the management period
-      const fertiliserManures = await this.fertiliserManureRepository.find({
-        where: { ManagementPeriodID: managementPeriod.ID },
-      });
+              // Add manure-related names to each OrganicManure object
+              const organicManuresWithNames = [];
+              for (const manure of organicManures) {
+                const manureTypeName = await this.ManureTypeName(
+                  manure.ManureTypeID,
+                  request
+                );
+                const applicationMethodName =
+                  await this.getApplicationMethodName(
+                    manure.ApplicationMethodID,
+                    request
+                  );
+                const incorporationMethodName =
+                  await this.getIncorporationMethodName(
+                    manure.IncorporationMethodID,
+                    request
+                  );
+                const incorporationDelayName =
+                  await this.getIncorporationDelayName(
+                    manure.IncorporationDelayID,
+                    request
+                  );
 
-      managementWithSubData.push({
-        ...managementPeriod,
-        OrganicManures: organicManuresWithNames,
-        Recommendation: recommendation
-          ? {
-              ...(mergedRecommendation != null ? mergedRecommendation : recommendation),
-              RecommendationComments: recommendationComments,
+                organicManuresWithNames.push({
+                  ...manure,
+                  ManureTypeName: manureTypeName,
+                  ApplicationMethodName: applicationMethodName,
+                  IncorporationMethodName: incorporationMethodName,
+                  IncorporationDelayName: incorporationDelayName,
+                });
+              }
+
+              // Fetch recommendation based on management period
+              const recommendation =
+                await this.recommendationRepository.findOne({
+                  where: { ManagementPeriodID: managementPeriod.ID },
+                });
+
+              // Fetch recommendations using stored procedure
+              const storedProcedure =
+                "EXEC dbo.spRecommendations_GetRecommendations @fieldId = @0, @harvestYear = @1";
+              const recommendations = await this.executeQuery(storedProcedure, [
+                field.ID,
+                year,
+              ]);
+
+              let mergedRecommendation = null;
+              if (recommendations != null) {
+                const recBasedOnManId = recommendations.filter(
+                  (rec) => rec.ManagementPeriod_ID === managementPeriod.ID
+                );
+                if (recBasedOnManId != null) {
+                  for (const r of recBasedOnManId) {
+                    const data = {
+                      Crop: {},
+                      Recommendation: {},
+                      ManagementPeriod: {},
+                      FertiliserManure: {},
+                    };
+
+                    const previousAppliedLime =
+                      await this.processSoilRecommendations(year, field.ID, r);
+                    data.Recommendation.PreviousAppliedLime =
+                      previousAppliedLime || 0;
+
+                    Object.keys(r).forEach((recDataKey) => {
+                      if (recDataKey.startsWith("Crop_"))
+                        data.Crop[recDataKey.slice(5)] = r[recDataKey];
+                      else if (recDataKey.startsWith("Recommendation_"))
+                        data.Recommendation[recDataKey.slice(15)] =
+                          r[recDataKey];
+                      else if (recDataKey.startsWith("ManagementPeriod_"))
+                        data.ManagementPeriod[recDataKey.slice(17)] =
+                          r[recDataKey];
+                      else if (recDataKey.startsWith("FertiliserManure_"))
+                        data.FertiliserManure[recDataKey.slice(17)] =
+                          r[recDataKey];
+                    });
+
+                    mergedRecommendation = {
+                      ...data.Recommendation,
+                      ...data.FertiliserManure, // Add FertiliserManure properties to Recommendation
+                    };
+                  }
+                }
+              }
+
+              // Fetch comments for the recommendation
+              const recommendationComments = recommendation
+                ? await this.recommendationCommentsRepository.find({
+                    where: { RecommendationID: recommendation.ID },
+                  })
+                : [];
+
+              // Fetch fertiliser manures for the management period
+              const fertiliserManures =
+                await this.fertiliserManureRepository.find({
+                  where: { ManagementPeriodID: managementPeriod.ID },
+                });
+
+              managementWithSubData.push({
+                ...managementPeriod,
+                OrganicManures: organicManuresWithNames,
+                Recommendation: recommendation
+                  ? {
+                      ...(mergedRecommendation != null
+                        ? mergedRecommendation
+                        : recommendation),
+                      RecommendationComments: recommendationComments,
+                    }
+                  : null,
+                FertiliserManures: fertiliserManures,
+              });
             }
-          : null,
-        FertiliserManures: fertiliserManures,
-      });
-    }
 
-    // Fetch crop type and other crop-related information
-    const cropTypeName = await this.getCropTypeName(crop.CropTypeID, cropTypeAllData);
-    const cropInfo1Name = crop.CropInfo1 ? await this.getCropInfo1Name(crop.CropTypeID, crop.CropInfo1) : "";
-    const cropInfo2Name = crop.CropInfo2 ? await this.getCropInfo2Name(crop.CropInfo2) : "";
+            // Fetch crop type and other crop-related information
+            const cropTypeName = await this.getCropTypeName(
+              crop.CropTypeID,
+              cropTypeAllData
+            );
+            const cropInfo1Name = crop.CropInfo1
+              ? await this.getCropInfo1Name(crop.CropTypeID, crop.CropInfo1)
+              : "";
+            const cropInfo2Name = crop.CropInfo2
+              ? await this.getCropInfo2Name(crop.CropInfo2)
+              : "";
 
-    cropsWithManagement.push({
-      ...crop,
-      CropTypeName: cropTypeName,
-      CropInfo1Name: cropInfo1Name,
-      CropInfo2Name: cropInfo2Name,
-      ManagementPeriods: managementWithSubData,
-      SNSAnalysis:  SNSAnalysis,
-    });
-  } catch (error) {
-    console.error("Error processing crop", crop.ID, error);
-    cropsWithManagement.push({
-      ...crop,
-      error: error.message,
-    });
-  }
-}
-
+            cropsWithManagement.push({
+              ...crop,
+              CropTypeName: cropTypeName,
+              CropInfo1Name: cropInfo1Name,
+              CropInfo2Name: cropInfo2Name,
+              ManagementPeriods: managementWithSubData,
+              SNSAnalysis: SNSAnalysis,
+            });
+          } catch (error) {
+            console.error("Error processing crop", crop.ID, error);
+            cropsWithManagement.push({
+              ...crop,
+              error: error.message,
+            });
+          }
+        }
 
         // Fetch SoilTypeName by passing field.SoilTypeID
         const soil = await this.rB209SoilService.getData(
@@ -705,7 +788,8 @@ for (const crop of crops) {
         );
         const soilTypeName = soil?.soilType;
         // Get SulphurDeficient from soilAnalysis
-        const sulphurDeficient =soilAnalysis!=null? soilAnalysis?.SulphurDeficient:null;
+        const sulphurDeficient =
+          soilAnalysis != null ? soilAnalysis?.SulphurDeficient : null;
         // Create soilDetails object
         const soilDetails = {
           SoilTypeName: soilTypeName,
@@ -716,7 +800,7 @@ for (const crop of crops) {
           Startingk:
             pkBalance && pkBalance.KBalance != null ? pkBalance.KBalance : null,
         };
-console.log('soilDetails',soilDetails);
+        console.log("soilDetails", soilDetails);
         // Build the full field object with all associated sub-objects
         const fieldData = {
           ...field,
@@ -725,7 +809,7 @@ console.log('soilDetails',soilDetails);
           PreviousCrop: previousCropTypename,
           Crops: cropsWithManagement,
           // PreviousGrasses: previousGrasses,
-           SoilAnalysis: soilAnalysis,
+          SoilAnalysis: soilAnalysis,
           SoilDetails: soilDetails,
         };
 
@@ -1027,7 +1111,7 @@ console.log('soilDetails',soilDetails);
       "CreatedOn",
       "ModifiedOn",
     ];
-    console.log('soilAnalysisRecordsFiveYears',soilAnalysisRecordsFiveYears)
+    console.log("soilAnalysisRecordsFiveYears", soilAnalysisRecordsFiveYears);
     // Initialize the latest values object
     const latestSoilAnalysis = {};
     if (soilAnalysisRecordsFiveYears.length > 0) {
@@ -1049,13 +1133,106 @@ console.log('soilDetails',soilDetails);
         }
       });
     }
-    const isEmpty = Object.values(latestSoilAnalysis).every((value) => value === null);
+    const isEmpty = Object.values(latestSoilAnalysis).every(
+      (value) => value === null
+    );
     if (isEmpty) {
       return { latestSoilAnalysis: null, errors };
     }
-    
+
     return { latestSoilAnalysis, errors };
   }
+
+  async findSwardTypeManagment(SwardManagementID) {
+    try {
+      let swardManagementsName = null;
+      let swardManagementsList = await this.rB209GrassService.getData(
+        `Grass/SwardManagements`
+      );
+
+      if (swardManagementsList.length > 0) {
+        const matchingSward = swardManagementsList.find(
+          (x) => x.swardManagementId === SwardManagementID
+        );
+        if (matchingSward != null) {
+          swardManagementsName = matchingSward
+            ? matchingSward.swardManagement
+            : null;
+        }
+      }
+      console.log('swardManagementsName',swardManagementsName);
+      return swardManagementsName;
+    } catch (error) {
+      console.error(`Error fetching sward Management list`, error);
+      return "Unknown";
+    }
+  };
+
+  async findDefoliationSequenceDescription(SwardTypeID,PotentialCut,DefoliationSequenceID)  {
+    try {
+      let defoliationSequenceDescription = null;
+      let defoliationSequenceList = await this.rB209GrassService.getData(
+        `Grass/DefoliationSequence?swardTypeId=${SwardTypeID}&numberOfCuts=${PotentialCut}`
+      );
+      if (
+        defoliationSequenceList.data &&
+        Array.isArray(defoliationSequenceList.data.list) &&
+        defoliationSequenceList.data.list.length > 0
+      ) {
+        const matchingDefoliation =
+          defoliationSequenceList.data.list.find(
+            (x) => x.defoliationSequenceId == DefoliationSequenceID
+          );
+        if (matchingDefoliation != null) {
+          defoliationSequenceDescription = matchingDefoliation
+            ? matchingDefoliation.defoliationSequenceDescription
+            : null;
+        }
+      }
+
+      return defoliationSequenceDescription;
+    } catch (error) {
+      console.error(
+        `Error fetching Defoliation Sequence for swardTypeId: ${SwardTypeID}&numberOfCuts=${PotentialCut}`,
+        error
+      );
+      return "Unknown";
+    }
+  };
+  async findSwardType(SwardTypeID){
+    try {
+      let swardTypeName = null;
+      let swardTypeList = await this.rB209GrassService.getData(
+        `Grass/SwardTypes`
+      );
+
+      if (swardTypeList.length > 0) {
+        const matchingSward = swardTypeList.find(
+          (x) => x.swardTypeId === SwardTypeID
+        );
+        if (matchingSward != null) {
+          swardTypeName = matchingSward ? matchingSward.swardType : null;
+        }
+      }
+
+      return swardTypeName;
+    } catch (error) {
+      console.error(`Error fetching sward Type list`, error);
+      return "Unknown";
+    }
+  };
+
+  async findGrassSeason(seasonID) {
+    try {
+      let season = await this.rB209GrasslandService.getData(
+        `Grassland/GrasslandSeason/${seasonID}`
+      );
+      return season.seasonName;
+    } catch (error) {
+      console.error(`Error fetching Grassland Season`, error);
+      return "Unknown";
+    }
+  };
 }
 
 module.exports = { FieldService };
