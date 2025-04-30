@@ -86,7 +86,6 @@ class OrganicManureService extends BaseService {
     );
     this.countryRepository = AppDataSource.getRepository(CountryEntity);
     this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
-    
   }
 
   async getTotalNitrogen(
@@ -307,7 +306,8 @@ class OrganicManureService extends BaseService {
     firstCropData,
     organicManureData,
     OrganicManure,
-    allPKBalanceData
+    allPKBalanceData,
+    rb209CountryId
   ) {
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
@@ -384,7 +384,7 @@ class OrganicManureService extends BaseService {
         organicMaterials: [],
         mannerOutputs: [],
         previousCropping: {},
-        countryId: farm.EnglishRules ? 1 : 2,
+        countryId: rb209CountryId,
       },
       nutrients: {
         nitrogen: true,
@@ -592,7 +592,7 @@ class OrganicManureService extends BaseService {
     return nutrientRecommendationnReqBody;
   }
 
-  async handleSoilAnalysisValidation(fieldId, fieldName, year, CountryID) {
+  async handleSoilAnalysisValidation(fieldId, fieldName, year, rb209CountryId) {
     const errors = [];
     const fiveYearsAgo = year - 4;
 
@@ -638,7 +638,7 @@ class OrganicManureService extends BaseService {
 
     const soilAnalysisRecords = await this.assignIndexIdToSoilRecords(
       soilAnalysisRecordsFiveYears,
-      CountryID
+      rb209CountryId
     );
 
     return { latestSoilAnalysis, errors, soilAnalysisRecords };
@@ -1263,7 +1263,7 @@ class OrganicManureService extends BaseService {
     return null; // Return null if no match is found
   }
 
-  async assignIndexIdToSoilRecords(soilAnalysisRecords, CountryID) {
+  async assignIndexIdToSoilRecords(soilAnalysisRecords, rb209CountryId) {
     const nutrientIndicesData = {};
 
     // Loop through each soil analysis record
@@ -1283,7 +1283,7 @@ class OrganicManureService extends BaseService {
           // Use dynamic countryId for the NutrientIndices API call
           nutrientIndicesData[nutrientName] =
             await this.RB209SoilService.getData(
-              `Soil/NutrientIndices/${nutrientId}/${methodologyId}/${CountryID}`
+              `Soil/NutrientIndices/${nutrientId}/${methodologyId}/${rb209CountryId}`
             );
         }
 
@@ -1377,9 +1377,14 @@ class OrganicManureService extends BaseService {
         const farmData = await this.farmRepository.findOneBy({
           ID: organicManureData.FarmID,
         });
-        const countryData = await this.countryRepository.findOneBy({
-          ID: farmData.CountryID,
-        });
+        const rb209CountryData = await transactionalManager.findOne(
+          CountryEntity,
+          {
+            where: {
+              ID: farmData.CountryID,
+            },
+          }
+        );
         const cropTypeLinkingData =
           await this.CropTypeLinkingRepository.findOneBy({
             CropTypeID: cropData.CropTypeID,
@@ -1618,7 +1623,7 @@ class OrganicManureService extends BaseService {
           fieldData.ID,
           fieldData.Name,
           cropData?.Year,
-          countryData.RB209CountryID
+          rb209CountryData.RB209CountryID
         );
         Errors.push(...soilAnalysisErrors);
         if (Errors.length > 0)
@@ -1822,7 +1827,8 @@ class OrganicManureService extends BaseService {
               firstCrop,
               organicManureData,
               OrganicManure,
-              allPKBalanceData
+              allPKBalanceData,
+              rb209CountryData.RB209CountryID
             );
           console.log(
             "nutrientRecommensssdationnReqBody",
@@ -2323,13 +2329,13 @@ class OrganicManureService extends BaseService {
           "EXEC [spOrganicManures_DeleteOrganicManures] @OrganicManureID = @0";
         await transactionalManager.query(storedProcedure, [organicManureId]);
 
-         await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
-           crop.FieldID,
-           crop.Year,
-           request,
-           userId,
-           transactionalManager
-         );
+        await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+          crop.FieldID,
+          crop.Year,
+          request,
+          userId,
+          transactionalManager
+        );
         // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
         const nextAvailableCrop = await this.cropRepository.findOne({
           where: {

@@ -197,7 +197,9 @@ class PlanService extends BaseService {
     snsAnalysesData,
     crop,
     allPKBalanceData,
-    allCropData
+    allCropData,
+    rb209CountryId
+
   ) {
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
@@ -277,7 +279,7 @@ class PlanService extends BaseService {
         organicMaterials: [],
         previousCropping: {},
         //countryId: farm.EnglishRules ? 1 : 2,
-        countryId: farm.EnglishRules ? 1 : 2,
+        countryId: rb209CountryId,
       },
       nutrients: {
         nitrogen: true,
@@ -324,7 +326,6 @@ class PlanService extends BaseService {
         );
       });
     }
-
 
     // Add SnsAnalyses data
     // if (snsAnalysesData) {
@@ -416,7 +417,7 @@ class PlanService extends BaseService {
     return { farm, errors };
   }
 
-  async handleSoilAnalysisValidation(fieldId, fieldName, year, CountryID) {
+  async handleSoilAnalysisValidation(fieldId, fieldName, year, rb209CountryId) {
     const errors = [];
     const fiveYearsAgo = year - 4;
 
@@ -459,16 +460,15 @@ class PlanService extends BaseService {
           // Explicitly set the field to null if no value was found
           latestSoilAnalysis[field] = null;
         }
-
       });
     }
     // Iterate over the fields and find the latest value for each field
 
     const soilAnalysisRecords = await this.assignIndexIdToSoilRecords(
       soilAnalysisRecordsFiveYears,
-      CountryID
+      rb209CountryId
     );
-  
+
     return { latestSoilAnalysis, errors, soilAnalysisRecords };
   }
 
@@ -495,7 +495,7 @@ class PlanService extends BaseService {
 
   async getSnsAnalysesData(id) {
     const data = await this.snsAnalysisRepository.findOneBy({
-      CropID: id, 
+      CropID: id,
     });
 
     return data;
@@ -542,7 +542,7 @@ class PlanService extends BaseService {
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex:  null,
+      SIndex: null,
       NIndex: null,
     };
 
@@ -573,7 +573,7 @@ class PlanService extends BaseService {
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex:  null,
+      SIndex: null,
       NIndex: null,
     };
     let nIndex;
@@ -591,13 +591,11 @@ class PlanService extends BaseService {
             cropOrder1Data.ManureN = null;
             cropOrder1Data.FertilizerN = calculation.cropNeed;
             cropOrder1Data.NIndex = calculation.indexpH;
-   
           } else if (sequenceId === 2) {
             cropOrder2Data.CropN = calculation.recommendation;
             cropOrder2Data.ManureN = null;
             cropOrder2Data.FertilizerN = calculation.cropNeed;
             cropOrder2Data.NIndex = calculation.indexpH;
-        
           }
           break;
 
@@ -684,11 +682,11 @@ class PlanService extends BaseService {
       }
     }
 
-
     let firstCropSaveData = allRecommendations.find(
-      (recommendation) => recommendation.ManagementPeriodID === managementPeriodData.ID
+      (recommendation) =>
+        recommendation.ManagementPeriodID === managementPeriodData.ID
     );
-   
+
     if (firstCropSaveData) {
       // Update existing recommendation
       firstCropSaveData = {
@@ -974,8 +972,8 @@ class PlanService extends BaseService {
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
       SIndex: null,
-      NIndex: null
-    }
+      NIndex: null,
+    };
 
     let cropOrder2Data = {
       CropN: null,
@@ -1005,7 +1003,7 @@ class PlanService extends BaseService {
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
       SIndex: null,
-      NIndex: null
+      NIndex: null,
     };
     let nIndex;
     // Iterate through the nutrient recommendations data
@@ -1020,7 +1018,6 @@ class PlanService extends BaseService {
             // cropOrder1Data.ManureN = calculation.applied;
             cropOrder1Data.FertilizerN = calculation.cropNeed;
             cropOrder1Data.NIndex = calculation.indexpH;
-         
           } else if (sequenceId === 2) {
             cropOrder2Data.CropN = calculation.recommendation;
             // cropOrder2Data.ManureN = calculation.applied;
@@ -1113,7 +1110,7 @@ class PlanService extends BaseService {
     let managementPeriodIdSecondCrop = ManagementPeriods[0]?.ID;
     // Save or update for Crop Order 2
     let firstCropSaveData;
- 
+
     // Save or update for Crop Order 1
     firstCropSaveData = await this.createCropSaveData(
       transactionalManager,
@@ -1161,16 +1158,13 @@ class PlanService extends BaseService {
       return null;
     }
     const nutrientData = nutrientIndicesData[nutrient];
-  
 
     // Special case for Potassium (nutrientId = 2)
     if (nutrient === "Potassium") {
       // Check if indexValue is 2 and match with "2+"
       if (indexValue === 2) {
         for (const data of nutrientData) {
-   
           if (data.index.trim() === "2+") {
-          
             return data.indexId;
           }
         }
@@ -1179,9 +1173,7 @@ class PlanService extends BaseService {
       // Check if indexValue is -2 and match with "2-"
       if (indexValue === -2) {
         for (const data of nutrientData) {
-
           if (data.index.trim() === "2-") {
-           
             return data.indexId;
           }
         }
@@ -1189,16 +1181,14 @@ class PlanService extends BaseService {
     }
 
     for (const data of nutrientData) {
-    
       if (data.index.trim() === indexValue.toString()) {
-     
         return data.indexId;
       }
     }
     return null; // Return null if no match is found
   }
 
-  async assignIndexIdToSoilRecords(soilAnalysisRecords, CountryID) {
+  async assignIndexIdToSoilRecords(soilAnalysisRecords, rb209CountryId) {
     const nutrientIndicesData = {};
 
     // Loop through each soil analysis record
@@ -1218,7 +1208,7 @@ class PlanService extends BaseService {
           // Use dynamic countryId for the NutrientIndices API call
           nutrientIndicesData[nutrientName] =
             await this.RB209SoilService.getData(
-              `Soil/NutrientIndices/${nutrientId}/${methodologyId}/${CountryID}`
+              `Soil/NutrientIndices/${nutrientId}/${methodologyId}/${rb209CountryId}`
             );
         }
 
@@ -1237,7 +1227,6 @@ class PlanService extends BaseService {
       }
     }
 
-  
     return soilAnalysisRecords;
   }
 
@@ -1249,58 +1238,58 @@ class PlanService extends BaseService {
       `Soil/NutrientIndex/${numericIndexId}/${numericNutrientId}`
     );
     const trimmedIndexValue = indexValue.index.trim();
- 
+
     return trimmedIndexValue;
   }
 
   async fetchAllDataByFieldIDs(fieldIDs) {
-  // Fetch all crop data by FieldID using `find` and `IN` operator
-  const allCropData = await this.cropRepository.find({
-    where: {
-      FieldID: In(fieldIDs), // Using TypeORM's `In` function
-    },
-  });
+    // Fetch all crop data by FieldID using `find` and `IN` operator
+    const allCropData = await this.cropRepository.find({
+      where: {
+        FieldID: In(fieldIDs), // Using TypeORM's `In` function
+      },
+    });
 
-  // Extract CropIDs from the fetched crop data
-  const cropIDs = allCropData.map((crop) => crop.ID);
+    // Extract CropIDs from the fetched crop data
+    const cropIDs = allCropData.map((crop) => crop.ID);
 
-  // Fetch all management period data from managementRepository using `IN` operator
-  const allManagementPeriods = await this.managementPeriodRepository.find({
-    where: {
-      CropID: In(cropIDs), // Fetch management periods where CropID is in cropIDs array
-    },
-  });
+    // Fetch all management period data from managementRepository using `IN` operator
+    const allManagementPeriods = await this.managementPeriodRepository.find({
+      where: {
+        CropID: In(cropIDs), // Fetch management periods where CropID is in cropIDs array
+      },
+    });
 
-  // Extract ManagementPeriodIDs from the fetched management period data
-  const managementPeriodIDs = allManagementPeriods.map(
-    (managementPeriod) => managementPeriod.ID
-  );
+    // Extract ManagementPeriodIDs from the fetched management period data
+    const managementPeriodIDs = allManagementPeriods.map(
+      (managementPeriod) => managementPeriod.ID
+    );
 
-  // Fetch all recommendations from recommendationRepository by ManagementPeriodID using `IN` operator
-  const allRecommendations = await this.repository.find({
-    where: {
-      ManagementPeriodID: In(managementPeriodIDs), // Fetch recommendations where ManagementPeriodID is in managementPeriodIDs array
-    },
-  });
+    // Fetch all recommendations from recommendationRepository by ManagementPeriodID using `IN` operator
+    const allRecommendations = await this.repository.find({
+      where: {
+        ManagementPeriodID: In(managementPeriodIDs), // Fetch recommendations where ManagementPeriodID is in managementPeriodIDs array
+      },
+    });
 
-  // Fetch all PKBalanceData from pkBalanceRepository by FieldID using `IN` operator
-  const allPKBalanceData = await this.pkBalanceRepository.find({
-    where: {
-      FieldID: In(fieldIDs), // Fetch PKBalanceData where FieldID is in fieldIDs array
-    },
-  });
+    // Fetch all PKBalanceData from pkBalanceRepository by FieldID using `IN` operator
+    const allPKBalanceData = await this.pkBalanceRepository.find({
+      where: {
+        FieldID: In(fieldIDs), // Fetch PKBalanceData where FieldID is in fieldIDs array
+      },
+    });
 
-  // Return the fetched data as an object
-  return {
-    allCropData,
-    allManagementPeriods,
-    allRecommendations,
-    allPKBalanceData,
-  };
-}
+    // Return the fetched data as an object
+    return {
+      allCropData,
+      allManagementPeriods,
+      allRecommendations,
+      allPKBalanceData,
+    };
+  }
 
   async createNutrientsRecommendationForField(crops, userId, request) {
-    const fieldIDs = crops.map((cropData) => cropData.Crop.FieldID);//22 //23
+    const fieldIDs = crops.map((cropData) => cropData.Crop.FieldID); //22 //23
     const {
       allCropData,
       allManagementPeriods,
@@ -1342,9 +1331,14 @@ class PlanService extends BaseService {
           field.FarmID
         );
         Errors.push(...farmErrors);
-        const countryData = await this.countryRepository.findOneBy({
-          ID: farm.CountryID,
-        });
+        const rb209CountryData = await transactionalManager.findOne(
+          CountryEntity,
+          {
+            where: {
+              ID: farm.CountryID,
+            },
+          }
+        );
 
         const {
           latestSoilAnalysis,
@@ -1354,9 +1348,9 @@ class PlanService extends BaseService {
           fieldId,
           field.Name,
           crop?.Year,
-          countryData.RB209CountryID
+          rb209CountryData.RB209CountryID
         );
-    
+
         Errors.push(...soilAnalysisErrors);
         if (Errors.length > 0) {
           throw new Error(JSON.stringify(Errors));
@@ -1428,18 +1422,19 @@ class PlanService extends BaseService {
             snsAnalysesData,
             crop,
             allPKBalanceData,
-            allCropData
+            allCropData,
+            rb209CountryData.RB209CountryID
           );
-       console.log(
-         "nutrientRecommendationnReqBodysoil",
-         nutrientRecommendationnReqBody.field.soil.soilAnalyses
-       );
+        console.log(
+          "nutrientRecommendationnReqBodysoil",
+          nutrientRecommendationnReqBody.field.soil.soilAnalyses
+        );
         const nutrientRecommendationsData =
           await this.rB209RecommendationService.postData(
             "Recommendation/Recommendations",
             nutrientRecommendationnReqBody
           );
-        
+
         if (
           !nutrientRecommendationsData ||
           !nutrientRecommendationsData.calculations == null ||
@@ -1505,7 +1500,6 @@ class PlanService extends BaseService {
               snsAnalysesData,
               userId
             );
-         
 
           const savedFirstRecommendationComment =
             await this.saveMultipleRecommendation(
@@ -1633,7 +1627,6 @@ class PlanService extends BaseService {
     userId,
     transactionalManager
   ) {
-   
     // Use the new function to create the recommendation comment
     const newComment = await this.createRecommendationComment(
       nutrientId,
