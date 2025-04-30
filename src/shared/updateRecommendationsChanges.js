@@ -690,6 +690,7 @@ class UpdateRecommendationChanges {
       );
 
       const cropPlanOfNextYear = await this.getCropPlanOfNextYear(
+        transactionalManager,
         crop?.Year,
         fieldId
       );
@@ -826,7 +827,8 @@ class UpdateRecommendationChanges {
             snsAnalysesData,
             dataMultipleCrops,
             crop,
-            pkBalanceData
+            pkBalanceData,
+            transactionalManager
           );
         console.log(
           "nutrientRecommendationnReqBodysns",
@@ -1568,8 +1570,8 @@ class UpdateRecommendationChanges {
     return { field, errors };
   }
 
-  async getCropPlanOfNextYear(cropYear, fieldId) {
-    return await this.cropRepository.find({
+  async getCropPlanOfNextYear(transactionalManager, cropYear, fieldId) {
+    return await transactionalManager.find(CropEntity, {
       where: {
         FieldID: fieldId,
         Year: MoreThan(cropYear),
@@ -1848,10 +1850,14 @@ class UpdateRecommendationChanges {
     // Get ManagementPeriodID for first crop
     let firstCropSaveData = null;
     if (firstCrop) {
-      const firstCropManagementPeriodId =
-        await this.managementPeriodRepository.findOneBy({
-          CropID: firstCrop.ID,
-        });
+      const firstCropManagementPeriodId = await transactionalManager.findOne(
+        ManagementPeriodEntity,
+        {
+          where: {
+            CropID: firstCrop.ID,
+          },
+        }
+      );
 
       for (const calculation of nutrientRecommendationsData?.calculations ||
         []) {
@@ -1955,10 +1961,14 @@ class UpdateRecommendationChanges {
     // Get ManagementPeriodID for second crop if it exists
     let secondCropSaveData = null;
     if (secondCrop) {
-      const secondCropManagementPeriodId =
-        await this.managementPeriodRepository.findOneBy({
-          CropID: secondCrop.ID,
-        });
+      const secondCropManagementPeriodId = await transactionalManager.findOne(
+        ManagementPeriodEntity,
+        {
+          where: {
+            CropID: secondCrop.ID,
+          },
+        }
+      );
 
       for (const calculation of nutrientRecommendationsData?.calculations ||
         []) {
@@ -2152,7 +2162,11 @@ class UpdateRecommendationChanges {
         HttpStatus.BAD_REQUEST
       );
     }
-    const previousCrop = await this.findPreviousCrop(field.ID, crop.Year);
+    const previousCrop = await this.findPreviousCrop(
+      transactionalManager,
+      field.ID,
+      crop.Year
+    );
 
     const arableBody = await this.buildArableBody(dataMultipleCrops, field);
     const excessRainfall = await this.getWinterExcessRainfall(
@@ -2381,9 +2395,9 @@ class UpdateRecommendationChanges {
     return nutrientRecommendationnReqBody;
   }
 
-  async findPreviousCrop(fieldID, currentYear) {
+  async findPreviousCrop(transactionalManager, fieldID, currentYear) {
     // Find all crops matching the previous year and field ID
-    const previousCrops = await this.cropRepository.find({
+    const previousCrops = await transactionalManager.find(CropEntity, {
       where: {
         FieldID: fieldID,
         Year: currentYear - 1,
@@ -2406,7 +2420,8 @@ class UpdateRecommendationChanges {
     snsAnalysesData,
     dataMultipleCrops,
     crop,
-    pkBalanceData
+    pkBalanceData,
+    transactionalManager
   ) {
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
@@ -2421,7 +2436,11 @@ class UpdateRecommendationChanges {
         HttpStatus.BAD_REQUEST
       );
     }
-    const previousCrop = await this.findPreviousCrop(field.ID, crop.Year);
+    const previousCrop = await this.findPreviousCrop(
+      transactionalManager,
+      field.ID,
+      crop.Year
+    );
 
     const excessRainfall = await this.getWinterExcessRainfall(
       farm.ID,
