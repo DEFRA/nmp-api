@@ -325,9 +325,14 @@ class UpdateRecommendationChanges {
       const farmData = await this.farmRespository.findOne({
         where: { ID: fieldData.FarmID },
       });
-      const countryData = await this.countryRepository.findOneBy({
-        ID: farmData.CountryID,
-      });
+      const rb209CountryData = await transactionalManager.findOne(
+        CountryEntity,
+        {
+          where: {
+            ID: farmData.CountryID,
+          },
+        }
+      );
 
       const cropTypeLinkingData =
         await this.CropTypeLinkingRepository.findOneBy({
@@ -346,7 +351,7 @@ class UpdateRecommendationChanges {
         fieldData.ID,
         fieldData.Name,
         cropData?.Year,
-        countryData.RB209CountryID,
+        rb209CountryData.RB209CountryID,
         transactionalManager
       );
       Errors.push(...soilAnalysisErrors);
@@ -583,7 +588,8 @@ class UpdateRecommendationChanges {
           secondCropMannerOutput,
           firstCrop,
           organicManure,
-          pkBalanceData
+          pkBalanceData,
+          rb209CountryData.RB209CountryID
         );
       console.log(
         "nutrientRecommendationnReqBody",
@@ -690,6 +696,7 @@ class UpdateRecommendationChanges {
       );
 
       const cropPlanOfNextYear = await this.getCropPlanOfNextYear(
+        transactionalManager,
         crop?.Year,
         fieldId
       );
@@ -699,9 +706,14 @@ class UpdateRecommendationChanges {
       const { farm, errors: farmErrors } = await this.handleFarmValidation(
         field.FarmID
       );
-      const countryData = await this.countryRepository.findOneBy({
-        ID: farm.CountryID,
-      });
+      const rb209CountryData = await transactionalManager.findOne(
+        CountryEntity,
+        {
+          where: {
+            ID: farm.CountryID,
+          },
+        }
+      );
 
       const dataMultipleCrops = await transactionalManager.find(CropEntity, {
         where: {
@@ -719,7 +731,7 @@ class UpdateRecommendationChanges {
         fieldId,
         field.Name,
         crop?.Year,
-        countryData.RB209CountryID,
+        rb209CountryData.RB209CountryID,
         transactionalManager
       );
       Errors.push(...soilAnalysisErrors);
@@ -826,7 +838,9 @@ class UpdateRecommendationChanges {
             snsAnalysesData,
             dataMultipleCrops,
             crop,
-            pkBalanceData
+            pkBalanceData,
+            transactionalManager,
+            rb209CountryData.RB209CountryID
           );
         console.log(
           "nutrientRecommendationnReqBodysns",
@@ -1568,8 +1582,8 @@ class UpdateRecommendationChanges {
     return { field, errors };
   }
 
-  async getCropPlanOfNextYear(cropYear, fieldId) {
-    return await this.cropRepository.find({
+  async getCropPlanOfNextYear(transactionalManager, cropYear, fieldId) {
+    return await transactionalManager.find(CropEntity, {
       where: {
         FieldID: fieldId,
         Year: MoreThan(cropYear),
@@ -1848,10 +1862,14 @@ class UpdateRecommendationChanges {
     // Get ManagementPeriodID for first crop
     let firstCropSaveData = null;
     if (firstCrop) {
-      const firstCropManagementPeriodId =
-        await this.managementPeriodRepository.findOneBy({
-          CropID: firstCrop.ID,
-        });
+      const firstCropManagementPeriodId = await transactionalManager.findOne(
+        ManagementPeriodEntity,
+        {
+          where: {
+            CropID: firstCrop.ID,
+          },
+        }
+      );
 
       for (const calculation of nutrientRecommendationsData?.calculations ||
         []) {
@@ -1955,10 +1973,14 @@ class UpdateRecommendationChanges {
     // Get ManagementPeriodID for second crop if it exists
     let secondCropSaveData = null;
     if (secondCrop) {
-      const secondCropManagementPeriodId =
-        await this.managementPeriodRepository.findOneBy({
-          CropID: secondCrop.ID,
-        });
+      const secondCropManagementPeriodId = await transactionalManager.findOne(
+        ManagementPeriodEntity,
+        {
+          where: {
+            CropID: secondCrop.ID,
+          },
+        }
+      );
 
       for (const calculation of nutrientRecommendationsData?.calculations ||
         []) {
@@ -2130,7 +2152,8 @@ class UpdateRecommendationChanges {
     secondCropMannerOutput,
     firstCropData,
     organicManureData,
-    pkBalanceData
+    pkBalanceData,
+    rb209CountryId
   ) {
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
@@ -2152,7 +2175,11 @@ class UpdateRecommendationChanges {
         HttpStatus.BAD_REQUEST
       );
     }
-    const previousCrop = await this.findPreviousCrop(field.ID, crop.Year);
+    const previousCrop = await this.findPreviousCrop(
+      transactionalManager,
+      field.ID,
+      crop.Year
+    );
 
     const arableBody = await this.buildArableBody(dataMultipleCrops, field);
     const excessRainfall = await this.getWinterExcessRainfall(
@@ -2209,7 +2236,7 @@ class UpdateRecommendationChanges {
         organicMaterials: [],
         mannerOutputs: [],
         previousCropping: {},
-        countryId: farm.EnglishRules ? 1 : 2,
+        countryId: rb209CountryId,
       },
       nutrients: {
         nitrogen: true,
@@ -2381,9 +2408,9 @@ class UpdateRecommendationChanges {
     return nutrientRecommendationnReqBody;
   }
 
-  async findPreviousCrop(fieldID, currentYear) {
+  async findPreviousCrop(transactionalManager, fieldID, currentYear) {
     // Find all crops matching the previous year and field ID
-    const previousCrops = await this.cropRepository.find({
+    const previousCrops = await transactionalManager.find(CropEntity, {
       where: {
         FieldID: fieldID,
         Year: currentYear - 1,
@@ -2406,7 +2433,9 @@ class UpdateRecommendationChanges {
     snsAnalysesData,
     dataMultipleCrops,
     crop,
-    pkBalanceData
+    pkBalanceData,
+    transactionalManager,
+    rb209CountryId
   ) {
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
@@ -2421,7 +2450,11 @@ class UpdateRecommendationChanges {
         HttpStatus.BAD_REQUEST
       );
     }
-    const previousCrop = await this.findPreviousCrop(field.ID, crop.Year);
+    const previousCrop = await this.findPreviousCrop(
+      transactionalManager,
+      field.ID,
+      crop.Year
+    );
 
     const excessRainfall = await this.getWinterExcessRainfall(
       farm.ID,
@@ -2477,7 +2510,7 @@ class UpdateRecommendationChanges {
             : 0, //TODO:: need to find it
         organicMaterials: [],
         previousCropping: {},
-        countryId: farm.EnglishRules ? 1 : 2,
+        countryId: rb209CountryId,
       },
       nutrients: {
         nitrogen: true,
@@ -2650,7 +2683,7 @@ class UpdateRecommendationChanges {
     return null; // Return null if no match is found
   }
 
-  async assignIndexIdToSoilRecords(soilAnalysisRecords, CountryID) {
+  async assignIndexIdToSoilRecords(soilAnalysisRecords, rb209CountryId) {
     const nutrientIndicesData = {};
 
     // Loop through each soil analysis record
@@ -2670,7 +2703,7 @@ class UpdateRecommendationChanges {
           // Use dynamic countryId for the NutrientIndices API call
           nutrientIndicesData[nutrientName] =
             await this.RB209SoilService.getData(
-              `Soil/NutrientIndices/${nutrientId}/${methodologyId}/${CountryID}`
+              `Soil/NutrientIndices/${nutrientId}/${methodologyId}/${rb209CountryId}`
             );
         }
 
@@ -2706,7 +2739,7 @@ class UpdateRecommendationChanges {
     fieldId,
     fieldName,
     year,
-    CountryID,
+    rb209CountryId,
     transactionalManager
   ) {
     const errors = [];
@@ -2764,7 +2797,7 @@ class UpdateRecommendationChanges {
 
     const soilAnalysisRecords = await this.assignIndexIdToSoilRecords(
       soilAnalysisRecordsFiveYears,
-      CountryID
+      rb209CountryId
     );
 
     return { latestSoilAnalysis, errors, soilAnalysisRecords };

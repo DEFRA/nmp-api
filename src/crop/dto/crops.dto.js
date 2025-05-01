@@ -62,6 +62,7 @@ const ManagementPeriodsDto = Joi.array()
       Defoliation: Joi.number().integer().allow(null).required(),
       Utilisation1ID: Joi.number().integer().allow(null).optional(),
       Utilisation2ID: Joi.number().integer().allow(null).optional(),
+      Yield: Joi.number().allow(null).optional(),
       PloughedDown: Joi.date().iso().allow(null).required(),
       PreviousID: Joi.number().integer().allow(null).optional(),
       CreatedOn: Joi.date().iso().allow(null).optional(),

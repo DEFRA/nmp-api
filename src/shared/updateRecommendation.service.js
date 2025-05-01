@@ -264,9 +264,14 @@ class UpdateRecommendation {
       const farmData = await this.farmRespository.findOne({
         where: { ID: fieldData.FarmID },
       });
-      const countryData = await this.countryRepository.findOneBy({
-        ID: farmData.CountryID,
-      });
+      const rb209CountryData = await transactionalManager.findOne(
+        CountryEntity,
+        {
+          where: {
+            ID: farmData.CountryID,
+          },
+        }
+      );
 
       const cropTypeLinkingData =
         await this.CropTypeLinkingRepository.findOneBy({
@@ -285,7 +290,7 @@ class UpdateRecommendation {
         fieldData.ID,
         fieldData.Name,
         cropData?.Year,
-        countryData.RB209CountryID,
+        rb209CountryData.RB209CountryID,
         transactionalManager
       );
       Errors.push(...soilAnalysisErrors);
@@ -512,7 +517,8 @@ class UpdateRecommendation {
           secondCropMannerOutput,
           firstCrop,
           organicManure,
-          pkBalanceData
+          pkBalanceData,
+          rb209CountryData.RB209CountryID
         );
       console.log(
         "nutrientRecommendationnReqBody",
@@ -623,9 +629,14 @@ class UpdateRecommendation {
       const { farm, errors: farmErrors } = await this.handleFarmValidation(
         field.FarmID
       );
-      const countryData = await this.countryRepository.findOneBy({
-        ID: farm.CountryID,
-      });
+      const rb209CountryData = await transactionalManager.findOne(
+        CountryEntity,
+        {
+          where: {
+            ID: farm.CountryID,
+          },
+        }
+      );
       const dataMultipleCrops = await this.cropRepository.find({
         where: {
           FieldID: field.ID,
@@ -642,7 +653,7 @@ class UpdateRecommendation {
         fieldId,
         field.Name,
         crop?.Year,
-        countryData.RB209CountryID,
+        rb209CountryData.RB209CountryID,
         transactionalManager
       );
       Errors.push(...soilAnalysisErrors);
@@ -741,7 +752,8 @@ class UpdateRecommendation {
             snsAnalysesData,
             dataMultipleCrops,
             crop,
-            pkBalanceData
+            pkBalanceData,
+            rb209CountryData.RB209CountryID
           );
         console.log(
           "nutrientRecommendationnReqBodysns",
@@ -2033,7 +2045,8 @@ class UpdateRecommendation {
     secondCropMannerOutput,
     firstCropData,
     organicManureData,
-    pkBalanceData
+    pkBalanceData,
+    rb209CountryId
   ) {
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
@@ -2112,7 +2125,7 @@ class UpdateRecommendation {
         organicMaterials: [],
         mannerOutputs: [],
         previousCropping: {},
-        countryId: farm.EnglishRules ? 1 : 2,
+        countryId: rb209CountryId,
       },
       nutrients: {
         nitrogen: true,
@@ -2309,7 +2322,8 @@ class UpdateRecommendation {
     snsAnalysesData,
     dataMultipleCrops,
     crop,
-    pkBalanceData
+    pkBalanceData,
+    rb209CountryId
   ) {
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
@@ -2380,7 +2394,7 @@ class UpdateRecommendation {
             : 0, //TODO:: need to find it
         organicMaterials: [],
         previousCropping: {},
-        countryId: farm.EnglishRules ? 1 : 2,
+        countryId: rb209CountryId,
       },
       nutrients: {
         nitrogen: true,
@@ -2558,7 +2572,7 @@ class UpdateRecommendation {
     return null; // Return null if no match is found
   }
 
-  async assignIndexIdToSoilRecords(soilAnalysisRecords, CountryID) {
+  async assignIndexIdToSoilRecords(soilAnalysisRecords, rb209CountryId) {
     const nutrientIndicesData = {};
 
     // Loop through each soil analysis record
@@ -2578,7 +2592,7 @@ class UpdateRecommendation {
           // Use dynamic countryId for the NutrientIndices API call
           nutrientIndicesData[nutrientName] =
             await this.RB209SoilService.getData(
-              `Soil/NutrientIndices/${nutrientId}/${methodologyId}/${CountryID}`
+              `Soil/NutrientIndices/${nutrientId}/${methodologyId}/${rb209CountryId}`
             );
         }
 
@@ -2614,7 +2628,7 @@ class UpdateRecommendation {
     fieldId,
     fieldName,
     year,
-    CountryID,
+    rb209CountryId,
     transactionalManager
   ) {
     const errors = [];
@@ -2671,7 +2685,7 @@ class UpdateRecommendation {
 
     const soilAnalysisRecords = await this.assignIndexIdToSoilRecords(
       soilAnalysisRecordsFiveYears,
-      CountryID
+      rb209CountryId
     );
 
     return { latestSoilAnalysis, errors, soilAnalysisRecords };
