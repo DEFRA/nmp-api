@@ -975,12 +975,14 @@ class UpdateRecommendationChanges {
             {}
           );
         // Fetch all existing comments related to the savedRecommendation.ID at once
-        const existingallComments =
-          await this.recommendationCommentRepository.find({
+        const existingallComments =await transactionalManager.find(
+          RecommendationCommentEntity,
+          {
             where: {
               RecommendationID: savedRecommendation?.ID,
             },
-          });
+          }
+        );
 
         for (const existingComment of existingallComments) {
           const nutrientIdExists = Object.keys(notesByNutrient).some(
