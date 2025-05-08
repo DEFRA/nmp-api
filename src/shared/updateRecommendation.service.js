@@ -524,7 +524,9 @@ class UpdateRecommendation {
           firstCrop,
           organicManure,
           pkBalanceData,
-          rb209CountryData.RB209CountryID
+          rb209CountryData.RB209CountryID,
+          transactionalManager,
+          request
         );
       console.log(
         "nutrientRecommendationnReqBody",
@@ -2199,7 +2201,8 @@ class UpdateRecommendation {
 
   async buildArableBody(
     dataMultipleCrops, // Accept either a single crop or multiple crops
-    field
+    field,
+    transactionalManager
   ) {
     const arableBody = [];
 
@@ -2256,11 +2259,18 @@ class UpdateRecommendation {
     firstCropData,
     organicManureData,
     pkBalanceData,
-    rb209CountryId
+    rb209CountryId,
+    transactionalManager,
+    request
   ) {
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
     );
+     const grassGrowthClass =
+      await this.grassGrowthClass.calculateGrassGrowthClassByFieldId(
+        field.ID,
+        request
+      );
     const cropType = cropTypesList.find(
       (cropType) => cropType.cropTypeId === crop.CropTypeID
     );
@@ -2280,7 +2290,17 @@ class UpdateRecommendation {
     }
     const previousCrop = await this.findPreviousCrop(transactionalManager,field.ID, crop.Year);
 
-    const arableBody = await this.buildArableBody(dataMultipleCrops, field);
+    const arableBody = await this.buildArableBody(dataMultipleCrops, field,transactionalManager);
+    const grassObject = await this.buildGrassObject(
+      crop,
+      field,
+      grassGrowthClass,
+      transactionalManager
+    );
+     const isCropGrass = await this.isGrassCropPresent(
+      crop,
+      transactionalManager
+    );
     const excessRainfall = await this.getWinterExcessRainfall(
       farm.ID,
       crop.Year
@@ -2289,28 +2309,10 @@ class UpdateRecommendation {
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: crop.FieldType,
-        multipleCrops: arableBody.length > 1 ? true : false,
-        arable: arableBody,
-        grassland:
-          crop.FieldType == 1
-            ? {}
-            : {
-                cropOrder: null,
-                snsId: null,
-                grassGrowthClassId: null,
-                yieldTypeId: null,
-                sequenceId: null,
-                grasslandSequence: [
-                  {
-                    position: null,
-                    cropMaterialId: null,
-                    yield: null,
-                  },
-                ],
-                establishedDate: null,
-                seasonId: null,
-                siteClassId: null,
-              },
+        multipleCrops: dataMultipleCrops.length >  1 ? true : false,
+        arable: crop.FieldType == 2 ? [] : arableBody,
+        grassland: {},
+        grass:crop.FieldType == 3 || crop.FieldType == 2 ? grassObject : {},
         soil: {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
@@ -2343,8 +2345,8 @@ class UpdateRecommendation {
         potash: true,
         magnesium: true,
         sodium: true,
-        sulphur: true,
-        lime: true,
+        sulphur: isCropGrass ? false : true,
+        lime: isCropGrass ? false : true,
       },
       totals: true,
       referenceValue: `${field.ID}-${crop.ID}-${crop.Year}`,

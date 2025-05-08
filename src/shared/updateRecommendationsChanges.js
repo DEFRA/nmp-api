@@ -594,7 +594,9 @@ class UpdateRecommendationChanges {
           firstCrop,
           organicManure,
           pkBalanceData,
-          rb209CountryData.RB209CountryID
+          rb209CountryData.RB209CountryID,
+          transactionalManager,
+          request
         );
       console.log(
         "nutrientRecommendationnReqBody",
@@ -2363,11 +2365,19 @@ if (crop.CropTypeID !==140){
     firstCropData,
     organicManureData,
     pkBalanceData,
-    rb209CountryId
+    rb209CountryId,
+    transactionalManager,
+    request
   ) {
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
     );
+
+    const grassGrowthClass =
+      await this.grassGrowthClass.calculateGrassGrowthClassByFieldId(
+        field.ID,
+        request
+      );
     const cropType = cropTypesList.find(
       (cropType) => cropType.cropTypeId === crop.CropTypeID
     );
@@ -2402,6 +2412,10 @@ if (crop.CropTypeID !==140){
       grassGrowthClass,
       transactionalManager
     );
+     const isCropGrass = await this.isGrassCropPresent(
+      crop,
+      transactionalManager
+    );
     const excessRainfall = await this.getWinterExcessRainfall(
       farm.ID,
       crop.Year
@@ -2410,7 +2424,7 @@ if (crop.CropTypeID !==140){
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: crop.FieldType,
-        multipleCrops: crop.CropOrder == 2 ? true : false,
+        multipleCrops: dataMultipleCrops.length >  1 ? true : false,
         arable: crop.FieldType == 2 ? [] : arableBody,
         grassland:{},
         grass:crop.FieldType == 3 || crop.FieldType == 2 ? grassObject : {},
@@ -2446,8 +2460,8 @@ if (crop.CropTypeID !==140){
         potash: true,
         magnesium: true,
         sodium: true,
-        sulphur: true,
-        lime: true,
+         sulphur: isCropGrass ? false : true,
+        lime: isCropGrass ? false : true,
       },
       totals: true,
       referenceValue: `${field.ID}-${crop.ID}-${crop.Year}`,
