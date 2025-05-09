@@ -44,6 +44,8 @@ const { CountryEntity } = require("../db/entity/country.entity");
 const RB209SoilService = require("../vendors/rb209/soil/soil.service");
 const { NutrientMapperNames } = require("../constants/nutrient-mapper-names");
 const { UpdateRecommendationChanges } = require("../shared/updateRecommendationsChanges");
+const { GrassGrowthService } = require("../grass-growth-plan/grass-growth-plan.service");
+const { ExcessRainfallsEntity } = require("../db/entity/excess-rainfalls.entity");
 
 class OrganicManureService extends BaseService {
   constructor() {
@@ -86,6 +88,10 @@ class OrganicManureService extends BaseService {
     );
     this.countryRepository = AppDataSource.getRepository(CountryEntity);
     this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
+    this.grassGrowthClass = new GrassGrowthService();
+    this.excessRainfallRepository = AppDataSource.getRepository(
+      ExcessRainfallsEntity
+    );
   }
 
   async getTotalNitrogen(
@@ -220,7 +226,8 @@ class OrganicManureService extends BaseService {
 
   async buildArableBody(
     dataMultipleCrops, // Accept either a single crop or multiple crops
-    field
+    field,
+    transactionalManager
   ) {
     const arableBody = [];
 
@@ -246,17 +253,18 @@ class OrganicManureService extends BaseService {
           HttpStatus.BAD_REQUEST
         );
       }
-
       // Add crop to arableBody based on its CropOrder
-      arableBody.push({
-        cropOrder: crop.CropOrder,
-        cropGroupId: currentCropType.cropGroupId,
-        cropTypeId: crop.CropTypeID,
-        cropInfo1Id: crop.CropInfo1,
-        cropInfo2Id: crop.CropInfo2,
-        sowingDate: crop.SowingDate,
-        expectedYield: crop.Yield,
-      });
+      if (crop.CropTypeID !== 140) {
+        arableBody.push({
+          cropOrder: crop.CropOrder,
+          cropGroupId: currentCropType.cropGroupId,
+          cropTypeId: crop.CropTypeID,
+          cropInfo1Id: crop.CropInfo1,
+          cropInfo2Id: crop.CropInfo2,
+          sowingDate: crop.SowingDate,
+          expectedYield: crop.Yield,
+        });
+      }
     }
 
     // Return the list of crops sorted by CropOrder (if necessary)
@@ -294,6 +302,97 @@ class OrganicManureService extends BaseService {
     return previousCrops[0] || null;
   }
 
+  async getWinterExcessRainfall(farmId, year) {
+    const excessRainfall = await this.excessRainfallRepository.findOne({
+      where: {
+        FarmID: farmId,
+        Year: year,
+      },
+    });
+    if (excessRainfall) {
+      return excessRainfall;
+    } else {
+      return null;
+    }
+  }
+
+  async buildGrassObject(crop, field, grassGrowthClass, transactionalManager) {
+    // Case: Only one crop with CropOrder 1 and CropTypeID 140
+    if (crop.CropOrder === 1 && crop.CropTypeID === 140) {
+      return {
+        cropOrder: crop.CropOrder,
+        swardTypeId: crop.SwardTypeID,
+        swardManagementId: crop.SwardManagementID,
+        sequenceId: crop.DefoliationSequenceID,
+        grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
+        yield: crop.Yield,
+        seasonId: crop.Establishment,
+      };
+    }
+
+    // Case: CropOrder is 2 and it's grass
+    if (crop.CropOrder === 2) {
+      if (crop.CropTypeID === 140) {
+        return {
+          cropOrder: crop.CropOrder,
+          swardTypeId: crop.SwardTypeID,
+          swardManagementId: crop.SwardManagementID,
+          sequenceId: crop.DefoliationSequenceID,
+          grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
+          yield: crop.Yield,
+          seasonId: crop.Establishment,
+        };
+      } else {
+        // Look up CropOrder 1
+        const firstCrop = await this.getFirstCropData(
+          transactionalManager,
+          field.ID,
+          crop.Year
+        );
+
+        if (firstCrop && firstCrop.CropTypeID === 140) {
+          return {
+            cropOrder: firstCrop.CropOrder,
+            swardTypeId: firstCrop.SwardTypeID,
+            swardManagementId: firstCrop.SwardManagementID,
+            sequenceId: firstCrop.DefoliationSequenceID,
+            grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
+            yield: firstCrop.Yield,
+            seasonId: firstCrop.Establishment,
+          };
+        }
+      }
+    }
+
+    // Default return
+    return {};
+  }
+
+  async isGrassCropPresent(crop, transaction) {
+    if (crop.CropOrder === 1) {
+      if (crop.CropTypeID === 140) {
+        return true;
+      } else {
+        return false;
+      }
+    } else if (crop.CropOrder === 2) {
+      if (crop.CropTypeID === 140) {
+        return true;
+      } else {
+        const firstCropData = await this.getFirstCropData(
+          transaction,
+          crop.FieldID,
+          crop.Year
+        );
+        if (firstCropData.CropTypeID === 140) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    }
+  }
+
   async buildNutrientRecommendationReqBody(
     field,
     farm,
@@ -307,11 +406,18 @@ class OrganicManureService extends BaseService {
     organicManureData,
     OrganicManure,
     allPKBalanceData,
-    rb209CountryId
+    rb209CountryId,
+    request,
+    transactionalManager
   ) {
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
     );
+    const grassGrowthClass =
+      await this.grassGrowthClass.calculateGrassGrowthClassByFieldId(
+        field.ID,
+        request
+      );
     const cropType = cropTypesList.find(
       (cropType) => cropType.cropTypeId === crop.CropTypeID
     );
@@ -336,38 +442,41 @@ class OrganicManureService extends BaseService {
       crop.Year - 1,
       allPKBalanceData
     );
+    const excessRainfall = await this.getWinterExcessRainfall(
+      farm.ID,
+      crop.Year
+    );
 
-    const arableBody = await this.buildArableBody(dataMultipleCrops, field);
+    const arableBody = await this.buildArableBody(
+      dataMultipleCrops,
+      field,
+      transactionalManager
+    );
+    const grassObject = await this.buildGrassObject(
+      crop,
+      field,
+      grassGrowthClass,
+      transactionalManager
+    );
+    const isCropGrass = await this.isGrassCropPresent(
+      crop,
+      transactionalManager
+    );
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: crop.FieldType,
-        multipleCrops: arableBody.length > 1 ? true : false,
-        arable: arableBody,
-        grassland:
-          crop.FieldType == 1
-            ? {}
-            : {
-                cropOrder: null,
-                snsId: null,
-                grassGrowthClassId: null,
-                yieldTypeId: null,
-                sequenceId: null,
-                grasslandSequence: [
-                  {
-                    position: null,
-                    cropMaterialId: null,
-                    yield: null,
-                  },
-                ],
-                establishedDate: null,
-                seasonId: null,
-                siteClassId: null,
-              },
+        multipleCrops: dataMultipleCrops.length > 1 ? true : false,
+        arable: crop.FieldType == 2 ? [] : arableBody,
+        grassland: {},
+        grass: crop.FieldType == 3 || crop.FieldType == 2 ? grassObject : {},
         soil: {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
           nvzActionProgrammeId: field.NVZProgrammeID,
-          psc: 0, //TODO:: need to find it
+          psc:
+            excessRainfall?.WinterRainfall != null
+              ? excessRainfall.WinterRainfall
+              : 0, //TODO:: need to find it, //TODO:: need to find it
           pkBalance: {
             phosphate: pkBalanceData != null ? pkBalanceData.PBalance : 0,
             potash: pkBalanceData != null ? pkBalanceData.KBalance : 0,
@@ -392,8 +501,8 @@ class OrganicManureService extends BaseService {
         potash: true,
         magnesium: true,
         sodium: true,
-        sulphur: true,
-        lime: true,
+        sulphur: isCropGrass ? false : true,
+        lime: isCropGrass ? false : true,
       },
       totals: true,
       referenceValue: `${field.ID}-${crop.ID}-${crop.Year}`,
@@ -562,16 +671,16 @@ class OrganicManureService extends BaseService {
         (cropType) => cropType?.cropTypeId === previousCrop?.CropTypeID
       );
       nutrientRecommendationnReqBody.field.previousCropping = {
-        previousGrassId: 1,
-        previousCropGroupId:
-          cropType?.cropGroupId !== undefined && cropType?.cropGroupId !== null
+        previousGrassId: previousCrop?.CropTypeID==140 ? null: 1,
+        previousCropGroupId: previousCrop?.CropTypeID==140 ? null :
+          (cropType?.cropGroupId !== undefined && cropType?.cropGroupId !== null
             ? cropType?.cropGroupId
-            : null,
-        previousCropTypeId:
-          previousCrop.CropTypeID !== undefined &&
+            : null),
+        previousCropTypeId:previousCrop?.CropTypeID==140 ? null :
+          (previousCrop.CropTypeID !== undefined &&
           previousCrop.CropTypeID !== null
             ? previousCrop.CropTypeID
-            : null,
+            : null),
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -581,7 +690,7 @@ class OrganicManureService extends BaseService {
       nutrientRecommendationnReqBody.field.previousCropping = {
         previousCropGroupId: null,
         previousCropTypeId: null,
-        previousGrassId: 1,
+        previousGrassId: previousCrop?.CropTypeID==140 ? null : 1,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -1828,7 +1937,9 @@ class OrganicManureService extends BaseService {
               organicManureData,
               OrganicManure,
               allPKBalanceData,
-              rb209CountryData.RB209CountryID
+              rb209CountryData.RB209CountryID,
+              request,
+              transactionalManager
             );
           console.log(
             "nutrientRecommensssdationnReqBody",

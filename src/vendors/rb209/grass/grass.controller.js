@@ -12,24 +12,37 @@ class RB209GrassController {
   }
 
   async getGrassDefoliationSequence() {
-    let url = this.#request.url.pathname.split("/rb209")[1];
-    const { swardTypeId, numberOfCuts } = this.#request.query;
+    //let url = this.#request.url.pathname.split("/rb209")[1];
+    const url = this.#request.url.pathname.split("/rb209")[1];
 
-    const queryParams = [];
-    if (swardTypeId !== undefined) {
-      queryParams.push(`swardTypeId=${swardTypeId}`);
-    }
-    if (numberOfCuts !== undefined) {
-      queryParams.push(`numberOfCuts=${numberOfCuts}`);
-    }
+    //const { swardTypeId, numberOfCuts } = this.#request.query;
+    const { swardTypeId, numberOfCuts } = this.#request.params;
 
-    if (queryParams.length > 0) {
-      url += "?" + queryParams.join("&");
-    }
+    // const queryParams = [];
+    // if (swardTypeId !== undefined) {
+    //   queryParams.push(`swardTypeId=${swardTypeId}`);
+    // }
+    // if (numberOfCuts !== undefined) {
+    //   queryParams.push(`numberOfCuts=${numberOfCuts}`);
+    // }
+
+    // if (queryParams.length > 0) {
+    //   url += "?" + queryParams.join("&");
+    // }
 
     try {
       const data = await this.#service.getData(url);
       return this.#h.response(data);
+      // console.log("data oof defoliation",data)
+      // if (data.status != 404 ) {
+      //   return this.#h.response(data);
+      // } else {
+      //   const data = await this.#service.getData(
+      //     `Grass/DefoliationSequence/${swardTypeId}/${numberOfCuts}`
+      //   );
+      //   console.log("data needed", data);
+      //   return this.#h.response({ list: data });
+      // }
     } catch (error) {
       return this.#h.response({ error });
     }
@@ -37,28 +50,52 @@ class RB209GrassController {
 
   async getGrassCutsForField() {
     let url = this.#request.url.pathname.split("/rb209")[1];
-    const { swardTypeId, swardManagementId } = this.#request.query;
+    const { swardTypeId, swardManagementId } = this.#request.params;
 
-    const queryParams = [];
-    if (swardTypeId !== undefined) {
-      queryParams.push(`swardTypeId=${swardTypeId}`);
-    }
-    if (swardManagementId !== undefined) {
-      queryParams.push(`swardManagementId=${swardManagementId}`);
-    }
+    // const queryParams = [];
+    // if (swardTypeId !== undefined) {
+    //   queryParams.push(`swardTypeId=${swardTypeId}`);
+    // }
+    // if (swardManagementId !== undefined) {
+    //   queryParams.push(`swardManagementId=${swardManagementId}`);
+    // }
 
-    if (queryParams.length > 0) {
-      url += "?" + queryParams.join("&");
-    }
+    // if (queryParams.length > 0) {
+    //   url += "?" + queryParams.join("&");
+    // }
 
     try {
       const data = await this.#service.getData(url);
-      return this.#h.response(data);
+      return this.#h.response({ data });
+
+      // if(data.status!=404){
+
+      //   return this.#h.response(data);
+      // }else{
+      //   console.log("swardTypeId", swardTypeId);
+      //   console.log("swardManagementId", swardManagementId);
+      // const data = await this.#service.getData(
+      //   `Grass/PotentialCuts/${swardTypeId}/${swardManagementId}`
+      // );
+      // console.log("data needed for", data);
+
+      //   return this.#h.response({data});
+
+      // }
     } catch (error) {
       return this.#h.response({ error });
     }
   }
-
+  async getSwardManagementBySwardManagementId() {
+    let url = this.#request.url.pathname.split("/rb209")[1];
+    const { swardManagementId } = this.#request.params;
+    try {
+      const data = await this.#service.getData(url);
+      return this.#h.response({ data });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
   async getSwardManagementsForGrassFields() {
     const url = this.#request.url.pathname.split("/rb209")[1];
     try {
@@ -81,29 +118,35 @@ class RB209GrassController {
 
   async getYieldRangesForGrassFields() {
     let url = this.#request.url.pathname.split("/rb209")[1];
-    const { sequenceId, grassGrowthClassId } = this.#request.query;
+    const { sequenceId, grassGrowthClassId } = this.#request.params;
 
-    const queryParams = [];
-    if (sequenceId !== undefined) {
-      queryParams.push(`sequenceId=${sequenceId}`);
-    }
-    if (grassGrowthClassId !== undefined) {
-      queryParams.push(`grassGrowthClassId=${grassGrowthClassId}`);
-    }
+    // const queryParams = [];
+    // if (sequenceId !== undefined) {
+    //   queryParams.push(`sequenceId=${sequenceId}`);
+    // }
+    // if (grassGrowthClassId !== undefined) {
+    //   queryParams.push(`grassGrowthClassId=${grassGrowthClassId}`);
+    // }
 
-    if (queryParams.length > 0) {
-      url += "?" + queryParams.join("&");
-    }
+    // if (queryParams.length > 0) {
+    //   url += "?" + queryParams.join("&");
+    // }
 
     try {
       const data = await this.#service.getData(url);
       return this.#h.response(data);
+      // if (data.status != 404 || data.status != 422) {
+      //   return this.#h.response(data);
+      // } else {
+      //   const data = await this.#service.getData(
+      //     `Grass/YieldRangesEnglandAndWales/${sequenceId}/${grassGrowthClassId}`
+      //   );
+      //   return this.#h.response(data);
+      // }
     } catch (error) {
       return this.#h.response({ error });
     }
   }
-
-
 }
 
 module.exports = { RB209GrassController };

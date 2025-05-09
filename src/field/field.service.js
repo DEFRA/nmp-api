@@ -587,7 +587,8 @@ class FieldService extends BaseService {
                    await this.findDefoliationSequenceDescription(
                      crop.SwardTypeID,
                      crop.PotentialCut,
-                     crop.DefoliationSequenceID
+                     crop.DefoliationSequenceID,
+                     crop.Establishment
                    );
                }
               crop.DefoliationSequenceName =
@@ -1168,11 +1169,12 @@ class FieldService extends BaseService {
     }
   };
 
-  async findDefoliationSequenceDescription(SwardTypeID,PotentialCut,DefoliationSequenceID)  {
+  async findDefoliationSequenceDescription(SwardTypeID,PotentialCut,DefoliationSequenceID,establishment)  {
     try {
+      let newSward = (establishment == 0 || null) ? false : true;
       let defoliationSequenceDescription = null;
       let defoliationSequenceList = await this.rB209GrassService.getData(
-        `Grass/DefoliationSequence?swardTypeId=${SwardTypeID}&numberOfCuts=${PotentialCut}`
+        `Grass/DefoliationSequence/${SwardTypeID}/${PotentialCut}/${newSward}`
       );
       if (
         defoliationSequenceList.data &&
