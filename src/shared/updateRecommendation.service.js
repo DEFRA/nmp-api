@@ -467,6 +467,7 @@ class UpdateRecommendation {
         cropData.ID
       );
       let fertiliserData = await this.getP205AndK20fromfertiliser(
+        transactionalManager,
         organicManure.ManagementPeriodID
       );
 
@@ -628,6 +629,7 @@ class UpdateRecommendation {
       );
 
       const cropPlanOfNextYear = await this.getCropPlanOfNextYear(
+        transactionalManager,
         crop?.Year,
         fieldId
       );
@@ -645,7 +647,7 @@ class UpdateRecommendation {
           },
         }
       );
-      const dataMultipleCrops = await this.cropRepository.find({
+      const dataMultipleCrops = await transactionalManager.find(CropEntity, {
         where: {
           FieldID: field.ID,
           Year: crop.Year,
@@ -676,6 +678,7 @@ class UpdateRecommendation {
 
       const secondCropManagementData = await this.getManagementPeriod(crop.ID);
       let fertiliserData = await this.getP205AndK20fromfertiliser(
+        transactionalManager,
         secondCropManagementData.ID
       );
 
@@ -1196,18 +1199,21 @@ class UpdateRecommendation {
       where: { ManagementPeriodID: ID },
     });
   }
-  async getP205AndK20fromfertiliser(managementPeriodId) {
+  async getP205AndK20fromfertiliser(transactionalManager,managementPeriodId) {
     let sumOfP205 = 0;
     let sumOfK20 = 0;
-    const fertiliserData = await this.fertiliserRepository.find({
-      where: {
-        ManagementPeriodID: managementPeriodId,
-      },
-      select: {
-        P2O5: true,
-        K2O: true,
-      },
-    });
+    const fertiliserData = await transactionalManager.find(
+      FertiliserManuresEntity,
+      {
+        where: {
+          ManagementPeriodID: managementPeriodId,
+        },
+        select: {
+          P2O5: true,
+          K2O: true,
+        },
+      }
+    );
 
     if (fertiliserData && fertiliserData.length > 0) {
       for (const fertiliser of fertiliserData) {
@@ -1694,8 +1700,8 @@ class UpdateRecommendation {
     return { field, errors };
   }
 
-  async getCropPlanOfNextYear(cropYear, fieldId) {
-    return await this.cropRepository.find({
+  async getCropPlanOfNextYear(transactionalManager, cropYear, fieldId) {
+    return await transactionalManager.find(CropEntity, {
       where: {
         FieldID: fieldId,
         Year: MoreThan(cropYear),
