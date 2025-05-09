@@ -451,6 +451,7 @@ module.exports = [
         query: Joi.object({
           newGroupName: Joi.string().required(),
           year: Joi.number().integer().required(),
+          farmId: Joi.number().integer().required(),
         }),
         failAction: (request, h, err) => {
           return h
