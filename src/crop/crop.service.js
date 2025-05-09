@@ -314,12 +314,14 @@ class CropService extends BaseService {
     const findDefoliationSequenceDescription = async (
       SwardTypeID,
       PotentialCut,
-      DefoliationSequenceID
+      DefoliationSequenceID,
+      establishment
     ) => {
       try {
+        let newSward = (establishment == 0 || null) ? false:true
         let defoliationSequenceDescription = null;
         let defoliationSequenceList = await this.rB209GrassService.getData(
-          `Grass/DefoliationSequence/${SwardTypeID}/${PotentialCut}`
+          `Grass/DefoliationSequence/${SwardTypeID}/${PotentialCut}/${newSward}`
         );
 
         if (
@@ -365,7 +367,8 @@ class CropService extends BaseService {
           await findDefoliationSequenceDescription(
             plan.SwardTypeID,
             plan.PotentialCut,
-            plan.DefoliationSequenceID
+            plan.DefoliationSequenceID,
+            plan.Establishment
           );
       }
 
