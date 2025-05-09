@@ -43,7 +43,7 @@ module.exports = [
   // },
   {
     method: "GET",
-    path: "/vendors/rb209/Grass/DefoliationSequence/{swardTypeId}/{numberOfCuts}",
+    path: "/vendors/rb209/Grass/DefoliationSequence/{swardTypeId}/{numberOfCuts}/{newSward}",
     handler: async (request, h) => {
       const controller = new RB209GrassController(request, h);
       return controller.getGrassDefoliationSequence(request, h);
@@ -62,6 +62,9 @@ module.exports = [
             .integer()
             .required()
             .description("The number of cuts made to the field in the season."),
+          newSward: Joi.boolean()
+            .required()
+            .description("Whether a new sward (true) or not (false)"),
         }),
         failAction: (request, h, err) => {
           return h
@@ -280,5 +283,5 @@ module.exports = [
         },
       },
     },
-  }
+  },
 ];

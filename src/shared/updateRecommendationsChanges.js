@@ -1241,21 +1241,22 @@ async extractNutrientData(calculations, defoliationId) {
           updated
         );
         results.push(saved);
-      } else {
-        // Create a new recommendation record
-        const created = this.RecommendationRepository.create({
-          ...cropRecData,
-          ManagementPeriodID: managementPeriod.ID,
-          Comments: `Reference Value: ${filteredData.referenceValue}\nVersion: ${filteredData.versionNumber}`,
-          CreatedOn: new Date(),
-          CreatedByID: userId,
-        });
-        const saved = await transactionalManager.save(
-          RecommendationEntity,
-          created
-        );
-        results.push(saved);
-      }
+      } 
+      // else {
+      //   // Create a new recommendation record
+      //   const created = this.RecommendationRepository.create({
+      //     ...cropRecData,
+      //     ManagementPeriodID: managementPeriod.ID,
+      //     Comments: `Reference Value: ${filteredData.referenceValue}\nVersion: ${filteredData.versionNumber}`,
+      //     CreatedOn: new Date(),
+      //     CreatedByID: userId,
+      //   });
+      //   const saved = await transactionalManager.save(
+      //     RecommendationEntity,
+      //     created
+      //   );
+      //   results.push(saved);
+      // }
     }
 
     return results;
@@ -2594,16 +2595,16 @@ if (crop.CropTypeID !==140){
         (cropType) => cropType.cropTypeId === previousCrop.CropTypeID
       );
       nutrientRecommendationnReqBody.field.previousCropping = {
-        previousGrassId: 1,
-        previousCropGroupId:
-          cropType.cropGroupId !== undefined && cropType.cropGroupId !== null
+        previousGrassId: previousCrop?.CropTypeID==140 ? null :1,
+        previousCropGroupId:previousCrop?.CropTypeID==140 ? null :
+          (cropType.cropGroupId !== undefined && cropType.cropGroupId !== null
             ? cropType.cropGroupId
-            : null,
-        previousCropTypeId:
-          previousCrop.CropTypeID !== undefined &&
+            : null),
+        previousCropTypeId:previousCrop?.CropTypeID==140 ? null :
+          (previousCrop.CropTypeID !== undefined &&
           previousCrop.CropTypeID !== null
             ? previousCrop.CropTypeID
-            : null,
+            : null),
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -2613,7 +2614,7 @@ if (crop.CropTypeID !==140){
       nutrientRecommendationnReqBody.field.previousCropping = {
         previousCropGroupId: null,
         previousCropTypeId: null,
-        previousGrassId: 1,
+        previousGrassId: previousCrop?.CropTypeID==140 ? null: 1,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -2903,16 +2904,16 @@ if (crop.CropTypeID !==140){
         (cropType) => cropType?.cropTypeId === previousCrop?.CropTypeID
       );
       nutrientRecommendationnReqBody.field.previousCropping = {
-        previousGrassId: 1,
-        previousCropGroupId:
-          cropType?.cropGroupId !== undefined && cropType?.cropGroupId !== null
+        previousGrassId:previousCrop?.CropTypeID==140 ? null: 1,
+        previousCropGroupId:previousCrop?.CropTypeID==140 ? null :
+          (cropType?.cropGroupId !== undefined && cropType?.cropGroupId !== null
             ? cropType.cropGroupId
-            : null,
-        previousCropTypeId:
-          previousCrop?.CropTypeID !== undefined &&
+            : null),
+        previousCropTypeId:previousCrop?.CropTypeID==140 ? null :
+          (previousCrop?.CropTypeID !== undefined &&
           previousCrop?.CropTypeID !== null
             ? previousCrop?.CropTypeID
-            : null,
+            : null),
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -2922,7 +2923,7 @@ if (crop.CropTypeID !==140){
       nutrientRecommendationnReqBody.field.previousCropping = {
         previousCropGroupId: null,
         previousCropTypeId: null,
-        previousGrassId: 1,
+        previousGrassId: previousCrop?.CropTypeID==140 ? null:1,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,

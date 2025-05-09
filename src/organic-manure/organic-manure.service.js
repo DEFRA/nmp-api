@@ -671,16 +671,16 @@ class OrganicManureService extends BaseService {
         (cropType) => cropType?.cropTypeId === previousCrop?.CropTypeID
       );
       nutrientRecommendationnReqBody.field.previousCropping = {
-        previousGrassId: 1,
-        previousCropGroupId:
-          cropType?.cropGroupId !== undefined && cropType?.cropGroupId !== null
+        previousGrassId: previousCrop?.CropTypeID==140 ? null: 1,
+        previousCropGroupId: previousCrop?.CropTypeID==140 ? null :
+          (cropType?.cropGroupId !== undefined && cropType?.cropGroupId !== null
             ? cropType?.cropGroupId
-            : null,
-        previousCropTypeId:
-          previousCrop.CropTypeID !== undefined &&
+            : null),
+        previousCropTypeId:previousCrop?.CropTypeID==140 ? null :
+          (previousCrop.CropTypeID !== undefined &&
           previousCrop.CropTypeID !== null
             ? previousCrop.CropTypeID
-            : null,
+            : null),
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -690,7 +690,7 @@ class OrganicManureService extends BaseService {
       nutrientRecommendationnReqBody.field.previousCropping = {
         previousCropGroupId: null,
         previousCropTypeId: null,
-        previousGrassId: 1,
+        previousGrassId: previousCrop?.CropTypeID==140 ? null : 1,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,

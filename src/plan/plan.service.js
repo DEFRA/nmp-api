@@ -433,11 +433,11 @@ class PlanService extends BaseService {
         (cropType) => cropType?.cropTypeId === previousCrop?.CropTypeID
       );
       nutrientRecommendationnReqBody.field.previousCropping = {
-        previousGrassId: 1,
-        previousCropGroupId:
+        previousGrassId: previousCrop?.CropTypeID==140 ? null: 1,
+        previousCropGroupId:  previousCrop?.CropTypeID==140 ? null :(
           cropType?.cropGroupId !== undefined && cropType?.cropGroupId !== null
             ? cropType?.cropGroupId
-            : null,
+            : null),
         previousCropTypeId:
           previousCrop?.CropTypeID !== undefined &&
           previousCrop?.CropTypeID !== null
@@ -452,7 +452,7 @@ class PlanService extends BaseService {
       nutrientRecommendationnReqBody.field.previousCropping = {
         previousCropGroupId: null,
         previousCropTypeId: null,
-        previousGrassId: 1,
+        previousGrassId: previousCrop?.CropTypeID==140 ? null : 1,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
