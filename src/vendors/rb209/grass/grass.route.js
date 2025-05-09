@@ -154,7 +154,40 @@ module.exports = [
       },
     },
   },
-
+  {
+    method: "GET",
+    path: "/vendors/rb209/Grass/SwardManagement/{swardManagementId}",
+    handler: async (request, h) => {
+      const controller = new RB209GrassController(request, h);
+      return controller.getSwardManagementBySwardManagementId(request, h);
+    },
+    options: {
+      tags: ["api", "RB209 Grass"],
+      description:
+        "Get the text of the sward management for the provided sward management id.",
+      validate: {
+        params: Joi.object({
+          swardManagementId: Joi.number()
+            .integer()
+            .required()
+            .description("The Sward Management Id of the field."),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+  },
   {
     method: "GET",
     path: "/vendors/rb209/Grass/SwardManagements",

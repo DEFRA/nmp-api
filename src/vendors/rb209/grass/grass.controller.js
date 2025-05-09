@@ -67,7 +67,7 @@ class RB209GrassController {
     try {
       const data = await this.#service.getData(url);
       return this.#h.response({ data });
-      
+
       // if(data.status!=404){
 
       //   return this.#h.response(data);
@@ -80,13 +80,22 @@ class RB209GrassController {
       // console.log("data needed for", data);
 
       //   return this.#h.response({data});
-      
+
       // }
     } catch (error) {
       return this.#h.response({ error });
     }
   }
-
+  async getSwardManagementBySwardManagementId() {
+    let url = this.#request.url.pathname.split("/rb209")[1];
+    const { swardManagementId } = this.#request.params;
+    try {
+      const data = await this.#service.getData(url);
+      return this.#h.response({ data });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
   async getSwardManagementsForGrassFields() {
     const url = this.#request.url.pathname.split("/rb209")[1];
     try {
@@ -125,7 +134,7 @@ class RB209GrassController {
 
     try {
       const data = await this.#service.getData(url);
-       return this.#h.response(data);
+      return this.#h.response(data);
       // if (data.status != 404 || data.status != 422) {
       //   return this.#h.response(data);
       // } else {
@@ -138,8 +147,6 @@ class RB209GrassController {
       return this.#h.response({ error });
     }
   }
-
-
 }
 
 module.exports = { RB209GrassController };
