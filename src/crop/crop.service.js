@@ -319,7 +319,7 @@ class CropService extends BaseService {
       try {
         let defoliationSequenceDescription = null;
         let defoliationSequenceList = await this.rB209GrassService.getData(
-          `Grass/DefoliationSequence?swardTypeId=${SwardTypeID}&numberOfCuts=${PotentialCut}`
+          `Grass/DefoliationSequence/${SwardTypeID}/${PotentialCut}`
         );
 
         if (
