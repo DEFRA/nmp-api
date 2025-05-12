@@ -534,23 +534,28 @@ class CropService extends BaseService {
     }
   }
 
-  async CropGroupNameExists(cropIds, newGroupName, year) {
-    return (await this.existingGroupNameCount(cropIds, newGroupName, year)) > 0;
+  async CropGroupNameExists(cropIds, newGroupName, year,farmId) {
+    return (await this.existingGroupNameCount(cropIds, newGroupName, year,farmId)) > 0;
   }
-  async existingGroupNameCount(cropIds, newGroupName, year) {
+  async existingGroupNameCount(cropIds, newGroupName, year,farmId) {
     if (!newGroupName) {
       throw boom.badRequest("Group Name is required");
     }
 
     const existingGroupNameCount = await this.repository
-      .createQueryBuilder("Crops")
-      .where("Crops.CropGroupName = :groupName", {
-        groupName: newGroupName.trim(),
-      })
-      .andWhere("Crops.Year = :year", { year })
-      .andWhere("Crops.ID NOT IN (:...cropIds)", { cropIds });
+  .createQueryBuilder("Crops")
+  .leftJoin("Fields", "Field", "Field.ID = Crops.fieldId")      // Join Fields table manually
+  .leftJoin("Farms", "Farm", "Farm.ID = Field.farmId")          // Join Farms table manually
+  .where("Crops.CropGroupName = :groupName", {
+    groupName: newGroupName.trim(),
+  })
+  .andWhere("Farm.ID = :farmId", { farmId })                    // Use farmId passed in
+  .andWhere("Crops.Year = :year", { year })
+  .andWhere("Crops.ID NOT IN (:...cropIds)", { cropIds });
 
-    return await existingGroupNameCount.getCount();
+  return await existingGroupNameCount.getCount();
+  
+  
   }
 
   async updateCropGroupName(cropIds, cropGroupName, variety, year, userId) {
