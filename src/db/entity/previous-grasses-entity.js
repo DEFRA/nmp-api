@@ -20,6 +20,10 @@ const PreviousGrassesEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
+    LayDuration: {
+      type: "int",
+      nullable: true,
+    },
     GrassManagementOptionID: {
       type: "int",
       nullable: true,
