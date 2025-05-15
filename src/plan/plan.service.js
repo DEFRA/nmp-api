@@ -438,11 +438,11 @@ class PlanService extends BaseService {
           cropType?.cropGroupId !== undefined && cropType?.cropGroupId !== null
             ? cropType?.cropGroupId
             : null),
-        previousCropTypeId:
-          previousCrop?.CropTypeID !== undefined &&
+        previousCropTypeId: previousCrop?.CropTypeID==140 ? null:
+          (previousCrop?.CropTypeID !== undefined &&
           previousCrop?.CropTypeID !== null
             ? previousCrop?.CropTypeID
-            : null,
+            : null),
         snsId: null,
         smnDepth: null,
         measuredSmn: null,

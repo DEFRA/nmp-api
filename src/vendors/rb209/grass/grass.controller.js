@@ -10,7 +10,16 @@ class RB209GrassController {
     this.#h = h;
     this.#service = new RB209GrassService();
   }
-
+  async getGrassDefoliationSequenceByDefoliationSequenceId() {
+    let url = this.#request.url.pathname.split("/rb209")[1];
+    const { defoliationSequenceId } = this.#request.params;
+    try {
+      const data = await this.#service.getData(url);
+      return this.#h.response({ data });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
   async getGrassDefoliationSequence() {
     //let url = this.#request.url.pathname.split("/rb209")[1];
     const url = this.#request.url.pathname.split("/rb209")[1];
@@ -47,7 +56,37 @@ class RB209GrassController {
       return this.#h.response({ error });
     }
   }
+  async getGrassGrowthClassesByCountryId() {
+    const url = this.#request.url.pathname.split("/rb209")[1];
+    try {
+      const data = await this.#service.getData(url);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
 
+  async getGrassGrowthClassByGrassGrowthClassId() {
+    const { grassGrowthClassId } = this.#request.params;
+    const url = this.#request.url.pathname.split("/rb209")[1];
+    try {
+      const data = await this.#service.getData(url);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+
+  async getGrassGrowthClassBySoilTypeIdAndRainfallAndAltitudeAndChalk() {
+    const { soilTypeId, rainfall, altitude, chalk } = this.#request.params;
+    const url = this.#request.url.pathname.split("/rb209")[1];
+    try {
+      const data = await this.#service.getData(url);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
   async getGrassCutsForField() {
     let url = this.#request.url.pathname.split("/rb209")[1];
     const { swardTypeId, swardManagementId } = this.#request.params;
@@ -105,7 +144,26 @@ class RB209GrassController {
       return this.#h.response({ error });
     }
   }
-
+  async getSwardManagementBySwardTypeId() {
+    let url = this.#request.url.pathname.split("/rb209")[1];
+    const { swardTypeId } = this.#request.params;
+    try {
+      const data = await this.#service.getData(url);
+      return this.#h.response({ data });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+  async getSwardTypeBySwardTypeId() {
+    let url = this.#request.url.pathname.split("/rb209")[1];
+    const { swardTypeId } = this.#request.params;
+    try {
+      const data = await this.#service.getData(url);
+      return this.#h.response({ data });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
   async getSwardTypesForField() {
     const url = this.#request.url.pathname.split("/rb209")[1];
     try {
