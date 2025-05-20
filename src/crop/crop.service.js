@@ -254,50 +254,56 @@ class CropService extends BaseService {
 
     const findManagementPeriodId = async (cropId) => {
       try {
-        const managementPeriod = await this.managementPeriodRepository.findOne({
+        const managementPeriods = await this.managementPeriodRepository.find({
           where: { CropID: cropId },
           select: ["ID"],
         });
-        return managementPeriod ? managementPeriod.ID : null;
+
+        return managementPeriods.map((period) => period.ID);
       } catch (error) {
         console.error(
-          `Error fetching ManagementPeriodID for CropId: ${cropId}`,
+          `Error fetching ManagementPeriodIDs for CropId: ${cropId}`,
           error
         );
-        return null;
+        return [];
       }
     };
+    ;
 
-    const findOrganicManureData = async (managementPeriodId) => {
+    const findOrganicManureData = async (managementPeriodIds) => {
       try {
         const organicManureEntries = await this.organicManureRepository.find({
-          where: { ManagementPeriodID: managementPeriodId },
+          where: {
+            ManagementPeriodID: In(managementPeriodIds),
+          },
         });
         return organicManureEntries;
       } catch (error) {
         console.error(
-          `Error fetching organic manure data for ManagementPeriodID: ${managementPeriodId}`,
+          `Error fetching organic manure data for ManagementPeriodIDs: ${managementPeriodIds}`,
           error
         );
         return [];
       }
     };
+    
 
-    const findInorganicFertiliserData = async (managementPeriodId) => {
+    const findInorganicFertiliserData = async (managementPeriodIds) => {
       try {
         const fertiliserEntries = await this.fertiliserRepository.find({
-          where: { ManagementPeriodID: managementPeriodId },
+          where: {
+            ManagementPeriodID: In(managementPeriodIds),
+          },
         });
         return fertiliserEntries;
       } catch (error) {
         console.error(
-          `Error fetching inorganic fertiliser data for ManagementPeriodID: ${managementPeriodId}`,
+          `Error fetching inorganic fertiliser data for ManagementPeriodIDs: ${managementPeriodIds}`,
           error
         );
         return [];
       }
     };
-
     const findFarmRainfall = async (farmId) => {
       try {
         const farmRecord = await this.farmRepository.findOne({

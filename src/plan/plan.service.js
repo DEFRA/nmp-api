@@ -1519,20 +1519,13 @@ class PlanService extends BaseService {
             request,
             transactionalManager
           );
-           console.log(
-             "nutrientRecommendationnReqBody",
-             nutrientRecommendationnReqBody
-           );
-        console.log(
-          "nutrientRecommendationnReqBodysoil",
-          nutrientRecommendationnReqBody.field.soil.soilAnalyses
-        );
+           
         const nutrientRecommendationsData =
           await this.rB209RecommendationService.postData(
             "Recommendation/Recommendations",
             nutrientRecommendationnReqBody
           );
-   console.log("nutrientRecommendationsData", nutrientRecommendationsData);
+ 
         if (
           !nutrientRecommendationsData ||
           !nutrientRecommendationsData.calculations == null ||

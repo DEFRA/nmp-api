@@ -60,7 +60,7 @@ module.exports = [
           defoliationSequenceId: Joi.number()
             .integer()
             .required()
-            .description("TThe Defoliation Sequence Id of the field."),
+            .description("The Defoliation Sequence Id of the field."),
         }),
         failAction: (request, h, err) => {
           return h
