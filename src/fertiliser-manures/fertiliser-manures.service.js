@@ -349,11 +349,22 @@ class FertiliserManuresService extends BaseService {
     return await AppDataSource.transaction(async (transactionalManager) => {
       const updatedFertilisers = [];
       for (const manure of updatedFertiliserManureData) {
+        // const {
+        //   ID,
+        //   CreatedByID,
+        //   CreatedOn,
+        //   ManagementPeriodID,
+        //   ...updatedData
+        // } = manure;
         const {
           ID,
           CreatedByID,
-          CreatedOn,
-          ManagementPeriodID,
+          CreatedOn,        
+          FieldName,
+          EncryptedCounter,
+          Defoliation,
+          FieldID,
+          DefoliationName,
           ...updatedData
         } = manure;
         // Update fertiliseremanure
