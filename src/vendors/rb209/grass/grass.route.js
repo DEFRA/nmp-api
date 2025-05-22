@@ -80,7 +80,7 @@ module.exports = [
   },
   {
     method: "GET",
-    path: "/vendors/rb209/Grass/DefoliationSequence/{swardTypeId}/{numberOfCuts}/{newSward}",
+    path: "/vendors/rb209/Grass/DefoliationSequences/{swardTypeId}/{numberOfCuts}/{newSward}",
     handler: async (request, h) => {
       const controller = new RB209GrassController(request, h);
       return controller.getGrassDefoliationSequence(request, h);
@@ -128,7 +128,8 @@ module.exports = [
     },
     options: {
       tags: ["api", "RB209 Grass"],
-      description: "Full list of available Grass Growth Classes (GGC) for Grassland fields",
+      description:
+        "Full list of available Grass Growth Classes (GGC) for Grassland fields",
       validate: {
         params: Joi.object({
           countryId: Joi.string().required(),
@@ -149,7 +150,130 @@ module.exports = [
       },
     },
   },
-
+  {
+    method: "GET",
+    path: "/vendors/rb209/Grass/GrassHistories/{countryId}",
+    handler: async (request, h) => {
+      const controller = new RB209GrassController(request, h);
+      return controller.getGrassHistoriesByCountryId(request, h);
+    },
+    options: {
+      tags: ["api", "RB209 Grass"],
+      description: "Grass History list of Grass Fields",
+      validate: {
+        params: Joi.object({
+          countryId: Joi.string()
+            .required()
+            .description("The Country ID to filter on"),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+  },
+  {
+    method: "GET",
+    path: "/vendors/rb209/Grass/GrassHistory/{grassHistoryId}",
+    handler: async (request, h) => {
+      const controller = new RB209GrassController(request, h);
+      return controller.getGrassHistoryByGrassHistoryId(request, h);
+    },
+    options: {
+      tags: ["api", "RB209 Grass"],
+      description: "Grass History of Grass History ID provided",
+      validate: {
+        params: Joi.object({
+          grassHistoryId: Joi.string()
+            .required()
+            .description("The Grass History ID"),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+  },
+  {
+    method: "GET",
+    path: "/vendors/rb209/Grass/GrassSeasons/{seasonId}",
+    handler: async (request, h) => {
+      const controller = new RB209GrassController(request, h);
+      return controller.getGrassSeasonBySeasonId(request, h);
+    },
+    options: {
+      tags: ["api", "RB209 Grass"],
+      description: "This endpoint is used to return grass season",
+      validate: {
+        params: Joi.object({
+          seasonId: Joi.string().required().description("The Season ID"),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+  },
+  {
+    method: "GET",
+    path: "/vendors/rb209/Grass/GrassSeason/{countryId}",
+    handler: async (request, h) => {
+      const controller = new RB209GrassController(request, h);
+      return controller.getGrassSeasonByCountryId(request, h);
+    },
+    options: {
+      tags: ["api", "RB209 Grass"],
+      description: "This endpoint is used to return grass seasons",
+      validate: {
+        params: Joi.object({
+          countryId: Joi.string().required().description("The Country ID"),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+  },
   // Grass Growth Class by Grass Growth Class ID
   {
     method: "GET",
@@ -164,8 +288,9 @@ module.exports = [
         "Individual Grass Growth Class (GGC) Text filtered from the supplied corresponding Grass Growth Class ID",
       validate: {
         params: Joi.object({
-          grassGrowthClassId: Joi.string().required()
-          .description("The Grass Growth Class ID to filter on"),
+          grassGrowthClassId: Joi.string()
+            .required()
+            .description("The Grass Growth Class ID to filter on"),
         }),
         failAction: (request, h, err) => {
           return h
