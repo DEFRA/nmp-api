@@ -65,7 +65,42 @@ class RB209GrassController {
       return this.#h.response({ error });
     }
   }
-
+  async getGrassHistoriesByCountryId() {
+    const url = this.#request.url.pathname.split("/rb209")[1];
+    try {
+      const data = await this.#service.getData(url);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+  async getGrassHistoryByGrassHistoryId() {
+    const url = this.#request.url.pathname.split("/rb209")[1];
+    try {
+      const data = await this.#service.getData(url);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+  async getGrassSeasonBySeasonId() {
+    const url = this.#request.url.pathname.split("/rb209")[1];
+    try {
+      const data = await this.#service.getData(url);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+  async getGrassSeasonByCountryId() {
+    const url = this.#request.url.pathname.split("/rb209")[1];
+    try {
+      const data = await this.#service.getData(url);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
   async getGrassGrowthClassByGrassGrowthClassId() {
     const { grassGrowthClassId } = this.#request.params;
     const url = this.#request.url.pathname.split("/rb209")[1];
