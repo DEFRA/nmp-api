@@ -2505,7 +2505,7 @@ class OrganicManureService extends BaseService {
           ID,
           CreatedByID,
           CreatedOn,
-          ManagementPeriodID,
+          // ManagementPeriodID,
           FieldName,
           EncryptedCounter,
           Defoliation,
