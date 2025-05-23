@@ -2506,6 +2506,11 @@ class OrganicManureService extends BaseService {
           CreatedByID,
           CreatedOn,
           ManagementPeriodID,
+          FieldName,
+          EncryptedCounter,
+          Defoliation,
+          FieldID,
+          DefoliationName,
           ...updatedData
         } = OrganicManure;
 
