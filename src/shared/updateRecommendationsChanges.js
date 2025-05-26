@@ -2605,6 +2605,7 @@ if (crop.CropTypeID !==140){
           previousCrop.CropTypeID !== null
             ? previousCrop.CropTypeID
             : null),
+            grassHistoryId:null,    
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -2615,6 +2616,7 @@ if (crop.CropTypeID !==140){
         previousCropGroupId: null,
         previousCropTypeId: null,
         previousGrassId: previousCrop?.CropTypeID==140 ? null: 1,
+        grassHistoryId:null,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -2650,7 +2652,7 @@ if (crop.CropTypeID !==140){
         cropOrder: crop.CropOrder,
         swardTypeId: crop.SwardTypeID,
         swardManagementId: crop.SwardManagementID,
-        sequenceId: crop.DefoliationSequenceID,
+        defoliationSequenceId: crop.DefoliationSequenceID,
         grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
         yield: crop.Yield,
         seasonId: crop.Establishment,
@@ -2664,7 +2666,7 @@ if (crop.CropTypeID !==140){
           cropOrder: crop.CropOrder,
           swardTypeId: crop.SwardTypeID,
           swardManagementId: crop.SwardManagementID,
-          sequenceId: crop.DefoliationSequenceID,
+          defoliationSequenceId: crop.DefoliationSequenceID,
           grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
           yield: crop.Yield,
           seasonId: crop.Establishment,
@@ -2682,7 +2684,7 @@ if (crop.CropTypeID !==140){
             cropOrder: firstCrop.CropOrder,
             swardTypeId: firstCrop.SwardTypeID,
             swardManagementId: firstCrop.SwardManagementID,
-            sequenceId: firstCrop.DefoliationSequenceID,
+            defoliationSequenceId: firstCrop.DefoliationSequenceID,
             grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
             yield: firstCrop.Yield,
             seasonId: firstCrop.Establishment,
@@ -2914,6 +2916,7 @@ if (crop.CropTypeID !==140){
           previousCrop?.CropTypeID !== null
             ? previousCrop?.CropTypeID
             : null),
+            grassHistoryId:null,    
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -2924,6 +2927,7 @@ if (crop.CropTypeID !==140){
         previousCropGroupId: null,
         previousCropTypeId: null,
         previousGrassId: previousCrop?.CropTypeID==140 ? null:1,
+        grassHistoryId:null,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
