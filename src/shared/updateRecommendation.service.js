@@ -2496,6 +2496,7 @@ class UpdateRecommendation {
           previousCrop.CropTypeID !== null
             ? previousCrop.CropTypeID
             : null),
+        grassHistoryId:null,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -2506,6 +2507,7 @@ class UpdateRecommendation {
         previousCropGroupId: null,
         previousCropTypeId: null,
         previousGrassId: previousCrop?.CropTypeID==140 ? null : 1,
+        grassHistoryId:null,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -2541,7 +2543,7 @@ class UpdateRecommendation {
         cropOrder: crop.CropOrder,
         swardTypeId: crop.SwardTypeID,
         swardManagementId: crop.SwardManagementID,
-        sequenceId: crop.DefoliationSequenceID,
+        defoliationSequenceId: crop.DefoliationSequenceID,
         grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
         yield: crop.Yield,
         seasonId: crop.Establishment,
@@ -2555,7 +2557,7 @@ class UpdateRecommendation {
           cropOrder: crop.CropOrder,
           swardTypeId: crop.SwardTypeID,
           swardManagementId: crop.SwardManagementID,
-          sequenceId: crop.DefoliationSequenceID,
+          defoliationSequenceId: crop.DefoliationSequenceID,
           grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
           yield: crop.Yield,
           seasonId: crop.Establishment,
@@ -2573,7 +2575,7 @@ class UpdateRecommendation {
             cropOrder: firstCrop.CropOrder,
             swardTypeId: firstCrop.SwardTypeID,
             swardManagementId: firstCrop.SwardManagementID,
-            sequenceId: firstCrop.DefoliationSequenceID,
+            defoliationSequenceId: firstCrop.DefoliationSequenceID,
             grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
             yield: firstCrop.Yield,
             seasonId: firstCrop.Establishment,
@@ -2803,6 +2805,7 @@ class UpdateRecommendation {
           previousCrop?.CropTypeID !== null
             ? previousCrop?.CropTypeID
             : null),
+        grassHistoryId:null,    
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -2813,6 +2816,7 @@ class UpdateRecommendation {
         previousCropGroupId: null,
         previousCropTypeId: null,
         previousGrassId: previousCrop?.CropTypeID==140 ? null :1,
+        grassHistoryId:null,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
