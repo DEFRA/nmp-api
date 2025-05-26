@@ -201,17 +201,18 @@ class OrganicManureService extends BaseService {
     return manureTypeIds;
   }
 
-  async getFirstCropData(FieldID, Year) {
-    const data = await this.cropRepository.findOne({
-      where: {
-        FieldID: FieldID,
-        Year: Year,
-        Confirm: false, // Or 0 based on your field setup
-        CropOrder: 1,
-      },
-    });
-    return data;
-  }
+  async getFirstCropData(transactionalManager, FieldID, Year) {
+  const data = await transactionalManager.findOne(CropEntity, {
+    where: {
+      FieldID: FieldID,
+      Year: Year,
+      Confirm: false, // Or 0, depending on your schema
+      CropOrder: 1,
+    },
+  });
+ 
+  return data;
+}
 
   async getManagementPeriodId(id) {
     const data = await this.managementPeriodRepository.findOne({
@@ -1540,7 +1541,7 @@ class OrganicManureService extends BaseService {
 
         let manureApplications = null;
         if (dataMultipleCrops.length > 1) {
-          firstCrop = await this.getFirstCropData(fieldData.ID, cropData.Year);
+          firstCrop = await this.getFirstCropData(transactionalManager,fieldData.ID, cropData.Year);
           firstCropManagementPeriods = managementPeriodAllData.find(
             (mp) => mp.CropID == firstCrop.ID
           );
