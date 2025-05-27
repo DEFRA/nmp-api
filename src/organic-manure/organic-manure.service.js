@@ -202,17 +202,17 @@ class OrganicManureService extends BaseService {
   }
 
   async getFirstCropData(transactionalManager, FieldID, Year) {
-  const data = await transactionalManager.findOne(CropEntity, {
-    where: {
-      FieldID: FieldID,
-      Year: Year,
-      Confirm: false, // Or 0, depending on your schema
-      CropOrder: 1,
-    },
-  });
- 
-  return data;
-}
+    const data = await transactionalManager.findOne(CropEntity, {
+      where: {
+        FieldID: FieldID,
+        Year: Year,
+        Confirm: false, // Or 0, depending on your schema
+        CropOrder: 1,
+      },
+    });
+
+    return data;
+  }
 
   async getManagementPeriodId(id) {
     const data = await this.managementPeriodRepository.findOne({
@@ -1541,7 +1541,11 @@ class OrganicManureService extends BaseService {
 
         let manureApplications = null;
         if (dataMultipleCrops.length > 1) {
-          firstCrop = await this.getFirstCropData(transactionalManager,fieldData.ID, cropData.Year);
+          firstCrop = await this.getFirstCropData(
+            transactionalManager,
+            fieldData.ID,
+            cropData.Year
+          );
           firstCropManagementPeriods = managementPeriodAllData.find(
             (mp) => mp.CropID == firstCrop.ID
           );
@@ -2513,7 +2517,6 @@ class OrganicManureService extends BaseService {
           ID,
           CreatedByID,
           CreatedOn,
-          // ManagementPeriodID,
           FieldName,
           EncryptedCounter,
           Defoliation,
@@ -2522,23 +2525,42 @@ class OrganicManureService extends BaseService {
           ...updatedData
         } = OrganicManure;
 
+        // Fetch existing OrganicManure from DB
+        const existingOrganicManure = await transactionalManager.findOne(
+          OrganicManureEntity,
+          { where: { ID } }
+        );
+
+        if (!existingOrganicManure) {
+          console.log(`Organic Manure with ID ${ID} not found`);
+          continue;
+        }
+
+        // Check if ManagementPeriodID matches
+        const isManagementPeriodSame =
+          existingOrganicManure.ManagementPeriodID ===
+          OrganicManure.ManagementPeriodID;
+
+        // Merge the updated data, include new ManagementPeriodID if changed
+        const dataToUpdate = {
+          ...updatedData,
+          ModifiedByID: userId,
+          ModifiedOn: new Date(),
+          ...(isManagementPeriodSame
+            ? {}
+            : { ManagementPeriodID: OrganicManure.ManagementPeriodID }),
+        };
+
         const result = await transactionalManager.update(
           OrganicManureEntity,
           ID,
-          {
-            ...updatedData,
-            ModifiedByID: userId,
-            ModifiedOn: new Date(),
-          }
+          dataToUpdate
         );
 
-        if (result.affected === 0) {
-          console.log(`Organic Manures with ID ${ID} not found`);
-        }
-
+        // Fetch the updated version to return
         const organicManure = await transactionalManager.findOne(
           OrganicManureEntity,
-          { where: { ID: ID } }
+          { where: { ID } }
         );
 
         if (organicManure) {
@@ -2602,7 +2624,7 @@ class OrganicManureService extends BaseService {
 
         // 🔄 Update recommendations
         const managementPeriod = await this.managementPeriodRepository.findOne({
-          where: { ID: organicManure.ManagementPeriodID },
+          where: { ID: OrganicManure.ManagementPeriodID },
         });
 
         const crop = await this.cropRepository.findOne({
