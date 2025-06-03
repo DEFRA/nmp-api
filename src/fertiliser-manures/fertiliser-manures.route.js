@@ -11,7 +11,7 @@ const getController = (request, h) =>
 module.exports = [
   {
     method: "GET",
-    path: "/fertiliser-manures/total-nitrogen/{managementPeriodID}",
+    path: "/fertiliser-manures/total-nitrogen/{fieldId}",
     handler: async (request, h) => {
       return getController(request, h).getFertiliserManureNitrogenSum();
     },
@@ -21,7 +21,7 @@ module.exports = [
         "Get Fertiliser Manure Total Nitrogen by Management Period ID",
       validate: {
         params: Joi.object({
-          managementPeriodID: Joi.number().required(),
+          fieldId: Joi.number().required(),
         }),
         query: Joi.object({
           fromDate: Joi.date().iso().required(),
@@ -48,7 +48,7 @@ module.exports = [
 
   {
     method: "GET",
-    path: "/fertiliser-manures/organic-manures/total-nitrogen/{managementPeriodID}",
+    path: "/fertiliser-manures/organic-manures/total-nitrogen/{fieldId}",
     handler: async (request, h) => {
       return getController(request, h).getTotalNitrogen();
     },
@@ -58,12 +58,12 @@ module.exports = [
         "Get total nitrogen from both Fertiliser and Organic Manures by Management Period ID",
       validate: {
         params: Joi.object({
-          managementPeriodID: Joi.number().required(),
+          fieldId: Joi.number().required(),
         }),
         query: Joi.object({
-          confirm: Joi.boolean().required(),          
+          confirm: Joi.boolean().required(),
           fertiliserID: Joi.number().integer().allow(null).optional(),
-          organicManureID: Joi.number().integer().allow(null).optional()
+          organicManureID: Joi.number().integer().allow(null).optional(),
         }),
         failAction: (request, h, err) => {
           return h
@@ -109,8 +109,6 @@ module.exports = [
       },
     },
   },
-
-  
 
   {
     method: "GET",

@@ -1359,7 +1359,7 @@ async extractNutrientData(calculations, defoliationId) {
         }
       }
       //geting current pKBalance
-      const pkBalance = await transactionalManager.find(PKBalanceEntity, {
+      const pkBalance = await transactionalManager.findOne(PKBalanceEntity, {
         where: {
           FieldID: fieldId,
           Year: crop.Year,

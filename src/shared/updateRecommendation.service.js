@@ -1269,11 +1269,18 @@ class UpdateRecommendation {
         }
       }
       //geting current pKBalance
-      let pkBalance = await this.getPKBalanceData(
-        crop?.Year,
-        fieldId,
-        pKBalanceAllData
-      );
+      // let pkBalance = await this.getPKBalanceData(
+      //   crop?.Year,
+      //   fieldId,
+      //   pKBalanceAllData
+      // );
+
+      let pkBalance= await transactionalManager.findOne(PKBalanceEntity, {
+        where: {
+          FieldID: fieldId,
+          Year: crop.Year,
+        },
+      });
       if (pkBalance) {
         const updateData = {
           Year: year,

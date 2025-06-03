@@ -12,16 +12,16 @@ class FertiliserManuresController {
   }
 
   async getFertiliserManureNitrogenSum() {
-    const { managementPeriodID } = this.#request.params;
+    const { fieldId } = this.#request.params;
     const { fromDate, toDate, confirm,fertiliserId, } = this.#request.query;
 
     try {
       const totalN =
         await this.#fertiliserManuresService.getFertiliserManureNitrogenSum(
-          managementPeriodID,
+          fieldId,
           fromDate,
           toDate,
-          confirm,          
+          confirm,
           fertiliserId
         );
       return this.#h.response({ TotalN: totalN });
@@ -31,11 +31,11 @@ class FertiliserManuresController {
   }
 
   async getTotalNitrogen() {
-    const { managementPeriodID } = this.#request.params;
+    const { fieldId } = this.#request.params;
     const { confirm,fertiliserID,organicManureID } = this.#request.query;
     try {
       const totalN = await this.#fertiliserManuresService.getTotalNitrogen(
-        managementPeriodID,        
+        fieldId,
         confirm,
         fertiliserID,
         organicManureID
