@@ -375,42 +375,42 @@ class RecommendationService extends BaseService {
       });
       const groupedObj = {};
        const findDefoliationSequenceDescription = async (
-        SwardTypeID,
-        PotentialCut,
-        DefoliationSequenceID,
-        establishment
-      ) => {
-        try {
-          let newSward = (establishment == 0 || null )? false : true;
-          let defoliationSequenceDescription = null;
-          let defoliationSequenceList = await this.rB209GrassService.getData(
-            `Grass/DefoliationSequence/${SwardTypeID}/${PotentialCut}/${newSward}`
-          );    
-          console.log('defoliationSequenceList',defoliationSequenceList.data)
-          if (
-            defoliationSequenceList.data &&
-            Array.isArray(defoliationSequenceList.data.list) &&
-            defoliationSequenceList.data.list.length > 0
-          ) {
-            const matchingDefoliation = defoliationSequenceList.data.list.find(
-              (x) => x.defoliationSequenceId == DefoliationSequenceID
-            );
-            if (matchingDefoliation != null) {
-              defoliationSequenceDescription = matchingDefoliation
-                ? matchingDefoliation.defoliationSequenceDescription
-                : null;
-            }
-          }
+         swardManagementId,
+         PotentialCut,
+         DefoliationSequenceID,
+         establishment
+       ) => {
+         try {
+           let newSward = establishment == 0 || null ? false : true;
+           let defoliationSequenceDescription = null;
+           let defoliationSequenceList = await this.rB209GrassService.getData(
+             `Grass/DefoliationSequence/${swardManagementId}/${PotentialCut}/${newSward}`
+           );
+           console.log("defoliationSequenceList", defoliationSequenceList.data);
+           if (
+             defoliationSequenceList.data &&
+             Array.isArray(defoliationSequenceList.data.list) &&
+             defoliationSequenceList.data.list.length > 0
+           ) {
+             const matchingDefoliation = defoliationSequenceList.data.list.find(
+               (x) => x.defoliationSequenceId == DefoliationSequenceID
+             );
+             if (matchingDefoliation != null) {
+               defoliationSequenceDescription = matchingDefoliation
+                 ? matchingDefoliation.defoliationSequenceDescription
+                 : null;
+             }
+           }
 
-          return defoliationSequenceDescription;
-        } catch (error) {
-          console.error(
-            `Error fetching Defoliation Sequence for swardTypeId: ${SwardTypeID}&numberOfCuts=${PotentialCut}`,
-            error
-          );
-          return "Unknown";
-        }
-      };
+           return defoliationSequenceDescription;
+         } catch (error) {
+           console.error(
+             `Error fetching Defoliation Sequence for swardTypeId: ${SwardTypeID}&numberOfCuts=${PotentialCut}`,
+             error
+           );
+           return "Unknown";
+         }
+       };
       const findSwardType = async (SwardTypeID) => {
         try {
           let swardTypeName = null;
@@ -455,23 +455,25 @@ class RecommendationService extends BaseService {
         groupedObj[r.Crop.ID] = {
           Crop: {
             ...r.Crop,
-            EstablishmentName:(r.Crop.CropTypeID==140&&r.Crop.Establishment!=null)?
-            await findGrassSeason(r.Crop.Establishment):null,
+            EstablishmentName:
+              r.Crop.CropTypeID == 140 && r.Crop.Establishment != null
+                ? await findGrassSeason(r.Crop.Establishment)
+                : null,
             SwardManagementName:
-              (r.Crop.CropTypeID==140&&r.Crop.SwardManagementID != null)
+              r.Crop.CropTypeID == 140 && r.Crop.SwardManagementID != null
                 ? await this.findSwardTypeManagment(r.Crop.SwardManagementID)
                 : null,
             SwardTypeName:
-              (r.Crop.CropTypeID==140&&r.Crop.SwardTypeID != null)
+              r.Crop.CropTypeID == 140 && r.Crop.SwardTypeID != null
                 ? await findSwardType(r.Crop.SwardTypeID)
                 : null,
             DefoliationSequenceName:
-            (r.Crop.CropTypeID==140&&
+              r.Crop.CropTypeID == 140 &&
               r.Crop.SwardTypeID != null &&
               r.Crop.PotentialCut != null &&
-              r.Crop.DefoliationSequenceID != null)
+              r.Crop.DefoliationSequenceID != null
                 ? await findDefoliationSequenceDescription(
-                    r.Crop.SwardTypeID,
+                    r.Crop.SwardManagementID,
                     r.Crop.PotentialCut,
                     r.Crop.DefoliationSequenceID,
                     r.Crop.Establishment

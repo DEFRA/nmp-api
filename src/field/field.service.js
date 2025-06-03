@@ -570,7 +570,6 @@ class FieldService extends BaseService {
         }
 
         const soilAnalysis = latestSoilAnalysis ? latestSoilAnalysis : null;
-       
 
         if (crops != null) {
           for (const crop of crops) {
@@ -578,41 +577,42 @@ class FieldService extends BaseService {
               let swardType = null;
               let defoliationSequenceDescription = null;
               let swardTypeManagment = null;
-               if (
-                 crop.SwardTypeID != null &&
-                 crop.PotentialCut != null &&
-                 crop.DefoliationSequenceID != null
-               ) {
-                 defoliationSequenceDescription =
-                   await this.findDefoliationSequenceDescription(
-                     crop.SwardTypeID,
-                     crop.PotentialCut,
-                     crop.DefoliationSequenceID,
-                     crop.Establishment
-                   );
-               }
+              if (
+                crop.SwardTypeID != null &&
+                crop.PotentialCut != null &&
+                crop.DefoliationSequenceID != null
+              ) {
+                defoliationSequenceDescription =
+                  await this.findDefoliationSequenceDescription(
+                    crop.SwardManagementID,
+                    crop.PotentialCut,
+                    crop.DefoliationSequenceID,
+                    crop.Establishment
+                  );
+              }
               crop.DefoliationSequenceName =
                 defoliationSequenceDescription != null
                   ? defoliationSequenceDescription
                   : null;
               if (crop.SwardTypeID != null) {
-                swardType =await this.findSwardType(crop.SwardTypeID);
+                swardType = await this.findSwardType(crop.SwardTypeID);
               }
               crop.SwardTypeName = swardType != null ? swardType : null;
               if (crop.SwardManagementID != null) {
                 swardTypeManagment = await this.findSwardTypeManagment(
                   crop.SwardManagementID
-                );                
+                );
               }
               crop.SwardManagementName =
-                  swardTypeManagment != null ? swardTypeManagment : null;
-                  crop.EstablishmentName=(crop.CropTypeID==140&&crop.Establishment!=null)?
-                  await this.findGrassSeason(crop.Establishment):null
-                }
-                
+                swardTypeManagment != null ? swardTypeManagment : null;
+              crop.EstablishmentName =
+                crop.CropTypeID == 140 && crop.Establishment != null
+                  ? await this.findGrassSeason(crop.Establishment)
+                  : null;
+            }
           }
         }
-        
+
         const cropsWithManagement = [];
         for (const crop of crops) {
           try {
@@ -628,7 +628,8 @@ class FieldService extends BaseService {
                 }
               : null;
             // Fetch management periods related to the crop
-            const managementPeriods = await this.managementPeriodRepository.find({
+            const managementPeriods =
+              await this.managementPeriodRepository.find({
                 where: { CropID: crop.ID },
               });
 
@@ -1161,30 +1162,34 @@ class FieldService extends BaseService {
             : null;
         }
       }
-      console.log('swardManagementsName',swardManagementsName);
+      console.log("swardManagementsName", swardManagementsName);
       return swardManagementsName;
     } catch (error) {
       console.error(`Error fetching sward Management list`, error);
       return "Unknown";
     }
-  };
+  }
 
-  async findDefoliationSequenceDescription(SwardTypeID,PotentialCut,DefoliationSequenceID,establishment)  {
+  async findDefoliationSequenceDescription(
+    swardManagementId,
+    PotentialCut,
+    DefoliationSequenceID,
+    establishment
+  ) {
     try {
-      let newSward = (establishment == 0 || null) ? false : true;
+      let newSward = establishment == 0 || null ? false : true;
       let defoliationSequenceDescription = null;
       let defoliationSequenceList = await this.rB209GrassService.getData(
-        `Grass/DefoliationSequence/${SwardTypeID}/${PotentialCut}/${newSward}`
+        `Grass/DefoliationSequence/${swardManagementId}/${PotentialCut}/${newSward}`
       );
       if (
         defoliationSequenceList.data &&
         Array.isArray(defoliationSequenceList.data.list) &&
         defoliationSequenceList.data.list.length > 0
       ) {
-        const matchingDefoliation =
-          defoliationSequenceList.data.list.find(
-            (x) => x.defoliationSequenceId == DefoliationSequenceID
-          );
+        const matchingDefoliation = defoliationSequenceList.data.list.find(
+          (x) => x.defoliationSequenceId == DefoliationSequenceID
+        );
         if (matchingDefoliation != null) {
           defoliationSequenceDescription = matchingDefoliation
             ? matchingDefoliation.defoliationSequenceDescription
@@ -1200,8 +1205,8 @@ class FieldService extends BaseService {
       );
       return "Unknown";
     }
-  };
-  async findSwardType(SwardTypeID){
+  }
+  async findSwardType(SwardTypeID) {
     try {
       let swardTypeName = null;
       let swardTypeList = await this.rB209GrassService.getData(
@@ -1222,7 +1227,7 @@ class FieldService extends BaseService {
       console.error(`Error fetching sward Type list`, error);
       return "Unknown";
     }
-  };
+  }
 
   async findGrassSeason(seasonID) {
     try {
@@ -1234,7 +1239,7 @@ class FieldService extends BaseService {
       console.error(`Error fetching Grassland Season`, error);
       return "Unknown";
     }
-  };
+  }
 }
 
 module.exports = { FieldService };
