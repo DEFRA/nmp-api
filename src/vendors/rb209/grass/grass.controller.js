@@ -25,7 +25,7 @@ class RB209GrassController {
     const url = this.#request.url.pathname.split("/rb209")[1];
 
     //const { swardTypeId, numberOfCuts } = this.#request.query;
-    const { swardTypeId, numberOfCuts } = this.#request.params;
+    const { swardManagementId, numberOfCuts } = this.#request.params;
 
     // const queryParams = [];
     // if (swardTypeId !== undefined) {

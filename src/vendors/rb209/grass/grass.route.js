@@ -80,7 +80,7 @@ module.exports = [
   },
   {
     method: "GET",
-    path: "/vendors/rb209/Grass/DefoliationSequences/{swardTypeId}/{numberOfCuts}/{newSward}",
+    path: "/vendors/rb209/Grass/DefoliationSequences/{swardManagementId}/{numberOfCuts}/{newSward}",
     handler: async (request, h) => {
       const controller = new RB209GrassController(request, h);
       return controller.getGrassDefoliationSequence(request, h);
@@ -91,7 +91,7 @@ module.exports = [
         "The list of different defoliation sequences available for grass fields.",
       validate: {
         params: Joi.object({
-          swardTypeId: Joi.number()
+          swardManagementId: Joi.number()
             .integer()
             .required()
             .description("The Sward Type Id of the field."),
