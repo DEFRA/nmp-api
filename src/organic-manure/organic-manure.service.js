@@ -94,35 +94,41 @@ class OrganicManureService extends BaseService {
     );
   }
 
-  async getTotalNitrogen(
-    managementPeriodID,
-    fromDate,
-    toDate,
-    confirm,
-    organicManureID
-  ) {
+  async getTotalNitrogen(fieldId, fromDate, toDate, confirm, organicManureID) {
     // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
     const fromDateFormatted = new Date(fromDate);
     fromDateFormatted.setHours(0, 0, 0, 0); // Set time to start of the day
 
     const toDateFormatted = new Date(toDate);
     toDateFormatted.setHours(23, 59, 59, 999); // Set time to end of the day
+    // const query = await this.repository
+    //   .createQueryBuilder("organicManures")
+    //   .select(
+    //     "SUM(organicManures.N * organicManures.ApplicationRate)",
+    //     "totalN"
+    //   )
+    //   .where("organicManures.ManagementPeriodID = :managementPeriodID", {
+    //     managementPeriodID,
+    //   })
+    //   .andWhere(
+    //     "organicManures.ApplicationDate BETWEEN :fromDate AND :toDate",
+    //     { fromDate: fromDateFormatted, toDate: toDateFormatted }
+    //   )
+    //   .andWhere("organicManures.Confirm =:confirm", { confirm });
+
     const query = await this.repository
-      .createQueryBuilder("organicManures")
-      .select(
-        "SUM(organicManures.N * organicManures.ApplicationRate)",
-        "totalN"
-      )
-      .where("organicManures.ManagementPeriodID = :managementPeriodID", {
-        managementPeriodID,
+      .createQueryBuilder("O") // O = OrganicManures
+      .select("SUM(O.N * O.ApplicationRate)", "totalN")
+      .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
+      .innerJoin("Crops", "C", "M.CropID = C.ID")
+      .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
+      .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
+        fromDate: fromDateFormatted,
+        toDate: toDateFormatted,
       })
-      .andWhere(
-        "organicManures.ApplicationDate BETWEEN :fromDate AND :toDate",
-        { fromDate: fromDateFormatted, toDate: toDateFormatted }
-      )
-      .andWhere("organicManures.Confirm =:confirm", { confirm });
+      .andWhere("O.Confirm = :confirm", { confirm });
     if (organicManureID != null) {
-      query.andWhere("organicManures.ID != :organicManureID", {
+      query.andWhere("O.ID != :organicManureID", {
         organicManureID,
       });
     }
@@ -131,44 +137,61 @@ class OrganicManureService extends BaseService {
     return result.totalN;
   }
   async getTotalNitrogenIfIsGreenFoodCompost(
-    managementPeriodID,
+    fieldId,
     fromDate,
     toDate,
     confirm,
     isGreenFoodCompost,
     organicManureID
   ) {
-    const query = this.repository
-      .createQueryBuilder("organicManures")
-      .select(
-        "SUM(organicManures.N * organicManures.ApplicationRate)",
-        "totalN"
-      )
-      .where("organicManures.ManagementPeriodID = :managementPeriodID", {
-        managementPeriodID,
-      })
-      .andWhere(
-        "organicManures.ApplicationDate BETWEEN :fromDate AND :toDate",
-        {
-          fromDate,
-          toDate,
-        }
-      )
-      .andWhere("organicManures.Confirm = :confirm", { confirm });
+    // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
+    const fromDateFormatted = new Date(fromDate);
+    fromDateFormatted.setHours(0, 0, 0, 0); // Set time to start of the day
+
+    const toDateFormatted = new Date(toDate);
+    toDateFormatted.setHours(23, 59, 59, 999); // Set time to end of the day
+    // const query = this.repository
+    //   .createQueryBuilder("organicManures")
+    //   .select(
+    //     "SUM(organicManures.N * organicManures.ApplicationRate)",
+    //     "totalN"
+    //   )
+    //   .where("organicManures.ManagementPeriodID = :managementPeriodID", {
+    //     managementPeriodID,
+    //   })
+    //   .andWhere(
+    //     "organicManures.ApplicationDate BETWEEN :fromDate AND :toDate",
+    //     {
+    //       fromDate,
+    //       toDate,
+    //     }
+    //   )
+    //   .andWhere("organicManures.Confirm = :confirm", { confirm });
 
     // Add additional filtering for ManureTypeID when isGreenFoodCompost is true
+    const query = await this.repository
+      .createQueryBuilder("O") // O = OrganicManures
+      .select("SUM(O.N * O.ApplicationRate)", "totalN")
+      .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
+      .innerJoin("Crops", "C", "M.CropID = C.ID")
+      .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
+      .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
+        fromDate: fromDateFormatted,
+        toDate: toDateFormatted,
+      })
+      .andWhere("O.Confirm = :confirm", { confirm });
     if (isGreenFoodCompost) {
-      query.andWhere("organicManures.ManureTypeID IN (:...manureTypeIDs)", {
+      query.andWhere("O.ManureTypeID IN (:...manureTypeIDs)", {
         manureTypeIDs: [24, 32],
       });
     }
     if (!isGreenFoodCompost) {
-      query.andWhere("organicManures.ManureTypeID NOT IN (:...manureTypeIDs)", {
+      query.andWhere("O.ManureTypeID NOT IN (:...manureTypeIDs)", {
         manureTypeIDs: [24, 32],
       });
     }
     if (organicManureID != null) {
-      query.andWhere("organicManures.ID != :organicManureID", {
+      query.andWhere("O.ID != :organicManureID", {
         organicManureID,
       });
     }
