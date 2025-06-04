@@ -31,11 +31,11 @@ class FertiliserManuresController {
   }
 
   async getTotalNitrogen() {
-    const { fieldId } = this.#request.params;
+    const { managementPeriodID } = this.#request.params;
     const { confirm,fertiliserID,organicManureID } = this.#request.query;
     try {
       const totalN = await this.#fertiliserManuresService.getTotalNitrogen(
-        fieldId,
+        managementPeriodID,
         confirm,
         fertiliserID,
         organicManureID

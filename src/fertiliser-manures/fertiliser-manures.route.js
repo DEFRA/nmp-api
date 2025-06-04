@@ -18,7 +18,7 @@ module.exports = [
     options: {
       tags: ["api", "Fertiliser Manures"],
       description:
-        "Get Fertiliser Manure Total Nitrogen by Management Period ID",
+        "Get Fertiliser Manure Total Nitrogen by field ID",
       validate: {
         params: Joi.object({
           fieldId: Joi.number().required(),
@@ -48,7 +48,7 @@ module.exports = [
 
   {
     method: "GET",
-    path: "/fertiliser-manures/organic-manures/total-nitrogen/{fieldId}",
+    path: "/fertiliser-manures/organic-manures/total-nitrogen/{managementPeriodID}",
     handler: async (request, h) => {
       return getController(request, h).getTotalNitrogen();
     },
@@ -58,7 +58,7 @@ module.exports = [
         "Get total nitrogen from both Fertiliser and Organic Manures by Management Period ID",
       validate: {
         params: Joi.object({
-          fieldId: Joi.number().required(),
+          managementPeriodID: Joi.number().required(),
         }),
         query: Joi.object({
           confirm: Joi.boolean().required(),

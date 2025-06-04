@@ -90,52 +90,52 @@ class FertiliserManuresService extends BaseService {
     return result.totalN;
   }
 
-  async getTotalNitrogen(fieldId, confirm, fertiliserID, organicManureID) {
-    // const fertiliserManuresResult = await this.repository
-    //   .createQueryBuilder("fertiliserManures")
-    //   .select(
-    //     "SUM(fertiliserManures.N * fertiliserManures.ApplicationRate)",
-    //     "totalN"
-    //   )
-    //   .where("fertiliserManures.ManagementPeriodID = :managementPeriodID", {
-    //     managementPeriodID,
-    //   })
-    //   .andWhere("fertiliserManures.Confirm = :confirm", { confirm });
-
+  async getTotalNitrogen(managementPeriodID, confirm, fertiliserID, organicManureID) {
     const fertiliserManuresResult = await this.repository
-      .createQueryBuilder("F") // O = OrganicManures
-      .select("SUM(F.N * F.ApplicationRate)", "totalN")
-      .innerJoin("ManagementPeriods", "M", "F.ManagementPeriodID = M.ID")
-      .innerJoin("Crops", "C", "M.CropID = C.ID")
-      .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
-      .andWhere("F.Confirm = :confirm", { confirm });
-    if (fertiliserID !== null && fertiliserID !== undefined) {
-      fertiliserManuresResult.andWhere("F.ID != :fertiliserID", {
-        fertiliserID,
-      });
-    }
+      .createQueryBuilder("fertiliserManures")
+      .select(
+        "SUM(fertiliserManures.N * fertiliserManures.ApplicationRate)",
+        "totalN"
+      )
+      .where("fertiliserManures.ManagementPeriodID = :managementPeriodID", {
+        managementPeriodID,
+      })
+      .andWhere("fertiliserManures.Confirm = :confirm", { confirm });
+
+    // const fertiliserManuresResult = await this.repository
+    //   .createQueryBuilder("F") // O = OrganicManures
+    //   .select("SUM(F.N * F.ApplicationRate)", "totalN")
+    //   .innerJoin("ManagementPeriods", "M", "F.ManagementPeriodID = M.ID")
+    //   .innerJoin("Crops", "C", "M.CropID = C.ID")
+    //   .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
+    //   .andWhere("F.Confirm = :confirm", { confirm });
+    // if (fertiliserID !== null && fertiliserID !== undefined) {
+    //   fertiliserManuresResult.andWhere("F.ID != :fertiliserID", {
+    //     fertiliserID,
+    //   });
+    // }
 
     const fertiliserResult = await fertiliserManuresResult.getRawOne();
     console.log("fertiliserResult", fertiliserResult);
     // return result.totalN;
     // .getRawOne();
-    // const organicManuresResult = await this.organicManureRepository
-    //   .createQueryBuilder("organicManures")
-    //   .select("SUM(organicManures.AvailableNForNMax)", "totalN")
-    //   .where("organicManures.ManagementPeriodID = :managementPeriodID", {
-    //     managementPeriodID,
-    //   })
-    //   .andWhere("organicManures.Confirm = :confirm", { confirm });
+    const organicManuresResult = await this.organicManureRepository
+      .createQueryBuilder("organicManures")
+      .select("SUM(organicManures.AvailableNForNMax)", "totalN")
+      .where("organicManures.ManagementPeriodID = :managementPeriodID", {
+        managementPeriodID,
+      })
+      .andWhere("organicManures.Confirm = :confirm", { confirm });
 
-    const organicManuresResult = await this.repository
-      .createQueryBuilder("O") // O = OrganicManures
-      .select("SUM(O.AvailableNForNMax)", "totalN")
-      .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
-      .innerJoin("Crops", "C", "M.CropID = C.ID")
-      .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
-      .andWhere("O.Confirm = :confirm", { confirm });
+    // const organicManuresResult = await this.repository
+    //   .createQueryBuilder("O") // O = OrganicManures
+    //   .select("SUM(O.AvailableNForNMax)", "totalN")
+    //   .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
+    //   .innerJoin("Crops", "C", "M.CropID = C.ID")
+    //   .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
+    //   .andWhere("O.Confirm = :confirm", { confirm });
     if (organicManureID !== null && organicManureID !== undefined) {
-      organicManuresResult.andWhere("O.ID != :organicManureID", {
+      organicManuresResult.andWhere("organicManures.ID != :organicManureID", {
         organicManureID,
       });
     }

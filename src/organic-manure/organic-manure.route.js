@@ -15,7 +15,7 @@ module.exports = [
     options: {
       tags: ["api", "Organic Manure"],
       description:
-        "Get Total Nitrogen by ManagementPeriodID and Application Date Range",
+        "Get Total Nitrogen by fieldID and Application Date Range",
       validate: {
         params: Joi.object({
           fieldId: Joi.number().integer().required(),
@@ -47,11 +47,11 @@ module.exports = [
   },
   {
     method: "GET",
-    path: "/organic-manures/total-nitrogen-if-green-food-compost/{managementPeriodID}",
+    path: "/organic-manures/total-nitrogen-if-green-food-compost/{fieldId}",
     options: {
       tags: ["api", "Organic Manure"],
       description:
-        "Get Total Nitrogen by ManagementPeriodID,GreenFoodCompost and Application Date Range",
+        "Get Total Nitrogen by fieldID,GreenFoodCompost and Application Date Range",
       validate: {
         params: Joi.object({
           fieldId: Joi.number().integer().required(),
