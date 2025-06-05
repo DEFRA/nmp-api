@@ -41,6 +41,21 @@ class CropTypeLinkingsController {
       return this.#h.response({ error });
     }
   }
+  async getCropTypeLinking() {
+    try {
+      const CropTypeLinking =
+        await this.#cropTypeLinkingsService.getAll(          
+        );
+      if (!CropTypeLinking) {
+        throw boom.notFound(
+          "No CropTypeLinking Data found"
+        );
+      }
+      return this.#h.response({ CropTypeLinking });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
 }
 
 module.exports = { CropTypeLinkingsController };
