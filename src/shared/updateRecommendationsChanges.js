@@ -560,6 +560,7 @@ class UpdateRecommendationChanges {
           cropData,
           nutrientRecommendationsData,
           pkBalanceData,
+          pKBalanceAllData,
           userId,
           secondCropManagementData,
           fertiliserData,

@@ -23,6 +23,7 @@ const { In } = require("typeorm");
 const {
   UpdateRecommendationChanges,
 } = require("../shared/updateRecommendationsChanges");
+const { SecondCropLinkingEntity } = require("../db/entity/second-crop-linking.entity");
 class CropService extends BaseService {
   constructor() {
     super(CropEntity);
@@ -110,7 +111,39 @@ class CropService extends BaseService {
       cropType: cropType.cropType,
     };
   }
-
+  async validateAndHandleSecondCrop(
+    transactionalManager,
+    updatedCrop,
+    fieldId,
+    year
+  ) {
+    if (updatedCrop?.CropOrder !== 1) return;
+  
+    const secondCrop = await transactionalManager.findOne(CropEntity, {
+      where: { FieldID: fieldId, Year: year, CropOrder: 2 },
+    });
+  
+    if (secondCrop) {
+      const firstCropTypeID = updatedCrop.CropTypeID;
+      const secondCropTypeID = secondCrop.CropTypeID;
+  
+      const linking = await transactionalManager.findOne(
+        SecondCropLinkingEntity,
+        {
+          where: {
+            FirstCropID: firstCropTypeID,
+            SecondCropID: secondCropTypeID,
+          },
+        }
+      );
+  
+      if (!linking) {
+        const storedProcedureSecondCrop = "EXEC dbo.spCrops_DeleteCrops @CropsID = @0";
+        await AppDataSource.query(storedProcedureSecondCrop, [secondCrop.ID]);
+      }
+    }
+  }
+  
   async updateCropByFieldYearAndConfirm(
     updatedCropData,
     userId,
@@ -118,11 +151,10 @@ class CropService extends BaseService {
     year,
     confirm
   ) {
-    // Convert confirm to integer for database (1 for true, 0 for false)
     const confirmValue = confirm ? 1 : 0;
+
     const result = await AppDataSource.transaction(
       async (transactionalManager) => {
-        // Find the existing crop based on FieldID, Year, and Confirm
         const existingCrop = await transactionalManager.findOne(CropEntity, {
           where: { FieldID: fieldId, Year: year, Confirm: confirmValue },
         });
@@ -133,7 +165,6 @@ class CropService extends BaseService {
           );
         }
 
-        // Destructure out fields you don't want to update
         const {
           ID,
           CreatedByID,
@@ -142,11 +173,10 @@ class CropService extends BaseService {
           Year,
           FieldName,
           EncryptedCounter,
-          FieldID,
+          FieldID: cropFieldID,
           ...updateData
         } = updatedCropData;
 
-        // Perform the update on the CropEntity using FieldID, Year, and Confirm
         const updateResult = await transactionalManager.update(
           CropEntity,
           { FieldID: fieldId, Year: year, Confirm: confirmValue },
@@ -163,13 +193,17 @@ class CropService extends BaseService {
           );
         }
 
-        // If needed, perform additional updates to related entities (e.g., Fields or any other logic)
-        // Example:
-
-        // Return the updated crop record
         const updatedCrop = await transactionalManager.findOne(CropEntity, {
           where: { FieldID: fieldId, Year: year, Confirm: confirmValue },
         });
+
+        await this.validateAndHandleSecondCrop(
+          transactionalManager,
+          updatedCrop,
+          fieldId,
+          year
+        );
+
 
         return updatedCrop;
       }
@@ -177,6 +211,7 @@ class CropService extends BaseService {
 
     return result;
   }
+
   // Other methods...
   async mapCropTypeIdWithTheirNames(plans) {
     try {
@@ -268,8 +303,6 @@ class CropService extends BaseService {
         return [];
       }
     };
-    ;
-
     const findOrganicManureData = async (managementPeriodIds) => {
       try {
         const organicManureEntries = await this.organicManureRepository.find({
@@ -286,7 +319,6 @@ class CropService extends BaseService {
         return [];
       }
     };
-    
 
     const findInorganicFertiliserData = async (managementPeriodIds) => {
       try {
@@ -356,7 +388,7 @@ class CropService extends BaseService {
     };
     const rainfall = await findFarmRainfall(farmId);
     const plansWithNames = await this.mapCropTypeIdWithTheirNames(plans);
-    
+
     const cropDetails = [];
 
     for (const plan of plansWithNames) {
@@ -540,28 +572,29 @@ class CropService extends BaseService {
     }
   }
 
-  async CropGroupNameExists(cropIds, newGroupName, year,farmId) {
-    return (await this.existingGroupNameCount(cropIds, newGroupName, year,farmId)) > 0;
+  async CropGroupNameExists(cropIds, newGroupName, year, farmId) {
+    return (
+      (await this.existingGroupNameCount(cropIds, newGroupName, year, farmId)) >
+      0
+    );
   }
-  async existingGroupNameCount(cropIds, newGroupName, year,farmId) {
+  async existingGroupNameCount(cropIds, newGroupName, year, farmId) {
     if (!newGroupName) {
       throw boom.badRequest("Group Name is required");
     }
 
     const existingGroupNameCount = await this.repository
-  .createQueryBuilder("Crops")
-  .leftJoin("Fields", "Field", "Field.ID = Crops.fieldId")      // Join Fields table manually
-  .leftJoin("Farms", "Farm", "Farm.ID = Field.farmId")          // Join Farms table manually
-  .where("Crops.CropGroupName = :groupName", {
-    groupName: newGroupName.trim(),
-  })
-  .andWhere("Farm.ID = :farmId", { farmId })                    // Use farmId passed in
-  .andWhere("Crops.Year = :year", { year })
-  .andWhere("Crops.ID NOT IN (:...cropIds)", { cropIds });
+      .createQueryBuilder("Crops")
+      .leftJoin("Fields", "Field", "Field.ID = Crops.fieldId") // Join Fields table manually
+      .leftJoin("Farms", "Farm", "Farm.ID = Field.farmId") // Join Farms table manually
+      .where("Crops.CropGroupName = :groupName", {
+        groupName: newGroupName.trim(),
+      })
+      .andWhere("Farm.ID = :farmId", { farmId }) // Use farmId passed in
+      .andWhere("Crops.Year = :year", { year })
+      .andWhere("Crops.ID NOT IN (:...cropIds)", { cropIds });
 
-  return await existingGroupNameCount.getCount();
-  
-  
+    return await existingGroupNameCount.getCount();
   }
 
   async updateCropGroupName(cropIds, cropGroupName, variety, year, userId) {
@@ -615,7 +648,7 @@ class CropService extends BaseService {
     return await AppDataSource.transaction(async (transactionalManager) => {
       const updatedResults = [];
       const cropData = body.Crops;
-    
+
       for (const cropEntry of cropData) {
         const crop = cropEntry?.Crop;
         const {
@@ -646,8 +679,15 @@ class CropService extends BaseService {
         }
 
         const updatedCrop = await transactionalManager.findOne(CropEntity, {
-          where: { ID:ID },
+          where: { ID: ID },
         });
+
+        await this.validateAndHandleSecondCrop(
+          transactionalManager,
+          updatedCrop,
+          updatedCrop.FieldID,
+          updatedCrop.Year
+        );
 
         // Update ManagementPeriods for this crop
         const updatedManagementPeriods = [];
