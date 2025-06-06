@@ -495,7 +495,8 @@ class UpdateRecommendation {
           userId,
           secondCropManagementData,
           fertiliserData,
-          year
+          year,
+          transactionalManager
         );
 
         if (saveAndUpdatePKBalance) {
@@ -573,7 +574,8 @@ class UpdateRecommendation {
         userId,
         secondCropManagementData,
         fertiliserData,
-        year
+        year,
+        transactionalManager
       );
 
       if (saveAndUpdatePKBalance) {
@@ -734,7 +736,8 @@ class UpdateRecommendation {
             userId,
             secondCropManagementData,
             fertiliserData,
-            year
+            year,
+            transactionalManager
           );
 
           if (saveAndUpdatePKBalance) {
@@ -803,7 +806,8 @@ class UpdateRecommendation {
             userId,
             secondCropManagementData,
             fertiliserData,
-            year
+            year,
+            transactionalManager
           );
 
           if (saveAndUpdatePKBalance) {
@@ -1136,7 +1140,7 @@ class UpdateRecommendation {
           updated
         );
         results.push(saved);
-      } 
+      }
       // else {
       //   // Create a new recommendation record
       //   const created = this.RecommendationRepository.create({
@@ -1200,7 +1204,7 @@ class UpdateRecommendation {
       where: { ManagementPeriodID: ID },
     });
   }
-  async getP205AndK20fromfertiliser(transactionalManager,managementPeriodId) {
+  async getP205AndK20fromfertiliser(transactionalManager, managementPeriodId) {
     let sumOfP205 = 0;
     let sumOfK20 = 0;
     const fertiliserData = await transactionalManager.find(
@@ -1233,7 +1237,8 @@ class UpdateRecommendation {
     userId,
     secondCropManagementData,
     fertiliserData,
-    year
+    year,
+    transactionalManager
   ) {
     try {
       let pBalance = 0;
@@ -1275,7 +1280,7 @@ class UpdateRecommendation {
       //   pKBalanceAllData
       // );
 
-      let pkBalance= await transactionalManager.findOne(PKBalanceEntity, {
+      let pkBalance = await transactionalManager.findOne(PKBalanceEntity, {
         where: {
           FieldID: fieldId,
           Year: crop.Year,
@@ -2280,7 +2285,7 @@ class UpdateRecommendation {
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
     );
-     const grassGrowthClass =
+    const grassGrowthClass =
       await this.grassGrowthClass.calculateGrassGrowthClassByFieldId(
         field.ID,
         request
@@ -2302,16 +2307,24 @@ class UpdateRecommendation {
         HttpStatus.BAD_REQUEST
       );
     }
-    const previousCrop = await this.findPreviousCrop(transactionalManager,field.ID, crop.Year);
+    const previousCrop = await this.findPreviousCrop(
+      transactionalManager,
+      field.ID,
+      crop.Year
+    );
 
-    const arableBody = await this.buildArableBody(dataMultipleCrops, field,transactionalManager);
+    const arableBody = await this.buildArableBody(
+      dataMultipleCrops,
+      field,
+      transactionalManager
+    );
     const grassObject = await this.buildGrassObject(
       crop,
       field,
       grassGrowthClass,
       transactionalManager
     );
-     const isCropGrass = await this.isGrassCropPresent(
+    const isCropGrass = await this.isGrassCropPresent(
       crop,
       transactionalManager
     );
@@ -2323,10 +2336,10 @@ class UpdateRecommendation {
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: crop.FieldType,
-        multipleCrops: dataMultipleCrops.length >  1 ? true : false,
+        multipleCrops: dataMultipleCrops.length > 1 ? true : false,
         arable: crop.FieldType == 2 ? [] : arableBody,
         grassland: {},
-        grass:crop.FieldType == 3 || crop.FieldType == 2 ? grassObject : {},
+        grass: crop.FieldType == 3 || crop.FieldType == 2 ? grassObject : {},
         soil: {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
@@ -2493,17 +2506,22 @@ class UpdateRecommendation {
         (cropType) => cropType.cropTypeId === previousCrop.CropTypeID
       );
       nutrientRecommendationnReqBody.field.previousCropping = {
-        previousGrassId: previousCrop?.CropTypeID==140 ? null :1,
-        previousCropGroupId:previousCrop?.CropTypeID==140 ? null :
-          (cropType.cropGroupId !== undefined && cropType.cropGroupId !== null
+        previousGrassId: previousCrop?.CropTypeID == 140 ? null : 1,
+        previousCropGroupId:
+          previousCrop?.CropTypeID == 140
+            ? null
+            : cropType.cropGroupId !== undefined &&
+              cropType.cropGroupId !== null
             ? cropType.cropGroupId
-            : null),
-        previousCropTypeId:previousCrop?.CropTypeID==140 ? null :
-          (previousCrop.CropTypeID !== undefined &&
-          previousCrop.CropTypeID !== null
+            : null,
+        previousCropTypeId:
+          previousCrop?.CropTypeID == 140
+            ? null
+            : previousCrop.CropTypeID !== undefined &&
+              previousCrop.CropTypeID !== null
             ? previousCrop.CropTypeID
-            : null),
-        grassHistoryId:null,
+            : null,
+        grassHistoryId: null,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -2513,8 +2531,8 @@ class UpdateRecommendation {
       nutrientRecommendationnReqBody.field.previousCropping = {
         previousCropGroupId: null,
         previousCropTypeId: null,
-        previousGrassId: previousCrop?.CropTypeID==140 ? null : 1,
-        grassHistoryId:null,
+        previousGrassId: previousCrop?.CropTypeID == 140 ? null : 1,
+        grassHistoryId: null,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -2802,17 +2820,22 @@ class UpdateRecommendation {
         (cropType) => cropType?.cropTypeId === previousCrop?.CropTypeID
       );
       nutrientRecommendationnReqBody.field.previousCropping = {
-        previousGrassId: previousCrop?.CropTypeID==140 ? null : 1,
-        previousCropGroupId: previousCrop?.CropTypeID==140 ? null :
-          (cropType?.cropGroupId !== undefined && cropType?.cropGroupId !== null
+        previousGrassId: previousCrop?.CropTypeID == 140 ? null : 1,
+        previousCropGroupId:
+          previousCrop?.CropTypeID == 140
+            ? null
+            : cropType?.cropGroupId !== undefined &&
+              cropType?.cropGroupId !== null
             ? cropType.cropGroupId
-            : null),
-        previousCropTypeId:previousCrop?.CropTypeID==140 ? null :
-          (previousCrop?.CropTypeID !== undefined &&
-          previousCrop?.CropTypeID !== null
+            : null,
+        previousCropTypeId:
+          previousCrop?.CropTypeID == 140
+            ? null
+            : previousCrop?.CropTypeID !== undefined &&
+              previousCrop?.CropTypeID !== null
             ? previousCrop?.CropTypeID
-            : null),
-        grassHistoryId:null,    
+            : null,
+        grassHistoryId: null,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -2822,8 +2845,8 @@ class UpdateRecommendation {
       nutrientRecommendationnReqBody.field.previousCropping = {
         previousCropGroupId: null,
         previousCropTypeId: null,
-        previousGrassId: previousCrop?.CropTypeID==140 ? null :1,
-        grassHistoryId:null,
+        previousGrassId: previousCrop?.CropTypeID == 140 ? null : 1,
+        grassHistoryId: null,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
