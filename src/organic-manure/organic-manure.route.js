@@ -299,4 +299,33 @@ module.exports = [
       },
     },
   },
+  {
+      method: "GET",
+      path: "/organic-manure/total-nitrogen-by/{managementPeriodID}",
+      handler: async (request, h) => {
+        return getController(request, h).getTotalAvailableNitrogenByManagementPeriodID();
+      },
+      options: {
+        tags: ["api", "Organic Manure"],
+        description: "Get Organic Manure Total Available Nitrogen by managementPeriodID",
+        validate: {
+          params: Joi.object({
+            managementPeriodID: Joi.number().required(),
+          }),
+          failAction: (request, h, err) => {
+            return h
+              .response(
+                formatErrorResponse({
+                  source: {
+                    error: err,
+                  },
+                  request,
+                })
+              )
+              .code(400)
+              .takeover();
+          },
+        },
+      },
+    }
 ];

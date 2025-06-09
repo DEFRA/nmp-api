@@ -2746,5 +2746,21 @@ class OrganicManureService extends BaseService {
       return null;
     }
   }
+  async getTotalAvailableNitrogenByManagementPeriodID(managementPeriodID) {
+    const organicManuresResult = await this.repository
+      .createQueryBuilder("OrganicManures")
+      .select(
+        "SUM(OrganicManures.AvailableN)",
+        "totalN"
+      )
+      .where("OrganicManures.ManagementPeriodID = :managementPeriodID", {
+        managementPeriodID,
+      });
+
+    const organicResult = await organicManuresResult.getRawOne();
+    console.log("organicResult", organicResult);
+    
+    return organicResult.totalN;
+  }
 }
 module.exports = { OrganicManureService };

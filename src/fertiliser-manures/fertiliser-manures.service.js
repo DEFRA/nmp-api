@@ -592,6 +592,22 @@ class FertiliserManuresService extends BaseService {
       }
     });
   }
+   async getTotalNitrogenByManagementPeriodID(managementPeriodID) {
+    const fertiliserManuresResult = await this.repository
+      .createQueryBuilder("fertiliserManures")
+      .select(
+        "SUM(fertiliserManures.N * fertiliserManures.ApplicationRate)",
+        "totalN"
+      )
+      .where("fertiliserManures.ManagementPeriodID = :managementPeriodID", {
+        managementPeriodID,
+      });
+
+    const fertiliserResult = await fertiliserManuresResult.getRawOne();
+    console.log("fertiliserResult", fertiliserResult);
+    
+    return fertiliserResult.totalN;
+  }
 }
 
 module.exports = { FertiliserManuresService };
