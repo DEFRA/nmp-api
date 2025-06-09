@@ -492,6 +492,7 @@ class UpdateRecommendation {
           cropData,
           nutrientRecommendationsData,
           pkBalanceData,
+          pKBalanceAllData,
           userId,
           secondCropManagementData,
           fertiliserData,
