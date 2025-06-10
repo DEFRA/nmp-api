@@ -2,7 +2,10 @@ const Joi = require("joi");
 const {
   FertiliserManuresController,
 } = require("./fertiliser-manures.controller");
-const { CreateFertiliserManuresDto, updateFertiliserManuresDto } = require("./dto/fertiliser-manures.dto");
+const {
+  CreateFertiliserManuresDto,
+  updateFertiliserManuresDto,
+} = require("./dto/fertiliser-manures.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 
 const getController = (request, h) =>
@@ -17,8 +20,7 @@ module.exports = [
     },
     options: {
       tags: ["api", "Fertiliser Manures"],
-      description:
-        "Get Fertiliser Manure Total Nitrogen by field ID",
+      description: "Get Fertiliser Manure Total Nitrogen by field ID",
       validate: {
         params: Joi.object({
           fieldId: Joi.number().required(),
@@ -236,4 +238,33 @@ module.exports = [
       return getController(request, h).deleteFertiliserManureByIds();
     },
   },
+ {
+    method: "GET",
+    path: "/fertiliser-manures/total-nitrogen-by/{managementPeriodID}",
+    handler: async (request, h) => {
+      return getController(request, h).getTotalNitrogenByManagementPeriodID();
+    },
+    options: {
+      tags: ["api", "Fertiliser Manures"],
+      description: "Get Fertiliser Manure Total Nitrogen by managementPeriodID",
+      validate: {
+        params: Joi.object({
+          managementPeriodID: Joi.number().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+  }
 ];

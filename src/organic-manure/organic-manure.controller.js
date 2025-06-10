@@ -189,6 +189,17 @@ class OrganicManureController {
       return this.#h.response({ error });
     }
   }
+    async getTotalAvailableNitrogenByManagementPeriodID() {
+    const { managementPeriodID } = this.#request.params;
+    try {
+      const totalN = await this.#organicManureService.getTotalAvailableNitrogenByManagementPeriodID(
+        managementPeriodID
+      );
+      return this.#h.response({ TotalN: totalN });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
 }
 
 module.exports = { OrganicManureController };

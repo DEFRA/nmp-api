@@ -150,6 +150,17 @@ class FertiliserManuresController {
       return this.#h.response({ error: error.message });
     }
   }
+  async getTotalNitrogenByManagementPeriodID() {
+    const { managementPeriodID } = this.#request.params;
+    try {
+      const totalN = await this.#fertiliserManuresService.getTotalNitrogenByManagementPeriodID(
+        managementPeriodID
+      );
+      return this.#h.response({ TotalN: totalN });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
 }
 
 module.exports = { FertiliserManuresController };
