@@ -71,6 +71,9 @@ const { CropInfoQuestionsEntity } = require("./entity/crop-info-questions.entity
 const { ExcessRainfallsEntity } = require("./entity/excess-rainfalls.entity.js");
 const { ExcessWinterRainfallOptionsEntity } = require("./entity/excess-winter-rainfall-options.js");
 const { UserExtensionsEntity } = require("./entity/user-extension.entity.js");
+const { PreviousGrassIdMappingEntity } = require("./entity/previous-grass-Id-mapping.entity.js");
+const { GrassHistoryIdMappingEntity } = require("./entity/grass-history-id-mapping-entity.js");
+const { CropGroupCategoriesEntity } = require("./entity/crop-group-categories.entity.js");
 
 
 dotven.config();
@@ -127,7 +130,10 @@ const baseConfig = {
     CropInfoQuestionsEntity,
     ExcessRainfallsEntity,
     ExcessWinterRainfallOptionsEntity,
-    UserExtensionsEntity
+    UserExtensionsEntity,
+    PreviousGrassIdMappingEntity,
+    GrassHistoryIdMappingEntity,
+    CropGroupCategoriesEntity
   ],
 };
 

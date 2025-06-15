@@ -4,13 +4,14 @@ const { FieldEntity } = require("../db/entity/field.entity");
 const RB209GrasslandService = require("../vendors/rb209/grassland/grassland.service");
 const MannerRainfallPostApplicationService = require("../vendors/manner/rainfall-post-application/rainfall-post-application.service");
 const { FarmEntity } = require("../db/entity/farm.entity");
+const RB209GrassService = require("../vendors/rb209/grass/grass.service");
 
 class GrassGrowthService extends BaseService {
   constructor() {
     super();
     this.fieldRepository = AppDataSource.getRepository(FieldEntity);
     this.farmRepository = AppDataSource.getRepository(FarmEntity);
-    this.grassGrowthService = new RB209GrasslandService();
+    this.grassGrowthService = new RB209GrassService();
     this.MannerRainfallPostApplicationService =
       new MannerRainfallPostApplicationService();
   }
