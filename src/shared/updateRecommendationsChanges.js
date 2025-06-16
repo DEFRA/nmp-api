@@ -41,6 +41,10 @@ const {
   ExcessRainfallsEntity,
 } = require("../db/entity/excess-rainfalls.entity");
 const { GrassGrowthService } = require("../grass-growth-plan/grass-growth-plan.service");
+const { CalculateGrassHistoryAndPreviousGrass } = require("./calculate-previous-grass-id.service");
+const { CropTypeMapper } = require("../constants/crop-type-mapper");
+const { CropOrderMapper } = require("../constants/crop-order-mapper");
+const { FieldTypeMapper } = require("../constants/field-type-mapper");
 
 
 class UpdateRecommendationChanges {
@@ -90,6 +94,7 @@ class UpdateRecommendationChanges {
       ExcessRainfallsEntity
     );
     this.grassGrowthClass = new GrassGrowthService();
+    this.calculateGrassId = new CalculateGrassHistoryAndPreviousGrass();
     
 
   }
@@ -452,7 +457,7 @@ class UpdateRecommendationChanges {
 
         // Find the crop where CropOrder == 2
         const secondCrop = dataMultipleCrops.find(
-          (crop) => crop.CropOrder === 2
+          (crop) => crop.CropOrder === CropOrderMapper.SECONDCROP
         );
         const secondCropSnsAnalysis = await this.getSnsAnalysesData(
           transactionalManager,
@@ -544,7 +549,7 @@ class UpdateRecommendationChanges {
         fieldData.ID,
         pKBalanceAllData
       );
-      if (cropData.CropTypeID === 170 || cropData.CropInfo1 === null) {
+      if (cropData.CropTypeID === CropTypeMapper.OTHER || cropData.CropInfo1 === null) {
         const otherRecommendations = await this.saveRecommendationForOtherCrops(
           transactionalManager,
           organicManure,
@@ -805,7 +810,7 @@ class UpdateRecommendationChanges {
         pKBalanceAllData
       );
 
-      if (crop.CropTypeID === 170 || crop.CropInfo1 === null) {
+      if (crop.CropTypeID === CropTypeMapper.OTHER || crop.CropInfo1 === null) {
         try {
           let saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldId,
@@ -905,34 +910,35 @@ class UpdateRecommendationChanges {
       }
       let savedRecommendation;
       let mannerOutputs = [];
-      if (crop.CropOrder == 2) {
+      if (crop.CropOrder == CropOrderMapper.SECONDCROP) {
         const firstCropData = await this.getFirstCropData(
           transactionalManager,
           field.ID,
           crop.Year
         );
 
-            const cropFirstSavedRecommedndationData = await this.buildCropRecommendationData(
-              firstCropData,
-              latestSoilAnalysis,
-              nutrientRecommendationsData,
-              transactionalManager,
-              userId
-            )
+        const cropFirstSavedRecommedndationData =
+          await this.buildCropRecommendationData(
+            firstCropData,
+            latestSoilAnalysis,
+            nutrientRecommendationsData,
+            transactionalManager,
+            userId
+          );
 
         const managementPeriodData = await this.getManagementPeriod(
           transactionalManager,
           firstCropData.ID
         );
 
-           const cropSecondSavedRecommedndationData =
-            await this.buildCropRecommendationData(
-              crop,
-              latestSoilAnalysis,
-              nutrientRecommendationsData,
-              transactionalManager,
-              userId
-            );
+        const cropSecondSavedRecommedndationData =
+          await this.buildCropRecommendationData(
+            crop,
+            latestSoilAnalysis,
+            nutrientRecommendationsData,
+            transactionalManager,
+            userId
+          );
 
         // const savedMultipleCropRecommendation =
         //   await this.saveRecommendationForMutipleCrops(
@@ -946,22 +952,21 @@ class UpdateRecommendationChanges {
         //     allRecommendations,
         //     userId
         //   );
-          const isGrassCrops = await this.isGrassCropPresent(
-            crop,
-            transactionalManager
-          );
-          if(isGrassCrops){
-            const savedFirstRecommendationComment =
-              await this.saveMultipleRecommendation(
-                Recommendations,
-                cropFirstSavedRecommedndationData[0],
-                cropSecondSavedRecommedndationData[0],
-                transactionalManager,
-                nutrientRecommendationsData,
-                userId
-              );
-
-          }
+        const isGrassCrops = await this.isGrassCropPresent(
+          crop,
+          transactionalManager
+        );
+        if (isGrassCrops) {
+          const savedFirstRecommendationComment =
+            await this.saveMultipleRecommendation(
+              Recommendations,
+              cropFirstSavedRecommedndationData[0],
+              cropSecondSavedRecommedndationData[0],
+              transactionalManager,
+              nutrientRecommendationsData,
+              userId
+            );
+        }
       } else {
         const cropNutrientsValue = {};
         nutrientRecommendationsData.calculations.forEach((recommendation) => {
@@ -994,17 +999,17 @@ class UpdateRecommendationChanges {
         // );
 
         const cropSavedRecommedndationData =
-            await this.buildCropRecommendationData(
-              crop,
-              latestSoilAnalysis,
-              nutrientRecommendationsData,
-              transactionalManager,
-              userId
-            );
+          await this.buildCropRecommendationData(
+            crop,
+            latestSoilAnalysis,
+            nutrientRecommendationsData,
+            transactionalManager,
+            userId
+          );
 
         //savedRecommendation = savedData.firstCropSaveData;
-        if(crop.CropTypeID!==140){
-        savedRecommendation = cropSavedRecommedndationData[0];
+        if (crop.CropTypeID !== CropTypeMapper.GRASS) {
+          savedRecommendation = cropSavedRecommedndationData[0];
 
           const RecommendationComments = [];
           const notesByNutrient =
@@ -1019,7 +1024,7 @@ class UpdateRecommendationChanges {
               {}
             );
           // Fetch all existing comments related to the savedRecommendation.ID at once
-  
+
           const existingallComments = await transactionalManager.find(
             RecommendationCommentEntity,
             {
@@ -1028,12 +1033,12 @@ class UpdateRecommendationChanges {
               },
             }
           );
-  
+
           for (const existingComment of existingallComments) {
             const nutrientIdExists = Object.keys(notesByNutrient).some(
               (nutrientId) => parseInt(nutrientId) === existingComment.Nutrient
             );
-  
+
             // If the nutrientId does not exist, delete the comment using transactionalManager
             if (!nutrientIdExists) {
               await transactionalManager.delete(RecommendationCommentEntity, {
@@ -1042,21 +1047,22 @@ class UpdateRecommendationChanges {
             }
           }
           for (const nutrientId in notesByNutrient) {
-            const concatenatedNote = notesByNutrient[nutrientId]?.join(" <br/>"); // Concatenate notes for the same nutrientId
-  
+            const concatenatedNote =
+              notesByNutrient[nutrientId]?.join(" <br/>"); // Concatenate notes for the same nutrientId
+
             // Check if a recommendation comment already exists for the Nutrient in the fetched data
             const alreadyExistingComment = existingallComments.find(
               (comment) => comment.Nutrient === parseInt(nutrientId)
             );
-  
+
             let newComment;
-  
+
             if (alreadyExistingComment) {
               // Update the existing comment
               alreadyExistingComment.Comment = concatenatedNote; // Update the comment with the concatenated notes
               alreadyExistingComment.ModifiedOn = new Date(); // Optionally track when the comment was modified
               alreadyExistingComment.ModifiedByID = userId;
-  
+
               // Save the updated comment
               newComment = await transactionalManager.save(
                 RecommendationCommentEntity,
@@ -1071,7 +1077,7 @@ class UpdateRecommendationChanges {
                 CreatedOn: new Date(),
                 CreatedByID: userId,
               });
-  
+
               // Save the new comment
               newComment = await transactionalManager.save(
                 RecommendationCommentEntity,
@@ -1084,7 +1090,7 @@ class UpdateRecommendationChanges {
           //   const nutrientIdExists = Object.keys(notesByNutrient).some(
           //     (nutrientId) => parseInt(nutrientId) === existingComment.Nutrient
           //   );
-  
+
           //   // If the nutrientId does not exist, delete the comment using transactionalManager
           //   if (!nutrientIdExists) {
           //     await transactionalManager.delete(RecommendationCommentEntity, {
@@ -1331,7 +1337,7 @@ async extractNutrientData(calculations, defoliationId) {
       let kBalance = 0;
       let saveAndUpdatePKBalance;
 
-      if (crop.CropTypeID == 170 || crop.CropInfo1 == null) {
+      if (crop.CropTypeID == CropTypeMapper.OTHER || crop.CropInfo1 == null) {
         if (pkBalanceData) {
           pBalance =
             (fertiliserData == null ? 0 : fertiliserData.p205) -
@@ -2056,11 +2062,15 @@ async extractNutrientData(calculations, defoliationId) {
     };
 
     let cropOrder2Data = {
-      ...cropOrder1Data,
+      ...cropOrder1Data
     };
 
-    const firstCrop = dataMultipleCrops?.find((crop) => crop.CropOrder === 1);
-    const secondCrop = dataMultipleCrops?.find((crop) => crop.CropOrder === 2);
+    const firstCrop = dataMultipleCrops?.find(
+      (crop) => crop.CropOrder === CropOrderMapper.FIRSTCROP
+    );
+    const secondCrop = dataMultipleCrops?.find(
+      (crop) => crop.CropOrder === CropOrderMapper.SECONDCROP
+    );
 
     const recommendationMap = allRecommendations.reduce(
       (acc, recommendation) => {
@@ -2335,8 +2345,7 @@ async extractNutrientData(calculations, defoliationId) {
           HttpStatus.BAD_REQUEST
         );
       }
-if (crop.CropTypeID !==140){
-
+if (crop.CropTypeID !== CropTypeMapper.GRASS) {
   arableBody.push({
     cropOrder: crop.CropOrder,
     cropGroupId: currentCropType.cropGroupId,
@@ -2422,14 +2431,32 @@ if (crop.CropTypeID !==140){
       farm.ID,
       crop.Year
     );
+    let grassHistoryID = null;
+    let previousGrassId = null;
+    if (crop.CropTypeID == CropTypeMapper.GRASS) {
+      grassHistoryID = await this.calculateGrassId.getGrassHistoryID(
+        field,
+        crop,
+        transactionalManager
+      );
+    } else {
+      previousGrassId = await this.calculateGrassId.getPreviousGrassID(
+        crop,
+        transactionalManager
+      );
+    }
 
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: crop.FieldType,
-        multipleCrops: dataMultipleCrops.length >  1 ? true : false,
-        arable: crop.FieldType == 2 ? [] : arableBody,
-        grassland:{},
-        grass:crop.FieldType == 3 || crop.FieldType == 2 ? grassObject : {},
+        multipleCrops: dataMultipleCrops.length > 1 ? true : false,
+        arable: crop.FieldType == FieldTypeMapper.GRASS ? [] : arableBody,
+        grassland: {},
+        grass:
+          crop.FieldType == FieldTypeMapper.BOTH ||
+          crop.FieldType == FieldTypeMapper.GRASS
+            ? grassObject
+            : {},
         soil: {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
@@ -2462,7 +2489,7 @@ if (crop.CropTypeID !==140){
         potash: true,
         magnesium: true,
         sodium: true,
-         sulphur: isCropGrass ? false : true,
+        sulphur: isCropGrass ? false : true,
         lime: isCropGrass ? false : true,
       },
       totals: true,
@@ -2596,12 +2623,12 @@ if (crop.CropTypeID !==140){
         (cropType) => cropType.cropTypeId === previousCrop.CropTypeID
       );
       nutrientRecommendationnReqBody.field.previousCropping = {
-        previousGrassId: previousCrop?.CropTypeID==140 ? null :1,
-        previousCropGroupId:previousCrop?.CropTypeID==140 ? null :
+        previousGrassId: previousCrop?.CropTypeID==CropTypeMapper.GRASS ? null :1,
+        previousCropGroupId:previousCrop?.CropTypeID==CropTypeMapper.GRASS ? null :
           (cropType.cropGroupId !== undefined && cropType.cropGroupId !== null
             ? cropType.cropGroupId
             : null),
-        previousCropTypeId:previousCrop?.CropTypeID==140 ? null :
+        previousCropTypeId:previousCrop?.CropTypeID==CropTypeMapper.GRASS ? null :
           (previousCrop.CropTypeID !== undefined &&
           previousCrop.CropTypeID !== null
             ? previousCrop.CropTypeID
@@ -2616,8 +2643,9 @@ if (crop.CropTypeID !==140){
       nutrientRecommendationnReqBody.field.previousCropping = {
         previousCropGroupId: null,
         previousCropTypeId: null,
-        previousGrassId: previousCrop?.CropTypeID==140 ? null: 1,
-        grassHistoryId:null,
+        previousGrassId:
+          previousCrop?.CropTypeID == CropTypeMapper.GRASS ? null : 1,
+        grassHistoryId: null,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -2639,7 +2667,9 @@ if (crop.CropTypeID !==140){
 
     // If more than one crop is found, filter for CropOrder = 2
     if (previousCrops.length > 1) {
-      return previousCrops.find((crop) => crop.CropOrder === 2);
+      return previousCrops.find(
+        (crop) => crop.CropOrder === CropOrderMapper.SECONDCROP
+      );
     }
 
     // Otherwise, return the first crop (or null if none are found)
@@ -2648,7 +2678,10 @@ if (crop.CropTypeID !==140){
 
    async buildGrassObject(crop, field, grassGrowthClass, transactionalManager) {
     // Case: Only one crop with CropOrder 1 and CropTypeID 140
-    if (crop.CropOrder === 1 && crop.CropTypeID === 140) {
+    if (
+      crop.CropOrder === CropOrderMapper.FIRSTCROP &&
+      crop.CropTypeID === CropTypeMapper.GRASS
+    ) {
       return {
         cropOrder: crop.CropOrder,
         swardTypeId: crop.SwardTypeID,
@@ -2661,8 +2694,8 @@ if (crop.CropTypeID !==140){
     }
 
     // Case: CropOrder is 2 and it's grass
-    if (crop.CropOrder === 2) {
-      if (crop.CropTypeID === 140) {
+    if (crop.CropOrder === CropOrderMapper.SECONDCROP) {
+      if (crop.CropTypeID === CropTypeMapper.GRASS) {
         return {
           cropOrder: crop.CropOrder,
           swardTypeId: crop.SwardTypeID,
@@ -2680,7 +2713,7 @@ if (crop.CropTypeID !==140){
           crop.Year
         );
 
-        if (firstCrop && firstCrop.CropTypeID === 140) {
+        if (firstCrop && firstCrop.CropTypeID === CropTypeMapper.GRASS) {
           return {
             cropOrder: firstCrop.CropOrder,
             swardTypeId: firstCrop.SwardTypeID,
@@ -2699,27 +2732,27 @@ if (crop.CropTypeID !==140){
   }
 
   async isGrassCropPresent(crop,transaction){
-   if(crop.CropOrder === 1){
-     if(crop.CropTypeID ===140){
-      return true
-     }else{
-      return false
+   if (crop.CropOrder === CropOrderMapper.FIRSTCROP) {
+     if (crop.CropTypeID === CropTypeMapper.GRASS) {
+       return true;
+     } else {
+       return false;
      }
-   }else if(crop.CropOrder === 2){
-      if(crop.CropTypeID ===140){
-        return true
-      }else{
-        const firstCropData = await this.getFirstCropData(
-          transaction,
-          crop.FieldID,
-          crop.Year
-        );
-        if(firstCropData.CropTypeID ===140){
-          return true
-        }else{
-          return false
-        }
-      }
+   } else if (crop.CropOrder === CropOrderMapper.SECONDCROP) {
+     if (crop.CropTypeID === CropTypeMapper.GRASS) {
+       return true;
+     } else {
+       const firstCropData = await this.getFirstCropData(
+         transaction,
+         crop.FieldID,
+         crop.Year
+       );
+       if (firstCropData.CropTypeID === CropTypeMapper.GRASS) {
+         return true;
+       } else {
+         return false;
+       }
+     }
    }
   }
 
@@ -2782,6 +2815,20 @@ if (crop.CropTypeID !==140){
       field,
       transactionalManager
     );
+    let grassHistoryID = null;
+    let previousGrassId = null;
+    if (crop.CropTypeID == CropTypeMapper.GRASS) {
+      grassHistoryID = await this.calculateGrassId.getGrassHistoryID(
+        field,
+        crop,
+        transactionalManager
+      );
+    } else {
+      previousGrassId = await this.calculateGrassId.getPreviousGrassID(
+        crop,
+        transactionalManager
+      );
+    }
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: crop.FieldType,
@@ -2907,12 +2954,12 @@ if (crop.CropTypeID !==140){
         (cropType) => cropType?.cropTypeId === previousCrop?.CropTypeID
       );
       nutrientRecommendationnReqBody.field.previousCropping = {
-        previousGrassId:previousCrop?.CropTypeID==140 ? null: 1,
-        previousCropGroupId:previousCrop?.CropTypeID==140 ? null :
+        previousGrassId:previousCrop?.CropTypeID==CropTypeMapper.GRASS ? null: 1,
+        previousCropGroupId:previousCrop?.CropTypeID==CropTypeMapper.GRASS ? null :
           (cropType?.cropGroupId !== undefined && cropType?.cropGroupId !== null
             ? cropType.cropGroupId
             : null),
-        previousCropTypeId:previousCrop?.CropTypeID==140 ? null :
+        previousCropTypeId:previousCrop?.CropTypeID==CropTypeMapper.GRASS ? null :
           (previousCrop?.CropTypeID !== undefined &&
           previousCrop?.CropTypeID !== null
             ? previousCrop?.CropTypeID
@@ -2927,8 +2974,9 @@ if (crop.CropTypeID !==140){
       nutrientRecommendationnReqBody.field.previousCropping = {
         previousCropGroupId: null,
         previousCropTypeId: null,
-        previousGrassId: previousCrop?.CropTypeID==140 ? null:1,
-        grassHistoryId:null,
+        previousGrassId:
+          previousCrop?.CropTypeID == CropTypeMapper.GRASS ? null : 1,
+        grassHistoryId: null,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
