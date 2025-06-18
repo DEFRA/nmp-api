@@ -73,6 +73,7 @@ const { UserExtensionsEntity } = require("./entity/user-extension.entity.js");
 const { PreviousGrassIdMappingEntity } = require("./entity/previous-grass-Id-mapping.entity.js");
 const { GrassHistoryIdMappingEntity } = require("./entity/grass-history-id-mapping-entity.js");
 const { CropGroupCategoriesEntity } = require("./entity/crop-group-categories.entity.js");
+const { SoilGroupCategoriesEntity } = require("./entity/soil-group-categories-entity.js");
 
 
 
@@ -134,7 +135,8 @@ const baseConfig = {
     UserExtensionsEntity,
     PreviousGrassIdMappingEntity,
     GrassHistoryIdMappingEntity,
-    CropGroupCategoriesEntity
+    CropGroupCategoriesEntity,
+    SoilGroupCategoriesEntity
   ],
   migrations: [],
   subscribers: [],
