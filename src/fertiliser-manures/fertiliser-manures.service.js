@@ -40,7 +40,7 @@ class FertiliserManuresService extends BaseService {
       AppDataSource.getRepository(SoilAnalysisEntity);
   }
   async getFertiliserManureNitrogenSum(
-    managementPeriodID,
+    fieldId,
     fromDate,
     toDate,
     confirm,
@@ -53,24 +53,35 @@ class FertiliserManuresService extends BaseService {
     const toDateFormatted = new Date(toDate);
     toDateFormatted.setHours(23, 59, 59, 999); // Set time to end of the day
 
-    const queryBuilder = this.repository
-      .createQueryBuilder("fertiliserManures")
-      .select(
-        "SUM(fertiliserManures.N * fertiliserManures.ApplicationRate)",
-        "totalN"
-      )
-      .where("fertiliserManures.ManagementPeriodID = :managementPeriodID", {
-        managementPeriodID,
+    // const queryBuilder = this.repository
+    //   .createQueryBuilder("fertiliserManures")
+    //   .select(
+    //     "SUM(fertiliserManures.N * fertiliserManures.ApplicationRate)",
+    //     "totalN"
+    //   )
+    //   .where("fertiliserManures.ManagementPeriodID = :managementPeriodID", {
+    //     managementPeriodID,
+    //   })
+    //   .andWhere(
+    //     "fertiliserManures.ApplicationDate BETWEEN :fromDate AND :toDate",
+    //     { fromDate: fromDateFormatted, toDate: toDateFormatted }
+    //   )
+    //   .andWhere("fertiliserManures.Confirm = :confirm", { confirm });
+    const queryBuilder = await this.repository
+      .createQueryBuilder("F") 
+      .select("SUM(F.N * F.ApplicationRate)", "totalN")
+      .innerJoin("ManagementPeriods", "M", "F.ManagementPeriodID = M.ID")
+      .innerJoin("Crops", "C", "M.CropID = C.ID")
+      .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
+      .andWhere("F.ApplicationDate BETWEEN :fromDate AND :toDate", {
+        fromDate: fromDateFormatted,
+        toDate: toDateFormatted,
       })
-      .andWhere(
-        "fertiliserManures.ApplicationDate BETWEEN :fromDate AND :toDate",
-        { fromDate: fromDateFormatted, toDate: toDateFormatted }
-      )
-      .andWhere("fertiliserManures.Confirm = :confirm", { confirm });
+      .andWhere("F.Confirm = :confirm", { confirm });
 
     // Only apply the fertiliserId condition if it's not null or undefined
     if (fertiliserId !== null && fertiliserId !== undefined) {
-      queryBuilder.andWhere("fertiliserManures.ID != :fertiliserId", {
+      queryBuilder.andWhere("F.ID != :fertiliserId", {
         fertiliserId,
       });
     }
@@ -79,12 +90,7 @@ class FertiliserManuresService extends BaseService {
     return result.totalN;
   }
 
-  async getTotalNitrogen(
-    managementPeriodID,
-    confirm,
-    fertiliserID,
-    organicManureID
-  ) {
+  async getTotalNitrogen(managementPeriodID, confirm, fertiliserID, organicManureID) {
     const fertiliserManuresResult = await this.repository
       .createQueryBuilder("fertiliserManures")
       .select(
@@ -95,14 +101,19 @@ class FertiliserManuresService extends BaseService {
         managementPeriodID,
       })
       .andWhere("fertiliserManures.Confirm = :confirm", { confirm });
-    if (fertiliserID !== null && fertiliserID !== undefined) {
-      fertiliserManuresResult.andWhere(
-        "fertiliserManures.ID != :fertiliserID",
-        {
-          fertiliserID,
-        }
-      );
-    }
+
+    // const fertiliserManuresResult = await this.repository
+    //   .createQueryBuilder("F") // O = OrganicManures
+    //   .select("SUM(F.N * F.ApplicationRate)", "totalN")
+    //   .innerJoin("ManagementPeriods", "M", "F.ManagementPeriodID = M.ID")
+    //   .innerJoin("Crops", "C", "M.CropID = C.ID")
+    //   .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
+    //   .andWhere("F.Confirm = :confirm", { confirm });
+    // if (fertiliserID !== null && fertiliserID !== undefined) {
+    //   fertiliserManuresResult.andWhere("F.ID != :fertiliserID", {
+    //     fertiliserID,
+    //   });
+    // }
 
     const fertiliserResult = await fertiliserManuresResult.getRawOne();
     console.log("fertiliserResult", fertiliserResult);
@@ -115,6 +126,14 @@ class FertiliserManuresService extends BaseService {
         managementPeriodID,
       })
       .andWhere("organicManures.Confirm = :confirm", { confirm });
+
+    // const organicManuresResult = await this.repository
+    //   .createQueryBuilder("O") // O = OrganicManures
+    //   .select("SUM(O.AvailableNForNMax)", "totalN")
+    //   .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
+    //   .innerJoin("Crops", "C", "M.CropID = C.ID")
+    //   .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
+    //   .andWhere("O.Confirm = :confirm", { confirm });
     if (organicManureID !== null && organicManureID !== undefined) {
       organicManuresResult.andWhere("organicManures.ID != :organicManureID", {
         organicManureID,
@@ -349,11 +368,22 @@ class FertiliserManuresService extends BaseService {
     return await AppDataSource.transaction(async (transactionalManager) => {
       const updatedFertilisers = [];
       for (const manure of updatedFertiliserManureData) {
+        // const {
+        //   ID,
+        //   CreatedByID,
+        //   CreatedOn,
+        //   ManagementPeriodID,
+        //   ...updatedData
+        // } = manure;
         const {
           ID,
           CreatedByID,
           CreatedOn,
-          ManagementPeriodID,
+          FieldName,
+          EncryptedCounter,
+          Defoliation,
+          FieldID,
+          DefoliationName,
           ...updatedData
         } = manure;
         // Update fertiliseremanure
@@ -387,7 +417,6 @@ class FertiliserManuresService extends BaseService {
           where: { ID: managementPeriod.CropID },
         });
 
-       
         await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
           crop.FieldID,
           crop.Year,
@@ -512,13 +541,13 @@ class FertiliserManuresService extends BaseService {
           "EXEC [spFertiliserManures_DeleteFertiliserManures] @ID = @0";
         await transactionalManager.query(storedProcedure, [fertliserManureId]);
 
-         await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
-           crop.FieldID,
-           crop.Year,
-           request,
-           userId,
-           transactionalManager
-         );
+        await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+          crop.FieldID,
+          crop.Year,
+          request,
+          userId,
+          transactionalManager
+        );
         // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
         const nextAvailableCrop = await this.cropRepository.findOne({
           where: {
@@ -562,6 +591,22 @@ class FertiliserManuresService extends BaseService {
         console.error("Error deleting fertiliserManure:", error);
       }
     });
+  }
+   async getTotalNitrogenByManagementPeriodID(managementPeriodID) {
+    const fertiliserManuresResult = await this.repository
+      .createQueryBuilder("fertiliserManures")
+      .select(
+        "SUM(fertiliserManures.N * fertiliserManures.ApplicationRate)",
+        "totalN"
+      )
+      .where("fertiliserManures.ManagementPeriodID = :managementPeriodID", {
+        managementPeriodID,
+      });
+
+    const fertiliserResult = await fertiliserManuresResult.getRawOne();
+    console.log("fertiliserResult", fertiliserResult);
+    
+    return fertiliserResult.totalN;
   }
 }
 

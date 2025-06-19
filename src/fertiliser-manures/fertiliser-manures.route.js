@@ -2,7 +2,10 @@ const Joi = require("joi");
 const {
   FertiliserManuresController,
 } = require("./fertiliser-manures.controller");
-const { CreateFertiliserManuresDto, updateFertiliserManuresDto } = require("./dto/fertiliser-manures.dto");
+const {
+  CreateFertiliserManuresDto,
+  updateFertiliserManuresDto,
+} = require("./dto/fertiliser-manures.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 
 const getController = (request, h) =>
@@ -11,17 +14,16 @@ const getController = (request, h) =>
 module.exports = [
   {
     method: "GET",
-    path: "/fertiliser-manures/total-nitrogen/{managementPeriodID}",
+    path: "/fertiliser-manures/total-nitrogen/{fieldId}",
     handler: async (request, h) => {
       return getController(request, h).getFertiliserManureNitrogenSum();
     },
     options: {
       tags: ["api", "Fertiliser Manures"],
-      description:
-        "Get Fertiliser Manure Total Nitrogen by Management Period ID",
+      description: "Get Fertiliser Manure Total Nitrogen by field ID",
       validate: {
         params: Joi.object({
-          managementPeriodID: Joi.number().required(),
+          fieldId: Joi.number().required(),
         }),
         query: Joi.object({
           fromDate: Joi.date().iso().required(),
@@ -61,9 +63,9 @@ module.exports = [
           managementPeriodID: Joi.number().required(),
         }),
         query: Joi.object({
-          confirm: Joi.boolean().required(),          
+          confirm: Joi.boolean().required(),
           fertiliserID: Joi.number().integer().allow(null).optional(),
-          organicManureID: Joi.number().integer().allow(null).optional()
+          organicManureID: Joi.number().integer().allow(null).optional(),
         }),
         failAction: (request, h, err) => {
           return h
@@ -109,8 +111,6 @@ module.exports = [
       },
     },
   },
-
-  
 
   {
     method: "GET",
@@ -238,4 +238,33 @@ module.exports = [
       return getController(request, h).deleteFertiliserManureByIds();
     },
   },
+ {
+    method: "GET",
+    path: "/fertiliser-manures/total-nitrogen-by/{managementPeriodID}",
+    handler: async (request, h) => {
+      return getController(request, h).getTotalNitrogenByManagementPeriodID();
+    },
+    options: {
+      tags: ["api", "Fertiliser Manures"],
+      description: "Get Fertiliser Manure Total Nitrogen by managementPeriodID",
+      validate: {
+        params: Joi.object({
+          managementPeriodID: Joi.number().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+  }
 ];
