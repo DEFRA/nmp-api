@@ -66,7 +66,7 @@ class GrassGrowthService extends BaseService {
 
       // Fetch grass growth data
       const grassGrowthData = await this.grassGrowthService.getData(
-        `Grassland/GrassGrowthClass/${field.SoilTypeID}/${summerRainfall}/${altitude}/${soilOverChalk}`
+        `Grass/GrassGrowthClass/${field.SoilTypeID}/${summerRainfall}/${altitude}/${soilOverChalk}`
       );
 
       return { ...grassGrowthData, fieldId };
