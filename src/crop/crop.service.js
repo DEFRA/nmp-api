@@ -462,6 +462,7 @@ class CropService extends BaseService {
             return {
               OrganicMaterialId: organicManure.ID,
               ApplicationDate: organicManure.ApplicationDate,
+              ManureTypeId: organicManure.ManureTypeID,
               Field: crop.FieldName,
               FieldId: crop.FieldID,
               Crop: crop.CropTypeName,
