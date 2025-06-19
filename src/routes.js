@@ -35,4 +35,5 @@ module.exports = [
   ...require("./excess-rainfall/excess-rainfall.route"),
   ...require("./user-extension/user-extension.route"),
   ...require("./sns-analysis/sns-analysis.route"),
+  ...require("./grass-growth-plan/grass-growth-plan.route"),
 ];

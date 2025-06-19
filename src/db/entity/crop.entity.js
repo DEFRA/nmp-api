@@ -102,12 +102,24 @@ const CropEntity = new EntitySchema({
       default: 0,
       nullable: true,
     },
-    DefoliationSequence: {
+    DefoliationSequenceID: {
       type: "int",
       default: 0,
       nullable: true,
     },
     GrazingIntensity: {
+      type: "int",
+      nullable: true,
+    },
+    SwardTypeID: {
+      type: "int",
+      nullable: true,
+    },
+    SwardManagementID: {
+      type: "int",
+      nullable: true,
+    },
+    PotentialCut: {
       type: "int",
       nullable: true,
     },
@@ -145,6 +157,12 @@ const CropEntity = new EntitySchema({
       target: "Field",
       joinColumn: { name: "FieldID" },
       inverseSide: "Crops",
+    },
+    CropType: {
+      type: "one-to-one",
+      target: "CropGroupCategories",
+      joinColumn: { name: "CropTypeID" },
+      inverseSide: "CropTypes",
     },
     CropIDSnsAnalyses: {
       type: "many-to-one",
