@@ -361,7 +361,7 @@ class RecommendationService extends BaseService {
         });
         return data;
       });
-      console.log("AllGood");
+      
       const PKbalance = await this.PKbalanceRepository.findOne({
         where: {
           Year: harvestYear - 1,
