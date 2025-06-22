@@ -2437,12 +2437,14 @@ if (crop.CropTypeID !== CropTypeMapper.GRASS) {
       grassHistoryID = await this.calculateGrassId.getGrassHistoryID(
         field,
         crop,
-        transactionalManager
+        transactionalManager,
+        crop.Year
       );
     } else {
       previousGrassId = await this.calculateGrassId.getPreviousGrassID(
         crop,
-        transactionalManager
+        transactionalManager,
+        crop.Year
       );
     }
 
@@ -2821,12 +2823,14 @@ if (crop.CropTypeID !== CropTypeMapper.GRASS) {
       grassHistoryID = await this.calculateGrassId.getGrassHistoryID(
         field,
         crop,
-        transactionalManager
+        transactionalManager,
+        crop.Year
       );
     } else {
       previousGrassId = await this.calculateGrassId.getPreviousGrassID(
         crop,
-        transactionalManager
+        transactionalManager,
+        crop.Year
       );
     }
     const nutrientRecommendationnReqBody = {
