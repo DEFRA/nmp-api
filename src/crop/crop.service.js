@@ -1220,17 +1220,20 @@ class CropService extends BaseService {
     // Find all crops matching the previous year and field ID
     // Filter all crops to find those matching the previous year and field ID
 
-    const previousCrops = await transactionalManager.findOne(CropEntity, {
+    let previousCrops = await transactionalManager.findOne(CropEntity, {
       where: {
         FieldID: fieldID,
         Year: currentYear - 1,
       },
     });
-    // If more than one crop is found, filter for CropOrder = 2
-    if (previousCrops.length > 1) {
-      return previousCrops.find(
-        (crop) => crop.CropOrder === CropOrderMapper.SECONDCROP
-      );
+    if (previousCrops){
+
+      if (previousCrops.length > 1) {
+        // If more than one crop is found, filter for CropOrder = 2
+        return previousCrops.find(
+          (crop) => crop.CropOrder === CropOrderMapper.SECONDCROP
+        );
+      }
     }
 
     // Otherwise, return the first crop (or null if none are found)
