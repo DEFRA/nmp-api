@@ -54,6 +54,14 @@ const CropDto = Joi.object({
   EncryptedCounter: Joi.number().integer().allow(null),
 }).required();
 
+const CopyPlanDto = Joi.object({
+  farmID: Joi.number().integer().allow(null).optional(),
+  harvestYear: Joi.number().integer().required(),
+  copyYear: Joi.number().integer().required(),
+  isOrganic: Joi.boolean().required(),
+  isFertiliser: Joi.boolean().required(),
+}).required();
+
 const ManagementPeriodsDto = Joi.array()
   .items(
     Joi.object({
@@ -99,4 +107,5 @@ module.exports = {
   CreateCropWithManagementPeriodsDto,
   CreatePlanDto,
   CreateCropWithManagementPeriodsDto,
+  CopyPlanDto
 };

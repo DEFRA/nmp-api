@@ -2346,12 +2346,14 @@ class UpdateRecommendation {
       grassHistoryID = await this.calculateGrassId.getGrassHistoryID(
         field,
         crop,
-        transactionalManager
+        transactionalManager,
+        crop.Year
       );
     } else {
       previousGrassId = await this.calculateGrassId.getPreviousGrassID(
         crop,
-        transactionalManager
+        transactionalManager,
+        crop.Year
       );
     }
 
@@ -2728,12 +2730,14 @@ class UpdateRecommendation {
       grassHistoryID = await this.calculateGrassId.getGrassHistoryID(
         field,
         crop,
-        transactionalManager
+        transactionalManager,
+        crop.Year
       );
     } else {
       previousGrassId = await this.calculateGrassId.getPreviousGrassID(
         crop,
-        transactionalManager
+        transactionalManager,
+        crop.Year
       );
     }
     const nutrientRecommendationnReqBody = {

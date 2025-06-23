@@ -352,6 +352,27 @@ class CropController {
       });
     }
   }
+
+  async copyPlanByHarvestYearAndFarmID() {
+    try {
+      const body = this.#request.payload;
+      const userId = this.#request.userId;
+
+      const results = await this.#cropService.copyPlan(
+        body,
+        userId,
+        this.#request
+      );
+
+      return this.#h.response(results);
+    } catch (error) {
+      console.error("Error copying crop:", error);
+      return this.#h.response({
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  }
 }
 
 module.exports = { CropController };

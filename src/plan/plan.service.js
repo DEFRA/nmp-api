@@ -406,12 +406,14 @@ class PlanService extends BaseService {
       grassHistoryID = await this.calculateGrassId.getGrassHistoryID(
         field,
         crop,
-        transactionalManager
+        transactionalManager,
+        crop.Year
       );
     } else {
       previousGrassId = await this.calculateGrassId.getPreviousGrassID(
         crop,
-        transactionalManager
+        transactionalManager,
+        crop.Year
       );
     }
 
