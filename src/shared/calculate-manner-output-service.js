@@ -1,6 +1,7 @@
 const { CropTypeLinkingEntity } = require("../db/entity/crop-type-linking.entity");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { ManagementPeriodEntity } = require("../db/entity/management-period.entity");
+const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
 const { SoilTypeSoilTextureEntity } = require("../db/entity/soil-type-soil-texture.entity");
 const MannerCalculateNutrientsService = require("../vendors/manner/calculate-nutrients/calculate-nutrients.service");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
@@ -238,24 +239,26 @@ class CalculateMannerOutputService {
         }
       );
       
-     
+      let matchingPeriod = null,
+        otherPeriods = null,
+        orderedPeriods = null;
 
-      // Separate periods: one matching organicManure.ManagementPeriodID, then others
-      let matchingPeriod = managementPeriods.find(
-        (p) => p.ID === organicManure.ManagementPeriodID
-      );
-      const otherPeriods = managementPeriods.filter(
-        (p) => p.ID !== organicManure.ManagementPeriodID
-      );
-       let orderedPeriods = null
-       if(organicManure!=null){
-           orderedPeriods = matchingPeriod
-            ? [matchingPeriod, ...otherPeriods]
-            : otherPeriods;
+      if (organicManure != null) {
+        // Separate periods: one matching organicManure.ManagementPeriodID, then others
+        matchingPeriod = managementPeriods.find(
+          (p) => p.ID === organicManure.ManagementPeriodID
+        );
+        otherPeriods = managementPeriods.filter(
+          (p) => p.ID !== organicManure.ManagementPeriodID
+        );
+      
 
-       }else{
-        orderedPeriods = managementPeriods
-       }
+        orderedPeriods = matchingPeriod
+          ? [matchingPeriod, ...otherPeriods]
+          : otherPeriods;
+      } else {
+        orderedPeriods = managementPeriods;
+      }
 
       // Step 4: Process each management period
       for (const period of orderedPeriods) {
