@@ -364,9 +364,7 @@ class CropController {
         this.#request
       );
 
-      return this.#h.response({
-        copiedCrops: results,
-      });
+      return this.#h.response(results);
     } catch (error) {
       console.error("Error copying crop:", error);
       return this.#h.response({
