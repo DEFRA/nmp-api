@@ -44,7 +44,9 @@ const OrganicManureEntitySchema = Joi.object({
   EncryptedCounter: Joi.string().optional().allow(null),
   Defoliation: Joi.number().integer().optional().allow(null),
   FieldID: Joi.number().integer().allow(null),
-  DefoliationName: Joi.string().optional().allow(null)
+  DefoliationName: Joi.string().optional().allow(null),
+  AvailableNForNextYear: Joi.number().precision(3).allow(null),
+  AvailableNForNextDefoliation: Joi.number().precision(3).allow(null)
 });
 
 const UpdateOrganicManureEntitySchema = Joi.object({
@@ -84,7 +86,9 @@ const UpdateOrganicManureEntitySchema = Joi.object({
   EncryptedCounter: Joi.string().optional().allow(null),
   Defoliation: Joi.number().integer().optional().allow(null),
   FieldID: Joi.number().integer().allow(null),
-  DefoliationName: Joi.string().optional().allow(null)
+  DefoliationName: Joi.string().optional().allow(null),
+  AvailableNForNextYear: Joi.number().integer().optional().allow(null),
+  AvailableNForNextDefoliation: Joi.number().integer().optional().allow(null)
 });
 
 // Define the validation schema for OrganicManureDto
