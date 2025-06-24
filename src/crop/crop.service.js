@@ -391,38 +391,22 @@ class CropService extends BaseService {
       }
     };
 
-    const findDefoliationSequenceDescription = async (
-      swardManagementId,
-      PotentialCut,
-      DefoliationSequenceID,
-      establishment
+   const findDefoliationSequenceDescription = async (
+      DefoliationSequenceID
     ) => {
       try {
-        let newSward = establishment == 0 || null ? false : true;
         let defoliationSequenceDescription = null;
-        let defoliationSequenceList = await this.rB209GrassService.getData(
-          `Grass/DefoliationSequence/${swardManagementId}/${PotentialCut}/${newSward}`
+        let defoliationSequence = await this.rB209GrassService.getData(
+          `Grass/DefoliationSequence/${DefoliationSequenceID}`
         );
-
-        if (
-          defoliationSequenceList.data &&
-          Array.isArray(defoliationSequenceList.data.list) &&
-          defoliationSequenceList.data.list.length > 0
-        ) {
-          const matchingDefoliation = defoliationSequenceList.data.list.find(
-            (x) => x.defoliationSequenceId === DefoliationSequenceID
-          );
-          if (matchingDefoliation != null) {
-            defoliationSequenceDescription = matchingDefoliation
-              ? matchingDefoliation.defoliationSequenceDescription
-              : null;
-          }
-        }
+        defoliationSequenceDescription = defoliationSequence
+          ? defoliationSequence.defoliationSequenceDescription
+          : null;
 
         return defoliationSequenceDescription;
       } catch (error) {
         console.error(
-          `Error fetching Defoliation Sequence for swardTypeId: ${SwardTypeID}&numberOfCuts=${PotentialCut}`,
+          `Error fetching Defoliation Sequence by id ${DefoliationSequenceID}`,
           error
         );
         return "Unknown";
@@ -437,19 +421,9 @@ class CropService extends BaseService {
       const { PlantingDate } = await findCropDetailsFromRepo(plan.CropID);
 
       let defoliationSequenceDescription = null;
-
-      if (
-        plan.SwardTypeID != null &&
-        plan.PotentialCut != null &&
-        plan.DefoliationSequenceID != null
-      ) {
+	 if (plan.DefoliationSequenceID != null) {
         defoliationSequenceDescription =
-          await findDefoliationSequenceDescription(
-            plan.SwardManagementID,
-            plan.PotentialCut,
-            plan.DefoliationSequenceID,
-            plan.Establishment
-          );
+          await findDefoliationSequenceDescription(plan.DefoliationSequenceID);
       }
 
       cropDetails.push({
