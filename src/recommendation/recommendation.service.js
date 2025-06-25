@@ -374,38 +374,22 @@ class RecommendationService extends BaseService {
         },
       });
       const groupedObj = {};
-       const findDefoliationSequenceDescription = async (
-         swardManagementId,
-         PotentialCut,
-         DefoliationSequenceID,
-         establishment
+         const findDefoliationSequenceDescription = async (
+         DefoliationSequenceID
        ) => {
          try {
-           let newSward = establishment == 0 || null ? false : true;
            let defoliationSequenceDescription = null;
-           let defoliationSequenceList = await this.rB209GrassService.getData(
-             `Grass/DefoliationSequence/${swardManagementId}/${PotentialCut}/${newSward}`
-           );
-           console.log("defoliationSequenceList", defoliationSequenceList.data);
-           if (
-             defoliationSequenceList.data &&
-             Array.isArray(defoliationSequenceList.data.list) &&
-             defoliationSequenceList.data.list.length > 0
-           ) {
-             const matchingDefoliation = defoliationSequenceList.data.list.find(
-               (x) => x.defoliationSequenceId == DefoliationSequenceID
-             );
-             if (matchingDefoliation != null) {
-               defoliationSequenceDescription = matchingDefoliation
-                 ? matchingDefoliation.defoliationSequenceDescription
-                 : null;
-             }
-           }
+           let defoliationSequence = await this.rB209GrassService.getData(
+          `Grass/DefoliationSequence/${DefoliationSequenceID}`
+        );
 
+defoliationSequenceDescription = defoliationSequence
+               ? defoliationSequence.defoliationSequenceDescription
+               : null;
            return defoliationSequenceDescription;
          } catch (error) {
            console.error(
-             `Error fetching Defoliation Sequence for swardTypeId: ${SwardTypeID}&numberOfCuts=${PotentialCut}`,
+             `Error fetching Defoliation Sequence by id ${DefoliationSequenceID}`,
              error
            );
            return "Unknown";
@@ -467,16 +451,11 @@ class RecommendationService extends BaseService {
               r.Crop.CropTypeID == 140 && r.Crop.SwardTypeID != null
                 ? await findSwardType(r.Crop.SwardTypeID)
                 : null,
-            DefoliationSequenceName:
+              DefoliationSequenceName:
               r.Crop.CropTypeID == 140 &&
-              r.Crop.SwardTypeID != null &&
-              r.Crop.PotentialCut != null &&
               r.Crop.DefoliationSequenceID != null
                 ? await findDefoliationSequenceDescription(
-                    r.Crop.SwardManagementID,
-                    r.Crop.PotentialCut,
-                    r.Crop.DefoliationSequenceID,
-                    r.Crop.Establishment
+                    r.Crop.DefoliationSequenceID
                   )
                 : null,
           },
