@@ -1562,12 +1562,13 @@ class CropService extends BaseService {
       );
       nutrientRecommendationnReqBody.field.previousCropping = {
         previousGrassId: grassHistoryID ? null : previousGrassId,
-        previousCropGroupId: grassHistoryID
-          ? null
-          : cropType?.cropGroupId !== undefined &&
-            cropType?.cropGroupId !== null
-          ? cropType?.cropGroupId
-          : null,
+        previousCropGroupId:
+          previousCrop.CropTypeID === CropTypeMapper.GRASS
+            ? null
+            : cropType?.cropGroupId !== undefined &&
+              cropType?.cropGroupId !== null
+            ? cropType?.cropGroupId
+            : null,
         // previousCropTypeId:
         //   previousCrop?.CropTypeID == 140
         //     ? null
@@ -1575,12 +1576,13 @@ class CropService extends BaseService {
         //       previousCrop?.CropTypeID !== null
         //     ? previousCrop?.CropTypeID
         //     : null,
-        previousCropTypeId: grassHistoryID
-          ? null
-          : previousCrop?.CropTypeID !== undefined &&
-            previousCrop?.CropTypeID !== null
-          ? previousCrop?.CropTypeID
-          : null,
+        previousCropTypeId:
+          previousCrop.CropTypeID === CropTypeMapper.GRASS
+            ? null
+            : previousCrop?.CropTypeID !== undefined &&
+              previousCrop?.CropTypeID !== null
+            ? previousCrop?.CropTypeID
+            : null,
         grassHistoryId: previousGrassId ? null : grassHistoryID,
         snsId: null,
         smnDepth: null,
