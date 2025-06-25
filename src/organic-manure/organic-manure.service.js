@@ -47,6 +47,9 @@ const { UpdateRecommendationChanges } = require("../shared/updateRecommendations
 const { GrassGrowthService } = require("../grass-growth-plan/grass-growth-plan.service");
 const { ExcessRainfallsEntity } = require("../db/entity/excess-rainfalls.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
+const { CalculateMannerOutputService } = require("../shared/calculate-manner-output-service");
+const { FieldTypeMapper } = require("../constants/field-type-mapper");
+const { CalculateGrassHistoryAndPreviousGrass } = require("../shared/calculate-previous-grass-id.service");
 
 class OrganicManureService extends BaseService {
   constructor() {
@@ -64,6 +67,8 @@ class OrganicManureService extends BaseService {
     this.rB209ArableService = new RB209ArableService();
     this.rB209RecommendationService = new RB209RecommendationService();
     this.RB209SoilService = new RB209SoilService();
+    this.CalculateMannerOutput = new CalculateMannerOutputService();
+    this.calculateGrassId = new CalculateGrassHistoryAndPreviousGrass();
     this.recommendationCommentRepository = AppDataSource.getRepository(
       RecommendationCommentEntity
     );
@@ -341,6 +346,8 @@ class OrganicManureService extends BaseService {
     }
   }
 
+  
+
   async buildGrassObject(crop, field, grassGrowthClass, transactionalManager) {
     // Case: Only one crop with CropOrder 1 and CropTypeID 140
     if (crop.CropOrder === 1 && crop.CropTypeID === 140) {
@@ -417,6 +424,56 @@ class OrganicManureService extends BaseService {
       }
     }
   }
+  async determineFieldType(crop, transactionalManager) {
+    let crops;
+
+    // Check if it's a single crop or already an array of crops
+    if (Array.isArray(crop)) {
+      crops = crop;
+    } else {
+      // Fetch all crops for the same FieldID and Year
+      crops = await transactionalManager.find(CropEntity, {
+        where: { FieldID: crop.FieldID, Year: crop.Year },
+      });
+
+      // If only one crop found in DB, use it
+      if (crops.length === 0 && crop?.CropTypeID) {
+        crops = [crop]; // fallback to single crop passed
+      }
+    }
+
+    if (crops.length === 1) {
+      const cropTypeID = crops[0].CropTypeID;
+      if (cropTypeID === CropTypeMapper.GRASS) {
+        return FieldTypeMapper.GRASS; // Grass
+      } else if (
+        cropTypeID !== CropTypeMapper.GRASS &&
+        cropTypeID !== CropTypeMapper.OTHER
+      ) {
+        return FieldTypeMapper.ARABLE;
+      }
+    }
+
+    if (crops.length === 2) {
+      const cropTypeIDs = crops.map((c) => c.CropTypeID);
+      const isBothGrass = cropTypeIDs.every(
+        (id) => id === CropTypeMapper.GRASS
+      );
+      const isOneGrass = cropTypeIDs.includes(CropTypeMapper.GRASS);
+      const isOtherValid = cropTypeIDs.some(
+        (id) => id !== CropTypeMapper.GRASS && id !== CropTypeMapper.GRASS
+      );
+      const isBothArable = cropTypeIDs.every(
+        (id) => id !== CropTypeMapper.GRASS
+      );
+
+      if (isBothGrass) return 2; // Both crops are grass
+      if (isOneGrass && isOtherValid) return 3; // Mixed
+      if (isBothArable) return 1; // Both are arable/horticulture
+    }
+
+    return FieldTypeMapper.ARABLE; // Default fallback
+  }
 
   async buildNutrientRecommendationReqBody(
     field,
@@ -471,6 +528,22 @@ class OrganicManureService extends BaseService {
       farm.ID,
       crop.Year
     );
+    let grassHistoryID = null;
+    let previousGrassId = null;
+    if (crop.CropTypeID == CropTypeMapper.GRASS) {
+      grassHistoryID = await this.calculateGrassId.getGrassHistoryID(
+        field,
+        crop,
+        transactionalManager,
+        crop.Year
+      );
+    } else {
+      previousGrassId = await this.calculateGrassId.getPreviousGrassID(
+        crop,
+        transactionalManager,
+        crop.Year
+      );
+    }
 
     const arableBody = await this.buildArableBody(
       dataMultipleCrops,
@@ -487,13 +560,18 @@ class OrganicManureService extends BaseService {
       crop,
       transactionalManager
     );
+    const fieldType = await this.determineFieldType(crop, transactionalManager);
     const nutrientRecommendationnReqBody = {
       field: {
-        fieldType: crop.FieldType,
+        fieldType: fieldType,
         multipleCrops: dataMultipleCrops.length > 1 ? true : false,
-        arable: crop.FieldType == 2 ? [] : arableBody,
+        arable: crop.FieldType == FieldTypeMapper.GRASS ? [] : arableBody,
         grassland: {},
-        grass: crop.FieldType == 3 || crop.FieldType == 2 ? grassObject : {},
+        grass:
+          fieldType == FieldTypeMapper.BOTH ||
+          crop.FieldType == FieldTypeMapper.GRASS
+            ? grassObject
+            : {},
         soil: {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
@@ -698,22 +776,22 @@ class OrganicManureService extends BaseService {
         (cropType) => cropType?.cropTypeId === previousCrop?.CropTypeID
       );
       nutrientRecommendationnReqBody.field.previousCropping = {
-        previousGrassId: previousCrop?.CropTypeID == 140 ? null : 1,
+        previousGrassId: grassHistoryID ? null : previousGrassId,
         previousCropGroupId:
-          previousCrop?.CropTypeID == 140
+          previousCrop?.CropTypeID == CropTypeMapper.GRASS
             ? null
             : cropType?.cropGroupId !== undefined &&
               cropType?.cropGroupId !== null
             ? cropType?.cropGroupId
             : null,
         previousCropTypeId:
-          previousCrop?.CropTypeID == 140
+          previousCrop?.CropTypeID == CropTypeMapper.GRASS
             ? null
             : previousCrop.CropTypeID !== undefined &&
               previousCrop.CropTypeID !== null
             ? previousCrop.CropTypeID
             : null,
-        grassHistoryId: null,
+        grassHistoryId: previousGrassId ? null : grassHistoryID,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -723,7 +801,8 @@ class OrganicManureService extends BaseService {
       nutrientRecommendationnReqBody.field.previousCropping = {
         previousCropGroupId: null,
         previousCropTypeId: null,
-        previousGrassId: previousCrop?.CropTypeID == 140 ? null : 1,
+        previousGrassId:
+          previousCrop?.CropTypeID == CropTypeMapper.GRASS ? null : 1,
         grassHistoryId: null,
         snsId: null,
         smnDepth: null,
@@ -1617,16 +1696,15 @@ class OrganicManureService extends BaseService {
         filteredData.calculations,
         defoliationId
       );
-      let relevantMannerOutput=null;
-      if(mannerOutputs!=null){
-
+      let relevantMannerOutput = null;
+      if (mannerOutputs != null) {
         relevantMannerOutput =
           mannerOutputs.find(
             (m) =>
               m.defoliationId === defoliationId && m.id === cropData.CropOrder
-          ) ?? null; 
+          ) ?? null;
       }
-            
+
       // Initialize crop recommendation object for this defoliation group
       const cropRecData = {
         CropN: null,
@@ -1669,12 +1747,18 @@ class OrganicManureService extends BaseService {
             break;
           case 1:
             cropRecData.CropP2O5 = calc.recommendation;
-            cropRecData.ManureP2O5 =relevantMannerOutput != null? relevantMannerOutput?.availableP:null;
+            cropRecData.ManureP2O5 =
+              relevantMannerOutput != null
+                ? relevantMannerOutput?.availableP
+                : null;
             cropRecData.FertilizerP2O5 = calc.cropNeed;
             break;
           case 2:
             cropRecData.CropK2O = calc.recommendation;
-            cropRecData.ManureK2O =relevantMannerOutput != null?relevantMannerOutput?.availableK:null;
+            cropRecData.ManureK2O =
+              relevantMannerOutput != null
+                ? relevantMannerOutput?.availableK
+                : null;
             cropRecData.FertilizerK2O = calc.cropNeed;
             break;
           case 3:
@@ -1688,7 +1772,9 @@ class OrganicManureService extends BaseService {
           case 5:
             cropRecData.CropSO3 = calc.recommendation;
             cropRecData.ManureSO3 =
-              relevantMannerOutput != null?relevantMannerOutput?.availableS:null;
+              relevantMannerOutput != null
+                ? relevantMannerOutput?.availableS
+                : null;
             cropRecData.FertilizerSO3 = calc.cropNeed;
             break;
           case 6:
@@ -1750,111 +1836,111 @@ class OrganicManureService extends BaseService {
     return results;
   }
 
-   async saveMultipleRecommendation(
-      Recommendations,
-      savedCrop,
-      cropSaveData,
-      transactionalManager,
-      nutrientRecommendationsData,
-      userId
-    ) {
-      const RecommendationComments = [];
-  
-      // Separate advice notes by sequenceId for crop (sequenceId = croporder)
-      const cropNotes = nutrientRecommendationsData.adviceNotes?.filter(
-        (note) => note.sequenceId === savedCrop.CropOrder
+  async saveMultipleRecommendation(
+    Recommendations,
+    savedCrop,
+    cropSaveData,
+    transactionalManager,
+    nutrientRecommendationsData,
+    userId
+  ) {
+    const RecommendationComments = [];
+
+    // Separate advice notes by sequenceId for crop (sequenceId = croporder)
+    const cropNotes = nutrientRecommendationsData.adviceNotes?.filter(
+      (note) => note.sequenceId === savedCrop.CropOrder
+    );
+
+    // Helper function to group notes by nutrientId and concatenate them
+    const groupNotesByNutrientId = (notes) => {
+      return notes.reduce((acc, adviceNote) => {
+        const nutrientId = adviceNote.nutrientId;
+        if (!acc[nutrientId]) {
+          acc[nutrientId] = [];
+        }
+        acc[nutrientId].push(adviceNote.note); // Group notes by nutrientId
+        return acc;
+      }, {});
+    };
+
+    const cropNotesByNutrientId = groupNotesByNutrientId(cropNotes);
+    //const secondCropNotesByNutrientId = groupNotesByNutrientId(secondCropNotes);
+
+    // Track nutrient IDs that are being processed
+    const nutrientIdsInData = [];
+
+    // Function to handle saving comments (with updates or creations)
+    const saveComments = async (notesByNutrientId, savedCrop) => {
+      const existingComments = await transactionalManager.find(
+        RecommendationCommentEntity,
+        { where: { RecommendationID: savedCrop.ID } }
       );
-  
-      // Helper function to group notes by nutrientId and concatenate them
-      const groupNotesByNutrientId = (notes) => {
-        return notes.reduce((acc, adviceNote) => {
-          const nutrientId = adviceNote.nutrientId;
-          if (!acc[nutrientId]) {
-            acc[nutrientId] = [];
-          }
-          acc[nutrientId].push(adviceNote.note); // Group notes by nutrientId
-          return acc;
-        }, {});
-      };
-  
-      const cropNotesByNutrientId = groupNotesByNutrientId(cropNotes);
-      //const secondCropNotesByNutrientId = groupNotesByNutrientId(secondCropNotes);
-  
-      // Track nutrient IDs that are being processed
-      const nutrientIdsInData = [];
-  
-      // Function to handle saving comments (with updates or creations)
-      const saveComments = async (notesByNutrientId, savedCrop) => {
-        const existingComments = await transactionalManager.find(
-          RecommendationCommentEntity,
-          { where: { RecommendationID: savedCrop.ID } }
+
+      for (const nutrientId in notesByNutrientId) {
+        const concatenatedNote = notesByNutrientId[nutrientId].join(" <br/>"); // Concatenate notes for the same nutrientId
+
+        // Add nutrientId to the processed list
+        nutrientIdsInData.push(parseInt(nutrientId));
+
+        // Check if the comment already exists for this nutrientId in the database
+        const existingComment = existingComments.find(
+          (comment) => comment.Nutrient === parseInt(nutrientId)
         );
-  
-        for (const nutrientId in notesByNutrientId) {
-          const concatenatedNote = notesByNutrientId[nutrientId].join(" <br/>"); // Concatenate notes for the same nutrientId
-  
-          // Add nutrientId to the processed list
-          nutrientIdsInData.push(parseInt(nutrientId));
-  
-          // Check if the comment already exists for this nutrientId in the database
-          const existingComment = existingComments.find(
-            (comment) => comment.Nutrient === parseInt(nutrientId)
-          );
-  
-          if (existingComment) {
-            // Update existing comment if found
-            existingComment.Comment = concatenatedNote;
-            existingComment.ModifiedOn = new Date();
-            existingComment.ModifiedByID = userId;
-  
-            const updatedComment = await transactionalManager.save(
-              RecommendationCommentEntity,
-              existingComment
-            );
-            RecommendationComments.push(updatedComment);
-          } else {
-            // Create a new comment if not found
-            const newComment = this.recommendationCommentRepository.create({
-              Nutrient: parseInt(nutrientId),
-              Comment: concatenatedNote,
-              RecommendationID: savedCrop.ID, // Use the correct recommendation ID from the passed crop data
-              CreatedOn: new Date(),
-              CreatedByID: userId,
-            });
-  
-            const savedComment = await transactionalManager.save(
-              RecommendationCommentEntity,
-              newComment
-            );
-            RecommendationComments.push(savedComment);
-          }
-        }
-  
-        // Remove comments from the database if the nutrientId is not in the new data
-        const commentsToDelete = existingComments.filter(
-          (comment) => !nutrientIdsInData.includes(comment.Nutrient)
-        );
-  
-        if (commentsToDelete.length > 0) {
-          await transactionalManager.remove(
+
+        if (existingComment) {
+          // Update existing comment if found
+          existingComment.Comment = concatenatedNote;
+          existingComment.ModifiedOn = new Date();
+          existingComment.ModifiedByID = userId;
+
+          const updatedComment = await transactionalManager.save(
             RecommendationCommentEntity,
-            commentsToDelete
+            existingComment
           );
+          RecommendationComments.push(updatedComment);
+        } else {
+          // Create a new comment if not found
+          const newComment = this.recommendationCommentRepository.create({
+            Nutrient: parseInt(nutrientId),
+            Comment: concatenatedNote,
+            RecommendationID: savedCrop.ID, // Use the correct recommendation ID from the passed crop data
+            CreatedOn: new Date(),
+            CreatedByID: userId,
+          });
+
+          const savedComment = await transactionalManager.save(
+            RecommendationCommentEntity,
+            newComment
+          );
+          RecommendationComments.push(savedComment);
         }
-        return RecommendationComments;
-      };
-  
-      // Handle notes for the crop
-      await saveComments(cropNotesByNutrientId, cropSaveData);
-  
-      // Push the first crop recommendation and its comments to the final result array
-      Recommendations.push({
-        Recommendation: cropSaveData, // First crop recommendation
-        RecommendationComments,
-      });
-  
-      return Recommendations;
-    }
+      }
+
+      // Remove comments from the database if the nutrientId is not in the new data
+      const commentsToDelete = existingComments.filter(
+        (comment) => !nutrientIdsInData.includes(comment.Nutrient)
+      );
+
+      if (commentsToDelete.length > 0) {
+        await transactionalManager.remove(
+          RecommendationCommentEntity,
+          commentsToDelete
+        );
+      }
+      return RecommendationComments;
+    };
+
+    // Handle notes for the crop
+    await saveComments(cropNotesByNutrientId, cropSaveData);
+
+    // Push the first crop recommendation and its comments to the final result array
+    Recommendations.push({
+      Recommendation: cropSaveData, // First crop recommendation
+      RecommendationComments,
+    });
+
+    return Recommendations;
+  }
 
   async createOrganicManuresWithFarmManureType(request, body, userId) {
     return await AppDataSource.transaction(async (transactionalManager) => {
@@ -2419,8 +2505,10 @@ class OrganicManureService extends BaseService {
           );
           organicManures.push(savedOrganicManure);
           let arableNotes = nutrientRecommendationsData.adviceNotes;
-   
-          let savedRecommendation, savedRecommendationComment,Recommendations=[];
+
+          let savedRecommendation,
+            savedRecommendationComment,
+            Recommendations = [];
           for (const cropData of dataMultipleCrops) {
             savedRecommendation = await this.buildCropRecommendationData(
               cropData,
@@ -2447,7 +2535,7 @@ class OrganicManureService extends BaseService {
             // e.g., push to an array
             // testResults.push(testSavedData);
           }
-          
+
           // const savedData = await this.saveRecommendationForMultipleCrops(
           //   transactionalManager,
           //   nutrientRecommendationsData,
@@ -2968,6 +3056,116 @@ class OrganicManureService extends BaseService {
       }
     });
   }
+  async buildManureApplicationsForUpdate(
+    managementPeriodID,
+    organicManureData,
+    mulOrganicManuresData,
+    request
+  ) {
+    // Initialize an empty array for storing results
+    const manureApplications = [];
+
+    // Loop through the mulOrganicManuresData (array of objects)
+    for (const manure of mulOrganicManuresData) {
+      // Fetch manure type data for each manure by its ManureTypeID
+      const manureTypeData = await this.getManureTypeData(
+        manure.ManureTypeID,
+        request
+      );
+
+      // Push each manure application details into the array
+      manureApplications.push({
+        manureDetails: {
+          manureID: manure.ManureTypeID,
+          name: manureTypeData.data.name,
+          isLiquid: manureTypeData.data.isLiquid,
+          dryMatter: manure.DryMatterPercent,
+          totalN: manure.N,
+          nH4N: manure.NH4N,
+          uric: manure.UricAcid,
+          nO3N: manure.NO3N,
+          p2O5: manure.P2O5,
+          sO3: manure.SO3,
+          k2O: manure.K2O,
+          mgO: manure.MgO,
+        },
+        applicationDate: new Date(manure.ApplicationDate)
+          .toISOString()
+          .split("T")[0],
+        applicationRate: {
+          value: manure.ApplicationRate,
+          unit: "kg/hectare",
+        },
+        applicationMethodID: manure.ApplicationMethodID,
+        incorporationMethodID: manure.IncorporationMethodID,
+        incorporationDelayID: manure.IncorporationDelayID,
+        autumnCropNitrogenUptake: {
+          value: manure.AutumnCropNitrogenUptake,
+          unit: "string",
+        },
+        endOfDrainageDate: new Date(manure.EndOfDrain)
+          .toISOString()
+          .split("T")[0],
+        rainfallPostApplication: manure.Rainfall,
+        cropNUptake: manure.AutumnCropNitrogenUptake,
+        windspeedID: manure.WindspeedID,
+        rainTypeID: manure.RainfallWithinSixHoursID,
+        topsoilMoistureID: manure.MoistureID,
+      });
+    }
+    if (organicManureData.ManagementPeriodID == managementPeriodID) {
+      if (Object.keys(organicManureData).length !== 0) {
+        // Handle the single organicManureData object and push its values into the array
+        // Fetch manure type data for the single organicManureData object
+        const manureTypeData = await this.getManureTypeData(
+          organicManureData.ManureTypeID,
+          request
+        );
+
+        manureApplications.push({
+          manureDetails: {
+            manureID: organicManureData.ManureTypeID,
+            name: manureTypeData.data.name,
+            isLiquid: manureTypeData.data.isLiquid,
+            dryMatter: organicManureData.DryMatterPercent,
+            totalN: organicManureData.N,
+            nH4N: organicManureData.NH4N,
+            uric: organicManureData.UricAcid,
+            nO3N: organicManureData.NO3N,
+            p2O5: organicManureData.P2O5,
+            sO3: organicManureData.SO3,
+            k2O: organicManureData.K2O,
+            mgO: organicManureData.MgO,
+          },
+          applicationDate: new Date(organicManureData.ApplicationDate)
+            .toISOString()
+            .split("T")[0],
+          applicationRate: {
+            value: organicManureData.ApplicationRate,
+            unit: "kg/hectare",
+          },
+          applicationMethodID: organicManureData.ApplicationMethodID,
+          incorporationMethodID: organicManureData.IncorporationMethodID,
+          incorporationDelayID: organicManureData.IncorporationDelayID,
+          autumnCropNitrogenUptake: {
+            value: organicManureData.AutumnCropNitrogenUptake,
+            unit: "string",
+          },
+          endOfDrainageDate: new Date(organicManureData.EndOfDrain)
+            .toISOString()
+            .split("T")[0],
+          rainfallPostApplication: organicManureData.Rainfall,
+          cropNUptake: organicManureData.AutumnCropNitrogenUptake,
+          windspeedID: organicManureData.WindspeedID,
+          rainTypeID: organicManureData.RainfallWithinSixHoursID,
+          topsoilMoistureID: organicManureData.MoistureID,
+        });
+      }
+    }
+
+    // Return the manure applications array
+    return manureApplications;
+  }
 
   async updateOrganicManure(updatedOrganicManureData, userId, request) {
     return await AppDataSource.transaction(async (transactionalManager) => {
@@ -2989,7 +3187,45 @@ class OrganicManureService extends BaseService {
           DefoliationName,
           ...updatedData
         } = OrganicManure;
+        // 🔄 Update recommendations
+        const managementPeriod = await transactionalManager.findOne(
+          ManagementPeriodEntity,
+          {
+            where: { ID: OrganicManure.ManagementPeriodID },
+          }
+        );
 
+        const crop = await transactionalManager.findOne(CropEntity, {
+          where: { ID: managementPeriod?.CropID },
+        });
+
+        const fieldData = await transactionalManager.findOne(FieldEntity, {
+          where: { ID: crop?.FieldID },
+        });
+
+        const farmData = await transactionalManager.findOne(FarmEntity, {
+          where: { ID: fieldData?.FarmID },
+        });
+        const cropTypeLinkingData = await transactionalManager.findOne(
+          CropTypeLinkingEntity,
+          {
+            where: {
+              CropTypeID: crop.CropTypeID,
+            },
+          }
+        );
+
+        const soilTypeTextureData = await transactionalManager.findOne(
+          SoilTypeSoilTextureEntity,
+          {
+            where: {
+              SoilTypeID: fieldData.SoilTypeID,
+            },
+          }
+        );
+        let manureBody = null,
+          manureRequestBody = null,
+          mannerOutput = null;
         // Fetch existing OrganicManure from DB
         const existingOrganicManure = await transactionalManager.findOne(
           OrganicManureEntity,
@@ -3000,21 +3236,72 @@ class OrganicManureService extends BaseService {
           console.log(`Organic Manure with ID ${ID} not found`);
           continue;
         }
+        const mulOrganicManuresData = await transactionalManager.find(
+          OrganicManureEntity,
+          {
+            where: {
+              ManagementPeriodID: OrganicManure.ManagementPeriodID,
+              ID: Not(OrganicManure.ID),
+            },
+          }
+        );
 
+        if (mulOrganicManuresData) {
+          manureBody = await this.buildManureApplicationsForUpdate(
+            OrganicManure.ManagementPeriodID,
+            OrganicManure,
+            mulOrganicManuresData,
+            request
+          );
+
+          if (manureBody) {
+            manureRequestBody = await this.buildMannerOutputReq(
+              farmData,
+              fieldData,
+              cropTypeLinkingData,
+              OrganicManure,
+              manureBody,
+              soilTypeTextureData
+            );
+          }
+
+          if (manureRequestBody) {
+            mannerOutput = await this.MannerCalculateNutrientsService.postData(
+              "/calculate-nutrients",
+              manureRequestBody,
+              request
+            );
+          }
+        }
         // Check if ManagementPeriodID matches
         const isManagementPeriodSame =
           existingOrganicManure.ManagementPeriodID ===
           OrganicManure.ManagementPeriodID;
-
+        let dataToUpdate;
         // Merge the updated data, include new ManagementPeriodID if changed
-        const dataToUpdate = {
-          ...updatedData,
-          ModifiedByID: userId,
-          ModifiedOn: new Date(),
-          ...(isManagementPeriodSame
-            ? {}
-            : { ManagementPeriodID: OrganicManure.ManagementPeriodID }),
-        };
+        if (mannerOutput) {
+          dataToUpdate = {
+            ...updatedData,
+            AvailableN: mannerOutput.data.currentCropAvailableN,
+            AvailableSO3: mannerOutput.data.cropAvailableSO3,
+            AvailableP2O5: mannerOutput.data.cropAvailableP2O5,
+            AvailableK2O: mannerOutput.data.cropAvailableK2O,
+            ModifiedByID: userId,
+            ModifiedOn: new Date(),
+            ...(isManagementPeriodSame
+              ? {}
+              : { ManagementPeriodID: OrganicManure.ManagementPeriodID }),
+          };
+        } else {
+          dataToUpdate = {
+            ...updatedData,
+            ModifiedByID: userId,
+            ModifiedOn: new Date(),
+            ...(isManagementPeriodSame
+              ? {}
+              : { ManagementPeriodID: OrganicManure.ManagementPeriodID }),
+          };
+        }
 
         const result = await transactionalManager.update(
           OrganicManureEntity,
@@ -3086,15 +3373,6 @@ class OrganicManureService extends BaseService {
             );
           }
         }
-
-        // 🔄 Update recommendations
-        const managementPeriod = await this.managementPeriodRepository.findOne({
-          where: { ID: OrganicManure.ManagementPeriodID },
-        });
-
-        const crop = await this.cropRepository.findOne({
-          where: { ID: managementPeriod.CropID },
-        });
 
         await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
           crop.FieldID,

@@ -185,7 +185,7 @@ class CalculateGrassHistoryAndPreviousGrass {
     if (!crop) {
       crop = await transactionalManager.findOne(CropEntity, {
         where: { FieldID: fieldId, Year: targetYear, CropOrder: 1 },
-      });
+      }); 
     }
     return crop;
   }
@@ -260,7 +260,7 @@ class CalculateGrassHistoryAndPreviousGrass {
       return 1;
     }
 
-    // Step 3: LayDuration
+    // Step 3: LayDuration//need to check 5 yrs
     let layCount = 0;
     [FirstHYFieldType, SecondHYFieldType, ThirdHYFieldType].forEach((c) => {
       if (c === FieldTypeMapper.GRASS) layCount++;
@@ -269,14 +269,21 @@ class CalculateGrassHistoryAndPreviousGrass {
 
     // Step 4: IsGrazedOnly
     const SwardManagementID = cropThisYear?.SwardManagementID;
-    const IsGrazedOnly = [
-      SwardManagementMapper.GRAZEDONLY,
-      SwardManagementMapper.GRAZINGANDSILAGE,
-      SwardManagementMapper.GRAZINGANDHAY,
-    ].includes(SwardManagementID)
+    const IsGrazedOnly = [SwardManagementMapper.GRAZEDONLY].includes(
+      SwardManagementID
+    )
       ? 1
       : 0;
-
+    // const IscutOnly = [SwardManagementMapper.GRAZEDONLY].includes(
+    //   SwardManagementID
+    // )
+    //   ? 1
+    //   : 0;
+    // const IscutAndGrazing = [SwardManagementMapper.GRAZEDONLY].includes(
+    //   SwardManagementID
+    // )
+    //   ? 1
+    //   : 0;
     // Step 5: IsHighClover
     const SwardTypeID = cropThisYear?.SwardTypeID;
     const IsHighClover = [

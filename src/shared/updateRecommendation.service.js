@@ -38,6 +38,7 @@ const { GrassGrowthService } = require("../grass-growth-plan/grass-growth-plan.s
 const { CalculateGrassHistoryAndPreviousGrass } = require("./calculate-previous-grass-id.service");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
 const { CropOrderMapper } = require("../constants/crop-order-mapper");
+const { FieldTypeMapper } = require("../constants/field-type-mapper");
 
 class UpdateRecommendation {
   constructor() {
@@ -87,7 +88,6 @@ class UpdateRecommendation {
     );
     this.grassGrowthClass = new GrassGrowthService();
     this.calculateGrassId = new CalculateGrassHistoryAndPreviousGrass();
-
   }
 
   async getYearsGreaterThanGivenYear(fieldID, year) {
@@ -241,7 +241,56 @@ class UpdateRecommendation {
       }
     });
   }
+  async determineFieldType(crop, transactionalManager) {
+    let crops;
 
+    // Check if it's a single crop or already an array of crops
+    if (Array.isArray(crop)) {
+      crops = crop;
+    } else {
+      // Fetch all crops for the same FieldID and Year
+      crops = await transactionalManager.find(CropEntity, {
+        where: { FieldID: crop.FieldID, Year: crop.Year },
+      });
+
+      // If only one crop found in DB, use it
+      if (crops.length === 0 && crop?.CropTypeID) {
+        crops = [crop]; // fallback to single crop passed
+      }
+    }
+
+    if (crops.length === 1) {
+      const cropTypeID = crops[0].CropTypeID;
+      if (cropTypeID === CropTypeMapper.GRASS) {
+        return 2; // Grass
+      } else if (
+        cropTypeID !== CropTypeMapper.GRASS &&
+        cropTypeID !== CropTypeMapper.OTHER
+      ) {
+        return 1; // Arable or Horticulture
+      }
+    }
+
+    if (crops.length === 2) {
+      const cropTypeIDs = crops.map((c) => c.CropTypeID);
+      const isBothGrass = cropTypeIDs.every(
+        (id) => id === CropTypeMapper.GRASS
+      );
+      const isOneGrass = cropTypeIDs.includes(CropTypeMapper.GRASS);
+      const isOtherValid = cropTypeIDs.some(
+        (id) => id !== CropTypeMapper.GRASS && id !== CropTypeMapper.GRASS
+      );
+      const isBothArable = cropTypeIDs.every(
+        (id) => id !== CropTypeMapper.GRASS
+      );
+
+      if (isBothGrass) return 2; // Both crops are grass
+      if (isOneGrass && isOtherValid) return 3; // Mixed
+      if (isBothArable) return 1; // Both are arable/horticulture
+    }
+
+    return 1; // Default fallback
+  }
   async saveRecommendationWithManure(
     organicManures,
     organicManureAllData,
@@ -481,7 +530,10 @@ class UpdateRecommendation {
         fieldData.ID,
         pKBalanceAllData
       );
-      if (cropData.CropTypeID === CropTypeMapper.OTHER || cropData.CropInfo1 === null) {
+      if (
+        cropData.CropTypeID === CropTypeMapper.OTHER ||
+        cropData.CropInfo1 === null
+      ) {
         const otherRecommendations = await this.saveRecommendationForOtherCrops(
           transactionalManager,
           organicManure,
@@ -1988,7 +2040,9 @@ class UpdateRecommendation {
     const firstCrop = dataMultipleCrops?.find(
       (crop) => crop.CropOrder === CropOrderMapper.FIRSTCROP
     );
-    const secondCrop = dataMultipleCrops?.find((crop) => crop.CropOrder === CropOrderMapper.SECONDCROP);
+    const secondCrop = dataMultipleCrops?.find(
+      (crop) => crop.CropOrder === CropOrderMapper.SECONDCROP
+    );
 
     const recommendationMap = allRecommendations.reduce(
       (acc, recommendation) => {
@@ -2340,6 +2394,8 @@ class UpdateRecommendation {
       farm.ID,
       crop.Year
     );
+    const fieldType = await this.determineFieldType(crop, transactionalManager);
+
     let grassHistoryID = null;
     let previousGrassId = null;
     if (crop.CropTypeID == CropTypeMapper.GRASS) {
@@ -2359,11 +2415,11 @@ class UpdateRecommendation {
 
     const nutrientRecommendationnReqBody = {
       field: {
-        fieldType: crop.FieldType,
+        fieldType: fieldType,
         multipleCrops: dataMultipleCrops.length > 1 ? true : false,
-        arable: crop.FieldType == 2 ? [] : arableBody,
+        arable: fieldType == FieldTypeMapper.GRASS ? [] : arableBody,
         grassland: {},
-        grass: crop.FieldType == 3 || crop.FieldType == 2 ? grassObject : {},
+        grass: fieldType == FieldTypeMapper.BOTH || crop.FieldType == FieldTypeMapper.GRASS ? grassObject : {},
         soil: {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
@@ -2530,8 +2586,7 @@ class UpdateRecommendation {
         (cropType) => cropType.cropTypeId === previousCrop.CropTypeID
       );
       nutrientRecommendationnReqBody.field.previousCropping = {
-        previousGrassId:
-          previousCrop?.CropTypeID == CropTypeMapper.GRASS ? null : 1,
+        previousGrassId: grassHistoryID ? null : previousGrassId,
         previousCropGroupId:
           previousCrop?.CropTypeID == CropTypeMapper.GRASS
             ? null
@@ -2546,7 +2601,7 @@ class UpdateRecommendation {
               previousCrop.CropTypeID !== null
             ? previousCrop.CropTypeID
             : null,
-        grassHistoryId: null,
+        grassHistoryId: previousGrassId ? null:grassHistoryID,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -2580,7 +2635,9 @@ class UpdateRecommendation {
 
     // If more than one crop is found, filter for CropOrder = 2
     if (previousCrops.length > 1) {
-      return previousCrops.find((crop) => crop.CropOrder === CropOrderMapper.SECONDCROP);
+      return previousCrops.find(
+        (crop) => crop.CropOrder === CropOrderMapper.SECONDCROP
+      );
     }
 
     // Otherwise, return the first crop (or null if none are found)
@@ -2726,6 +2783,8 @@ class UpdateRecommendation {
     );
     let grassHistoryID = null;
     let previousGrassId = null;
+    const fieldType = await this.determineFieldType(crop, transactionalManager);
+
     if (crop.CropTypeID == CropTypeMapper.GRASS) {
       grassHistoryID = await this.calculateGrassId.getGrassHistoryID(
         field,
@@ -2742,11 +2801,11 @@ class UpdateRecommendation {
     }
     const nutrientRecommendationnReqBody = {
       field: {
-        fieldType: crop.FieldType,
+        fieldType: fieldType,
         multipleCrops: dataMultipleCrops.length > 1 ? true : false,
-        arable: crop.FieldType == 2 ? [] : arableBody,
+        arable: fieldType == FieldTypeMapper.GRASS ? [] : arableBody,
         grassland: {},
-        grass: crop.FieldType == 3 || crop.FieldType == 2 ? grassObject : {},
+        grass: fieldType == FieldTypeMapper.BOTH || fieldType == FieldTypeMapper.GRASS ? grassObject : {},
         soil: {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
@@ -2865,7 +2924,7 @@ class UpdateRecommendation {
         (cropType) => cropType?.cropTypeId === previousCrop?.CropTypeID
       );
       nutrientRecommendationnReqBody.field.previousCropping = {
-        previousGrassId: previousCrop?.CropTypeID == CropTypeMapper.GRASS ? null : 1,
+        previousGrassId:grassHistoryID ? null : previousGrassId,
         previousCropGroupId:
           previousCrop?.CropTypeID == CropTypeMapper.GRASS
             ? null
@@ -2880,7 +2939,7 @@ class UpdateRecommendation {
               previousCrop?.CropTypeID !== null
             ? previousCrop?.CropTypeID
             : null,
-        grassHistoryId: null,
+        grassHistoryId: previousGrassId ? null: grassHistoryID,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
