@@ -191,6 +191,18 @@ const OrganicManureEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
+    AvailableNForNextYear: {
+      type: "decimal",
+      precision: 18,
+      scale: 3,
+      nullable: true,
+    },
+    AvailableNForNextDefoliation: {
+      type: "decimal",
+      precision: 18,
+      scale: 3,
+      nullable: true,
+    },
   },
   relations: {
     CreatedByUser: {
