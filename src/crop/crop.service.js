@@ -1507,7 +1507,7 @@ class CropService extends BaseService {
       referenceValue: `${field.ID}-${crop.ID}-${crop.Year}`,
     };
 
-    if (mannerOutput != null || mannerOutput.length > 0) {
+    if (mannerOutput != null || mannerOutput?.length > 0) {
       nutrientRecommendationnReqBody.field.mannerOutputs = mannerOutput;
     }
     if (soilAnalysis) {
