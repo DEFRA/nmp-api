@@ -1507,7 +1507,7 @@ class CropService extends BaseService {
       referenceValue: `${field.ID}-${crop.ID}-${crop.Year}`,
     };
 
-    if (mannerOutput != null || mannerOutput?.length > 0) {
+    if (mannerOutput != null && mannerOutput?.length > 0) {
       nutrientRecommendationnReqBody.field.mannerOutputs = mannerOutput;
     }
     if (soilAnalysis) {
@@ -2066,6 +2066,15 @@ class CropService extends BaseService {
 
       // Step 3: Loop through each crop
       for (const crop of crops) {
+
+         // ✅ Skip if critical fields are null
+  if (
+    crop.CropInfo1 === null &&
+    crop.Yield === null &&
+    crop.DefoliationSequenceID === null
+  ) {
+    continue;
+  }
         // Check if any soil analysis record has P or K index
         const soilAnalysis = await transactionalManager.find(
           SoilAnalysisEntity,
