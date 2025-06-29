@@ -1,4 +1,5 @@
 const { FieldTypeMapper } = require("../constants/field-type-mapper");
+const { GrassManagementOptionsMapper } = require("../constants/grass-management-options-mapper");
 const { SoilGroupCategoriesMapper } = require("../constants/soil-group-categories-mapper");
 const { SwardManagementMapper } = require("../constants/sward-management-mapper");
 const { SwardTypeMapper } = require("../constants/sward-type-mapper");
@@ -185,10 +186,190 @@ class CalculateGrassHistoryAndPreviousGrass {
     if (!crop) {
       crop = await transactionalManager.findOne(CropEntity, {
         where: { FieldID: fieldId, Year: targetYear, CropOrder: 1 },
-      }); 
+      });
     }
     return crop;
   }
+
+  async calculateLeyDuration(fieldTypes) {
+    let leyCount = 0;
+    let currentStreak = 0;
+
+    for (const ft of fieldTypes) {
+      if (ft === 2) {
+        // 2 = Grass
+        currentStreak++;
+        if (currentStreak > leyCount) {
+          leyCount = currentStreak;
+        }
+      } else {
+        currentStreak = 0; // Reset on non-grass
+      }
+    }
+
+    // Return ley duration category
+    if (leyCount > 2) return 2;
+    if (leyCount > 0) return 1;
+    return 0;
+  }
+
+  async getExtendedFieldTypesForLeyCheck(
+    fieldId,
+    harvestYear,
+    transactionalManager
+  ) {
+    const fieldTypes = [];
+
+    // Step 1: Get field types for years: -1, -2, -3
+    for (let i = 1; i <= 3; i++) {
+      const crop = await this.getCropForYear(
+        fieldId,
+        harvestYear - i,
+        transactionalManager
+      );
+      let fieldType = crop?.FieldType ?? null;
+
+      if (!fieldType) {
+        const prevGrass = await transactionalManager.findOne(
+          PreviousGrassesEntity,
+          {
+            where: { FieldID: fieldId, HarvestYear: harvestYear - i },
+          }
+        );
+        if (prevGrass) fieldType = FieldTypeMapper.GRASS;
+      }
+
+      fieldTypes.push(fieldType ?? FieldTypeMapper.ARABLE);
+    }
+
+    // Step 2: Handle additional years for Ley calculation
+    const [first, second, third] = fieldTypes;
+
+    if (
+      first === FieldTypeMapper.ARABLE &&
+      second === FieldTypeMapper.GRASS &&
+      third === FieldTypeMapper.GRASS
+    ) {
+      const crop4 = await this.getCropForYear(
+        fieldId,
+        harvestYear - 4,
+        transactionalManager
+      );
+      let fieldType4 = crop4?.FieldType ?? null;
+
+      if (!fieldType4) {
+        const prevGrass = await transactionalManager.findOne(
+          PreviousGrassesEntity,
+          {
+            where: { FieldID: fieldId, HarvestYear: harvestYear - 4 },
+          }
+        );
+        if (prevGrass) fieldType4 = FieldTypeMapper.GRASS;
+      }
+
+      if (fieldType4 === FieldTypeMapper.GRASS)
+        fieldTypes.push(FieldTypeMapper.GRASS);
+    }
+
+    if (
+      first === FieldTypeMapper.ARABLE &&
+      second === FieldTypeMapper.ARABLE &&
+      third === FieldTypeMapper.GRASS
+    ) {
+      for (let i = 4; i <= 5; i++) {
+        const cropX = await this.getCropForYear(
+          fieldId,
+          harvestYear - i,
+          transactionalManager
+        );
+        let fieldTypeX = cropX?.FieldType ?? null;
+
+        if (!fieldTypeX) {
+          const prevGrass = await transactionalManager.findOne(
+            PreviousGrassesEntity,
+            {
+              where: { FieldID: fieldId, HarvestYear: harvestYear - i },
+            }
+          );
+          if (prevGrass) fieldTypeX = FieldTypeMapper.GRASS;
+        }
+
+        if (fieldTypeX === FieldTypeMapper.GRASS) {
+          fieldTypes.push(FieldTypeMapper.GRASS);
+        }
+      }
+    }
+
+    return fieldTypes;
+  }
+
+  async findLastGrassCropDetails(fieldId, fromYear, transactionalManager) {
+    for (let y = fromYear - 1; y >= fromYear - 5; y--) {
+      // Check CropEntity
+      const crop = await this.getCropForYear(fieldId, y, transactionalManager);
+      if (crop?.FieldType === 2) {
+        const swardManagementId = crop.SwardManagementID;
+        const swardTypeID = crop.SwardTypeID;
+
+        const isGrazedOnly =
+          swardManagementId === SwardManagementMapper.GRAZEDONLY ? 1 : 0;
+        const iscutOnly = [
+          SwardManagementMapper.CUTFORSILAGEONLY,
+          SwardManagementMapper.CUTFORHAYONLY,
+        ].includes(swardManagementId)
+          ? 1
+          : 0;
+        const iscutAndGrazing = [
+          SwardManagementMapper.GRAZINGANDHAY,
+          SwardManagementMapper.GRAZINGANDSILAGE,
+        ].includes(swardManagementId)
+          ? 1
+          : 0;
+
+        const isHighClover = [
+          SwardTypeMapper.GRASSANDCLOVER,
+          SwardTypeMapper.REDCLOVER,
+          SwardTypeMapper.LUCERNE,
+        ].includes(swardTypeID)
+          ? 1
+          : 0;
+
+        return { crop, isGrazedOnly, iscutOnly, iscutAndGrazing, isHighClover };
+      }
+
+      // Check PreviousGrassesEntity
+      const prevGrass = await transactionalManager.findOne(
+        PreviousGrassesEntity,
+        {
+          where: { FieldID: fieldId, HarvestYear: y },
+        }
+      );
+
+      if (prevGrass) {
+        const mgmtId = prevGrass.GrassManagementOptionID;
+
+        const isGrazedOnly =
+          mgmtId === GrassManagementOptionsMapper.GRAZEDONLY ? 1 : 0;
+        const iscutOnly =
+          mgmtId === GrassManagementOptionsMapper.CUTONLY ? 1 : 0;
+        const iscutAndGrazing =
+          mgmtId === GrassManagementOptionsMapper.GRAZEDANDCUT ? 1 : 0;
+
+        const isHighClover = prevGrass.HasGreaterThan30PercentClover ? 1 : 0;
+
+        return {
+          crop: prevGrass,
+          isGrazedOnly,
+          iscutOnly,
+          iscutAndGrazing,
+          isHighClover,
+        };
+      }
+    }
+
+    return null;
+  }
+
   async getPreviousGrassID(crop, transactionalManager, harvestYear) {
     // Step 1: Fetch crops for current and previous years
     let cropThisYear = crop;
@@ -197,103 +378,27 @@ class CalculateGrassHistoryAndPreviousGrass {
         where: { FieldID: crop.FieldID, Year: crop.Year },
       });
     }
-    // const crop1 = await transactionalManager.findOne(CropEntity, {
-    //   where: { FieldID: crop.FieldID, Year: crop.Year - 1 },
-    // });
-    // const crop2 = await transactionalManager.findOne(CropEntity, {
-    //   where: { FieldID: crop.FieldID, Year: crop.Year - 2 },
-    // });
-    // const crop3 = await transactionalManager.findOne(CropEntity, {
-    //   where: { FieldID: crop.FieldID, Year: crop.Year - 3 },
-    // });
 
-    const crop1 = await this.getCropForYear(
+    const fieldTypes = await this.getExtendedFieldTypesForLeyCheck(
       crop.FieldID,
-      harvestYear - 1,
-      transactionalManager
-    );
-    const crop2 = await this.getCropForYear(
-      crop.FieldID,
-      harvestYear - 2,
-      transactionalManager
-    );
-    const crop3 = await this.getCropForYear(
-      crop.FieldID,
-      harvestYear - 3,
+      harvestYear,
       transactionalManager
     );
 
-    let FirstHYFieldType = crop1?.FieldType || null;
-    let SecondHYFieldType = crop2?.FieldType || null;
-    let ThirdHYFieldType = crop3?.FieldType || null;
+    const [firstHyFieldType, secondHyFieldType, thirdHyFieldType] = fieldTypes;
 
-    // Step 2: Check PreviousGrass if crop not found
-    const missingYears = [];
-    if (!crop1) missingYears.push(harvestYear - 1);
-    if (!crop2) missingYears.push(harvestYear - 2);
-    if (!crop3) missingYears.push(harvestYear - 3);
-
-    for (const y of missingYears) {
-      const prevGrass = await transactionalManager.findOne(
-        PreviousGrassesEntity,
-        {
-          where: { FieldID: crop.FieldID, HarvestYear: y },
-        }
-      );
-      if (prevGrass) {
-        if (y === harvestYear - 1) FirstHYFieldType = FieldTypeMapper.GRASS;
-        if (y === harvestYear - 2) SecondHYFieldType = FieldTypeMapper.GRASS;
-        if (y === harvestYear - 3) ThirdHYFieldType = FieldTypeMapper.GRASS;
-      }
-    }
-    // 🆕 Assign default value `1` if still null
-    if (FirstHYFieldType === null) FirstHYFieldType = FieldTypeMapper.ARABLE;
-    if (SecondHYFieldType === null) SecondHYFieldType = FieldTypeMapper.ARABLE;
-    if (ThirdHYFieldType === null) ThirdHYFieldType = FieldTypeMapper.ARABLE;
-
-    // Step 8: If none of the FieldTypes is 2, return 1 directly
-    if (
-      FirstHYFieldType !== FieldTypeMapper.GRASS &&
-      SecondHYFieldType !== FieldTypeMapper.GRASS &&
-      ThirdHYFieldType !== FieldTypeMapper.GRASS
-    ) {
-      return 1;
-    }
-
-    // Step 3: LayDuration//need to check 5 yrs
-    let layCount = 0;
-    [FirstHYFieldType, SecondHYFieldType, ThirdHYFieldType].forEach((c) => {
-      if (c === FieldTypeMapper.GRASS) layCount++;
-    });
-    const LayDuration = layCount > 2 ? 2 : layCount > 0 ? 1 : 0;
-
-    // Step 4: IsGrazedOnly
-    const SwardManagementID = cropThisYear?.SwardManagementID;
-    const IsGrazedOnly = [SwardManagementMapper.GRAZEDONLY].includes(
-      SwardManagementID
-    )
-      ? 1
-      : 0;
-    // const IscutOnly = [SwardManagementMapper.GRAZEDONLY].includes(
-    //   SwardManagementID
-    // )
-    //   ? 1
-    //   : 0;
-    // const IscutAndGrazing = [SwardManagementMapper.GRAZEDONLY].includes(
-    //   SwardManagementID
-    // )
-    //   ? 1
-    //   : 0;
-    // Step 5: IsHighClover
-    const SwardTypeID = cropThisYear?.SwardTypeID;
-    const IsHighClover = [
-      SwardTypeMapper.GRASSANDCLOVER,
-      SwardTypeMapper.REDCLOVER,
-      SwardTypeMapper.LUCERNE,
-    ].includes(SwardTypeID)
-      ? 1
-      : 0;
-
+    const leyDuration = await this.calculateLeyDuration(fieldTypes);
+    const lastGrass = await this.findLastGrassCropDetails(
+      crop.FieldID,
+      harvestYear,
+      transactionalManager
+    );
+     const {
+    isGrazedOnly,
+    iscutOnly,
+    iscutAndGrazing,
+    isHighClover,
+  } = lastGrass;
     // Step 6: NitrogenUse
     let nitrogenTotal = 0;
 
@@ -334,20 +439,22 @@ class CalculateGrassHistoryAndPreviousGrass {
       nitrogenTotal = organicN + fertiliserN;
     }
 
-    const NitrogenUse = nitrogenTotal > 250 ? "High" : "Low";
+    const nitrogenUse = nitrogenTotal > 250 ? "High" : "Low";
 
     // Step 7: Lookup in PreviousGrassIdMapping
     const mapping = await transactionalManager.findOne(
       PreviousGrassIdMappingEntity,
       {
         where: {
-          FirstHYFieldType: FirstHYFieldType,
-          SecondHYFieldType: SecondHYFieldType,
-          ThirdHYFieldType: ThirdHYFieldType,
-          LayDuration: LayDuration,
-          IsGrazedOnly: IsGrazedOnly,
-          IsHighClover: IsHighClover,
-          NitrogenUse: NitrogenUse, // This should be string: "High" or "Low"
+          FirstHYFieldType: firstHyFieldType,
+          SecondHYFieldType: secondHyFieldType,
+          ThirdHYFieldType: thirdHyFieldType,
+          LayDuration: leyDuration,
+          IsGrazedOnly: isGrazedOnly,
+          IsCutOnly: iscutOnly,
+          IsGrazedNCut: iscutAndGrazing,
+          IsHighClover: isHighClover,
+          NitrogenUse: nitrogenUse,
         },
       }
     );
