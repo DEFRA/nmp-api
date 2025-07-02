@@ -35,6 +35,16 @@ const PreviousGrassIdMappingEntity = new EntitySchema({
       nullable: true,
       name: "IsGrazedOnly",
     },
+    IsCutOnly: {
+      type: "bit",
+      nullable: true,
+      name: "IsCutOnly",
+    },
+    IsGrazedNCut: {
+      type: "bit",
+      nullable: true,
+      name: "IsGrazedNCut",
+    },
     IsHighClover: {
       type: "bit",
       nullable: true,
