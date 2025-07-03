@@ -264,6 +264,7 @@ class CalculateGrassHistoryAndPreviousGrass {
           grassCrop,
           transactionalManager
         );
+        nitrogenUse = nitrogenUse.nitrogenUse
       }
     }
 
@@ -294,6 +295,11 @@ class CalculateGrassHistoryAndPreviousGrass {
     // -----------------------------
     // Step 5: Soil and Crop Group Categories
     // -----------------------------
+    if(firstHYFieldType == FieldTypeMapper.ARABLE && secondHYFieldType == FieldTypeMapper.ARABLE ){
+      nitrogenUse=null
+      isHighClover=null
+      isReseeded=null
+    }
     let soilGroupCategoryID = null;
     let cropGroupCategoryID = null;
 
@@ -333,7 +339,7 @@ class CalculateGrassHistoryAndPreviousGrass {
           SecondHYFieldType: secondHYFieldType,
           IsReseeded: isReseeded,
           IsHighClover: isHighClover,
-          NitrogenUse: nitrogenUse.nitrogenUse,
+          NitrogenUse: nitrogenUse,
           SoilGroupCategoryID: soilGroupCategoryID,
           CropGroupCategoryID: cropGroupCategoryID,
         },
