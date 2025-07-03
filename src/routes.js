@@ -36,4 +36,5 @@ module.exports = [
   ...require("./user-extension/user-extension.route"),
   ...require("./sns-analysis/sns-analysis.route"),
   ...require("./grass-growth-plan/grass-growth-plan.route"),
+  ...require("./nutrients-loading-farm-details/nutrients-loading-farm-details.route")
 ];

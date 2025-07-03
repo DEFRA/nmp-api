@@ -75,6 +75,11 @@ const { PreviousGrassIdMappingEntity } = require("./entity/previous-grass-Id-map
 const { GrassHistoryIdMappingEntity } = require("./entity/grass-history-id-mapping-entity.js");
 const { CropGroupCategoriesEntity } = require("./entity/crop-group-categories.entity.js");
 const { SoilGroupCategoriesEntity } = require("./entity/soil-group-categories-entity.js");
+const { LivestockGroupsEntity } = require("./entity/livestock-groups-Entity.js");
+const { LivestockTypesEntity } = require("./entity/livestock-types-entity .js");
+const { NutrientsLoadingFarmDetailsEntity } = require("./entity/nutrients-loading-farm-details-entity.js");
+const { NutrientsLoadingLiveStocksEntity } = require("./entity/nutrients-loading-live-stocks-entity.js");
+const { NutrientsLoadingManuresEntity } = require("./entity/nutrients-loading-manures-entity.js");
 
 
 dotven.config();
@@ -135,7 +140,12 @@ const baseConfig = {
     PreviousGrassIdMappingEntity,
     GrassHistoryIdMappingEntity,
     CropGroupCategoriesEntity,
-    SoilGroupCategoriesEntity
+    SoilGroupCategoriesEntity,
+    LivestockGroupsEntity,
+    LivestockTypesEntity,
+    NutrientsLoadingFarmDetailsEntity,
+    NutrientsLoadingLiveStocksEntity,
+    NutrientsLoadingManuresEntity
   ],
 };
 
