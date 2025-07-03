@@ -14,7 +14,7 @@ class NutrientsLoadingFarmDetailsService extends BaseService {
 
   async getByFarmIdAndYear(farmId, year) {
     const record = await this.repository.findOneBy({
-      FarmId: farmId,
+      FarmID: farmId,
       CalendarYear: year,
     });
 
@@ -23,41 +23,64 @@ class NutrientsLoadingFarmDetailsService extends BaseService {
 
   async checkRecordExists(farmId, year) {
     return await this.recordExists({
-      FarmId: farmId,
+      FarmID: farmId,
       CalendarYear: year,
     });
   }
 
   async createNutrientsLoadingFarmDetails(payload, userId) {
-    const { FarmId, CalendarYear } = payload;
-
-    const exists = await this.checkRecordExists(FarmId, CalendarYear);
-    if (exists) {
-      throw boom.conflict(
-        "NutrientsLoadingFarmDetails already exists for this FarmId and CalendarYear"
-      );
-    }
+    const { FarmID, CalendarYear } = payload;
 
     return await AppDataSource.transaction(async (transactionalManager) => {
-      const data = this.repository.create({
-        ...payload,
-        CreatedByID: userId,
-        CreatedOn: new Date(),
-      });
-
-      const saved = await transactionalManager.save(
+      const existingRecord = await transactionalManager.findOne(
         NutrientsLoadingFarmDetailsEntity,
-        data
+        { where: { FarmID: FarmID, CalendarYear: CalendarYear } }
       );
 
-      return { NutrientsLoadingFarmDetails: saved };
+      if (existingRecord) {
+     
+        const { ID,CreatedByID, CreatedOn, ...rest } = payload;
+       const saved = await transactionalManager.update(
+         NutrientsLoadingFarmDetailsEntity,
+         { FarmID: FarmID, CalendarYear: CalendarYear },
+         {
+           ...rest,
+           ModifiedByID: userId,
+           ModifiedOn: new Date(),
+         }
+       );
+
+       
+        const updatedRecord = await transactionalManager.findOne(
+          NutrientsLoadingFarmDetailsEntity,
+          { where: { FarmID: FarmID, CalendarYear: CalendarYear } }
+        );
+
+        return  updatedRecord ;
+      } else {
+        const newRecord = transactionalManager.create(
+          NutrientsLoadingFarmDetailsEntity,
+          {
+            ...payload,
+            CreatedByID: userId,
+            CreatedOn: new Date(),
+          }
+        );
+
+        const saved = await transactionalManager.save(
+          NutrientsLoadingFarmDetailsEntity,
+          newRecord
+        );
+
+        return  saved ;
+      }
     });
   }
 
   async updateNutrientsLoadingFarmDetails(payload, userId) {
     const {
-      Id,
-      FarmId,
+      ID,
+      FarmID,
       CalendarYear,
       CreatedByID,
       CreatedOn,
@@ -65,7 +88,7 @@ class NutrientsLoadingFarmDetailsService extends BaseService {
     } = payload;
 
     const result = await this.repository.update(
-      { FarmId, CalendarYear },
+      { FarmID, CalendarYear },
       {
         ...dataToUpdate,
         ModifiedByID: userId,
@@ -75,11 +98,11 @@ class NutrientsLoadingFarmDetailsService extends BaseService {
 
     if (result.affected === 0) {
       throw boom.notFound(
-        `NutrientsLoadingFarmDetails with FarmId ${FarmId} and CalendarYear ${CalendarYear} not found`
+        `NutrientsLoadingFarmDetails with FarmId ${FarmID} and CalendarYear ${CalendarYear} not found`
       );
     }
 
-    const updated = await this.repository.findOneBy({ FarmId, CalendarYear });
+    const updated = await this.repository.findOneBy({ FarmID, CalendarYear });
 
     return updated;
   }

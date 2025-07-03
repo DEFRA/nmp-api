@@ -4,16 +4,16 @@ const NutrientsLoadingFarmDetailsEntity = new EntitySchema({
   name: "NutrientsLoadingFarmDetails",
   tableName: "NutrientsLoadingFarmDetails",
   columns: {
-    Id: {
+    ID: {
       type: "int",
       primary: true,
       generated: true,
-      name: "Id",
+      name: "ID",
     },
-    FarmId: {
+    FarmID: {
       type: "int",
       nullable: false,
-      name: "FarmId",
+      name: "FarmID",
     },
     CalendarYear: {
       type: "int",
@@ -61,7 +61,39 @@ const NutrientsLoadingFarmDetailsEntity = new EntitySchema({
       nullable: false,
       name: "ContingencyPlan",
     },
+    CreatedOn: {
+      type: "datetime2",
+      precision: 7,
+      nullable: true,
+      name: "CreatedOn",
+      default: () => "getdate()",
+    },
+    CreatedByID: {
+      type: "int",
+      nullable: true,
+      name: "CreatedByID",
+    },
+    ModifiedOn: {
+      type: "datetime2",
+      precision: 7,
+      nullable: true,
+      name: "ModifiedOn",
+    },
+    ModifiedByID: {
+      type: "int",
+      nullable: true,
+      name: "ModifiedByID",
+    },
   },
+  relations: {
+    Farm: {
+      type: "one-to-one",
+      target: "Farms",
+      joinColumn: {
+        name: "FarmID",
+      },
+    },
+  }
 });
 
 module.exports = { NutrientsLoadingFarmDetailsEntity };
