@@ -90,9 +90,9 @@ class CalculateGrassHistoryAndPreviousGrass {
 
       const SwardTypeID = crop1.SwardTypeID;
       isHighClover = [
-        SwardTypeMapper.GRASSANDCLOVER,
-        SwardTypeMapper.REDCLOVER,
-        SwardTypeMapper.LUCERNE,
+        SwardTypeMapper?.GRASSANDCLOVER,
+        SwardTypeMapper?.REDCLOVER,
+        SwardTypeMapper?.LUCERNE,
       ].includes(SwardTypeID)
         ? 1
         : 0;
@@ -195,11 +195,11 @@ class CalculateGrassHistoryAndPreviousGrass {
         crop2?.DefoliationSequenceID !== null &&
         firstHYFieldType !== FieldTypeMapper.GRASS
       ) {
-        const swardTypeID = crop2.SwardTypeID;
+        const swardTypeID = crop2?.SwardTypeID;
         const highCloverTypes = [
-          SwardTypeMapper.GRASSANDCLOVER,
-          SwardTypeMapper.REDCLOVER,
-          SwardTypeMapper.LUCERNE,
+          SwardTypeMapper?.GRASSANDCLOVER,
+          SwardTypeMapper?.REDCLOVER,
+          SwardTypeMapper?.LUCERNE,
         ];
 
         if (isHighClover === null) {
@@ -233,7 +233,7 @@ class CalculateGrassHistoryAndPreviousGrass {
             isHighClover === null &&
             firstHYFieldType !== FieldTypeMapper.GRASS
           ) {
-            isHighClover = prevGrass2.HasGreaterThan30PercentClover ? 1 : 0;
+            isHighClover = prevGrass2?.HasGreaterThan30PercentClover ? 1 : 0;
           }
         } else {
           secondHYFieldType = FieldTypeMapper.ARABLE;
@@ -248,11 +248,12 @@ class CalculateGrassHistoryAndPreviousGrass {
     // -----------------------------
     // Step 4: NitrogenUse
     let nitrogenUse = null;
+    let grassCrop = null;
 
     if (isHighClover === 1) {
       nitrogenUse = null; // Skip calculation
     } else if (isHighClover === 0) {
-      let grassCrop = null;
+      grassCrop = null;
       if (firstHYFieldType === FieldTypeMapper.GRASS && crop1) {
         grassCrop = crop1;
       } else if (secondHYFieldType === FieldTypeMapper.GRASS && crop2) {
@@ -264,7 +265,7 @@ class CalculateGrassHistoryAndPreviousGrass {
           grassCrop,
           transactionalManager
         );
-        nitrogenUse = nitrogenUse.nitrogenUse
+        nitrogenUse = nitrogenUse?.nitrogenUse
       }
     }
 
