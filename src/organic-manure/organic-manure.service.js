@@ -50,6 +50,8 @@ const { CropTypeMapper } = require("../constants/crop-type-mapper");
 const { CalculateMannerOutputService } = require("../shared/calculate-manner-output-service");
 const { FieldTypeMapper } = require("../constants/field-type-mapper");
 const { CalculateGrassHistoryAndPreviousGrass } = require("../shared/calculate-previous-grass-id.service");
+const { CalculateTotalAvailableNForNextYear } = require("../shared/calculate-next-year-available-n");
+const { CropOrderMapper } = require("../constants/crop-order-mapper");
 
 class OrganicManureService extends BaseService {
   constructor() {
@@ -69,6 +71,8 @@ class OrganicManureService extends BaseService {
     this.RB209SoilService = new RB209SoilService();
     this.CalculateMannerOutput = new CalculateMannerOutputService();
     this.calculateGrassId = new CalculateGrassHistoryAndPreviousGrass();
+    this.CalculateTotalAvailableNForPreviousYear =
+      new CalculateTotalAvailableNForNextYear();
     this.recommendationCommentRepository = AppDataSource.getRepository(
       RecommendationCommentEntity
     );
@@ -345,8 +349,6 @@ class OrganicManureService extends BaseService {
       return null;
     }
   }
-
-  
 
   async buildGrassObject(crop, field, grassGrowthClass, transactionalManager) {
     // Case: Only one crop with CropOrder 1 and CropTypeID 140
@@ -1537,13 +1539,67 @@ class OrganicManureService extends BaseService {
       throw new Error("Failed to get manure type data");
     }
   }
-  async buildMannerOutputs(CropData, MannerOutput, managementPeriod) {
+
+
+async buildMannerOutputs(
+  CropData,
+  MannerOutput,
+  managementPeriod,
+  transactionalManager
+) {
+  let nextCropAvailableN =0;
+  nextCropAvailableN = await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
+      CropData.FieldID,
+      CropData.Year,
+      transactionalManager
+    );
+
+  let availableNForNextDefoliation = 0;
+
+  if (managementPeriod.Defoliation > 1) {
+    const previousDefoliationManagementPeriods = await transactionalManager.find(
+      ManagementPeriodEntity,
+      {
+        where: {
+          CropID: CropData.ID,
+          Defoliation: managementPeriod.Defoliation - 1,
+        },
+      }
+    );
+
+    const prevManagementPeriodIDs = previousDefoliationManagementPeriods.map(
+      (mp) => mp.ID
+    );
+
+    if (prevManagementPeriodIDs.length > 0) {
+      const organicManures = await transactionalManager.find(
+        OrganicManureEntity,
+        {
+          where: {
+            ManagementPeriodID: In(prevManagementPeriodIDs),
+          },
+        }
+      );
+
+      availableNForNextDefoliation = organicManures.reduce(
+        (sum, manure) => sum + (manure.AvailableNForNextDefoliation || 0),
+        0
+      );
+    }
+  }
+  if (CropData.CropOrder == CropOrderMapper.SECONDCROP){
+    nextCropAvailableN=0;
+    availableNForNextDefoliation=0;
+  }
     return [
       {
         id: CropData.CropOrder,
         defoliationId: managementPeriod.Defoliation,
         totalN: MannerOutput.data.totalN,
-        availableN: MannerOutput.data.currentCropAvailableN,
+        availableN:
+          MannerOutput.data.currentCropAvailableN +
+          nextCropAvailableN +
+          availableNForNextDefoliation,
         totalP: MannerOutput.data.totalP2O5,
         availableP: MannerOutput.data.cropAvailableP2O5,
         totalK: MannerOutput.data.totalK2O,
@@ -1553,7 +1609,8 @@ class OrganicManureService extends BaseService {
         totalM: MannerOutput.data.totalMgO,
       },
     ];
-  }
+}
+
 
   async calculateMannerOutputForOrganicManure(
     cropData,
@@ -1639,7 +1696,12 @@ class OrganicManureService extends BaseService {
         let output = [];
         // 4.4: Build output and add to final array
         if (mannerOutput) {
-          output = await this.buildMannerOutputs(crop, mannerOutput, period);
+          output = await this.buildMannerOutputs(
+            crop,
+            mannerOutput,
+            period,
+            transactionalManager
+          );
         }
         allMannerOutputs.push(...output);
       }
@@ -2356,7 +2418,10 @@ class OrganicManureService extends BaseService {
           }
         }
 
-        if (cropData.CropTypeID === CropTypeMapper.OTHER && cropData.CropInfo1 === null) {
+        if (
+          cropData.CropTypeID === CropTypeMapper.OTHER &&
+          cropData.CropInfo1 === null
+        ) {
           await this.saveOrganicManureForOtherCropType(
             organicManureData,
             mannerOutputs,
@@ -3480,4 +3545,4 @@ class OrganicManureService extends BaseService {
     return organicResult.totalN;
   }
 }
- module.exports = { OrganicManureService };
+module.exports = { OrganicManureService }
