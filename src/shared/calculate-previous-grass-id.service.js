@@ -88,7 +88,7 @@ class CalculateGrassHistoryAndPreviousGrass {
     ) {
       // Grass found in crop1
 
-      const SwardTypeID = crop1.SwardTypeID;
+      const SwardTypeID = crop1?.SwardTypeID;
       isHighClover = [
         SwardTypeMapper?.GRASSANDCLOVER,
         SwardTypeMapper?.REDCLOVER,
