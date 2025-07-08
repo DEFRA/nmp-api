@@ -28,8 +28,8 @@ class NutrientsLoadingManuresService extends BaseService {
   }
 
   async createNutrientsLoadingManures(payload, userId) {
-    const { FarmID } = payload;
-
+    const { FarmID, } = payload;
+  
     return await AppDataSource.transaction(async (transactionalManager) => {
       const existingRecord = await transactionalManager.findOne(
         NutrientsLoadingManuresEntity,
@@ -43,7 +43,7 @@ class NutrientsLoadingManuresService extends BaseService {
           { FarmID: FarmID },
           {
             ...rest,
-            ModifiedByID: userId,
+            // ModifiedByID: userId,
             ModifiedOn: new Date(),
           }
         );
@@ -55,11 +55,18 @@ class NutrientsLoadingManuresService extends BaseService {
 
         return updatedRecord;
       } else {
+        const {
+          CreatedByID,
+          CreatedOn,
+          ModifiedByID,
+          ModifiedOn,
+          ...cleanPayload
+        } = payload;
         const newRecord = transactionalManager.create(
           NutrientsLoadingManuresEntity,
           {
-            ...payload,
-            CreatedByID: userId,
+            ...cleanPayload,
+            // CreatedByID: userId,
             CreatedOn: new Date(),
           }
         );

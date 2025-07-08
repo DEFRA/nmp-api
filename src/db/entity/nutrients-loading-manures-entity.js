@@ -8,12 +8,12 @@ const NutrientsLoadingManuresEntity = new EntitySchema({
       type: "int",
       primary: true,
       generated: true,
-      name: "Id",
+      name: "ID",
     },
     FarmID: {
       type: "int",
       nullable: false,
-      name: "FarmId",
+      name: "FarmID",
     },
     ManureLookupType: {
       type: "nvarchar",
@@ -21,10 +21,10 @@ const NutrientsLoadingManuresEntity = new EntitySchema({
       nullable: true,
       name: "ManureLookupType",
     },
-    ManureTypeId: {
+    ManureTypeID: {
       type: "int",
       nullable: true,
-      name: "ManureTypeId",
+      name: "ManureTypeID",
     },
     ManureType: {
       type: "nvarchar",
@@ -115,7 +115,7 @@ const NutrientsLoadingManuresEntity = new EntitySchema({
       type: "datetime2",
       precision: 7,
       nullable: true,
-      name: "CreatedOn"
+      name: "CreatedOn",
     },
     CreatedByID: {
       type: "int",

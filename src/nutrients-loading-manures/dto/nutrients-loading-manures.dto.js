@@ -6,7 +6,6 @@ const NutrientsLoadingManuresDto = Joi.object({
   ManureLookupType: Joi.string().max(250).allow(null, ""),
   ManureTypeID: Joi.number().integer().allow(null),
   ManureType: Joi.string().max(250).allow(null, ""),
-
   Quantity: Joi.number().precision(3).allow(null),
   NContent: Joi.number().precision(3).allow(null),
   NTotal: Joi.number().integer().allow(null),
