@@ -4,13 +4,13 @@ const NutrientsLoadingManuresEntity = new EntitySchema({
   name: "NutrientsLoadingManures",
   tableName: "NutrientsLoadingManures",
   columns: {
-    Id: {
+    ID: {
       type: "int",
       primary: true,
       generated: true,
       name: "Id",
     },
-    FarmId: {
+    FarmID: {
       type: "int",
       nullable: false,
       name: "FarmId",
@@ -109,6 +109,36 @@ const NutrientsLoadingManuresEntity = new EntitySchema({
       length: 255,
       nullable: true,
       name: "Comments",
+    },
+
+    CreatedOn: {
+      type: "datetime2",
+      precision: 7,
+      nullable: true,
+      name: "CreatedOn"
+    },
+    CreatedByID: {
+      type: "int",
+      nullable: true,
+      name: "CreatedByID",
+    },
+    ModifiedOn: {
+      type: "datetime2",
+      precision: 7,
+      nullable: true,
+      name: "ModifiedOn",
+    },
+    ModifiedByID: {
+      type: "int",
+      nullable: true,
+      name: "ModifiedByID",
+    },
+  },
+  relations: {
+    Farm: {
+      type: "one-to-one",
+      target: "Farms",
+      joinColumn: { name: "FarmID" },
     },
   },
 });
