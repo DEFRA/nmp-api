@@ -34,6 +34,29 @@ module.exports = [
     },
   },
 
+  {
+    method: "GET",
+    path: "/nutrientsLoadingFarmDetailsByFarmId/{farmId}",
+    options: {
+      tags: ["api", "NutrientsLoadingFarmDetails"],
+      description: "Get NutrientsLoadingFarmDetails by FarmID ",
+      validate: {
+        params: Joi.object({
+          farmId: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) =>
+          h
+            .response(formatErrorResponse({ source: { error: err }, request }))
+            .code(400)
+            .takeover(),
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new NutrientsLoadingFarmDetailsController(request, h);
+      return controller.getByFarmId();
+    },
+  },
+
   // POST (farmId and year from payload)
   {
     method: "POST",

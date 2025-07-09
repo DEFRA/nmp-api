@@ -27,6 +27,21 @@ class NutrientsLoadingFarmDetailsService extends BaseService {
     return { NutrientsLoadingFarmDetails: records };
   }
 
+  async getByFarmId(farmId) {
+    return await AppDataSource.transaction(
+      async (transactionalEntityManager) => {
+        const records = await transactionalEntityManager.find(
+          NutrientsLoadingFarmDetailsEntity, // target is the entity class
+          {
+            where: { FarmID: farmId },
+          }
+        );
+
+        return  records ;
+      }
+    );
+  }
+
   async checkRecordExists(farmId, year) {
     return await this.recordExists({
       FarmID: farmId,
