@@ -19,7 +19,7 @@ module.exports = [
           farmId: Joi.number().integer().required(),
         }),
         query: Joi.object({
-          year: Joi.number().integer().required(),
+          year: Joi.number().integer().optional().allow(null)
         }),
         failAction: (request, h, err) =>
           h
