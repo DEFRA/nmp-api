@@ -558,8 +558,8 @@ class CalculateGrassHistoryAndPreviousGrass {
       // Check CropEntity
       const crop = await this.getCropForYear(fieldId, y, transactionalManager);
       if (
-        crop?.CropInfo1 !== null &&
-        crop?.Yield !== null &&
+        crop?.CropInfo1 !== null ||
+        crop?.Yield !== null ||
         crop?.DefoliationSequenceID !== null
       ) {
         if (crop?.FieldType === 2) {
