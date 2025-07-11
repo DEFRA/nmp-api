@@ -870,7 +870,7 @@ class UpdateRecommendationChanges {
         pKBalanceAllData
       );
       if (
-        cropData.CropTypeID === CropTypeMapper.OTHER ||
+        cropData.CropTypeID === CropTypeMapper.OTHER &&
         cropData.CropInfo1 === null
       ) {
         const otherRecommendations = await this.saveRecommendationForOtherCrops(
