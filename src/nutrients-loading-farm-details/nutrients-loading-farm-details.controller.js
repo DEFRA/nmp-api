@@ -30,8 +30,17 @@ class NutrientsLoadingFarmDetailsController {
     }
   }
 
-  async createNutrientsLoadingFarmDetails() {
+  async getByFarmId() {
+    const { farmId } = this.#request.params;
+    try {
+      const data = await this.#nutrientsFarmDetailsservice.getByFarmId(farmId);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
 
+  async createNutrientsLoadingFarmDetails() {
     const payload = this.#request.payload;
     const userId = this.#request.userId;
 
