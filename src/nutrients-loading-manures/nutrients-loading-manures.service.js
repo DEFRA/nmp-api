@@ -14,7 +14,7 @@ class NutrientsLoadingManuresService extends BaseService {
   }
 
   async getByFarmIdAndYear(farmId) {
-    const record = await this.repository.findOneBy({
+    const record = await this.repository.findBy({
       FarmID: farmId,
     });
 
