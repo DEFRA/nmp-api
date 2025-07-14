@@ -19,7 +19,7 @@ module.exports = [
           farmId: Joi.number().integer().required(),
         }),
         query: Joi.object({
-          year: Joi.number().integer().required(),
+          year: Joi.number().integer().optional().allow(null)
         }),
         failAction: (request, h, err) =>
           h
@@ -31,6 +31,29 @@ module.exports = [
     handler: async (request, h) => {
       const controller = new NutrientsLoadingFarmDetailsController(request, h);
       return controller.getByFarmIdAndYear();
+    },
+  },
+
+  {
+    method: "GET",
+    path: "/nutrientsLoadingFarmDetailsByFarmId/{farmId}",
+    options: {
+      tags: ["api", "NutrientsLoadingFarmDetails"],
+      description: "Get NutrientsLoadingFarmDetails by FarmID ",
+      validate: {
+        params: Joi.object({
+          farmId: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) =>
+          h
+            .response(formatErrorResponse({ source: { error: err }, request }))
+            .code(400)
+            .takeover(),
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new NutrientsLoadingFarmDetailsController(request, h);
+      return controller.getByFarmId();
     },
   },
 

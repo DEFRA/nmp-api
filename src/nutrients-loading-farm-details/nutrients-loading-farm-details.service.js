@@ -2,7 +2,9 @@ const { BaseService } = require("../base/base.service");
 const { AppDataSource } = require("../db/data-source");
 
 const boom = require("@hapi/boom");
-const { NutrientsLoadingFarmDetailsEntity } = require("../db/entity/nutrients-loading-farm-details-entity");
+const {
+  NutrientsLoadingFarmDetailsEntity,
+} = require("../db/entity/nutrients-loading-farm-details-entity");
 
 class NutrientsLoadingFarmDetailsService extends BaseService {
   constructor() {
@@ -13,12 +15,31 @@ class NutrientsLoadingFarmDetailsService extends BaseService {
   }
 
   async getByFarmIdAndYear(farmId, year) {
-    const record = await this.repository.findOneBy({
-      FarmID: farmId,
-      CalendarYear: year,
-    });
+    const whereClause = { FarmID: farmId };
 
-    return { NutrientsLoadingFarmDetails: record };
+    // Only include year in where clause if it's actually provided
+    if (year !== undefined || year !== null || year !== "") {
+      whereClause.CalendarYear = year;
+    }
+
+    const records = await this.repository.find({ where: whereClause });
+
+    return { NutrientsLoadingFarmDetails: records };
+  }
+
+  async getByFarmId(farmId) {
+    return await AppDataSource.transaction(
+      async (transactionalEntityManager) => {
+        const records = await transactionalEntityManager.find(
+          NutrientsLoadingFarmDetailsEntity, // target is the entity class
+          {
+            where: { FarmID: farmId },
+          }
+        );
+
+        return  records ;
+      }
+    );
   }
 
   async checkRecordExists(farmId, year) {
@@ -38,25 +59,23 @@ class NutrientsLoadingFarmDetailsService extends BaseService {
       );
 
       if (existingRecord) {
-     
-        const { ID,CreatedByID, CreatedOn, ...rest } = payload;
-       const saved = await transactionalManager.update(
-         NutrientsLoadingFarmDetailsEntity,
-         { FarmID: FarmID, CalendarYear: CalendarYear },
-         {
-           ...rest,
-           ModifiedByID: userId,
-           ModifiedOn: new Date(),
-         }
-       );
+        const { ID, CreatedByID, CreatedOn, ...rest } = payload;
+        const saved = await transactionalManager.update(
+          NutrientsLoadingFarmDetailsEntity,
+          { FarmID: FarmID, CalendarYear: CalendarYear },
+          {
+            ...rest,
+            ModifiedByID: userId,
+            ModifiedOn: new Date(),
+          }
+        );
 
-       
         const updatedRecord = await transactionalManager.findOne(
           NutrientsLoadingFarmDetailsEntity,
           { where: { FarmID: FarmID, CalendarYear: CalendarYear } }
         );
 
-        return  updatedRecord ;
+        return updatedRecord;
       } else {
         const newRecord = transactionalManager.create(
           NutrientsLoadingFarmDetailsEntity,
@@ -72,7 +91,7 @@ class NutrientsLoadingFarmDetailsService extends BaseService {
           newRecord
         );
 
-        return  saved ;
+        return saved;
       }
     });
   }

@@ -88,7 +88,7 @@ class CalculateGrassHistoryAndPreviousGrass {
     ) {
       // Grass found in crop1
 
-      const SwardTypeID = crop1.SwardTypeID;
+      const SwardTypeID = crop1?.SwardTypeID;
       isHighClover = [
         SwardTypeMapper?.GRASSANDCLOVER,
         SwardTypeMapper?.REDCLOVER,
@@ -558,8 +558,8 @@ class CalculateGrassHistoryAndPreviousGrass {
       // Check CropEntity
       const crop = await this.getCropForYear(fieldId, y, transactionalManager);
       if (
-        crop?.CropInfo1 !== null &&
-        crop?.Yield !== null &&
+        crop?.CropInfo1 !== null ||
+        crop?.Yield !== null ||
         crop?.DefoliationSequenceID !== null
       ) {
         if (crop?.FieldType === 2) {
