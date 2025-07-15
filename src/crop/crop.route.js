@@ -5,6 +5,7 @@ const {
   CreateCropWithManagementPeriodsDto,
   CreatePlanDto,
   CropDto,
+  CopyPlanDto,
 } = require("./dto/crops.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 
@@ -450,7 +451,8 @@ module.exports = [
         }),
         query: Joi.object({
           newGroupName: Joi.string().required(),
-          year:Joi.number().integer().required()
+          year: Joi.number().integer().required(),
+          farmId: Joi.number().integer().required(),
         }),
         failAction: (request, h, err) => {
           return h
@@ -484,8 +486,8 @@ module.exports = [
         }),
         query: Joi.object({
           cropGroupName: Joi.string(),
-          variety:Joi.string().allow(''),
-          year:Joi.number().integer().required()
+          variety: Joi.string().allow(""),
+          year: Joi.number().integer().required(),
         }),
         failAction: (request, h, err) => {
           return h
@@ -505,6 +507,64 @@ module.exports = [
     handler: async (request, h) => {
       const controller = new CropController(request, h);
       return controller.updateCropGroupName(); // Assuming this method exists in your controller
+    },
+  },
+
+  {
+    method: "PUT",
+    path: "/crops",
+    options: {
+      tags: ["api", "Crop"],
+      description: "Update multiple crops",
+      validate: {
+        payload: CreatePlanDto,
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new CropController(request, h);
+      return controller.updateMultipleCrops(); // You’ll need to define this method in your controller
+    },
+  },
+
+  {
+    method: "POST",
+    path: "/crops/copyplans",
+    handler: async (request, h) => {
+      const controller = new CropController(request, h);
+      return controller.copyPlanByHarvestYearAndFarmID();
+    },
+    options: {
+      tags: ["api", "Crop"],
+      description: "Create Crop Plan",
+      validate: {
+        payload: CopyPlanDto,
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
     },
   },
 ];

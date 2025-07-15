@@ -77,6 +77,7 @@ const PreviousGrassesSchema = Joi.object({
   FieldID: Joi.number().integer().required(),
   HasGrassInLastThreeYear: Joi.boolean().required(),
   HarvestYear: Joi.number().integer().allow(null),
+  LayDuration: Joi.number().integer().allow(null),
   GrassManagementOptionID: Joi.number().integer().allow(null),
   GrassTypicalCutID: Joi.number().integer().allow(null),
   HasGreaterThan30PercentClover: Joi.boolean().allow(null),

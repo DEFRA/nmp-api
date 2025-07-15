@@ -23,12 +23,27 @@ const CropDto = Joi.object({
   MilkYield: Joi.number().allow(null).precision(3).default(0).allow(null),
   ConcentrateUse: Joi.number().allow(null).precision(3).default(0).allow(null),
   StockingRate: Joi.number().allow(null).precision(3).default(0).allow(null),
-  DefoliationSequence: Joi.number()
+  DefoliationSequenceID: Joi.number()
     .integer()
     .allow(null)
     .default(0)
     .allow(null),
   GrazingIntensity: Joi.number().integer().allow(null).allow(null),
+  SwardTypeID: Joi.number()
+    .integer()
+    .allow(null)
+    .default(0)
+    .allow(null),
+    SwardManagementID: Joi.number()
+    .integer()
+    .allow(null)
+    .default(0)
+    .allow(null),
+    PotentialCut: Joi.number()
+    .integer()
+    .allow(null)
+    .default(0)
+    .allow(null),
   PreviousID: Joi.number().integer().allow(null),
   CropOrder: Joi.number().integer().required(),
   CreatedOn: Joi.date().iso().allow(null).optional(),
@@ -39,14 +54,23 @@ const CropDto = Joi.object({
   EncryptedCounter: Joi.number().integer().allow(null),
 }).required();
 
+const CopyPlanDto = Joi.object({
+  farmID: Joi.number().integer().allow(null).optional(),
+  harvestYear: Joi.number().integer().required(),
+  copyYear: Joi.number().integer().required(),
+  isOrganic: Joi.boolean().required(),
+  isFertiliser: Joi.boolean().required(),
+}).required();
+
 const ManagementPeriodsDto = Joi.array()
   .items(
     Joi.object({
       ID: Joi.number().integer().allow(null).optional(),
       CropID: Joi.number().integer().allow(null).optional(),
-      DefoliationID: Joi.number().integer().allow(null).required(),
+      Defoliation: Joi.number().integer().allow(null).required(),
       Utilisation1ID: Joi.number().integer().allow(null).optional(),
       Utilisation2ID: Joi.number().integer().allow(null).optional(),
+      Yield: Joi.number().allow(null).optional(),
       PloughedDown: Joi.date().iso().allow(null).required(),
       PreviousID: Joi.number().integer().allow(null).optional(),
       CreatedOn: Joi.date().iso().allow(null).optional(),
@@ -83,4 +107,5 @@ module.exports = {
   CreateCropWithManagementPeriodsDto,
   CreatePlanDto,
   CreateCropWithManagementPeriodsDto,
+  CopyPlanDto
 };

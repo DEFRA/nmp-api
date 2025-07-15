@@ -25,11 +25,6 @@ class CropController {
         farmId,
         harvestYear
       );
-
-      if (plans.length === 0) {
-        throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
-      }
-
       return this.#h.response(plans);
     } catch (error) {
       console.error("Error in getCropsPlansByHarvestYear controller:", error);
@@ -272,11 +267,9 @@ class CropController {
   }
   async deleteCropsByIds() {
     const { cropIds } = this.#request.payload;
- const userId = this.#request.userId;
+    const userId = this.#request.userId;
 
     try {
-     
-
       // Loop through each cropId and call the service method to delete it
       for (let cropId of cropIds) {
         const result = await this.#cropService.deleteCropById(
@@ -297,8 +290,9 @@ class CropController {
   }
   async CropGroupNameExists() {
     const { cropIds } = this.#request.params;
-    const { newGroupName} = this.#request.query;
-    const { year} = this.#request.query;
+    const { newGroupName } = this.#request.query;
+    const { year } = this.#request.query;
+    const { farmId } = this.#request.query;
 
     try {
       const cropIdsArray = cropIds.split(",").map((id) => parseInt(id));
@@ -306,7 +300,8 @@ class CropController {
         await this.#cropService.CropGroupNameExists(
           cropIdsArray,
           newGroupName,
-          year
+          year,
+          farmId
         );
       return this.#h.response(cropGroupNameAlreadyExist);
     } catch (error) {
@@ -316,13 +311,12 @@ class CropController {
   async updateCropGroupName() {
     try {
       const { cropIds } = this.#request.params;
-      const { cropGroupName} = this.#request.query;
-      const {variety} = this.#request.query;
-      const { year} = this.#request.query;
+      const { cropGroupName } = this.#request.query;
+      const { variety } = this.#request.query;
+      const { year } = this.#request.query;
       const userId = this.#request.userId;
       const cropIdsArray = cropIds.split(",").map((id) => parseInt(id));
-      const updateCropGroupName =
-      await this.#cropService.updateCropGroupName(
+      const updateCropGroupName = await this.#cropService.updateCropGroupName(
         cropIdsArray,
         cropGroupName,
         variety,
@@ -331,11 +325,52 @@ class CropController {
       );
       return this.#h.response(updateCropGroupName); // Return the updated crop
     } catch (error) {
-      console.error(
-        "Error in updateCropGroupName controller:",
-        error
-      );
+      console.error("Error in updateCropGroupName controller:", error);
       return this.#h.response({ error }); // Return error response
+    }
+  }
+
+  async updateMultipleCrops() {
+    try {
+      const body = this.#request.payload;
+      const userId = this.#request.userId;
+
+      const updatedResults = await this.#cropService.updateCrop(
+        body,
+        userId,
+        this.#request
+      );
+
+      return this.#h.response({
+        updatedCrops: updatedResults,
+      });
+    } catch (error) {
+      console.error("Error updating crops:", error);
+      return this.#h.response({
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  }
+
+  async copyPlanByHarvestYearAndFarmID() {
+    try {
+      const body = this.#request.payload;
+      const userId = this.#request.userId;
+
+      const results = await this.#cropService.copyPlan(
+        body,
+        userId,
+        this.#request
+      );
+
+      return this.#h.response(results);
+    } catch (error) {
+      console.error("Error copying crop:", error);
+      return this.#h.response({
+        message: "Internal Server Error",
+        error: error.message,
+      });
     }
   }
 }
