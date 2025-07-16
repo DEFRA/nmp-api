@@ -875,7 +875,7 @@ class OrganicManureService extends BaseService {
     request
   ) {
     // Filter the organicManureAllData for the given managementPeriodID
-    const mulOrganicManuresData = organicManureAllData.filter(
+    const mulOrganicManuresData = organicManureAllData?.filter(
       (manure) => manure.ManagementPeriodID === managementPeriodID
     );
 
@@ -1636,7 +1636,7 @@ async buildMannerOutputs(
     // Step 2: Process cropData first, then rest
     const cropsToProcess = [
       cropData,
-      ...allCrops.filter((c) => c.ID !== cropData.ID),
+      ...allCrops?.filter((c) => c.ID !== cropData.ID),
     ];
 
     // Step 3: Loop through crops
@@ -1648,10 +1648,10 @@ async buildMannerOutputs(
       );
 
       // Separate periods: one matching organicManure.ManagementPeriodID, then others
-      const matchingPeriod = managementPeriods.find(
+      const matchingPeriod = managementPeriods?.find(
         (p) => p.ID === organicManure.ManagementPeriodID
       );
-      const otherPeriods = managementPeriods.filter(
+      const otherPeriods = managementPeriods?.filter(
         (p) => p.ID !== organicManure.ManagementPeriodID
       );
 
@@ -1711,15 +1711,15 @@ async buildMannerOutputs(
   }
 
   async extractNutrientData(calculations, defoliationId) {
-    return calculations.filter((c) => c.defoliationId === defoliationId);
+    return calculations?.filter((c) => c.defoliationId === defoliationId);
   }
 
   async filterBySingleSequenceId(data, sequenceId) {
-    const filteredCalculations = data.calculations.filter(
+    const filteredCalculations = data?.calculations?.filter(
       (item) => item.sequenceId === sequenceId
     );
 
-    const filteredAdviceNotes = data.adviceNotes.filter(
+    const filteredAdviceNotes = data?.adviceNotes?.filter(
       (item) => item.sequenceId === sequenceId
     );
 
@@ -1748,7 +1748,7 @@ async buildMannerOutputs(
 
     // Get all unique defoliationIds from filtered calculations
     const defoliationIds = [
-      ...new Set(filteredData.calculations.map((calc) => calc.defoliationId)),
+      ...new Set(filteredData?.calculations?.map((calc) => calc.defoliationId)),
     ];
 
     // Loop over each defoliationId
@@ -1909,7 +1909,7 @@ async buildMannerOutputs(
     const RecommendationComments = [];
 
     // Separate advice notes by sequenceId for crop (sequenceId = croporder)
-    const cropNotes = nutrientRecommendationsData.adviceNotes?.filter(
+    const cropNotes = nutrientRecommendationsData?.adviceNotes?.filter(
       (note) => note.sequenceId === savedCrop.CropOrder
     );
 
@@ -1979,7 +1979,7 @@ async buildMannerOutputs(
       }
 
       // Remove comments from the database if the nutrientId is not in the new data
-      const commentsToDelete = existingComments.filter(
+      const commentsToDelete = existingComments?.filter(
         (comment) => !nutrientIdsInData.includes(comment.Nutrient)
       );
 
@@ -2080,7 +2080,7 @@ async buildMannerOutputs(
             CropTypeID: cropData.CropTypeID,
           });
 
-        const soilAnalsisData = soilAnalysisAllData.filter((soilAnalyses) => {
+        const soilAnalsisData = soilAnalysisAllData?.filter((soilAnalyses) => {
           return soilAnalyses.FieldID === cropData.FieldID;
         });
         const soilTypeTextureData =
@@ -2370,7 +2370,7 @@ async buildMannerOutputs(
         let isNextYearOrganicManureExist = false;
         let isNextYearFertiliserExist = false;
         if (isSoilAnalysisHavePAndK) {
-          const cropPlanForNextYear = cropPlanAllData.filter((cropPlan) => {
+          const cropPlanForNextYear = cropPlanAllData?.filter((cropPlan) => {
             return (
               cropPlan.FieldID === fieldData.ID && cropPlan.Year > cropData.Year
             );
@@ -2382,18 +2382,16 @@ async buildMannerOutputs(
             isNextYearPlanExist = true;
             for (const crop of cropPlanForNextYear) {
               console.log("CropID", crop.ID);
-              const managementPeriodDataId = managementPeriodAllData
-                .filter((manData) => manData.CropID === crop.ID)
-                .map((manData) => manData.ID);
+              const managementPeriodDataId = managementPeriodAllData?.filter((manData) => manData.CropID === crop.ID).map((manData) => manData.ID);
               console.log("managementPeriodDataId", managementPeriodDataId);
               if (managementPeriodDataId.length > 0) {
-                const filterOrganicManure = organicManureAllData.filter(
+                const filterOrganicManure = organicManureAllData?.filter(
                   (organicData) =>
                     organicData.ManagementPeriodID === managementPeriodDataId[0]
                 );
 
                 console.log("organicManureId", filterOrganicManure);
-                const filterFertiliserData = fertiliserAllData.filter(
+                const filterFertiliserData = fertiliserAllData?.filter(
                   (fertData) =>
                     fertData.ManagementPeriodID === managementPeriodDataId[0]
                 );
@@ -2838,8 +2836,8 @@ async buildMannerOutputs(
     const recommendationComments = [];
 
     // Separate notes by crop sequence
-    const firstCropNotes = arableNotes.filter((note) => note.sequenceId === 1);
-    const secondCropNotes = arableNotes.filter((note) => note.sequenceId === 2);
+    const firstCropNotes = arableNotes?.filter((note) => note.sequenceId === 1);
+    const secondCropNotes = arableNotes?.filter((note) => note.sequenceId === 2);
 
     // Group notes by nutrientId and concatenate
     const groupNotesByNutrientId = (notes) => {
@@ -2964,7 +2962,7 @@ async buildMannerOutputs(
         CattleSlurry: 45,
       });
 
-      const liquidManureTypes = allManureTypes.data.filter((manure) =>
+      const liquidManureTypes = allManureTypes?.data?.filter((manure) =>
         Object.values(ManureTypes).includes(manure.id)
       );
 

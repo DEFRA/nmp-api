@@ -257,7 +257,7 @@ class PlanService extends BaseService {
   async findPreviousCrop(fieldID, currentYear, allCropData) {
     // Find all crops matching the previous year and field ID
     // Filter all crops to find those matching the previous year and field ID
-    const previousCrops = allCropData.filter(
+    const previousCrops = allCropData?.filter(
       (crop) => crop.FieldID === fieldID && crop.Year === currentYear - 1
     );
     // If more than one crop is found, filter for CropOrder = 2
@@ -940,10 +940,10 @@ class PlanService extends BaseService {
     const RecommendationComments = [];
 
     // Separate advice notes by sequenceId for first crop (sequenceId = 1) and second crop (sequenceId = 2)
-    const firstCropNotes = nutrientRecommendationsData.adviceNotes?.filter(
+    const firstCropNotes = nutrientRecommendationsData?.adviceNotes?.filter(
       (note) => note.sequenceId === 1
     );
-    const secondCropNotes = nutrientRecommendationsData.adviceNotes?.filter(
+    const secondCropNotes = nutrientRecommendationsData?.adviceNotes?.filter(
       (note) => note.sequenceId === 2
     );
 
@@ -1013,7 +1013,7 @@ class PlanService extends BaseService {
       }
 
       // Remove comments from the database if the nutrientId is not in the new data
-      const commentsToDelete = existingComments.filter(
+      const commentsToDelete = existingComments?.filter(
         (comment) => !nutrientIdsInData.includes(comment.Nutrient)
       );
 
@@ -1825,8 +1825,7 @@ class PlanService extends BaseService {
           (data) => data.Year === crop.Year && data.FieldID === fieldId
         );
 
-        const cropPlanOfNextYear = allCropData
-          .filter((data) => data.FieldID === fieldId && data.Year > crop?.Year) // Filter records in memory
+        const cropPlanOfNextYear = allCropData?.filter((data) => data.FieldID === fieldId && data.Year > crop?.Year) // Filter records in memory
           .map((data) => ({ ID: data.ID }));
         const { field, errors: fieldErrors } = await this.handleFieldValidation(
           fieldId
@@ -2187,14 +2186,14 @@ class PlanService extends BaseService {
 
     // Get all unique defoliationIds from filtered calculations
     const defoliationIds = [
-      ...new Set(filteredData.calculations.map((calc) => calc.defoliationId)),
+      ...new Set(filteredData?.calculations?.map((calc) => calc.defoliationId)),
     ];
 
     // Loop over each defoliationId
     for (const defoliationId of defoliationIds) {
       // Extract all calculations with this defoliationId
       const defoliationData = await this.extractNutrientData(
-        filteredData.calculations,
+        filteredData?.calculations,
         defoliationId
       );
 
@@ -2314,15 +2313,15 @@ class PlanService extends BaseService {
   }
 
   async extractNutrientData(calculations, defoliationId) {
-    return calculations.filter((c) => c.defoliationId === defoliationId);
+    return calculations?.filter((c) => c.defoliationId === defoliationId);
   }
 
   async filterBySingleSequenceId(data, sequenceId) {
-    const filteredCalculations = data.calculations.filter(
+    const filteredCalculations = data?.calculations?.filter(
       (item) => item.sequenceId === sequenceId
     );
 
-    const filteredAdviceNotes = data.adviceNotes.filter(
+    const filteredAdviceNotes = data?.adviceNotes?.filter(
       (item) => item.sequenceId === sequenceId
     );
 
