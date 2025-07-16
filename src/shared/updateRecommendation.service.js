@@ -40,6 +40,8 @@ const { CropTypeMapper } = require("../constants/crop-type-mapper");
 const { CropOrderMapper } = require("../constants/crop-order-mapper");
 const { FieldTypeMapper } = require("../constants/field-type-mapper");
 const { CalculateMannerOutputService } = require("./calculate-manner-output-service");
+const { CalculateTotalAvailableNForNextYear } = require("./calculate-next-year-available-n");
+const { CalculateNextDefoliationService } = require("./calculate-next-defoliation-totalN");
 
 
 class UpdateRecommendation {
@@ -92,6 +94,8 @@ class UpdateRecommendation {
     );
     this.grassGrowthClass = new GrassGrowthService();
     this.calculateGrassId = new CalculateGrassHistoryAndPreviousGrass();
+    this.CalculateTotalAvailableNForPreviousYear = new CalculateTotalAvailableNForNextYear();
+    this.CalculateNextDefoliationService = new CalculateNextDefoliationService();  
   }
 
   async getYearsGreaterThanGivenYear(fieldID, year) {
@@ -389,6 +393,44 @@ class UpdateRecommendation {
           ) ?? null;
       }
 
+       let availableNForNextDefoliation = 0,nextCropAvailableN = 0;
+      
+              if (mannerOutputs != null) {
+                relevantMannerOutput =
+                  mannerOutputs.find(
+                    (m) =>
+                      m.defoliationId === defoliationId && m.id === cropData.CropOrder
+                  ) ?? null;
+              }
+      
+               if (relevantMannerOutput ==null){
+                      const managementPeriods = await transactionalManager.find(
+                      ManagementPeriodEntity,
+                      { where: { CropID: cropID, Defoliation: defoliationId } }
+                    );
+              
+                    if (!managementPeriods.length) continue;
+              
+                    const managementPeriod = managementPeriods[0];
+              
+                      availableNForNextDefoliation = await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
+                          transactionalManager,
+                          managementPeriod,
+                          cropData
+                        );
+              
+                        if(defoliationId == 1){
+                            
+                            nextCropAvailableN =
+                              await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
+                                cropData.FieldID,
+                                cropData.Year,
+                                transactionalManager
+                              );
+              
+                        }
+                    }
+
       // Initialize crop recommendation object for this defoliation group
       const cropRecData = {
         CropN: null,
@@ -426,7 +468,7 @@ class UpdateRecommendation {
             cropRecData.ManureN =
               relevantMannerOutput != null
                 ? relevantMannerOutput?.availableN
-                : null;
+                : availableNForNextDefoliation + nextCropAvailableN;
             cropRecData.NIndex = calc.indexpH;
             break;
           case 1:
@@ -1400,6 +1442,32 @@ class UpdateRecommendation {
         filteredData.calculations,
         defoliationId
       );
+       const managementPeriods = await transactionalManager.find(
+        ManagementPeriodEntity,
+        { where: { CropID: cropID, Defoliation: defoliationId } }
+      );
+      
+      if (!managementPeriods.length) continue;
+      
+      const managementPeriod = managementPeriods[0];
+      let availableNForNextDefoliation = 0,nextCropAvailableN = 0;     
+
+        availableNForNextDefoliation = await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
+            transactionalManager,
+            managementPeriod,
+            cropData
+          );
+
+          if(defoliationId == 1){
+              
+              nextCropAvailableN =
+                await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
+                  cropData.FieldID,
+                  cropData.Year,
+                  transactionalManager
+                );
+
+          }
 
       // Initialize crop recommendation object for this defoliation group
       const cropRecData = {
@@ -1435,6 +1503,7 @@ class UpdateRecommendation {
           case 0:
             cropRecData.CropN = calc.recommendation;
             cropRecData.FertilizerN = calc.cropNeed;
+            cropRecData.ManureN = availableNForNextDefoliation + nextCropAvailableN;
             cropRecData.NIndex = calc.indexpH;
             break;
           case 1:
@@ -1467,14 +1536,14 @@ class UpdateRecommendation {
       }
 
       // Retrieve the management period that matches the crop and defoliationId.
-      const managementPeriods = await transactionalManager.find(
-        ManagementPeriodEntity,
-        { where: { CropID: cropID, Defoliation: defoliationId } }
-      );
+      // const managementPeriods = await transactionalManager.find(
+      //   ManagementPeriodEntity,
+      //   { where: { CropID: cropID, Defoliation: defoliationId } }
+      // );
 
-      if (!managementPeriods.length) continue;
+      // if (!managementPeriods.length) continue;
 
-      const managementPeriod = managementPeriods[0];
+      // const managementPeriod = managementPeriods[0];
 
       // Check if a recommendation exists for this management period
       const existingRecommendation = await transactionalManager.findOne(
