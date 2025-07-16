@@ -239,20 +239,20 @@ class UpdateRecommendationChanges {
       allManagementPeriods,
       transactionalManager
     );
-    const crops = allCropData.filter((crop) => crop.Year === year);
+    const crops = allCropData?.filter((crop) => crop.Year === year);
 
     if (crops.length > 0) {
       const cropIds = crops.map((crop) => crop.ID);
-      const managementPeriods = allManagementPeriods.filter((mp) =>
+      const managementPeriods = allManagementPeriods?.filter((mp) =>
         cropIds.includes(mp.CropID)
       );
-      const managementPeriodIDs = managementPeriods.map((mp) => mp.ID);
+      const managementPeriodIDs = managementPeriods?.map((mp) => mp.ID);
 
       if (managementPeriods.length === 0) {
         throw new Error("No Management Periods found for the selected crops");
       }
 
-      const organicManures = organicManureAllData.filter((om) =>
+      const organicManures = organicManureAllData?.filter((om) =>
         managementPeriodIDs.includes(om.ManagementPeriodID)
       );
 
@@ -316,7 +316,7 @@ class UpdateRecommendationChanges {
         const RecommendationComments = [];
     
         // Separate advice notes by sequenceId for crop (sequenceId = croporder)
-        const cropNotes = nutrientRecommendationsData.adviceNotes?.filter(
+        const cropNotes = nutrientRecommendationsData?.adviceNotes?.filter(
           (note) => note.sequenceId === savedCrop.CropOrder
         );
     
@@ -386,7 +386,7 @@ class UpdateRecommendationChanges {
           }
     
           // Remove comments from the database if the nutrientId is not in the new data
-          const commentsToDelete = existingComments.filter(
+          const commentsToDelete = existingComments?.filter(
             (comment) => !nutrientIdsInData.includes(comment.Nutrient)
           );
     
@@ -429,14 +429,14 @@ class UpdateRecommendationChanges {
   
       // Get all unique defoliationIds from filtered calculations
       const defoliationIds = [
-        ...new Set(filteredData.calculations.map((calc) => calc.defoliationId)),
+        ...new Set(filteredData?.calculations?.map((calc) => calc.defoliationId)),
       ];
   
       // Loop over each defoliationId
       for (const defoliationId of defoliationIds) {
         // Extract all calculations with this defoliationId
         const defoliationData = await this.extractNutrientData(
-          filteredData.calculations,
+          filteredData?.calculations,
           defoliationId
         );
         let relevantMannerOutput = null;
@@ -691,7 +691,7 @@ class UpdateRecommendationChanges {
         fieldData.ID,
         pKBalanceAllData
       );
-      const dataMultipleCrops = allCropData.filter(
+      const dataMultipleCrops = allCropData?.filter(
         (crop) =>
           crop.FieldID === fieldData.ID &&
           crop.Year === cropData.Year &&
@@ -1456,11 +1456,11 @@ class UpdateRecommendationChanges {
   }
 
   async filterBySingleSequenceId(data, sequenceId) {
-    const filteredCalculations = data.calculations.filter(
+    const filteredCalculations = data?.calculations?.filter(
       (item) => item.sequenceId === sequenceId
     );
 
-    const filteredAdviceNotes = data.adviceNotes.filter(
+    const filteredAdviceNotes = data?.adviceNotes?.filter(
       (item) => item.sequenceId === sequenceId
     );
 
@@ -1471,7 +1471,7 @@ class UpdateRecommendationChanges {
     };
   }
   async extractNutrientData(calculations, defoliationId) {
-    return calculations.filter((c) => c.defoliationId === defoliationId);
+    return calculations?.filter((c) => c.defoliationId === defoliationId);
   }
   async buildCropRecommendationData(
     cropData,
@@ -1490,7 +1490,7 @@ class UpdateRecommendationChanges {
 
     // Get all unique defoliationIds from filtered calculations
     const defoliationIds = [
-      ...new Set(filteredData.calculations.map((calc) => calc.defoliationId)),
+      ...new Set(filteredData?.calculations?.map((calc) => calc.defoliationId)),
     ];
 
     // Loop over each defoliationId
@@ -1979,10 +1979,10 @@ class UpdateRecommendationChanges {
     const RecommendationComments = [];
 
     // Separate advice notes by sequenceId for first crop (sequenceId = 1) and second crop (sequenceId = 2)
-    const firstCropNotes = nutrientRecommendationsData.adviceNotes?.filter(
+    const firstCropNotes = nutrientRecommendationsData?.adviceNotes?.filter(
       (note) => note.sequenceId === 1
     );
-    const secondCropNotes = nutrientRecommendationsData.adviceNotes?.filter(
+    const secondCropNotes = nutrientRecommendationsData?.adviceNotes?.filter(
       (note) => note.sequenceId === 2
     );
 
@@ -2037,7 +2037,7 @@ class UpdateRecommendationChanges {
       }
 
       // Remove comments from the database if the nutrientId is not in the new data
-      const commentsToDelete = existingComments.filter(
+      const commentsToDelete = existingComments?.filter(
         (comment) => !nutrientIdsInData.includes(comment.Nutrient)
       );
 
@@ -2268,8 +2268,8 @@ class UpdateRecommendationChanges {
     const recommendationComments = [];
 
     // Separate notes by crop sequence
-    const firstCropNotes = arableNotes.filter((note) => note.sequenceId === 1);
-    const secondCropNotes = arableNotes.filter((note) => note.sequenceId === 2);
+    const firstCropNotes = arableNotes?.filter((note) => note.sequenceId === 1);
+    const secondCropNotes = arableNotes?.filter((note) => note.sequenceId === 2);
 
     // Group notes by nutrientId and concatenate
     const groupNotesByNutrientId = (notes) => {
@@ -3578,7 +3578,7 @@ class UpdateRecommendationChanges {
     request
   ) {
     // Filter organic manure data based on ManagementPeriodID
-    const mulOrganicManuresData = organicManureAllData.filter(
+    const mulOrganicManuresData = organicManureAllData?.filter(
       (manure) => manure.ManagementPeriodID === managementPeriodID
     );
 
