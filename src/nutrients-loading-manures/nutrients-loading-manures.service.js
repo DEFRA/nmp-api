@@ -36,7 +36,7 @@ class NutrientsLoadingManuresService extends BaseService {
       //   NutrientsLoadingManuresEntity,
       //   { where: { FarmID: FarmID } }
       // );
-
+    const { SaveDefaultForFarm, NutrientsLoadingManure } = payload;
       const {
         ID,
         DryMatterPercent,
@@ -49,7 +49,7 @@ class NutrientsLoadingManuresService extends BaseService {
         ModifiedByID,
         ModifiedOn,
         ...cleanPayload
-      } = payload;
+      } = NutrientsLoadingManure; 
 console.log('Clean',cleanPayload)
       const newRecord = transactionalManager.create(
         NutrientsLoadingManuresEntity,
