@@ -1123,7 +1123,12 @@ class UpdateRecommendation {
         pKBalanceAllData
       );
 
-      if (crop.CropTypeID === CropTypeMapper.OTHER && crop.CropInfo1 === null) {
+      if (
+        (crop.CropTypeID === CropTypeMapper.OTHER && crop.CropInfo1 === null) ||
+        (crop.CropInfo1 === null &&
+          crop?.Yield === null &&
+          crop?.DefoliationSequenceID === null)
+      ) {
         try {
           let saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldId,

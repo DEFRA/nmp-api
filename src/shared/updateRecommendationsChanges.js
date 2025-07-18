@@ -905,8 +905,11 @@ class UpdateRecommendationChanges {
         pKBalanceAllData
       );
       if (
-        cropData.CropTypeID === CropTypeMapper.OTHER &&
-        cropData.CropInfo1 === null
+        (cropData.CropTypeID === CropTypeMapper.OTHER &&
+          cropData.CropInfo1 === null) ||
+        (cropData.CropInfo1 === null &&
+          cropData?.Yield === null &&
+          cropData?.DefoliationSequenceID === null)
       ) {
         const otherRecommendations = await this.saveRecommendationForOtherCrops(
           transactionalManager,
@@ -2278,16 +2281,17 @@ class UpdateRecommendationChanges {
     // Prepare cropOrderData with the values from latestSoilAnalysis, snsAnalysesData, and mannerOutputReq
     let cropOrderData = {
       CropN: null,
-      ManureN: mannerOutputs.data.currentCropAvailableN,
+      ManureN: mannerOutputs[0].availableN,
       FertilizerN: null,
       CropP2O5: null,
-      ManureP2O5: mannerOutputs.data.cropAvailableP2O5 || null,
+      ManureP2O5: mannerOutputs[0].availableP || null,
       FertilizerP2O5: null,
-      ManureK2O: mannerOutputs.data.cropAvailableK2O || null,
+      ManureK2O: mannerOutputs[0].availableK || null,
       CropMgO: null,
       ManureMgO: null,
       FertilizerMgO: null,
       CropSO3: null,
+      ManureSO3: mannerOutputs[0].availableS || null,
       ManureSO3: null,
       FertilizerSO3: null,
       CropNa2O: null, // assuming Na2O is present in mannerOutputReq if not remove this
