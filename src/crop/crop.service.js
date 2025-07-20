@@ -2181,7 +2181,7 @@ class CropService extends BaseService {
 
       // Step 3: Loop through each crop
       for (const crop of crops) {
-        // ✅ Skip if critical fields are null
+       
         if (
           crop.CropInfo1 === null &&
           crop.Yield === null &&
@@ -2201,15 +2201,28 @@ class CropService extends BaseService {
           (item) =>
             item.PhosphorusIndex !== null || item.PotassiumIndex !== null
         );
-        const pkBalanceData = await transactionalManager.findOne(
-          PKBalanceEntity,
-          {
-            where: {
-              FieldID: crop.FieldID,
-              Year: harvestYear,
-            },
-          }
-        );
+       const pkBalanceData = await transactionalManager.findOne(
+         PKBalanceEntity,
+         {
+           where: {
+             FieldID: crop.FieldID,
+             Year: copyYear,
+           },
+         }
+       );
+
+       if (pkBalanceData) {
+         const newPkBalance = {
+           ...pkBalanceData,
+           ID: null, // Ensure it's treated as a new insert
+           Year: harvestYear,
+           CreatedByID: userId,
+           CreatedOn: new Date(),
+         };
+
+         await transactionalManager.save(PKBalanceEntity, newPkBalance);
+       }
+
 
         // Find any crop plan with the same field and year > copyYear
         const cropPlanOfNextYear = await transactionalManager.findOne(
@@ -2249,7 +2262,7 @@ class CropService extends BaseService {
         const snsAnalysisData = await transactionalManager.findOne(
           SnsAnalysesEntity,
           {
-            where: { CropID: crop.ID }, // or pass `id` if used directly
+            where: { CropID: crop.ID }, 
           }
         );
         const managementPeriods = await transactionalManager.find(
@@ -2424,8 +2437,16 @@ class CropService extends BaseService {
               let updatedApplicationDate = null;
               if (manure.ApplicationDate) {
                 const originalDate = new Date(manure.ApplicationDate);
+                const month = originalDate.getMonth(); // 0 = Jan, 7 = Aug
+                const day = originalDate.getDate();
+                let yearToSet = harvestYear;
+                // If date is from previous harvest year window (1 Aug - 31 Dec)
+                if (month >= 7) {
+                  yearToSet = harvestYear - 1;
+                }
+
                 updatedApplicationDate = new Date(originalDate);
-                updatedApplicationDate.setFullYear(harvestYear);
+                updatedApplicationDate.setFullYear(yearToSet);
               }
               const newManure = {
                 ...manure,
@@ -2500,16 +2521,56 @@ class CropService extends BaseService {
         Recommendations.push({
           Recommendation: updatedRecommendation,
         });
-        if (savedCrop.CropTypeID != CropTypeMapper.GRASS) {
-          savedRecommendationComment = await this.saveMultipleRecommendation(
-            Recommendations,
-            savedCrop,
-            updatedRecommendation[0],
-            transactionalManager,
-            nutrientRecommendationsData,
-            userId
-          );
-        }
+        // if (savedCrop.CropTypeID != CropTypeMapper.GRASS) {
+        //   savedRecommendationComment = await this.saveMultipleRecommendation(
+        //     Recommendations,
+        //     savedCrop,
+        //     updatedRecommendation[0],
+        //     transactionalManager,
+        //     nutrientRecommendationsData,
+        //     userId
+        //   );
+        // }
+
+             const isGrass = savedCrop.CropTypeID === CropTypeMapper.GRASS;
+        
+                     const hasDefoliationIdInAdviceNotes =
+                       nutrientRecommendationsData.adviceNotes?.some((note) =>
+                         Object.prototype.hasOwnProperty.call(note, "defoliationId")
+                       );
+        
+                     if (isGrass) {
+                       if (hasDefoliationIdInAdviceNotes) {
+                         for (const singleRecommendation of updatedRecommendation) {
+                           await this.saveMultipleRecommendation(
+                             Recommendations,
+                             savedCrop,
+                             singleRecommendation,
+                             transactionalManager,
+                             nutrientRecommendationsData,
+                             userId
+                           );
+                         }
+                       } else {
+                        await this.saveMultipleRecommendation(
+                          Recommendations,
+                          savedCrop,
+                          updatedRecommendation[0],
+                          transactionalManager,
+                          nutrientRecommendationsData,
+                          userId
+                        );
+                       }
+                     } else {
+                      await this.saveMultipleRecommendation(
+                        Recommendations,
+                        savedCrop,
+                        updatedRecommendation[0],
+                        transactionalManager,
+                        nutrientRecommendationsData,
+                        userId
+                      );
+                     }
 
         // 5. If isFertiliser, copy fertiliser manures
         if (isFertiliser) {
