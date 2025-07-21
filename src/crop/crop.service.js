@@ -391,7 +391,7 @@ class CropService extends BaseService {
       }
     };
 
-   const findDefoliationSequenceDescription = async (
+    const findDefoliationSequenceDescription = async (
       DefoliationSequenceID
     ) => {
       try {
@@ -421,7 +421,7 @@ class CropService extends BaseService {
       const { PlantingDate } = await findCropDetailsFromRepo(plan.CropID);
 
       let defoliationSequenceDescription = null;
-	 if (plan.DefoliationSequenceID != null) {
+      if (plan.DefoliationSequenceID != null) {
         defoliationSequenceDescription =
           await findDefoliationSequenceDescription(plan.DefoliationSequenceID);
       }
@@ -527,66 +527,90 @@ class CropService extends BaseService {
     };
   }
   async deleteCropById(CropsID, userId, request) {
-    const crop = await this.repository.findOneBy({
-      ID: CropsID,
-    });
-
-    // Construct the stored procedure to delete a single crop by its ID
-    const storedProcedure = "EXEC dbo.spCrops_DeleteCrops @CropsID = @0";
-    // If the crop's CropOrder is 1, check for a second crop (CropOrder = 2) in the same year
-    if (crop.CropOrder === 1) {
-      const secondCrop = await this.repository.findOne({
-        where: {
-          Year: crop.Year,
-          CropOrder: 2, // Find the second crop with CropOrder 2
-          FieldID: crop.FieldID,
-        },
+    await AppDataSource.manager.transaction(async (transactionalManager) => {
+      const crop = await transactionalManager.findOne(this.repository.target, {
+        where: { ID: CropsID },
       });
 
-      // If the second crop exists, delete it
-      if (secondCrop) {
-        const storedProcedureSecondCrop =
-          "EXEC dbo.spCrops_DeleteCrops @CropsID = @0";
-        await AppDataSource.query(storedProcedureSecondCrop, [secondCrop.ID]);
+      if (!crop) {
+        throw new Error("Crop not found");
       }
-    }
 
-    // Pass the individual cropId to the stored procedure
-    await AppDataSource.query(storedProcedure, [CropsID]);
+      // Construct the stored procedure to delete a single crop by its ID
+      const storedProcedure = "EXEC dbo.spCrops_DeleteCrops @CropsID = @0";
 
-    // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
-    const nextAvailableCrop = await this.repository.findOne({
-      where: {
-        FieldID: crop.FieldID,
-        Year: MoreThan(crop.Year), // Find the next available year greater than the current crop.Year
-      },
-      order: {
-        Year: "ASC", // Ensure we get the next immediate year
-      },
-    });
-    if (nextAvailableCrop) {
-      this.UpdateRecommendation.updateRecommendationsForField(
-        crop.FieldID,
-        nextAvailableCrop.Year,
-        request,
-        userId
-      )
-        .then((res) => {
-          if (res === undefined) {
-            console.log(
-              "updateRecommendationAndOrganicManure returned undefined"
-            );
-          } else {
-            console.log("updateRecommendationAndOrganicManure result:", res);
+      // If the crop's CropOrder is 1, check for a second crop (CropOrder = 2) in the same year
+      if (crop.CropOrder === 1) {
+        const secondCrop = await transactionalManager.findOne(
+          CropEntity,
+          {
+            where: {
+              Year: crop.Year,
+              CropOrder: CropOrderMapper.SECONDCROP,
+              FieldID: crop.FieldID,
+            },
           }
-        })
-        .catch((error) => {
-          console.error(
-            "Error updating recommendation and organic manure:",
-            error
-          );
-        });
-    }
+        );
+
+        if (secondCrop) {
+          const storedProcedureSecondCrop =
+            "EXEC dbo.spCrops_DeleteCrops @CropsID = @0";
+          await transactionalManager.query(storedProcedureSecondCrop, [
+            secondCrop.ID,
+          ]);
+
+        
+        }
+      }
+
+      // Delete the primary crop
+      await transactionalManager.query(storedProcedure, [CropsID]);
+      await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+        crop.FieldID,
+        crop.Year,
+        request,
+        userId,
+        transactionalManager
+      );
+      // Find the next available crop
+      const nextAvailableCrop = await transactionalManager.findOne(
+        CropEntity,
+        {
+          where: {
+            FieldID: crop.FieldID,
+            Year: MoreThan(crop.Year),
+          },
+          order: {
+            Year: "ASC",
+          },
+        }
+      );
+
+      if (nextAvailableCrop) {
+        // Not transactional — it's okay if this fails independently
+        this.UpdateRecommendation.updateRecommendationsForField(
+          crop.FieldID,
+          nextAvailableCrop.Year,
+          request,
+          userId
+        )
+          .then((res) => {
+            if (res === undefined) {
+              console.log(
+                "updateRecommendationAndOrganicManure returned undefined"
+              );
+            } else {
+              console.log("updateRecommendationAndOrganicManure result:", res);
+            }
+          })
+          .catch((error) => {
+            console.error(
+              "Error updating recommendation and organic manure:",
+              error
+            );
+          });
+      }
+    });
   }
 
   async CropGroupNameExists(cropIds, newGroupName, year, farmId) {
@@ -706,116 +730,113 @@ class CropService extends BaseService {
           updatedCrop.Year
         );
 
-      
-
         // 1. Fetch all existing ManagementPeriods for this crop
-const existingPeriods = await transactionalManager.find(ManagementPeriodEntity, {
-  where: { CropID: ID },
-});
-const existingPeriodIDs = new Set(existingPeriods.map(p => p.ID));
+        const existingPeriods = await transactionalManager.find(
+          ManagementPeriodEntity,
+          {
+            where: { CropID: ID },
+          }
+        );
+        const existingPeriodIDs = new Set(existingPeriods.map((p) => p.ID));
 
-// 2. Extract IDs from request
-const requestPeriodIDs = new Set(
-  (cropEntry.ManagementPeriods || []).map(p => p.ID).filter(Boolean)
-);
+        // 2. Extract IDs from request
+        const requestPeriodIDs = new Set(
+          (cropEntry.ManagementPeriods || []).map((p) => p.ID).filter(Boolean)
+        );
 
-// 3. Prepare result array
-const updatedManagementPeriods = [];
+        // 3. Prepare result array
+        const updatedManagementPeriods = [];
 
-// 4. Handle insert/update
-for (const period of cropEntry.ManagementPeriods || []) {
-  const {
-    ID: periodID,
-    CreatedByID,
-    CreatedOn,
-    ...periodDataToUpdate
-  } = period;
+        // 4. Handle insert/update
+        for (const period of cropEntry.ManagementPeriods || []) {
+          const {
+            ID: periodID,
+            CreatedByID,
+            CreatedOn,
+            ...periodDataToUpdate
+          } = period;
 
-  if (periodID && existingPeriodIDs.has(periodID)) {
-    // Update existing
-    await transactionalManager.update(
-      ManagementPeriodEntity,
-      periodID,
-      {
-        ...periodDataToUpdate,
-        ModifiedByID: userId,
-        ModifiedOn: new Date(),
-      }
-    );
+          if (periodID && existingPeriodIDs.has(periodID)) {
+            // Update existing
+            await transactionalManager.update(
+              ManagementPeriodEntity,
+              periodID,
+              {
+                ...periodDataToUpdate,
+                ModifiedByID: userId,
+                ModifiedOn: new Date(),
+              }
+            );
 
-    const updatedPeriod = await transactionalManager.findOne(
-      ManagementPeriodEntity,
-      { where: { ID: periodID } }
-    );
+            const updatedPeriod = await transactionalManager.findOne(
+              ManagementPeriodEntity,
+              { where: { ID: periodID } }
+            );
 
-    if (updatedPeriod) {
-      updatedManagementPeriods.push(updatedPeriod);
-    }
-  } else {
-  
-      const newPeriod = await transactionalManager.save(
-        ManagementPeriodEntity,
-        {
-          ...periodDataToUpdate,
-          CropID: ID,
-          CreatedByID: userId,
-          CreatedOn: new Date(),
-          ModifiedByID: userId,
-          ModifiedOn: new Date(),
+            if (updatedPeriod) {
+              updatedManagementPeriods.push(updatedPeriod);
+            }
+          } else {
+            const newPeriod = await transactionalManager.save(
+              ManagementPeriodEntity,
+              {
+                ...periodDataToUpdate,
+                CropID: ID,
+                CreatedByID: userId,
+                CreatedOn: new Date(),
+                ModifiedByID: userId,
+                ModifiedOn: new Date(),
+              }
+            );
+
+            if (newPeriod) {
+              updatedManagementPeriods.push(newPeriod);
+              requestPeriodIDs.add(newPeriod.ID); // important for later delete filtering
+            }
+          }
         }
-      );
 
-      if (newPeriod) {
-        updatedManagementPeriods.push(newPeriod);
-        requestPeriodIDs.add(newPeriod.ID); // important for later delete filtering
-      }
-    
-  }
-}
+        // 5. Delete missing periods and their associated records
+        const periodIDsToDelete = [...existingPeriodIDs].filter(
+          (existingID) => !requestPeriodIDs.has(existingID)
+        );
 
-// 5. Delete missing periods and their associated records
-const periodIDsToDelete = [...existingPeriodIDs].filter(
-  existingID => !requestPeriodIDs.has(existingID)
-);
+        for (const oldID of periodIDsToDelete) {
+          // 1. Delete OrganicManure entries
+          await transactionalManager.delete(OrganicManureEntity, {
+            ManagementPeriodID: oldID,
+          });
 
-for (const oldID of periodIDsToDelete) {
-  // 1. Delete OrganicManure entries
-  await transactionalManager.delete(OrganicManureEntity, {
-    ManagementPeriodID: oldID,
-  });
+          // 2. Delete FertiliserManure entries
+          await transactionalManager.delete(FertiliserManuresEntity, {
+            ManagementPeriodID: oldID,
+          });
 
-  // 2. Delete FertiliserManure entries
-  await transactionalManager.delete(FertiliserManuresEntity, {
-    ManagementPeriodID: oldID,
-  });
+          // 3. Find and delete Recommendations and their Comments
+          const recommendations = await transactionalManager.find(
+            RecommendationEntity,
+            {
+              where: { ManagementPeriodID: oldID },
+            }
+          );
 
-  // 3. Find and delete Recommendations and their Comments
-  const recommendations = await transactionalManager.find(
-    RecommendationEntity,
-    {
-      where: { ManagementPeriodID: oldID },
-    }
-  );
+          for (const recommendation of recommendations) {
+            // 3a. Delete comments tied to this recommendation
+            await transactionalManager.delete(RecommendationCommentEntity, {
+              RecommendationID: recommendation.ID,
+            });
 
-  for (const recommendation of recommendations) {
-    // 3a. Delete comments tied to this recommendation
-    await transactionalManager.delete(RecommendationCommentEntity, {
-      RecommendationID: recommendation.ID,
-    });
+            // 3b. Delete the recommendation itself
+            await transactionalManager.delete(RecommendationEntity, {
+              ID: recommendation.ID,
+            });
+          }
 
-    // 3b. Delete the recommendation itself
-    await transactionalManager.delete(RecommendationEntity, {
-      ID: recommendation.ID,
-    });
-  }
-
-  // 4. Finally, delete the ManagementPeriod itself
-  await transactionalManager.delete(ManagementPeriodEntity, {
-    ID: oldID,
-  });
-}
-
-
+          // 4. Finally, delete the ManagementPeriod itself
+          await transactionalManager.delete(ManagementPeriodEntity, {
+            ID: oldID,
+          });
+        }
 
         // Recommendation update
         await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
@@ -2014,11 +2035,33 @@ for (const oldID of periodIDsToDelete) {
     userId
   ) {
     const RecommendationComments = [];
+    let cropNotes = [];
 
-    // Separate advice notes by sequenceId for crop (sequenceId = croporder)
-    const cropNotes = nutrientRecommendationsData.adviceNotes?.filter(
-      (note) => note.sequenceId === savedCrop.CropOrder
-    );
+    const hasDefoliationIdInNotes =
+      nutrientRecommendationsData.adviceNotes?.some((note) =>
+        Object.prototype.hasOwnProperty.call(note, "defoliationId")
+      );
+
+    if (hasDefoliationIdInNotes) {
+      const managementPeriod = await transactionalManager.find(
+        ManagementPeriodEntity,
+        {
+          where: { ID: savedCrop.ManagementPeriodID },
+        }
+      );
+
+      const defoliationValue = managementPeriod?.[0]?.Defoliation;
+
+      cropNotes = nutrientRecommendationsData.adviceNotes.filter(
+        (note) =>
+          note.defoliationId === defoliationValue &&
+          note.sequenceId === savedCrop.CropOrder
+      );
+    } else {
+      cropNotes = nutrientRecommendationsData.adviceNotes?.filter(
+        (note) => note.sequenceId === savedCrop.CropOrder
+      );
+    }
 
     // Helper function to group notes by nutrientId and concatenate them
     const groupNotesByNutrientId = (notes) => {
@@ -2138,15 +2181,14 @@ for (const oldID of periodIDsToDelete) {
 
       // Step 3: Loop through each crop
       for (const crop of crops) {
-
-         // ✅ Skip if critical fields are null
-  if (
-    crop.CropInfo1 === null &&
-    crop.Yield === null &&
-    crop.DefoliationSequenceID === null
-  ) {
-    continue;
-  }
+       
+        if (
+          crop.CropInfo1 === null &&
+          crop.Yield === null &&
+          crop.DefoliationSequenceID === null
+        ) {
+          continue;
+        }
         // Check if any soil analysis record has P or K index
         const soilAnalysis = await transactionalManager.find(
           SoilAnalysisEntity,
@@ -2159,15 +2201,28 @@ for (const oldID of periodIDsToDelete) {
           (item) =>
             item.PhosphorusIndex !== null || item.PotassiumIndex !== null
         );
-        const pkBalanceData = await transactionalManager.findOne(
-          PKBalanceEntity,
-          {
-            where: {
-              FieldID: crop.FieldID,
-              Year: harvestYear,
-            },
-          }
-        );
+       const pkBalanceData = await transactionalManager.findOne(
+         PKBalanceEntity,
+         {
+           where: {
+             FieldID: crop.FieldID,
+             Year: copyYear,
+           },
+         }
+       );
+
+       if (pkBalanceData) {
+         const newPkBalance = {
+           ...pkBalanceData,
+           ID: null, // Ensure it's treated as a new insert
+           Year: harvestYear,
+           CreatedByID: userId,
+           CreatedOn: new Date(),
+         };
+
+         await transactionalManager.save(PKBalanceEntity, newPkBalance);
+       }
+
 
         // Find any crop plan with the same field and year > copyYear
         const cropPlanOfNextYear = await transactionalManager.findOne(
@@ -2207,7 +2262,7 @@ for (const oldID of periodIDsToDelete) {
         const snsAnalysisData = await transactionalManager.findOne(
           SnsAnalysesEntity,
           {
-            where: { CropID: crop.ID }, // or pass `id` if used directly
+            where: { CropID: crop.ID }, 
           }
         );
         const managementPeriods = await transactionalManager.find(
@@ -2344,7 +2399,7 @@ for (const oldID of periodIDsToDelete) {
             ...crop,
             ID: null, // ensure it's treated as new
             Year: harvestYear,
-            SowingDate:updatedSowingDate,
+            SowingDate: updatedSowingDate,
             CreatedByID: userId,
             CreatedOn: new Date(),
           })
@@ -2379,12 +2434,19 @@ for (const oldID of periodIDsToDelete) {
             );
 
             for (const manure of manures) {
-
               let updatedApplicationDate = null;
               if (manure.ApplicationDate) {
                 const originalDate = new Date(manure.ApplicationDate);
+                const month = originalDate.getMonth(); // 0 = Jan, 7 = Aug
+                const day = originalDate.getDate();
+                let yearToSet = harvestYear;
+                // If date is from previous harvest year window (1 Aug - 31 Dec)
+                if (month >= 7) {
+                  yearToSet = harvestYear - 1;
+                }
+
                 updatedApplicationDate = new Date(originalDate);
-                updatedApplicationDate.setFullYear(harvestYear);
+                updatedApplicationDate.setFullYear(yearToSet);
               }
               const newManure = {
                 ...manure,
@@ -2423,8 +2485,6 @@ for (const oldID of periodIDsToDelete) {
           }
         }
 
-       
-
         for (const oldPeriod of managementPeriods) {
           const oldRecommendations = await transactionalManager.find(
             RecommendationEntity,
@@ -2461,17 +2521,56 @@ for (const oldID of periodIDsToDelete) {
         Recommendations.push({
           Recommendation: updatedRecommendation,
         });
-        if (savedCrop.CropTypeID != CropTypeMapper.GRASS) {
-          savedRecommendationComment = await this.saveMultipleRecommendation(
-            Recommendations,
-            savedCrop,
-            updatedRecommendation[0],
-            transactionalManager,
-            nutrientRecommendationsData,
-            userId
-          );
-      
-        }
+        // if (savedCrop.CropTypeID != CropTypeMapper.GRASS) {
+        //   savedRecommendationComment = await this.saveMultipleRecommendation(
+        //     Recommendations,
+        //     savedCrop,
+        //     updatedRecommendation[0],
+        //     transactionalManager,
+        //     nutrientRecommendationsData,
+        //     userId
+        //   );
+        // }
+
+             const isGrass = savedCrop.CropTypeID === CropTypeMapper.GRASS;
+        
+                     const hasDefoliationIdInAdviceNotes =
+                       nutrientRecommendationsData.adviceNotes?.some((note) =>
+                         Object.prototype.hasOwnProperty.call(note, "defoliationId")
+                       );
+        
+                     if (isGrass) {
+                       if (hasDefoliationIdInAdviceNotes) {
+                         for (const singleRecommendation of updatedRecommendation) {
+                           await this.saveMultipleRecommendation(
+                             Recommendations,
+                             savedCrop,
+                             singleRecommendation,
+                             transactionalManager,
+                             nutrientRecommendationsData,
+                             userId
+                           );
+                         }
+                       } else {
+                        await this.saveMultipleRecommendation(
+                          Recommendations,
+                          savedCrop,
+                          updatedRecommendation[0],
+                          transactionalManager,
+                          nutrientRecommendationsData,
+                          userId
+                        );
+                       }
+                     } else {
+                      await this.saveMultipleRecommendation(
+                        Recommendations,
+                        savedCrop,
+                        updatedRecommendation[0],
+                        transactionalManager,
+                        nutrientRecommendationsData,
+                        userId
+                      );
+                     }
 
         // 5. If isFertiliser, copy fertiliser manures
         if (isFertiliser) {
@@ -2496,7 +2595,7 @@ for (const oldID of periodIDsToDelete) {
                 ManagementPeriodID: oldToNewManagementPeriodMap[oldPeriod.ID],
                 ApplicationDate: updatedApplicationDate,
                 CreatedByID: userId,
-                CreatedOn:new Date()
+                CreatedOn: new Date(),
               };
 
               const savedFert = await transactionalManager.save(
@@ -2507,7 +2606,6 @@ for (const oldID of periodIDsToDelete) {
             }
           }
         }
-      
 
         if (cropPlanOfNextYear) {
           this.UpdateRecommendation.updateRecommendationsForField(

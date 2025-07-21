@@ -1,7 +1,7 @@
 const Joi = require("joi");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { NutrientsLoadingManuresController } = require("./nutrients-loading-manures.controller");
-const { NutrientsLoadingManuresDto } = require("./dto/nutrients-loading-manures.dto");
+const { NutrientsLoadingManuresDto, CreateNutrientsLoadingManuresDto } = require("./dto/nutrients-loading-manures.dto");
 
 module.exports = [
   {
@@ -35,7 +35,7 @@ module.exports = [
       tags: ["api", "NutrientsLoadingManures"],
       description: "Create NutrientsLoadingManures",
       validate: {
-        payload: NutrientsLoadingManuresDto,
+        payload: CreateNutrientsLoadingManuresDto,
         failAction: (request, h, err) =>
           h
             .response(formatErrorResponse({ source: { error: err }, request }))
