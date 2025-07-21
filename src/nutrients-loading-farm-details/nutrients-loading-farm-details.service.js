@@ -18,11 +18,11 @@ class NutrientsLoadingFarmDetailsService extends BaseService {
     const whereClause = { FarmID: farmId };
 
     // Only include year in where clause if it's actually provided
-    if (year !== undefined || year !== null || year !== "") {
+    //if (year !== undefined || year !== null || year !== "") {
       whereClause.CalendarYear = year;
-    }
+    //}
 
-    const records = await this.repository.find({ where: whereClause });
+    const records = await this.repository.findOne({ where: whereClause });
 
     return { NutrientsLoadingFarmDetails: records };
   }

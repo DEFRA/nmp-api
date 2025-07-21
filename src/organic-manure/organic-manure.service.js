@@ -573,7 +573,7 @@ class OrganicManureService extends BaseService {
         grassland: {},
         grass:
           fieldType == FieldTypeMapper.BOTH ||
-          crop.FieldType == FieldTypeMapper.GRASS
+          fieldType == FieldTypeMapper.GRASS
             ? grassObject
             : {},
         soil: {

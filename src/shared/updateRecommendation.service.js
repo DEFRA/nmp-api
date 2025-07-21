@@ -3071,7 +3071,7 @@ class UpdateRecommendation {
         grassland: {},
         grass:
           fieldType == FieldTypeMapper.BOTH ||
-          crop.FieldType == FieldTypeMapper.GRASS
+          fieldType == FieldTypeMapper.GRASS
             ? grassObject
             : {},
         soil: {
