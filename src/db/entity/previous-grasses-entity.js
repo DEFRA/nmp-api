@@ -28,10 +28,6 @@ const PreviousGrassesEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
-    GrassTypicalCutID: {
-      type: "int",
-      nullable: true,
-    },
     HasGreaterThan30PercentClover: {
       type: "bit",
       nullable: true,
@@ -72,12 +68,6 @@ const PreviousGrassesEntity = new EntitySchema({
       type: "many-to-one",
       target: "GrassManagementOptions",
       joinColumn: { name: "GrassManagementOptionID" },
-      inverseSide: "PreviousGrasses",
-    },
-    GrassTypicalCuts: {
-      type: "many-to-one",
-      target: "GrassTypicalCuts",
-      joinColumn: { name: "GrassTypicalCutID" },
       inverseSide: "PreviousGrasses",
     },
     SoilNitrogenSupplyItems: {
