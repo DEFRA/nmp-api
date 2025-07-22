@@ -433,8 +433,8 @@ class PlanService extends BaseService {
         arable: fieldType == FieldTypeMapper.GRASS ? [] : arableBody,
         grassland: {},
         grass:
-          crop.FieldType == FieldTypeMapper.BOTH ||
-          crop.FieldType == FieldTypeMapper.GRASS
+          fieldType == FieldTypeMapper.BOTH ||
+          fieldType == FieldTypeMapper.GRASS
             ? grassObject
             : {},
         soil: {
