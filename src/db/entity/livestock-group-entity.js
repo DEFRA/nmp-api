@@ -1,6 +1,6 @@
 const { EntitySchema } = require("typeorm");
 
-const LivestockGroupsEntity = new EntitySchema({
+const LivestockGroupEntity = new EntitySchema({
   name: "LivestockGroups",
   tableName: "LivestockGroups",
   columns: {
@@ -29,4 +29,4 @@ const LivestockGroupsEntity = new EntitySchema({
   },
 });
 
-module.exports = { LivestockGroupsEntity };
+module.exports = { LivestockGroupEntity };
