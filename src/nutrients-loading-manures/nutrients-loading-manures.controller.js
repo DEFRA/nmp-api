@@ -1,6 +1,8 @@
 const boom = require("@hapi/boom");
 const { StaticStrings } = require("../shared/static.string");
-const { NutrientsLoadingManuresService } = require("./nutrients-loading-manures.service");
+const {
+  NutrientsLoadingManuresService,
+} = require("./nutrients-loading-manures.service");
 
 class NutrientsLoadingManuresController {
   #request;
@@ -54,6 +56,15 @@ class NutrientsLoadingManuresController {
           this.#request
         );
       return this.#h.response(updated);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+  async getById() {
+    const { id } = this.#request.params;
+    try {
+      const { records } = await this.#nutrientsFarmManureservice.getById(id);
+      return this.#h.response({ NutrientsLoadingManure: records });
     } catch (error) {
       return this.#h.response({ error });
     }
