@@ -15,8 +15,8 @@ class NutrientsLoadingManuresService extends BaseService {
     this.repository = AppDataSource.getRepository(
       NutrientsLoadingManuresEntity
     );
-        this.farmManureTypeRepository =
-          AppDataSource.getRepository(FarmManureTypeEntity);
+    this.farmManureTypeRepository =
+      AppDataSource.getRepository(FarmManureTypeEntity);
   }
 
   async getByFarmIdAndYear(farmId) {
@@ -41,20 +41,21 @@ class NutrientsLoadingManuresService extends BaseService {
       //   NutrientsLoadingManuresEntity,
       //   { where: { FarmID: FarmID } }
       // );
-    const { SaveDefaultForFarm, NutrientsLoadingManure } = payload;
+      const { SaveDefaultForFarm, NutrientsLoadingManure } = payload;
       const {
         ID,
-        DryMatterPercent,
-        NH4N,
-        UricAcid,
-        NO3N,
-        K2O,
-        SO3,
-        MgO,
+        // DryMatterPercent,
+        // NH4N,
+        // UricAcid,
+        // NO3N,
+        // K2O,
+        // SO3,
+        // MgO,
+        EncryptedID,
         ModifiedByID,
         ModifiedOn,
         ...cleanPayload
-      } = NutrientsLoadingManure; 
+      } = NutrientsLoadingManure;
       const newRecord = transactionalManager.create(
         NutrientsLoadingManuresEntity,
         {
@@ -65,92 +66,171 @@ class NutrientsLoadingManuresService extends BaseService {
       );
       // console.log("cleanPayload123", ...cleanPayload);
       // console.log("cleanPayload12223", newRecord);
-       const saved = await transactionalManager.save(
-         NutrientsLoadingManuresEntity,
-         newRecord
-       );
-         let savedFarmManureType;
+      const saved = await transactionalManager.save(
+        NutrientsLoadingManuresEntity,
+        newRecord
+      );
+      let savedFarmManureType;
       let farmManureTypeData;
-      
-        if (SaveDefaultForFarm) {
-                 farmManureTypeData = {
-                  FarmID: NutrientsLoadingManure.FarmID,
-                   ManureTypeID: NutrientsLoadingManure.ManureTypeID,
-                   ManureTypeName: NutrientsLoadingManure.ManureType,
-                   FieldTypeID: 1,
-                   TotalN: NutrientsLoadingManure.NContent, //Nitogen
-                   DryMatter: NutrientsLoadingManure.DryMatterPercent,
-                   NH4N: NutrientsLoadingManure.NH4N, //ammonium
-                  Uric: NutrientsLoadingManure.UricAcid, //uric acid
-                   NO3N: NutrientsLoadingManure.NO3N, //nitrate
-                   P2O5: NutrientsLoadingManure.PContent,
-                   SO3: NutrientsLoadingManure.SO3,
-                   K2O: NutrientsLoadingManure.K2O,
-                   MgO: NutrientsLoadingManure.MgO,
-                 };
-               }
-               if (farmManureTypeData) {
-                       const existingFarmManureType =
-                         await this.farmManureTypeRepository.findOne({
-                           where: {
-                             FarmID: farmManureTypeData.FarmID,
-                             ManureTypeID: farmManureTypeData.ManureTypeID,
-                             ManureTypeName: farmManureTypeData.ManureTypeName,
-                           },
-                         });
-                       if (existingFarmManureType) {
-                         await this.farmManureTypeRepository.update(
-                           existingFarmManureType.ID,
-                           {
-                             ...farmManureTypeData,
-                             ModifiedByID: userId,
-                             ModifiedOn: new Date(),
-                           }
-                        );
 
-                         savedFarmManureType = {
-                           ...existingFarmManureType,
-                           ...farmManureTypeData,
-                           ModifiedByID: userId,
-                           ModifiedOn: new Date(),
-                         };
-                       } else {
-                         savedFarmManureType = await transactionalManager.save(
-                           FarmManureTypeEntity,
-                           this.farmManureTypeRepository.create({
-                             ...farmManureTypeData,
-                            CreatedByID: userId,
-                             CreatedOn: new Date(),
-                           })
-                         );
-                      }
-                     }
+      if (SaveDefaultForFarm) {
+        farmManureTypeData = {
+          FarmID: NutrientsLoadingManure.FarmID,
+          ManureTypeID: NutrientsLoadingManure.ManureTypeID,
+          ManureTypeName: NutrientsLoadingManure.ManureType,
+          FieldTypeID: 1,
+          TotalN: NutrientsLoadingManure.NContent, //Nitogen
+          DryMatter: NutrientsLoadingManure.DryMatterPercent,
+          NH4N: NutrientsLoadingManure.NH4N, //ammonium
+          Uric: NutrientsLoadingManure.UricAcid, //uric acid
+          NO3N: NutrientsLoadingManure.NO3N, //nitrate
+          P2O5: NutrientsLoadingManure.PContent,
+          SO3: NutrientsLoadingManure.SO3,
+          K2O: NutrientsLoadingManure.K2O,
+          MgO: NutrientsLoadingManure.MgO,
+        };
+      }
+      if (farmManureTypeData) {
+        const existingFarmManureType =
+          await this.farmManureTypeRepository.findOne({
+            where: {
+              FarmID: farmManureTypeData.FarmID,
+              ManureTypeID: farmManureTypeData.ManureTypeID,
+              ManureTypeName: farmManureTypeData.ManureTypeName,
+            },
+          });
+        if (existingFarmManureType) {
+          await transactionalManager.update(
+            FarmManureTypeEntity,
+            existingFarmManureType.ID,
+            {
+              ...farmManureTypeData,
+              ModifiedByID: userId,
+              ModifiedOn: new Date(),
+            }
+          );
+
+          savedFarmManureType = {
+            ...existingFarmManureType,
+            ...farmManureTypeData,
+            ModifiedByID: userId,
+            ModifiedOn: new Date(),
+          };
+        } else {
+          savedFarmManureType = await transactionalManager.save(
+            FarmManureTypeEntity,
+            this.farmManureTypeRepository.create({
+              ...farmManureTypeData,
+              CreatedByID: userId,
+              CreatedOn: new Date(),
+            })
+          );
+        }
+      }
       return saved;
       //}
     });
   }
 
   async updateNutrientsLoadingManures(payload, userId) {
-    const { ID, FarmID, CreatedByID, CreatedOn, ...dataToUpdate } = payload;
-
-    const result = await this.repository.update(
-      { FarmID },
-      {
-        ...dataToUpdate,
-        ModifiedByID: userId,
-        ModifiedOn: new Date(),
-      }
-    );
-
-    if (result.affected === 0) {
-      throw boom.notFound(
-        `NutrientsLoadingFarmDetails with FarmId ${FarmID}  not found`
+    
+    return await AppDataSource.transaction(async (transactionalManager) => {
+      const { SaveDefaultForFarm, NutrientsLoadingManure } = payload;
+      const {
+        ID,
+        FarmID,
+        CreatedByID,
+        CreatedOn,
+        // DryMatterPercent,
+        // NH4N,
+        // UricAcid,
+        // NO3N,
+        // K2O,
+        // SO3,
+        // MgO,
+        EncryptedID,
+        ...dataToUpdate
+      } = NutrientsLoadingManure;
+      const result = await transactionalManager.update(
+        NutrientsLoadingManuresEntity,
+        { ID, FarmID },
+        {
+          ...dataToUpdate,
+          ModifiedByID: userId,
+          ModifiedOn: new Date(),
+        }
       );
-    }
+      
+      let savedFarmManureType;
+      let farmManureTypeData;
 
-    const updated = await this.repository.findOneBy({ FarmID });
+      if (SaveDefaultForFarm) {
+        farmManureTypeData = {
+          FarmID: NutrientsLoadingManure.FarmID,
+          ManureTypeID: NutrientsLoadingManure.ManureTypeID,
+          ManureTypeName: NutrientsLoadingManure.ManureType,
+          FieldTypeID: 1,
+          TotalN: NutrientsLoadingManure.NContent, //Nitogen
+          DryMatter: NutrientsLoadingManure.DryMatterPercent,
+          NH4N: NutrientsLoadingManure.NH4N, //ammonium
+          Uric: NutrientsLoadingManure.UricAcid, //uric acid
+          NO3N: NutrientsLoadingManure.NO3N, //nitrate
+          P2O5: NutrientsLoadingManure.PContent,
+          SO3: NutrientsLoadingManure.SO3,
+          K2O: NutrientsLoadingManure.K2O,
+          MgO: NutrientsLoadingManure.MgO,
+        };
+      }
+      if (farmManureTypeData) {
+        const existingFarmManureType =
+          await this.farmManureTypeRepository.findOne({
+            where: {
+              FarmID: farmManureTypeData.FarmID,
+              ManureTypeID: farmManureTypeData.ManureTypeID,
+              ManureTypeName: farmManureTypeData.ManureTypeName,
+            },
+          });
+        if (existingFarmManureType) {
+          await transactionalManager.update(
+            FarmManureTypeEntity,
+            existingFarmManureType.ID,
+            {
+              ...farmManureTypeData,
+              ModifiedByID: userId,
+              ModifiedOn: new Date(),
+            }
+          );
 
-    return updated;
+          savedFarmManureType = {
+            ...existingFarmManureType,
+            ...farmManureTypeData,
+            ModifiedByID: userId,
+            ModifiedOn: new Date(),
+          };
+        } else {
+          savedFarmManureType = await transactionalManager.save(
+            FarmManureTypeEntity,
+              this.farmManureTypeRepository.create({
+              ...farmManureTypeData,
+              CreatedByID: userId,
+              CreatedOn: new Date(),
+            })
+          );
+        }
+      }
+      if (result.affected === 0) {
+        throw boom.notFound(
+          `NutrientsLoadingFarmDetails with FarmId ${FarmID}  not found`
+        );
+      }
+
+      const updated = await transactionalManager.findOneBy(
+        NutrientsLoadingManuresEntity,
+        { ID,FarmID });
+
+      
+      return updated;
+    });
   }
 }
 
