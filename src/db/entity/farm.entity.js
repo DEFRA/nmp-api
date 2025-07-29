@@ -178,7 +178,12 @@ const FarmEntity = new EntitySchema({
       joinColumn: { name: "ID" },
       inverseSide: "Farm",
     },
-
+    NutrientsLoadingLiveStocks: {
+      type: "one-to-many",
+      target: "NutrientsLoadingLiveStocks",
+      joinColumn: { name: "ID" },
+      inverseSide: "Farm",
+    },
     CreatedByUser: {
       target: "User",
       type: "many-to-one",

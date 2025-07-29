@@ -40,6 +40,5 @@ module.exports = [
   ...require("./nutrients-loading-manures/nutrients-loading-manures.route"),
   ...require("./livestock-group/livestock-group.route"),
   ...require("./livestock-type/livestock-type.route"),
-
-
+  ...require("./nutrients-loading-live-stocks/nutrients-loading-live-stocks.route"),
 ];
