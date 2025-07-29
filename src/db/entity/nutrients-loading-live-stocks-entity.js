@@ -15,27 +15,15 @@ const NutrientsLoadingLiveStocksEntity = new EntitySchema({
       nullable: false,
       name: "FarmID",
     },
-    LiveStockGroupId: {
+    LiveStockGroupID: {
       type: "int",
       nullable: false,
-      name: "LiveStockGroupId",
+      name: "LiveStockGroupID",
     },
-    LiveStockGroup: {
-      type: "nvarchar",
-      length: 250,
-      nullable: true,
-      name: "LiveStockGroup",
-    },
-    LiveStockTypeId: {
+    LiveStockTypeID: {
       type: "int",
       nullable: true,
-      name: "LiveStockTypeId",
-    },
-    LiveStockType: {
-      type: "nvarchar",
-      length: 250,
-      nullable: true,
-      name: "LiveStockType",
+      name: "LiveStockTypeID",
     },
     Units: {
       type: "decimal",
