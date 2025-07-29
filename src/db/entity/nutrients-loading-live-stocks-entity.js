@@ -153,7 +153,18 @@ const NutrientsLoadingLiveStocksEntity = new EntitySchema({
       joinColumn: { name: "FarmID" },
       inverseSide: "NutrientsLoadingLiveStocks",
     },
-
+    NutrientsLoadingLiveStocksGroup: {
+      type: "many-to-one",
+      target: "LivestockGroups",
+      joinColumn: { name: "LiveStockGroupID" },
+      inverseSide: "LivestockGroupsIdInLiveStocks",
+    },
+    NutrientsLoadingLiveStocksType: {
+      type: "many-to-one",
+      target: "LivestockTypes",
+      joinColumn: { name: "LiveStockTypeID" },
+      inverseSide: "LivestockGroupsIdInLiveStocks",
+    },
     CreatedBy: {
       type: "many-to-one",
       target: "User",

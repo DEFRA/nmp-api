@@ -11,7 +11,6 @@ const createNutrientsLoadingLiveStocks = Joi.object({
   Occupancy: Joi.number().allow(null),
   PByUnit: Joi.number().allow(null),
   TotalPProduced: Joi.number().allow(null),
-
   Jan: Joi.number().allow(null),
   Feb: Joi.number().allow(null),
   Mar: Joi.number().allow(null),

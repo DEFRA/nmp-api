@@ -26,6 +26,14 @@ const LivestockGroupEntity = new EntitySchema({
       },
       inverseSide: "LivestockGroup",
     },
+    LivestockGroupsIdInLiveStocksNutrients: {
+      type: "one-to-many",
+      target: "NutrientsLoadingLiveStocks",
+      joinColumn: {
+        name: "ID",
+      },
+      inverseSide: "NutrientsLoadingLiveStocksGroup",
+    },
   },
 });
 
