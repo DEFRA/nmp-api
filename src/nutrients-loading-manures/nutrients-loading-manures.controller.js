@@ -69,6 +69,20 @@ class NutrientsLoadingManuresController {
       return this.#h.response({ error });
     }
   }
+    async deleteNutrientsLoadingManureById() {
+      const { nutrientsLoadingManureId } = this.#request.params;
+      try {
+        const result = await this.#nutrientsFarmManureservice.deleteNutrientsLoadingManureById(
+          nutrientsLoadingManureId
+        );
+        if (result?.affectedRows === 0) {
+          throw boom.notFound(`NutrientsLoadingManure with ID ${nutrientsLoadingManureById} not found.`);
+        }
+        return this.#h.response({ message: "NutrientsLoadingManure deleted successfully." });
+      } catch (error) {
+        return this.#h.response({ error: error.message });
+      }
+    }
 }
 
 module.exports = { NutrientsLoadingManuresController };

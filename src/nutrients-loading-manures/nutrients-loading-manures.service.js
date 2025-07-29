@@ -232,6 +232,26 @@ class NutrientsLoadingManuresService extends BaseService {
       return updated;
     });
   }
+    async deleteNutrientsLoadingManureById(nutrientsLoadingManureId) {
+    // Check if the NutrientsLoadingManure exists
+    const nutrientsLoadingManureData = await this.repository.findOne({
+      where: { ID: nutrientsLoadingManureId },
+    });
+
+    // If the NutrientsLoadingManure does not exist, throw a not found error
+    if (nutrientsLoadingManureData == null) {
+      throw boom.notFound(`NutrientsLoadingManure with ID ${nutrientsLoadingManureById} not found`);
+    }
+
+    try {
+      // Call the stored procedure to delete the NutrientsLoadingManure
+      const storedProcedure = "EXEC [dbo].[spNutrientsLoadingManures_DeleteNutrientsLoadingManures] @NutrientsLoadingManureID = @0";
+      await AppDataSource.query(storedProcedure, [nutrientsLoadingManureId]);
+    } catch (error) {
+      // Log the error and throw an internal server error
+      console.error("Error deleting NutrientsLoadingManure:", error);
+    }
+  }
 }
 
 module.exports = { NutrientsLoadingManuresService };
