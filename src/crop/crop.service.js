@@ -960,20 +960,19 @@ class CropService extends BaseService {
           transactionalManager
         );
   
-        const nextAvailableCrop = await transactionalManager.find(CropEntity, {
+        const nextAvailableCrop = await transactionalManager.findOne(CropEntity, {
           where: {
             FieldID: updatedCrop.FieldID,
             Year: MoreThan(updatedCrop.Year),
           },
-          order: { Year: "ASC" },
-          take: 1, // ensures only the first (earliest) one is returned
+          order: { Year: "ASC" }
         });
          console.log("nextAvailableCrop", nextAvailableCrop);
         // console.log("nextAvailableCrop[0].Year", nextAvailableCrop[0].Year.lengh);
-        if (nextAvailableCrop[0]?.Year) {
+        if (nextAvailableCrop) {
           this.UpdateRecommendation.updateRecommendationsForField(
             updatedCrop.FieldID,
-            nextAvailableCrop[0]?.Year,
+            nextAvailableCrop.Year,
             request,
             userId
           ).catch((error) => {
