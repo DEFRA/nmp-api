@@ -959,7 +959,7 @@ class CropService extends BaseService {
           userId,
           transactionalManager
         );
-
+  
         const nextAvailableCrop = await transactionalManager.find(CropEntity, {
           where: {
             FieldID: updatedCrop.FieldID,
@@ -968,8 +968,9 @@ class CropService extends BaseService {
           order: { Year: "ASC" },
           take: 1, // ensures only the first (earliest) one is returned
         });
-
-        if (nextAvailableCrop[0].Year) {
+         console.log("nextAvailableCrop", nextAvailableCrop);
+        // console.log("nextAvailableCrop[0].Year", nextAvailableCrop[0].Year.lengh);
+        if (nextAvailableCrop[0]?.Year) {
           this.UpdateRecommendation.updateRecommendationsForField(
             updatedCrop.FieldID,
             nextAvailableCrop[0].Year,
