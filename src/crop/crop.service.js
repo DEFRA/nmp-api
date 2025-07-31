@@ -973,7 +973,7 @@ class CropService extends BaseService {
         if (nextAvailableCrop[0]?.Year) {
           this.UpdateRecommendation.updateRecommendationsForField(
             updatedCrop.FieldID,
-            nextAvailableCrop[0].Year,
+            nextAvailableCrop[0]?.Year,
             request,
             userId
           ).catch((error) => {
