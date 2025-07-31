@@ -96,4 +96,34 @@ module.exports = [
       return controller.updateNutrientsLoadingManures();
     },
   },
+  {
+    method: "DELETE",
+    path: "/nutrientsLoadingManures/{nutrientsLoadingManureId}",
+    options: {
+      tags: ["api", "NutrientsLoadingManures"],
+      description: "Delete NutrientsLoadingManures by NutrientsLoadingManure Id",
+      validate: {
+        params: Joi.object({
+          nutrientsLoadingManureId: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new NutrientsLoadingManuresController(request, h);
+      return controller.deleteNutrientsLoadingManureById();
+    },
+  },
 ];

@@ -1,0 +1,63 @@
+const { BaseService } = require("../base/base.service");
+const { AppDataSource } = require("../db/data-source");
+const { NutrientsLoadingLiveStocksEntity } = require("../db/entity/nutrients-loading-live-stocks-entity");
+
+class NutrientsLoadingLiveStocksService extends BaseService {
+  constructor() {
+    super(NutrientsLoadingLiveStocksEntity);
+    this.repository = AppDataSource.getRepository(NutrientsLoadingLiveStocksEntity);
+  }
+
+  async getByFarmId(farmId) {
+    const record = await this.repository.findBy({
+      FarmID: farmId,
+    });
+    return  record ;
+  }
+
+
+
+  async createNutrientsLiveStocks(payload, userId) {
+   
+    return await AppDataSource.transaction(async (transactionalManager) => {
+      const { ID, FarmID,CreatedByID, CreatedOn, ...cleanPayload } = payload;
+
+      const existingRecord = await transactionalManager.findOne(
+        NutrientsLoadingLiveStocksEntity,
+        { where: { FarmID: FarmID } }
+      );
+
+       if (existingRecord) {
+         return { message: "Record already exists", existingRecord };
+       }
+      
+      const newRecord = transactionalManager.create(
+        NutrientsLoadingLiveStocksEntity,
+        {
+          ...cleanPayload,
+          FarmID: FarmID,
+          CreatedOn: new Date(),
+          CreatedByID: userId
+        }
+      );
+    
+      const saved = await transactionalManager.save(
+        NutrientsLoadingLiveStocksEntity,
+        newRecord
+      );
+
+      const savedRecord = await transactionalManager.findOne(
+        NutrientsLoadingLiveStocksEntity,
+        { where: { FarmID: FarmID } }
+      );
+
+
+      return savedRecord;
+    
+    });
+  }
+
+  
+}
+
+module.exports = { NutrientsLoadingLiveStocksService };

@@ -856,10 +856,10 @@ class CropService extends BaseService {
           take: 1, // ensures only the first (earliest) one is returned
         });
 
-        if (nextAvailableCrop.Year) {
+        if (nextAvailableCrop[0].Year) {
           this.UpdateRecommendation.updateRecommendationsForField(
             updatedCrop.FieldID,
-            nextAvailableCrop.Year,
+            nextAvailableCrop[0].Year,
             request,
             userId
           ).catch((error) => {
