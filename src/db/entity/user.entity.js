@@ -162,6 +162,19 @@ const UserEntity = new EntitySchema({
       inverseSide: "User",
       joinColumn: { name: "ID" },
     },
+
+    CreatedNutrientsLoadingLiveStocks: {
+      type: "one-to-many",
+      target: "NutrientsLoadingLiveStocks",
+      JoinColumn: "ID",
+      inverseSide: "CreatedBy",
+    },
+    ModifiedNutrientsLoadingLiveStocks: {
+      type: "one-to-many",
+      target: "NutrientsLoadingLiveStocks",
+      JoinColumn: "ID",
+      inverseSide: "ModifiedBy",
+    },
   },
 });
 

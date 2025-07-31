@@ -1,6 +1,6 @@
 const { EntitySchema } = require("typeorm");
 
-const LivestockGroupsEntity = new EntitySchema({
+const LivestockGroupEntity = new EntitySchema({
   name: "LivestockGroups",
   tableName: "LivestockGroups",
   columns: {
@@ -26,7 +26,15 @@ const LivestockGroupsEntity = new EntitySchema({
       },
       inverseSide: "LivestockGroup",
     },
+    LivestockGroupsIdInLiveStocksNutrients: {
+      type: "one-to-many",
+      target: "NutrientsLoadingLiveStocks",
+      joinColumn: {
+        name: "ID",
+      },
+      inverseSide: "NutrientsLoadingLiveStocksGroup",
+    },
   },
 });
 
-module.exports = { LivestockGroupsEntity };
+module.exports = { LivestockGroupEntity };
