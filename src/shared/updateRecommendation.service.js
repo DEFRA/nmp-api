@@ -1579,11 +1579,17 @@ class UpdateRecommendation {
       // Initialize crop recommendation object for this defoliation group
       const cropRecData = {
         CropN: null,
+        ManureN: null,
         CropP2O5: null,
+        ManureP2O5: null,
         CropK2O: null,
+        ManureK2O: null,
         CropMgO: null,
+        ManureMgO: null,
         CropSO3: null,
+        ManureSO3: null,
         CropNa2O: null,
+        ManureNa2O: null,
         CropLime: null,
         FertilizerN: null,
         FertilizerP2O5: null,
@@ -3071,7 +3077,7 @@ class UpdateRecommendation {
         grassland: {},
         grass:
           fieldType == FieldTypeMapper.BOTH ||
-          crop.FieldType == FieldTypeMapper.GRASS
+          fieldType == FieldTypeMapper.GRASS
             ? grassObject
             : {},
         soil: {

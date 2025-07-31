@@ -4,38 +4,26 @@ const NutrientsLoadingLiveStocksEntity = new EntitySchema({
   name: "NutrientsLoadingLiveStocks",
   tableName: "NutrientsLoadingLiveStocks",
   columns: {
-    Id: {
+    ID: {
       type: "int",
       primary: true,
       generated: true,
-      name: "Id",
+      name: "ID",
     },
-    FarmId: {
+    FarmID: {
       type: "int",
       nullable: false,
-      name: "FarmId",
+      name: "FarmID",
     },
-    LiveStockGroupId: {
+    LiveStockGroupID: {
       type: "int",
       nullable: false,
-      name: "LiveStockGroupId",
+      name: "LiveStockGroupID",
     },
-    LiveStockGroup: {
-      type: "nvarchar",
-      length: 250,
-      nullable: true,
-      name: "LiveStockGroup",
-    },
-    LiveStockTypeId: {
+    LiveStockTypeID: {
       type: "int",
       nullable: true,
-      name: "LiveStockTypeId",
-    },
-    LiveStockType: {
-      type: "nvarchar",
-      length: 250,
-      nullable: true,
-      name: "LiveStockType",
+      name: "LiveStockTypeID",
     },
     Units: {
       type: "decimal",
@@ -134,6 +122,60 @@ const NutrientsLoadingLiveStocksEntity = new EntitySchema({
       type: "int",
       nullable: true,
       name: "Dec",
+    },
+    CreatedOn: {
+      type: "datetime2",
+      precision: 7,
+      nullable: true,
+      name: "CreatedOn",
+    },
+    CreatedByID: {
+      type: "int",
+      nullable: true,
+      name: "CreatedByID",
+    },
+    ModifiedOn: {
+      type: "datetime2",
+      precision: 7,
+      nullable: true,
+      name: "ModifiedOn",
+    },
+    ModifiedByID: {
+      type: "int",
+      nullable: true,
+      name: "ModifiedByID",
+    },
+  },
+  relations: {
+    Farm: {
+      type: "one-to-one",
+      target: "Farms",
+      joinColumn: { name: "FarmID" },
+      inverseSide: "NutrientsLoadingLiveStocks",
+    },
+    NutrientsLoadingLiveStocksGroup: {
+      type: "many-to-one",
+      target: "LivestockGroups",
+      joinColumn: { name: "LiveStockGroupID" },
+      inverseSide: "LivestockGroupsIdInLiveStocks",
+    },
+    NutrientsLoadingLiveStocksType: {
+      type: "many-to-one",
+      target: "LivestockTypes",
+      joinColumn: { name: "LiveStockTypeID" },
+      inverseSide: "LivestockGroupsIdInLiveStocks",
+    },
+    CreatedBy: {
+      type: "many-to-one",
+      target: "User",
+      joinColumn: { name: "CreatedByID" },
+      inverseSide: "CreatedNutrientsLoadingLiveStocks",
+    },
+    ModifiedBy: {
+      type: "many-to-one",
+      target: "User",
+      joinColumn: { name: "ModifiedByID" },
+      inverseSide: "ModifiedNutrientsLoadingLiveStocks",
     },
   },
 });

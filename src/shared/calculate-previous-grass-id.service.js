@@ -1,3 +1,4 @@
+const { CloverMapper } = require("../constants/clover-mapper");
 const { FieldTypeMapper } = require("../constants/field-type-mapper");
 const { GrassManagementOptionsMapper } = require("../constants/grass-management-options-mapper");
 const { SoilGroupCategoriesMapper } = require("../constants/soil-group-categories-mapper");
@@ -475,7 +476,7 @@ class CalculateGrassHistoryAndPreviousGrass {
   }
 
   async calculateTotalNitrogenUseForCrop(crop, transactionalManager) {
-    if (!crop?.ID) return { nitrogenTotal: 0, nitrogenUse: "Low" };
+    if (!crop?.ID) return { nitrogenTotal: 0, nitrogenUse: CloverMapper.LowClover };
 
     let organicAvailableN = 0;
     let organicNextDefoliationN = 0;
@@ -544,7 +545,11 @@ class CalculateGrassHistoryAndPreviousGrass {
 
     // Step 5: Classify nitrogen use
     const nitrogenUse =
-      nitrogenTotal > 250 ? "High" : nitrogenTotal > 100 ? "Moderate" : "Low";
+      nitrogenTotal > 250
+        ? CloverMapper.HighClover
+        : nitrogenTotal > 100
+        ? CloverMapper.ModerateClover
+        : CloverMapper.LowClover;
 
     return {
       nitrogenTotal,
@@ -553,7 +558,7 @@ class CalculateGrassHistoryAndPreviousGrass {
   }
 
   async findLastGrassCropDetails(fieldId, fromYear, transactionalManager) {
-    let nitrogenUse = "Low";
+    let nitrogenUse = CloverMapper.LowClover;
     for (let y = fromYear - 1; y >= fromYear - 5; y--) {
       // Check CropEntity
       const crop = await this.getCropForYear(fieldId, y, transactionalManager);
@@ -562,7 +567,7 @@ class CalculateGrassHistoryAndPreviousGrass {
         crop?.Yield !== null ||
         crop?.DefoliationSequenceID !== null
       ) {
-        if (crop?.FieldType === 2) {
+        if (crop?.FieldType === FieldTypeMapper.GRASS) {
           const swardManagementId = crop.SwardManagementID;
           const swardTypeID = crop.SwardTypeID;
 
@@ -627,14 +632,14 @@ class CalculateGrassHistoryAndPreviousGrass {
         nitrogenUse = null;
 
         if (prevGrass.HasGreaterThan30PercentClover) {
-          nitrogenUse = "High";
+          nitrogenUse = CloverMapper.HighClover;
         } else {
           const nitrogenId = prevGrass.SoilNitrogenSupplyItemID;
-          if (nitrogenId === SoilNitrogenMapper.HIGHN) nitrogenUse = "High";
+          if (nitrogenId === SoilNitrogenMapper.HIGHN) nitrogenUse = CloverMapper.HighClover;
           else if (nitrogenId === SoilNitrogenMapper.MODERATEN)
-            nitrogenUse = "Moderate";
-          else if (nitrogenId === SoilNitrogenMapper.LOWN) nitrogenUse = "Low";
-          else nitrogenUse = "Low"; // fallback
+            nitrogenUse = CloverMapper.ModerateClover;
+          else if (nitrogenId === SoilNitrogenMapper.LOWN) nitrogenUse = CloverMapper.LowClover;
+          else nitrogenUse = CloverMapper.LowClover; 
         }
 
         return {
@@ -667,8 +672,12 @@ class CalculateGrassHistoryAndPreviousGrass {
     );
 
     const [firstHyFieldType, secondHyFieldType, thirdHyFieldType] = fieldTypes;
-    if(firstHyFieldType ==1 && secondHyFieldType==1 && thirdHyFieldType ==1 ){
-      return 1
+    if (
+      firstHyFieldType == FieldTypeMapper.ARABLE &&
+      secondHyFieldType == FieldTypeMapper.ARABLE &&
+      thirdHyFieldType == FieldTypeMapper.ARABLE
+    ) {
+      return 1;
     }
     const leyDuration = await this.calculateLeyDuration(fieldTypes);
     const lastGrass = await this.findLastGrassCropDetails(
@@ -683,8 +692,8 @@ class CalculateGrassHistoryAndPreviousGrass {
       isHighClover,
       nitrogenUse,
     } = lastGrass;
-    if(nitrogenUse =='Moderate'){
-      nitrogenUse='Low'
+    if (nitrogenUse == CloverMapper.ModerateClover) {
+      nitrogenUse = CloverMapper.LowClover;
     }
     // Step 6: NitrogenUse
     // let nitrogenTotal = 0;

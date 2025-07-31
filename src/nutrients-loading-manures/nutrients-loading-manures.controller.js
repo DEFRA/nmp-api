@@ -1,6 +1,8 @@
 const boom = require("@hapi/boom");
 const { StaticStrings } = require("../shared/static.string");
-const { NutrientsLoadingManuresService } = require("./nutrients-loading-manures.service");
+const {
+  NutrientsLoadingManuresService,
+} = require("./nutrients-loading-manures.service");
 
 class NutrientsLoadingManuresController {
   #request;
@@ -58,6 +60,29 @@ class NutrientsLoadingManuresController {
       return this.#h.response({ error });
     }
   }
+  async getById() {
+    const { id } = this.#request.params;
+    try {
+      const { records } = await this.#nutrientsFarmManureservice.getById(id);
+      return this.#h.response({ NutrientsLoadingManure: records });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+    async deleteNutrientsLoadingManureById() {
+      const { nutrientsLoadingManureId } = this.#request.params;
+      try {
+        const result = await this.#nutrientsFarmManureservice.deleteNutrientsLoadingManureById(
+          nutrientsLoadingManureId
+        );
+        if (result?.affectedRows === 0) {
+          throw boom.notFound(`NutrientsLoadingManure with ID ${nutrientsLoadingManureById} not found.`);
+        }
+        return this.#h.response({ message: "NutrientsLoadingManure deleted successfully." });
+      } catch (error) {
+        return this.#h.response({ error: error.message });
+      }
+    }
 }
 
 module.exports = { NutrientsLoadingManuresController };
