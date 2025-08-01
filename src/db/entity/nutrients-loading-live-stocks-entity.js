@@ -15,8 +15,10 @@ const NutrientsLoadingLiveStocksEntity = new EntitySchema({
       nullable: false,
       name: "FarmID",
     },
-    Year: {
+    CalendarYear: {
       type: "int",
+      nullable: false,
+      name: "CalendarYear",
     },
     LiveStockTypeID: {
       type: "int",
