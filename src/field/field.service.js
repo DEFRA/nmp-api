@@ -360,10 +360,13 @@ class FieldService extends BaseService {
     // const snsAnalysisData = await this.snsAnalysisRepository.findOneBy({
     //   FieldID: fieldId,
     // });
-    const cropData = await this.cropRepository.findOneBy({
-      FieldID: fieldId,
-      CropInfo1: null,
-      Yield: null,
+      const cropData = await this.cropRepository.findOne({
+      where: {
+        FieldID: fieldId
+      },
+      order: {
+        Year: 'ASC', 
+      },
     });
     const previousGrassesData = await this.previousGrassesRepository.find({
       where: { FieldID: fieldId },
