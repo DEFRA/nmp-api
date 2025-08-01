@@ -8,9 +8,10 @@ class NutrientsLoadingLiveStocksService extends BaseService {
     this.repository = AppDataSource.getRepository(NutrientsLoadingLiveStocksEntity);
   }
 
-  async getByFarmId(farmId) {
+  async getByFarmIdAndYear(farmId,year) {
     const record = await this.repository.findBy({
       FarmID: farmId,
+      CalendarYear:year
     });
     return  record ;
   }
@@ -42,6 +43,7 @@ class NutrientsLoadingLiveStocksService extends BaseService {
         NutrientsLoadingLiveStocksEntity,
         {
           ...cleanPayload,
+          CalendarYear:CalendarYear,
           FarmID: FarmID,
           CreatedOn: new Date(),
           CreatedByID: userId
