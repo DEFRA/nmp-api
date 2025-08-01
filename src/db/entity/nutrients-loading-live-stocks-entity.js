@@ -15,10 +15,8 @@ const NutrientsLoadingLiveStocksEntity = new EntitySchema({
       nullable: false,
       name: "FarmID",
     },
-    LiveStockGroupID: {
+    Year: {
       type: "int",
-      nullable: false,
-      name: "LiveStockGroupID",
     },
     LiveStockTypeID: {
       type: "int",
@@ -148,7 +146,7 @@ const NutrientsLoadingLiveStocksEntity = new EntitySchema({
   },
   relations: {
     Farm: {
-      type: "one-to-one",
+      type: "many-to-one",
       target: "Farms",
       joinColumn: { name: "FarmID" },
       inverseSide: "NutrientsLoadingLiveStocks",

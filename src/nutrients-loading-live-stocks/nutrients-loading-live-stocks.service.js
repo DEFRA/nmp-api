@@ -20,11 +20,18 @@ class NutrientsLoadingLiveStocksService extends BaseService {
   async createNutrientsLiveStocks(payload, userId) {
    
     return await AppDataSource.transaction(async (transactionalManager) => {
-      const { ID, FarmID,CreatedByID, CreatedOn, ...cleanPayload } = payload;
+      const {
+        ID,
+        FarmID,
+        CalendarYear,
+        CreatedByID,
+        CreatedOn,
+        ...cleanPayload
+      } = payload;
 
       const existingRecord = await transactionalManager.findOne(
         NutrientsLoadingLiveStocksEntity,
-        { where: { FarmID: FarmID } }
+        { where: { FarmID: FarmID, CalendarYear: CalendarYear } }
       );
 
        if (existingRecord) {
@@ -48,7 +55,7 @@ class NutrientsLoadingLiveStocksService extends BaseService {
 
       const savedRecord = await transactionalManager.findOne(
         NutrientsLoadingLiveStocksEntity,
-        { where: { FarmID: FarmID } }
+        { where: { FarmID: FarmID,CalendarYear: CalendarYear } }
       );
 
 
