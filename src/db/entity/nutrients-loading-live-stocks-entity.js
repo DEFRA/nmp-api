@@ -148,7 +148,7 @@ const NutrientsLoadingLiveStocksEntity = new EntitySchema({
   },
   relations: {
     Farm: {
-      type: "many-to-one",
+      type: "one-to-many",
       target: "Farms",
       joinColumn: { name: "FarmID" },
       inverseSide: "NutrientsLoadingLiveStocks",

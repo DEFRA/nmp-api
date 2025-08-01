@@ -30,14 +30,14 @@ class NutrientsLoadingLiveStocksService extends BaseService {
         ...cleanPayload
       } = payload;
 
-      const existingRecord = await transactionalManager.findOne(
-        NutrientsLoadingLiveStocksEntity,
-        { where: { FarmID: FarmID, CalendarYear: CalendarYear } }
-      );
+      // const existingRecord = await transactionalManager.findOne(
+      //   NutrientsLoadingLiveStocksEntity,
+      //   { where: { FarmID: FarmID, CalendarYear: CalendarYear } }
+      // );
 
-       if (existingRecord) {
-         return { message: "Record already exists", existingRecord };
-       }
+      //  if (existingRecord) {
+      //    return { message: "Record already exists", existingRecord };
+      //  }
       
       const newRecord = transactionalManager.create(
         NutrientsLoadingLiveStocksEntity,
