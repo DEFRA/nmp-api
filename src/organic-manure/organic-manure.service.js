@@ -2839,7 +2839,7 @@ async buildMannerOutputs(
             ) {
               // UpdateRecommendation
               this.UpdateRecommendation.updateRecommendationsForField(
-                cropData.FieldID,
+                cropData?.FieldID,
                 cropData?.Year,
                 request,
                 userId

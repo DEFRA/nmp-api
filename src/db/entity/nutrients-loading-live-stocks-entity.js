@@ -15,10 +15,10 @@ const NutrientsLoadingLiveStocksEntity = new EntitySchema({
       nullable: false,
       name: "FarmID",
     },
-    LiveStockGroupID: {
+    CalendarYear: {
       type: "int",
       nullable: false,
-      name: "LiveStockGroupID",
+      name: "CalendarYear",
     },
     LiveStockTypeID: {
       type: "int",
@@ -148,17 +148,17 @@ const NutrientsLoadingLiveStocksEntity = new EntitySchema({
   },
   relations: {
     Farm: {
-      type: "one-to-one",
+      type: "one-to-many",
       target: "Farms",
       joinColumn: { name: "FarmID" },
       inverseSide: "NutrientsLoadingLiveStocks",
     },
-    NutrientsLoadingLiveStocksGroup: {
-      type: "many-to-one",
-      target: "LivestockGroups",
-      joinColumn: { name: "LiveStockGroupID" },
-      inverseSide: "LivestockGroupsIdInLiveStocks",
-    },
+    // NutrientsLoadingLiveStocksGroup: {
+    //   type: "many-to-one",
+    //   target: "LivestockGroups",
+    //   joinColumn: { name: "LiveStockGroupID" },
+    //   inverseSide: "LivestockGroupsIdInLiveStocks",
+    // },
     NutrientsLoadingLiveStocksType: {
       type: "many-to-one",
       target: "LivestockTypes",

@@ -3,7 +3,7 @@ const Joi = require("joi");
 const createNutrientsLoadingLiveStocks = Joi.object({
   ID: Joi.number().integer().optional().allow(null).default(null),
   FarmID: Joi.number().required(),
-  LiveStockGroupID: Joi.number().required(),
+  CalendarYear: Joi.number().required().allow(null).optional(),
   LiveStockTypeID: Joi.number().allow(null),
   Units: Joi.number().precision(3).allow(null),
   NByUnit: Joi.number().precision(3).allow(null),
