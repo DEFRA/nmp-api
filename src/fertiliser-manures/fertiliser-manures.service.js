@@ -185,11 +185,11 @@ class FertiliserManuresService extends BaseService {
         });
 
         const fieldData = fieldAllData.filter((fieldData) => {
-          return fieldData.ID === cropData[0].FieldID;
+          return fieldData.ID === cropData[0]?.FieldID;
         });
 
         const soilAnalsisData = soilAnalysisAllData.filter((soilAnalyses) => {
-          return soilAnalyses.FieldID === cropData[0].FieldID;
+          return soilAnalyses.FieldID === cropData[0]?.FieldID;
         });
         let isSoilAnalysisHavePAndK = false;
         if (soilAnalsisData.length > 0) {
@@ -204,8 +204,8 @@ class FertiliserManuresService extends BaseService {
         if (isSoilAnalysisHavePAndK) {
           const pkBalanceData = pkBalanceAllData.filter((pkBalance) => {
             return (
-              pkBalance.FieldID === fieldData[0].ID &&
-              pkBalance.Year === cropData[0].Year
+              pkBalance.FieldID === fieldData[0]?.ID &&
+              pkBalance.Year === cropData[0]?.Year
             );
           });
           // ({
@@ -213,8 +213,8 @@ class FertiliserManuresService extends BaseService {
           // });
           const cropPlanForNextYear = cropPlanAllData.filter((cropPlan) => {
             return (
-              cropPlan.FieldID === fieldData[0].ID &&
-              cropPlan.Year > cropData[0].Year
+              cropPlan.FieldID === fieldData[0]?.ID &&
+              cropPlan.Year > cropData[0]?.Year
             );
           });
           let isNextYearPlanExist = false;
@@ -247,8 +247,8 @@ class FertiliserManuresService extends BaseService {
           ) {
             //call shreyash's function
             this.UpdateRecommendation.updateRecommendationsForField(
-              fieldData[0].ID,
-              cropData[0].Year,
+              fieldData[0]?.ID,
+              cropData[0]?.Year,
               request,
               userId
             )
@@ -275,27 +275,27 @@ class FertiliserManuresService extends BaseService {
               let updatePKBalance;
               const totalP205AndK20 = await this.getTotalP205AndK20(
                 fertiliserData,
-                managementPeriodData[0].ID
+                managementPeriodData[0]?.ID
               );
 
               const recommandationData =
                 await this.getTotalFertiliserP205AndK20FromRecommandation(
-                  managementPeriodData[0].ID,
+                  managementPeriodData[0]?.ID,
                   recommandationAllData
                 );
 
               if (totalP205AndK20 && recommandationData) {
                 let pBalance =
                   totalP205AndK20.p205 +
-                  fertiliserManureData[0].P2O5 -
+                  fertiliserManureData[0]?.P2O5 -
                   recommandationData.p205;
                 let kBalance =
                   totalP205AndK20.k20 +
-                  fertiliserManureData[0].K2O -
+                  fertiliserManureData[0]?.K2O -
                   recommandationData.k20;
                 const updateData = {
-                  Year: cropData[0].Year,
-                  FieldID: fieldData[0].ID,
+                  Year: cropData[0]?.Year,
+                  FieldID: fieldData[0]?.ID,
                   PBalance: pBalance,
                   KBalance: kBalance,
                 };

@@ -685,6 +685,112 @@ class CropService extends BaseService {
     return result;
   }
 
+  async syncManagementPeriodsBySequence(
+  transactionalManager,
+  cropID,
+  userId,
+  incomingPeriods
+) {
+  const existingPeriods = await transactionalManager.find(
+    ManagementPeriodEntity,
+    {
+      where: { CropID: cropID },
+      order: { CreatedOn: "ASC" }, // or ID: 'ASC' if you prefer
+    }
+  );
+
+  const updatedManagementPeriods = [];
+  const existingCount = existingPeriods.length;
+  const incomingCount = incomingPeriods.length;
+  const minCount = Math.min(existingCount, incomingCount);
+
+
+  // 1. Update existing by order (exclude ID from incoming)
+  for (let i = 0; i < minCount; i++) {
+    const incoming = incomingPeriods[i];
+    const existing = existingPeriods[i];
+
+    const {
+      ID, // intentionally excluded
+      CreatedByID, // also exclude to avoid accidental overwrite
+      CreatedOn, // also exclude if DB manages this field
+      CropID,
+      ...dataToUpdate
+    } = incoming;
+
+    await transactionalManager.update(ManagementPeriodEntity, existing.ID, {
+      ...dataToUpdate,
+      ModifiedByID: userId,
+      ModifiedOn: new Date(),
+    });
+
+    const updated = await transactionalManager.findOne(ManagementPeriodEntity, {
+      where: { ID: existing.ID },
+    });
+
+    if (updated) {
+      updatedManagementPeriods.push(updated);
+    }
+  }
+
+  // 2. Insert new ones if incoming > existing
+  for (let i = existingCount; i < incomingCount; i++) {
+    const newPeriod = await transactionalManager.save(ManagementPeriodEntity, {
+      ...incomingPeriods[i],
+      CropID: cropID,
+      CreatedByID: userId,
+      CreatedOn: new Date(),
+      ModifiedByID: userId,
+      ModifiedOn: new Date(),
+    });
+
+    if (newPeriod) {
+      updatedManagementPeriods.push(newPeriod);
+    }
+  }
+
+  // 3. Delete excess existing periods if existing > incoming
+  for (let i = incomingCount; i < existingCount; i++) {
+    const periodToDelete = existingPeriods[i];
+
+    // Delete related OrganicManure
+    await transactionalManager.delete(OrganicManureEntity, {
+      ManagementPeriodID: periodToDelete.ID,
+    });
+
+    // Delete related FertiliserManure
+    await transactionalManager.delete(FertiliserManuresEntity, {
+      ManagementPeriodID: periodToDelete.ID,
+    });
+
+    // Delete related Recommendations & Comments
+    const recommendations = await transactionalManager.find(
+      RecommendationEntity,
+      {
+        where: { ManagementPeriodID: periodToDelete.ID },
+      }
+    );
+
+    for (const recommendation of recommendations) {
+      await transactionalManager.delete(RecommendationCommentEntity, {
+        RecommendationID: recommendation.ID,
+      });
+
+      await transactionalManager.delete(RecommendationEntity, {
+        ID: recommendation.ID,
+      });
+    }
+
+    // Finally delete the ManagementPeriod
+    await transactionalManager.delete(ManagementPeriodEntity, {
+      ID: periodToDelete.ID,
+    });
+  }
+
+  return updatedManagementPeriods;
+}
+
+
   async updateCrop(body, userId, request) {
     return await AppDataSource.transaction(async (transactionalManager) => {
       const updatedResults = [];
@@ -730,113 +836,120 @@ class CropService extends BaseService {
           updatedCrop.Year
         );
 
-        // 1. Fetch all existing ManagementPeriods for this crop
-        const existingPeriods = await transactionalManager.find(
-          ManagementPeriodEntity,
-          {
-            where: { CropID: ID },
-          }
-        );
-        const existingPeriodIDs = new Set(existingPeriods.map((p) => p.ID));
-
-        // 2. Extract IDs from request
-        const requestPeriodIDs = new Set(
-          (cropEntry.ManagementPeriods || []).map((p) => p.ID).filter(Boolean)
+        const updatedManagementPeriods = await this.syncManagementPeriodsBySequence(
+          transactionalManager,
+          crop.ID,
+          userId,
+          cropEntry.ManagementPeriods
         );
 
-        // 3. Prepare result array
-        const updatedManagementPeriods = [];
+        // // 1. Fetch all existing ManagementPeriods for this crop
+        // const existingPeriods = await transactionalManager.find(
+        //   ManagementPeriodEntity,
+        //   {
+        //     where: { CropID: ID },
+        //   }
+        // );
+        // const existingPeriodIDs = new Set(existingPeriods.map((p) => p.ID));
 
-        // 4. Handle insert/update
-        for (const period of cropEntry.ManagementPeriods || []) {
-          const {
-            ID: periodID,
-            CreatedByID,
-            CreatedOn,
-            ...periodDataToUpdate
-          } = period;
+        // // 2. Extract IDs from request
+        // const requestPeriodIDs = new Set(
+        //   (cropEntry.ManagementPeriods || []).map((p) => p.ID).filter(Boolean)
+        // );
 
-          if (periodID && existingPeriodIDs.has(periodID)) {
-            // Update existing
-            await transactionalManager.update(
-              ManagementPeriodEntity,
-              periodID,
-              {
-                ...periodDataToUpdate,
-                ModifiedByID: userId,
-                ModifiedOn: new Date(),
-              }
-            );
+        // // 3. Prepare result array
+        // const updatedManagementPeriods = [];
 
-            const updatedPeriod = await transactionalManager.findOne(
-              ManagementPeriodEntity,
-              { where: { ID: periodID } }
-            );
+        // // 4. Handle insert/update
+        // for (const period of cropEntry.ManagementPeriods || []) {
+        //   const {
+        //     ID: periodID,
+        //     CreatedByID,
+        //     CreatedOn,
+        //     ...periodDataToUpdate
+        //   } = period;
 
-            if (updatedPeriod) {
-              updatedManagementPeriods.push(updatedPeriod);
-            }
-          } else {
-            const newPeriod = await transactionalManager.save(
-              ManagementPeriodEntity,
-              {
-                ...periodDataToUpdate,
-                CropID: ID,
-                CreatedByID: userId,
-                CreatedOn: new Date(),
-                ModifiedByID: userId,
-                ModifiedOn: new Date(),
-              }
-            );
+        //   if (periodID && existingPeriodIDs.has(periodID)) {
+        //     // Update existing
+        //     await transactionalManager.update(
+        //       ManagementPeriodEntity,
+        //       periodID,
+        //       {
+        //         ...periodDataToUpdate,
+        //         ModifiedByID: userId,
+        //         ModifiedOn: new Date(),
+        //       }
+        //     );
 
-            if (newPeriod) {
-              updatedManagementPeriods.push(newPeriod);
-              requestPeriodIDs.add(newPeriod.ID); // important for later delete filtering
-            }
-          }
-        }
+        //     const updatedPeriod = await transactionalManager.findOne(
+        //       ManagementPeriodEntity,
+        //       { where: { ID: periodID } }
+        //     );
 
-        // 5. Delete missing periods and their associated records
-        const periodIDsToDelete = [...existingPeriodIDs].filter(
-          (existingID) => !requestPeriodIDs.has(existingID)
-        );
+        //     if (updatedPeriod) {
+        //       updatedManagementPeriods.push(updatedPeriod);
+        //     }
+        //   } else {
+        //     const newPeriod = await transactionalManager.save(
+        //       ManagementPeriodEntity,
+        //       {
+        //         ...periodDataToUpdate,
+        //         CropID: ID,
+        //         CreatedByID: userId,
+        //         CreatedOn: new Date(),
+        //         ModifiedByID: userId,
+        //         ModifiedOn: new Date(),
+        //       }
+        //     );
 
-        for (const oldID of periodIDsToDelete) {
-          // 1. Delete OrganicManure entries
-          await transactionalManager.delete(OrganicManureEntity, {
-            ManagementPeriodID: oldID,
-          });
+        //     if (newPeriod) {
+        //       updatedManagementPeriods.push(newPeriod);
+        //       requestPeriodIDs.add(newPeriod.ID); // important for later delete filtering
+        //     }
+        //   }
+        // }
 
-          // 2. Delete FertiliserManure entries
-          await transactionalManager.delete(FertiliserManuresEntity, {
-            ManagementPeriodID: oldID,
-          });
+        // // 5. Delete missing periods and their associated records
+        // const periodIDsToDelete = [...existingPeriodIDs].filter(
+        //   (existingID) => !requestPeriodIDs.has(existingID)
+        // );
 
-          // 3. Find and delete Recommendations and their Comments
-          const recommendations = await transactionalManager.find(
-            RecommendationEntity,
-            {
-              where: { ManagementPeriodID: oldID },
-            }
-          );
+        // for (const oldID of periodIDsToDelete) {
+        //   // 1. Delete OrganicManure entries
+        //   await transactionalManager.delete(OrganicManureEntity, {
+        //     ManagementPeriodID: oldID,
+        //   });
 
-          for (const recommendation of recommendations) {
-            // 3a. Delete comments tied to this recommendation
-            await transactionalManager.delete(RecommendationCommentEntity, {
-              RecommendationID: recommendation.ID,
-            });
+        //   // 2. Delete FertiliserManure entries
+        //   await transactionalManager.delete(FertiliserManuresEntity, {
+        //     ManagementPeriodID: oldID,
+        //   });
 
-            // 3b. Delete the recommendation itself
-            await transactionalManager.delete(RecommendationEntity, {
-              ID: recommendation.ID,
-            });
-          }
+        //   // 3. Find and delete Recommendations and their Comments
+        //   const recommendations = await transactionalManager.find(
+        //     RecommendationEntity,
+        //     {
+        //       where: { ManagementPeriodID: oldID },
+        //     }
+        //   );
 
-          // 4. Finally, delete the ManagementPeriod itself
-          await transactionalManager.delete(ManagementPeriodEntity, {
-            ID: oldID,
-          });
-        }
+        //   for (const recommendation of recommendations) {
+        //     // 3a. Delete comments tied to this recommendation
+        //     await transactionalManager.delete(RecommendationCommentEntity, {
+        //       RecommendationID: recommendation.ID,
+        //     });
+
+        //     // 3b. Delete the recommendation itself
+        //     await transactionalManager.delete(RecommendationEntity, {
+        //       ID: recommendation.ID,
+        //     });
+        //   }
+
+        //   // 4. Finally, delete the ManagementPeriod itself
+        //   await transactionalManager.delete(ManagementPeriodEntity, {
+        //     ID: oldID,
+        //   });
+        // }
 
         // Recommendation update
         await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
@@ -846,20 +959,20 @@ class CropService extends BaseService {
           userId,
           transactionalManager
         );
-
-        const nextAvailableCrop = await transactionalManager.find(CropEntity, {
+  
+        const nextAvailableCrop = await transactionalManager.findOne(CropEntity, {
           where: {
             FieldID: updatedCrop.FieldID,
             Year: MoreThan(updatedCrop.Year),
           },
-          order: { Year: "ASC" },
-          take: 1, // ensures only the first (earliest) one is returned
+          order: { Year: "ASC" }
         });
-
-        if (nextAvailableCrop[0].Year) {
+         console.log("nextAvailableCrop", nextAvailableCrop);
+        // console.log("nextAvailableCrop[0].Year", nextAvailableCrop[0].Year.lengh);
+        if (nextAvailableCrop) {
           this.UpdateRecommendation.updateRecommendationsForField(
             updatedCrop.FieldID,
-            nextAvailableCrop[0].Year,
+            nextAvailableCrop.Year,
             request,
             userId
           ).catch((error) => {

@@ -8,9 +8,10 @@ class NutrientsLoadingLiveStocksService extends BaseService {
     this.repository = AppDataSource.getRepository(NutrientsLoadingLiveStocksEntity);
   }
 
-  async getByFarmId(farmId) {
+  async getByFarmIdAndYear(farmId,year) {
     const record = await this.repository.findBy({
       FarmID: farmId,
+      CalendarYear:year
     });
     return  record ;
   }
@@ -20,21 +21,29 @@ class NutrientsLoadingLiveStocksService extends BaseService {
   async createNutrientsLiveStocks(payload, userId) {
    
     return await AppDataSource.transaction(async (transactionalManager) => {
-      const { ID, FarmID,CreatedByID, CreatedOn, ...cleanPayload } = payload;
+      const {
+        ID,
+        FarmID,
+        CalendarYear,
+        CreatedByID,
+        CreatedOn,
+        ...cleanPayload
+      } = payload;
 
-      const existingRecord = await transactionalManager.findOne(
-        NutrientsLoadingLiveStocksEntity,
-        { where: { FarmID: FarmID } }
-      );
+      // const existingRecord = await transactionalManager.findOne(
+      //   NutrientsLoadingLiveStocksEntity,
+      //   { where: { FarmID: FarmID, CalendarYear: CalendarYear } }
+      // );
 
-       if (existingRecord) {
-         return { message: "Record already exists", existingRecord };
-       }
+      //  if (existingRecord) {
+      //    return { message: "Record already exists", existingRecord };
+      //  }
       
       const newRecord = transactionalManager.create(
         NutrientsLoadingLiveStocksEntity,
         {
           ...cleanPayload,
+          CalendarYear:CalendarYear,
           FarmID: FarmID,
           CreatedOn: new Date(),
           CreatedByID: userId
@@ -48,7 +57,7 @@ class NutrientsLoadingLiveStocksService extends BaseService {
 
       const savedRecord = await transactionalManager.findOne(
         NutrientsLoadingLiveStocksEntity,
-        { where: { FarmID: FarmID } }
+        { where: { FarmID: FarmID,CalendarYear: CalendarYear } }
       );
 
 

@@ -544,6 +544,20 @@ class UpdateRecommendation {
           updated
         );
         results.push(saved);
+      }else{
+        // Create a new recommendation record
+        const created = this.RecommendationRepository.create({
+          ...cropRecData,
+          ManagementPeriodID: managementPeriod.ID,
+          Comments: `Reference Value: ${filteredData.referenceValue}\nVersion: ${filteredData.versionNumber}`,
+          CreatedOn: new Date(),
+          CreatedByID: userId,
+        });
+        const saved = await transactionalManager.save(
+          RecommendationEntity,
+          created
+        );
+        results.push(saved);
       }
     }
 
@@ -1680,21 +1694,21 @@ class UpdateRecommendation {
         );
         results.push(saved);
       }
-      // else {
-      //   // Create a new recommendation record
-      //   const created = this.RecommendationRepository.create({
-      //     ...cropRecData,
-      //     ManagementPeriodID: managementPeriod.ID,
-      //     Comments: `Reference Value: ${filteredData.referenceValue}\nVersion: ${filteredData.versionNumber}`,
-      //     CreatedOn: new Date(),
-      //     CreatedByID: userId,
-      //   });
-      //   const saved = await transactionalManager.save(
-      //     RecommendationEntity,
-      //     created
-      //   );
-      //   results.push(saved);
-      // }
+      else {
+        // Create a new recommendation record
+        const created = this.RecommendationRepository.create({
+          ...cropRecData,
+          ManagementPeriodID: managementPeriod.ID,
+          Comments: `Reference Value: ${filteredData.referenceValue}\nVersion: ${filteredData.versionNumber}`,
+          CreatedOn: new Date(),
+          CreatedByID: userId,
+        });
+        const saved = await transactionalManager.save(
+          RecommendationEntity,
+          created
+        );
+        results.push(saved);
+      }
     }
 
     return results;
