@@ -13,10 +13,11 @@ class NutrientsLoadingLiveStocksController {
     this.#service = new NutrientsLoadingLiveStocksService();
   }
 
-  async getByFarmId() {
+  async getByFarmIdAndYear() {
     const { farmId } = this.#request.params;
+    const { year } = this.#request.query;
     try {
-      const data = await this.#service.getByFarmId(farmId);
+      const data = await this.#service.getByFarmIdAndYear(farmId, year);
       return this.#h.response(data);
     } catch (error) {
       console.error("Error in getByFarmId:", error);
