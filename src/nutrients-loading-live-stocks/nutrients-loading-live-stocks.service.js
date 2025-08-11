@@ -1,20 +1,34 @@
 const { BaseService } = require("../base/base.service");
 const { AppDataSource } = require("../db/data-source");
 const { NutrientsLoadingLiveStocksEntity } = require("../db/entity/nutrients-loading-live-stocks-entity");
-
+const { LivestockTypeEntity } = require("../db/entity/livestock-type-entity");
 class NutrientsLoadingLiveStocksService extends BaseService {
   constructor() {
     super(NutrientsLoadingLiveStocksEntity);
     this.repository = AppDataSource.getRepository(NutrientsLoadingLiveStocksEntity);
+        this.LivestockTypeRepository = AppDataSource.getRepository(
+          LivestockTypeEntity
+        );
   }
 
-  async getByFarmIdAndYear(farmId,year) {
-    const record = await this.repository.findBy({
-      FarmID: farmId,
-      CalendarYear:year
+async getByFarmIdAndYear(farmId, year) {
+  const records = await this.repository.findBy({
+    FarmID: farmId,
+    CalendarYear: year,
+  });
+
+  for (const record of records) {
+    const livestock = await this.LivestockTypeRepository.findOne({
+      where: { ID: record.LiveStockTypeID },
     });
-    return  record ;
+    record.LiveStockType = livestock ? livestock.Name : null;
   }
+
+  return records;
+}
+
+
+
 
 
 
