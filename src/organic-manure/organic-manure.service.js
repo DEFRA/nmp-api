@@ -3748,7 +3748,7 @@ async buildMannerOutputs(
   async getTotalAvailableNitrogenByManagementPeriodID(managementPeriodID) {
     const organicManuresResult = await this.repository
       .createQueryBuilder("OrganicManures")
-      .select("SUM(OrganicManures.AvailableN)", "totalN")
+      .select("SUM(COALESCE(OrganicManures.AvailableNForNMax, OrganicManures.AvailableN))", "totalN")
       .where("OrganicManures.ManagementPeriodID = :managementPeriodID", {
         managementPeriodID,
       });
