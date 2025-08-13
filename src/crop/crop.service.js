@@ -1706,7 +1706,7 @@ class CropService extends BaseService {
         potash: true,
         magnesium: true,
         sodium: true,
-        sulphur: isCropGrass ? false : true,
+        sulphur: isCropGrass ? false : false,
         lime: isCropGrass ? false : true,
       },
       totals: true,

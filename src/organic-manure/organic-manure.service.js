@@ -608,7 +608,7 @@ class OrganicManureService extends BaseService {
         potash: true,
         magnesium: true,
         sodium: true,
-        sulphur: true,
+        sulphur: false,
         lime: true,
       },
       totals: true,
