@@ -608,7 +608,7 @@ class OrganicManureService extends BaseService {
         potash: true,
         magnesium: true,
         sodium: true,
-        sulphur: true,
+        sulphur: false,
         lime: true,
       },
       totals: true,
@@ -3748,7 +3748,7 @@ async buildMannerOutputs(
   async getTotalAvailableNitrogenByManagementPeriodID(managementPeriodID) {
     const organicManuresResult = await this.repository
       .createQueryBuilder("OrganicManures")
-      .select("SUM(OrganicManures.AvailableN)", "totalN")
+      .select("SUM(COALESCE(OrganicManures.AvailableNForNMax, OrganicManures.AvailableN))", "totalN")
       .where("OrganicManures.ManagementPeriodID = :managementPeriodID", {
         managementPeriodID,
       });

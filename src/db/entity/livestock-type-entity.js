@@ -61,6 +61,10 @@ const LivestockTypeEntity = new EntitySchema({
       nullable: false,
       name: "LivestockGroupID",
     },
+    IsGrazing: {
+      type: "bit",
+      default: 0,
+    },
   },
   relations: {
     LivestockGroup: {
