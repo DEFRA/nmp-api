@@ -18,7 +18,7 @@ const {
   UpdateRecommendation,
 } = require("../shared/updateRecommendation.service");
 const { FieldEntity } = require("../db/entity/field.entity");
-const { MoreThan, Between } = require("typeorm");
+const { MoreThan, Between, Not } = require("typeorm");
 const { In } = require("typeorm");
 const {
   UpdateRecommendationChanges,
@@ -541,16 +541,13 @@ class CropService extends BaseService {
 
       // If the crop's CropOrder is 1, check for a second crop (CropOrder = 2) in the same year
       if (crop.CropOrder === 1) {
-        const secondCrop = await transactionalManager.findOne(
-          CropEntity,
-          {
-            where: {
-              Year: crop.Year,
-              CropOrder: CropOrderMapper.SECONDCROP,
-              FieldID: crop.FieldID,
-            },
-          }
-        );
+        const secondCrop = await transactionalManager.findOne(CropEntity, {
+          where: {
+            Year: crop.Year,
+            CropOrder: CropOrderMapper.SECONDCROP,
+            FieldID: crop.FieldID,
+          },
+        });
 
         if (secondCrop) {
           const storedProcedureSecondCrop =
@@ -558,8 +555,6 @@ class CropService extends BaseService {
           await transactionalManager.query(storedProcedureSecondCrop, [
             secondCrop.ID,
           ]);
-
-        
         }
       }
 
@@ -573,18 +568,15 @@ class CropService extends BaseService {
         transactionalManager
       );
       // Find the next available crop
-      const nextAvailableCrop = await transactionalManager.findOne(
-        CropEntity,
-        {
-          where: {
-            FieldID: crop.FieldID,
-            Year: MoreThan(crop.Year),
-          },
-          order: {
-            Year: "ASC",
-          },
-        }
-      );
+      const nextAvailableCrop = await transactionalManager.findOne(CropEntity, {
+        where: {
+          FieldID: crop.FieldID,
+          Year: MoreThan(crop.Year),
+        },
+        order: {
+          Year: "ASC",
+        },
+      });
 
       if (nextAvailableCrop) {
         // Not transactional — it's okay if this fails independently
@@ -686,110 +678,114 @@ class CropService extends BaseService {
   }
 
   async syncManagementPeriodsBySequence(
-  transactionalManager,
-  cropID,
-  userId,
-  incomingPeriods
-) {
-  const existingPeriods = await transactionalManager.find(
-    ManagementPeriodEntity,
-    {
-      where: { CropID: cropID },
-      order: { CreatedOn: "ASC" }, // or ID: 'ASC' if you prefer
-    }
-  );
-
-  const updatedManagementPeriods = [];
-  const existingCount = existingPeriods.length;
-  const incomingCount = incomingPeriods.length;
-  const minCount = Math.min(existingCount, incomingCount);
-
-
-  // 1. Update existing by order (exclude ID from incoming)
-  for (let i = 0; i < minCount; i++) {
-    const incoming = incomingPeriods[i];
-    const existing = existingPeriods[i];
-
-    const {
-      ID, // intentionally excluded
-      CreatedByID, // also exclude to avoid accidental overwrite
-      CreatedOn, // also exclude if DB manages this field
-      CropID,
-      ...dataToUpdate
-    } = incoming;
-
-    await transactionalManager.update(ManagementPeriodEntity, existing.ID, {
-      ...dataToUpdate,
-      ModifiedByID: userId,
-      ModifiedOn: new Date(),
-    });
-
-    const updated = await transactionalManager.findOne(ManagementPeriodEntity, {
-      where: { ID: existing.ID },
-    });
-
-    if (updated) {
-      updatedManagementPeriods.push(updated);
-    }
-  }
-
-  // 2. Insert new ones if incoming > existing
-  for (let i = existingCount; i < incomingCount; i++) {
-    const newPeriod = await transactionalManager.save(ManagementPeriodEntity, {
-      ...incomingPeriods[i],
-      CropID: cropID,
-      CreatedByID: userId,
-      CreatedOn: new Date(),
-      ModifiedByID: userId,
-      ModifiedOn: new Date(),
-    });
-
-    if (newPeriod) {
-      updatedManagementPeriods.push(newPeriod);
-    }
-  }
-
-  // 3. Delete excess existing periods if existing > incoming
-  for (let i = incomingCount; i < existingCount; i++) {
-    const periodToDelete = existingPeriods[i];
-
-    // Delete related OrganicManure
-    await transactionalManager.delete(OrganicManureEntity, {
-      ManagementPeriodID: periodToDelete.ID,
-    });
-
-    // Delete related FertiliserManure
-    await transactionalManager.delete(FertiliserManuresEntity, {
-      ManagementPeriodID: periodToDelete.ID,
-    });
-
-    // Delete related Recommendations & Comments
-    const recommendations = await transactionalManager.find(
-      RecommendationEntity,
+    transactionalManager,
+    cropID,
+    userId,
+    incomingPeriods
+  ) {
+    const existingPeriods = await transactionalManager.find(
+      ManagementPeriodEntity,
       {
-        where: { ManagementPeriodID: periodToDelete.ID },
+        where: { CropID: cropID },
+        order: { CreatedOn: "ASC" }, // or ID: 'ASC' if you prefer
       }
     );
 
-    for (const recommendation of recommendations) {
-      await transactionalManager.delete(RecommendationCommentEntity, {
-        RecommendationID: recommendation.ID,
+    const updatedManagementPeriods = [];
+    const existingCount = existingPeriods.length;
+    const incomingCount = incomingPeriods.length;
+    const minCount = Math.min(existingCount, incomingCount);
+
+    // 1. Update existing by order (exclude ID from incoming)
+    for (let i = 0; i < minCount; i++) {
+      const incoming = incomingPeriods[i];
+      const existing = existingPeriods[i];
+
+      const {
+        ID, // intentionally excluded
+        CreatedByID, // also exclude to avoid accidental overwrite
+        CreatedOn, // also exclude if DB manages this field
+        CropID,
+        ...dataToUpdate
+      } = incoming;
+
+      await transactionalManager.update(ManagementPeriodEntity, existing.ID, {
+        ...dataToUpdate,
+        ModifiedByID: userId,
+        ModifiedOn: new Date(),
       });
 
-      await transactionalManager.delete(RecommendationEntity, {
-        ID: recommendation.ID,
+      const updated = await transactionalManager.findOne(
+        ManagementPeriodEntity,
+        {
+          where: { ID: existing.ID },
+        }
+      );
+
+      if (updated) {
+        updatedManagementPeriods.push(updated);
+      }
+    }
+
+    // 2. Insert new ones if incoming > existing
+    for (let i = existingCount; i < incomingCount; i++) {
+      const newPeriod = await transactionalManager.save(
+        ManagementPeriodEntity,
+        {
+          ...incomingPeriods[i],
+          CropID: cropID,
+          CreatedByID: userId,
+          CreatedOn: new Date(),
+          ModifiedByID: userId,
+          ModifiedOn: new Date(),
+        }
+      );
+
+      if (newPeriod) {
+        updatedManagementPeriods.push(newPeriod);
+      }
+    }
+
+    // 3. Delete excess existing periods if existing > incoming
+    for (let i = incomingCount; i < existingCount; i++) {
+      const periodToDelete = existingPeriods[i];
+
+      // Delete related OrganicManure
+      await transactionalManager.delete(OrganicManureEntity, {
+        ManagementPeriodID: periodToDelete.ID,
+      });
+
+      // Delete related FertiliserManure
+      await transactionalManager.delete(FertiliserManuresEntity, {
+        ManagementPeriodID: periodToDelete.ID,
+      });
+
+      // Delete related Recommendations & Comments
+      const recommendations = await transactionalManager.find(
+        RecommendationEntity,
+        {
+          where: { ManagementPeriodID: periodToDelete.ID },
+        }
+      );
+
+      for (const recommendation of recommendations) {
+        await transactionalManager.delete(RecommendationCommentEntity, {
+          RecommendationID: recommendation.ID,
+        });
+
+        await transactionalManager.delete(RecommendationEntity, {
+          ID: recommendation.ID,
+        });
+      }
+
+      // Finally delete the ManagementPeriod
+      await transactionalManager.delete(ManagementPeriodEntity, {
+        ID: periodToDelete.ID,
       });
     }
 
-    // Finally delete the ManagementPeriod
-    await transactionalManager.delete(ManagementPeriodEntity, {
-      ID: periodToDelete.ID,
-    });
+    return updatedManagementPeriods;
   }
-
-  return updatedManagementPeriods;
-}
-
 
   async updateCrop(body, userId, request) {
     return await AppDataSource.transaction(async (transactionalManager) => {
@@ -836,12 +832,13 @@ class CropService extends BaseService {
           updatedCrop.Year
         );
 
-        const updatedManagementPeriods = await this.syncManagementPeriodsBySequence(
-          transactionalManager,
-          crop.ID,
-          userId,
-          cropEntry.ManagementPeriods
-        );
+        const updatedManagementPeriods =
+          await this.syncManagementPeriodsBySequence(
+            transactionalManager,
+            crop.ID,
+            userId,
+            cropEntry.ManagementPeriods
+          );
 
         // // 1. Fetch all existing ManagementPeriods for this crop
         // const existingPeriods = await transactionalManager.find(
@@ -959,15 +956,18 @@ class CropService extends BaseService {
           userId,
           transactionalManager
         );
-  
-        const nextAvailableCrop = await transactionalManager.findOne(CropEntity, {
-          where: {
-            FieldID: updatedCrop.FieldID,
-            Year: MoreThan(updatedCrop.Year),
-          },
-          order: { Year: "ASC" }
-        });
-         console.log("nextAvailableCrop", nextAvailableCrop);
+
+        const nextAvailableCrop = await transactionalManager.findOne(
+          CropEntity,
+          {
+            where: {
+              FieldID: updatedCrop.FieldID,
+              Year: MoreThan(updatedCrop.Year),
+            },
+            order: { Year: "ASC" },
+          }
+        );
+        console.log("nextAvailableCrop", nextAvailableCrop);
         // console.log("nextAvailableCrop[0].Year", nextAvailableCrop[0].Year.lengh);
         if (nextAvailableCrop) {
           this.UpdateRecommendation.updateRecommendationsForField(
@@ -1441,57 +1441,49 @@ class CropService extends BaseService {
   }
 
   async buildGrassObject(crop, field, grassGrowthClass, transactionalManager) {
-    // Case: Only one crop with CropOrder 1 and CropTypeID 140
-    if (
-      crop.CropOrder === CropOrderMapper.FIRSTCROP &&
-      crop.CropTypeID === CropTypeMapper.GRASS
-    ) {
+    let grassCrop = null;
+
+    if (crop.CropTypeID === CropTypeMapper.GRASS) {
+      grassCrop = crop;
+    } else {
+      grassCrop = await transactionalManager.findOne(CropEntity, {
+        where: {
+          FieldID: crop.FieldID,
+          Year: crop.Year,
+          CropTypeID: CropTypeMapper.GRASS,
+          ID: Not(crop.ID), // exclude the current crop
+        },
+      });
+    }
+
+    if (!grassCrop) {
+      return {};
+    }
+
+    if (grassCrop.CropOrder === CropOrderMapper.FIRSTCROP) {
       return {
-        cropOrder: crop.CropOrder,
-        swardTypeId: crop.SwardTypeID,
-        swardManagementId: crop.SwardManagementID,
-        defoliationSequenceId: crop.DefoliationSequenceID,
+        cropOrder: grassCrop.CropOrder,
+        swardTypeId: grassCrop.SwardTypeID,
+        swardManagementId: grassCrop.SwardManagementID,
+        defoliationSequenceId: grassCrop.DefoliationSequenceID,
         grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
-        yield: crop.Yield,
-        seasonId: crop.Establishment,
+        yield: grassCrop.Yield,
+        seasonId: grassCrop.Establishment,
       };
     }
 
-    // Case: CropOrder is 2 and it's grass
-    if (crop.CropOrder === CropOrderMapper.SECONDCROP) {
-      if (crop.CropTypeID === CropTypeMapper.GRASS) {
-        return {
-          cropOrder: crop.CropOrder,
-          swardTypeId: crop.SwardTypeID,
-          swardManagementId: crop.SwardManagementID,
-          defoliationSequenceId: crop.DefoliationSequenceID,
-          grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
-          yield: crop.Yield,
-          seasonId: crop.Establishment,
-        };
-      } else {
-        // Look up CropOrder 1
-        const firstCrop = await this.getFirstCropData(
-          transactionalManager,
-          field.ID,
-          crop.Year
-        );
-
-        if (firstCrop && firstCrop.CropTypeID === CropTypeMapper.GRASS) {
-          return {
-            cropOrder: firstCrop.CropOrder,
-            swardTypeId: firstCrop.SwardTypeID,
-            swardManagementId: firstCrop.SwardManagementID,
-            defoliationSequenceId: firstCrop.DefoliationSequenceID,
-            grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
-            yield: firstCrop.Yield,
-            seasonId: firstCrop.Establishment,
-          };
-        }
-      }
+    if (grassCrop.CropOrder === CropOrderMapper.SECONDCROP) {
+      return {
+        cropOrder: grassCrop.CropOrder,
+        swardTypeId: grassCrop.SwardTypeID,
+        swardManagementId: grassCrop.SwardManagementID,
+        defoliationSequenceId: grassCrop.DefoliationSequenceID,
+        grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
+        yield: grassCrop.Yield,
+        seasonId: grassCrop.Establishment,
+      };
     }
 
-    // Default return
     return {};
   }
 
@@ -1606,7 +1598,14 @@ class CropService extends BaseService {
         HttpStatus.BAD_REQUEST
       );
     }
-
+      const dataMultipleCrops = await transactionalManager.find(CropEntity, {
+            where: {
+              FieldID: crop.FieldID,
+              Year: crop.Year,
+              Confirm: false,
+            },
+          });
+    
     const previousCrop = await this.findPreviousCrop(
       field.ID,
       harvestYear,
@@ -1664,13 +1663,12 @@ class CropService extends BaseService {
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: fieldType,
-        multipleCrops:
-          crop.CropOrder == CropOrderMapper.SECONDCROP ? true : false,
-        arable: crop.FieldType == FieldTypeMapper.GRASS ? [] : arableBody,
+        multipleCrops: dataMultipleCrops.length > 1 ? true : false,
+        arable: fieldType == FieldTypeMapper.GRASS ? [] : arableBody,
         grassland: {},
         grass:
-          crop.FieldType == FieldTypeMapper.BOTH ||
-          crop.FieldType == FieldTypeMapper.GRASS
+          fieldType == FieldTypeMapper.BOTH ||
+          fieldType == FieldTypeMapper.GRASS
             ? grassObject
             : {},
         soil: {
@@ -1706,7 +1704,7 @@ class CropService extends BaseService {
         potash: true,
         magnesium: true,
         sodium: true,
-        sulphur:  true,
+        sulphur: true,
         lime: true,
       },
       totals: true,
@@ -2294,7 +2292,6 @@ class CropService extends BaseService {
 
       // Step 3: Loop through each crop
       for (const crop of crops) {
-       
         if (
           crop.CropInfo1 === null &&
           crop.Yield === null &&
@@ -2314,28 +2311,27 @@ class CropService extends BaseService {
           (item) =>
             item.PhosphorusIndex !== null || item.PotassiumIndex !== null
         );
-       const pkBalanceData = await transactionalManager.findOne(
-         PKBalanceEntity,
-         {
-           where: {
-             FieldID: crop.FieldID,
-             Year: copyYear,
-           },
-         }
-       );
+        const pkBalanceData = await transactionalManager.findOne(
+          PKBalanceEntity,
+          {
+            where: {
+              FieldID: crop.FieldID,
+              Year: copyYear,
+            },
+          }
+        );
 
-       if (pkBalanceData) {
-         const newPkBalance = {
-           ...pkBalanceData,
-           ID: null, // Ensure it's treated as a new insert
-           Year: harvestYear,
-           CreatedByID: userId,
-           CreatedOn: new Date(),
-         };
+        if (pkBalanceData) {
+          const newPkBalance = {
+            ...pkBalanceData,
+            ID: null, // Ensure it's treated as a new insert
+            Year: harvestYear,
+            CreatedByID: userId,
+            CreatedOn: new Date(),
+          };
 
-         await transactionalManager.save(PKBalanceEntity, newPkBalance);
-       }
-
+          await transactionalManager.save(PKBalanceEntity, newPkBalance);
+        }
 
         // Find any crop plan with the same field and year > copyYear
         const cropPlanOfNextYear = await transactionalManager.findOne(
@@ -2375,7 +2371,7 @@ class CropService extends BaseService {
         const snsAnalysisData = await transactionalManager.findOne(
           SnsAnalysesEntity,
           {
-            where: { CropID: crop.ID }, 
+            where: { CropID: crop.ID },
           }
         );
         const managementPeriods = await transactionalManager.find(
@@ -2645,45 +2641,45 @@ class CropService extends BaseService {
         //   );
         // }
 
-             const isGrass = savedCrop.CropTypeID === CropTypeMapper.GRASS;
-        
-                     const hasDefoliationIdInAdviceNotes =
-                       nutrientRecommendationsData.adviceNotes?.some((note) =>
-                         Object.prototype.hasOwnProperty.call(note, "defoliationId")
-                       );
-        
-                     if (isGrass) {
-                       if (hasDefoliationIdInAdviceNotes) {
-                         for (const singleRecommendation of updatedRecommendation) {
-                           await this.saveMultipleRecommendation(
-                             Recommendations,
-                             savedCrop,
-                             singleRecommendation,
-                             transactionalManager,
-                             nutrientRecommendationsData,
-                             userId
-                           );
-                         }
-                       } else {
-                        await this.saveMultipleRecommendation(
-                          Recommendations,
-                          savedCrop,
-                          updatedRecommendation[0],
-                          transactionalManager,
-                          nutrientRecommendationsData,
-                          userId
-                        );
-                       }
-                     } else {
-                      await this.saveMultipleRecommendation(
-                        Recommendations,
-                        savedCrop,
-                        updatedRecommendation[0],
-                        transactionalManager,
-                        nutrientRecommendationsData,
-                        userId
-                      );
-                     }
+        const isGrass = savedCrop.CropTypeID === CropTypeMapper.GRASS;
+
+        const hasDefoliationIdInAdviceNotes =
+          nutrientRecommendationsData.adviceNotes?.some((note) =>
+            Object.prototype.hasOwnProperty.call(note, "defoliationId")
+          );
+
+        if (isGrass) {
+          if (hasDefoliationIdInAdviceNotes) {
+            for (const singleRecommendation of updatedRecommendation) {
+              await this.saveMultipleRecommendation(
+                Recommendations,
+                savedCrop,
+                singleRecommendation,
+                transactionalManager,
+                nutrientRecommendationsData,
+                userId
+              );
+            }
+          } else {
+            await this.saveMultipleRecommendation(
+              Recommendations,
+              savedCrop,
+              updatedRecommendation[0],
+              transactionalManager,
+              nutrientRecommendationsData,
+              userId
+            );
+          }
+        } else {
+          await this.saveMultipleRecommendation(
+            Recommendations,
+            savedCrop,
+            updatedRecommendation[0],
+            transactionalManager,
+            nutrientRecommendationsData,
+            userId
+          );
+        }
 
         // 5. If isFertiliser, copy fertiliser manures
         if (isFertiliser) {
