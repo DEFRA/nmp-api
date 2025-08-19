@@ -3748,7 +3748,9 @@ class OrganicManureService extends BaseService {
       )
       .where("OrganicManures.ManagementPeriodID = :managementPeriodID", {
         managementPeriodID,
-      });
+      }).
+      andWhere("OrganicManures.ManureTypeID != :excludedType", { excludedType: 33 });
+       // Exclude Paper Crumble - Chemically/Physcially Treated
 
     const organicResult = await organicManuresResult.getRawOne();
     console.log("organicResult", organicResult);
