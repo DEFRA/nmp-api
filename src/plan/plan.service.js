@@ -2731,7 +2731,7 @@ class PlanService extends BaseService {
     cropOrder
   ) {
     try {
-      cropOrder = cropOrder || 1;
+      //cropOrder = cropOrder || 1;
       const storedProcedure =
         "EXEC dbo.spCrops_GetCropPlansManagementPeriodByHarvestYear @fieldIds = @0, @harvestYear = @1, @cropTypeId = @2 , @cropOrder = @3";
       const plans = await this.executeQuery(storedProcedure, [
