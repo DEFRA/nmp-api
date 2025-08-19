@@ -25,7 +25,7 @@ const {
   FertiliserManuresEntity,
 } = require("../db/entity/fertiliser-manures.entity");
 const { FarmEntity } = require("../db/entity/farm.entity");
-const { Between } = require("typeorm");
+const { Between, MoreThan } = require("typeorm");
 const RB209ArableService = require("../vendors/rb209/arable/arable.service");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
 const MannerApplicationMethodService = require("../vendors/manner/application-method/application-method.service");
@@ -40,6 +40,8 @@ const {
 
 const RB209GrassService = require("../vendors/rb209/grass/grass.service");
 const RB209GrasslandService = require("../vendors/rb209/grassland/grassland.service");
+const { UpdateRecommendationChanges } = require("../shared/updateRecommendationsChanges");
+const { UpdateRecommendation } = require("../shared/updateRecommendation.service");
 class FieldService extends BaseService {
   constructor() {
     super(FieldEntity);
@@ -82,6 +84,10 @@ class FieldService extends BaseService {
     );
     this.rB209GrassService = new RB209GrassService();
     this.rB209GrasslandService = new RB209GrasslandService();
+    this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
+    this.UpdateRecommendation = new UpdateRecommendation();
+    
+
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -297,28 +303,119 @@ class FieldService extends BaseService {
       };
     });
   }
-  async updateField(updatedFieldData, userId, fieldId) {
-    const { ID, CreatedByID, CreatedOn, EncryptedFieldId, ...dataToUpdate } =
-      updatedFieldData;
+  async updateField(updatedFieldData, userId, fieldId,request) {
+    return await AppDataSource.transaction(async (transactionalManager) => {
+      const { ID, CreatedByID, CreatedOn, EncryptedFieldId, ...dataToUpdate } =
+        updatedFieldData;
 
-    // const { TopSoilID, SubSoilID } = await this.getSoilTextureBySoilTypeId(
-    //   updatedFieldData.SoilTypeID
-    // );
+      // 1. Get original field inside transaction
+      const originalField = await transactionalManager.findOne(FieldEntity, {
+        where: { ID: fieldId },
+      });
 
-    const result = await this.repository.update(fieldId, {
-      ...dataToUpdate,
-      ModifiedByID: userId,
-      ModifiedOn: new Date(),
+      if (!originalField) {
+        console.log(`Field with ID ${fieldId} not found`);
+      }
+
+      // 2. Check if sensitive fields are changing
+      const sensitiveFields = [
+        "TotalArea",
+        "CroppedArea",
+        "ManureNonSpreadingArea",
+        "IsWithinNVZ",
+        "IsAbove300SeaLevel",
+        "SoilTypeID",
+        "SoilReleasingClay",
+        "SoilOverChalk",
+        "NVZProgrammeID",
+      ];
+
+      let isSensitiveChange = false;
+      for (const field of sensitiveFields) {
+        if (
+          updatedFieldData[field] !== undefined &&
+          updatedFieldData[field] !== originalField[field]
+        ) {
+          isSensitiveChange = true;
+          break;
+        }
+      }
+
+      // 3. If sensitive fields changed → check crops
+      if (isSensitiveChange) {
+        const crops = await transactionalManager.find(CropEntity, {
+          where: { FieldID: fieldId },
+        });
+
+    
+          const oldestCrop = crops.reduce((oldest, current) =>
+            current.Year < oldest.Year ? current : oldest
+          );
+
+          console.log("Number of crops:", crops.length);
+          console.log("Oldest crop:", oldestCrop);
+
+          // 👉 If you want to block update:
+          // throw boom.badRequest(`Cannot update sensitive fields. Oldest crop exists for year ${oldestCrop.Year}`);
+        
+
+         await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+           fieldId,
+           oldestCrop.Year,
+           request,
+           userId,
+           transactionalManager
+         );
+        
+                const nextAvailableCrop = await transactionalManager.findOne(
+                  CropEntity,
+                  {
+                    where: {
+                      FieldID: fieldId,
+                      Year: MoreThan(oldestCrop.Year),
+                    },
+                    order: { Year: "ASC" },
+                  }
+                );
+                console.log("nextAvailableCrop", nextAvailableCrop);
+                // console.log("nextAvailableCrop[0].Year", nextAvailableCrop[0].Year.lengh);
+                if (nextAvailableCrop) {
+                  this.UpdateRecommendation.updateRecommendationsForField(
+                    fieldId,
+                    nextAvailableCrop.Year,
+                    request,
+                    userId
+                  ).catch((error) => {
+                    console.error(
+                      "Error updating next crop's recommendations:",
+                      error
+                    );
+                  });
+                }
+      }
+
+      // 4. Perform the update inside transaction
+      const updateResult = await transactionalManager.update(
+        FieldEntity,
+        fieldId,
+        {
+          ...dataToUpdate,
+          ModifiedByID: userId,
+          ModifiedOn: new Date(),
+        }
+      );
+
+      if (updateResult.affected === 0) {
+        throw boom.notFound(`Field with ID ${fieldId} not found`);
+      }
+
+      // 5. Fetch updated field inside same transaction
+      const updatedField = await transactionalManager.findOne(FieldEntity, {
+        where: { ID: fieldId },
+      });
+
+      return updatedField;
     });
-
-    if (result.affected === 0) {
-      throw boom.notFound(`Field with ID ${fieldId} not found`);
-    }
-
-    const updatedField = await this.repository.findOne({
-      where: { ID: fieldId },
-    });
-    return updatedField;
   }
 
   async deleteFieldAndRelatedEntities(fieldId) {
@@ -360,12 +457,12 @@ class FieldService extends BaseService {
     // const snsAnalysisData = await this.snsAnalysisRepository.findOneBy({
     //   FieldID: fieldId,
     // });
-      const cropData = await this.cropRepository.findOne({
+    const cropData = await this.cropRepository.findOne({
       where: {
-        FieldID: fieldId
+        FieldID: fieldId,
       },
       order: {
-        Year: 'ASC', 
+        Year: "ASC",
       },
     });
     const previousGrassesData = await this.previousGrassesRepository.find({
