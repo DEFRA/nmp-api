@@ -661,15 +661,24 @@ class FieldService extends BaseService {
         const Errors = [];
         // Enrich crops with management periods and their sub-objects
 
-        const { latestSoilAnalysis, errors: soilAnalysisErrors } =
-          await this.handleSoilAnalysisValidation(field.ID, year);
+        // const { latestSoilAnalysis, errors: soilAnalysisErrors } =
+        //   await this.handleSoilAnalysisValidation(field.ID, year);
 
-        Errors.push(...soilAnalysisErrors);
-        if (Errors.length > 0) {
-          throw new Error(JSON.stringify(Errors));
-        }
+        // Errors.push(...soilAnalysisErrors);
+        // if (Errors.length > 0) {
+        //   throw new Error(JSON.stringify(Errors));
+        // }
+        const soilAnalysisRecords = await this.soilAnalysisRepository.find(
+      {
+        where: {
+          FieldID: field.ID,
+          Year: year,
+        },
+        order: { Date: "DESC" }, // Order by date, most recent first
+      }
+    );
 
-        const soilAnalysis = latestSoilAnalysis ? latestSoilAnalysis : null;
+        const soilAnalysis = soilAnalysisRecords ? soilAnalysisRecords : null;
 
         if (crops != null) {
           for (const crop of crops) {
