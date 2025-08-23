@@ -61,6 +61,16 @@ const NutrientsLoadingFarmDetailsEntity = new EntitySchema({
       nullable: false,
       name: "ContingencyPlan",
     },
+    IsAnyLivestockNumber: {
+      type: "bit",
+      nullable: true,
+      name: "IsAnyLivestockNumber",
+    },
+    IsAnyLivestockImportExport: {
+      type: "bit",
+      nullable: true,
+      name: "IsAnyLivestockImportExport",
+    },
     CreatedOn: {
       type: "datetime2",
       precision: 7,
