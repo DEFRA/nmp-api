@@ -59,9 +59,9 @@ const init = async () => {
     responseHandlerPlugin,
   ]);
 
-  server.ext("onPreHandler", (request, h) => {
-    return azureAuthMiddleware.use(request, h);
-  });
+  // server.ext("onPreHandler", (request, h) => {
+  //   return azureAuthMiddleware.use(request, h);
+  // });
 
   server.route(routes);
 
