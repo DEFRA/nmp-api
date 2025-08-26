@@ -81,6 +81,7 @@ const { NutrientsLoadingLiveStocksEntity } = require("./entity/nutrients-loading
 const { NutrientsLoadingManuresEntity } = require("./entity/nutrients-loading-manures-entity.js");
 const { StorageTypesEntity } = require("./entity/storage-types.Entity.js");
 const { StoreCapacitiesEntity } = require("./entity/store-capacities.entity.js");
+const { MaterialStatesEntity } = require("./entity/material-states.entity.js");
 
 
 
@@ -150,7 +151,8 @@ const baseConfig = {
     NutrientsLoadingLiveStocksEntity,
     NutrientsLoadingManuresEntity,
     StorageTypesEntity,
-    StoreCapacitiesEntity
+    StoreCapacitiesEntity,
+    MaterialStatesEntity
   ],
   migrations: [],
   subscribers: [],

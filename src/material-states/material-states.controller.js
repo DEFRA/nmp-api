@@ -1,6 +1,7 @@
-const { StoreCapacitiesService } = require("./store-capacities.service");
+const { MaterialStatesService } = require("./material-states.service");
 
-class StoreCapacitiesController {
+
+class MaterialStatesController {
   #request;
   #h;
   #service;
@@ -8,7 +9,7 @@ class StoreCapacitiesController {
   constructor(request, h) {
     this.#request = request;
     this.#h = h;
-    this.#service = new StoreCapacitiesService();
+    this.#service = new MaterialStatesService();
   }
 
   async getAll() {
@@ -21,10 +22,10 @@ class StoreCapacitiesController {
     }
   }
 
-  async getByFarmIdAndYear() {
-    const { farmId, year } = this.#request.params;
+  async getById() {
+    const { id } = this.#request.params;
     try {
-      const record = await this.#service.getByFarmAndYear(farmId, year);
+      const record = await this.#service.getById(id);
       return this.#h.response(record);
     } catch (error) {
       console.error("Error in getById:", error);
@@ -33,4 +34,4 @@ class StoreCapacitiesController {
   }
 }
 
-module.exports = { StoreCapacitiesController };
+module.exports = { MaterialStatesController };

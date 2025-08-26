@@ -11,13 +11,16 @@ class StoreCapacitiesService extends BaseService {
   }
 
 
-  async getById(farmId, year) {
-    const record = await this.repository.findOneBy({
-      FarmID: farmId,
-      Year: year,
+  async getByFarmAndYear(farmId, year) {
+    const records = await this.repository.find({
+      where: {
+        FarmID: farmId,
+        Year: year,
+      },
     });
-    return record;
+    return records;
   }
+
 }
 
 module.exports = { StoreCapacitiesService };

@@ -4,14 +4,20 @@ const StoreCapacitiesEntity = new EntitySchema({
   name: "StoreCapacities",
   tableName: "StoreCapacities",
   columns: {
-    FarmID: {
+    ID: {
       type: "int",
       primary: true,
+      generated: true,
+      name: "ID",
+    },
+    FarmID: {
+      type: "int",
+      nullable: false,
       name: "FarmID",
     },
     Year: {
       type: "int",
-      primary: true,
+      nullable: false,
       name: "Year",
     },
     StoreName: {
