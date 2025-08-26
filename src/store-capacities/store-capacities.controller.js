@@ -21,10 +21,10 @@ class StoreCapacitiesController {
     }
   }
 
-  async getById() {
+  async getByFarmIdAndYear() {
     const { farmId, year } = this.#request.params;
     try {
-      const record = await this.#service.getById(farmId, year);
+      const record = await this.#service.getByFarmAndYear(farmId, year);
       return this.#h.response(record);
     } catch (error) {
       console.error("Error in getById:", error);

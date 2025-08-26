@@ -41,7 +41,7 @@ module.exports = [
     },
     handler: async (request, h) => {
       const controller = new StoreCapacitiesController(request, h);
-      return controller.getById();
+      return controller.getByFarmIdAndYear();
     },
   },
 ];
