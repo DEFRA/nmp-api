@@ -80,6 +80,8 @@ const { LivestockTypeEntity } = require("./entity/livestock-type-entity.js");
 const { NutrientsLoadingFarmDetailsEntity } = require("./entity/nutrients-loading-farm-details-entity.js");
 const { NutrientsLoadingLiveStocksEntity } = require("./entity/nutrients-loading-live-stocks-entity.js");
 const { NutrientsLoadingManuresEntity } = require("./entity/nutrients-loading-manures-entity.js");
+const { StorageTypesEntity } = require("./entity/storage-types.Entity.js");
+const { StoreCapacitiesEntity } = require("./entity/store-capacities.entity.js");
 
 
 dotven.config();
@@ -145,7 +147,9 @@ const baseConfig = {
     LivestockTypeEntity,
     NutrientsLoadingFarmDetailsEntity,
     NutrientsLoadingLiveStocksEntity,
-    NutrientsLoadingManuresEntity
+    NutrientsLoadingManuresEntity,
+    StorageTypesEntity,
+    StoreCapacitiesEntity
   ],
 };
 
