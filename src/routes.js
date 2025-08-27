@@ -42,5 +42,6 @@ module.exports = [
   ...require("./livestock-type/livestock-type.route"),
   ...require("./nutrients-loading-live-stocks/nutrients-loading-live-stocks.route"),
   ...require("./storage-types/storage-types.route"),
-  ...require("./store-capacities/store-capacities.route")
+  ...require("./store-capacities/store-capacities.route"),
+  ...require("./material-states/material-states.route")
 ];

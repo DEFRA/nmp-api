@@ -1,30 +1,30 @@
 const Joi = require("joi");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
-const { StoreCapacitiesController } = require("./store-capacities.controller");
+const { MaterialStatesController } = require("./material-states.controller");
+
 
 module.exports = [
   {
     method: "GET",
-    path: "/store-capacities",
+    path: "/material-states",
     options: {
-      tags: ["api", "Store Capacities"],
-      description: "Get all store capacities",
+      tags: ["api", "MaterialStates"],
+      description: "Get all Material States",
     },
     handler: async (request, h) => {
-      const controller = new StoreCapacitiesController(request, h);
+      const controller = new MaterialStatesController(request, h);
       return controller.getAll();
     },
   },
   {
     method: "GET",
-    path: "/store-capacities/{farmId}/{year}",
+    path: "/material-states/{id}",
     options: {
-      tags: ["api", "Store Capacities"],
-      description: "Get store capacity by farmId and year",
+      tags: ["api", "MaterialStates"],
+      description: "Get Material State by ID",
       validate: {
         params: Joi.object({
-          farmId: Joi.number().required(),
-          year: Joi.number().required(),
+          id: Joi.number().integer().required(),
         }),
         failAction: (request, h, err) => {
           return h
@@ -40,8 +40,8 @@ module.exports = [
       },
     },
     handler: async (request, h) => {
-      const controller = new StoreCapacitiesController(request, h);
-      return controller.getByFarmIdAndYear();
+      const controller = new MaterialStatesController(request, h);
+      return controller.getById();
     },
   },
 ];
