@@ -71,6 +71,7 @@ const {
 const {
   CalculateMannerOutputService,
 } = require("../shared/calculate-manner-output-service");
+const { CalculateCropsSnsAnalysisService } = require("../shared/calculate-crops-sns-analysis-service");
 
 class PlanService extends BaseService {
   constructor() {
@@ -109,6 +110,7 @@ class PlanService extends BaseService {
     this.CalculateTotalAvailableNForPreviousYear =
       new CalculateTotalAvailableNForNextYear();
     this.CalculateMannerOutput = new CalculateMannerOutputService();
+    this.CalculateCropsSnsAnalysis = new CalculateCropsSnsAnalysisService();
   }
 
   async getManagementPeriods(id) {
@@ -512,10 +514,10 @@ class PlanService extends BaseService {
           ...(soilAnalysis.SulphurDeficient && {
             sulphurDeficient: soilAnalysis.SulphurDeficient,
           }),
-          ...(soilAnalysis.SoilNitrogenSupplyIndex != null && {
-            snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
-            snsMethodologyId: 4,
-          }),
+          // ...(soilAnalysis.SoilNitrogenSupplyIndex != null && {
+          //   snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
+          //   snsMethodologyId: 4,
+          // }),
           ...(soilAnalysis.PhosphorusIndex != null && {
             pIndexId: soilAnalysis.PhosphorusIndex,
             pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
@@ -550,6 +552,51 @@ class PlanService extends BaseService {
     //     mgMethodologyId: 4,
     //   });
     // }
+
+    // Add SnsAnalyses data
+    if (Array.isArray(snsAnalysesData)) {
+      snsAnalysesData.forEach((analysis) => {
+        const snsAnalysisData = {
+          ...(analysis.SampleDate != null && {
+            soilAnalysisDate: analysis.SampleDate,
+          }),
+          ...(analysis.SoilNitrogenSupplyIndex != null && {
+            snsIndexId: analysis.SoilNitrogenSupplyIndex,
+            snsMethodologyId: 4,
+          }),
+          ...(analysis.SNSCropOrder != null && {
+            SNSCropOrder: analysis.SNSCropOrder,
+          }),
+        };
+
+        // Only push if there's actual data
+        if (Object.keys(snsAnalysisData).length > 0) {
+          nutrientRecommendationnReqBody.field.soil.soilAnalyses.push(
+            snsAnalysisData
+          );
+        }
+      });
+    } else if (snsAnalysesData) {
+      const snsAnalysisData = {
+        ...(snsAnalysesData.SampleDate != null && {
+          soilAnalysisDate: snsAnalysesData.SampleDate,
+        }),
+        ...(snsAnalysesData.SoilNitrogenSupplyIndex != null && {
+          snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex,
+          snsMethodologyId: 4,
+        }),
+        ...(snsAnalysesData.SNSCropOrder != null && {
+          SNSCropOrder: snsAnalysesData.SNSCropOrder,
+        }),
+      };
+
+      // Only push if there's actual data
+      if (Object.keys(snsAnalysisData).length > 0) {
+        nutrientRecommendationnReqBody.field.soil.soilAnalyses.push(
+          snsAnalysisData
+        );
+      }
+    }
 
     if (previousCrop) {
       const cropType = cropTypesList.find(
@@ -2024,7 +2071,13 @@ class PlanService extends BaseService {
           throw new Error(JSON.stringify(Errors));
         }
 
-        const snsAnalysesData = await this.getSnsAnalysesData(crop?.ID);
+        //const snsAnalysesData = await this.getSnsAnalysesData(crop?.ID);
+        const snsAnalysesData =
+          await this.CalculateCropsSnsAnalysis.getCropsSnsAnalyses(
+            transactionalManager,
+            fieldId,
+            crop.Year
+          );
         if (crop.CropTypeID === CropTypeMapper.OTHER) {
           await this.savedDefault(cropData, userId, transactionalManager);
           if (isSoilAnalysisHavePAndK) {

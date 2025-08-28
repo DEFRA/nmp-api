@@ -743,6 +743,9 @@ class OrganicManureService extends BaseService {
             snsIndexId: analysis.SoilNitrogenSupplyIndex,
             snsMethodologyId: 4,
           }),
+          ...(analysis.SNSCropOrder != null && {
+            SNSCropOrder: analysis.SNSCropOrder,
+          }),
         };
 
         // Only push if there's actual data
@@ -760,6 +763,9 @@ class OrganicManureService extends BaseService {
         ...(snsAnalysesData.SoilNitrogenSupplyIndex != null && {
           snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex,
           snsMethodologyId: 4,
+        }),
+        ...(snsAnalysesData.SNSCropOrder != null && {
+          SNSCropOrder: snsAnalysesData.SNSCropOrder,
         }),
       };
 
@@ -1023,12 +1029,17 @@ class OrganicManureService extends BaseService {
     }
   }
 
-  async getSnsAnalysesData(id) {
+  async getSnsAnalysesData(crop) {
     const data = await this.snsAnalysisRepository.findOne({
-      where: { CropID: id },
+      where: { CropID: crop.ID },
     });
 
-    return data;
+    if (data) {
+      return {
+        ...data,
+        SNSCropOrder: crop.CropOrder,
+      };
+    }
   }
 
   async getSecondCropRecommendation(secondCropManagementPeriodId) {
@@ -2500,7 +2511,7 @@ class OrganicManureService extends BaseService {
           // Loop through each crop in dataMultipleCrops
           for (const singleCrop of dataMultipleCrops) {
             // Retrieve snsAnalysesData for each crop by crop.ID
-            const analysisData = await this.getSnsAnalysesData(singleCrop.ID);
+            const analysisData = await this.getSnsAnalysesData(singleCrop);
 
             // Check if snsAnalysesData exists (not null or empty)
             if (analysisData) {
@@ -2510,7 +2521,7 @@ class OrganicManureService extends BaseService {
           }
         } else if (dataMultipleCrops.length === 1) {
           // If there is only one crop, get snsAnalysesData for that crop
-          const analysisData = await this.getSnsAnalysesData(cropData.ID);
+          const analysisData = await this.getSnsAnalysesData(cropData);
 
           // Check if snsAnalysesData exists and assign directly as an object
           if (analysisData) {
@@ -3748,9 +3759,11 @@ class OrganicManureService extends BaseService {
       )
       .where("OrganicManures.ManagementPeriodID = :managementPeriodID", {
         managementPeriodID,
-      }).
-      andWhere("OrganicManures.ManureTypeID != :excludedType", { excludedType: 33 });
-       // Exclude Paper Crumble - Chemically/Physcially Treated
+      })
+      .andWhere("OrganicManures.ManureTypeID != :excludedType", {
+        excludedType: 33,
+      });
+    // Exclude Paper Crumble - Chemically/Physcially Treated
 
     const organicResult = await organicManuresResult.getRawOne();
     console.log("organicResult", organicResult);
