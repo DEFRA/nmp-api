@@ -782,7 +782,7 @@ class UpdateRecommendationChanges {
         );
         const firstCropSnsAnalysis = await this.getSnsAnalysesData(
           transactionalManager,
-          firstCrop.ID
+          firstCrop
         );
         if (firstCropSnsAnalysis) {
           snsAnalysesData.push(firstCropSnsAnalysis);
@@ -832,7 +832,7 @@ class UpdateRecommendationChanges {
         );
         const secondCropSnsAnalysis = await this.getSnsAnalysesData(
           transactionalManager,
-          secondCrop.ID
+          secondCrop
         );
         if (secondCropSnsAnalysis) {
           snsAnalysesData.push(secondCropSnsAnalysis);
@@ -898,7 +898,7 @@ class UpdateRecommendationChanges {
         // );
         snsAnalysesData = await this.getSnsAnalysesData(
           transactionalManager,
-          cropData.ID
+          cropData
         );
       }
 
@@ -1229,7 +1229,7 @@ class UpdateRecommendationChanges {
           // Retrieve snsAnalysesData for each crop by crop.ID
           const analysisData = await this.getSnsAnalysesData(
             transactionalManager,
-            singleCrop.ID
+            singleCrop
           );
 
           // Check if snsAnalysesData exists (not null or empty)
@@ -1242,7 +1242,7 @@ class UpdateRecommendationChanges {
         // If there is only one crop, get snsAnalysesData for that crop
         const analysisData = await this.getSnsAnalysesData(
           transactionalManager,
-          crop.ID
+          crop
         );
 
         // Check if snsAnalysesData exists and assign directly as an object
@@ -3262,6 +3262,9 @@ class UpdateRecommendationChanges {
           ...(analysis.SoilNitrogenSupplyIndex != null && {
             snsIndexId: analysis.SoilNitrogenSupplyIndex,
           }),
+          ...(analysis.SNSCropOrder != null && {
+            SNSCropOrder: analysis.SNSCropOrder
+          })
         };
 
         // Only push if there's actual data
@@ -3278,6 +3281,9 @@ class UpdateRecommendationChanges {
         }),
         ...(snsAnalysesData.SoilNitrogenSupplyIndex != null && {
           snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex,
+        }),
+        ...(snsAnalysesData.SNSCropOrder != null && {
+          SNSCropOrder: snsAnalysesData.SNSCropOrder
         }),
       };
 
@@ -3600,6 +3606,9 @@ class UpdateRecommendationChanges {
             snsIndexId: analysis.SoilNitrogenSupplyIndex,
             snsMethodologyId: 4,
           }),
+          ...(analysis.SNSCropOrder != null && {
+            SNSCropOrder: analysis.SNSCropOrder,
+          }),
         };
 
         // Only push if there's actual data
@@ -3617,6 +3626,9 @@ class UpdateRecommendationChanges {
         ...(snsAnalysesData.SoilNitrogenSupplyIndex != null && {
           snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex,
           snsMethodologyId: 4,
+        }),
+        ...(snsAnalysesData.SNSCropOrder != null && {
+          SNSCropOrder: snsAnalysesData.SNSCropOrder,
         }),
       };
 
@@ -3670,12 +3682,17 @@ class UpdateRecommendationChanges {
 
     return nutrientRecommendationnReqBody;
   }
-  async getSnsAnalysesData(transactionalManager, id) {
+  async getSnsAnalysesData(transactionalManager, crop) {
     const data = await transactionalManager.findOne(SnsAnalysesEntity, {
-      where: { CropID: id },
+      where: { CropID: crop.ID },
     });
 
-    return data;
+      if (data) {
+        return {
+          ...data,
+          SNSCropOrder: crop.CropOrder,
+        };
+      }
   }
 
   async getCrops(fieldID, year) {
