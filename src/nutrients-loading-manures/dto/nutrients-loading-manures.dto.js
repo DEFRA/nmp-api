@@ -25,7 +25,7 @@ const NutrientsLoadingManuresDto = Joi.object({
   Address3: Joi.string().max(50).allow(null, ""),
   Address4: Joi.string().max(50).allow(null, ""),
   PostCode: Joi.string().max(50).allow(null, ""),
-  Comments: Joi.string().max(255).allow(null, ""),
+  Comments: Joi.string().max(100).allow(null, ""),
   CreatedOn: Joi.date().iso().allow(null).default(null),
   CreatedByID: Joi.number().integer().allow(null).default(null),
   ModifiedOn: Joi.date().iso().allow(null).default(null),
