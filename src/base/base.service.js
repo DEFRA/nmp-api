@@ -14,9 +14,9 @@ class BaseService {
 
   async getById(id) {
     const records = await this.#entity.findOne({ where: { ID: id } });
-    if (!records) {
-      throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
-    }
+    // if (!records) {
+    //   throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
+    // }
     return { records };
   }
 
