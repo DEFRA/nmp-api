@@ -88,7 +88,8 @@ class FieldController {
       const updatedField = await this.#fieldService.updateField(
         Field,
         userId,
-        fieldId
+        fieldId,
+        this.#request
       );
       return this.#h.response({ Field: updatedField });
     } catch (error) {

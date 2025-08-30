@@ -544,7 +544,7 @@ class UpdateRecommendation {
           updated
         );
         results.push(saved);
-      }else{
+      } else {
         // Create a new recommendation record
         const created = this.RecommendationRepository.create({
           ...cropRecData,
@@ -728,7 +728,7 @@ class UpdateRecommendation {
         );
         const firstCropSnsAnalysis = await this.getSnsAnalysesData(
           transactionalManager,
-          firstCrop.ID
+          firstCrop
         );
         if (firstCropSnsAnalysis) {
           snsAnalysesData.push(firstCropSnsAnalysis);
@@ -778,7 +778,7 @@ class UpdateRecommendation {
         );
         const secondCropSnsAnalysis = await this.getSnsAnalysesData(
           transactionalManager,
-          secondCrop.ID
+          secondCrop
         );
         if (secondCropSnsAnalysis) {
           snsAnalysesData.push(secondCropSnsAnalysis);
@@ -844,7 +844,7 @@ class UpdateRecommendation {
         // );
         snsAnalysesData = await this.getSnsAnalysesData(
           transactionalManager,
-          cropData.ID
+          cropData
         );
       }
 
@@ -1160,7 +1160,7 @@ class UpdateRecommendation {
           // Retrieve snsAnalysesData for each crop by crop.ID
           const analysisData = await this.getSnsAnalysesData(
             transactionalManager,
-            singleCrop.ID
+            singleCrop
           );
 
           // Check if snsAnalysesData exists (not null or empty)
@@ -1173,7 +1173,7 @@ class UpdateRecommendation {
         // If there is only one crop, get snsAnalysesData for that crop
         const analysisData = await this.getSnsAnalysesData(
           transactionalManager,
-          crop.ID
+          crop
         );
 
         // Check if snsAnalysesData exists and assign directly as an object
@@ -1484,55 +1484,55 @@ class UpdateRecommendation {
       //   }
       // }
 
-       for (const cropData of dataMultipleCrops) {
-               savedRecommendation = await this.buildCropRecommendationData(
-                 cropData,
-                 latestSoilAnalysis,
-                 nutrientRecommendationsData,
-                 transactionalManager,
-                 userId
-               );
-      
-               const isGrass = cropData.CropTypeID === CropTypeMapper.GRASS;
-      
-               const hasDefoliationIdInAdviceNotes =
-                 nutrientRecommendationsData.adviceNotes?.some((note) =>
-                   Object.prototype.hasOwnProperty.call(note, "defoliationId")
-                 );
-      
-               if (isGrass) {
-                 if (hasDefoliationIdInAdviceNotes) {
-                   for (const singleRecommendation of savedRecommendation) {
-                     savedRecommendation = await this.saveMultipleRecommendation(
-                       Recommendations,
-                       cropData,
-                       singleRecommendation,
-                       transactionalManager,
-                       nutrientRecommendationsData,
-                       userId
-                     );
-                   }
-                 } else {
-                   savedRecommendation = await this.saveMultipleRecommendation(
-                     Recommendations,
-                     cropData,
-                     savedRecommendation[0],
-                     transactionalManager,
-                     nutrientRecommendationsData,
-                     userId
-                   );
-                 }
-               } else {
-                 savedRecommendation = await this.saveMultipleRecommendation(
-                   Recommendations,
-                   cropData,
-                   savedRecommendation[0],
-                   transactionalManager,
-                   nutrientRecommendationsData,
-                   userId
-                 );
-               }
-             }
+      for (const cropData of dataMultipleCrops) {
+        savedRecommendation = await this.buildCropRecommendationData(
+          cropData,
+          latestSoilAnalysis,
+          nutrientRecommendationsData,
+          transactionalManager,
+          userId
+        );
+
+        const isGrass = cropData.CropTypeID === CropTypeMapper.GRASS;
+
+        const hasDefoliationIdInAdviceNotes =
+          nutrientRecommendationsData.adviceNotes?.some((note) =>
+            Object.prototype.hasOwnProperty.call(note, "defoliationId")
+          );
+
+        if (isGrass) {
+          if (hasDefoliationIdInAdviceNotes) {
+            for (const singleRecommendation of savedRecommendation) {
+              savedRecommendation = await this.saveMultipleRecommendation(
+                Recommendations,
+                cropData,
+                singleRecommendation,
+                transactionalManager,
+                nutrientRecommendationsData,
+                userId
+              );
+            }
+          } else {
+            savedRecommendation = await this.saveMultipleRecommendation(
+              Recommendations,
+              cropData,
+              savedRecommendation[0],
+              transactionalManager,
+              nutrientRecommendationsData,
+              userId
+            );
+          }
+        } else {
+          savedRecommendation = await this.saveMultipleRecommendation(
+            Recommendations,
+            cropData,
+            savedRecommendation[0],
+            transactionalManager,
+            nutrientRecommendationsData,
+            userId
+          );
+        }
+      }
     }
   }
 
@@ -1693,8 +1693,7 @@ class UpdateRecommendation {
           updated
         );
         results.push(saved);
-      }
-      else {
+      } else {
         // Create a new recommendation record
         const created = this.RecommendationRepository.create({
           ...cropRecData,
@@ -3126,7 +3125,7 @@ class UpdateRecommendation {
         potash: true,
         magnesium: true,
         sodium: true,
-        sulphur: false,
+        sulphur: true,
         lime: true,
       },
       totals: true,
@@ -3230,6 +3229,9 @@ class UpdateRecommendation {
           ...(analysis.SoilNitrogenSupplyIndex != null && {
             snsIndexId: analysis.SoilNitrogenSupplyIndex,
           }),
+          ...(analysis.SNSCropOrder != null && {
+            SNSCropOrder: analysis.SNSCropOrder,
+          })
         };
 
         // Only push if there's actual data
@@ -3246,6 +3248,9 @@ class UpdateRecommendation {
         }),
         ...(snsAnalysesData.SoilNitrogenSupplyIndex != null && {
           snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex,
+        }),
+        ...(snsAnalysesData.SNSCropOrder != null && {
+          SNSCropOrder: snsAnalysesData.SNSCropOrder,
         }),
       };
 
@@ -3321,57 +3326,49 @@ class UpdateRecommendation {
   }
 
   async buildGrassObject(crop, field, grassGrowthClass, transactionalManager) {
-    // Case: Only one crop with CropOrder 1 and CropTypeID 140
-    if (
-      crop.CropOrder === CropOrderMapper.FIRSTCROP &&
-      crop.CropTypeID === CropTypeMapper.GRASS
-    ) {
+    let grassCrop = null;
+
+    if (crop.CropTypeID === CropTypeMapper.GRASS) {
+      grassCrop = crop;
+    } else {
+      grassCrop = await transactionalManager.findOne(CropEntity, {
+        where: {
+          FieldID: crop.FieldID,
+          Year: crop.Year,
+          CropTypeID: CropTypeMapper.GRASS,
+          ID: Not(crop.ID), // exclude the current crop
+        },
+      });
+    }
+
+    if (!grassCrop) {
+      return {};
+    }
+
+    if (grassCrop.CropOrder === CropOrderMapper.FIRSTCROP) {
       return {
-        cropOrder: crop.CropOrder,
-        swardTypeId: crop.SwardTypeID,
-        swardManagementId: crop.SwardManagementID,
-        defoliationSequenceId: crop.DefoliationSequenceID,
+        cropOrder: grassCrop.CropOrder,
+        swardTypeId: grassCrop.SwardTypeID,
+        swardManagementId: grassCrop.SwardManagementID,
+        defoliationSequenceId: grassCrop.DefoliationSequenceID,
         grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
-        yield: crop.Yield,
-        seasonId: crop.Establishment,
+        yield: grassCrop.Yield,
+        seasonId: grassCrop.Establishment,
       };
     }
 
-    // Case: CropOrder is 2 and it's grass
-    if (crop.CropOrder === CropOrderMapper.SECONDCROP) {
-      if (crop.CropTypeID === CropTypeMapper.GRASS) {
-        return {
-          cropOrder: crop.CropOrder,
-          swardTypeId: crop.SwardTypeID,
-          swardManagementId: crop.SwardManagementID,
-          defoliationSequenceId: crop.DefoliationSequenceID,
-          grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
-          yield: crop.Yield,
-          seasonId: crop.Establishment,
-        };
-      } else {
-        // Look up CropOrder 1
-        const firstCrop = await this.getFirstCropData(
-          transactionalManager,
-          field.ID,
-          crop.Year
-        );
-
-        if (firstCrop && firstCrop.CropTypeID === CropTypeMapper.GRASS) {
-          return {
-            cropOrder: firstCrop.CropOrder,
-            swardTypeId: firstCrop.SwardTypeID,
-            swardManagementId: firstCrop.SwardManagementID,
-            defoliationSequenceId: firstCrop.DefoliationSequenceID,
-            grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
-            yield: firstCrop.Yield,
-            seasonId: firstCrop.Establishment,
-          };
-        }
-      }
+    if (grassCrop.CropOrder === CropOrderMapper.SECONDCROP) {
+      return {
+        cropOrder: grassCrop.CropOrder,
+        swardTypeId: grassCrop.SwardTypeID,
+        swardManagementId: grassCrop.SwardManagementID,
+        defoliationSequenceId: grassCrop.DefoliationSequenceID,
+        grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
+        yield: grassCrop.Yield,
+        seasonId: grassCrop.Establishment,
+      };
     }
 
-    // Default return
     return {};
   }
   async isGrassCropPresent(crop, transaction) {
@@ -3516,7 +3513,7 @@ class UpdateRecommendation {
         potash: true,
         magnesium: true,
         sodium: true,
-        sulphur: false,
+        sulphur: true,
         lime: true,
       },
       totals: true,
@@ -3571,6 +3568,9 @@ class UpdateRecommendation {
             snsIndexId: analysis.SoilNitrogenSupplyIndex,
             snsMethodologyId: 4,
           }),
+          ...(analysis.SNSCropOrder != null && {
+            SNSCropOrder: analysis.SNSCropOrder,
+          })
         };
 
         // Only push if there's actual data
@@ -3588,6 +3588,9 @@ class UpdateRecommendation {
         ...(snsAnalysesData.SoilNitrogenSupplyIndex != null && {
           snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex,
           snsMethodologyId: 4,
+        }),
+        ...(snsAnalysesData.SNSCropOrder != null && {
+          SNSCropOrder: snsAnalysesData.SNSCropOrder,
         }),
       };
 
@@ -3641,12 +3644,17 @@ class UpdateRecommendation {
 
     return nutrientRecommendationnReqBody;
   }
-  async getSnsAnalysesData(transactionalManager, id) {
+  async getSnsAnalysesData(transactionalManager, crop) {
     const data = await transactionalManager.findOne(SnsAnalysesEntity, {
-      where: { CropID: id },
+      where: { CropID: crop.ID },
     });
 
-    return data;
+      if (data) {
+        return {
+          ...data,
+          SNSCropOrder: crop.CropOrder,
+        };
+      }
   }
 
   async getAllOrganicManure() {

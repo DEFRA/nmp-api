@@ -104,7 +104,7 @@ const NutrientsLoadingManuresEntity = new EntitySchema({
     },
     Comments: {
       type: "nvarchar",
-      length: 255,
+      length: 100,
       nullable: true,
       name: "Comments",
     },
