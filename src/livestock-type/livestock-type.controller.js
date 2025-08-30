@@ -14,7 +14,16 @@ class LivestockTypeController {
   async getAllLivestockTypes() {
     try {
       const { records } = await this.#livestockTypeService.getAll();
-      return this.#h.response({ LivestockGroups: records });
+      return this.#h.response({ LivestockTypes: records });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+
+  async getLivestockTypeById() {
+    try {
+      const { records } = await this.#livestockTypeService.getById();
+      return this.#h.response({ LivestockTypes: records });
     } catch (error) {
       return this.#h.response({ error });
     }

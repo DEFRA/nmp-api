@@ -5,6 +5,7 @@ const createNutrientsLoadingLiveStocks = Joi.object({
   FarmID: Joi.number().required(),
   CalendarYear: Joi.number().required().allow(null).optional(),
   LiveStockTypeID: Joi.number().allow(null),
+  LiveStockType: Joi.string().optional().allow(null),
   Units: Joi.number().precision(3).allow(null),
   NByUnit: Joi.number().precision(3).allow(null),
   TotalNProduced: Joi.number().precision(3).allow(null),

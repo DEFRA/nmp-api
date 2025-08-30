@@ -11,6 +11,8 @@ const NutrientsLoadingFarmDetailsDto = Joi.object({
   Derogation: Joi.boolean().required(),
   GrassPercentage: Joi.number().integer().allow(null),
   ContingencyPlan: Joi.boolean().required(),
+  IsAnyLivestockNumber: Joi.boolean().allow(null),
+  IsAnyLivestockImportExport: Joi.boolean().allow(null),
   CreatedOn: Joi.date().iso().allow(null).default(null),
   CreatedByID: Joi.number().integer().allow(null).default(null),
   ModifiedOn: Joi.date().iso().allow(null).default(null),
