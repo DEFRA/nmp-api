@@ -83,6 +83,8 @@ const { NutrientsLoadingManuresEntity } = require("./entity/nutrients-loading-ma
 const { StorageTypesEntity } = require("./entity/storage-types.Entity.js");
 const { StoreCapacitiesEntity } = require("./entity/store-capacities.entity.js");
 const { MaterialStatesEntity } = require("./entity/material-states.entity.js");
+const { SolidManureTypesEntity } = require("./entity/solid-manure-types.entity.js");
+const { BankSlopeAnglesEntity } = require("./entity/bank-slope-angles-entity.js");
 
 
 dotven.config();
@@ -151,7 +153,9 @@ const baseConfig = {
     NutrientsLoadingManuresEntity,
     StorageTypesEntity,
     StoreCapacitiesEntity,
-    MaterialStatesEntity
+    MaterialStatesEntity,
+    SolidManureTypesEntity,
+    BankSlopeAnglesEntity
   ],
 };
 
