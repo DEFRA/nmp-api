@@ -2141,6 +2141,7 @@ class PlanService extends BaseService {
           this.cropRepository.create({
             ...crop,
             CreatedByID: userId,
+            CreatedOn: new Date()
           })
         );
 
@@ -2154,6 +2155,7 @@ class PlanService extends BaseService {
               ...managementPeriod,
               CropID: savedCrop.ID,
               CreatedByID: userId,
+              CreatedOn: new Date()
             })
           );
           ManagementPeriods.push(savedManagementPeriod);
