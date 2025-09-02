@@ -79,7 +79,7 @@ class CalculateMannerOutputService {
         totalK: MannerOutput.data.totalK2O,
         availableK: MannerOutput.data.cropAvailableK2O,
         totalS: MannerOutput.data.totalSO3,
-        availableS: MannerOutput.data.cropAvailableSO3,
+        availableS: MannerOutput?.data?.cropAvailableSO3,
         totalM: MannerOutput.data.totalMgO,
       },
     ];

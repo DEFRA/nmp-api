@@ -1613,7 +1613,7 @@ class OrganicManureService extends BaseService {
         totalK: MannerOutput.data.totalK2O,
         availableK: MannerOutput.data.cropAvailableK2O,
         totalS: MannerOutput.data.totalSO3,
-        availableS: MannerOutput.data.cropAvailableSO3,
+        availableS: MannerOutput?.data?.cropAvailableSO3,
         totalM: MannerOutput.data.totalMgO,
       },
     ];
@@ -2731,10 +2731,12 @@ class OrganicManureService extends BaseService {
             this.repository.create({
               ...organicManureData.OrganicManure,
               CreatedByID: userId,
+              CreatedOn: new Date(),
               ...(organicManureData.OrganicManure.ID == 0 ? { ID: null } : {}),
             })
           );
           organicManures.push(savedOrganicManure);
+          console.log("savedOrganicManure", savedOrganicManure);
           let arableNotes = nutrientRecommendationsData.adviceNotes;
 
           let savedRecommendation,
@@ -3487,26 +3489,26 @@ class OrganicManureService extends BaseService {
           where: { ID: crop?.FieldID },
         });
 
-        const farmData = await transactionalManager.findOne(FarmEntity, {
-          where: { ID: fieldData?.FarmID },
-        });
-        const cropTypeLinkingData = await transactionalManager.findOne(
-          CropTypeLinkingEntity,
-          {
-            where: {
-              CropTypeID: crop.CropTypeID,
-            },
-          }
-        );
+        // const farmData = await transactionalManager.findOne(FarmEntity, {
+        //   where: { ID: fieldData?.FarmID },
+        // });
+        // const cropTypeLinkingData = await transactionalManager.findOne(
+        //   CropTypeLinkingEntity,
+        //   {
+        //     where: {
+        //       CropTypeID: crop.CropTypeID,
+        //     },
+        //   }
+        // );
 
-        const soilTypeTextureData = await transactionalManager.findOne(
-          SoilTypeSoilTextureEntity,
-          {
-            where: {
-              SoilTypeID: fieldData.SoilTypeID,
-            },
-          }
-        );
+        // const soilTypeTextureData = await transactionalManager.findOne(
+        //   SoilTypeSoilTextureEntity,
+        //   {
+        //     where: {
+        //       SoilTypeID: fieldData.SoilTypeID,
+        //     },
+        //   }
+        // );
         let manureBody = null,
           manureRequestBody = null,
           mannerOutput = null;
@@ -3516,74 +3518,78 @@ class OrganicManureService extends BaseService {
           { where: { ID } }
         );
 
-        if (!existingOrganicManure) {
-          console.log(`Organic Manure with ID ${ID} not found`);
-          continue;
-        }
-        const mulOrganicManuresData = await transactionalManager.find(
-          OrganicManureEntity,
-          {
-            where: {
-              ManagementPeriodID: OrganicManure.ManagementPeriodID,
-              ID: Not(OrganicManure.ID),
-            },
-          }
-        );
+        // if (!existingOrganicManure) {
+        //   console.log(`Organic Manure with ID ${ID} not found`);
+        //   continue;
+        // }
+        // const mulOrganicManuresData = await transactionalManager.find(
+        //   OrganicManureEntity,
+        //   {
+        //     where: {
+        //       ManagementPeriodID: OrganicManure.ManagementPeriodID,
+        //       ID: Not(OrganicManure.ID),
+        //     },
+        //   }
+        // );
 
-        if (mulOrganicManuresData) {
-          manureBody = await this.buildManureApplicationsForUpdate(
-            OrganicManure.ManagementPeriodID,
-            OrganicManure,
-            mulOrganicManuresData,
-            request
-          );
+        // if (mulOrganicManuresData) {
+        //   manureBody = await this.buildManureApplicationsForUpdate(
+        //     OrganicManure.ManagementPeriodID,
+        //     OrganicManure,
+        //     mulOrganicManuresData,
+        //     request
+        //   );
 
-          if (manureBody) {
-            manureRequestBody = await this.buildMannerOutputReq(
-              farmData,
-              fieldData,
-              cropTypeLinkingData,
-              OrganicManure,
-              manureBody,
-              soilTypeTextureData
-            );
-          }
+        //   if (manureBody) {
+        //     manureRequestBody = await this.buildMannerOutputReq(
+        //       farmData,
+        //       fieldData,
+        //       cropTypeLinkingData,
+        //       OrganicManure,
+        //       manureBody,
+        //       soilTypeTextureData
+        //     );
+        //   }
 
-          if (manureRequestBody) {
-            mannerOutput = await this.MannerCalculateNutrientsService.postData(
-              "/calculate-nutrients",
-              manureRequestBody,
-              request
-            );
-          }
-        }
+        //   if (manureRequestBody) {
+        //     mannerOutput = await this.MannerCalculateNutrientsService.postData(
+        //       "/calculate-nutrients",
+        //       manureRequestBody,
+        //       request
+        //     );
+        //   }
+        // }
         // Check if ManagementPeriodID matches
-        const isManagementPeriodSame =
-          existingOrganicManure.ManagementPeriodID ===
-          OrganicManure.ManagementPeriodID;
+        // const isManagementPeriodSame =
+        //   existingOrganicManure.ManagementPeriodID ===
+        //   OrganicManure.ManagementPeriodID;
         let dataToUpdate;
         // Merge the updated data, include new ManagementPeriodID if changed
-        if (mannerOutput) {
+        // if (mannerOutput) {
+        //   dataToUpdate = {
+        //     ...updatedData,
+        //     AvailableN: mannerOutput.data.currentCropAvailableN,
+        //     AvailableSO3: mannerOutput.data.cropAvailableSO3,
+        //     AvailableP2O5: mannerOutput.data.cropAvailableP2O5,
+        //     AvailableK2O: mannerOutput.data.cropAvailableK2O,
+        //     ModifiedByID: userId,
+        //     ModifiedOn: new Date(),
+        //     ...(isManagementPeriodSame
+        //       ? {}
+        //       : { ManagementPeriodID: OrganicManure.ManagementPeriodID }),
+        //   };
+        // } else 
+          {
           dataToUpdate = {
             ...updatedData,
-            AvailableN: mannerOutput.data.currentCropAvailableN,
-            AvailableSO3: mannerOutput.data.cropAvailableSO3,
-            AvailableP2O5: mannerOutput.data.cropAvailableP2O5,
-            AvailableK2O: mannerOutput.data.cropAvailableK2O,
             ModifiedByID: userId,
             ModifiedOn: new Date(),
-            ...(isManagementPeriodSame
-              ? {}
-              : { ManagementPeriodID: OrganicManure.ManagementPeriodID }),
-          };
-        } else {
-          dataToUpdate = {
-            ...updatedData,
-            ModifiedByID: userId,
-            ModifiedOn: new Date(),
-            ...(isManagementPeriodSame
-              ? {}
-              : { ManagementPeriodID: OrganicManure.ManagementPeriodID }),
+            // ...(isManagementPeriodSame
+            //   ? {}
+             // : {
+                 ManagementPeriodID: OrganicManure.ManagementPeriodID 
+              //  }
+              //  ),
           };
         }
 
