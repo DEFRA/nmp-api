@@ -191,8 +191,8 @@ const FarmEntity = new EntitySchema({
       joinColumn: { name: "CreatedByID" },
     },
     ModifiedByUser: {
-      target: "User",
       type: "many-to-one",
+      target: "User",
       inverseSide: "ModifiedFarms",
       joinColumn: { name: "ModifiedByID" },
     },
@@ -200,6 +200,12 @@ const FarmEntity = new EntitySchema({
       type: "many-to-one",
       target: "Country",
       joinColumn: { name: "CountryID" },
+      inverseSide: "Farms",
+    },
+    StoreCapacity: {
+      type: "one-to-many",
+      target: "StoreCapacities",
+      joinColumn: { name: "ID" },
       inverseSide: "Farms",
     },
     // InprogressCalculations: {
