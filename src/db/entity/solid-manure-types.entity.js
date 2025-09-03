@@ -7,7 +7,7 @@ const SolidManureTypesEntity = new EntitySchema({
     ID: {
       type: "int",
       primary: true,
-      generated: true, 
+      generated: true,
       name: "ID",
     },
     Name: {
@@ -22,6 +22,14 @@ const SolidManureTypesEntity = new EntitySchema({
       scale: 1,
       nullable: false,
       name: "Density",
+    },
+  },
+  relations: {
+    StoreCapacity: {
+      type: "one-to-many",
+      target: "StoreCapacities",
+      joinColumn: { name: "ID" },
+      inverseSide: "SolidManureType",
     },
   },
 });

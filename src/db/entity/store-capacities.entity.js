@@ -107,34 +107,72 @@ const StoreCapacitiesEntity = new EntitySchema({
       nullable: true,
       name: "SurfaceArea",
     },
+    CreatedOn: {
+      type: "datetime2",
+      nullable: true,
+      precision: 7,
+      default: "GETDATE()",
+    },
+    CreatedByID: {
+      type: "int",
+      nullable: true,
+    },
+    ModifiedOn: {
+      type: "datetime2",
+      nullable: true,
+      precision: 7,
+      default: "GETDATE()",
+    },
+    ModifiedByID: {
+      type: "int",
+      nullable: true,
+    },
   },
-//   relations: {
-//     Farm: {
-//       type: "many-to-one",
-//       target: "Farms",
-//       joinColumn: { name: "FarmID" },
-//     },
-//     MaterialState: {
-//       type: "many-to-one",
-//       target: "MaterialStates",
-//       joinColumn: { name: "MaterialStateID" },
-//     },
-//     StorageType: {
-//       type: "many-to-one",
-//       target: "StorageTypes",
-//       joinColumn: { name: "StorageTypeID" },
-//     },
-//     SolidManureType: {
-//       type: "many-to-one",
-//       target: "SolidManureTypes",
-//       joinColumn: { name: "SolidManureTypeID" },
-//     },
-//     BankSlopeAngle: {
-//       type: "many-to-one",
-//       target: "BankSlopeAngles",
-//       joinColumn: { name: "BankSlopeAngleID" },
-//     },
-//   },
+  relations: {
+    Farms: {
+      type: "many-to-one",
+      target: "Farm",
+      joinColumn: { name: "FarmID" },
+      inverseSide: "StoreCapacity",
+    },
+    MaterialState: {
+      type: "many-to-one",
+      target: "MaterialStates",
+      joinColumn: { name: "MaterialStateID" },
+      inverseSide: "StoreCapacity",
+    },
+    StorageType: {
+      type: "many-to-one",
+      target: "StorageTypes",
+      joinColumn: { name: "StorageTypeID" },
+      inverseSide: "StoreCapacity",
+    },
+    SolidManureType: {
+      type: "many-to-one",
+      target: "SolidManureTypes",
+      joinColumn: { name: "SolidManureTypeID" },
+      inverseSide: "StoreCapacity",
+    },
+    BankSlopeAngle: {
+      type: "many-to-one",
+      target: "BankSlopeAngles",
+      joinColumn: { name: "BankSlopeAngleID" },
+      inverseSide: "StoreCapacity",
+    },
+
+    CreatedBy: {
+      type: "many-to-one",
+      target: "User",
+      joinColumn: { name: "CreatedByID" },
+      inverseSide: "CreatedStoreCapacitiesByUser",
+    },
+    ModifiedBy: {
+      type: "many-to-one",
+      target: "User",
+      joinColumn: { name: "ModifiedByID" },
+      inverseSide: "ModifiedStoreCapacitiesByUser",
+    },
+  },
 });
 
 module.exports = { StoreCapacitiesEntity };
