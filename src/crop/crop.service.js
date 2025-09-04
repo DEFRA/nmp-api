@@ -276,6 +276,8 @@ class CropService extends BaseService {
       throw error;
     }
   }
+
+
   async getOrganicAndInorganicDetails(farmId, harvestYear, request) {
     const storedProcedure =
       "EXEC dbo.spCrops_GetPlansByHarvestYear @farmId = @0, @harvestYear = @1";
@@ -425,6 +427,7 @@ class CropService extends BaseService {
         defoliationSequenceDescription =
           await findDefoliationSequenceDescription(plan.DefoliationSequenceID);
       }
+     let lastModifiedDate= await this.getLatestModifiedDate(plan.CropID);
 
       cropDetails.push({
         CropId: plan.CropID,
@@ -438,7 +441,7 @@ class CropService extends BaseService {
         CropInfo1: plan.CropInfo1,
         CropInfo2: plan.CropInfo2,
         Yield: plan.Yield,
-        LastModifiedOn: plan.LastModifiedOn,
+        LastModifiedOn: lastModifiedDate,
         PlantingDate: PlantingDate,
         Management: defoliationSequenceDescription,
       });
@@ -2748,6 +2751,64 @@ class CropService extends BaseService {
       return { Recommendations };
     });
   }
+
+  async  getLatestModifiedDate(cropId) {
+  return AppDataSource.transaction(async (transactionalManager) => {
+    // 1. Crop latest
+    const crop = await transactionalManager.findOne(CropEntity, {
+      where: { ID: cropId },
+      select: ["CreatedOn", "ModifiedOn"],
+    });
+    if (!crop) console.log(`Crop with ID ${cropId} not found`);
+    const cropLatest = await this.maxDate(crop.CreatedOn, crop.ModifiedOn);
+
+    // 2. Organic manure latest
+    const periods = await transactionalManager.find(ManagementPeriodEntity, {
+      where: { CropID: cropId },
+      select: ["ID"],
+    });
+    const periodIds = periods.map(p => p.ID);
+
+    let organicLatest = null;
+    if (periodIds.length) {
+      const organics = await transactionalManager.find(OrganicManureEntity, {
+        where: { ManagementPeriodID: In(periodIds) },
+        select: ["CreatedOn", "ModifiedOn"],
+      });
+      organics.forEach(async o => {
+        organicLatest = await this.maxDate(organicLatest, maxDate(o.CreatedOn, o.ModifiedOn));
+      });
+    }
+
+    // 3. Fertiliser latest
+    let fertiliserLatest = null;
+    if (periodIds.length) {
+      const fertilisers = await transactionalManager.find(
+        FertiliserManuresEntity,
+        {
+          where: { ManagementPeriodID: In(periodIds) },
+          select: ["CreatedOn", "ModifiedOn"],
+        }
+      );
+      fertilisers.forEach(async f => {
+        fertiliserLatest = await this.maxDate(fertiliserLatest, maxDate(f.CreatedOn, f.ModifiedOn));
+      });
+    }
+
+    // 4. Final latest among all three
+    const finalLatest = await this.maxDate(cropLatest, maxDate(organicLatest, fertiliserLatest));
+
+    return {
+      finalLatest
+    };
+  });
+}
+
+async maxDate(d1, d2) {
+  if (!d1) return d2 || null;
+  if (!d2) return d1 || null;
+  return d1 > d2 ? d1 : d2;
+}
 }
 
 module.exports = { CropService };
