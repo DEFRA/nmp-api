@@ -1993,7 +1993,7 @@ class CropService extends BaseService {
             cropRecData.FertilizerN = calc.cropNeed;
             cropRecData.ManureN =
               relevantMannerOutput != null
-                ? relevantMannerOutput?.availableN
+                ? calc.applied
                 : null;
             cropRecData.NIndex = calc.indexpH;
             break;
@@ -2001,7 +2001,7 @@ class CropService extends BaseService {
             cropRecData.CropP2O5 = calc.recommendation;
             cropRecData.ManureP2O5 =
               relevantMannerOutput != null
-                ? relevantMannerOutput?.availableP
+                ? calc.applied
                 : null;
             cropRecData.FertilizerP2O5 = calc.cropNeed;
             break;
@@ -2009,7 +2009,7 @@ class CropService extends BaseService {
             cropRecData.CropK2O = calc.recommendation;
             cropRecData.ManureK2O =
               relevantMannerOutput != null
-                ? relevantMannerOutput?.availableK
+                ? calc.applied
                 : null;
             cropRecData.FertilizerK2O = calc.cropNeed;
             break;
@@ -2025,7 +2025,7 @@ class CropService extends BaseService {
             cropRecData.CropSO3 = calc.recommendation;
             cropRecData.ManureSO3 =
               relevantMannerOutput != null
-                ? relevantMannerOutput?.availableS
+                ? calc.applied
                 : null;
             cropRecData.FertilizerSO3 = calc.cropNeed;
             break;
