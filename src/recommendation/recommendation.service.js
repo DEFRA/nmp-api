@@ -43,7 +43,7 @@ class RecommendationService extends BaseService {
     );
     this.fertiliserManuresRepository = AppDataSource.getRepository(
       FertiliserManuresEntity
-    );    
+    );
     this.rB209GrassService = new RB209GrassService();
     this.rB209GrasslandService = new RB209GrasslandService();
   }
@@ -111,7 +111,7 @@ class RecommendationService extends BaseService {
     // Ensure both fieldID and year are provided
     if (!fieldID || !year) {
       console.log("FieldID and Year are required");
-      return null; 
+      return null;
     }
 
     // Build the query object
@@ -313,9 +313,9 @@ class RecommendationService extends BaseService {
         }
       }
       // Return the result of the calculation
-      if(result < 0){
+      if (result < 0) {
         return 0;
-      }else{
+      } else {
         return result;
       }
     } catch (error) {
@@ -361,7 +361,7 @@ class RecommendationService extends BaseService {
         });
         return data;
       });
-      
+
       const PKbalance = await this.PKbalanceRepository.findOne({
         where: {
           Year: harvestYear - 1,
@@ -374,27 +374,27 @@ class RecommendationService extends BaseService {
         },
       });
       const groupedObj = {};
-         const findDefoliationSequenceDescription = async (
-         DefoliationSequenceID
-       ) => {
-         try {
-           let defoliationSequenceDescription = null;
-           let defoliationSequence = await this.rB209GrassService.getData(
-          `Grass/DefoliationSequence/${DefoliationSequenceID}`
-        );
+      const findDefoliationSequenceDescription = async (
+        DefoliationSequenceID
+      ) => {
+        try {
+          let defoliationSequenceDescription = null;
+          let defoliationSequence = await this.rB209GrassService.getData(
+            `Grass/DefoliationSequence/${DefoliationSequenceID}`
+          );
 
-defoliationSequenceDescription = defoliationSequence
-               ? defoliationSequence.defoliationSequenceDescription
-               : null;
-           return defoliationSequenceDescription;
-         } catch (error) {
-           console.error(
-             `Error fetching Defoliation Sequence by id ${DefoliationSequenceID}`,
-             error
-           );
-           return "Unknown";
-         }
-       };
+          defoliationSequenceDescription = defoliationSequence
+            ? defoliationSequence.defoliationSequenceDescription
+            : null;
+          return defoliationSequenceDescription;
+        } catch (error) {
+          console.error(
+            `Error fetching Defoliation Sequence by id ${DefoliationSequenceID}`,
+            error
+          );
+          return "Unknown";
+        }
+      };
       const findSwardType = async (SwardTypeID) => {
         try {
           let swardTypeName = null;
@@ -430,11 +430,9 @@ defoliationSequenceDescription = defoliationSequence
         }
       };
 
-     
-     
       const mappedRecommendationsNew = await Promise.all(mappedRecommendations);
       console.log("mappedRecommendationsNew", mappedRecommendationsNew);
-      
+
       for (const r of mappedRecommendationsNew) {
         groupedObj[r.Crop.ID] = {
           Crop: {
@@ -451,9 +449,8 @@ defoliationSequenceDescription = defoliationSequence
               r.Crop.CropTypeID == 140 && r.Crop.SwardTypeID != null
                 ? await findSwardType(r.Crop.SwardTypeID)
                 : null,
-              DefoliationSequenceName:
-              r.Crop.CropTypeID == 140 &&
-              r.Crop.DefoliationSequenceID != null
+            DefoliationSequenceName:
+              r.Crop.CropTypeID == 140 && r.Crop.DefoliationSequenceID != null
                 ? await findDefoliationSequenceDescription(
                     r.Crop.DefoliationSequenceID
                   )
@@ -470,9 +467,7 @@ defoliationSequenceDescription = defoliationSequence
         };
       }
 
-      
-     
-console.log('groupedObj',groupedObj)
+      console.log("groupedObj", groupedObj);
 
       const dataWithComments = await Promise.all(
         Object.values(groupedObj).map(async (r) => ({
@@ -580,7 +575,7 @@ console.log('groupedObj',groupedObj)
       let swardManagementsList = await this.rB209GrassService.getData(
         `Grass/SwardManagements`
       );
-console.log('swardManagementsList',swardManagementsList);
+      console.log("swardManagementsList", swardManagementsList);
       if (swardManagementsList.length > 0) {
         const matchingSward = swardManagementsList.find(
           (x) => x.swardManagementId === SwardManagementID
@@ -597,7 +592,37 @@ console.log('swardManagementsList',swardManagementsList);
       console.error(`Error fetching sward Management list`, error);
       return "Unknown";
     }
-  };
+  }
+
+  // async findRecommendationByManagementPeriodID(managementPeriodId) {
+  //   if (!managementPeriodId) {
+  //     console.error("ManagementPeriodId is required");
+  //   }
+
+  //   const recommendationData = await this.repository.findOne({
+  //     where: {
+  //       ManagementPeriodID: managementPeriodId,
+  //     },
+  //   });
+
+  //   return recommendationData;
+  // }
+
+   async findRecommendationByManagementPeriodID(managementPeriodId) {
+    // Ensure the managementPeriodID is provided
+    if (!managementPeriodId) {
+      console.error("managementPeriodId is required");
+    }
+
+    const recommendationData = await this.repository.findOne({
+      where: {
+        ManagementPeriodID: managementPeriodId,
+      },
+    });
+
+    // Return the recommendationData or null if not found
+    return recommendationData || null;
+  }
 }
 
 module.exports = { RecommendationService };

@@ -35,6 +35,22 @@ class RecommendationController {
       return this.#h.response({ error });
     }
   }
+
+ async findRecommendationByManagementPeriodID() {
+  try {
+    const { managementPeriodId } = this.#request.params;
+    
+  console.log('123456', managementPeriodId);
+    const recommendation = await this.#recommendationService.findRecommendationByManagementPeriodID(managementPeriodId);
+
+    return this.#h.response(recommendation);
+  } catch (error) {
+    console.error("Error in findRecommendationByManagementPeriodID controller:", error);
+    return this.#h.response({ error }).code(500);
+  }
+}
+
+
 }
 
 module.exports = { RecommendationController };
