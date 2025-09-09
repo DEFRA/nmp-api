@@ -2309,9 +2309,7 @@ class CropService extends BaseService {
       // Step 3: Loop through each crop
       for (const crop of crops) {
         if (
-          crop.CropInfo1 === null &&
-          crop.Yield === null &&
-          crop.DefoliationSequenceID === null
+          crop.IsBasePlan
         ) {
           continue;
         }

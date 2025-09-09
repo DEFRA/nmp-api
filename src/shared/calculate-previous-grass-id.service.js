@@ -83,9 +83,7 @@ class CalculateGrassHistoryAndPreviousGrass {
     if (
       firstHYFieldType === 2 &&
       crop1!==null ||
-      crop1?.CropInfo1 !== null &&
-      crop1?.Yield !== null &&
-      crop1?.DefoliationSequenceID !== null
+      (!crop?.IsBasePlan)
     ) {
       // Grass found in crop1
 

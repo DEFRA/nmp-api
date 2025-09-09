@@ -927,9 +927,7 @@ class UpdateRecommendationChanges {
       if (
         (cropData.CropTypeID === CropTypeMapper.OTHER &&
           cropData.CropInfo1 === null) ||
-        (cropData.CropInfo1 === null &&
-          cropData?.Yield === null &&
-          cropData?.DefoliationSequenceID === null)
+        (cropData.IsBasePlan)
       ) {
         const otherRecommendations = await this.saveRecommendationForOtherCrops(
           transactionalManager,
@@ -1264,9 +1262,7 @@ class UpdateRecommendationChanges {
 
       if (
         crop.CropTypeID === CropTypeMapper.OTHER ||
-        (crop?.CropInfo1 === null &&
-          crop?.Yield === null &&
-          crop?.DefoliationSequenceID === null)
+        (crop?.IsBasePlan)
       ) {
         try {
           let saveAndUpdatePKBalance = await this.UpdatePKBalance(

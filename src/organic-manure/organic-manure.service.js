@@ -2588,9 +2588,7 @@ class OrganicManureService extends BaseService {
         if (
           (cropData.CropTypeID === CropTypeMapper.OTHER &&
             cropData.CropInfo1 === null) ||
-          (cropData.CropInfo1 === null &&
-            cropData?.Yield === null &&
-            cropData?.DefoliationSequenceID === null)
+          (cropData.IsBasePlan)
         ) {
           await this.saveOrganicManureForOtherCropType(
             organicManureData,
