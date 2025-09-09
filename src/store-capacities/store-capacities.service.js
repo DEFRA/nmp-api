@@ -22,13 +22,7 @@ class StoreCapacitiesService extends BaseService {
   async createStoreCapacities(payload, userId) {
     return await AppDataSource.transaction(async (transactionalManager) => {
       const { ID,FarmID, Year,CreatedByID,CreatedOn, ...cleanPayload } = payload;
-     const existingRecord = await transactionalManager.findOne(StoreCapacitiesEntity, {
-        where: { FarmID: FarmID, Year: Year },
-      });
-      if (existingRecord) {
-         return {message:`record with FarmID ${FarmID} and Year ${Year} already exists`};
-  
-      }
+   
       const newRecord = transactionalManager.create(StoreCapacitiesEntity, {
         ...cleanPayload,
         FarmID:FarmID,
@@ -47,7 +41,7 @@ class StoreCapacitiesService extends BaseService {
         { where: { FarmID: FarmID, Year: Year } }
       );
 
-      return savedRecord;
+      return { StoreCapacities:savedRecord };
     });
   }
 }
