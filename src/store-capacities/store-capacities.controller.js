@@ -31,6 +31,19 @@ class StoreCapacitiesController {
       return this.#h.response(error);
     }
   }
+
+  async create() {
+    try {
+      const payload = this.#request.payload;
+     const userId = this.#request.userId;
+
+      const record = await this.#service.createStoreCapacities(payload, userId);
+      return this.#h.response(record)
+    } catch (error) {
+      console.error("Error in create:", error);
+      return this.#h.response( error)
+    }
+  }
 }
 
 module.exports = { StoreCapacitiesController };
