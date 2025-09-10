@@ -72,6 +72,7 @@ const {
   CalculateMannerOutputService,
 } = require("../shared/calculate-manner-output-service");
 const { CalculateCropsSnsAnalysisService } = require("../shared/calculate-crops-sns-analysis-service");
+const { CropTypeLinkingEntity } = require("../db/entity/crop-type-linking.entity");
 
 class PlanService extends BaseService {
   constructor() {
@@ -195,77 +196,46 @@ class PlanService extends BaseService {
     return {};
   }
 
-  async buildArableBody(crop, field, transactionalManager) {
+  async buildArableBody(
+    dataMultipleCrops, // Accept either a single crop or multiple crops
+    field,
+    transactionalManager
+  ) {
     const arableBody = [];
 
-    // Fetch cropType for the current crop (CropOrder 1 or 2)
+    // Ensure dataMultipleCrops is always treated as an array
+    const crops = Array.isArray(dataMultipleCrops)
+      ? dataMultipleCrops
+      : [dataMultipleCrops];
+
+    // Fetch cropTypes list once for all crops
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
     );
-    const currentCropType = cropTypesList.find(
-      (cropType) => cropType.cropTypeId === crop.CropTypeID
-    );
 
-    if (!currentCropType || currentCropType.cropGroupId === null) {
-      throw new HttpException(
-        `Invalid CropTypeId for crop having field name ${field.Name}`,
-        HttpStatus.BAD_REQUEST
-      );
-    }
-
-    // If CropOrder is 1, add only the current crop's data
-    if (
-      crop.CropOrder === CropOrderMapper.FIRSTCROP &&
-      crop.CropTypeID !== CropTypeMapper.GRASS
-    ) {
-      arableBody.push({
-        cropOrder: crop.CropOrder,
-        cropGroupId: currentCropType.cropGroupId,
-        cropTypeId: crop.CropTypeID,
-        cropInfo1Id: crop.CropInfo1,
-        cropInfo2Id: crop.CropInfo2,
-        sowingDate: crop.SowingDate,
-        expectedYield: crop.Yield,
-      });
-    }
-
-    // If CropOrder is 2, find the crop with CropOrder 1 and add both crops
-    if (crop.CropOrder === CropOrderMapper.SECONDCROP) {
-      // Find the previous crop with CropOrder 1
-
-      const previousCrop = await this.getFirstCropData(
-        transactionalManager,
-        field.ID,
-        crop.Year
+    // Iterate over crops (single or multiple)
+    for (const crop of crops) {
+      const currentCropType = cropTypesList.find(
+        (cropType) => cropType.cropTypeId === crop.CropTypeID
       );
 
-      if (previousCrop && previousCrop.CropTypeID !== CropTypeMapper.GRASS) {
-        // Fetch cropType for the previous crop
-        const previousCropType = cropTypesList.find(
-          (cropType) => cropType.cropTypeId === previousCrop.CropTypeID
+      if (!currentCropType || currentCropType.cropGroupId == null) {
+        throw new HttpException(
+          `Invalid CropTypeId for crop having field name ${field.Name}`,
+          HttpStatus.BAD_REQUEST
         );
-
-        if (!previousCropType || previousCropType.cropGroupId === null) {
-          throw new HttpException(
-            `Invalid CropTypeId for previous crop having field name ${field.Name}`,
-            HttpStatus.BAD_REQUEST
-          );
-        }
-
-        // Add CropOrder 1 (previous crop)
-        arableBody.push({
-          cropOrder: previousCrop.CropOrder,
-          cropGroupId: previousCropType.cropGroupId,
-          cropTypeId: previousCrop.CropTypeID,
-          cropInfo1Id: previousCrop.CropInfo1,
-          cropInfo2Id: previousCrop.CropInfo2,
-          sowingDate: previousCrop.SowingDate,
-          expectedYield: previousCrop.Yield,
-        });
       }
-
+      let expectedYield = crop.Yield,cropTypeLinkingData;
+      if(expectedYield == null){
+       cropTypeLinkingData = await transactionalManager.findOne(CropTypeLinkingEntity,{
+         where: {
+           CropTypeID:crop.CropTypeID
+         },
+       });
+       expectedYield = cropTypeLinkingData.DefaultYield;
+      }
+ 
       if (crop.CropTypeID !== CropTypeMapper.GRASS) {
-        // Add CropOrder 2 (current crop)
         arableBody.push({
           cropOrder: crop.CropOrder,
           cropGroupId: currentCropType.cropGroupId,
@@ -273,12 +243,14 @@ class PlanService extends BaseService {
           cropInfo1Id: crop.CropInfo1,
           cropInfo2Id: crop.CropInfo2,
           sowingDate: crop.SowingDate,
-          expectedYield: crop.Yield,
+          expectedYield: expectedYield,
         });
       }
+      // Add crop to arableBody based on its CropOrder
     }
 
-    return arableBody;
+    // Return the list of crops sorted by CropOrder (if necessary)
+    return arableBody.sort((a, b) => a.cropOrder - b.cropOrder);
   }
   async findPreviousCrop(fieldID, currentYear, allCropData) {
     // Find all crops matching the previous year and field ID
@@ -383,7 +355,8 @@ class PlanService extends BaseService {
     rb209CountryId,
     request,
     transactionalManager,
-    mannerOutputs
+    mannerOutputs,
+    dataMultipleCrops
   ) {
     const cropTypesList = await this.rB209ArableService.getData(
       "/Arable/CropTypes"
@@ -413,7 +386,7 @@ class PlanService extends BaseService {
 
     // Use the buildArableBody function to get the arable array
     const arableBody = await this.buildArableBody(
-      crop,
+      dataMultipleCrops,
       field,
       transactionalManager
     );
@@ -2141,7 +2114,7 @@ class PlanService extends BaseService {
           this.cropRepository.create({
             ...crop,
             CreatedByID: userId,
-            CreatedOn: new Date()
+            CreatedOn: new Date(),
           })
         );
 
@@ -2155,13 +2128,20 @@ class PlanService extends BaseService {
               ...managementPeriod,
               CropID: savedCrop.ID,
               CreatedByID: userId,
-              CreatedOn: new Date()
+              CreatedOn: new Date(),
             })
           );
           ManagementPeriods.push(savedManagementPeriod);
         }
         let mannerOutputs = null,
           newOrganicManure = null;
+        const dataMultipleCrops = await transactionalManager.find(CropEntity, {
+          where: {
+            FieldID: savedCrop.FieldID,
+            Year: savedCrop.Year,
+            Confirm: false,
+          },
+        });
         mannerOutputs =
           await this.CalculateMannerOutput.calculateMannerOutputForOrganicManure(
             savedCrop,
@@ -2183,7 +2163,8 @@ class PlanService extends BaseService {
             rb209CountryData.RB209CountryID,
             request,
             transactionalManager,
-            mannerOutputs
+            mannerOutputs,
+            dataMultipleCrops
           );
 
         const nutrientRecommendationsData =
@@ -2344,13 +2325,6 @@ class PlanService extends BaseService {
         //     });
         //   }
         // }
-        const dataMultipleCrops = await transactionalManager.find(CropEntity, {
-          where: {
-            FieldID: crop.FieldID,
-            Year: crop.Year,
-            Confirm: false,
-          },
-        });
 
         for (const cropData of dataMultipleCrops) {
           let savedRecommendation = await this.buildCropRecommendationData(

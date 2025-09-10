@@ -47,6 +47,7 @@ const CropDto = Joi.object({
   PreviousID: Joi.number().integer().allow(null),
   CropOrder: Joi.number().integer().required(),
   CreatedOn: Joi.date().iso().allow(null).optional(),
+  IsBasePlan: Joi.boolean().required(),
   CreatedByID: Joi.number().integer().allow(null).optional(),
   ModifiedOn: Joi.date().iso().allow(null).optional(),
   ModifiedByID: Joi.number().integer().allow(null).optional(),
