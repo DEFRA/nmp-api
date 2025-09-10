@@ -1874,7 +1874,7 @@ class UpdateRecommendationChanges {
       let kBalance = 0;
       let saveAndUpdatePKBalance;
 
-      if (crop.CropTypeID == CropTypeMapper.OTHER || crop.CropInfo1 == null) {
+      if (crop.CropTypeID == CropTypeMapper.OTHER || crop.IsBasePlan) {
         if (pkBalanceData) {
           pBalance =
             (fertiliserData == null ? 0 : fertiliserData.p205) -
@@ -3013,6 +3013,19 @@ class UpdateRecommendationChanges {
           HttpStatus.BAD_REQUEST
         );
       }
+       let expectedYield = crop.Yield,
+         cropTypeLinkingData;
+       if (expectedYield == null) {
+         cropTypeLinkingData = await transactionalManager.findOne(
+           CropTypeLinkingEntity,
+           {
+             where: {
+               CropTypeID: crop.CropTypeID,
+             },
+           }
+         );
+         expectedYield = cropTypeLinkingData.DefaultYield;
+       }
       if (crop.CropTypeID !== CropTypeMapper.GRASS) {
         arableBody.push({
           cropOrder: crop.CropOrder,
@@ -3021,7 +3034,7 @@ class UpdateRecommendationChanges {
           cropInfo1Id: crop.CropInfo1,
           cropInfo2Id: crop.CropInfo2,
           sowingDate: crop.SowingDate,
-          expectedYield: crop.Yield,
+          expectedYield: expectedYield,
         });
       }
       // Add crop to arableBody based on its CropOrder
