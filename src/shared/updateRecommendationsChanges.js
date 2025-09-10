@@ -519,26 +519,29 @@ class UpdateRecommendationChanges {
           case 0:
             cropRecData.CropN = calc.recommendation;
             cropRecData.FertilizerN = calc.cropNeed;
-            cropRecData.ManureN =
-              relevantMannerOutput != null
-                ? relevantMannerOutput?.availableN
-                : null;
+            // cropRecData.ManureN =
+            //   relevantMannerOutput != null
+            //     ? relevantMannerOutput?.availableN
+            //     : null;
+            cropRecData.ManureN = calc.applied;
             cropRecData.NIndex = calc.indexpH;
             break;
           case 1:
             cropRecData.CropP2O5 = calc.recommendation;
-            cropRecData.ManureP2O5 =
-              relevantMannerOutput != null
-                ? relevantMannerOutput?.availableP
-                : null;
+            // cropRecData.ManureP2O5 =
+            //   relevantMannerOutput != null
+            //     ? relevantMannerOutput?.availableP
+            //     : null;
+              cropRecData.ManureP2O5 = calc.applied;
             cropRecData.FertilizerP2O5 = calc.cropNeed;
             break;
           case 2:
             cropRecData.CropK2O = calc.recommendation;
-            cropRecData.ManureK2O =
-              relevantMannerOutput != null
-                ? relevantMannerOutput?.availableK
-                : null;
+            // cropRecData.ManureK2O =
+            //   relevantMannerOutput != null
+            //     ? relevantMannerOutput?.availableK
+            //     : null;
+            cropRecData.ManureK2O = calc.applied;
             cropRecData.FertilizerK2O = calc.cropNeed;
             break;
           case 3:
@@ -551,10 +554,11 @@ class UpdateRecommendationChanges {
             break;
           case 5:
             cropRecData.CropSO3 = calc.recommendation;
-            cropRecData.ManureSO3 =
-              relevantMannerOutput != null
-                ? relevantMannerOutput?.availableS
-                : null;
+            // cropRecData.ManureSO3 =
+            //   relevantMannerOutput != null
+            //     ? relevantMannerOutput?.availableS
+            //     : null;
+             cropRecData.ManureSO3 = calc.applied;
             cropRecData.FertilizerSO3 = calc.cropNeed;
             break;
           case 6:

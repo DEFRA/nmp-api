@@ -35,7 +35,7 @@ const NutrientsLoadingLiveStocksEntity = new EntitySchema({
     NByUnit: {
       type: "decimal",
       precision: 18,
-      scale: 3,
+      scale: 6,
       nullable: true,
       name: "NByUnit",
     },
@@ -54,7 +54,7 @@ const NutrientsLoadingLiveStocksEntity = new EntitySchema({
     PByUnit: {
       type: "decimal",
       precision: 18,
-      scale: 0,
+      scale: 6,
       nullable: true,
       name: "PByUnit",
     },

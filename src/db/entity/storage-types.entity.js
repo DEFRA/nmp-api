@@ -24,6 +24,14 @@ const StorageTypesEntity = new EntitySchema({
       name: "FreeBoardHeight",
     },
   },
+  relations: {
+    StorageCapacity: {
+      type: "one-to-many",
+      target: "StoreCapacities",
+      joinColumn: { name: "ID" },
+      inverseSide: "StorageType",
+    },
+  },
 });
 
 module.exports = { StorageTypesEntity };

@@ -7,7 +7,7 @@ const MaterialStatesEntity = new EntitySchema({
     ID: {
       type: "int",
       primary: true,
-      generated: true, 
+      generated: true,
       name: "ID",
     },
     Name: {
@@ -15,6 +15,14 @@ const MaterialStatesEntity = new EntitySchema({
       length: 50,
       nullable: false,
       name: "Name",
+    },
+  },
+  relations: {
+    StoreCapacity: {
+      type: "one-to-many",
+      target: "StoreCapacities",
+      joinColumn: { name: "ID" },
+      inverseSide: "MaterialState",
     },
   },
 });

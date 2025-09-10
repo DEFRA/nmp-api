@@ -7,7 +7,7 @@ const BankSlopeAnglesEntity = new EntitySchema({
     ID: {
       type: "int",
       primary: true,
-      generated: true, 
+      generated: true,
       name: "ID",
     },
     Name: {
@@ -27,6 +27,14 @@ const BankSlopeAnglesEntity = new EntitySchema({
       scale: 2,
       nullable: false,
       name: "Slope",
+    },
+  },
+  relations: {
+    StoreCapacity: {
+      type: "one-to-many",
+      target: "StoreCapacities",
+      joinColumn: { name: "ID" },
+      inverseSide: "BankSlopeAngle",
     },
   },
 });
