@@ -53,6 +53,7 @@ class StoreCapacitiesService extends BaseService {
         ...cleanPayload,
         FarmID: FarmID,
         Year: Year,
+        StoreName:StoreName,
         CreatedOn: new Date(),
         CreatedByID: userId,
       });

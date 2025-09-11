@@ -1,10 +1,8 @@
 const Joi = require("joi");
 
-/**
- * DTO for creating a new StoreCapacity record
- * Based on dbo.StoreCapacities schema
- */
+
 const StoreCapacitiesCreateDto = Joi.object({
+  ID: Joi.number().integer().optional().allow(null).default(null),
   FarmID: Joi.number().integer().required().default(null),
   Year: Joi.number().integer().required(),
   StoreName: Joi.string().max(128).required(),
