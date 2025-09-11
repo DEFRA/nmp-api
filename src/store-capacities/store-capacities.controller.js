@@ -32,16 +32,27 @@ class StoreCapacitiesController {
     }
   }
 
+  async checkExistByFarmIdYearAndStoreName() {
+    const { farmId, year, storeName } = this.#request.params;
+    try {
+      const exists = await this.#service.checkExist(farmId, year, storeName);
+      return this.#h.response({ exists });
+    } catch (error) {
+      console.error("Error in checkExistByFarmIdYearAndStoreName:", error);
+      return this.#h.response(error);
+    }
+  }
+
   async create() {
     try {
       const payload = this.#request.payload;
-     const userId = this.#request.userId;
+      const userId = this.#request.userId;
 
       const record = await this.#service.createStoreCapacities(payload, userId);
-      return this.#h.response(record)
+      return this.#h.response(record);
     } catch (error) {
       console.error("Error in create:", error);
-      return this.#h.response( error)
+      return this.#h.response(error);
     }
   }
 }

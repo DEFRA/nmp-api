@@ -289,9 +289,19 @@ class OrganicManureService extends BaseService {
           `Invalid CropTypeId for crop having field name ${field.Name}`,
           HttpStatus.BAD_REQUEST
         );
+
       }
+       let expectedYield = crop.Yield,cropTypeLinkingData;
+            if(expectedYield == null){
+             cropTypeLinkingData = await transactionalManager.findOne(CropTypeLinkingEntity,{
+               where: {
+                 CropTypeID:crop.CropTypeID
+               },
+             });
+             expectedYield = cropTypeLinkingData.DefaultYield;
+            }
       // Add crop to arableBody based on its CropOrder
-      if (crop.CropTypeID !== 140) {
+      if (crop.CropTypeID !== CropTypeMapper.GRASS) {
         arableBody.push({
           cropOrder: crop.CropOrder,
           cropGroupId: currentCropType.cropGroupId,
@@ -299,7 +309,7 @@ class OrganicManureService extends BaseService {
           cropInfo1Id: crop.CropInfo1,
           cropInfo2Id: crop.CropInfo2,
           sowingDate: crop.SowingDate,
-          expectedYield: crop.Yield,
+          expectedYield: expectedYield,
         });
       }
     }
@@ -2588,9 +2598,7 @@ class OrganicManureService extends BaseService {
         if (
           (cropData.CropTypeID === CropTypeMapper.OTHER &&
             cropData.CropInfo1 === null) ||
-          (cropData.CropInfo1 === null &&
-            cropData?.Yield === null &&
-            cropData?.DefoliationSequenceID === null)
+          (cropData.IsBasePlan)
         ) {
           await this.saveOrganicManureForOtherCropType(
             organicManureData,
