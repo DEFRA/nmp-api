@@ -46,6 +46,37 @@ module.exports = [
     },
   },
   {
+    method: "GET",
+    path: "/store-capacities/{farmId}/{year}/{storeName}",
+    options: {
+      tags: ["api", "Store Capacities"],
+      description:
+        "Check if store capacity exists by farmId, year, and storeName",
+      validate: {
+        params: Joi.object({
+          farmId: Joi.number().required(),
+          year: Joi.number().required(),
+          storeName: Joi.string().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: { error: err },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new StoreCapacitiesController(request, h);
+      return controller.checkExistByFarmIdYearAndStoreName();
+    },
+  },
+  {
     method: "POST",
     path: "/store-capacities",
     options: {

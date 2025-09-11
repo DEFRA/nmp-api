@@ -81,11 +81,8 @@ class CalculateGrassHistoryAndPreviousGrass {
     let firstHYFieldType = crop1?.FieldType ?? null;
 
     if (
-      firstHYFieldType === 2 &&
-      crop1!==null ||
-      crop1?.CropInfo1 !== null &&
-      crop1?.Yield !== null &&
-      crop1?.DefoliationSequenceID !== null
+      (firstHYFieldType === 2 && crop1 !== null) ||
+      !cropThisYear?.IsBasePlan
     ) {
       // Grass found in crop1
 
@@ -101,9 +98,7 @@ class CalculateGrassHistoryAndPreviousGrass {
       const establishment = crop1?.Establishment;
       isReseeded = establishment === 0 || establishment === null ? 0 : 1;
     } else if (
-      (crop1?.CropInfo1 == null &&
-        crop1?.Yield == null &&
-        crop1?.DefoliationSequenceID == null) ||
+      (crop1?.IsBasePlan) ||
       !crop1
     ) {
       const prevGrass1 = await transactionalManager.findOne(
@@ -188,12 +183,10 @@ class CalculateGrassHistoryAndPreviousGrass {
         transactionalManager
       );
 
-      // 🌿 Try determining isHighClover from crop2 first
+     
       if (
         crop2 ||
-        crop2?.CropInfo1 !== null &&
-        crop2?.Yield !== null &&
-        crop2?.DefoliationSequenceID !== null &&
+        !crop2?.IsBasePlan  &&
         firstHYFieldType !== FieldTypeMapper.GRASS
       ) {
         const swardTypeID = crop2?.SwardTypeID;

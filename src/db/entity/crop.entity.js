@@ -131,6 +131,10 @@ const CropEntity = new EntitySchema({
       type: "int",
       default: 1,
     },
+    IsBasePlan: {
+      type: "bit",
+      default: 1,
+    },
     CreatedOn: {
       type: "datetime2",
       precision: 7,

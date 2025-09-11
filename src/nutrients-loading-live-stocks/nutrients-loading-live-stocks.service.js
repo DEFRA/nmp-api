@@ -87,7 +87,7 @@ class NutrientsLoadingLiveStocksService extends BaseService {
                   nutrientsLoadingFarmDetails != null &&
                   nutrientsLoadingFarmDetails.IsAnyLivestockNumber != 1
                 ) {
-                  await await transactionalManager.update(
+                  await transactionalManager.update(
                     NutrientsLoadingFarmDetailsEntity,
                     nutrientsLoadingFarmDetails.ID,
                     {
