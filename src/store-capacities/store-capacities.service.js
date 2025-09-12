@@ -44,8 +44,8 @@ class StoreCapacitiesService extends BaseService {
 
       enrichedRecords.push({
         ...record,
-        storageTypeName: storageType ? storageType.Name : null,
-        solidManureTypeName: solidManureType ? solidManureType.Name : null,
+        StorageTypeName: storageType ? storageType.Name : null,
+        SolidManureTypeName: solidManureType ? solidManureType.Name : null,
       });
     }
 
