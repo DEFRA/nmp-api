@@ -5,11 +5,18 @@ const boom = require("@hapi/boom");
 const {
   StoreCapacitiesEntity,
 } = require("../db/entity/store-capacities.entity");
+const { StorageTypesEntity } = require("../db/entity/storage-types.Entity");
+const { SolidManureTypesEntity } = require("../db/entity/solid-manure-types.entity");
 
 class StoreCapacitiesService extends BaseService {
   constructor() {
     super(StoreCapacitiesEntity);
     this.repository = AppDataSource.getRepository(StoreCapacitiesEntity);
+    this.storageTypesRepository =
+      AppDataSource.getRepository(StorageTypesEntity);
+    this.solidManureTypesRepository = AppDataSource.getRepository(
+      SolidManureTypesEntity
+    );
   }
 
   async getByFarmAndYear(farmId, year) {
@@ -19,8 +26,32 @@ class StoreCapacitiesService extends BaseService {
         Year: year,
       },
     });
-    return records;
+
+    const enrichedRecords = [];
+
+    for (const record of records) {
+      const storageType = record.StorageTypeID
+        ? await this.storageTypesRepository.findOne({
+            where: { ID: record.StorageTypeID },
+          })
+        : null;
+
+      const solidManureType = record.SolidManureTypeID
+        ? await this.solidManureTypesRepository.findOne({
+            where: { ID: record.SolidManureTypeID },
+          })
+        : null;
+
+      enrichedRecords.push({
+        ...record,
+        storageTypeName: storageType ? storageType.Name : null,
+        solidManureTypeName: solidManureType ? solidManureType.Name : null,
+      });
+    }
+
+    return enrichedRecords;
   }
+
   async checkExist(farmId, year, storeName) {
     const record = await this.repository.findOne({
       where: { FarmID: farmId, Year: year, StoreName: storeName },
@@ -53,7 +84,7 @@ class StoreCapacitiesService extends BaseService {
         ...cleanPayload,
         FarmID: FarmID,
         Year: Year,
-        StoreName:StoreName,
+        StoreName: StoreName,
         CreatedOn: new Date(),
         CreatedByID: userId,
       });

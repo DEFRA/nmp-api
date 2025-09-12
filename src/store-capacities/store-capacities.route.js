@@ -18,14 +18,16 @@ module.exports = [
   },
   {
     method: "GET",
-    path: "/store-capacities/{farmId}/{year}",
+    path: "/store-capacities/{farmId}",
     options: {
       tags: ["api", "Store Capacities"],
       description: "Get store capacity by farmId and year",
       validate: {
         params: Joi.object({
-          farmId: Joi.number().required(),
-          year: Joi.number().required(),
+          farmId: Joi.number().required()
+        }),
+        query: Joi.object({
+          year: Joi.number().integer().optional().allow(null)
         }),
         failAction: (request, h, err) => {
           return h
