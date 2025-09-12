@@ -85,8 +85,7 @@ class CropService extends BaseService {
     this.recommendationCommentRepository = AppDataSource.getRepository(
       RecommendationCommentEntity
     );
-  this.CalculateCropsSnsAnalysis = new CalculateCropsSnsAnalysisService();
-    
+    this.CalculateCropsSnsAnalysis = new CalculateCropsSnsAnalysisService();
   }
 
   async createCropWithManagementPeriods(
@@ -1360,19 +1359,19 @@ class CropService extends BaseService {
           HttpStatus.BAD_REQUEST
         );
       }
-       let expectedYield = crop.Yield,
-         cropTypeLinkingData;
-       if (expectedYield == null) {
-         cropTypeLinkingData = await transactionalManager.findOne(
-           CropTypeLinkingEntity,
-           {
-             where: {
-               CropTypeID: crop.CropTypeID,
-             },
-           }
-         );
-         expectedYield = cropTypeLinkingData.DefaultYield;
-       }
+      let expectedYield = crop.Yield,
+        cropTypeLinkingData;
+      if (expectedYield == null) {
+        cropTypeLinkingData = await transactionalManager.findOne(
+          CropTypeLinkingEntity,
+          {
+            where: {
+              CropTypeID: crop.CropTypeID,
+            },
+          }
+        );
+        expectedYield = cropTypeLinkingData.DefaultYield;
+      }
       if (crop.CropTypeID !== CropTypeMapper.GRASS) {
         arableBody.push({
           cropOrder: crop.CropOrder,
@@ -2400,7 +2399,7 @@ class CropService extends BaseService {
         //     where: { CropID: crop.ID },
         //   }
         // );
-         //const snsAnalysesData = await this.getSnsAnalysesData(crop?.ID);
+        //const snsAnalysesData = await this.getSnsAnalysesData(crop?.ID);
         const snsAnalysisData =
           await this.CalculateCropsSnsAnalysis.getCropsSnsAnalyses(
             transactionalManager,
@@ -2833,15 +2832,40 @@ class CropService extends BaseService {
         }
       }
 
-      // 5. Final latest among all three
+      // 5. Recommendation latest (one per ManagementPeriod)
+      let recommendationLatest = null;
+      if (periodIds.length) {
+        const recommendations = await transactionalManager.find(
+          RecommendationEntity,
+          {
+            where: { ManagementPeriodID: In(periodIds) },
+            select: ["CreatedOn", "ModifiedOn"],
+          }
+        );
+
+        for (const r of recommendations) {
+          const latest = await this.maxDate(r.CreatedOn, r.ModifiedOn);
+          recommendationLatest = await this.maxDate(
+            recommendationLatest,
+            latest
+          );
+        }
+      }
+
+      // 6. Final latest among all four
       const finalLatest = await this.maxDate(
         cropLatest,
-        await this.maxDate(organicLatest, fertiliserLatest)
+        await this.maxDate(
+          organicLatest,
+          await this.maxDate(fertiliserLatest, recommendationLatest)
+        )
       );
 
-      return finalLatest;
+      return finalLatest
     });
   }
+
+ 
 
   async maxDate(d1, d2) {
     if (!d1) return d2 || null;

@@ -22,7 +22,9 @@ class StoreCapacitiesController {
   }
 
   async getByFarmIdAndYear() {
-    const { farmId, year } = this.#request.params;
+    const { farmId } = this.#request.params;
+    const { year } = this.#request.query;
+
     try {
       const record = await this.#service.getByFarmAndYear(farmId, year);
       return this.#h.response(record);
