@@ -2157,7 +2157,7 @@ class PlanService extends BaseService {
             farm,
             soilAnalysisRecords,
             snsAnalysesData,
-            crop,
+            savedCrop,
             allPKBalanceData,
             allCropData,
             rb209CountryData.RB209CountryID,
