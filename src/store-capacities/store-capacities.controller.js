@@ -75,8 +75,7 @@ class StoreCapacitiesController {
 
       const results = await this.#service.copyStorageCapacities(
         body,
-        userId,
-        this.#request
+        userId
       );
 
       return this.#h.response(results);

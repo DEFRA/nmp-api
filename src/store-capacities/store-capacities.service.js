@@ -105,17 +105,17 @@ class StoreCapacitiesService extends BaseService {
     });
   }
 
-  async copyStorageCapacities(body, userId, request) {
-    const { farmID, Year, copyYear } = body;
+  async copyStorageCapacities(body, userId) {
+    const { FarmID, Year, CopyYear } = body;
 
     return await AppDataSource.transaction(async (transactionalManager) => {
       const storageCapacities = await transactionalManager.find(
         StoreCapacitiesEntity,
-        { where: { FarmID: farmID, Year: copyYear } }
+        { where: { FarmID: FarmID, Year: CopyYear } }
       );
 
       if (!storageCapacities) {
-        throw boom.notFound(`No storage capacities found for Year ${copyYear}`);
+        throw boom.notFound(`No storage capacities found for Year ${CopyYear}`);
       }
 
       const newRecords = storageCapacities.map((record) => {

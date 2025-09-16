@@ -27,9 +27,9 @@ const StoreCapacitiesCreateDto = Joi.object({
 });
 
 const CopyStoreCapacitiesDto = Joi.object({
-  farmID: Joi.number().integer().allow(null).optional(),
+  FarmID: Joi.number().integer().allow(null).optional(),
   Year: Joi.number().integer().required(),
-  copyYear: Joi.number().integer().required(),
+  CopyYear: Joi.number().integer().required(),
 }).required();
 
 module.exports = {
