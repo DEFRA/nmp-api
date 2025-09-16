@@ -124,9 +124,7 @@ class StoreCapacitiesService extends BaseService {
           ID: null,
           Year: Year,
           CreatedOn: new Date(),
-          CreatedByID: userId,
-          ModifiedOn: null,
-          ModifiedByID: null,
+          CreatedByID: userId
         });
       });
       return await transactionalManager.save(StoreCapacitiesEntity, newRecords);
