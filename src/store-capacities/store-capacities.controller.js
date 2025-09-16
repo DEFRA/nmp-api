@@ -67,6 +67,29 @@ class StoreCapacitiesController {
       return this.#h.response(error);
     }
   }
+
+  async copyStorageCapacititesByYearAndFarmID() {
+    try {
+      const body = this.#request.payload;
+      const userId = this.#request.userId;
+
+      const results = await this.#service.copyStorageCapacities(
+        body,
+        userId,
+        this.#request
+      );
+
+      return this.#h.response(results);
+    } catch (error) {
+      console.error("Error copying storage capacities:", error);
+      return this.#h.response({
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  }
 }
+
+
 
 module.exports = { StoreCapacitiesController };

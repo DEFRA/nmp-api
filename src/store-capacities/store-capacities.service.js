@@ -6,7 +6,9 @@ const {
   StoreCapacitiesEntity,
 } = require("../db/entity/store-capacities.entity");
 const { StorageTypesEntity } = require("../db/entity/storage-types.Entity");
-const { SolidManureTypesEntity } = require("../db/entity/solid-manure-types.entity");
+const {
+  SolidManureTypesEntity,
+} = require("../db/entity/solid-manure-types.entity");
 
 class StoreCapacitiesService extends BaseService {
   constructor() {
@@ -100,6 +102,34 @@ class StoreCapacitiesService extends BaseService {
       );
 
       return savedRecord;
+    });
+  }
+
+  async copyStorageCapacities(body, userId, request) {
+    const { farmID, Year, copyYear } = body;
+
+    return await AppDataSource.transaction(async (transactionalManager) => {
+      const storageCapacities = await transactionalManager.find(
+        StoreCapacitiesEntity,
+        { where: { FarmID: farmID, Year: copyYear } }
+      );
+
+      if (!storageCapacities) {
+        throw boom.notFound(`No storage capacities found for Year ${copyYear}`);
+      }
+
+      const newRecords = storageCapacities.map((record) => {
+        return transactionalManager.create(StoreCapacitiesEntity, {
+          ...record,
+          ID: null,
+          Year: Year,
+          CreatedOn: new Date(),
+          CreatedByID: userId,
+          ModifiedOn: null,
+          ModifiedByID: null,
+        });
+      });
+      return await transactionalManager.save(StoreCapacitiesEntity, newRecords);
     });
   }
 }

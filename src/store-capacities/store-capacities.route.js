@@ -1,7 +1,7 @@
 const Joi = require("joi");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { StoreCapacitiesController } = require("./store-capacities.controller");
-const { StoreCapacitiesCreateDto } = require("./dto/store-capacities.dto");
+const { StoreCapacitiesCreateDto, CopyStoreCapacitiesDto } = require("./dto/store-capacities.dto");
 
 module.exports = [
   {
@@ -104,6 +104,34 @@ module.exports = [
     handler: async (request, h) => {
       const controller = new StoreCapacitiesController(request, h);
       return controller.getById();
+    },
+  },
+  {
+    method: "POST",
+    path: "/storage-capacities/copystoragecapacities",
+    handler: async (request, h) => {
+      const controller = new StoreCapacitiesController(request, h);
+      return controller.copyStorageCapacititesByYearAndFarmID();
+    },
+    options: {
+      tags: ["api", "Store Capacities"],
+      description: "copy Store Capacities",
+      validate: {
+        payload: CopyStoreCapacitiesDto,
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
     },
   },
   {
