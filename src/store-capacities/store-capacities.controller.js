@@ -33,6 +33,16 @@ class StoreCapacitiesController {
       return this.#h.response(error);
     }
   }
+  async getById() {
+    const { id } = this.#request.params;
+    try {
+      const record = await this.#service.getById(id);
+      return this.#h.response(record);
+    } catch (error) {
+      console.error("Error in getById:", error);
+      return this.#h.response(error);
+    }
+  }
 
   async checkExistByFarmIdYearAndStoreName() {
     const { farmId, year, storeName } = this.#request.params;
