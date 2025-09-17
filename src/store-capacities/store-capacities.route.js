@@ -49,16 +49,19 @@ module.exports = [
   },
   {
     method: "GET",
-    path: "/store-capacities/{farmId}/{year}/{storeName}",
+    path: "/store-capacities/{FarmId}/{Year}/{StoreName}",
     options: {
       tags: ["api", "Store Capacities"],
       description:
         "Check if store capacity exists by farmId, year, and storeName",
       validate: {
         params: Joi.object({
-          farmId: Joi.number().required(),
-          year: Joi.number().required(),
-          storeName: Joi.string().required(),
+          FarmId: Joi.number().required(),
+          Year: Joi.number().required(),
+          StoreName: Joi.string().required(),
+        }),
+        query: Joi.object({
+          ID: Joi.number().integer().optional().allow(null),
         }),
         failAction: (request, h, err) => {
           return h
