@@ -55,12 +55,28 @@ class StoreCapacitiesService extends BaseService {
     return enrichedRecords;
   }
 
-  async checkExist(farmId, year, storeName) {
-    const record = await this.repository.findOne({
-      where: { FarmID: farmId, Year: year, StoreName: storeName },
-    });
-
-    return !!record; // true if exists, false if not
+  async checkExist(FarmId, Year, StoreName,ID) {
+      const whereCondition = {
+        FarmID: FarmId,
+        Year: Year,
+        StoreName: StoreName,
+      };
+     if (ID) {
+     
+       const record = await this.repository.findOne({
+         where: {
+           ...whereCondition,
+           ID: Not(ID), 
+         },
+       });
+       return !!record;
+     } else {
+       // normal check when ID is not provided
+       const record = await this.repository.findOne({
+         where: whereCondition,
+       });
+       return !!record;
+     }
   }
   async createStoreCapacities(payload, userId) {
     return await AppDataSource.transaction(async (transactionalManager) => {

@@ -3,17 +3,17 @@ const { StorageTypesService } = require("./storage-types.service");
 class StorageTypesController {
   #request;
   #h;
-  #service;
+  #storageTypesService;
 
   constructor(request, h) {
     this.#request = request;
     this.#h = h;
-    this.#service = new StorageTypesService();
+    this.#storageTypesService = new StorageTypesService();
   }
 
   async getAll() {
     try {
-      const records = await this.#service.getAll();
+      const records = await this.#storageTypesService.getAll();
       return this.#h.response( records );
     } catch (error) {
       console.error("Error in getAll:", error);
@@ -24,7 +24,7 @@ class StorageTypesController {
   async getById() {
     const { id } = this.#request.params;
     try {
-      const record = await this.#service.getById(id);
+      const record = await this.#storageTypesService.getById(id);
       return this.#h.response( record );
     } catch (error) {
       console.error("Error in getById:", error);
