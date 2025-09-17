@@ -395,8 +395,8 @@ class UpdateRecommendation {
           ) ?? null;
       }
 
-      let availableNForNextDefoliation = 0,
-        nextCropAvailableN = 0;
+      let availableNForNextDefoliation = null,
+        nextCropAvailableN = null;
 
       if (mannerOutputs != null) {
         relevantMannerOutput =
@@ -1573,8 +1573,8 @@ class UpdateRecommendation {
       if (!managementPeriods.length) continue;
 
       const managementPeriod = managementPeriods[0];
-      let availableNForNextDefoliation = 0,
-        nextCropAvailableN = 0;
+      let availableNForNextDefoliation = null,
+        nextCropAvailableN = null;
 
       availableNForNextDefoliation =
         await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
@@ -1633,7 +1633,9 @@ class UpdateRecommendation {
             cropRecData.CropN = calc.recommendation;
             cropRecData.FertilizerN = calc.cropNeed;
             cropRecData.ManureN =
-              availableNForNextDefoliation + nextCropAvailableN;
+              availableNForNextDefoliation + nextCropAvailableN == 0
+                ? null
+                : availableNForNextDefoliation + nextCropAvailableN;
             cropRecData.NIndex = calc.indexpH;
             break;
           case 1:
@@ -3208,7 +3210,7 @@ class UpdateRecommendation {
           }),
           ...(soilAnalysis.SoilNitrogenSupplyIndex != null && {
             snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
-            snsMethodologyId: 4,
+            snsMethodologyId: 4
           }),
 
           ...(soilAnalysis.PhosphorusIndex != null && {
@@ -3243,10 +3245,11 @@ class UpdateRecommendation {
           }),
           ...(analysis.SoilNitrogenSupplyIndex != null && {
             snsIndexId: analysis.SoilNitrogenSupplyIndex,
+            snsMethodologyId: 4
           }),
           ...(analysis.SNSCropOrder != null && {
             SNSCropOrder: analysis.SNSCropOrder,
-          })
+          }),
         };
 
         // Only push if there's actual data
@@ -3263,6 +3266,7 @@ class UpdateRecommendation {
         }),
         ...(snsAnalysesData.SoilNitrogenSupplyIndex != null && {
           snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex,
+          snsMethodologyId: 4,
         }),
         ...(snsAnalysesData.SNSCropOrder != null && {
           SNSCropOrder: snsAnalysesData.SNSCropOrder,

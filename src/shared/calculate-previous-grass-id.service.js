@@ -688,6 +688,9 @@ class CalculateGrassHistoryAndPreviousGrass {
     if (nitrogenUse == CloverMapper.ModerateClover) {
       nitrogenUse = CloverMapper.LowClover;
     }
+     if (isHighClover) {
+       nitrogenUse = CloverMapper.HighClover;
+     }
     // Step 6: NitrogenUse
     // let nitrogenTotal = 0;
 

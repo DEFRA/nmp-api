@@ -12,7 +12,7 @@ async calculateAvailableNForNextDefoliation(
   managementPeriod,
   CropData,
 ) {
-  let availableNForNextDefoliation = 0;
+  let availableNForNextDefoliation = null;
 
   if (managementPeriod?.Defoliation > 1) {
     const previousDefoliationManagementPeriods =
@@ -43,11 +43,11 @@ async calculateAvailableNForNextDefoliation(
       );
     }
   }else{
-    return 0
+    return null
   }
 
   if (CropData.CropOrder === CropOrderMapper.SECONDCROP) {
-    return 0;
+    return null;
   }
 
   return availableNForNextDefoliation;

@@ -1566,7 +1566,7 @@ class OrganicManureService extends BaseService {
     managementPeriod,
     transactionalManager
   ) {
-    let nextCropAvailableN = 0;
+    let nextCropAvailableN = null;
     nextCropAvailableN =
       await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
         CropData.FieldID,
@@ -1574,7 +1574,7 @@ class OrganicManureService extends BaseService {
         transactionalManager
       );
 
-    let availableNForNextDefoliation = 0;
+    let availableNForNextDefoliation = null;
 
     if (managementPeriod.Defoliation > 1) {
       const previousDefoliationManagementPeriods =
@@ -1776,8 +1776,8 @@ class OrganicManureService extends BaseService {
         defoliationId
       );
       let relevantMannerOutput = null,
-        availableNForNextDefoliation = 0,
-        nextCropAvailableN = 0;
+        availableNForNextDefoliation = null,
+        nextCropAvailableN = null;
       if (mannerOutputs != null) {
         relevantMannerOutput =
           mannerOutputs.find(
