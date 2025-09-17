@@ -7,8 +7,12 @@ const StoreCapacitiesCreateDto = Joi.object({
   Year: Joi.number().integer().required(),
   StoreName: Joi.string().max(128).required(),
   MaterialStateID: Joi.number().integer().required(),
-  StorageTypeID: Joi.number().integer().optional().allow(null),
-  SolidManureTypeID: Joi.number().integer().optional().allow(null),
+  StorageTypeID: Joi.number().integer().optional().allow(null).default(null),
+  SolidManureTypeID: Joi.number()
+    .integer()
+    .optional()
+    .allow(null)
+    .default(null),
   Length: Joi.number().precision(3).optional().allow(null),
   Width: Joi.number().precision(3).optional().allow(null),
   Depth: Joi.number().precision(3).optional().allow(null),
@@ -19,10 +23,10 @@ const StoreCapacitiesCreateDto = Joi.object({
   CapacityVolume: Joi.number().precision(3).optional().allow(null),
   CapacityWeight: Joi.number().precision(3).optional().allow(null),
   SurfaceArea: Joi.number().precision(3).optional().allow(null),
-    CreatedOn: Joi.date().iso().allow(null).default(null),
-    CreatedByID: Joi.number().integer().allow(null).default(null),
-    ModifiedOn: Joi.date().iso().allow(null).default(null),
-    ModifiedByID: Joi.number().integer().allow(null).default(null),
+  CreatedOn: Joi.date().iso().allow(null).default(null),
+  CreatedByID: Joi.number().integer().allow(null).default(null),
+  ModifiedOn: Joi.date().iso().allow(null).default(null),
+  ModifiedByID: Joi.number().integer().allow(null).default(null),
   PreviousID: Joi.number().integer().optional().allow(null),
 });
 

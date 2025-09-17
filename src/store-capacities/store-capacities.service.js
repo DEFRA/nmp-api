@@ -9,6 +9,7 @@ const { StorageTypesEntity } = require("../db/entity/storage-types.Entity");
 const {
   SolidManureTypesEntity,
 } = require("../db/entity/solid-manure-types.entity");
+const { Not } = require("typeorm");
 
 class StoreCapacitiesService extends BaseService {
   constructor() {
@@ -124,10 +125,60 @@ class StoreCapacitiesService extends BaseService {
           ID: null,
           Year: Year,
           CreatedOn: new Date(),
-          CreatedByID: userId
+          CreatedByID: userId,
         });
       });
       return await transactionalManager.save(StoreCapacitiesEntity, newRecords);
+    });
+  }
+
+  async updateStoreCapacities(payload, userId) {
+    return await AppDataSource.transaction(async (transactionalManager) => {
+      const { ID, FarmID, Year, StoreName, CreatedByID, CreatedOn, ...dataToUpdate } =
+        payload;
+
+      // Check if another record with same FarmID, Year, StoreName already exists
+      const existingRecord = await transactionalManager.findOne(
+        StoreCapacitiesEntity,
+        {
+          where: {
+            FarmID,
+            Year,
+            StoreName,
+            ID: Not(ID), 
+          },
+        }
+      );
+
+       if (existingRecord) {
+         throw boom.conflict(
+           `Store capacity with FarmID ${FarmID}, Year ${Year}, and StoreName ${StoreName} already exists.`
+         );
+       }
+
+      const result = await transactionalManager.update(
+        StoreCapacitiesEntity,
+        { ID, FarmID },
+        {
+          StoreName:StoreName,
+          ...dataToUpdate,
+          ModifiedByID: userId,
+          ModifiedOn: new Date(),
+        }
+      );
+
+      if (result.affected === 0) {
+        throw boom.notFound(
+          `NutrientsLoadingFarmDetails with FarmId ${FarmID}  not found`
+        );
+      }
+
+      const updated = await transactionalManager.findOneBy(
+        StoreCapacitiesEntity,
+        { ID, FarmID }
+      );
+
+      return updated;
     });
   }
 }
