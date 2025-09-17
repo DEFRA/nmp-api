@@ -33,6 +33,16 @@ class StoreCapacitiesController {
       return this.#h.response(error);
     }
   }
+  async getById() {
+    const { id } = this.#request.params;
+    try {
+      const record = await this.#service.getById(id);
+      return this.#h.response(record);
+    } catch (error) {
+      console.error("Error in getById:", error);
+      return this.#h.response(error);
+    }
+  }
 
   async checkExistByFarmIdYearAndStoreName() {
     const { farmId, year, storeName } = this.#request.params;
@@ -57,6 +67,28 @@ class StoreCapacitiesController {
       return this.#h.response(error);
     }
   }
+
+  async copyStorageCapacititesByYearAndFarmID() {
+    try {
+      const body = this.#request.payload;
+      const userId = this.#request.userId;
+
+      const results = await this.#service.copyStorageCapacities(
+        body,
+        userId
+      );
+
+      return this.#h.response(results);
+    } catch (error) {
+      console.error("Error copying storage capacities:", error);
+      return this.#h.response({
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  }
 }
+
+
 
 module.exports = { StoreCapacitiesController };
