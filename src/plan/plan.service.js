@@ -2467,8 +2467,8 @@ class PlanService extends BaseService {
       if (!managementPeriods.length) continue;
 
       const managementPeriod = managementPeriods[0];
-      let availableNForNextDefoliation = 0,
-        nextCropAvailableN = 0;
+      let availableNForNextDefoliation = null,
+        nextCropAvailableN = null;
 
       availableNForNextDefoliation =
         await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
@@ -2521,7 +2521,9 @@ class PlanService extends BaseService {
             cropRecData.CropN = calc.recommendation;
             cropRecData.FertilizerN = calc.cropNeed;
             cropRecData.ManureN =
-              availableNForNextDefoliation + nextCropAvailableN;
+              availableNForNextDefoliation + nextCropAvailableN == 0
+                ? null
+                : availableNForNextDefoliation + nextCropAvailableN;
             cropRecData.NIndex = calc.indexpH;
             break;
           case 1:
