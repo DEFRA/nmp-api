@@ -160,4 +160,24 @@ module.exports = [
       return controller.create();
     },
   },
+  {
+    method: "PUT",
+    path: "/store-capacities",
+    options: {
+      tags: ["api", "Store Capacities"],
+      description: "Update Store Capacities",
+      validate: {
+        payload: StoreCapacitiesCreateDto,
+        failAction: (request, h, err) =>
+          h
+            .response(formatErrorResponse({ source: { error: err }, request }))
+            .code(400)
+            .takeover(),
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new StoreCapacitiesController(request, h);
+      return controller.updateStoreCapacities();
+    },
+  },
 ];

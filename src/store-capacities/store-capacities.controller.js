@@ -73,10 +73,7 @@ class StoreCapacitiesController {
       const body = this.#request.payload;
       const userId = this.#request.userId;
 
-      const results = await this.#service.copyStorageCapacities(
-        body,
-        userId
-      );
+      const results = await this.#service.copyStorageCapacities(body, userId);
 
       return this.#h.response(results);
     } catch (error) {
@@ -85,6 +82,22 @@ class StoreCapacitiesController {
         message: "Internal Server Error",
         error: error.message,
       });
+    }
+  }
+
+  async updateStoreCapacities() {
+    const payload = this.#request.payload;
+    const userId = this.#request.userId;
+
+    try {
+      const updated = await this.#service.updateStoreCapacities(
+        payload,
+        userId,
+        this.#request
+      );
+      return this.#h.response(updated);
+    } catch (error) {
+      return this.#h.response({ error });
     }
   }
 }
