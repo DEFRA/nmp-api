@@ -49,7 +49,7 @@ class StoreCapacitiesController {
 
   async checkExistByFarmIdYearAndStoreName() {
     const { FarmId, Year, StoreName } = this.#request.params;
-    console.log("farmid",FarmId)
+ 
     const { ID } = this.#request.query;
 
     try {
@@ -115,6 +115,25 @@ class StoreCapacitiesController {
       return this.#h.response(updated);
     } catch (error) {
       return this.#h.response({ error });
+    }
+  }
+  async deleteStoreCapacitiesById() {
+    const { storeCapacitiesId } = this.#request.params;
+    try {
+      const result =
+        await this.#storeCapacitiesService.deleteStoreCapacitiesById(
+          storeCapacitiesId
+        );
+      if (result?.affectedRows === 0) {
+        throw boom.notFound(
+          `StoreCapacities with ID ${storeCapacitiesId} not found.`
+        );
+      }
+      return this.#h.response({
+        message: "StoreCapacities deleted successfully.",
+      });
+    } catch (error) {
+      return this.#h.response({ error: error.message });
     }
   }
 }
