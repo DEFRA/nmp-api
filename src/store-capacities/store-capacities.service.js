@@ -205,27 +205,30 @@ class StoreCapacitiesService extends BaseService {
   }
 
   async deleteStoreCapacitiesById(storeCapacitiesId) {
-    // Check if the NutrientsLoadingManure exists
-    const storeCapacitiesIdData = await this.repository.findOne({
-      where: { ID: storeCapacitiesId },
-    });
-
-  
-    if (storeCapacitiesIdData == null) {
-      throw boom.notFound(
-        `storeCapacitiesId with ID ${storeCapacitiesId} not found`
+    await AppDataSource.manager.transaction(async (transactionalManager) => {
+      // 1. Check if the record exists
+      const storeCapacities = await transactionalManager.findOne(
+       StoreCapacitiesEntity,
+        { where: { ID: storeCapacitiesId } }
       );
-    }
 
-    try {
-   
+      if (!storeCapacities) {
+        throw boom.notFound(
+          `storeCapacity with ID ${storeCapacitiesId} not found`
+        );
+      }
+
+      // 2. Stored procedure to delete StoreCapacities by ID
       const storedProcedure =
-        "EXEC [dbo].[spStoreCapacities_DeleteStoreCapacities] @ID = @0";
-      await AppDataSource.query(storedProcedure, [storeCapacitiesId]);
-    } catch (error) {
-      // Log the error and throw an internal server error
-      console.error("Error deleting storeCapacities:", error);
-    }
+        "EXEC dbo.spStoreCapacities_DeleteStoreCapacities @ID = @0";
+
+      try {
+        await transactionalManager.query(storedProcedure, [storeCapacitiesId]);
+      } catch (error) {
+        console.error("Error deleting storeCapacities:", error);
+
+      }
+    });
   }
 }
 
