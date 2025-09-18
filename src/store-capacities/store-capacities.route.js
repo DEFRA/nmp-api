@@ -183,4 +183,34 @@ module.exports = [
       return controller.updateStoreCapacities();
     },
   },
+  {
+    method: "DELETE",
+    path: "/store-capacities/{storeCapacitiesId}",
+    options: {
+      tags: ["api", "Store Capacities"],
+      description: "Delete Store Capacities by Store Capacity Id ",
+      validate: {
+        params: Joi.object({
+          storeCapacitiesId: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new StoreCapacitiesController(request, h);
+      return controller.deleteStoreCapacitiesById();
+    },
+  },
 ];
