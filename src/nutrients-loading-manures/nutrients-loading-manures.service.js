@@ -266,7 +266,7 @@ class NutrientsLoadingManuresService extends BaseService {
     // If the NutrientsLoadingManure does not exist, throw a not found error
     if (nutrientsLoadingManureData == null) {
       throw boom.notFound(
-        `NutrientsLoadingManure with ID ${nutrientsLoadingManureById} not found`
+        `NutrientsLoadingManure with ID ${nutrientsLoadingManureId} not found`
       );
     }
 

@@ -9,6 +9,7 @@ const { StorageTypesEntity } = require("../db/entity/storage-types.Entity");
 const {
   SolidManureTypesEntity,
 } = require("../db/entity/solid-manure-types.entity");
+const { Not } = require("typeorm");
 
 class StoreCapacitiesService extends BaseService {
   constructor() {
@@ -54,12 +55,27 @@ class StoreCapacitiesService extends BaseService {
     return enrichedRecords;
   }
 
-  async checkExist(farmId, year, storeName) {
-    const record = await this.repository.findOne({
-      where: { FarmID: farmId, Year: year, StoreName: storeName },
-    });
-
-    return !!record; // true if exists, false if not
+  async checkExist(FarmId, Year, StoreName, ID) {
+    const whereCondition = {
+      FarmID: FarmId,
+      Year: Year,
+      StoreName: StoreName,
+    };
+    if (ID) {
+      const record = await this.repository.findOne({
+        where: {
+          ...whereCondition,
+          ID: Not(ID),
+        },
+      });
+      return !!record;
+    } else {
+      // normal check when ID is not provided
+      const record = await this.repository.findOne({
+        where: whereCondition,
+      });
+      return !!record;
+    }
   }
   async createStoreCapacities(payload, userId) {
     return await AppDataSource.transaction(async (transactionalManager) => {
@@ -124,10 +140,94 @@ class StoreCapacitiesService extends BaseService {
           ID: null,
           Year: Year,
           CreatedOn: new Date(),
-          CreatedByID: userId
+          CreatedByID: userId,
         });
       });
       return await transactionalManager.save(StoreCapacitiesEntity, newRecords);
+    });
+  }
+
+  async updateStoreCapacities(payload, userId) {
+    return await AppDataSource.transaction(async (transactionalManager) => {
+      const {
+        ID,
+        FarmID,
+        Year,
+        StoreName,
+        CreatedByID,
+        CreatedOn,
+        ...dataToUpdate
+      } = payload;
+
+      // Check if another record with same FarmID, Year, StoreName already exists
+      const existingRecord = await transactionalManager.findOne(
+        StoreCapacitiesEntity,
+        {
+          where: {
+            FarmID,
+            Year,
+            StoreName,
+            ID: Not(ID),
+          },
+        }
+      );
+
+      if (existingRecord) {
+        throw boom.conflict(
+          `Store capacity with FarmID ${FarmID}, Year ${Year}, and StoreName ${StoreName} already exists.`
+        );
+      }
+
+      const result = await transactionalManager.update(
+        StoreCapacitiesEntity,
+        { ID, FarmID },
+        {
+          StoreName: StoreName,
+          ...dataToUpdate,
+          ModifiedByID: userId,
+          ModifiedOn: new Date(),
+        }
+      );
+
+      if (result.affected === 0) {
+        throw boom.notFound(
+          `NutrientsLoadingFarmDetails with FarmId ${FarmID}  not found`
+        );
+      }
+
+      const updated = await transactionalManager.findOneBy(
+        StoreCapacitiesEntity,
+        { ID, FarmID }
+      );
+
+      return updated;
+    });
+  }
+
+  async deleteStoreCapacitiesById(storeCapacitiesId) {
+    await AppDataSource.manager.transaction(async (transactionalManager) => {
+      // 1. Check if the record exists
+      const storeCapacities = await transactionalManager.findOne(
+       StoreCapacitiesEntity,
+        { where: { ID: storeCapacitiesId } }
+      );
+
+      if (!storeCapacities) {
+        throw boom.notFound(
+          `storeCapacity with ID ${storeCapacitiesId} not found`
+        );
+      }
+
+      // 2. Stored procedure to delete StoreCapacities by ID
+      const storedProcedure =
+        "EXEC dbo.spStoreCapacities_DeleteStoreCapacities @ID = @0";
+
+      try {
+        await transactionalManager.query(storedProcedure, [storeCapacitiesId]);
+      } catch (error) {
+        console.error("Error deleting storeCapacities:", error);
+
+      }
     });
   }
 }

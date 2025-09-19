@@ -8,7 +8,7 @@ class CalculateTotalAvailableNForNextYear {
   constructor() {}
 
   async calculateAvailableNForPreviousYear(fieldID, year, transactionalManager) {
-    let totalAvailableN = 0;
+    let totalAvailableN = null;
   
     // Step 1: Get crops for fieldID and year - 1, ordered by CropOrder DESC
     const crops = await transactionalManager.find(CropEntity, {
