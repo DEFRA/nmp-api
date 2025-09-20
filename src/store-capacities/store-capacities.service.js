@@ -208,7 +208,7 @@ class StoreCapacitiesService extends BaseService {
     await AppDataSource.manager.transaction(async (transactionalManager) => {
       // 1. Check if the record exists
       const storeCapacities = await transactionalManager.findOne(
-       StoreCapacitiesEntity,
+        StoreCapacitiesEntity,
         { where: { ID: storeCapacitiesId } }
       );
 
@@ -218,15 +218,14 @@ class StoreCapacitiesService extends BaseService {
         );
       }
 
-      // 2. Stored procedure to delete StoreCapacities by ID
+      // 2. Stored procedure to delete StoreCapacities by StoreCapacityID
       const storedProcedure =
-        "EXEC dbo.spStoreCapacities_DeleteStoreCapacities @ID = @0";
+        "EXEC dbo.spStoreCapacities_DeleteStoreCapacities @StoreCapacityID = @0";
 
       try {
         await transactionalManager.query(storedProcedure, [storeCapacitiesId]);
       } catch (error) {
         console.error("Error deleting storeCapacities:", error);
-
       }
     });
   }
