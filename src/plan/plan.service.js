@@ -225,16 +225,20 @@ class PlanService extends BaseService {
           HttpStatus.BAD_REQUEST
         );
       }
-      let expectedYield = crop.Yield,cropTypeLinkingData;
-      if(expectedYield == null){
-       cropTypeLinkingData = await transactionalManager.findOne(CropTypeLinkingEntity,{
-         where: {
-           CropTypeID:crop.CropTypeID
-         },
-       });
-       expectedYield = cropTypeLinkingData.DefaultYield;
+      let expectedYield = crop.Yield,
+        cropTypeLinkingData;
+      if (expectedYield == null) {
+        cropTypeLinkingData = await transactionalManager.findOne(
+          CropTypeLinkingEntity,
+          {
+            where: {
+              CropTypeID: crop.CropTypeID,
+            },
+          }
+        );
+        expectedYield = cropTypeLinkingData.DefaultYield;
       }
- 
+
       if (crop.CropTypeID !== CropTypeMapper.GRASS) {
         arableBody.push({
           cropOrder: crop.CropOrder,
@@ -2051,6 +2055,20 @@ class PlanService extends BaseService {
             fieldId,
             crop.Year
           );
+
+        let cropPOfftake = 0;
+        if (latestSoilAnalysis.PhosphorusIndex) {
+          if (
+            latestSoilAnalysis.PhosphorusIndex < 4 &&
+            (crop.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP1 ||
+              crop.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP2 ||
+              crop.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP3 ||
+              crop.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP4)
+          ) {
+            cropPOfftake = crop.Yield ? crop.Yield : 50;
+          }
+        }
+
         if (crop.CropTypeID === CropTypeMapper.OTHER) {
           await this.savedDefault(cropData, userId, transactionalManager);
           if (isSoilAnalysisHavePAndK) {
@@ -2061,7 +2079,8 @@ class PlanService extends BaseService {
                   crop,
                   null,
                   pkBalanceData,
-                  userId
+                  userId,
+                  cropPOfftake
                 );
                 if (saveAndUpdatePKBalance) {
                   await transactionalManager.save(
@@ -2384,7 +2403,8 @@ class PlanService extends BaseService {
                 crop,
                 nutrientRecommendationsData.calculations,
                 pkBalanceData,
-                userId
+                userId,
+                cropPOfftake
               );
               if (saveAndUpdatePKBalance) {
                 await transactionalManager.save(
@@ -2786,7 +2806,8 @@ class PlanService extends BaseService {
     crop,
     calculations,
     pkBalanceData,
-    userId
+    userId,
+    cropPOfftake
   ) {
     try {
       let pBalance = 0;
@@ -2797,10 +2818,10 @@ class PlanService extends BaseService {
         for (const recommendation of calculations) {
           switch (recommendation.nutrientId) {
             case 1:
-              pBalance = pBalance - recommendation.cropNeed;
+              pBalance = pBalance - recommendation.cropNeed - cropPOfftake;
               break;
             case 2:
-              kBalance = kBalance - recommendation.cropNeed;
+              kBalance = kBalance - recommendation.cropNeed ;
               break;
           }
         }
