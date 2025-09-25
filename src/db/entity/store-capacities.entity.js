@@ -107,6 +107,11 @@ const StoreCapacitiesEntity = new EntitySchema({
       nullable: true,
       name: "SurfaceArea",
     },
+    PreviousID: {
+      type: "int",
+      nullable: true,
+      name: "PreviousID",
+    },
     CreatedOn: {
       type: "datetime2",
       nullable: true,

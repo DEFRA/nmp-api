@@ -1566,7 +1566,7 @@ class OrganicManureService extends BaseService {
     managementPeriod,
     transactionalManager
   ) {
-    let nextCropAvailableN = 0;
+    let nextCropAvailableN = null;
     nextCropAvailableN =
       await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
         CropData.FieldID,
@@ -1574,7 +1574,7 @@ class OrganicManureService extends BaseService {
         transactionalManager
       );
 
-    let availableNForNextDefoliation = 0;
+    let availableNForNextDefoliation = null;
 
     if (managementPeriod.Defoliation > 1) {
       const previousDefoliationManagementPeriods =
@@ -1776,8 +1776,8 @@ class OrganicManureService extends BaseService {
         defoliationId
       );
       let relevantMannerOutput = null,
-        availableNForNextDefoliation = 0,
-        nextCropAvailableN = 0;
+        availableNForNextDefoliation = null,
+        nextCropAvailableN = null;
       if (mannerOutputs != null) {
         relevantMannerOutput =
           mannerOutputs.find(
@@ -2891,14 +2891,31 @@ class OrganicManureService extends BaseService {
                 OrganicManure.ManagementPeriodID
               );
               let updatePKBalance;
+                let cropPOfftake = 0;
+                if (latestSoilAnalysis.PhosphorusIndex){
+
+                  if (
+                    latestSoilAnalysis.PhosphorusIndex < 4 &&
+                    (cropData.CropTypeID ==
+                      CropTypeMapper.POTATOVARIETYGROUP1 ||
+                      cropData.CropTypeID ==
+                        CropTypeMapper.POTATOVARIETYGROUP2 ||
+                      cropData.CropTypeID ==
+                        CropTypeMapper.POTATOVARIETYGROUP3 ||
+                      cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP4)
+                  ) {
+                    cropPOfftake = cropData.Yield ? cropData.Yield : 50;
+                  }
+                }
               if (fertiliserData.p205 > 0 || fertiliserData.k20 > 0) {
                 for (const recommendation of nutrientRecommendationsData.calculations) {
                   switch (recommendation.nutrientId) {
                     case 1:
-                      pBalance = fertiliserData.p205 - recommendation.cropNeed;
+                      pBalance =
+                        fertiliserData.p205 - recommendation.cropNeed - cropPOfftake;
                       break;
                     case 2:
-                      kBalance = fertiliserData.k20 - recommendation.cropNeed;
+                      kBalance = fertiliserData.k20 - recommendation.cropNeed 
                       break;
                   }
                 }
@@ -2906,7 +2923,8 @@ class OrganicManureService extends BaseService {
                 for (const recommendation of nutrientRecommendationsData.calculations) {
                   switch (recommendation.nutrientId) {
                     case 1:
-                      pBalance = pBalance - recommendation.cropNeed;
+                      pBalance =
+                        pBalance - recommendation.cropNeed - cropPOfftake;
                       break;
                     case 2:
                       kBalance = kBalance - recommendation.cropNeed;
