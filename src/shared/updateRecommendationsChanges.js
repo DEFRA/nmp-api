@@ -447,8 +447,8 @@ class UpdateRecommendationChanges {
       );
 
       let relevantMannerOutput = null,
-        availableNForNextDefoliation = 0,
-        nextCropAvailableN = 0;
+        availableNForNextDefoliation = null,
+        nextCropAvailableN = null;
 
       if (mannerOutputs != null) {
         relevantMannerOutput =
@@ -532,7 +532,7 @@ class UpdateRecommendationChanges {
             //   relevantMannerOutput != null
             //     ? relevantMannerOutput?.availableP
             //     : null;
-              cropRecData.ManureP2O5 = calc.applied;
+            cropRecData.ManureP2O5 = calc.applied;
             cropRecData.FertilizerP2O5 = calc.cropNeed;
             break;
           case 2:
@@ -558,7 +558,7 @@ class UpdateRecommendationChanges {
             //   relevantMannerOutput != null
             //     ? relevantMannerOutput?.availableS
             //     : null;
-             cropRecData.ManureSO3 = calc.applied;
+            cropRecData.ManureSO3 = calc.applied;
             cropRecData.FertilizerSO3 = calc.cropNeed;
             break;
           case 6:
@@ -924,10 +924,22 @@ class UpdateRecommendationChanges {
         fieldData.ID,
         pKBalanceAllData
       );
+       let cropPOfftake = 0;
+       if (latestSoilAnalysis.PhosphorusIndex) {
+         if (
+           latestSoilAnalysis.PhosphorusIndex < 4 &&
+           (cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP1 ||
+             cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP2 ||
+             cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP3 ||
+             cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP4)
+         ) {
+           cropPOfftake = cropData.Yield ? cropData.Yield : 50;
+         }
+       }
       if (
         (cropData.CropTypeID === CropTypeMapper.OTHER &&
           cropData.CropInfo1 === null) ||
-        (cropData.IsBasePlan)
+        cropData.IsBasePlan
       ) {
         const otherRecommendations = await this.saveRecommendationForOtherCrops(
           transactionalManager,
@@ -949,7 +961,8 @@ class UpdateRecommendationChanges {
           secondCropManagementData,
           fertiliserData,
           year,
-          transactionalManager
+          transactionalManager,
+          cropPOfftake
         );
 
         if (saveAndUpdatePKBalance) {
@@ -1260,10 +1273,20 @@ class UpdateRecommendationChanges {
         pKBalanceAllData
       );
 
-      if (
-        crop.CropTypeID === CropTypeMapper.OTHER ||
-        (crop?.IsBasePlan)
-      ) {
+      let cropPOfftake = 0;
+      if (latestSoilAnalysis.PhosphorusIndex) {
+        if (
+          latestSoilAnalysis.PhosphorusIndex < 4 &&
+          (crop.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP1 ||
+            crop.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP2 ||
+            crop.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP3 ||
+            crop.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP4)
+        ) {
+          cropPOfftake = crop.Yield ? crop.Yield : 50;
+        }
+      }
+
+      if (crop.CropTypeID === CropTypeMapper.OTHER || crop?.IsBasePlan) {
         try {
           let saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldId,
@@ -1275,7 +1298,8 @@ class UpdateRecommendationChanges {
             secondCropManagementData,
             fertiliserData,
             year,
-            transactionalManager
+            transactionalManager,
+            cropPOfftake
           );
 
           if (saveAndUpdatePKBalance) {
@@ -1664,8 +1688,8 @@ class UpdateRecommendationChanges {
       if (!managementPeriods.length) continue;
 
       const managementPeriod = managementPeriods[0];
-      let availableNForNextDefoliation = 0,
-        nextCropAvailableN = 0;
+      let availableNForNextDefoliation = null,
+        nextCropAvailableN = null;
 
       availableNForNextDefoliation =
         await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
@@ -1724,7 +1748,9 @@ class UpdateRecommendationChanges {
             cropRecData.CropN = calc.recommendation;
             cropRecData.FertilizerN = calc.cropNeed;
             cropRecData.ManureN =
-              availableNForNextDefoliation + nextCropAvailableN;
+              availableNForNextDefoliation + nextCropAvailableN == 0
+                ? null
+                : availableNForNextDefoliation + nextCropAvailableN;
             cropRecData.NIndex = calc.indexpH;
             break;
           case 1:
@@ -1867,7 +1893,8 @@ class UpdateRecommendationChanges {
     secondCropManagementData,
     fertiliserData,
     year,
-    transactionalManager
+    transactionalManager,
+    cropPOfftake
   ) {
     try {
       let pBalance = 0;
@@ -1892,7 +1919,8 @@ class UpdateRecommendationChanges {
             case 1:
               pBalance =
                 (fertiliserData == null ? 0 : fertiliserData.p205) -
-                recommendation.cropNeed;
+                recommendation.cropNeed -
+                cropPOfftake;
               break;
             case 2:
               kBalance =
@@ -3013,19 +3041,19 @@ class UpdateRecommendationChanges {
           HttpStatus.BAD_REQUEST
         );
       }
-       let expectedYield = crop.Yield,
-         cropTypeLinkingData;
-       if (expectedYield == null) {
-         cropTypeLinkingData = await transactionalManager.findOne(
-           CropTypeLinkingEntity,
-           {
-             where: {
-               CropTypeID: crop.CropTypeID,
-             },
-           }
-         );
-         expectedYield = cropTypeLinkingData.DefaultYield;
-       }
+      let expectedYield = crop.Yield,
+        cropTypeLinkingData;
+      if (expectedYield == null) {
+        cropTypeLinkingData = await transactionalManager.findOne(
+          CropTypeLinkingEntity,
+          {
+            where: {
+              CropTypeID: crop.CropTypeID,
+            },
+          }
+        );
+        expectedYield = cropTypeLinkingData.DefaultYield;
+      }
       if (crop.CropTypeID !== CropTypeMapper.GRASS) {
         arableBody.push({
           cropOrder: crop.CropOrder,
@@ -3274,10 +3302,11 @@ class UpdateRecommendationChanges {
           }),
           ...(analysis.SoilNitrogenSupplyIndex != null && {
             snsIndexId: analysis.SoilNitrogenSupplyIndex,
+            snsMethodologyId: 4,
           }),
           ...(analysis.SNSCropOrder != null && {
-            SNSCropOrder: analysis.SNSCropOrder
-          })
+            SNSCropOrder: analysis.SNSCropOrder,
+          }),
         };
 
         // Only push if there's actual data
@@ -3294,9 +3323,10 @@ class UpdateRecommendationChanges {
         }),
         ...(snsAnalysesData.SoilNitrogenSupplyIndex != null && {
           snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex,
+          snsMethodologyId: 4,
         }),
         ...(snsAnalysesData.SNSCropOrder != null && {
-          SNSCropOrder: snsAnalysesData.SNSCropOrder
+          SNSCropOrder: snsAnalysesData.SNSCropOrder,
         }),
       };
 
@@ -3374,11 +3404,9 @@ class UpdateRecommendationChanges {
   async buildGrassObject(crop, field, grassGrowthClass, transactionalManager) {
     let grassCrop = null;
 
- 
     if (crop.CropTypeID === CropTypeMapper.GRASS) {
       grassCrop = crop;
     } else {
-     
       grassCrop = await transactionalManager.findOne(CropEntity, {
         where: {
           FieldID: crop.FieldID,
@@ -3389,12 +3417,10 @@ class UpdateRecommendationChanges {
       });
     }
 
-
     if (!grassCrop) {
       return {};
     }
 
-  
     if (grassCrop.CropOrder === CropOrderMapper.FIRSTCROP) {
       return {
         cropOrder: grassCrop.CropOrder,
@@ -3700,12 +3726,12 @@ class UpdateRecommendationChanges {
       where: { CropID: crop.ID },
     });
 
-      if (data) {
-        return {
-          ...data,
-          SNSCropOrder: crop.CropOrder,
-        };
-      }
+    if (data) {
+      return {
+        ...data,
+        SNSCropOrder: crop.CropOrder,
+      };
+    }
   }
 
   async getCrops(fieldID, year) {

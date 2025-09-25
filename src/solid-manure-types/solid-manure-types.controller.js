@@ -3,17 +3,17 @@ const { SolidManureTypesService } = require("./solid-manure-types.service");
 class SolidManureTypesController {
   #request;
   #h;
-  #service;
+  #solidManureService;
 
   constructor(request, h) {
     this.#request = request;
     this.#h = h;
-    this.#service = new SolidManureTypesService();
+    this.#solidManureService = new SolidManureTypesService();
   }
 
   async getAll() {
     try {
-      const records = await this.#service.getAll();
+      const records = await this.#solidManureService.getAll();
       return this.#h.response(records);
     } catch (error) {
       console.error("Error in getAll:", error);
@@ -24,7 +24,7 @@ class SolidManureTypesController {
   async getById() {
     const { id } = this.#request.params;
     try {
-      const record = await this.#service.getById(id);
+      const record = await this.#solidManureService.getById(id);
       return this.#h.response(record);
     } catch (error) {
       console.error("Error in getById:", error);

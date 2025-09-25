@@ -75,7 +75,7 @@ module.exports = [
     },
   },
 
-  // PUT (farmId and year from payload)
+
   {
     method: "PUT",
     path: "/nutrientsLoadingManures",

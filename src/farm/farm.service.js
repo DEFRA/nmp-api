@@ -4,6 +4,8 @@ const { BaseService } = require("../base/base.service");
 const { AppDataSource } = require("../db/data-source");
 const { FieldEntity } = require("../db/entity/field.entity");
 const { getRepository } = require("typeorm");
+const {FieldNVZMapper}=require("../constants/field-nvz-mapper");
+const {FieldAbove300SeaLevelMapper}=require("../constants/field-above-300-sea-level-mapper");
 
 class FarmService extends BaseService {
   constructor() {
@@ -98,16 +100,16 @@ class FarmService extends BaseService {
           throw boom.notFound(`Farm with ID ${farmId} not found`);
         }
         if (
-          updatedFarmData.FieldsAbove300SeaLevel !== 2 ||
-          updatedFarmData.NVZFields !== 2
+          updatedFarmData.FieldsAbove300SeaLevel !== FieldAbove300SeaLevelMapper.SomeFieldsAbove300m ||
+          updatedFarmData.NVZFields !== FieldNVZMapper.SomeFieldsInNVZ
         ) {
           const fieldUpdateData = {};
-          if (updatedFarmData.FieldsAbove300SeaLevel !== 2) {
+          if (updatedFarmData.FieldsAbove300SeaLevel !== FieldAbove300SeaLevelMapper.SomeFieldsAbove300m) {
             fieldUpdateData.IsAbove300SeaLevel =
-              updatedFarmData.FieldsAbove300SeaLevel === 1;
+              updatedFarmData.FieldsAbove300SeaLevel === FieldAbove300SeaLevelMapper.AllFieldsAbove300m;
           }
-          if (updatedFarmData.NVZFields !== 2) {
-            fieldUpdateData.IsWithinNVZ = updatedFarmData.NVZFields === 1;
+          if (updatedFarmData.NVZFields !== FieldNVZMapper.SomeFieldsInNVZ) {
+            fieldUpdateData.IsWithinNVZ = updatedFarmData.NVZFields === FieldNVZMapper.AllFieldsInNVZ;
           }
           await transactionalManager.update(
             FieldEntity,
