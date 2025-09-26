@@ -1,6 +1,6 @@
-const OtherOfftakeMapper = {
-  pOfftake: 30,
-  kOfftake: 70
+const OtherCropOfftake = {
+  POFFTAKE: 30,
+  KOFFTAKE: 70,
 };
 
-module.exports = { OtherOfftakeMapper };
+module.exports = { OtherCropOfftake };

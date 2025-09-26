@@ -1,7 +1,7 @@
 const { In } = require("typeorm");
-const { PKIndexMapper } = require("../constants/other-crop-index");
+const {  PKBalanceIndexAdjustmentMapper } = require("../constants/other-crop-index");
 const {
-  OtherOfftakeMapper,
+ OtherCropOfftake,
 } = require("../constants/other-crop-offtake-mapper");
 const { CropEntity } = require("../db/entity/crop.entity");
 const {
@@ -90,11 +90,14 @@ async calculatePKBalanceOther(
   ) {
     cropNeed = 0;
   } else if (latestSoilAnalysis.PhosphorusIndex == 0) {
-    cropNeed = OtherOfftakeMapper.pOfftake + PKIndexMapper.forIndexZero;
+    cropNeed =
+      OtherCropOfftake.POFFTAKE + PKBalanceIndexAdjustmentMapper.INDEXZERO;
   } else if (latestSoilAnalysis.PhosphorusIndex == 1) {
-    cropNeed = OtherOfftakeMapper.pOfftake + PKIndexMapper.forIndexOne;
+    cropNeed =
+      OtherCropOfftake.POFFTAKE + PKBalanceIndexAdjustmentMapper.INDEXONE;
   } else if (latestSoilAnalysis.PhosphorusIndex == 2) {
-    cropNeed = OtherOfftakeMapper.pOfftake + PKIndexMapper.forIndexTwo;
+    cropNeed =
+      OtherCropOfftake.POFFTAKE + PKBalanceIndexAdjustmentMapper.INDEXTWO;
   }
 
   const pBalance =
@@ -117,11 +120,14 @@ async calculatePKBalanceOther(
   if (potassiumIndex && potassiumIndex.toString() === "2+") {
     cropNeed = 0;
   } else if (potassiumIndex == 0) {
-    cropNeed = OtherOfftakeMapper.kOfftake + PKIndexMapper.forIndexZero;
+    cropNeed =
+      OtherCropOfftake.KOFFTAKE + PKBalanceIndexAdjustmentMapper.INDEXZERO;
   } else if (potassiumIndex == 1) {
-    cropNeed = OtherOfftakeMapper.kOfftake + PKIndexMapper.forIndexOne;
+    cropNeed =
+      OtherCropOfftake.KOFFTAKE + PKBalanceIndexAdjustmentMapper.INDEXONE;
   } else if (potassiumIndex && potassiumIndex.toString() === "2-") {
-    cropNeed = OtherOfftakeMapper.kOfftake + PKIndexMapper.forIndexTwoMinus;
+    cropNeed =
+      OtherCropOfftake.KOFFTAKE + PKBalanceIndexAdjustmentMapper.INDEXTWOMINUS;
   }
 
 
