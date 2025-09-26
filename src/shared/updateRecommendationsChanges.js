@@ -48,6 +48,7 @@ const { FieldTypeMapper } = require("../constants/field-type-mapper");
 const { CalculateMannerOutputService } = require("./calculate-manner-output-service");
 const { CalculateTotalAvailableNForNextYear } = require("./calculate-next-year-available-n");
 const { CalculateNextDefoliationService } = require("./calculate-next-defoliation-totalN");
+const { CalculatePKBalanceOther } = require("./calculate-pk-balance-other");
 
 
 class UpdateRecommendationChanges {
@@ -103,6 +104,8 @@ class UpdateRecommendationChanges {
       new CalculateTotalAvailableNForNextYear();
     this.CalculateNextDefoliationService =
       new CalculateNextDefoliationService();
+    this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
+
   }
 
   async getYearsGreaterThanGivenYear(fieldID, year) {
@@ -962,7 +965,8 @@ class UpdateRecommendationChanges {
           fertiliserData,
           year,
           transactionalManager,
-          cropPOfftake
+          cropPOfftake,
+          latestSoilAnalysis
         );
 
         if (saveAndUpdatePKBalance) {
@@ -1112,7 +1116,9 @@ class UpdateRecommendationChanges {
         secondCropManagementData,
         fertiliserData,
         year,
-        transactionalManager
+        transactionalManager,
+        cropPOfftake,
+        latestSoilAnalysis
       );
 
       if (saveAndUpdatePKBalance) {
@@ -1299,7 +1305,8 @@ class UpdateRecommendationChanges {
             fertiliserData,
             year,
             transactionalManager,
-            cropPOfftake
+            cropPOfftake,
+            latestSoilAnalysis
           );
 
           if (saveAndUpdatePKBalance) {
@@ -1369,7 +1376,9 @@ class UpdateRecommendationChanges {
             secondCropManagementData,
             fertiliserData,
             year,
-            transactionalManager
+            transactionalManager,
+            cropPOfftake,
+            latestSoilAnalysis
           );
 
           if (saveAndUpdatePKBalance) {
@@ -1894,14 +1903,27 @@ class UpdateRecommendationChanges {
     fertiliserData,
     year,
     transactionalManager,
-    cropPOfftake
+    cropPOfftake,
+    latestSoilAnalysis
   ) {
     try {
       let pBalance = 0;
       let kBalance = 0;
       let saveAndUpdatePKBalance;
+      
+      if(crop.CropTypeID == CropTypeMapper.OTHER ){
+         
+         const otherPKBalance =
+           await this.CalculatePKBalanceOther.calculatePKBalanceOther(
+             crop,
+             latestSoilAnalysis,
+             transactionalManager
+           );
 
-      if (crop.CropTypeID == CropTypeMapper.OTHER || crop.IsBasePlan) {
+         pBalance = otherPKBalance.pBalance;
+         kBalance = otherPKBalance.kBalance;
+
+      }else if (crop.IsBasePlan) {
         if (pkBalanceData) {
           pBalance =
             (fertiliserData == null ? 0 : fertiliserData.p205) -
