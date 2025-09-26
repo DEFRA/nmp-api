@@ -19,6 +19,11 @@ const { MoreThan } = require("typeorm");
 const {
   UpdateRecommendationChanges,
 } = require("../shared/updateRecommendationsChanges");
+const { CropTypeMapper } = require("../constants/crop-type-mapper");
+const { CountryEntity } = require("../db/entity/country.entity");
+const { FarmEntity } = require("../db/entity/farm.entity");
+const { HandleSoilAnalysisService } = require("../shared/handle-soil-analysis");
+const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-other");
 
 class FertiliserManuresService extends BaseService {
   constructor() {
@@ -38,6 +43,11 @@ class FertiliserManuresService extends BaseService {
     this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
     this.soilAnalysisRepository =
       AppDataSource.getRepository(SoilAnalysisEntity);
+    this.farmRepository = AppDataSource.getRepository(FarmEntity);
+    this.HandleSoilAnalysisService = new HandleSoilAnalysisService();
+    this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
+    
+      
   }
   async getFertiliserManureNitrogenSum(
     fieldId,
@@ -293,6 +303,44 @@ class FertiliserManuresService extends BaseService {
                   totalP205AndK20.k20 +
                   fertiliserManureData[0]?.K2O -
                   recommandationData.k20;
+
+             if (cropData[0].CropTypeID == CropTypeMapper.OTHER){
+
+               const farmData = await this.farmRepository.findOneBy({
+                 ID: fieldData[0].FarmID,
+               });
+
+               const rb209CountryData = await transactionalManager.findOne(
+                 CountryEntity,
+                 {
+                   where: {
+                     ID: farmData.CountryID,
+                   },
+                 }
+               );
+
+               
+        const {
+          latestSoilAnalysis,
+          errors: soilAnalysisErrors,
+          soilAnalysisRecords,
+        } = await this.HandleSoilAnalysisService.handleSoilAnalysisValidation(
+          fieldData[0].ID,
+          fieldData[0].Name,
+          cropData[0]?.Year,
+          rb209CountryData.RB209CountryID
+        );
+                     const otherPKBalance =
+                       await this.CalculatePKBalanceOther.calculatePKBalanceOther(
+                         cropData[0],
+                         latestSoilAnalysis,
+                         transactionalManager
+                       );
+
+                     pBalance = otherPKBalance.pBalance;
+                     kBalance = otherPKBalance.kBalance;
+                      
+              }
                 const updateData = {
                   Year: cropData[0]?.Year,
                   FieldID: fieldData[0]?.ID,

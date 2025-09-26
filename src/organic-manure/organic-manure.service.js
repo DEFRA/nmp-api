@@ -53,6 +53,7 @@ const { CalculateGrassHistoryAndPreviousGrass } = require("../shared/calculate-p
 const { CalculateTotalAvailableNForNextYear } = require("../shared/calculate-next-year-available-n");
 const { CropOrderMapper } = require("../constants/crop-order-mapper");
 const { CalculateNextDefoliationService } = require("../shared/calculate-next-defoliation-totalN");
+const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-other");
 
 class OrganicManureService extends BaseService {
   constructor() {
@@ -105,6 +106,8 @@ class OrganicManureService extends BaseService {
     this.excessRainfallRepository = AppDataSource.getRepository(
       ExcessRainfallsEntity
     );
+    this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
+
   }
 
   async getTotalNitrogen(fieldId, fromDate, toDate, confirm, organicManureID) {
@@ -2624,7 +2627,7 @@ class OrganicManureService extends BaseService {
                 isNextYearOrganicManureExist == true) ||
               (isNextYearPlanExist == true && isNextYearFertiliserExist == true)
             ) {
-              //call shreyash's function
+           
               this.UpdateRecommendation.updateRecommendationsForField(
                 cropData.FieldID,
                 cropData.Year,
@@ -2669,13 +2672,29 @@ class OrganicManureService extends BaseService {
                 );
 
                 console.log("fertiliserData.length", fertiliserData.length);
-                if (fertiliserData.p205 > 0 || fertiliserData.k20 > 0) {
-                  //mannerOutputs.data.cropAvailableP2O5+pkBalanceData.PBalance
-                  pBalance = fertiliserData.p205 - (0 - pkBalanceData.PBalance);
-                  kBalance = fertiliserData.k20 - (0 - pkBalanceData.KBalance);
-                } else {
-                  pBalance = pBalance - (0 - pkBalanceData.PBalance);
-                  kBalance = kBalance - (0 - pkBalanceData.KBalance);
+                if(IsBasePlan){
+
+                  if (fertiliserData.p205 > 0 || fertiliserData.k20 > 0) {
+                    //mannerOutputs.data.cropAvailableP2O5+pkBalanceData.PBalance
+                    pBalance = fertiliserData.p205 - (0 - pkBalanceData.PBalance);
+                    kBalance = fertiliserData.k20 - (0 - pkBalanceData.KBalance);
+                  } else {
+                    pBalance = pBalance - (0 - pkBalanceData.PBalance);
+                    kBalance = kBalance - (0 - pkBalanceData.KBalance);
+                  }
+                }else if (
+                  cropData.CropTypeID == CropTypeMapper.OTHER &&
+                  !cropData.IsBasePlan
+                ) {
+                  const otherPKBalance =
+                    await this.CalculatePKBalanceOther.calculatePKBalanceOther(
+                      cropData,
+                      latestSoilAnalysis,
+                      transactionalManager
+                    );
+
+                  pBalance = otherPKBalance.pBalance;
+                  kBalance = otherPKBalance.kBalance;
                 }
 
                 const updateData = {

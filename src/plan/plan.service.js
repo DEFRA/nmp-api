@@ -73,6 +73,7 @@ const {
 } = require("../shared/calculate-manner-output-service");
 const { CalculateCropsSnsAnalysisService } = require("../shared/calculate-crops-sns-analysis-service");
 const { CropTypeLinkingEntity } = require("../db/entity/crop-type-linking.entity");
+const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-other");
 
 class PlanService extends BaseService {
   constructor() {
@@ -112,6 +113,7 @@ class PlanService extends BaseService {
       new CalculateTotalAvailableNForNextYear();
     this.CalculateMannerOutput = new CalculateMannerOutputService();
     this.CalculateCropsSnsAnalysis = new CalculateCropsSnsAnalysisService();
+    this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
   }
 
   async getManagementPeriods(id) {
@@ -2080,7 +2082,9 @@ class PlanService extends BaseService {
                   null,
                   pkBalanceData,
                   userId,
-                  cropPOfftake
+                  latestSoilAnalysis,
+                  cropPOfftake,
+                  transactionalManager
                 );
                 if (saveAndUpdatePKBalance) {
                   await transactionalManager.save(
@@ -2404,7 +2408,10 @@ class PlanService extends BaseService {
                 nutrientRecommendationsData.calculations,
                 pkBalanceData,
                 userId,
-                cropPOfftake
+                latestSoilAnalysis,
+                cropPOfftake,
+                transactionalManager
+
               );
               if (saveAndUpdatePKBalance) {
                 await transactionalManager.save(
@@ -2807,13 +2814,25 @@ class PlanService extends BaseService {
     calculations,
     pkBalanceData,
     userId,
-    cropPOfftake
+    latestSoilAnalysis,
+    cropPOfftake,
+    transactionalManager
   ) {
     try {
       let pBalance = 0;
       let kBalance = 0;
       let saveAndUpdatePKBalance;
       if (crop.CropTypeID === CropTypeMapper.OTHER || crop.CropInfo1 === null) {
+       const otherPKBalance =
+         await this.CalculatePKBalanceOther.calculatePKBalanceOther(
+           crop,
+           latestSoilAnalysis,
+           transactionalManager
+         );
+       
+       pBalance = otherPKBalance.pBalance
+       kBalance = otherPKBalance.kBalance
+
       } else {
         for (const recommendation of calculations) {
           switch (recommendation.nutrientId) {
@@ -2821,7 +2840,7 @@ class PlanService extends BaseService {
               pBalance = pBalance - recommendation.cropNeed - cropPOfftake;
               break;
             case 2:
-              kBalance = kBalance - recommendation.cropNeed ;
+              kBalance = kBalance - recommendation.cropNeed;
               break;
           }
         }
