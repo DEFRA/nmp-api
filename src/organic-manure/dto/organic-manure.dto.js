@@ -102,10 +102,10 @@ const WarningMessageItemSchema = Joi.object({
   Para3: Joi.string().optional().allow(null),
   WarningCodeID: Joi.number().integer().required(),
   WarningLevelID: Joi.number().integer().required(),
-  CreatedOn: Joi.date().optional().allow(null),
-  CreatedByID: Joi.number().integer().optional().allow(null),
-  ModifiedOn: Joi.date().optional().allow(null),
-  ModifiedByID: Joi.number().integer().optional().allow(null),
+  CreatedOn: Joi.date().optional().allow(null).default(null),
+  CreatedByID: Joi.number().integer().optional().allow(null).default(null),
+  ModifiedOn: Joi.date().optional().allow(null).default(null),
+  ModifiedByID: Joi.number().integer().optional().allow(null).default(null),
   PreviousID: Joi.number().integer().optional().allow(null),
 });
 

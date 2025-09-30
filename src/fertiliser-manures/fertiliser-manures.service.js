@@ -163,7 +163,8 @@ class FertiliserManuresService extends BaseService {
     const managementPeriodAllData =
       await this.managementPeriodRepository.find();
     const fieldAllData = await this.fieldRepository.find();
-
+      const fertiliserAllData = await this.repository.find();
+   
 
     return await AppDataSource.transaction(async (transactionalManager) => {
       // const fertiliserManures = fertiliserManureData.map(
@@ -193,11 +194,11 @@ class FertiliserManuresService extends BaseService {
       fertiliserManures.push(savedFertiliser);
         // Now save its WarningMessages (if any)
         if (
-          fertiliser?.fertiliserManureData?.FertiliserManure?.WarningMessages &&
-          fertiliser.fertiliserManureData?.FertiliserManure?.WarningMessages?.length > 0
+          fertiliser?.WarningMessages &&
+          fertiliser?.WarningMessages?.length > 0
         ) {
           const warningMessagesToSave =
-            fertiliser.fertiliserManureData.FertiliserManure.WarningMessages.map(
+            fertiliser.WarningMessages.map(
               (msg) =>
                 this.warningMessageRepository.create({
                   ...msg,
@@ -225,7 +226,6 @@ class FertiliserManuresService extends BaseService {
       //   await this.managementPeriodRepository.findOneBy({
       //     ID: fertiliserManureData[0].ManagementPeriodID,
       //   });
-      const fertiliserAllData = await this.repository.find();
       for (const fertManure of fertiliserManures) {
         const fertiliserData = fertiliserAllData.filter((fertData) => {
           return fertData.ManagementPeriodID === fertManure.ManagementPeriodID;
