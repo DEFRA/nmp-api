@@ -112,12 +112,12 @@ const WarningMessageItemSchema = Joi.object({
 // Define the validation schema for OrganicManureDto
 const OrganicManureDtoSchema = Joi.object({
   OrganicManure: OrganicManureEntitySchema.required(),
-  FarmID: Joi.number().integer().required(),
   WarningMessages: Joi.array()
-    .items(WarningMessageItemSchema)
-    .min(1)
-    .optional()
-    .allow(null),
+  .items(WarningMessageItemSchema)
+  .min(1)
+  .optional()
+  .allow(null),
+  FarmID: Joi.number().integer().required(),
   FieldTypeID: Joi.number().integer().required(),
   SaveDefaultForFarm: Joi.boolean().required().default(false)
 });
