@@ -92,7 +92,7 @@ const UpdateOrganicManureEntitySchema = Joi.object({
 });
 
 const WarningMessageItemSchema = Joi.object({
-  ID: Joi.number().integer().optional(), 
+  ID: Joi.number().integer().optional().allow(null).default(null), 
   FieldID: Joi.number().integer().required(),
   CropID: Joi.number().integer().required(),
   JoiningID: Joi.number().integer().required().allow(null).default(null),
