@@ -190,7 +190,7 @@ class FertiliserManuresService extends BaseService {
           (msg) =>
             this.warningMessageRepository.create({
               ...msg,
-              JoiningID: savedFertiliser.ID,
+              JoiningID: savedFertiliserManures.ID,
               CreatedByID: userId,
               CreatedOn: new Date(),
             })
