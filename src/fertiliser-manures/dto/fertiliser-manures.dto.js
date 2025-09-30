@@ -2,7 +2,7 @@ const Joi = require("joi");
 const { WarningMessageItemSchema } = require("../../organic-manure/dto/organic-manure.dto");
 
 const FertiliserManureDto = Joi.object({
-  ID: Joi.number().integer().allow(null).optional(),
+  ID: Joi.number().integer().allow(null).optional().default(null),
   ManagementPeriodID: Joi.number().integer().required(),
   ApplicationDate: Joi.date().iso().required(),
   ApplicationRate: Joi.number().precision(3).required(),

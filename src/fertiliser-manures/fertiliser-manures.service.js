@@ -166,41 +166,60 @@ class FertiliserManuresService extends BaseService {
 
     const fertiliserAllData = await this.repository.find();
     return await AppDataSource.transaction(async (transactionalManager) => {
-      const fertiliserManures = fertiliserManureData.map(
-        ({ ID, WarningMessages, ...rest }) => ({
-          ...rest,
-          CreatedByID: userId,
-          CreatedOn: new Date(),
-        })
+      // const fertiliserManures = fertiliserManureData.map(
+      //   ({ ID, WarningMessages, ...rest }) => ({
+      //     ...rest,
+      //     CreatedByID: userId,
+      //     CreatedOn: new Date(),
+      //   })
+      console.log("fertiliserManureData",fertiliserManureData);
+      console.log(
+        "fertiliserManureData.FertiliserManure",
+        fertiliserManureData.FertiliserManure
       );
+    
+      // );
+  let fertiliserManures =[];
+      for (const fertiliser of fertiliserManureData) {
+        // Save fertiliser first
+        const savedFertiliser = await transactionalManager.save(
+          FertiliserManuresEntity,
+          this.repository.create({
+            ...fertiliser,
+            CreatedByID: userId,
+            CreatedOn: new Date(),
+          })
+        );
+      fertiliserManures.push(savedFertiliser);
+        // Now save its WarningMessages (if any)
+        if (
+          fertiliser?.fertiliserManureData?.FertiliserManure?.WarningMessages &&
+          fertiliser.fertiliserManureData?.FertiliserManure?.WarningMessages?.length > 0
+        ) {
+          const warningMessagesToSave =
+            fertiliser.fertiliserManureData.FertiliserManure.WarningMessages.map(
+              (msg) =>
+                this.warningMessageRepository.create({
+                  ...msg,
+                  JoiningID: savedFertiliser.ID,
+                  CreatedByID: userId,
+                  CreatedOn: new Date(),
+                })
+            );
+
+          await transactionalManager.save(
+            WarningMessagesEntity,
+            warningMessagesToSave
+          );
+        }
+      }
+
       const soilAnalysisAllData = await this.soilAnalysisRepository.find();
       const pkBalanceAllData = await this.pkBalanceRepository.find();
 
-      const savedFertiliserManures = await transactionalManager.save(
-        FertiliserManuresEntity,
-        fertiliserManures
-      );
+    
 
-
-      if (
-        fertiliserManureData.WarningMessages &&
-        fertiliserManureData.WarningMessages.length > 0
-      ) {
-        const warningMessagesToSave = fertiliserManureData.WarningMessages.map(
-          (msg) =>
-            this.warningMessageRepository.create({
-              ...msg,
-              JoiningID: savedFertiliserManures.ID,
-              CreatedByID: userId,
-              CreatedOn: new Date(),
-            })
-        );
-
-        await transactionalManager.save(
-          WarningMessagesEntity,
-          warningMessagesToSave
-        );
-      }
+ 
 
       // const managementPeriodData =
       //   await this.managementPeriodRepository.findOneBy({
@@ -387,7 +406,7 @@ class FertiliserManuresService extends BaseService {
           }
         }
       }
-      return savedFertiliserManures;
+      return fertiliserManures;
     });
   }
 
