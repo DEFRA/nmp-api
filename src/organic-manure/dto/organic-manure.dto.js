@@ -91,12 +91,34 @@ const UpdateOrganicManureEntitySchema = Joi.object({
   AvailableNForNextDefoliation: Joi.number().precision(3).allow(null)
 });
 
+const WarningMessageItemSchema = Joi.object({
+  ID: Joi.number().integer().optional(), 
+  FieldID: Joi.number().integer().required(),
+  CropID: Joi.number().integer().required(),
+  JoiningID: Joi.number().integer().required().allow(null).default(null),
+  Header: Joi.string().max(250).optional().allow(null),
+  Para1: Joi.string().optional().allow(null),
+  Para2: Joi.string().optional().allow(null),
+  Para3: Joi.string().optional().allow(null),
+  WarningCodeID: Joi.number().integer().required(),
+  WarningLevelID: Joi.number().integer().required(),
+  CreatedOn: Joi.date().optional().allow(null),
+  CreatedByID: Joi.number().integer().optional().allow(null),
+  ModifiedOn: Joi.date().optional().allow(null),
+  ModifiedByID: Joi.number().integer().optional().allow(null),
+  PreviousID: Joi.number().integer().optional().allow(null),
+});
+
 // Define the validation schema for OrganicManureDto
 const OrganicManureDtoSchema = Joi.object({
   OrganicManure: OrganicManureEntitySchema.required(),
   FarmID: Joi.number().integer().required(),
   FieldTypeID: Joi.number().integer().required(),
   SaveDefaultForFarm: Joi.boolean().required().default(false),
+  WarningMessages: Joi.array()
+    .items(WarningMessageItemSchema)
+    .min(1)
+    .optional()
 });
 
 // Define the validation schema for OrganicManureDto
