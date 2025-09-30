@@ -54,6 +54,7 @@ const { CalculateTotalAvailableNForNextYear } = require("../shared/calculate-nex
 const { CropOrderMapper } = require("../constants/crop-order-mapper");
 const { CalculateNextDefoliationService } = require("../shared/calculate-next-defoliation-totalN");
 const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-other");
+const { WarningMessagesEntity } = require("../db/entity/warning-message.entity");
 
 class OrganicManureService extends BaseService {
   constructor() {
@@ -2763,9 +2764,30 @@ class OrganicManureService extends BaseService {
               ...organicManureData.OrganicManure,
               CreatedByID: userId,
               CreatedOn: new Date(),
-              ...(organicManureData.OrganicManure.ID == 0 ? { ID: null } : {}),
             })
           );
+
+   
+          if (
+            organicManureData.WarningMessages &&
+            organicManureData.WarningMessages.length > 0
+          ) {
+            const warningMessagesToSave = organicManureData.WarningMessages.map(
+              (wm) =>
+                transactionalManager.create(WarningMessagesEntity, {
+                  ...wm,
+                  JoiningID: savedOrganicManure.ID, 
+                  CreatedByID: userId,
+                  CreatedOn: new Date()
+                })
+            );
+
+            await transactionalManager.save(
+             WarningMessagesEntity,
+              warningMessagesToSave
+            );
+          }
+
           organicManures.push(savedOrganicManure);
           console.log("savedOrganicManure", savedOrganicManure);
           let arableNotes = nutrientRecommendationsData.adviceNotes;
@@ -2910,31 +2932,29 @@ class OrganicManureService extends BaseService {
                 OrganicManure.ManagementPeriodID
               );
               let updatePKBalance;
-                let cropPOfftake = 0;
-                if (latestSoilAnalysis.PhosphorusIndex){
-
-                  if (
-                    latestSoilAnalysis.PhosphorusIndex < 4 &&
-                    (cropData.CropTypeID ==
-                      CropTypeMapper.POTATOVARIETYGROUP1 ||
-                      cropData.CropTypeID ==
-                        CropTypeMapper.POTATOVARIETYGROUP2 ||
-                      cropData.CropTypeID ==
-                        CropTypeMapper.POTATOVARIETYGROUP3 ||
-                      cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP4)
-                  ) {
-                    cropPOfftake = cropData.Yield ? cropData.Yield : 50;
-                  }
+              let cropPOfftake = 0;
+              if (latestSoilAnalysis.PhosphorusIndex) {
+                if (
+                  latestSoilAnalysis.PhosphorusIndex < 4 &&
+                  (cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP1 ||
+                    cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP2 ||
+                    cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP3 ||
+                    cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP4)
+                ) {
+                  cropPOfftake = cropData.Yield ? cropData.Yield : 50;
                 }
+              }
               if (fertiliserData.p205 > 0 || fertiliserData.k20 > 0) {
                 for (const recommendation of nutrientRecommendationsData.calculations) {
                   switch (recommendation.nutrientId) {
                     case 1:
                       pBalance =
-                        fertiliserData.p205 - recommendation.cropNeed - cropPOfftake;
+                        fertiliserData.p205 -
+                        recommendation.cropNeed -
+                        cropPOfftake;
                       break;
                     case 2:
-                      kBalance = fertiliserData.k20 - recommendation.cropNeed 
+                      kBalance = fertiliserData.k20 - recommendation.cropNeed;
                       break;
                   }
                 }

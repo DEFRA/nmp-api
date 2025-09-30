@@ -164,7 +164,7 @@ class FertiliserManuresService extends BaseService {
       await this.managementPeriodRepository.find();
     const fieldAllData = await this.fieldRepository.find();
 
-    const fertiliserAllData = await this.repository.find();
+
     return await AppDataSource.transaction(async (transactionalManager) => {
       // const fertiliserManures = fertiliserManureData.map(
       //   ({ ID, WarningMessages, ...rest }) => ({
@@ -225,6 +225,7 @@ class FertiliserManuresService extends BaseService {
       //   await this.managementPeriodRepository.findOneBy({
       //     ID: fertiliserManureData[0].ManagementPeriodID,
       //   });
+      const fertiliserAllData = await this.repository.find();
       for (const fertManure of fertiliserManures) {
         const fertiliserData = fertiliserAllData.filter((fertData) => {
           return fertData.ManagementPeriodID === fertManure.ManagementPeriodID;
