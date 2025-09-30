@@ -145,6 +145,7 @@ module.exports = {
   OrganicManureEntitySchema,
   OrganicManureDtoSchema,
   CreateOrganicManuresWithFarmManureTypeDtoSchema,
-  UpdateOrganicManuresWithFarmManureTypeDtoSchema
+  UpdateOrganicManuresWithFarmManureTypeDtoSchema,
+  WarningMessageItemSchema
 };
 

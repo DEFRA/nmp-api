@@ -1,4 +1,5 @@
 const Joi = require("joi");
+const { WarningMessageItemSchema } = require("../../organic-manure/dto/organic-manure.dto");
 
 const FertiliserManureDto = Joi.object({
   ID: Joi.number().integer().allow(null).optional(),
@@ -25,13 +26,15 @@ const FertiliserManureDto = Joi.object({
   EncryptedCounter: Joi.string().optional().allow(null),
   Defoliation: Joi.number().integer().optional().allow(null),
   FieldID: Joi.number().integer().allow(null),
-  DefoliationName: Joi.string().optional().allow(null)
+  DefoliationName: Joi.string().optional().allow(null),
+  WarningMessages: Joi.array().items(WarningMessageItemSchema).optional().allow(null),
 }).required();
 
 
 
 const CreateFertiliserManuresDto = Joi.object({
     FertiliserManure: Joi.array().items(FertiliserManureDto).required(),
+  
 });
 
 
