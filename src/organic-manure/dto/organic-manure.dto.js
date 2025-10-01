@@ -119,11 +119,7 @@ const OrganicManureDtoSchema = Joi.object({
   .allow(null),
   FarmID: Joi.number().integer().required(),
   FieldTypeID: Joi.number().integer().required(),
-  SaveDefaultForFarm: Joi.boolean().required().default(false),
-  WarningMessages: Joi.array()
-    .items(WarningMessageItemSchema)
-    .min(1)
-    .optional()
+  SaveDefaultForFarm: Joi.boolean().required().default(false)
 });
 
 // Define the validation schema for OrganicManureDto

@@ -26,18 +26,28 @@ const FertiliserManureDto = Joi.object({
   EncryptedCounter: Joi.string().optional().allow(null),
   Defoliation: Joi.number().integer().optional().allow(null),
   FieldID: Joi.number().integer().allow(null),
-  DefoliationName: Joi.string().optional().allow(null),
-  WarningMessages: Joi.array().items(WarningMessageItemSchema).optional().allow(null),
+  DefoliationName: Joi.string().optional().allow(null)
 }).required();
 
 
+const FertiliserManureDtoSchema = Joi.object({
+  FertiliserManure: FertiliserManureDto.required(),
+  WarningMessages: Joi.array()
+    .items(WarningMessageItemSchema)
+    .min(1)
+    .optional()
+    .allow(null),
+});
 
 const CreateFertiliserManuresDto = Joi.object({
-    FertiliserManure: Joi.array().items(FertiliserManureDto).required(),
-  
+  FertiliserManure: Joi.array().items(FertiliserManureDtoSchema).required(),
+});
+const UpdateFertiliserManuresDto = Joi.object({
+  FertiliserManure: Joi.array().items(FertiliserManureDto).required(),
 });
 
 
 module.exports = {
-  CreateFertiliserManuresDto
+  CreateFertiliserManuresDto,
+  UpdateFertiliserManuresDto
 };

@@ -182,36 +182,34 @@ class FertiliserManuresService extends BaseService {
       // );
   let fertiliserManures =[];
       for (const fertiliser of fertiliserManureData) {
+          const fertiliserManure = fertiliser.FertiliserManure;
         // Save fertiliser first
         const savedFertiliser = await transactionalManager.save(
           FertiliserManuresEntity,
           this.repository.create({
-            ...fertiliser,
+            ...fertiliserManure,
             CreatedByID: userId,
             CreatedOn: new Date(),
           })
         );
       fertiliserManures.push(savedFertiliser);
         // Now save its WarningMessages (if any)
-        if (
-          fertiliser?.WarningMessages &&
-          fertiliser?.WarningMessages?.length > 0
-        ) {
-          const warningMessagesToSave =
-            fertiliser.WarningMessages.map(
-              (msg) =>
-                this.warningMessageRepository.create({
-                  ...msg,
-                  JoiningID: savedFertiliser.ID,
-                  CreatedByID: userId,
-                  CreatedOn: new Date(),
-                })
-            );
+        const warningMessage = fertiliser.WarningMessages
+        if (warningMessage && warningMessage?.length > 0) {
+          const warningMessagesToSave = warningMessage.map((msg) =>
+            this.warningMessageRepository.create({
+              ...msg,
+              JoiningID: savedFertiliser.ID,
+              CreatedByID: userId,
+              CreatedOn: new Date(),
+            })
+          );
 
-          await transactionalManager.save(
+         const savedWarningMessage = await transactionalManager.save(
             WarningMessagesEntity,
             warningMessagesToSave
           );
+          
         }
       }
 
