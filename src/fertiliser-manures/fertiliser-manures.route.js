@@ -5,6 +5,7 @@ const {
 const {
   CreateFertiliserManuresDto,
   updateFertiliserManuresDto,
+  UpdateFertiliserManuresDto,
 } = require("./dto/fertiliser-manures.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 
@@ -186,7 +187,7 @@ module.exports = [
       tags: ["api", "Fertiliser Manures"],
       description: "Update Fertiliser Manures by Id",
       validate: {
-        payload: CreateFertiliserManuresDto,
+        payload: UpdateFertiliserManuresDto,
         failAction: (request, h, err) => {
           return h
             .response(
@@ -238,7 +239,7 @@ module.exports = [
       return getController(request, h).deleteFertiliserManureByIds();
     },
   },
- {
+  {
     method: "GET",
     path: "/fertiliser-manures/total-nitrogen-by/{managementPeriodID}",
     handler: async (request, h) => {
@@ -266,5 +267,5 @@ module.exports = [
         },
       },
     },
-  }
+  },
 ];
