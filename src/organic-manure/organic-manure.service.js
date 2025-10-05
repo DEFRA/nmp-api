@@ -55,6 +55,7 @@ const { CropOrderMapper } = require("../constants/crop-order-mapper");
 const { CalculateNextDefoliationService } = require("../shared/calculate-next-defoliation-totalN");
 const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-other");
 const { WarningMessagesEntity } = require("../db/entity/warning-message.entity");
+const { CreateOrUpdateWarningMessage } = require("../shared/create-update-warning-messages.service");
 
 class OrganicManureService extends BaseService {
   constructor() {
@@ -108,6 +109,8 @@ class OrganicManureService extends BaseService {
       ExcessRainfallsEntity
     );
     this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
+    this.CreateOrUpdateWarningMessage = new CreateOrUpdateWarningMessage();
+
 
   }
 
@@ -3720,7 +3723,7 @@ class OrganicManureService extends BaseService {
       let savedFarmManureType = null;
 
       for (const manureEntry of updatedOrganicManureData) {
-        const { OrganicManure, FarmID, FieldTypeID, SaveDefaultForFarm } =
+        const { OrganicManure,WarningMessages, FarmID, FieldTypeID, SaveDefaultForFarm } =
           manureEntry;
 
         const {
@@ -3859,6 +3862,8 @@ class OrganicManureService extends BaseService {
           ID,
           dataToUpdate
         );
+
+        let updatedWarningMessages = await this.CreateOrUpdateWarningMessage.syncWarningMessages(WarningMessages,transactionalManager,userId);
 
         // Fetch the updated version to return
         const organicManure = await transactionalManager.findOne(
