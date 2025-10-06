@@ -25,6 +25,8 @@ const { FarmEntity } = require("../db/entity/farm.entity");
 const { HandleSoilAnalysisService } = require("../shared/handle-soil-analysis");
 const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-other");
 const { WarningMessagesEntity } = require("../db/entity/warning-message.entity");
+const { CreateOrUpdateWarningMessage } = require("../shared/create-update-warning-messages.service");
+const { WarningCodesMapper } = require("../constants/warning-codes-mapper");
 
 class FertiliserManuresService extends BaseService {
   constructor() {
@@ -48,7 +50,8 @@ class FertiliserManuresService extends BaseService {
     this.farmRepository = AppDataSource.getRepository(FarmEntity);
     this.HandleSoilAnalysisService = new HandleSoilAnalysisService();
     this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
-    
+    this.CreateOrUpdateWarningMessage = new CreateOrUpdateWarningMessage();
+
       
   }
   async getFertiliserManureNitrogenSum(
@@ -199,7 +202,10 @@ class FertiliserManuresService extends BaseService {
           const warningMessagesToSave = warningMessage.map((msg) =>
             this.warningMessageRepository.create({
               ...msg,
-              JoiningID: savedFertiliser.ID,
+              JoiningID:
+                wm.WarningCodeID == WarningCodesMapper.NMAXLIMIT
+                  ? msg.FieldID
+                  : savedFertiliser.ID,
               CreatedByID: userId,
               CreatedOn: new Date(),
             })
@@ -472,6 +478,8 @@ class FertiliserManuresService extends BaseService {
     return await AppDataSource.transaction(async (transactionalManager) => {
       const updatedFertilisers = [];
       for (const manure of updatedFertiliserManureData) {
+        const inorganicManure = manure.FertiliserManure;
+        const warningMessages = manure.WarningMessages; 
         // const {
         //   ID,
         //   CreatedByID,
@@ -489,7 +497,7 @@ class FertiliserManuresService extends BaseService {
           FieldID,
           DefoliationName,
           ...updatedData
-        } = manure;
+        } = inorganicManure;
         // Update fertiliseremanure
         const result = await transactionalManager.update(
           FertiliserManuresEntity,
@@ -500,6 +508,13 @@ class FertiliserManuresService extends BaseService {
             ModifiedOn: new Date(),
           }
         );
+
+        let updatedWarningMessages = await this.CreateOrUpdateWarningMessage.syncWarningMessages(
+                    warningMessages,
+                    transactionalManager,
+                    userId
+                  );
+
 
         if (result.affected === 0) {
           console.log(`Fertiliser Manures with ID ${ID} not found`);
