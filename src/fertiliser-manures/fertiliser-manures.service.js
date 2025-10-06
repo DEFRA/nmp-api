@@ -401,6 +401,22 @@ class FertiliserManuresService extends BaseService {
                   updatePKBalance
                 );
               }
+                   const nextAvailableCrop = await this.cropRepository.findOne({
+                     where: {
+                       FieldID: cropData.FieldID,
+                       Year: MoreThan(cropData.Year),
+                     },
+                     order: { Year: "ASC" },
+                   });
+
+                   if (nextAvailableCrop) {
+                     this.UpdateRecommendation.updateRecommendationsForField(
+                       cropData.FieldID,
+                       nextAvailableCrop.Year,
+                       request,
+                       userId
+                     );
+                   }
             }
           }
         }
@@ -505,13 +521,13 @@ class FertiliserManuresService extends BaseService {
           where: { ID: managementPeriod.CropID },
         });
 
-        await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
-          crop.FieldID,
-          crop.Year,
-          request,
-          userId,
-          transactionalManager
-        );
+        // await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+        //   crop.FieldID,
+        //   crop.Year,
+        //   request,
+        //   userId,
+        //   transactionalManager
+        // );
 
         // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
         const nextAvailableCrop = await this.cropRepository.findOne({
