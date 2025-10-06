@@ -26,6 +26,7 @@ const { HandleSoilAnalysisService } = require("../shared/handle-soil-analysis");
 const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-other");
 const { WarningMessagesEntity } = require("../db/entity/warning-message.entity");
 const { CreateOrUpdateWarningMessage } = require("../shared/create-update-warning-messages.service");
+const { WarningCodesMapper } = require("../constants/warning-codes-mapper");
 
 class FertiliserManuresService extends BaseService {
   constructor() {
@@ -201,7 +202,10 @@ class FertiliserManuresService extends BaseService {
           const warningMessagesToSave = warningMessage.map((msg) =>
             this.warningMessageRepository.create({
               ...msg,
-              JoiningID: savedFertiliser.ID,
+              JoiningID:
+                wm.WarningCodeID == WarningCodesMapper.NMAXLIMIT
+                  ? msg.FieldID
+                  : savedFertiliser.ID,
               CreatedByID: userId,
               CreatedOn: new Date(),
             })

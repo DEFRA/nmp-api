@@ -56,6 +56,7 @@ const { CalculateNextDefoliationService } = require("../shared/calculate-next-de
 const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-other");
 const { WarningMessagesEntity } = require("../db/entity/warning-message.entity");
 const { CreateOrUpdateWarningMessage } = require("../shared/create-update-warning-messages.service");
+const { WarningCodesMapper } = require("../constants/warning-codes-mapper");
 
 class OrganicManureService extends BaseService {
   constructor() {
@@ -2968,9 +2969,12 @@ class OrganicManureService extends BaseService {
               (wm) =>
                 transactionalManager.create(WarningMessagesEntity, {
                   ...wm,
-                  JoiningID: savedOrganicManure.ID, 
+                  JoiningID:
+                    wm.WarningCodeID == WarningCodesMapper.NMAXLIMIT
+                      ? cropData.FieldID
+                      : savedOrganicManure.ID,
                   CreatedByID: userId,
-                  CreatedOn: new Date()
+                  CreatedOn: new Date(),
                 })
             );
 
