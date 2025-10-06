@@ -57,8 +57,8 @@ async calculatePKBalanceOther(
         }
       );
 
-      organicP2O5 = organicManures.reduce((sum, o) => sum + (o.P2O5 || 0), 0);
-      organicK2O = organicManures.reduce((sum, o) => sum + (o.K2O || 0), 0);
+      organicP2O5 = organicManures.reduce((sum, o) => sum + (o.AvailableP2O5 || 0), 0);
+      organicK2O = organicManures.reduce((sum, o) => sum + (o.AvailableK2O || 0), 0);
 
       const fertiliserData = await transactionalManager.find(
         FertiliserManuresEntity,

@@ -100,7 +100,6 @@ class UpdateRecommendation {
     this.CalculateNextDefoliationService =
       new CalculateNextDefoliationService();
     this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
-  
   }
 
   async getYearsGreaterThanGivenYear(fieldID, year) {
@@ -869,33 +868,31 @@ class UpdateRecommendation {
         fieldData.ID,
         pKBalanceAllData
       );
-         let cropPOfftake = 0;
-         if (latestSoilAnalysis.PhosphorusIndex) {
-           if (
-             latestSoilAnalysis.PhosphorusIndex < 4 &&
-             (cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP1 ||
-               cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP2 ||
-               cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP3 ||
-               cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP4)
-           ) {
-             cropPOfftake = cropData.Yield ? cropData.Yield : 50;
-           }
-         }
+      let cropPOfftake = 0;
+      if (latestSoilAnalysis.PhosphorusIndex) {
+        if (
+          latestSoilAnalysis.PhosphorusIndex < 4 &&
+          (cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP1 ||
+            cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP2 ||
+            cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP3 ||
+            cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP4)
+        ) {
+          cropPOfftake = cropData.Yield ? cropData.Yield : 50;
+        }
+      }
       if (
-        cropData.CropTypeID === CropTypeMapper.OTHER &&
-        cropData.CropInfo1 === null
+        cropData.CropTypeID === CropTypeMapper.OTHER ||  cropData.IsBasePlan
       ) {
         const otherRecommendations = await this.saveRecommendationForOtherCrops(
           transactionalManager,
           organicManure,
+          cropData,
           mannerOutputs,
           userId,
           latestSoilAnalysis,
           snsAnalysesData,
           allRecommendations
         );
-
-     
 
         let saveAndUpdatePKBalance = await this.UpdatePKBalance(
           fieldData.ID,
@@ -1213,6 +1210,18 @@ class UpdateRecommendation {
         fieldId,
         pKBalanceAllData
       );
+      let newOrganicManure = null,
+        mannerOutputs = null;
+
+      mannerOutputs =
+        await this.CalculateMannerOutput.calculateMannerOutputForOrganicManure(
+          crop,
+          newOrganicManure,
+          farm,
+          field,
+          transactionalManager,
+          request
+        );
 
       let cropPOfftake = 0;
       if (latestSoilAnalysis.PhosphorusIndex) {
@@ -1227,12 +1236,21 @@ class UpdateRecommendation {
         }
       }
 
-      if (
-        (crop.CropTypeID === CropTypeMapper.OTHER && crop.CropInfo1 === null) ||
-        crop.IsBasePlan
-      ) {
-        try {
+      if (crop.CropTypeID === CropTypeMapper.OTHER || crop.IsBasePlan) {
+        let organicManure = null;
 
+        try {
+          const otherRecommendations =
+            await this.saveRecommendationForOtherCrops(
+              transactionalManager,
+              organicManure,
+              crop,
+              mannerOutputs,
+              userId,
+              latestSoilAnalysis,
+              snsAnalysesData,
+              allRecommendations
+            );
           let saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldId,
             crop,
@@ -1334,7 +1352,7 @@ class UpdateRecommendation {
         }
       }
       let savedRecommendation;
-      let mannerOutputs = [];
+
       // if (crop.CropOrder == CropOrderMapper.SECONDCROP) {
       //   const firstCropData = await this.getFirstCropData(
       //     transactionalManager,
@@ -1841,17 +1859,17 @@ class UpdateRecommendation {
       let pBalance = 0;
       let kBalance = 0;
       let saveAndUpdatePKBalance;
-       if (crop.CropTypeID == CropTypeMapper.OTHER ){
-          const otherPKBalance =
-            await this.CalculatePKBalanceOther.calculatePKBalanceOther(
-              crop,
-              latestSoilAnalysis,
-              transactionalManager
-            );
+      if (crop.CropTypeID == CropTypeMapper.OTHER) {
+        const otherPKBalance =
+          await this.CalculatePKBalanceOther.calculatePKBalanceOther(
+            crop,
+            latestSoilAnalysis,
+            transactionalManager
+          );
 
-          pBalance = otherPKBalance.pBalance;
-          kBalance = otherPKBalance.kBalance;
-       } else if (crop.IsBasePlan) {
+        pBalance = otherPKBalance.pBalance;
+        kBalance = otherPKBalance.kBalance;
+      } else if (crop.IsBasePlan) {
         if (pkBalanceData) {
           pBalance =
             (fertiliserData == null ? 0 : fertiliserData.p205) -
@@ -1875,7 +1893,7 @@ class UpdateRecommendation {
             case 2:
               kBalance =
                 (fertiliserData == null ? 0 : fertiliserData.k20) -
-                recommendation.cropNeed 
+                recommendation.cropNeed;
               break;
           }
         }
@@ -2506,7 +2524,8 @@ class UpdateRecommendation {
   }
   async saveRecommendationForOtherCrops(
     transactionalManager,
-    OrganicManure,
+    organicManure,
+    crop,
     mannerOutputs,
     userId,
     latestSoilAnalysis,
@@ -2514,38 +2533,80 @@ class UpdateRecommendation {
     allRecommendations
   ) {
     // Prepare cropOrderData with the values from latestSoilAnalysis, snsAnalysesData, and mannerOutputReq
-    let cropOrderData = {
-      CropN: null,
-      ManureN: mannerOutputs.data.currentCropAvailableN,
-      FertilizerN: null,
-      CropP2O5: null,
-      ManureP2O5: mannerOutputs.data.cropAvailableP2O5 || null,
-      FertilizerP2O5: null,
-      ManureK2O: mannerOutputs.data.cropAvailableK2O || null,
-      CropMgO: null,
-      ManureMgO: null,
-      FertilizerMgO: null,
-      CropSO3: null,
-      ManureSO3: null,
-      FertilizerSO3: null,
-      CropNa2O: null, // assuming Na2O is present in mannerOutputReq if not remove this
-      ManureNa2O: null,
-      FertilizerNa2O: null, // assuming Na2O is present
-      CropLime: null,
-      ManureLime: null,
-      FertilizerLime: null, // Assuming no data for FertilizerLime
-      PH: latestSoilAnalysis?.PH?.toString() || null,
-      SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
-      PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
-      KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
-      MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex: null,
-    };
+    // let cropOrderData = {
+    //   CropN: null,
+    //   ManureN: mannerOutputs.data.currentCropAvailableN,
+    //   FertilizerN: null,
+    //   CropP2O5: null,
+    //   ManureP2O5: mannerOutputs.data.cropAvailableP2O5 || null,
+    //   FertilizerP2O5: null,
+    //   ManureK2O: mannerOutputs.data.cropAvailableK2O || null,
+    //   CropMgO: null,
+    //   ManureMgO: null,
+    //   FertilizerMgO: null,
+    //   CropSO3: null,
+    //   ManureSO3: null,
+    //   FertilizerSO3: null,
+    //   CropNa2O: null, // assuming Na2O is present in mannerOutputReq if not remove this
+    //   ManureNa2O: null,
+    //   FertilizerNa2O: null, // assuming Na2O is present
+    //   CropLime: null,
+    //   ManureLime: null,
+    //   FertilizerLime: null, // Assuming no data for FertilizerLime
+    //   PH: latestSoilAnalysis?.PH?.toString() || null,
+    //   SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
+    //   PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
+    //   KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
+    //   MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
+    //   SIndex: null,
+    // };
+     if (mannerOutputs.length == 0) {
+       mannerOutputs = null;
+     }
+     let cropOrderData = {
+       CropN: null,
+       ManureN: mannerOutputs != null ? mannerOutputs[0]?.availableN : null,
+       FertilizerN: null,
+       CropP2O5: null,
+       ManureP2O5: mannerOutputs != null ? mannerOutputs[0]?.availableP : null,
+       FertilizerP2O5: null,
+       ManureK2O: mannerOutputs != null ? mannerOutputs[0]?.availableK : null,
+       CropMgO: null,
+       ManureMgO: null,
+       FertilizerMgO: null,
+       CropSO3: null,
+       ManureSO3: mannerOutputs != null ? mannerOutputs[0]?.availableS : null,
+       FertilizerSO3: null,
+       CropNa2O: null,
+       ManureNa2O: null,
+       FertilizerNa2O: null,
+       CropLime: null,
+       ManureLime: null,
+       FertilizerLime: null,
+       PH: latestSoilAnalysis?.PH?.toString() || null,
+       SNSIndex:
+         latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
+       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
+       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
+       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
+       SIndex: null,
+     };
 
-    // Check if there's an existing recommendation for the current OrganicManure.ManagementPeriodID
-    let recommendation = allRecommendations.find(
-      (rec) => rec.ManagementPeriodID === OrganicManure.ManagementPeriodID
-    );
+    let recommendation;
+    if (organicManure) {
+      recommendation = allRecommendations.find(
+        (rec) => rec.ManagementPeriodID === organicManure.ManagementPeriodID
+      );
+    } else {
+      const managementPeriod = await transactionalManager.findOne(
+        ManagementPeriodEntity,
+        { where: { CropID: crop.ID } }
+      );
+
+      recommendation = allRecommendations.find(
+        (rec) => rec.ManagementPeriodID === managementPeriod.ID
+      );
+    }
 
     if (recommendation) {
       // If a recommendation exists, update it

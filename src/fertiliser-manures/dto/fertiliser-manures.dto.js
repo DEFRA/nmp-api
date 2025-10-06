@@ -1,7 +1,8 @@
 const Joi = require("joi");
+const { WarningMessageItemSchema } = require("../../organic-manure/dto/organic-manure.dto");
 
 const FertiliserManureDto = Joi.object({
-  ID: Joi.number().integer().allow(null).optional(),
+  ID: Joi.number().integer().allow(null).optional().default(null),
   ManagementPeriodID: Joi.number().integer().required(),
   ApplicationDate: Joi.date().iso().required(),
   ApplicationRate: Joi.number().precision(3).required(),
@@ -29,12 +30,24 @@ const FertiliserManureDto = Joi.object({
 }).required();
 
 
+const FertiliserManureDtoSchema = Joi.object({
+  FertiliserManure: FertiliserManureDto.required(),
+  WarningMessages: Joi.array()
+    .items(WarningMessageItemSchema)
+    .min(1)
+    .optional()
+    .allow(null),
+});
 
 const CreateFertiliserManuresDto = Joi.object({
-    FertiliserManure: Joi.array().items(FertiliserManureDto).required(),
+  FertiliserManure: Joi.array().items(FertiliserManureDtoSchema).required(),
+});
+const UpdateFertiliserManuresDto = Joi.object({
+  FertiliserManure: Joi.array().items(FertiliserManureDto).required(),
 });
 
 
 module.exports = {
-  CreateFertiliserManuresDto
+  CreateFertiliserManuresDto,
+  UpdateFertiliserManuresDto
 };
