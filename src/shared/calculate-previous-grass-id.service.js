@@ -555,7 +555,7 @@ class CalculateGrassHistoryAndPreviousGrass {
     for (let y = fromYear - 1; y >= fromYear - 5; y--) {
       // Check CropEntity
       const crop = await this.getCropForYear(fieldId, y, transactionalManager);
-      if (
+       if (crop!=null&&
           !crop.IsBasePlan
       ) {
         if (crop?.FieldType === FieldTypeMapper.GRASS) {
