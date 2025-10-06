@@ -187,7 +187,7 @@ module.exports = [
       tags: ["api", "Fertiliser Manures"],
       description: "Update Fertiliser Manures by Id",
       validate: {
-        payload: UpdateFertiliserManuresDto,
+        payload: CreateFertiliserManuresDto,
         failAction: (request, h, err) => {
           return h
             .response(

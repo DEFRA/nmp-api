@@ -2530,9 +2530,11 @@ class CropService extends BaseService {
         const organicManures = [];
         const fertiliserManures = [];
         const oldToNewManagementPeriodMap = {};
-        const originalSowingDate = new Date(crop.SowingDate);
-        const updatedSowingDate = new Date(originalSowingDate);
+        let originalSowingDate = new Date(crop.SowingDate);
+        originalSowingDate = crop.SowingDate ? originalSowingDate : null
+        let updatedSowingDate = new Date(originalSowingDate);
         updatedSowingDate.setFullYear(harvestYear);
+        updatedSowingDate = crop.SowingDate ? updatedSowingDate : null
         // 1. Save the new crop
         savedCrop = await transactionalManager.save(
           CropEntity,
