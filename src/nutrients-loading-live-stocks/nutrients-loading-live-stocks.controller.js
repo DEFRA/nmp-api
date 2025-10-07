@@ -23,6 +23,16 @@ class NutrientsLoadingLiveStocksController {
       console.error("Error in getByFarmId:", error);
     }
   }
+  async getById() {
+    const { id } = this.#request.params;
+    try {
+      const record = await this.#service.getById(id);
+      return this.#h.response(record);
+    } catch (error) {
+      console.error("Error in getById:", error);
+      return this.#h.response(error);
+    }
+  }
 
   async createNutrientsLiveStocks() {
     const payload = this.#request.payload;
