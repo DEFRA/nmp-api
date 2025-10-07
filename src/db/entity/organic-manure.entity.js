@@ -160,9 +160,7 @@ const OrganicManureEntity = new EntitySchema({
       nullable: true,
     },
     AutumnCropNitrogenUptake: {
-      type: "decimal",
-      precision: 5,
-      scale: 2,
+      type: "int",
       default: 0,
       nullable: true,
     },
