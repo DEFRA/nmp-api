@@ -8,6 +8,7 @@ const { SoilTypeSoilTextureEntity } = require("../db/entity/soil-type-soil-textu
 const MannerCalculateNutrientsService = require("../vendors/manner/calculate-nutrients/calculate-nutrients.service");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
 const { CalculateTotalAvailableNForNextYear } = require("./calculate-next-year-available-n");
+const { RunTypeMapper } = require("../constants/run-type-mapper");
 
 class CalculateMannerOutputService {
   constructor() {
@@ -228,9 +229,11 @@ class CalculateMannerOutputService {
     soilTypeTextureData
   ) {
     return {
-      runType: farmData.EnglishRules ? 3 : 4,
+      runType: farmData.EnglishRules
+        ? RunTypeMapper.PLANETENGLAND
+        : RunTypeMapper.PLANETSCOTLAND,
       postcode: farmData.ClimateDataPostCode.split(" ")[0],
-      countryID: farmData.EnglishRules ? 1 : 2,
+      countryID: farmData.CountryID,
       field: {
         fieldID: fieldData.ID,
         fieldName: fieldData.Name,

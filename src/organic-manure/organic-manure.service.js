@@ -57,6 +57,7 @@ const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-othe
 const { WarningMessagesEntity } = require("../db/entity/warning-message.entity");
 const { CreateOrUpdateWarningMessage } = require("../shared/create-update-warning-messages.service");
 const { WarningCodesMapper } = require("../constants/warning-codes-mapper");
+const { RunTypeMapper } = require("../constants/run-type-mapper");
 
 class OrganicManureService extends BaseService {
   constructor() {
@@ -1015,9 +1016,11 @@ class OrganicManureService extends BaseService {
     soilTypeTextureData
   ) {
     return {
-      runType: farmData.EnglishRules ? 3 : 4,
+      runType: farmData.EnglishRules
+        ? RunTypeMapper.PLANETENGLAND
+        : RunTypeMapper.PLANETSCOTLAND,
       postcode: farmData.ClimateDataPostCode.split(" ")[0],
-      countryID: farmData.EnglishRules ? 1 : 2,
+      countryID: farmData.CountryID,
       field: {
         fieldID: fieldData.ID,
         fieldName: fieldData.Name,
