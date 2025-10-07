@@ -26,6 +26,34 @@ module.exports = [
     },
   },
   {
+    method: "GET",
+    path: "/nutrients-loading-live-stocks/by-id/{id}",
+    options: {
+      tags: ["api", "NutrientsLoadingLiveStocks"],
+      description: "Get Nutrients Loading-Live-Stocks By ID",
+      validate: {
+        params: Joi.object({
+          id: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: { error: err },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new NutrientsLoadingLiveStocksController(request, h);
+      return controller.getById();
+    },
+  },
+  {
     method: "POST",
     path: "/nutrients-loading-live-stocks",
     options: {
