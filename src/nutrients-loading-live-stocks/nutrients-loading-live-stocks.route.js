@@ -30,7 +30,7 @@ module.exports = [
     path: "/nutrients-loading-live-stocks/by-id/{id}",
     options: {
       tags: ["api", "NutrientsLoadingLiveStocks"],
-      description: "Get Nutrients Loading-Live-Stocks By ID",
+      description: "Get Nutrients Loading Live Stocks By ID",
       validate: {
         params: Joi.object({
           id: Joi.number().integer().required(),
