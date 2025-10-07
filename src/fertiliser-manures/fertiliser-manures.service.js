@@ -203,7 +203,7 @@ class FertiliserManuresService extends BaseService {
             this.warningMessageRepository.create({
               ...msg,
               JoiningID:
-                wm.WarningCodeID == WarningCodesMapper.NMAXLIMIT
+                msg?.WarningCodeID == WarningCodesMapper.NMAXLIMIT
                   ? msg.FieldID
                   : savedFertiliser.ID,
               CreatedByID: userId,
@@ -346,11 +346,11 @@ class FertiliserManuresService extends BaseService {
               if (totalP205AndK20 && recommandationData) {
                 let pBalance =
                   totalP205AndK20.p205 +
-                  fertiliserManureData[0]?.P2O5 -
+                  fertiliserManureData[0]?.FertiliserManure.P2O5 -
                   recommandationData.p205;
                 let kBalance =
                   totalP205AndK20.k20 +
-                  fertiliserManureData[0]?.K2O -
+                  fertiliserManureData[0]?.FertiliserManure.K2O -
                   recommandationData.k20;
 
                 if (cropData[0].CropTypeID == CropTypeMapper.OTHER) {
