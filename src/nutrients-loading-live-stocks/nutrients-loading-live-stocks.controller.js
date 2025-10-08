@@ -48,6 +48,22 @@ class NutrientsLoadingLiveStocksController {
       console.error("Error in create:", error);
     }
   }
+
+  async updateNutrientsLoadingLiveStocks() {
+    const payload = this.#request.payload;
+    const userId = this.#request.userId;
+
+    try {
+      const updated = await this.#service.updateNutrientsLoadingLiveStocks(
+        payload,
+        userId,
+        this.#request
+      );
+      return this.#h.response(updated);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
 }
 
 module.exports = { NutrientsLoadingLiveStocksController };
