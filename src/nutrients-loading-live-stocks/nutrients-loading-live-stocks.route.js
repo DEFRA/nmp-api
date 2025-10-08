@@ -27,7 +27,7 @@ module.exports = [
   },
   {
     method: "GET",
-    path: "/nutrients-loading-live-stocks/by-id/{id}",
+    path: "/nutrients-loading-live-stocks-by-id/{id}",
     options: {
       tags: ["api", "NutrientsLoadingLiveStocks"],
       description: "Get Nutrients Loading Live Stocks By ID",
