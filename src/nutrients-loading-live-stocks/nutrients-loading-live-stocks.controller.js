@@ -64,6 +64,21 @@ class NutrientsLoadingLiveStocksController {
       return this.#h.response({ error });
     }
   }
+
+  async deleteNutrientsLoadingLivestockById() {
+        const { nutrientsLoadingLivestockId } = this.#request.params;
+        try {
+          const result = await this.#service.deleteNutrientsLoadingLivestockById(
+            nutrientsLoadingLivestockId
+          );
+          if (result?.affectedRows === 0) {
+            throw boom.notFound(`NutrientsLoadingLivestock with ID ${nutrientsLoadingLivestockId} not found.`);
+          }
+          return this.#h.response({ message: "NutrientsLoadingLivestock deleted successfully." });
+        } catch (error) {
+          return this.#h.response({ error: error.message });
+        }
+      }
 }
 
 module.exports = { NutrientsLoadingLiveStocksController };

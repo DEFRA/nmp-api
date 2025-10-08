@@ -141,6 +141,29 @@ class NutrientsLoadingLiveStocksService extends BaseService {
 
     return result;
   }
+   async deleteNutrientsLoadingLivestockById(nutrientsLoadingLivestockId) {
+    // Check if the NutrientsLoadingLivestock exists
+    const nutrientsLoadingLivestockData = await this.repository.findOne({
+      where: { ID: nutrientsLoadingLivestockId },
+    });
+
+    // If the NutrientsLoadingLivestock does not exist, throw a not found error
+    if (nutrientsLoadingLivestockData == null) {
+      throw boom.notFound(
+        `NutrientsLoadingLivestock with ID ${nutrientsLoadingLivestockId} not found`
+      );
+    }
+
+    try {
+      // Call the stored procedure to delete the NutrientsLoadingLivestock
+      const storedProcedure =
+        "EXEC [dbo].[spNutrientsLoadingLiveStocks_DeleteNutrientsLoadingLiveStocks] @NutrientsLoadingLiveStockID = @0";
+      await AppDataSource.query(storedProcedure, [nutrientsLoadingLivestockId]);
+    } catch (error) {
+      // Log the error and throw an internal server error
+      console.error("Error deleting NutrientsLoadingLivestock:", error);
+    }
+  }
 }
 
 module.exports = { NutrientsLoadingLiveStocksService };
