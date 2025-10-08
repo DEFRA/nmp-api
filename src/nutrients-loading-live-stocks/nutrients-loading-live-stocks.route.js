@@ -70,5 +70,26 @@ module.exports = [
         ).createNutrientsLiveStocks(),
     },
   },
+
+  {
+    method: "PUT",
+    path: "/nutrients-loading-live-stocks",
+    options: {
+      tags: ["api", "NutrientsLoadingLiveStocks"],
+      description: "Update Nutrients Live Stocks",
+      validate: {
+        payload: createNutrientsLoadingLiveStocks,
+        failAction: (request, h, err) =>
+          h
+            .response(formatErrorResponse({ source: { error: err }, request }))
+            .code(400)
+            .takeover(),
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new NutrientsLoadingLiveStocksController(request, h);
+      return controller.updateNutrientsLoadingLiveStocks();
+    },
+  },
 ];
  
