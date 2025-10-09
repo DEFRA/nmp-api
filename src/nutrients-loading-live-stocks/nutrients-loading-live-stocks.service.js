@@ -16,7 +16,7 @@ class NutrientsLoadingLiveStocksService extends BaseService {
     );
     this.LivestockTypeRepository =
       AppDataSource.getRepository(LivestockTypeEntity);
-      
+
     this.nutrientsLoadingFarmDetailsRepository = AppDataSource.getRepository(
       NutrientsLoadingFarmDetailsEntity
     );
@@ -61,7 +61,7 @@ class NutrientsLoadingLiveStocksService extends BaseService {
         NutrientsLoadingLiveStocksEntity,
         {
           ...cleanPayload,
-          CalendarYear:CalendarYear,
+          CalendarYear: CalendarYear,
           FarmID: FarmID,
           CreatedOn: new Date(),
           CreatedByID: userId,
@@ -75,29 +75,94 @@ class NutrientsLoadingLiveStocksService extends BaseService {
 
       const savedRecord = await transactionalManager.findOne(
         NutrientsLoadingLiveStocksEntity,
-        { where: { FarmID: FarmID, CalendarYear: CalendarYear } }
+        { where: { ID: saved.ID } }
       );
       if (savedRecord != null) {
-         const nutrientsLoadingFarmDetails =
-                  await this.nutrientsLoadingFarmDetailsRepository.findOneBy({
-                    FarmID: FarmID,
-                    CalendarYear: CalendarYear,
-                  });
-                if (
-                  nutrientsLoadingFarmDetails != null &&
-                  nutrientsLoadingFarmDetails.IsAnyLivestockNumber != 1
-                ) {
-                  await transactionalManager.update(
-                    NutrientsLoadingFarmDetailsEntity,
-                    nutrientsLoadingFarmDetails.ID,
-                    {
-                      IsAnyLivestockNumber: 1,
-                    }
-                  );
-                }
+        const nutrientsLoadingFarmDetails =
+          await this.nutrientsLoadingFarmDetailsRepository.findOneBy({
+            FarmID: FarmID,
+            CalendarYear: CalendarYear,
+          });
+        if (
+          nutrientsLoadingFarmDetails != null &&
+          nutrientsLoadingFarmDetails.IsAnyLivestockNumber != 1
+        ) {
+          await transactionalManager.update(
+            NutrientsLoadingFarmDetailsEntity,
+            nutrientsLoadingFarmDetails.ID,
+            {
+              IsAnyLivestockNumber: 1,
+            }
+          );
+        }
       }
       return savedRecord;
     });
+  }
+  async updateNutrientsLoadingLiveStocks(payload, userId) {
+    const {
+      ID,
+      FarmID,
+      CalendarYear,
+      CreatedByID,
+      CreatedOn,
+      ...dataToUpdate
+    } = payload;
+
+    const result = await AppDataSource.transaction(
+      async (transactionalManager) => {
+        
+        const updateResult = await transactionalManager.update(
+          NutrientsLoadingLiveStocksEntity,
+          { ID },
+          {
+            ...dataToUpdate,
+            FarmID:FarmID,
+            CalendarYear:CalendarYear,
+            ModifiedByID: userId,
+            ModifiedOn: new Date(),
+          }
+        );
+
+        if (updateResult.affected === 0) {
+          throw boom.notFound(
+            `NutrientsLoadingLive with FarmId ${FarmID} and CalendarYear ${CalendarYear} not found`
+          );
+        }
+
+         const updatedRecord = await transactionalManager.findOne(
+           NutrientsLoadingLiveStocksEntity,
+           { where: { ID: ID } }
+         );
+
+        return updatedRecord;
+      }
+    );
+
+    return result;
+  }
+   async deleteNutrientsLoadingLivestockById(nutrientsLoadingLivestockId) {
+    // Check if the NutrientsLoadingLivestock exists
+    const nutrientsLoadingLivestockData = await this.repository.findOne({
+      where: { ID: nutrientsLoadingLivestockId },
+    });
+
+    // If the NutrientsLoadingLivestock does not exist, throw a not found error
+    if (nutrientsLoadingLivestockData == null) {
+      throw boom.notFound(
+        `NutrientsLoadingLivestock with ID ${nutrientsLoadingLivestockId} not found`
+      );
+    }
+
+    try {
+      // Call the stored procedure to delete the NutrientsLoadingLivestock
+      const storedProcedure =
+        "EXEC [dbo].[spNutrientsLoadingLiveStocks_DeleteNutrientsLoadingLiveStocks] @NutrientsLoadingLiveStockID = @0";
+      await AppDataSource.query(storedProcedure, [nutrientsLoadingLivestockId]);
+    } catch (error) {
+      // Log the error and throw an internal server error
+      console.error("Error deleting NutrientsLoadingLivestock:", error);
+    }
   }
 }
 
