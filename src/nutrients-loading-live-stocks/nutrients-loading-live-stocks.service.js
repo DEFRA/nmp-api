@@ -7,6 +7,8 @@ const { LivestockTypeEntity } = require("../db/entity/livestock-type-entity");
 const {
   NutrientsLoadingFarmDetailsEntity,
 } = require("../db/entity/nutrients-loading-farm-details-entity");
+const boom = require("@hapi/boom");
+
 
 class NutrientsLoadingLiveStocksService extends BaseService {
   constructor() {

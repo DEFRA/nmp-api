@@ -240,7 +240,7 @@ class CalculateMannerOutputService {
         ? RunTypeMapper.MANNERENGLAND
         : RunTypeMapper.MANNERSCOTLAND,
       postcode: farmData.ClimateDataPostCode.split(" ")[0],
-      countryID: rb209CountryData.CountryID,
+      countryID: rb209CountryData.RB209CountryID,
       field: {
         fieldID: fieldData.ID,
         fieldName: fieldData.Name,
