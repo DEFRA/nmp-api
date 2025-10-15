@@ -56,7 +56,7 @@ const {
 } = require("../vendors/rb209/recommendation/recommendation.service");
 const { CalculateCropsSnsAnalysisService } = require("../shared/calculate-crops-sns-analysis-service");
 const { CropTypeLinkingEntity } = require("../db/entity/crop-type-linking.entity");
-  const {PlanService} = require("../plan/plan.service");
+  const PlanService = require("../plan/plan.service");
 class CropService extends BaseService {
   constructor() {
     super(CropEntity);

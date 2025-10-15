@@ -2904,4 +2904,4 @@ class PlanService extends BaseService {
   }
 }
 
-module.exports = {PlanService};
+module.exports = PlanService;
