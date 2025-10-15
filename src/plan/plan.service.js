@@ -1630,44 +1630,50 @@ class PlanService extends BaseService {
     return trimmedIndexValue;
   }
 
-  async fetchAllDataByFieldIDs(fieldIDs) {
-    // Fetch all crop data by FieldID using `find` and `IN` operator
-    const allCropData = await this.cropRepository.find({
+  async fetchAllDataByFieldIDs(fieldIDs, transactionalManager) {
+    // Fetch all crop data by FieldID using the transactional manager
+    const allCropData = await transactionalManager.find(CropEntity, {
       where: {
-        FieldID: In(fieldIDs), // Using TypeORM's `In` function
+        FieldID: In(fieldIDs),
       },
     });
 
     // Extract CropIDs from the fetched crop data
     const cropIDs = allCropData.map((crop) => crop.ID);
 
-    // Fetch all management period data from managementRepository using `IN` operator
-    const allManagementPeriods = await this.managementPeriodRepository.find({
-      where: {
-        CropID: In(cropIDs), // Fetch management periods where CropID is in cropIDs array
-      },
-    });
+    // Fetch all management period data using the transactional manager
+    const allManagementPeriods = await transactionalManager.find(
+      ManagementPeriodEntity,
+      {
+        where: {
+          CropID: In(cropIDs),
+        },
+      }
+    );
 
     // Extract ManagementPeriodIDs from the fetched management period data
     const managementPeriodIDs = allManagementPeriods.map(
       (managementPeriod) => managementPeriod.ID
     );
 
-    // Fetch all recommendations from recommendationRepository by ManagementPeriodID using `IN` operator
-    const allRecommendations = await this.repository.find({
+    // Fetch all recommendations using the transactional manager
+    const allRecommendations = await transactionalManager.find(
+      RecommendationEntity,
+      {
+        where: {
+          ManagementPeriodID: In(managementPeriodIDs),
+        },
+      }
+    );
+
+    // Fetch all PKBalanceData using the transactional manager
+    const allPKBalanceData = await transactionalManager.find(PKBalanceEntity, {
       where: {
-        ManagementPeriodID: In(managementPeriodIDs), // Fetch recommendations where ManagementPeriodID is in managementPeriodIDs array
+        FieldID: In(fieldIDs),
       },
     });
 
-    // Fetch all PKBalanceData from pkBalanceRepository by FieldID using `IN` operator
-    const allPKBalanceData = await this.pkBalanceRepository.find({
-      where: {
-        FieldID: In(fieldIDs), // Fetch PKBalanceData where FieldID is in fieldIDs array
-      },
-    });
-
-    // Return the fetched data as an object
+    // Return all fetched data together
     return {
       allCropData,
       allManagementPeriods,
@@ -2021,7 +2027,7 @@ class PlanService extends BaseService {
       allManagementPeriods,
       allRecommendations,
       allPKBalanceData,
-    } = await this.fetchAllDataByFieldIDs(fieldIDs);
+    } = await this.fetchAllDataByFieldIDs(fieldIDs, transactionalManager);
 
     let Recommendations = [];
     const Errors = [];
