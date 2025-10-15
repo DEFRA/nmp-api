@@ -155,12 +155,14 @@ class CropController {
     const body = this.#request.payload;
     const userId = this.#request.userId;
     this.#request;
+    let transaction=null
     try {
       const data =
         await this.#planService.createNutrientsRecommendationForField(
           body.Crops,
           userId,
-          this.#request
+          this.#request,
+          transaction
         );
       return this.#h.response(data);
     } catch (error) {
