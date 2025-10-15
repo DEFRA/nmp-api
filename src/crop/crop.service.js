@@ -2874,6 +2874,37 @@ class CropService extends BaseService {
     if (!d2) return d1 || null;
     return d1 > d2 ? d1 : d2;
   }
+
+
+  async MergeCrop(userId,
+          year,
+          confirm, Crops,
+          request){
+            Crops.forEach((crop) => {
+              if(crop.ID!=null)
+              {
+
+updateCropByFieldYearAndConfirm(
+          crop,
+          userId,
+          crop.fieldID,
+          crop.year,
+          confirm
+        );
+              }
+              else{
+createNutrientsRecommendationForField(
+          crop,
+          userId,
+          request
+        )
+              }
+            })
+            //fieldId
+//  updateCropByFieldAndYearAndConfirm
+//createNutrientsRecommendationForField
+  }
+
 }
 
 module.exports = { CropService };
