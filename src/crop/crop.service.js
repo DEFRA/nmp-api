@@ -56,6 +56,7 @@ const {
 } = require("../vendors/rb209/recommendation/recommendation.service");
 const { CalculateCropsSnsAnalysisService } = require("../shared/calculate-crops-sns-analysis-service");
 const { CropTypeLinkingEntity } = require("../db/entity/crop-type-linking.entity");
+  const {PlanService} = require("../plan/plan.service");
 class CropService extends BaseService {
   constructor() {
     super(CropEntity);
@@ -86,6 +87,7 @@ class CropService extends BaseService {
       RecommendationCommentEntity
     );
     this.CalculateCropsSnsAnalysis = new CalculateCropsSnsAnalysisService();
+    this.planService = new PlanService();
   }
 
   async createCropWithManagementPeriods(
@@ -2877,27 +2879,27 @@ class CropService extends BaseService {
 
 
   async MergeCrop(userId,
-          year,
-          confirm, Crops,
+          // year,
+          // confirm, 
+          Crops,
           request){
             Crops.forEach((crop) => {
               if(crop.ID!=null)
               {
-
-updateCropByFieldYearAndConfirm(
+this.updateCropByFieldYearAndConfirm(
           crop,
           userId,
           crop.fieldID,
           crop.year,
-          confirm
+          crop.confirm
         );
               }
-              else{
-createNutrientsRecommendationForField(
+              else{ this.planService.createNutrientsRecommendationForField(
           crop,
           userId,
           request
         )
+        // createNutrientsRecommendationForField
               }
             })
             //fieldId
