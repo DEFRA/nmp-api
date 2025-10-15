@@ -336,11 +336,13 @@ class CropController {
     try {
       const body = this.#request.payload;
       const userId = this.#request.userId;
+      let transaction = null;
 
-      const updatedResults = await this.#cropService.updateCrop(
+      const updatedResults = await this.#cropService.updateCropData(
         body,
         userId,
-        this.#request
+        this.#request,
+        transaction
       );
 
       return this.#h.response({
@@ -390,7 +392,7 @@ async MergeCrop(){
 
       return this.#h.response(results);
     } catch (error) {
-      console.error("Error copying crop:", error);
+      console.error("Error merging crop:", error);
       return this.#h.response({
         message: "Internal Server Error",
         error: error.message,
