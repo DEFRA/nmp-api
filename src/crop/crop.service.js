@@ -2919,19 +2919,21 @@ class CropService extends BaseService {
     console.log("cropsWithID", cropsWithID);
     console.log("cropsWithoutID", cropsWithoutID);
     return await AppDataSource.transaction(async (transactionalManager) => {
-    await this.updateCropData(
+      let createdPlan
+        await this.updateCropData(
         cropsWithID,
         userId,
         request,
         transactionalManager
       );
 
-      await this.planService.createNutrientsRecommendationForField(
+       createdPlan = await this.planService.createNutrientsRecommendationForField(
         cropsWithoutID,
         userId,
         request,
         transactionalManager
       );
+      return createdPlan
     });
   }
 }

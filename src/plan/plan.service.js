@@ -1994,24 +1994,27 @@ class PlanService extends BaseService {
     request,
     transactionalManager
   ) {
+    let savedPlan
     // ✅ If a global transaction manager is provided, use it.
     if (transactionalManager) {
-      return await this.createNutrientsRecommendationWithinTransaction(
+      savedPlan = await this.createNutrientsRecommendationWithinTransaction(
         crops,
         userId,
         request,
         transactionalManager
       );
+      return savedPlan;
     }
 
     // ✅ Otherwise, start a new local transaction.
     return await AppDataSource.transaction(async (localManager) => {
-      return await this.createNutrientsRecommendationWithinTransaction(
+    savedPlan =  await this.createNutrientsRecommendationWithinTransaction(
         crops,
         userId,
         request,
         localManager
       );
+      return savedPlan
     });
   }
 
