@@ -816,7 +816,7 @@ class CropService extends BaseService {
       body, userId, request,
       transactionalManager
     ) {
-      // ✅ If a global transaction manager is provided, use it.
+      // If a global transaction manager is provided, use it.
       if (transactionalManager) {
         return await this.updateCrop(
           body,
