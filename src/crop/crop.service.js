@@ -2916,8 +2916,6 @@ class CropService extends BaseService {
   Crops: Crops.Crops.filter((crop) => crop.Crop.ID !== null)
 };
     const cropsWithoutID = Crops.Crops.filter((crop) => crop.Crop.ID === null);
-    console.log("cropsWithID", cropsWithID);
-    console.log("cropsWithoutID", cropsWithoutID);
     return await AppDataSource.transaction(async (transactionalManager) => {
       let createdPlan
         await this.updateCropData(
@@ -2933,7 +2931,7 @@ class CropService extends BaseService {
         request,
         transactionalManager
       );
-      return createdPlan
+      return (createdPlan!=null?true:false)
     });
   }
 }
