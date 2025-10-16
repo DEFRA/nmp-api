@@ -29,6 +29,12 @@ const SoilNitrogenSupplyItemsEntity = new EntitySchema({
       joinColumn: { name: "ID" },
       inverseSide: "SoilNitrogenSupplyItems",
     },
+    PreviousCroppingSoilNitrogenSupply: {
+      type: "one-to-many",
+      target: "PreviousCroppings",
+      joinColumn: { name: "ID" },
+      inverseSide: "SoilNitrogenSupplyItems",
+    },
   },
 });
 

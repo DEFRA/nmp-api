@@ -42,6 +42,8 @@ const RB209GrassService = require("../vendors/rb209/grass/grass.service");
 const RB209GrasslandService = require("../vendors/rb209/grassland/grassland.service");
 const { UpdateRecommendationChanges } = require("../shared/updateRecommendationsChanges");
 const { UpdateRecommendation } = require("../shared/updateRecommendation.service");
+const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
+
 class FieldService extends BaseService {
   constructor() {
     super(FieldEntity);
@@ -62,6 +64,9 @@ class FieldService extends BaseService {
     this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
     this.previousGrassesRepository = AppDataSource.getRepository(
       PreviousGrassesEntity
+    );
+    this.previousCroppingRepository = AppDataSource.getRepository(
+      PreviousCroppingEntity
     );
     this.organicManureRepository =
       AppDataSource.getRepository(OrganicManureEntity);
@@ -243,62 +248,67 @@ class FieldService extends BaseService {
       //     })
       //   );
       // }
-      // Save PreviousGrasses
-      let PreviousGrasses = [];
-      if (body.PreviousGrasses && body.PreviousGrasses.length > 0) {
-        for (const grassData of body.PreviousGrasses) {
-          const savedGrass = await transactionalManager.save(
-            PreviousGrassesEntity,
-            this.previousGrassesRepository.create({
-              ...grassData,
-              ...(grassData.ID == 0 ? { ID: null } : {}),
+      // Save PreviousCrops
+      let Previouscrops = [];
+      if (body.PreviousCroppings && body.PreviousCroppings.length > 0) {
+        for (const cropsData of body.PreviousCroppings) {
+          const savedCrops = await transactionalManager.save(
+            PreviousCroppingEntity,
+            this.previousCroppingRepository.create({
+              ...cropsData,
+              ...(cropsData.ID == 0 ? { ID: null } : {}),
               FieldID: Field.ID,
               CreatedByID: userId,
               CreatedOn: new Date(),
             })
           );
-          PreviousGrasses.push(savedGrass);
+        
+          Previouscrops.push(savedCrops);
+
         }
       }
       const Crops = [];
-      for (const cropData of body.Crops) {
-        const savedCrop = await transactionalManager.save(
-          CropEntity,
-          this.cropRepository.create({
-            ...cropData.Crop,
-            FieldID: Field.ID,
-            CreatedByID: userId,
-            CreatedOn: new Date(),
-          })
-        );
-        const ManagementPeriods = [];
-        let savedManagementPeriod;
-        for (const managementPeriod of cropData.ManagementPeriods) {
-          savedManagementPeriod = await transactionalManager.save(
-            ManagementPeriodEntity,
-            this.managementPeriodRepository.create({
-              ...managementPeriod,
-              CropID: savedCrop.ID,
+      if(body.crops){
+
+        for (const cropData of body.Crops) {
+          const savedCrop = await transactionalManager.save(
+            CropEntity,
+            this.cropRepository.create({
+              ...cropData.Crop,
+              FieldID: Field.ID,
               CreatedByID: userId,
               CreatedOn: new Date(),
             })
           );
-          ManagementPeriods.push(savedManagementPeriod);
+          const ManagementPeriods = [];
+          let savedManagementPeriod;
+          for (const managementPeriod of cropData.ManagementPeriods) {
+            savedManagementPeriod = await transactionalManager.save(
+              ManagementPeriodEntity,
+              this.managementPeriodRepository.create({
+                ...managementPeriod,
+                CropID: savedCrop.ID,
+                CreatedByID: userId,
+                CreatedOn: new Date(),
+              })
+            );
+            ManagementPeriods.push(savedManagementPeriod);
+          }
+          await this.saveRecommendationCrops(
+            transactionalManager,
+            savedManagementPeriod.ID,
+            userId
+          );
+  
+          Crops.push({ Crop: savedCrop, ManagementPeriods });
         }
-        await this.saveRecommendationCrops(
-          transactionalManager,
-          savedManagementPeriod.ID,
-          userId
-        );
-
-        Crops.push({ Crop: savedCrop, ManagementPeriods });
       }
 
       return {
         Field,
         SoilAnalysis,
         // SnsAnalysis,
-        Crops,
+        Previouscrops,
         PKBalance,
       };
     });
