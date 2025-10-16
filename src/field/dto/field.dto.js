@@ -132,10 +132,10 @@ const UpdateFieldDtoSchema = Joi.object({
 const CreateFieldWithSoilAnalysisAndCropsDto = Joi.object({
   Field: FieldEntitySchema,
   SoilAnalysis: SoilAnalysisSchema.allow(null).optional(),
-  Crops: Joi.array().items(CreateCropWithManagementPeriodsDto).required(),
+  //Crops: Joi.array().items(CreateCropWithManagementPeriodsDto).required(),
   PKBalance: PKBalanceSchema.allow(null).optional(),
-  PreviousGrasses: Joi.array()
-    .items(PreviousGrassesSchema)
+  PreviousCroppings: Joi.array()
+    .items(PreviousCroppingSchema)
     .allow(null)
     .optional(),
 });
