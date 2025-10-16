@@ -43,6 +43,7 @@ const RB209GrasslandService = require("../vendors/rb209/grassland/grassland.serv
 const { UpdateRecommendationChanges } = require("../shared/updateRecommendationsChanges");
 const { UpdateRecommendation } = require("../shared/updateRecommendation.service");
 const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
+const { CropTypeMapper } = require("../constants/crop-type-mapper");
 
 class FieldService extends BaseService {
   constructor() {
@@ -475,9 +476,13 @@ class FieldService extends BaseService {
         Year: "ASC",
       },
     });
-    const previousGrassesData = await this.previousGrassesRepository.find({
+    let previousGrassesData=[]
+    const previousCroppingData = await this.previousCroppingRepository.find({
       where: { FieldID: fieldId },
     });
+    if (previousCroppingData.CropTypeID == CropTypeMapper.GRASS){
+      previousGrassesData = previousCroppingData;
+    } 
     return {
       Field: fieldData,
       SoilAnalysis: soilAnalysisData,
@@ -559,10 +564,13 @@ class FieldService extends BaseService {
   }
 
   async getPreviousCropDataByFieldID(fieldID) {
-    const previousGrasses = await this.previousGrassesRepository.findOne({
+    let previousGrasses={}
+    const previousCroppingData = await this.previousCroppingRepository.findOne({
       where: { FieldID: fieldID },
     });
-
+    if(previousCroppingData.CropTypeID == CropTypeMapper.GRASS){
+      previousGrasses = previousCroppingData;
+    }
     return previousGrasses;
   }
 
