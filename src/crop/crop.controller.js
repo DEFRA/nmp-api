@@ -155,12 +155,14 @@ class CropController {
     const body = this.#request.payload;
     const userId = this.#request.userId;
     this.#request;
+    let transaction=null
     try {
       const data =
         await this.#planService.createNutrientsRecommendationForField(
           body.Crops,
           userId,
-          this.#request
+          this.#request,
+          transaction
         );
       return this.#h.response(data);
     } catch (error) {
@@ -334,11 +336,13 @@ class CropController {
     try {
       const body = this.#request.payload;
       const userId = this.#request.userId;
+      let transaction = null;
 
-      const updatedResults = await this.#cropService.updateCrop(
+      const updatedResults = await this.#cropService.updateCropData(
         body,
         userId,
-        this.#request
+        this.#request,
+        transaction
       );
 
       return this.#h.response({
@@ -367,6 +371,28 @@ class CropController {
       return this.#h.response(results);
     } catch (error) {
       console.error("Error copying crop:", error);
+      return this.#h.response({
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  }
+
+async MergeCrop(){
+ try {
+      const body = this.#request.payload;
+      const userId = this.#request.userId;
+
+      const results = await this.#cropService.MergeCrop(
+        // body,
+        userId,
+        body,
+        this.#request
+      );
+
+      return this.#h.response(results);
+    } catch (error) {
+      console.error("Error merging crop:", error);
       return this.#h.response({
         message: "Internal Server Error",
         error: error.message,

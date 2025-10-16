@@ -54,8 +54,13 @@ const { NutrientMapperNames } = require("../constants/nutrient-mapper-names");
 const {
   RB209RecommendationService,
 } = require("../vendors/rb209/recommendation/recommendation.service");
-const { CalculateCropsSnsAnalysisService } = require("../shared/calculate-crops-sns-analysis-service");
-const { CropTypeLinkingEntity } = require("../db/entity/crop-type-linking.entity");
+const {
+  CalculateCropsSnsAnalysisService,
+} = require("../shared/calculate-crops-sns-analysis-service");
+const {
+  CropTypeLinkingEntity,
+} = require("../db/entity/crop-type-linking.entity");
+const PlanService = require("../plan/plan.service");
 class CropService extends BaseService {
   constructor() {
     super(CropEntity);
@@ -86,6 +91,7 @@ class CropService extends BaseService {
       RecommendationCommentEntity
     );
     this.CalculateCropsSnsAnalysis = new CalculateCropsSnsAnalysisService();
+    this.planService = new PlanService();
   }
 
   async createCropWithManagementPeriods(
@@ -806,8 +812,33 @@ class CropService extends BaseService {
     return updatedManagementPeriods;
   }
 
-  async updateCrop(body, userId, request) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+  async updateCropData(
+      body, userId, request,
+      transactionalManager
+    ) {
+      // If a global transaction manager is provided, use it.
+      if (transactionalManager) {
+        return await this.updateCrop(
+          body,
+          userId,
+          request,
+          transactionalManager
+        );
+      }
+  
+      // ✅ Otherwise, start a new local transaction.
+      return await AppDataSource.transaction(async (localManager) => {
+        return await this.updateCrop(
+          body,
+          userId,
+          request,
+          localManager
+        );
+      });
+    }
+
+  async updateCrop(body, userId, request,transactionalManager) {
+   
       const updatedResults = [];
       const cropData = body.Crops;
 
@@ -1009,7 +1040,7 @@ class CropService extends BaseService {
       }
 
       return updatedResults;
-    });
+
   }
   // Function to find indexId by matching index values
   async findIndexId(nutrient, indexValue, nutrientIndicesData) {
@@ -2531,10 +2562,10 @@ class CropService extends BaseService {
         const fertiliserManures = [];
         const oldToNewManagementPeriodMap = {};
         let originalSowingDate = new Date(crop.SowingDate);
-        originalSowingDate = crop.SowingDate ? originalSowingDate : null
+        originalSowingDate = crop.SowingDate ? originalSowingDate : null;
         let updatedSowingDate = new Date(originalSowingDate);
         updatedSowingDate.setFullYear(harvestYear);
-        updatedSowingDate = crop.SowingDate ? updatedSowingDate : null
+        updatedSowingDate = crop.SowingDate ? updatedSowingDate : null;
         // 1. Save the new crop
         savedCrop = await transactionalManager.save(
           CropEntity,
@@ -2863,16 +2894,47 @@ class CropService extends BaseService {
         )
       );
 
-      return finalLatest
+      return finalLatest;
     });
   }
-
- 
 
   async maxDate(d1, d2) {
     if (!d1) return d2 || null;
     if (!d2) return d1 || null;
     return d1 > d2 ? d1 : d2;
+  }
+
+  async MergeCrop(
+    userId,
+    // year,
+    // confirm,
+    Crops,
+    request
+  ) {
+    
+    const cropsWithID = {
+  Crops: Crops.Crops.filter((crop) => crop.Crop.ID !== null)
+};
+    const cropsWithoutID = Crops.Crops.filter((crop) => crop.Crop.ID === null);
+    console.log("cropsWithID", cropsWithID);
+    console.log("cropsWithoutID", cropsWithoutID);
+    return await AppDataSource.transaction(async (transactionalManager) => {
+      let createdPlan
+        await this.updateCropData(
+        cropsWithID,
+        userId,
+        request,
+        transactionalManager
+      );
+
+       createdPlan = await this.planService.createNutrientsRecommendationForField(
+        cropsWithoutID,
+        userId,
+        request,
+        transactionalManager
+      );
+      return createdPlan
+    });
   }
 }
 
