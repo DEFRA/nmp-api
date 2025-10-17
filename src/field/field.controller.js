@@ -143,7 +143,7 @@ class FieldController {
 
   async getFieldRelatedData() {
     const { fieldId } = this.#request.params;
-     const { year } = this.#request.query;
+    const { year } = this.#request.query;
 
     try {
       // Handle multiple FieldIDs, split by comma if needed (if multiple IDs are passed)
@@ -154,6 +154,24 @@ class FieldController {
         fieldIds,
         year,
         this.#request
+      );
+
+      // Return the Field objects with related data
+      return this.#h.response(fieldData);
+    } catch (error) {
+      return this.#h.response({ error: error.message }).code(400);
+    }
+  }
+
+  async getFieldRelatedPreviousCroppingData() {
+    const { fieldId } = this.#request.params;
+    const { year } = this.#request.query;
+
+    try {
+      // Fetch related data for the fields
+      const fieldData = await this.#fieldService.getPreviousCroppingData(
+        fieldId,
+        year
       );
 
       // Return the Field objects with related data
