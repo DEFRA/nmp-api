@@ -953,7 +953,7 @@ class FieldService extends BaseService {
     });
    
 
-    return previousCroppingData;
+    return {PreviousCropping :previousCroppingData};
   }
   async processSoilRecommendations(harvestYear, fieldId, Recommendation) {
     try {
