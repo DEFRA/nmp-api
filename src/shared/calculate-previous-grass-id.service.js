@@ -1,4 +1,5 @@
 const { CloverMapper } = require("../constants/clover-mapper");
+const { CropTypeMapper } = require("../constants/crop-type-mapper");
 const { FieldTypeMapper } = require("../constants/field-type-mapper");
 const { GrassManagementOptionsMapper } = require("../constants/grass-management-options-mapper");
 const { SoilGroupCategoriesMapper } = require("../constants/soil-group-categories-mapper");
@@ -11,6 +12,7 @@ const { FertiliserManuresEntity } = require("../db/entity/fertiliser-manures.ent
 const { GrassHistoryIdMappingEntity } = require("../db/entity/grass-history-id-mapping-entity");
 const { ManagementPeriodEntity } = require("../db/entity/management-period.entity");
 const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
+const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
 const { PreviousGrassIdMappingEntity } = require("../db/entity/previous-grass-Id-mapping.entity");
 const { PreviousGrassesEntity } = require("../db/entity/previous-grasses-entity");
 const { SoilGroupCategoriesEntity } = require("../db/entity/soil-group-categories-entity");
@@ -24,7 +26,7 @@ class CalculateGrassHistoryAndPreviousGrass {
     fieldId,
     transactionalManager
   ) {
-    // 🌱 Case 1: Grass from PreviousGrassesEntity
+    //  Case 1: Grass from PreviousGrassesEntity
     if (!grassCrop?.ID || !grassCrop?.FieldType) {
  
 
@@ -41,17 +43,17 @@ class CalculateGrassHistoryAndPreviousGrass {
 
       // Then try finding PreviousGrassesEntity from previous year
       const prevGrassBefore = await transactionalManager.findOne(
-        PreviousGrassesEntity,
+        PreviousCroppingEntity,
         {
           where: {
             FieldID: fieldId,
-            HarvestYear: harvestYear-1,
+            HarvestYear: harvestYear - 1,
           },
         }
       );
 
-      if (prevGrassBefore) {
-        return 0; // Not reseeded
+      if (prevGrassBefore.CropTypeID == CropTypeMapper.GRASS) {
+        return 0; 
       }
 
       // No data found before the grass year → Assume reseeded
@@ -102,13 +104,13 @@ class CalculateGrassHistoryAndPreviousGrass {
       !crop1
     ) {
       const prevGrass1 = await transactionalManager.findOne(
-        PreviousGrassesEntity,
+        PreviousCroppingEntity,
         {
           where: { FieldID: field.ID, HarvestYear: harvestYear - 1 },
         }
       );
 
-      if (prevGrass1) {
+      if (prevGrass1.CropTypeID == CropTypeMapper.GRASS) {
         firstHYFieldType = FieldTypeMapper.GRASS;
         isHighClover = prevGrass1.HasGreaterThan30PercentClover ? 1 : 0;
         isReseeded = await this.calculateIsReseeded(
@@ -208,13 +210,13 @@ class CalculateGrassHistoryAndPreviousGrass {
 
       if (secondHYFieldType === null) {
         const prevGrass2 = await transactionalManager.findOne(
-          PreviousGrassesEntity,
+          PreviousCroppingEntity,
           {
             where: { FieldID: field.ID, HarvestYear: harvestYear - 2 },
           }
         );
 
-        if (prevGrass2) {
+        if (prevGrass2.CropTypeID == CropTypeMapper.GRASS) {
           secondHYFieldType = FieldTypeMapper.GRASS;
           isReseeded = await this.calculateIsReseeded(
             prevGrass2,
@@ -396,12 +398,12 @@ class CalculateGrassHistoryAndPreviousGrass {
 
       if (!fieldType) {
         const prevGrass = await transactionalManager.findOne(
-          PreviousGrassesEntity,
+          PreviousCroppingEntity,
           {
             where: { FieldID: fieldId, HarvestYear: harvestYear - i },
           }
         );
-        if (prevGrass) fieldType = FieldTypeMapper.GRASS;
+        if (prevGrass.CropTypeID == CropTypeMapper.GRASS) fieldType = FieldTypeMapper.GRASS;
       }
 
       fieldTypes.push(fieldType ?? FieldTypeMapper.ARABLE);
@@ -424,12 +426,12 @@ class CalculateGrassHistoryAndPreviousGrass {
 
       if (!fieldType4) {
         const prevGrass = await transactionalManager.findOne(
-          PreviousGrassesEntity,
+          PreviousCroppingEntity,
           {
             where: { FieldID: fieldId, HarvestYear: harvestYear - 4 },
           }
         );
-        if (prevGrass) fieldType4 = FieldTypeMapper.GRASS;
+        if (prevGrass.CropTypeID == CropTypeMapper.GRASS) fieldType4 = FieldTypeMapper.GRASS;
       }
 
       if (fieldType4 === FieldTypeMapper.GRASS)
@@ -451,12 +453,12 @@ class CalculateGrassHistoryAndPreviousGrass {
 
         if (!fieldTypeX) {
           const prevGrass = await transactionalManager.findOne(
-            PreviousGrassesEntity,
+            PreviousCroppingEntity,
             {
               where: { FieldID: fieldId, HarvestYear: harvestYear - i },
             }
           );
-          if (prevGrass) fieldTypeX = FieldTypeMapper.GRASS;
+          if (prevGrass.CropTypeID == CropTypeMapper.GRASS) fieldTypeX = FieldTypeMapper.GRASS;
         }
 
         if (fieldTypeX === FieldTypeMapper.GRASS) {
@@ -602,13 +604,13 @@ class CalculateGrassHistoryAndPreviousGrass {
 
       // Check PreviousGrassesEntity
       const prevGrass = await transactionalManager.findOne(
-        PreviousGrassesEntity,
+        PreviousCroppingEntity,
         {
           where: { FieldID: fieldId, HarvestYear: y },
         }
       );
 
-      if (prevGrass) {
+      if (prevGrass.CropTypeID == CropTypeMapper.GRASS) {
         const mgmtId = prevGrass.GrassManagementOptionID;
 
         const isGrazedOnly =
