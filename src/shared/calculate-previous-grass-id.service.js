@@ -396,7 +396,7 @@ class CalculateGrassHistoryAndPreviousGrass {
       );
       let fieldType = crop?.FieldType ?? null;
 
-      if (!fieldType) {
+      if (fieldType!=null) {
         const prevGrass = await transactionalManager.findOne(
           PreviousCroppingEntity,
           {

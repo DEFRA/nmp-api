@@ -163,23 +163,6 @@ class FieldController {
     }
   }
 
-  async getFieldRelatedPreviousCroppingData() {
-    const { fieldId } = this.#request.params;
-    const { year } = this.#request.query;
-
-    try {
-      // Fetch related data for the fields
-      const fieldData = await this.#fieldService.getPreviousCroppingData(
-        fieldId,
-        year
-      );
-
-      // Return the Field objects with related data
-      return this.#h.response(fieldData);
-    } catch (error) {
-      return this.#h.response({ error: error.message }).code(400);
-    }
-  }
 }
 
 module.exports = { FieldController };

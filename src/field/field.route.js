@@ -326,38 +326,5 @@ module.exports = [
       const controller = new FieldController(request, h);
       return controller.getFieldRelatedData();
     },
-  },
-  {
-    method: "GET",
-    path: "/fields/previous-cropping/{fieldId}",
-    options: {
-      tags: ["api", "Field"],
-      description: "Get field data by Field ID(s) and Year",
-      validate: {
-        params: Joi.object({
-          fieldId: Joi.number().integer().required(),
-        }),
-        query: Joi.object({
-          year: Joi.number().integer().required(), // Expecting year as a query parameter
-        }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
-      },
-    },
-    handler: async (request, h) => {
-      const controller = new FieldController(request, h);
-      return controller.getFieldRelatedPreviousCroppingData();
-    },
-  },
+  }
 ];
