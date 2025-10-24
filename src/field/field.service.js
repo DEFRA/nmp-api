@@ -943,18 +943,7 @@ class FieldService extends BaseService {
     return { Farm: farm };
   }
 
-  async getPreviousCroppingData(fieldId, year) {
   
-    const previousCroppingData = await this.previousCroppingRepository.findOne({
-      where: {
-        FieldID: fieldId ,
-        HarvestYear:year
-      },
-    });
-   
-
-    return {PreviousCropping :previousCroppingData};
-  }
   async processSoilRecommendations(harvestYear, fieldId, Recommendation) {
     try {
       const currentYear = harvestYear;
