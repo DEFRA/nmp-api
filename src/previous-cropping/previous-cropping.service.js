@@ -23,6 +23,15 @@ class PreviousCroppingService extends BaseService {
   return await AppDataSource.transaction(async (transactionalManager) => {
     let previousCroppingData = null;
     previousCroppingBody.sort((a, b) => a.HarvestYear - b.HarvestYear);
+     // Get the field and greatest year
+      let MaxYear = Math.max(
+        ...previousCroppingBody.map((item) => item.HarvestYear)
+      );
+      let MinYear = Math.min(
+        ...previousCroppingBody.map((item) => item.HarvestYear)
+      );
+      let greatestYearField = previousCroppingBody[0].FieldID;
+      
     for (const crop of previousCroppingBody) {
       if (crop.ID == null) {        
         const cropData = this.repository.create({
@@ -45,31 +54,41 @@ class PreviousCroppingService extends BaseService {
                 }
               );        
       }
-await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
-              crop.FieldID,
-              crop.HarvestYear,
-              request,
-              userId,
-              transactionalManager
-            );
+    }
+
+ const cropExist = await this.cropRepository.findOne({
+        where: {
+          FieldID: greatestYearField,
+          Year: MaxYear + 1, // Find the next available year greater than the current MaxYear
+        },
+      });
+      if (cropExist != null) {
+        await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+          greatestYearField,
+          MaxYear + 1,
+          request,
+          userId,
+          transactionalManager
+        );
+      }
 
             // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
             const nextAvailableCrop = await this.cropRepository.findOne({
-              where: {
-                FieldID: crop.FieldID,
-                Year: MoreThan(crop.HarvestYear), // Find the next available year greater than the current crop.Year
-              },
-              order: {
-                Year: "ASC", // Ensure we get the next immediate year
-              },
-            });
-            if (nextAvailableCrop) {
-              this.UpdateRecommendation.updateRecommendationsForField(
-                crop.FieldID,
-                nextAvailableCrop.Year,
-                request,
-                userId
-              )
+        where: {
+          FieldID: greatestYearField,
+          Year: MoreThan(MinYear), // Find the next available year greater than the current MinYear
+        },
+        order: {
+          Year: "ASC", // Ensure we get the next immediate year
+        },
+      });
+      if (nextAvailableCrop) {
+        this.UpdateRecommendation.updateRecommendationsForField(
+          greatestYearField,
+          nextAvailableCrop.Year,
+          request,
+          userId
+        )
                 .then((res) => {
                   if (res === undefined) {
                     console.log(
@@ -89,8 +108,6 @@ await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
                   );
                 });
             }
-
-    }
 
     
 

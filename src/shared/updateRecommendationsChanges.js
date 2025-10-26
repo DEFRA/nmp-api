@@ -2601,7 +2601,7 @@ class UpdateRecommendationChanges {
     if(mannerOutputs.length == 0){
       mannerOutputs = null
     }
-    console.log("mannerOutputs[0]?.availableS", mannerOutputs[0]?.availableS);
+    //console.log("mannerOutputs[0]?.availableS", mannerOutputs[0]?.availableS);
     let cropOrderData = {
       CropN: null,
       ManureN: mannerOutputs != null
