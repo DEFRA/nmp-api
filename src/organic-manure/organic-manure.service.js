@@ -58,6 +58,7 @@ const { WarningMessagesEntity } = require("../db/entity/warning-message.entity")
 const { CreateOrUpdateWarningMessage } = require("../shared/create-update-warning-messages.service");
 const { WarningCodesMapper } = require("../constants/warning-codes-mapper");
 const { RunTypeMapper } = require("../constants/run-type-mapper");
+const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
 
 class OrganicManureService extends BaseService {
   constructor() {
@@ -341,7 +342,7 @@ class OrganicManureService extends BaseService {
       throw error; // Re-throw the error or handle it as needed
     }
   }
-  async findPreviousCrop(fieldID, currentYear) {
+  async findPreviousCrop(fieldID, currentYear, transactionalManager) {
     // Find all crops matching the previous year and field ID
     const previousCrops = await this.cropRepository.find({
       where: {
@@ -349,6 +350,14 @@ class OrganicManureService extends BaseService {
         Year: currentYear - 1,
       },
     });
+    let prevCrop = null;
+    if (!previousCrops) {
+      // Check PreviousCrop
+      prevCrop = await transactionalManager.findOne(PreviousCroppingEntity, {
+        where: { FieldID: fieldID, HarvestYear: currentYear - 1 },
+      });
+      return prevCrop;
+    }
 
     // If more than one crop is found, filter for CropOrder = 2
     if (previousCrops.length > 1) {
@@ -537,7 +546,11 @@ class OrganicManureService extends BaseService {
         HttpStatus.BAD_REQUEST
       );
     }
-    const previousCrop = await this.findPreviousCrop(field.ID, crop.Year);
+    const previousCrop = await this.findPreviousCrop(
+      field.ID,
+      crop.Year,
+      transactionalManager
+    );
 
     const pkBalanceData = await this.getPKBalanceData(
       field.ID,
@@ -2208,7 +2221,8 @@ class OrganicManureService extends BaseService {
     year,
     transactionalManager,
     cropPOfftake,
-    latestSoilAnalysis
+    latestSoilAnalysis,
+    previousCrop
   ) {
     try {
       let pBalance = 0;
@@ -2225,7 +2239,7 @@ class OrganicManureService extends BaseService {
 
         pBalance = otherPKBalance.pBalance;
         kBalance = otherPKBalance.kBalance;
-      } else if (crop.IsBasePlan) {
+      } else if (crop.IsBasePlan || !previousCrop) {
         if (pkBalanceData) {
           pBalance =
             (fertiliserData == null ? 0 : fertiliserData.p205) -
@@ -2708,10 +2722,16 @@ class OrganicManureService extends BaseService {
             }
           }
         }
+        const previousCrop = await this.findPreviousCrop(
+          fieldData.ID,
+          cropData.Year,
+          transactionalManager
+        );
 
         if (
           cropData.CropTypeID === CropTypeMapper.OTHER ||
-          cropData.IsBasePlan
+          cropData.IsBasePlan ||
+          !previousCrop
         ) {
           await this.saveOrganicManureForOtherCropType(
             organicManureData,
@@ -2893,7 +2913,8 @@ class OrganicManureService extends BaseService {
             cropData?.Year,
             transactionalManager,
             cropPOfftake,
-            latestSoilAnalysis
+            latestSoilAnalysis,
+            previousCrop
           );
 
           if (saveAndUpdatePKBalance) {
