@@ -49,6 +49,7 @@ const { CalculateMannerOutputService } = require("./calculate-manner-output-serv
 const { CalculateTotalAvailableNForNextYear } = require("./calculate-next-year-available-n");
 const { CalculateNextDefoliationService } = require("./calculate-next-defoliation-totalN");
 const { CalculatePKBalanceOther } = require("./calculate-pk-balance-other");
+const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
 
 
 class UpdateRecommendationChanges {
@@ -938,7 +939,17 @@ class UpdateRecommendationChanges {
           cropPOfftake = cropData.Yield ? cropData.Yield : 50;
         }
       }
-      if (cropData.CropTypeID === CropTypeMapper.OTHER || cropData.IsBasePlan) {
+          const previousCrop = await this.findPreviousCrop(
+            transactionalManager,
+            fieldData.ID,
+            cropData.Year
+          );
+
+      if (
+        cropData.CropTypeID === CropTypeMapper.OTHER ||
+        cropData.IsBasePlan ||
+        !previousCrop
+      ) {
         const otherRecommendations = await this.saveRecommendationForOtherCrops(
           transactionalManager,
           organicManure,
@@ -962,7 +973,8 @@ class UpdateRecommendationChanges {
           year,
           transactionalManager,
           cropPOfftake,
-          latestSoilAnalysis
+          latestSoilAnalysis,
+          previousCrop
         );
 
         if (saveAndUpdatePKBalance) {
@@ -1114,7 +1126,8 @@ class UpdateRecommendationChanges {
         year,
         transactionalManager,
         cropPOfftake,
-        latestSoilAnalysis
+        latestSoilAnalysis,
+        previousCrop
       );
 
       if (saveAndUpdatePKBalance) {
@@ -1299,9 +1312,20 @@ class UpdateRecommendationChanges {
         }
       }
 
-      if (crop.CropTypeID === CropTypeMapper.OTHER || crop?.IsBasePlan) {
-        let organicManure = null
-         
+          const previousCrop = await this.findPreviousCrop(
+            transactionalManager,
+            field.ID,
+            crop.Year
+          );
+
+
+      if (
+        crop.CropTypeID === CropTypeMapper.OTHER ||
+        crop?.IsBasePlan ||
+        !previousCrop
+      ) {
+        let organicManure = null;
+
         try {
           const otherRecommendations =
             await this.saveRecommendationForOtherCrops(
@@ -1326,7 +1350,8 @@ class UpdateRecommendationChanges {
             year,
             transactionalManager,
             cropPOfftake,
-            latestSoilAnalysis
+            latestSoilAnalysis,
+            previousCrop
           );
 
           if (saveAndUpdatePKBalance) {
@@ -1398,7 +1423,8 @@ class UpdateRecommendationChanges {
             year,
             transactionalManager,
             cropPOfftake,
-            latestSoilAnalysis
+            latestSoilAnalysis,
+            previousCrop
           );
 
           if (saveAndUpdatePKBalance) {
@@ -1924,7 +1950,8 @@ class UpdateRecommendationChanges {
     year,
     transactionalManager,
     cropPOfftake,
-    latestSoilAnalysis
+    latestSoilAnalysis,
+    previousCrop
   ) {
     try {
       let pBalance = 0;
@@ -1941,7 +1968,7 @@ class UpdateRecommendationChanges {
 
         pBalance = otherPKBalance.pBalance;
         kBalance = otherPKBalance.kBalance;
-      } else if (crop.IsBasePlan) {
+      } else if (crop.IsBasePlan || !previousCrop) {
         if (pkBalanceData) {
           pBalance =
             (fertiliserData == null ? 0 : fertiliserData.p205) -
@@ -3452,6 +3479,15 @@ class UpdateRecommendationChanges {
         Year: currentYear - 1,
       },
     });
+     
+    let prevCrop = null;
+     if (!previousCrops) {
+       // Check PreviousCrop
+       prevCrop = await transactionalManager.findOne(PreviousCroppingEntity, {
+         where: { FieldID: fieldID, HarvestYear: currentYear - 1 },
+       });
+       return prevCrop;
+     }
 
     // If more than one crop is found, filter for CropOrder = 2
     if (previousCrops.length > 1) {
@@ -3753,7 +3789,7 @@ class UpdateRecommendationChanges {
             ? null
             : cropType?.cropGroupId !== undefined &&
               cropType?.cropGroupId !== null
-            ? cropType.cropGroupId
+            ? cropType?.cropGroupId
             : null,
         previousCropTypeId:
           previousCrop?.CropTypeID == CropTypeMapper.GRASS

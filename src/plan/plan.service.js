@@ -74,6 +74,7 @@ const {
 const { CalculateCropsSnsAnalysisService } = require("../shared/calculate-crops-sns-analysis-service");
 const { CropTypeLinkingEntity } = require("../db/entity/crop-type-linking.entity");
 const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-other");
+const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
 
 class PlanService extends BaseService {
   constructor() {
@@ -264,6 +265,16 @@ class PlanService extends BaseService {
     const previousCrops = allCropData?.filter(
       (crop) => crop.FieldID === fieldID && crop.Year === currentYear - 1
     );
+    let prevCrop = null;
+
+    if (!previousCrops) {
+      // Check PreviousCrop
+      prevCrop = await transactionalManager.findOne(PreviousCroppingEntity, {
+        where: { FieldID: fieldID, HarvestYear: currentYear - 1 },
+      });
+      return prevCrop;
+    }
+
     // If more than one crop is found, filter for CropOrder = 2
     if (previousCrops.length > 1) {
       return previousCrops.find(
@@ -1994,7 +2005,7 @@ class PlanService extends BaseService {
     request,
     transactionalManager
   ) {
-    let savedPlan
+    let savedPlan;
     // ✅ If a global transaction manager is provided, use it.
     if (transactionalManager) {
       savedPlan = await this.createNutrientsRecommendationWithinTransaction(
@@ -2008,13 +2019,13 @@ class PlanService extends BaseService {
 
     // ✅ Otherwise, start a new local transaction.
     return await AppDataSource.transaction(async (localManager) => {
-    savedPlan =  await this.createNutrientsRecommendationWithinTransaction(
+      savedPlan = await this.createNutrientsRecommendationWithinTransaction(
         crops,
         userId,
         request,
         localManager
       );
-      return savedPlan
+      return savedPlan;
     });
   }
 
@@ -2109,8 +2120,13 @@ class PlanService extends BaseService {
           cropPOfftake = crop.Yield ? crop.Yield : 50;
         }
       }
+      const previousCrop = await this.findPreviousCrop(
+        field.ID,
+        crop.Year,
+        allCropData
+      );
 
-      if (crop.CropTypeID === CropTypeMapper.OTHER) {
+      if (crop.CropTypeID === CropTypeMapper.OTHER || !previousCrop) {
         await this.savedDefault(cropData, userId, transactionalManager);
         if (isSoilAnalysisHavePAndK) {
           if (cropPlanOfNextYear.length == 0) {
@@ -2123,7 +2139,8 @@ class PlanService extends BaseService {
                 userId,
                 latestSoilAnalysis,
                 cropPOfftake,
-                transactionalManager
+                transactionalManager,
+                previousCrop
               );
               if (saveAndUpdatePKBalance) {
                 await transactionalManager.save(
@@ -2449,7 +2466,8 @@ class PlanService extends BaseService {
               userId,
               latestSoilAnalysis,
               cropPOfftake,
-              transactionalManager
+              transactionalManager,
+              previousCrop
             );
             if (saveAndUpdatePKBalance) {
               await transactionalManager.save(
@@ -2853,8 +2871,10 @@ class PlanService extends BaseService {
     userId,
     latestSoilAnalysis,
     cropPOfftake,
-    transactionalManager
+    transactionalManager,
+    previousCrop
   ) {
+    let fertiliserData = null
     try {
       let pBalance = 0;
       let kBalance = 0;
@@ -2869,6 +2889,18 @@ class PlanService extends BaseService {
 
         pBalance = otherPKBalance.pBalance;
         kBalance = otherPKBalance.kBalance;
+      } else if (crop.IsBasePlan || !previousCrop) {
+        if (pkBalanceData) {
+          pBalance =
+            (fertiliserData == null ? 0 : fertiliserData?.p205) -
+            (0 - pkBalanceData == null ? 0 : pkBalanceData?.PBalance);
+          kBalance =
+            (fertiliserData == null ? 0 : fertiliserData?.k20) -
+            (0 - pkBalanceData == null ? 0 : pkBalanceData.KBalance);
+        } else {
+          pBalance = fertiliserData == null ? 0 : fertiliserData?.p205;
+          kBalance = fertiliserData == null ? 0 : fertiliserData?.k20;
+        }
       } else {
         for (const recommendation of calculations) {
           switch (recommendation.nutrientId) {

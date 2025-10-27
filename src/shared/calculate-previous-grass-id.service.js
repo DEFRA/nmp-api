@@ -610,7 +610,7 @@ class CalculateGrassHistoryAndPreviousGrass {
         }
       );
 
-      if (prevGrass.CropTypeID == CropTypeMapper.GRASS) {
+      if (prevGrass && prevGrass.CropTypeID == CropTypeMapper.GRASS) {
         const mgmtId = prevGrass.GrassManagementOptionID;
 
         const isGrazedOnly =

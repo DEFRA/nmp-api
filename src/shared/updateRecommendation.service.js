@@ -43,6 +43,7 @@ const { CalculateMannerOutputService } = require("./calculate-manner-output-serv
 const { CalculateTotalAvailableNForNextYear } = require("./calculate-next-year-available-n");
 const { CalculateNextDefoliationService } = require("./calculate-next-defoliation-totalN");
 const { CalculatePKBalanceOther } = require("./calculate-pk-balance-other");
+const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
 
 
 class UpdateRecommendation {
@@ -880,8 +881,16 @@ class UpdateRecommendation {
           cropPOfftake = cropData.Yield ? cropData.Yield : 50;
         }
       }
+      const previousCrop = await this.findPreviousCrop(
+        transactionalManager,
+        fieldData.ID,
+        cropData.Year
+      );
+
       if (
-        cropData.CropTypeID === CropTypeMapper.OTHER ||  cropData.IsBasePlan
+        cropData.CropTypeID === CropTypeMapper.OTHER ||
+        cropData.IsBasePlan ||
+        !previousCrop
       ) {
         const otherRecommendations = await this.saveRecommendationForOtherCrops(
           transactionalManager,
@@ -906,7 +915,8 @@ class UpdateRecommendation {
           year,
           transactionalManager,
           cropPOfftake,
-          latestSoilAnalysis
+          latestSoilAnalysis,
+          previousCrop
         );
 
         if (saveAndUpdatePKBalance) {
@@ -1061,7 +1071,8 @@ class UpdateRecommendation {
         year,
         transactionalManager,
         cropPOfftake,
-        latestSoilAnalysis
+        latestSoilAnalysis,
+        previousCrop
       );
 
       if (saveAndUpdatePKBalance) {
@@ -1235,8 +1246,17 @@ class UpdateRecommendation {
           cropPOfftake = crop.Yield ? crop.Yield : 50;
         }
       }
+      const previousCrop = await this.findPreviousCrop(
+        transactionalManager,
+        field.ID,
+        crop.Year
+      );
 
-      if (crop.CropTypeID === CropTypeMapper.OTHER || crop.IsBasePlan) {
+      if (
+        crop.CropTypeID === CropTypeMapper.OTHER ||
+        crop.IsBasePlan ||
+        !previousCrop
+      ) {
         let organicManure = null;
 
         try {
@@ -1263,7 +1283,8 @@ class UpdateRecommendation {
             year,
             transactionalManager,
             cropPOfftake,
-            latestSoilAnalysis
+            latestSoilAnalysis,
+            previousCrop
           );
 
           if (saveAndUpdatePKBalance) {
@@ -1335,7 +1356,8 @@ class UpdateRecommendation {
             year,
             transactionalManager,
             cropPOfftake,
-            latestSoilAnalysis
+            latestSoilAnalysis,
+            previousCrop
           );
 
           if (saveAndUpdatePKBalance) {
@@ -1853,7 +1875,8 @@ class UpdateRecommendation {
     year,
     transactionalManager,
     cropPOfftake,
-    latestSoilAnalysis
+    latestSoilAnalysis,
+    previousCrop
   ) {
     try {
       let pBalance = 0;
@@ -1869,7 +1892,7 @@ class UpdateRecommendation {
 
         pBalance = otherPKBalance.pBalance;
         kBalance = otherPKBalance.kBalance;
-      } else if (crop.IsBasePlan) {
+      } else if (crop.IsBasePlan || !previousCrop) {
         if (pkBalanceData) {
           pBalance =
             (fertiliserData == null ? 0 : fertiliserData.p205) -
@@ -2560,37 +2583,36 @@ class UpdateRecommendation {
     //   MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
     //   SIndex: null,
     // };
-     if (mannerOutputs.length == 0) {
-       mannerOutputs = null;
-     }
-     let cropOrderData = {
-       CropN: null,
-       ManureN: mannerOutputs != null ? mannerOutputs[0]?.availableN : null,
-       FertilizerN: null,
-       CropP2O5: null,
-       ManureP2O5: mannerOutputs != null ? mannerOutputs[0]?.availableP : null,
-       FertilizerP2O5: null,
-       ManureK2O: mannerOutputs != null ? mannerOutputs[0]?.availableK : null,
-       CropMgO: null,
-       ManureMgO: null,
-       FertilizerMgO: null,
-       CropSO3: null,
-       ManureSO3: mannerOutputs != null ? mannerOutputs[0]?.availableS : null,
-       FertilizerSO3: null,
-       CropNa2O: null,
-       ManureNa2O: null,
-       FertilizerNa2O: null,
-       CropLime: null,
-       ManureLime: null,
-       FertilizerLime: null,
-       PH: latestSoilAnalysis?.PH?.toString() || null,
-       SNSIndex:
-         latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
-       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
-       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
-       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-       SIndex: null,
-     };
+    if (mannerOutputs.length == 0) {
+      mannerOutputs = null;
+    }
+    let cropOrderData = {
+      CropN: null,
+      ManureN: mannerOutputs != null ? mannerOutputs[0]?.availableN : null,
+      FertilizerN: null,
+      CropP2O5: null,
+      ManureP2O5: mannerOutputs != null ? mannerOutputs[0]?.availableP : null,
+      FertilizerP2O5: null,
+      ManureK2O: mannerOutputs != null ? mannerOutputs[0]?.availableK : null,
+      CropMgO: null,
+      ManureMgO: null,
+      FertilizerMgO: null,
+      CropSO3: null,
+      ManureSO3: mannerOutputs != null ? mannerOutputs[0]?.availableS : null,
+      FertilizerSO3: null,
+      CropNa2O: null,
+      ManureNa2O: null,
+      FertilizerNa2O: null,
+      CropLime: null,
+      ManureLime: null,
+      FertilizerLime: null,
+      PH: latestSoilAnalysis?.PH?.toString() || null,
+      SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
+      PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
+      KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
+      MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
+      SIndex: null,
+    };
 
     let recommendation;
     if (organicManure) {
@@ -3444,6 +3466,14 @@ class UpdateRecommendation {
         Year: currentYear - 1,
       },
     });
+    let prevCrop = null;
+    if (!previousCrops) {
+      // Check PreviousCrop
+      prevCrop = await transactionalManager.findOne(PreviousCroppingEntity, {
+        where: { FieldID: fieldID, HarvestYear: currentYear - 1 },
+      });
+      return prevCrop;
+    }
 
     // If more than one crop is found, filter for CropOrder = 2
     if (previousCrops.length > 1) {
