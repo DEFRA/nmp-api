@@ -118,14 +118,23 @@ class PreviousCroppingService extends BaseService {
 
   async getPreviousCroppingDataByFieldIdAndYear(fieldId, year) {
      const whereClause = { FieldID: fieldId };
-
+     var previousCroppingData=null;
     if (year !== null && year !== undefined) {
      whereClause.HarvestYear = year;
-    }
 
-    const previousCroppingData = await this.repository.find({
-      where: whereClause,
-    });
+        previousCroppingData = await this.repository.findOne({
+        where: whereClause,
+       });
+    }
+    else
+    {
+        previousCroppingData = await this.repository.find({
+        where: whereClause,
+       });
+    }
+   
+    
+    
     
     console.log("previousCroppingData", previousCroppingData);
     return { PreviousCropping: previousCroppingData };
