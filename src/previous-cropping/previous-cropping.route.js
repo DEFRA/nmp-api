@@ -15,7 +15,7 @@ module.exports = [
           fieldId: Joi.number().integer().required(),
         }),
         query: Joi.object({
-          year: Joi.number().integer().required(), // Expecting year as a query parameter
+          year: Joi.number().integer().optional().allow(null), // Expecting year as a query parameter
         }),
         failAction: (request, h, err) => {
           return h
