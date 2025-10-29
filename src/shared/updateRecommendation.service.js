@@ -2593,6 +2593,8 @@ class UpdateRecommendation {
       CropP2O5: null,
       ManureP2O5: mannerOutputs != null ? mannerOutputs[0]?.availableP : null,
       FertilizerP2O5: null,
+      CropK2O: null,
+      FertilizerK2O: null,
       ManureK2O: mannerOutputs != null ? mannerOutputs[0]?.availableK : null,
       CropMgO: null,
       ManureMgO: null,

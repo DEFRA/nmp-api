@@ -1261,8 +1261,8 @@ class PlanService extends BaseService {
       ManureP2O5: null,
       FertilizerP2O5: null,
       CropK2O: null,
-      ManureK2O: null,
       FertilizerK2O: null,
+      ManureK2O: null,
       CropMgO: null,
       ManureMgO: null,
       FertilizerMgO: null,
@@ -2128,6 +2128,23 @@ class PlanService extends BaseService {
 
       if (crop.CropTypeID === CropTypeMapper.OTHER || !previousCrop) {
         await this.savedDefault(cropData, userId, transactionalManager);
+
+         const nextAvailableCrop = await this.cropRepository.findOne({
+           where: {
+             FieldID: crop.FieldID,
+             Year: MoreThan(crop.Year),
+           },
+           order: { Year: "ASC" },
+         });
+
+         if (nextAvailableCrop) {
+          this.UpdateRecommendation.updateRecommendationsForField(
+            crop.FieldID,
+            nextAvailableCrop.Year,
+            request,
+            userId
+          )
+        }
         if (isSoilAnalysisHavePAndK) {
           if (cropPlanOfNextYear.length == 0) {
             try {
