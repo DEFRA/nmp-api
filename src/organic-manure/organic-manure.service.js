@@ -1402,9 +1402,11 @@ class OrganicManureService extends BaseService {
         ? mannerOutputs[0].availableP
         : OrganicManure.AvailableP2O5,
       FertilizerP2O5: null,
+      CropK2O: null,
       ManureK2O: mannerOutputs
         ? mannerOutputs[0].availableK
         : OrganicManure.AvailableK2O,
+      FertilizerK2O: null,
       CropMgO: null,
       ManureMgO: null,
       FertilizerMgO: null,

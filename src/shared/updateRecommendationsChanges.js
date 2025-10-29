@@ -2631,32 +2631,26 @@ class UpdateRecommendationChanges {
     //console.log("mannerOutputs[0]?.availableS", mannerOutputs[0]?.availableS);
     let cropOrderData = {
       CropN: null,
-      ManureN: mannerOutputs != null
-          ? mannerOutputs[0]?.availableN
-          : null,
+      ManureN: mannerOutputs != null ? mannerOutputs[0]?.availableN : null,
       FertilizerN: null,
       CropP2O5: null,
-      ManureP2O5: mannerOutputs != null
-          ? mannerOutputs[0]?.availableP
-          : null,
+      ManureP2O5: mannerOutputs != null ? mannerOutputs[0]?.availableP : null,
       FertilizerP2O5: null,
-      ManureK2O: mannerOutputs != null
-          ? mannerOutputs[0]?.availableK
-          : null,
+      CropK2O: null,
+      ManureK2O: mannerOutputs != null ? mannerOutputs[0]?.availableK : null,
+      FertilizerK2O: null,
       CropMgO: null,
       ManureMgO: null,
       FertilizerMgO: null,
       CropSO3: null,
-      ManureSO3: mannerOutputs != null
-          ? mannerOutputs[0]?.availableS
-          : null,
+      ManureSO3: mannerOutputs != null ? mannerOutputs[0]?.availableS : null,
       FertilizerSO3: null,
-      CropNa2O: null, 
+      CropNa2O: null,
       ManureNa2O: null,
-      FertilizerNa2O: null, 
+      FertilizerNa2O: null,
       CropLime: null,
       ManureLime: null,
-      FertilizerLime: null, 
+      FertilizerLime: null,
       PH: latestSoilAnalysis?.PH?.toString() || null,
       SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
