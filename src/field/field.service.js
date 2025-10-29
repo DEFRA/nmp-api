@@ -310,10 +310,14 @@ class FieldService extends BaseService {
       };
     });
   }
-  async updateField(updatedFieldData, userId, fieldId, request) {
+  async updateField(payload, userId, fieldId, request) {
     return await AppDataSource.transaction(async (transactionalManager) => {
+      const { Field: updatedFieldData, PreviousCroppings } = payload;
       const { ID, CreatedByID, CreatedOn, EncryptedFieldId, ...dataToUpdate } =
         updatedFieldData;
+
+        console.log("datatoupdate", payload);
+        console.log("updatedFieldData", updatedFieldData);
 
       // 1. Get original field inside transaction
       const originalField = await transactionalManager.findOne(FieldEntity, {
@@ -339,9 +343,16 @@ class FieldService extends BaseService {
 
       let isSensitiveChange = false;
       for (const field of sensitiveFields) {
+        if( updatedFieldData[field] == 0 ){
+          updatedFieldData[field] = null
+        }
+        if ( originalField[field] == 0){
+          originalField[field] = null
+        }
+      
         if (
-          updatedFieldData[field] !== undefined &&
-          updatedFieldData[field] !== originalField[field]
+          updatedFieldData[field] != undefined &&
+          updatedFieldData[field] != originalField[field]
         ) {
           isSensitiveChange = true;
           break;
@@ -361,8 +372,8 @@ class FieldService extends BaseService {
         console.log("Number of crops:", crops.length);
         console.log("Oldest crop:", oldestCrop);
 
-        // 👉 If you want to block update:
-        // throw boom.badRequest(`Cannot update sensitive fields. Oldest crop exists for year ${oldestCrop.Year}`);
+        //  If you want to block update:
+        
 
         await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
           fieldId,
@@ -383,7 +394,7 @@ class FieldService extends BaseService {
           }
         );
         console.log("nextAvailableCrop", nextAvailableCrop);
-        // console.log("nextAvailableCrop[0].Year", nextAvailableCrop[0].Year.lengh);
+
         if (nextAvailableCrop) {
           this.UpdateRecommendation.updateRecommendationsForField(
             fieldId,
@@ -395,6 +406,66 @@ class FieldService extends BaseService {
           });
         }
       }
+
+       if (Array.isArray(PreviousCroppings) && PreviousCroppings.length > 0) {
+         let hasPrevCropUpdated = false;
+         for (const prevCrop of PreviousCroppings) {
+           // Ensure FieldID is attached
+           prevCrop.FieldID = fieldId;
+
+           // Check if record already exists for FieldID 
+           const existingPrevCrop = await transactionalManager.findOne(
+             PreviousCroppingEntity,
+             {
+               where: { FieldID: fieldId, HarvestYear: prevCrop.HarvestYear },
+             }
+           );
+
+           const {ID, ...prevCropDataToUpdate } = prevCrop;
+
+           if (existingPrevCrop) {
+             // Update existing
+             await transactionalManager.update(
+               PreviousCroppingEntity,
+               existingPrevCrop.ID,
+               {
+                 ...prevCropDataToUpdate,
+                 ModifiedByID: userId,
+                 ModifiedOn: new Date(),
+               }
+             );
+
+          hasPrevCropUpdated = true;
+             
+
+
+           } 
+         }
+    
+         if (hasPrevCropUpdated) {
+
+           const crops = await transactionalManager.find(CropEntity, {
+             where: { FieldID: fieldId },
+           });
+
+           if(crops.length > 0){
+
+             const oldestCrop = crops.reduce((oldest, current) =>
+               current.Year < oldest.Year ? current : oldest
+             );
+   
+             this.UpdateRecommendation.updateRecommendationsForField(
+               fieldId,
+               oldestCrop.Year,
+               request,
+               userId
+             ).catch((error) => {
+               console.error("Error updating next crop's recommendations:", error);
+             });
+           }
+ 
+         }
+       }
 
       // 4. Perform the update inside transaction
       const updateResult = await transactionalManager.update(
@@ -943,7 +1014,6 @@ class FieldService extends BaseService {
     return { Farm: farm };
   }
 
-  
   async processSoilRecommendations(harvestYear, fieldId, Recommendation) {
     try {
       const currentYear = harvestYear;
