@@ -21,7 +21,7 @@ class PreviousCroppingController {
       // Previous croppping related data for the field
       const result = await this.#PreviousCroppingService.getPreviousCroppingDataByFieldIdAndYear(
         fieldId,
-        year
+        year??null
       );
 
       // Return the Previous croppping objects with related data
