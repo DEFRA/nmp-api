@@ -32,29 +32,41 @@ class PreviousCroppingService extends BaseService {
       );
       let greatestYearField = previousCroppingBody[0].FieldID;
       
+      const existingCrops = await this.repository.find({
+  where: previousCroppingBody.map(crop => ({
+    FieldID: crop.FieldID
+  })),
+});
     for (const crop of previousCroppingBody) {
-      if (crop.ID == null) {        
-        const cropData = this.repository.create({
-                ...crop,
-               CreatedByID: userId,
-        CreatedOn: new Date(),
-              });
-              previousCroppingData = await transactionalManager.save(PreviousCroppingEntity, cropData);          
-      } else {
-        const { HarvestYear, ID, FieldID, CreatedByID, CreatedOn, ...updatedData } =
-                crop;        
-              
-             previousCroppingData= await transactionalManager.update(
-                PreviousCroppingEntity,
-                ID,
-                {
-                  ...updatedData,
-                  ModifiedByID: userId,
-                  ModifiedOn: new Date(),
-                }
-              );        
-      }
-    }
+      
+      let cropData;
+         const previousCropExist = existingCrops.find(existingCrop =>
+      existingCrop.FieldID === crop.FieldID && existingCrop.HarvestYear === crop.HarvestYear
+    );
+
+if (previousCropExist == null) {
+    
+    cropData = {
+      ...crop,
+      CreatedByID: userId,   
+      CreatedOn: new Date(), 
+      ModifiedByID:null,
+      ModifiedOn:null,
+    };
+  } else {
+     cropData = {
+       ...crop,
+       CreatedByID: previousCropExist.CreatedByID, 
+       CreatedOn: previousCropExist.CreatedOn,    
+       ModifiedByID: userId,  
+      ModifiedOn: new Date(), 
+    };
+  }
+
+  // Use save() for both insert and update (upsert)
+    previousCroppingData = await transactionalManager.save(PreviousCroppingEntity, cropData);      
+    
+  }
 
  const cropExist = await this.cropRepository.findOne({
         where: {
