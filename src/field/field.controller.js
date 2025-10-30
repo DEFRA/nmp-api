@@ -83,10 +83,10 @@ class FieldController {
   async updateField() {
     const { fieldId } = this.#request.params;
     const userId = this.#request.userId;
-    const { Field } = this.#request.payload;
+    const payload = this.#request.payload;
     try {
       const updatedField = await this.#fieldService.updateField(
-        Field,
+        payload,
         userId,
         fieldId,
         this.#request
