@@ -216,7 +216,7 @@ class CalculateGrassHistoryAndPreviousGrass {
           }
         );
 
-        if (prevGrass2.CropTypeID == CropTypeMapper.GRASS) {
+        if (prevGrass2 && prevGrass2?.CropTypeID == CropTypeMapper.GRASS) {
           secondHYFieldType = FieldTypeMapper.GRASS;
           isReseeded = await this.calculateIsReseeded(
             prevGrass2,

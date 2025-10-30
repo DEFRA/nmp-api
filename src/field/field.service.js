@@ -421,7 +421,7 @@ class FieldService extends BaseService {
              }
            );
 
-           const {ID, ...prevCropDataToUpdate } = prevCrop;
+           const {ID,CreatedOn,CreatedByID, ...prevCropDataToUpdate } = prevCrop;
 
            if (existingPrevCrop) {
              // Update existing
@@ -435,11 +435,16 @@ class FieldService extends BaseService {
                }
              );
 
-          hasPrevCropUpdated = true;
-             
-
-
-           } 
+             hasPrevCropUpdated = true;
+           } else {
+             // Insert new record if not found
+             await transactionalManager.insert(PreviousCroppingEntity, {
+               ...prevCrop,
+               FieldID: fieldId,
+               CreatedByID: userId,
+               CreatedOn: new Date(),
+             });
+           }
          }
     
          if (hasPrevCropUpdated) {

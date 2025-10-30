@@ -2128,23 +2128,8 @@ class PlanService extends BaseService {
 
       if (crop.CropTypeID === CropTypeMapper.OTHER || !previousCrop) {
         await this.savedDefault(cropData, userId, transactionalManager);
-
-         const nextAvailableCrop = await this.cropRepository.findOne({
-           where: {
-             FieldID: crop.FieldID,
-             Year: MoreThan(crop.Year),
-           },
-           order: { Year: "ASC" },
-         });
-
-         if (nextAvailableCrop) {
-          this.UpdateRecommendation.updateRecommendationsForField(
-            crop.FieldID,
-            nextAvailableCrop.Year,
-            request,
-            userId
-          )
-        }
+      
+      
         if (isSoilAnalysisHavePAndK) {
           if (cropPlanOfNextYear.length == 0) {
             try {
@@ -2165,6 +2150,22 @@ class PlanService extends BaseService {
                   saveAndUpdatePKBalance.saveAndUpdatePKBalance
                 );
               }
+                 const nextAvailableCrop = await this.cropRepository.findOne({
+                   where: {
+                     FieldID: crop.FieldID,
+                     Year: MoreThan(crop.Year),
+                   },
+                   order: { Year: "ASC" },
+                 });
+
+                 if (nextAvailableCrop) {
+                   this.UpdateRecommendation.updateRecommendationsForField(
+                     crop.FieldID,
+                     nextAvailableCrop.Year,
+                     request,
+                     userId
+                   );
+                 }
             } catch (error) {
               console.error(
                 `Error while saving PKBalance Data FieldId: ${fieldId} And Year:${crop?.Year}:`,
