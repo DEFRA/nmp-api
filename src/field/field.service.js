@@ -406,9 +406,11 @@ class FieldService extends BaseService {
           });
         }
       }
-
+       
+      let updatedOrInsertedPrevCroppings = [];
        if (Array.isArray(PreviousCroppings) && PreviousCroppings.length > 0) {
          let hasPrevCropUpdated = false;
+         let previousCropping
          // Get all existing PreviousCroppings for this field
          const existingPrevCroppings = await transactionalManager.find(
            PreviousCroppingEntity,
@@ -439,7 +441,7 @@ class FieldService extends BaseService {
 
            if (existingPrevCrop) {
              // Update existing
-             await transactionalManager.update(
+           previousCropping =  await transactionalManager.update(
                PreviousCroppingEntity,
                existingPrevCrop.ID,
                {
@@ -452,12 +454,14 @@ class FieldService extends BaseService {
              hasPrevCropUpdated = true;
            } else {
              // Insert new record if not found
-             await transactionalManager.insert(PreviousCroppingEntity, {
-               ...prevCrop,
+          previousCropping = await transactionalManager.insert(PreviousCroppingEntity, {
+               ...prevCropDataToUpdate,
                FieldID: fieldId,
                CreatedByID: userId,
                CreatedOn: new Date(),
              });
+             hasPrevCropUpdated = true;
+
            }
          }
 
@@ -497,6 +501,10 @@ class FieldService extends BaseService {
              });
            }
          }
+            updatedOrInsertedPrevCroppings = await transactionalManager.find(
+              PreviousCroppingEntity,
+              { where: { FieldID: fieldId } }
+            );
        }
 
       // 4. Perform the update inside transaction
@@ -519,7 +527,10 @@ class FieldService extends BaseService {
         where: { ID: fieldId },
       });
 
-      return updatedField;
+      return {
+        Field: updatedField,
+        PreviousCroppings: updatedOrInsertedPrevCroppings
+      };
     });
   }
 
