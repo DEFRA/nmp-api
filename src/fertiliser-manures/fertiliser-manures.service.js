@@ -407,17 +407,19 @@ class FertiliserManuresService extends BaseService {
                   updatePKBalance
                 );
               }
+              console.log("cropData.FieldID", cropData[0].FieldID);
+              console.log("cropData.Year", cropData[0].FieldID);
                    const nextAvailableCrop = await this.cropRepository.findOne({
                      where: {
-                       FieldID: cropData.FieldID,
-                       Year: MoreThan(cropData.Year),
+                       FieldID: cropData[0].FieldID,
+                       Year: MoreThan(cropData[0].Year),
                      },
                      order: { Year: "ASC" },
                    });
 
                    if (nextAvailableCrop) {
                      this.UpdateRecommendation.updateRecommendationsForField(
-                       cropData.FieldID,
+                       cropData[0].FieldID,
                        nextAvailableCrop.Year,
                        request,
                        userId
