@@ -259,7 +259,12 @@ class PlanService extends BaseService {
     // Return the list of crops sorted by CropOrder (if necessary)
     return arableBody.sort((a, b) => a.cropOrder - b.cropOrder);
   }
-  async findPreviousCrop(fieldID, currentYear, allCropData) {
+  async findPreviousCrop(
+    fieldID,
+    currentYear,
+    allCropData,
+    transactionalManager
+  ) {
     // Find all crops matching the previous year and field ID
     // Filter all crops to find those matching the previous year and field ID
     const previousCrops = allCropData?.filter(
@@ -267,7 +272,7 @@ class PlanService extends BaseService {
     );
     let prevCrop = null;
 
-    if (!previousCrops) {
+    if (previousCrops.length == 0) {
       // Check PreviousCrop
       prevCrop = await transactionalManager.findOne(PreviousCroppingEntity, {
         where: { FieldID: fieldID, HarvestYear: currentYear - 1 },
@@ -398,7 +403,8 @@ class PlanService extends BaseService {
     const previousCrop = await this.findPreviousCrop(
       field.ID,
       crop.Year,
-      allCropData
+      allCropData,
+      transactionalManager
     );
 
     // Use the buildArableBody function to get the arable array
@@ -1998,6 +2004,7 @@ class PlanService extends BaseService {
 
     return mapping?.PreviousGrassID || null;
   }
+  
 
   async createNutrientsRecommendationForField(
     crops,
@@ -2123,13 +2130,13 @@ class PlanService extends BaseService {
       const previousCrop = await this.findPreviousCrop(
         field.ID,
         crop.Year,
-        allCropData
+        allCropData,
+        transactionalManager
       );
 
       if (crop.CropTypeID === CropTypeMapper.OTHER || !previousCrop) {
         await this.savedDefault(cropData, userId, transactionalManager);
-      
-      
+
         if (isSoilAnalysisHavePAndK) {
           if (cropPlanOfNextYear.length == 0) {
             try {
@@ -2150,22 +2157,27 @@ class PlanService extends BaseService {
                   saveAndUpdatePKBalance.saveAndUpdatePKBalance
                 );
               }
-                 const nextAvailableCrop = await this.cropRepository.findOne({
-                   where: {
-                     FieldID: crop.FieldID,
-                     Year: MoreThan(crop.Year),
-                   },
-                   order: { Year: "ASC" },
-                 });
+              const nextAvailableCrop = await this.cropRepository.findOne({
+                where: {
+                  FieldID: crop.FieldID,
+                  Year: MoreThan(crop.Year),
+                },
+                order: { Year: "ASC" },
+              });
 
-                 if (nextAvailableCrop) {
-                   this.UpdateRecommendation.updateRecommendationsForField(
-                     crop.FieldID,
-                     nextAvailableCrop.Year,
-                     request,
-                     userId
-                   );
-                 }
+              if (nextAvailableCrop) {
+                this.UpdateRecommendation.updateRecommendationsForField(
+                  crop.FieldID,
+                  nextAvailableCrop.Year,
+                  request,
+                  userId
+                );
+              }
+
+               return {
+                 message: "Default crop saved and exiting early",
+                 Recommendations,
+               };
             } catch (error) {
               console.error(
                 `Error while saving PKBalance Data FieldId: ${fieldId} And Year:${crop?.Year}:`,
@@ -2198,8 +2210,29 @@ class PlanService extends BaseService {
                   error
                 );
               });
+              return {
+                message: "Default crop saved and exiting early",
+                Recommendations,
+              }; 
           }
         }
+
+          const nextAvailableCrop = await this.cropRepository.findOne({
+            where: {
+              FieldID: crop.FieldID,
+              Year: MoreThan(crop.Year),
+            },
+            order: { Year: "ASC" },
+          });
+
+          if (nextAvailableCrop) {
+            this.UpdateRecommendation.updateRecommendationsForField(
+              crop.FieldID,
+              nextAvailableCrop.Year,
+              request,
+              userId
+            );
+          }
         return {
           message: "Default crop saved and exiting early",
           Recommendations,
@@ -2527,6 +2560,23 @@ class PlanService extends BaseService {
             });
         }
       }
+
+        const nextAvailableCrop = await this.cropRepository.findOne({
+          where: {
+            FieldID: crop.FieldID,
+            Year: MoreThan(crop.Year),
+          },
+          order: { Year: "ASC" },
+        });
+
+        if (nextAvailableCrop) {
+          this.UpdateRecommendation.updateRecommendationsForField(
+            crop.FieldID,
+            nextAvailableCrop.Year,
+            request,
+            userId
+          );
+        }
     }
 
     return { Recommendations };
@@ -2892,7 +2942,7 @@ class PlanService extends BaseService {
     transactionalManager,
     previousCrop
   ) {
-    let fertiliserData = null
+    let fertiliserData = null;
     try {
       let pBalance = 0;
       let kBalance = 0;

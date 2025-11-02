@@ -372,7 +372,7 @@ class FieldService extends BaseService {
         console.log("Number of crops:", crops.length);
         console.log("Oldest crop:", oldestCrop);
 
-        //  If you want to block update:
+
         
 
         await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
@@ -476,6 +476,7 @@ class FieldService extends BaseService {
              PreviousCroppingEntity,
              idsToDelete
            );
+             hasPrevCropUpdated = true;
          }
 
          if (hasPrevCropUpdated) {

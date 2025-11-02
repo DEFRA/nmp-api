@@ -3475,7 +3475,7 @@ class UpdateRecommendationChanges {
     });
      
     let prevCrop = null;
-     if (!previousCrops) {
+     if (previousCrops.length == 0) {
        // Check PreviousCrop
        prevCrop = await transactionalManager.findOne(PreviousCroppingEntity, {
          where: { FieldID: fieldID, HarvestYear: currentYear - 1 },

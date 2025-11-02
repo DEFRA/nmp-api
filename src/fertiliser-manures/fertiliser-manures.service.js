@@ -428,6 +428,22 @@ class FertiliserManuresService extends BaseService {
             }
           }
         }
+        const nextAvailableCrop = await this.cropRepository.findOne({
+          where: {
+            FieldID: cropData[0].FieldID,
+            Year: MoreThan(cropData[0].Year),
+          },
+          order: { Year: "ASC" },
+        });
+
+        if (nextAvailableCrop) {
+          this.UpdateRecommendation.updateRecommendationsForField(
+            cropData[0].FieldID,
+            nextAvailableCrop.Year,
+            request,
+            userId
+          );
+        }
       }
       return fertiliserManures;
     });
