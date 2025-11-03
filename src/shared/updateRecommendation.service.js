@@ -2616,33 +2616,71 @@ class UpdateRecommendation {
       SIndex: null,
     };
 
-    let recommendation;
+    let  managementPeriods=[];
     if (organicManure) {
-      recommendation = allRecommendations.find(
-        (rec) => rec.ManagementPeriodID === organicManure.ManagementPeriodID
-      );
+      // recommendation = allRecommendations.find(
+      //   (rec) => rec.ManagementPeriodID === organicManure.ManagementPeriodID
+      // );
+       managementPeriods = [
+         await transactionalManager.findOne(ManagementPeriodEntity, {
+           where: { ID: organicManure.ManagementPeriodID },
+         }),
+       ];
     } else {
-      const managementPeriod = await transactionalManager.findOne(
-        ManagementPeriodEntity,
-        { where: { CropID: crop.ID } }
+        managementPeriods = await transactionalManager.find(
+          ManagementPeriodEntity,
+          {
+            where: { CropID: crop.ID },
+          }
+        );
+
+     
+    }
+    let updatedRecommendations = [];
+
+    // if (recommendation) {
+    //   // If a recommendation exists, update it
+    //   recommendation = {
+    //     ...recommendation,
+    //     ...cropOrderData,
+    //     ModifiedOn: new Date(),
+    //     ModifiedByID: userId,
+    //   };
+    //   await transactionalManager.save(RecommendationEntity, recommendation);
+    // }
+    for (const period of managementPeriods) {
+      let recommendation = allRecommendations.find(
+        (rec) => rec.ManagementPeriodID === period.ID
       );
 
-      recommendation = allRecommendations.find(
-        (rec) => rec.ManagementPeriodID === managementPeriod.ID
-      );
-    }
+      if (recommendation) {
+        recommendation = {
+          ...recommendation,
+          ...cropOrderData,
+          ModifiedOn: new Date(),
+          ModifiedByID: userId,
+        };
 
-    if (recommendation) {
-      // If a recommendation exists, update it
-      recommendation = {
-        ...recommendation,
-        ...cropOrderData,
-        ModifiedOn: new Date(),
-        ModifiedByID: userId,
-      };
-      await transactionalManager.save(RecommendationEntity, recommendation);
+        await transactionalManager.save(RecommendationEntity, recommendation);
+
+        // Find and delete related recommendation comments
+        const existingComments = await transactionalManager.find(
+          RecommendationCommentEntity,
+          {
+            where: { RecommendationID: recommendation.ID },
+          }
+        );
+
+        if (existingComments && existingComments.length > 0) {
+          await transactionalManager.remove(
+            RecommendationCommentEntity,
+            existingComments
+          );
+        }
+        updatedRecommendations.push(recommendation);
+      }
     }
-    return recommendation;
+    return updatedRecommendations;
   }
 
   async saveOrUpdateArableNotes(
@@ -3469,7 +3507,7 @@ class UpdateRecommendation {
       },
     });
     let prevCrop = null;
-    if (!previousCrops) {
+    if (previousCrops.length == 0) {
       // Check PreviousCrop
       prevCrop = await transactionalManager.findOne(PreviousCroppingEntity, {
         where: { FieldID: fieldID, HarvestYear: currentYear - 1 },
@@ -3775,14 +3813,16 @@ class UpdateRecommendation {
           previousCrop?.CropTypeID == CropTypeMapper.GRASS
             ? null
             : cropType?.cropGroupId !== undefined &&
-              cropType?.cropGroupId !== null
+              cropType?.cropGroupId !== null &&
+              previousGrassId == null
             ? cropType.cropGroupId
             : null,
         previousCropTypeId:
           previousCrop?.CropTypeID == CropTypeMapper.GRASS
             ? null
             : previousCrop?.CropTypeID !== undefined &&
-              previousCrop?.CropTypeID !== null
+              previousCrop?.CropTypeID !== null &&
+              previousGrassId == null
             ? previousCrop?.CropTypeID
             : null,
         grassHistoryId: previousGrassId ? null : grassHistoryID,

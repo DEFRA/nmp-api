@@ -1838,7 +1838,7 @@ class CropService extends BaseService {
           previousCrop.CropTypeID === CropTypeMapper.GRASS
             ? null
             : cropType?.cropGroupId !== undefined &&
-              cropType?.cropGroupId !== null
+              cropType?.cropGroupId !== null && previousGrassId == null
             ? cropType?.cropGroupId
             : null,
         // previousCropTypeId:
@@ -1852,7 +1852,7 @@ class CropService extends BaseService {
           previousCrop.CropTypeID === CropTypeMapper.GRASS
             ? null
             : previousCrop?.CropTypeID !== undefined &&
-              previousCrop?.CropTypeID !== null
+              previousCrop?.CropTypeID !== null && previousGrassId == null
             ? previousCrop?.CropTypeID
             : null,
         grassHistoryId: previousGrassId ? null : grassHistoryID,
