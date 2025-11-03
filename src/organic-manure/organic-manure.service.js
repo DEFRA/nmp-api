@@ -1476,6 +1476,7 @@ class OrganicManureService extends BaseService {
         ...(organicManureData.OrganicManure.ID == 0 ? { ID: null } : {}),
 
         CreatedByID: userId,
+        CreatedOn: new Date()
       })
     );
     organicManures.push(savedOrganicManure);
