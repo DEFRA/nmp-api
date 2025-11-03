@@ -1310,6 +1310,7 @@ class PlanService extends BaseService {
         ...cropData.Crop,
         FieldID: cropData.Crop.FieldID, // assuming cropData contains Crop object
         CreatedByID: userId,
+        CreatedOn: new Date()
       })
     );
 
@@ -1319,8 +1320,9 @@ class PlanService extends BaseService {
         ManagementPeriodEntity,
         this.managementPeriodRepository.create({
           ...managementPeriod,
-          CropID: savedCrop.ID, // Link saved crop with ManagementPeriods
+          CropID: savedCrop.ID, 
           CreatedByID: userId,
+          CreatedOn: new Date()
         })
       );
       ManagementPeriods.push(savedManagementPeriod);
