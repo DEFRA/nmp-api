@@ -409,6 +409,13 @@ class FertiliserManuresService extends BaseService {
               }
               console.log("cropData.FieldID", cropData[0].FieldID);
               console.log("cropData.Year", cropData[0].FieldID);
+               await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+                 cropData[0].FieldID,
+                 cropData[0].Year,
+                 request,
+                 userId,
+                 transactionalManager
+               );
                    const nextAvailableCrop = await this.cropRepository.findOne({
                      where: {
                        FieldID: cropData[0].FieldID,
@@ -428,6 +435,13 @@ class FertiliserManuresService extends BaseService {
             }
           }
         }
+        await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+          cropData[0].FieldID,
+          cropData[0].Year,
+          request,
+          userId,
+          transactionalManager
+        );
         const nextAvailableCrop = await this.cropRepository.findOne({
           where: {
             FieldID: cropData[0].FieldID,
