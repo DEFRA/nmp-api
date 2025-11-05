@@ -551,8 +551,33 @@ class CropService extends BaseService {
       InorganicFertiliserApplication: inorganicFertiliserApplications.flat(),
     };
   }
-  async deleteCropById(CropsID, userId, request) {
-    await AppDataSource.manager.transaction(async (transactionalManager) => {
+
+    async deleteCrop(
+      cropId, userId, request,
+      transactionalManager
+    ) {
+      // If a global transaction manager is provided, use it.
+      if (transactionalManager) {
+        return await this.deleteCropById(
+          cropId,
+          userId,
+          request,
+          transactionalManager
+        );
+      }
+  
+      // ✅ Otherwise, start a new local transaction.
+      return await AppDataSource.transaction(async (localManager) => {
+        return await this.deleteCropById(
+          cropId,
+          userId,
+          request,
+          localManager
+        );
+      });
+    }
+  async deleteCropById(CropsID, userId, request,transactionalManager) {
+    // await AppDataSource.manager.transaction(async (transactionalManager) => {
       const crop = await transactionalManager.findOne(this.repository.target, {
         where: { ID: CropsID },
       });
@@ -627,7 +652,7 @@ class CropService extends BaseService {
             );
           });
       }
-    });
+    // });
   }
 
   async CropGroupNameExists(cropIds, newGroupName, year, farmId) {
@@ -851,7 +876,7 @@ class CropService extends BaseService {
           ModifiedOn,
           ModifiedByID,
           EncryptedCounter,
-          FieldName,
+          FieldName,IsDelete,
           ...updatedCropData
         } = crop;
 
@@ -2916,8 +2941,18 @@ class CropService extends BaseService {
   Crops: Crops.Crops.filter((crop) => crop.Crop.ID !== null)
 };
     const cropsWithoutID = Crops.Crops.filter((crop) => crop.Crop.ID === null);
+
+   const cropIds = Crops.Crops
+ .filter(crop => crop.Crop.ID !== null && crop.Crop.IsDelete === true)  // Adding condition for IsDeleted and ID not null
+ .map(crop => crop.Crop.ID);
     return await AppDataSource.transaction(async (transactionalManager) => {
       let createdPlan
+if(cropIds.length>0)
+ {
+  for (const cropId of cropIds) {
+    await this.deleteCrop(cropId, userId, request, transactionalManager);
+}
+ }
         await this.updateCropData(
         cropsWithID,
         userId,
@@ -2931,6 +2966,7 @@ class CropService extends BaseService {
         request,
         transactionalManager
       );
+ console.log('createdPlan',createdPlan)
       return (createdPlan!=null?true:false)
     });
   }
