@@ -270,14 +270,16 @@ class CropController {
   async deleteCropsByIds() {
     const { cropIds } = this.#request.payload;
     const userId = this.#request.userId;
+      let transaction = null;
 
     try {
       // Loop through each cropId and call the service method to delete it
       for (let cropId of cropIds) {
-        const result = await this.#cropService.deleteCropById(
+        const result = await this.#cropService.deleteCrop(
           cropId,
           userId,
-          this.#request
+          this.#request,
+          transaction
         );
 
         if (result?.affectedRows === 0) {

@@ -2176,10 +2176,10 @@ class PlanService extends BaseService {
                 );
               }
 
-               return {
-                 message: "Default crop saved and exiting early",
-                 Recommendations,
-               };
+              //  return {
+              //    message: "Default crop saved",
+              //    Recommendations,
+              //  };
             } catch (error) {
               console.error(
                 `Error while saving PKBalance Data FieldId: ${fieldId} And Year:${crop?.Year}:`,
@@ -2212,10 +2212,10 @@ class PlanService extends BaseService {
                   error
                 );
               });
-              return {
-                message: "Default crop saved and exiting early",
-                Recommendations,
-              }; 
+              // return {
+              //   message: "Default crop saved",
+              //   Recommendations,
+              // }; 
           }
         }
 
@@ -2235,13 +2235,13 @@ class PlanService extends BaseService {
               userId
             );
           }
-        return {
-          message: "Default crop saved and exiting early",
-          Recommendations,
-        };
+          Recommendations.push({
+          message: "Default crop saved",
+          crop: crop.FieldID,
+        });
       }
-
-      const savedCrop = await transactionalManager.save(
+else{
+const savedCrop = await transactionalManager.save(
         CropEntity,
         this.cropRepository.create({
           ...crop,
@@ -2579,9 +2579,16 @@ class PlanService extends BaseService {
             userId
           );
         }
+        Recommendations.push({
+          message: "crop saved",
+          crop: crop.FieldID, // Include additional crop-related info
+        });
+}      
     }
 
-    return { Recommendations };
+    return {
+         Recommendations
+        };
   }
 
   async buildCropRecommendationData(
