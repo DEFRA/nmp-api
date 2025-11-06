@@ -53,7 +53,7 @@ const CropDto = Joi.object({
   ModifiedByID: Joi.number().integer().allow(null).optional(),
   FieldName: Joi.string().optional().allow(null),
   EncryptedCounter: Joi.number().integer().allow(null),
-  IsDelete: Joi.boolean().allow(null),
+  IsDeleted: Joi.boolean().allow(null),
 }).required();
 
 const CopyPlanDto = Joi.object({
