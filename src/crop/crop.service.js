@@ -876,7 +876,7 @@ class CropService extends BaseService {
           ModifiedOn,
           ModifiedByID,
           EncryptedCounter,
-          FieldName,IsDelete,
+          FieldName,IsDeleted,
           ...updatedCropData
         } = crop;
 
@@ -2943,7 +2943,7 @@ class CropService extends BaseService {
     const cropsWithoutID = Crops.Crops.filter((crop) => crop.Crop.ID === null);
 
    const cropIds = Crops.Crops
- .filter(crop => crop.Crop.ID !== null && crop.Crop.IsDelete === true)  // Adding condition for IsDeleted and ID not null
+ .filter(crop => crop.Crop.ID !== null && crop.Crop.IsDeleted === true)  // Adding condition for IsDeleted and ID not null
  .map(crop => crop.Crop.ID);
     return await AppDataSource.transaction(async (transactionalManager) => {
       let createdPlan
