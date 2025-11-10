@@ -44,6 +44,7 @@ const { UpdateRecommendationChanges } = require("../shared/updateRecommendations
 const { UpdateRecommendation } = require("../shared/updateRecommendation.service");
 const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
+const { PreviousCroppingMapper } = require("../constants/action-mapper");
 
 class FieldService extends BaseService {
   constructor() {
@@ -251,10 +252,11 @@ class FieldService extends BaseService {
       let Previouscrops = [];
       if (body.PreviousCroppings && body.PreviousCroppings.length > 0) {
         for (const cropsData of body.PreviousCroppings) {
+          const {Action , ...createPrevCrops} = cropsData
           const savedCrops = await transactionalManager.save(
             PreviousCroppingEntity,
             this.previousCroppingRepository.create({
-              ...cropsData,
+              ...createPrevCrops,
               ...(cropsData.ID == 0 ? { ID: null } : {}),
               FieldID: Field.ID,
               CreatedByID: userId,
@@ -407,108 +409,202 @@ class FieldService extends BaseService {
         }
       }
        
+      //let updatedOrInsertedPrevCroppings = [];
+      //  if (Array.isArray(PreviousCroppings) && PreviousCroppings.length > 0) {
+      //    let hasPrevCropUpdated = false;
+      //    let previousCropping
+      //    // Get all existing PreviousCroppings for this field
+      //    const existingPrevCroppings = await transactionalManager.find(
+      //      PreviousCroppingEntity,
+      //      { where: { FieldID: fieldId } }
+      //    );
+
+      //    // Map for quick lookup by HarvestYear
+      //    const existingMap = new Map(
+      //      existingPrevCroppings.map((pc) => [pc.HarvestYear, pc])
+      //    );
+
+      //    // Extract HarvestYears from incoming data
+      //    const incomingYears = PreviousCroppings.map((p) => p.HarvestYear);
+      //    for (const prevCrop of PreviousCroppings) {
+      //      // Ensure FieldID is attached
+      //      prevCrop.FieldID = fieldId;
+
+      //      // Check if record already exists for FieldID
+      //      const existingPrevCrop = await transactionalManager.findOne(
+      //        PreviousCroppingEntity,
+      //        {
+      //          where: { FieldID: fieldId, HarvestYear: prevCrop.HarvestYear },
+      //        }
+      //      );
+
+      //      const { ID, CreatedOn, CreatedByID,PreviousCroppings,Action, ...prevCropDataToUpdate } =
+      //        prevCrop;
+
+      //      if (existingPrevCrop) {
+      //        // Update existing
+      //      previousCropping =  await transactionalManager.update(
+      //          PreviousCroppingEntity,
+      //          existingPrevCrop.ID,
+      //          {
+      //            ...prevCropDataToUpdate,
+      //            ModifiedByID: userId,
+      //            ModifiedOn: new Date(),
+      //          }
+      //        );
+
+      //        hasPrevCropUpdated = true;
+      //      } else {
+      //        // Insert new record if not found
+      //     previousCropping = await transactionalManager.insert(PreviousCroppingEntity, {
+      //          ...prevCropDataToUpdate,
+      //          FieldID: fieldId,
+      //          CreatedByID: userId,
+      //          CreatedOn: new Date(),
+      //        });
+      //        hasPrevCropUpdated = true;
+
+      //      }
+      //    }
+
+      //    // 4b. Delete old records that are not in incoming list
+      //    const toDelete = existingPrevCroppings.filter(
+      //      (pc) => !incomingYears.includes(pc.HarvestYear)
+      //    );
+
+      //    if (toDelete.length > 0) {
+      //      const idsToDelete = toDelete.map((pc) => pc.ID);
+      //      await transactionalManager.delete(
+      //        PreviousCroppingEntity,
+      //        idsToDelete
+      //      );
+      //        hasPrevCropUpdated = true;
+      //    }
+
+      //    if (hasPrevCropUpdated) {
+      //      const crops = await transactionalManager.find(CropEntity, {
+      //        where: { FieldID: fieldId },
+      //      });
+
+      //      if (crops.length > 0) {
+      //        const oldestCrop = crops.reduce((oldest, current) =>
+      //          current.Year < oldest.Year ? current : oldest
+      //        );
+
+      //        this.UpdateRecommendation.updateRecommendationsForField(
+      //          fieldId,
+      //          oldestCrop.Year,
+      //          request,
+      //          userId
+      //        ).catch((error) => {
+      //          console.error(
+      //            "Error updating next crop's recommendations:",
+      //            error
+      //          );
+      //        });
+      //      }
+      //    }
+      //       updatedOrInsertedPrevCroppings = await transactionalManager.find(
+      //         PreviousCroppingEntity,
+      //         { where: { FieldID: fieldId } }
+      //       );
+      //  }
+
       let updatedOrInsertedPrevCroppings = [];
-       if (Array.isArray(PreviousCroppings) && PreviousCroppings.length > 0) {
-         let hasPrevCropUpdated = false;
-         let previousCropping
-         // Get all existing PreviousCroppings for this field
-         const existingPrevCroppings = await transactionalManager.find(
-           PreviousCroppingEntity,
-           { where: { FieldID: fieldId } }
-         );
 
-         // Map for quick lookup by HarvestYear
-         const existingMap = new Map(
-           existingPrevCroppings.map((pc) => [pc.HarvestYear, pc])
-         );
+      if (Array.isArray(PreviousCroppings) && PreviousCroppings.length > 0) {
+        let hasPrevCropUpdated = false;
 
-         // Extract HarvestYears from incoming data
-         const incomingYears = PreviousCroppings.map((p) => p.HarvestYear);
-         for (const prevCrop of PreviousCroppings) {
-           // Ensure FieldID is attached
-           prevCrop.FieldID = fieldId;
 
-           // Check if record already exists for FieldID
-           const existingPrevCrop = await transactionalManager.findOne(
-             PreviousCroppingEntity,
-             {
-               where: { FieldID: fieldId, HarvestYear: prevCrop.HarvestYear },
-             }
-           );
+        for (const prevCrop of PreviousCroppings) {
+          prevCrop.FieldID = fieldId;
 
-           const { ID, CreatedOn, CreatedByID, ...prevCropDataToUpdate } =
-             prevCrop;
+          const {
+            ID,
+            CreatedOn,
+            CreatedByID,
+            PreviousCroppings,
+            Action,
+            ...prevCropData
+          } = prevCrop;
 
-           if (existingPrevCrop) {
-             // Update existing
-           previousCropping =  await transactionalManager.update(
-               PreviousCroppingEntity,
-               existingPrevCrop.ID,
-               {
-                 ...prevCropDataToUpdate,
-                 ModifiedByID: userId,
-                 ModifiedOn: new Date(),
-               }
-             );
-
-             hasPrevCropUpdated = true;
-           } else {
-             // Insert new record if not found
-          previousCropping = await transactionalManager.insert(PreviousCroppingEntity, {
-               ...prevCropDataToUpdate,
-               FieldID: fieldId,
-               CreatedByID: userId,
-               CreatedOn: new Date(),
-             });
-             hasPrevCropUpdated = true;
-
-           }
-         }
-
-         // 4b. Delete old records that are not in incoming list
-         const toDelete = existingPrevCroppings.filter(
-           (pc) => !incomingYears.includes(pc.HarvestYear)
-         );
-
-         if (toDelete.length > 0) {
-           const idsToDelete = toDelete.map((pc) => pc.ID);
-           await transactionalManager.delete(
-             PreviousCroppingEntity,
-             idsToDelete
-           );
-             hasPrevCropUpdated = true;
-         }
-
-         if (hasPrevCropUpdated) {
-           const crops = await transactionalManager.find(CropEntity, {
-             where: { FieldID: fieldId },
-           });
-
-           if (crops.length > 0) {
-             const oldestCrop = crops.reduce((oldest, current) =>
-               current.Year < oldest.Year ? current : oldest
-             );
-
-             this.UpdateRecommendation.updateRecommendationsForField(
-               fieldId,
-               oldestCrop.Year,
-               request,
-               userId
-             ).catch((error) => {
-               console.error(
-                 "Error updating next crop's recommendations:",
-                 error
-               );
-             });
-           }
-         }
-            updatedOrInsertedPrevCroppings = await transactionalManager.find(
+          // 🔍 Get existing record by ID (if ID present)
+          let existingPrevCrop = null;
+          if (ID) {
+            existingPrevCrop = await transactionalManager.findOne(
               PreviousCroppingEntity,
-              { where: { FieldID: fieldId } }
+              { where: { ID } }
             );
-       }
+          }
 
-      // 4. Perform the update inside transaction
+          // ✅ ACTION HANDLING
+          if (Action === PreviousCroppingMapper.INSERT) {
+            // ✅ Create
+            await transactionalManager.insert(PreviousCroppingEntity, {
+              ...prevCropData,
+              FieldID: fieldId,
+              CreatedByID: userId,
+              CreatedOn: new Date(),
+            });
+            hasPrevCropUpdated = true;
+          } else if (Action === PreviousCroppingMapper.UPDATE) {
+            // ✅ Update
+            if (existingPrevCrop) {
+              await transactionalManager.update(
+                PreviousCroppingEntity,
+                existingPrevCrop.ID,
+                {
+                  ...prevCropData,
+                  ModifiedByID: userId,
+                  ModifiedOn: new Date(),
+                }
+              );
+              hasPrevCropUpdated = true;
+            }
+          } else if (Action === PreviousCroppingMapper.DELETE) {
+            // ✅ Delete
+            if (existingPrevCrop) {
+              await transactionalManager.delete(
+                PreviousCroppingEntity,
+                existingPrevCrop.ID
+              );
+              hasPrevCropUpdated = true;
+            }
+          }
+        }
+
+        // ✅ Recalculate Recommendations if any change
+        if (hasPrevCropUpdated) {
+          const crops = await transactionalManager.find(CropEntity, {
+            where: { FieldID: fieldId },
+          });
+
+          if (crops.length > 0) {
+            const oldestCrop = crops.reduce((oldest, current) =>
+              current.Year < oldest.Year ? current : oldest
+            );
+
+            this.UpdateRecommendation.updateRecommendationsForField(
+              fieldId,
+              oldestCrop.Year,
+              request,
+              userId
+            ).catch((error) => {
+              console.error(
+                "Error updating next crop's recommendations:",
+                error
+              );
+            });
+          }
+        }
+
+        // ✅ Return latest data
+        updatedOrInsertedPrevCroppings = await transactionalManager.find(
+          PreviousCroppingEntity,
+          { where: { FieldID: fieldId } }
+        );
+      }
+
       const updateResult = await transactionalManager.update(
         FieldEntity,
         fieldId,

@@ -102,6 +102,7 @@ const PreviousCroppingSchema = Joi.object({
   CreatedByID: Joi.number().integer().allow(null),
   ModifiedOn: Joi.date().iso().allow(null),
   ModifiedByID: Joi.number().integer().allow(null),
+  Action: Joi.number().integer().allow(null).optional()
 }).required();
 const PKBalanceSchema = Joi.object({
   Year: Joi.number().required(),
