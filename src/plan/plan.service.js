@@ -2307,9 +2307,8 @@ const savedCrop = await transactionalManager.save(
 
       if (
         !nutrientRecommendationsData ||
-        !nutrientRecommendationsData.calculations == null ||
-        !nutrientRecommendationsData.adviceNotes == null ||
-        nutrientRecommendationsData.data?.error
+        nutrientRecommendationsData.calculations != null ||
+        nutrientRecommendationsData.adviceNotes != null 
       ) {
         throw boom.badData(`${nutrientRecommendationsData.data.error}`);
       } else if (nutrientRecommendationsData.data?.Invalid) {

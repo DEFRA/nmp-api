@@ -154,7 +154,6 @@ class CropController {
   async createNutrientsRecommendationForFieldByFieldId() {
     const body = this.#request.payload;
     const userId = this.#request.userId;
-    this.#request;
     let transaction=null
     try {
       const data =
@@ -299,7 +298,7 @@ class CropController {
     const { farmId } = this.#request.query;
 
     try {
-      const cropIdsArray = cropIds.split(",").map((id) => parseInt(id));
+      const cropIdsArray = cropIds.split(",").map((id) => Number.parseInt(id));
       const cropGroupNameAlreadyExist =
         await this.#cropService.CropGroupNameExists(
           cropIdsArray,
