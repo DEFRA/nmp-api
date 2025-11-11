@@ -2284,7 +2284,7 @@ class CropService extends BaseService {
       );
 
       for (const nutrient in notesByNutrientId) {
-        let nutrientId = Number.parseInt(nutrient);
+        const nutrientId = Number.parseInt(nutrient);
         const concatenatedNote = notesByNutrientId[nutrientId].join(" <br/>"); // Concatenate notes for the same nutrientId
 
         // Add nutrientId to the processed list
