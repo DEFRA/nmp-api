@@ -797,16 +797,18 @@ class FieldService extends BaseService {
         const crops = await this.cropRepository.find({
           where: { FieldID: field.ID, Year: year },
         });
-
         const previousCropData = await this.cropRepository.findOne({
-          where: { FieldID: field.ID, CropInfo1: null },
-          select: ["CropTypeID"],
-        });
+          where: { FieldID: field.ID, Year: year - 1 },
+      select: ["CropTypeID"],
+      order: {
+        CreatedOn: "DESC"  // Order by createdDate in descending order
+      },
+      });
+      
+      const previousCropTypename = previousCropData 
+        ? await this.getCropTypeName(previousCropData.CropTypeID,cropTypeAllData)
+        : null;
 
-        const previousCropTypename = await this.getCropTypeName(
-          previousCropData.CropTypeID,
-          cropTypeAllData
-        );
 
         // const previousGrasses = await this.previousGrassesRepository.find({
         //   where: { FieldID: field.ID },
@@ -1134,7 +1136,7 @@ class FieldService extends BaseService {
         const fieldData = {
           ...field,
           Management: grassManagementOptionName,
-          PreviousCropID: previousCropData.CropTypeID,
+          PreviousCropID: previousCropData?previousCropData.CropTypeID:null,
           PreviousCrop: previousCropTypename,
           Crops: cropsWithManagement,
           // PreviousGrasses: previousGrasses,
