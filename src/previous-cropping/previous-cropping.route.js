@@ -42,7 +42,7 @@ module.exports = [
     path: "/previous-cropping-previous-years/{fieldId}",
     options: {
       tags: ["api", "Previous Cropping"],
-      description: "Get previous croppping Previous Years data by Field ID and Year",
+      description: "Get previous croppping data older than given Year by Field ID and Year",
       validate: {
         params: Joi.object({
           fieldId: Joi.number().integer().required(),
