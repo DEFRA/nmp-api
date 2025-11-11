@@ -107,7 +107,5 @@ module.exports = {
   CropDto,
   CreatePlanDto,
   CreateCropWithManagementPeriodsDto,
-  CreatePlanDto,
-  CreateCropWithManagementPeriodsDto,
   CopyPlanDto
 };

@@ -1,4 +1,5 @@
 const { StoreCapacitiesService } = require("./store-capacities.service");
+const boom = require("@hapi/boom");
 
 class StoreCapacitiesController {
   #request;

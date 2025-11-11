@@ -166,12 +166,6 @@ const FarmEntity = new EntitySchema({
       joinColumn: { name: "ID" },
       inverseSide: "Farm",
     },
-    FarmManureTypes: {
-      type: "one-to-many",
-      target: "FarmManureType",
-      joinColumn: { name: "ID" },
-      inverseSide: "Farm",
-    },
     ExcessRainfalls: {
       type: "one-to-many",
       target: "ExcessRainfalls",

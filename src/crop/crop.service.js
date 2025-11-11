@@ -1268,7 +1268,7 @@ class CropService extends BaseService {
             ID: null,
             ManagementPeriodID: OldToNewManagementPeriodMap[oldPeriod.ID],
             CreatedByID: userId,
-            CreatedByID: new Date(),
+            CreatedOn: new Date(),
           };
 
           const savedManure = await transactionalManager.save(
@@ -1410,9 +1410,8 @@ class CropService extends BaseService {
       );
 
       if (!currentCropType || currentCropType.cropGroupId == null) {
-        throw new HttpException(
-          `Invalid CropTypeId for crop having field name ${field.Name}`,
-          HttpStatus.BAD_REQUEST
+       console.log(
+          `Invalid CropTypeId for crop having field name ${field.Name}`
         );
       }
       let expectedYield = crop.Yield,
@@ -1573,7 +1572,7 @@ class CropService extends BaseService {
       );
       const isOneGrass = cropTypeIDs.includes(CropTypeMapper.GRASS);
       const isOtherValid = cropTypeIDs.some(
-        (id) => id !== CropTypeMapper.GRASS && id !== CropTypeMapper.GRASS
+        (id) => id !== CropTypeMapper.GRASS 
       );
       const isBothArable = cropTypeIDs.every(
         (id) => id !== CropTypeMapper.GRASS
@@ -2154,10 +2153,10 @@ class CropService extends BaseService {
         if (pkBalanceData) {
           pBalance =
             (fertiliserData == null ? 0 : fertiliserData.p205) -
-            (0 - pkBalanceData == null ? 0 : pkBalanceData.PBalance);
+            (0 - (pkBalanceData == null ? 0 : pkBalanceData.PBalance));
           kBalance =
             (fertiliserData == null ? 0 : fertiliserData.k20) -
-            (0 - pkBalanceData == null ? 0 : pkBalanceData.KBalance);
+            (0 - (pkBalanceData == null ? 0 : pkBalanceData.KBalance));
         } else {
           pBalance = fertiliserData == null ? 0 : fertiliserData.p205;
           kBalance = fertiliserData == null ? 0 : fertiliserData.k20;
@@ -2284,15 +2283,16 @@ class CropService extends BaseService {
         { where: { RecommendationID: savedCrop.ID } }
       );
 
-      for (const nutrientId in notesByNutrientId) {
+      for (const nutrient in notesByNutrientId) {
+        const nutrientId = Number.parseInt(nutrient);
         const concatenatedNote = notesByNutrientId[nutrientId].join(" <br/>"); // Concatenate notes for the same nutrientId
 
         // Add nutrientId to the processed list
-        nutrientIdsInData.push(parseInt(nutrientId));
+        nutrientIdsInData.push(nutrientId);
 
         // Check if the comment already exists for this nutrientId in the database
         const existingComment = existingComments.find(
-          (comment) => comment.Nutrient === parseInt(nutrientId)
+          (comment) => comment.Nutrient === nutrientId
         );
 
         if (existingComment) {
@@ -2309,7 +2309,7 @@ class CropService extends BaseService {
         } else {
           // Create a new comment if not found
           const newComment = this.recommendationCommentRepository.create({
-            Nutrient: parseInt(nutrientId),
+            Nutrient: nutrientId,
             Comment: concatenatedNote,
             RecommendationID: savedCrop.ID, // Use the correct recommendation ID from the passed crop data
             CreatedOn: new Date(),
@@ -2568,9 +2568,8 @@ class CropService extends BaseService {
 
         if (
           !nutrientRecommendationsData ||
-          !nutrientRecommendationsData.calculations == null ||
-          !nutrientRecommendationsData.adviceNotes == null ||
-          nutrientRecommendationsData.data?.error
+          nutrientRecommendationsData.calculations != null ||
+          nutrientRecommendationsData.adviceNotes != null 
         ) {
           throw boom.badData(`${nutrientRecommendationsData.data.error}`);
         } else if (nutrientRecommendationsData.data?.Invalid) {
