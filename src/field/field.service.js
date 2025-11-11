@@ -805,7 +805,7 @@ class FieldService extends BaseService {
       },
       });
       
-      const previousCropTypename = previousCropData 
+      const previousCropTypeName = previousCropData 
         ? await this.getCropTypeName(previousCropData.CropTypeID,cropTypeAllData)
         : null;
 
@@ -1137,7 +1137,7 @@ class FieldService extends BaseService {
           ...field,
           Management: grassManagementOptionName,
           PreviousCropID: previousCropData?previousCropData.CropTypeID:null,
-          PreviousCrop: previousCropTypename,
+          PreviousCrop: previousCropTypeName,
           Crops: cropsWithManagement,
           // PreviousGrasses: previousGrasses,
           SoilAnalysis: soilAnalysis,
