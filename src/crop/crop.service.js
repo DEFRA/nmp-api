@@ -2568,8 +2568,8 @@ class CropService extends BaseService {
 
         if (
           !nutrientRecommendationsData ||
-          nutrientRecommendationsData.calculations == null ||
-          nutrientRecommendationsData.adviceNotes == null 
+          nutrientRecommendationsData?.calculations == null ||
+          nutrientRecommendationsData?.adviceNotes == null 
         ) {
           throw boom.badData(`${nutrientRecommendationsData.data.error}`);
         } else if (nutrientRecommendationsData.data?.Invalid) {
