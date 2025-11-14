@@ -98,11 +98,12 @@ const WarningMessagesEntity = new EntitySchema({
       joinColumn: { name: "CropID" },
       inverseSide: "WarningMessages",
     },
-    // WarningCode: {
-    //   type: "many-to-one",
-    //   target: "WarningCodes",
-    //   joinColumn: { name: "WarningCodeID" },
-    // },
+    WarningCode: {
+    type: "many-to-one",
+    target: "WarningCode",
+    joinColumn: { name: "WarningCodeID" },
+    inverseSide: "WarningMessages",
+    },
     // WarningLevel: {
     //   type: "many-to-one",
     //   target: "WarningLevels",

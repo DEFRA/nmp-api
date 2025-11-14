@@ -87,6 +87,7 @@ const { SolidManureTypesEntity } = require("./entity/solid-manure-types.entity.j
 const { BankSlopeAnglesEntity } = require("./entity/bank-slope-angles-entity.js");
 const { WarningMessagesEntity } = require("./entity/warning-message.entity.js");
 const { PreviousCroppingEntity } = require("./entity/previous-cropping.entity.js");
+const { WarningCodeEntity } = require("./entity/warning-code.entity.js");
 
 
 
@@ -160,7 +161,8 @@ const baseConfig = {
     SolidManureTypesEntity,
     BankSlopeAnglesEntity,
     WarningMessagesEntity,
-    PreviousCroppingEntity
+    PreviousCroppingEntity,
+    WarningCodeEntity
   ],
 };
 
