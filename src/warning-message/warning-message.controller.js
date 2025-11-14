@@ -15,7 +15,8 @@ class WarningMessageController {
   async getWarningMessageByFieldIdAndYear() {
     const { fieldId } = this.#request.params;
     const { harvestYear } = this.#request.query;
-
+     
+    const BAD_REQUEST = 400;
     try {
       // Handle multiple FieldIDs, split by comma if needed (if multiple IDs are passed)
       const fieldIds = fieldId.split(",").map((id) => Number.parseInt(id));
@@ -26,7 +27,7 @@ class WarningMessageController {
         );
       return this.#h.response(result);
     } catch (error) {
-      return this.#h.response({ error: error.message }).code(400);
+      return this.#h.response({ error: error.message }).code(BAD_REQUEST);
     }
   }
 

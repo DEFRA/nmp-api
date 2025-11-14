@@ -13,7 +13,7 @@ module.exports = [
       validate: {
               params: Joi.object({
                 fieldId: Joi.string()
-                  .pattern(/^[0-9]+(,[0-9]+)*$/) // Validate FieldIDs (comma-separated)
+                  .pattern(/^\d+(,\d+)*$/) // Validate FieldIDs (comma-separated)
                   .required(),
               }),
         query: Joi.object({
