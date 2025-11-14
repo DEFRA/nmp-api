@@ -75,6 +75,7 @@ const { CalculateCropsSnsAnalysisService } = require("../shared/calculate-crops-
 const { CropTypeLinkingEntity } = require("../db/entity/crop-type-linking.entity");
 const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-other");
 const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
+const { CalculatePreviousCropService } = require("../shared/previous-year-crop-service");
 
 class PlanService extends BaseService {
   constructor() {
@@ -115,6 +116,7 @@ class PlanService extends BaseService {
     this.CalculateMannerOutput = new CalculateMannerOutputService();
     this.CalculateCropsSnsAnalysis = new CalculateCropsSnsAnalysisService();
     this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
+    this.CalculatePreviousCropService = new CalculatePreviousCropService();
   }
 
   async getManagementPeriods(id) {
@@ -400,12 +402,13 @@ class PlanService extends BaseService {
       );
     }
 
-    const previousCrop = await this.findPreviousCrop(
-      field.ID,
-      crop.Year,
-      allCropData,
-      transactionalManager
-    );
+    
+    const previousCrop =
+      await this.CalculatePreviousCropService.findPreviousCrop(
+        field.ID,
+        crop.Year,
+        transactionalManager
+      );
 
     // Use the buildArableBody function to get the arable array
     const arableBody = await this.buildArableBody(
@@ -1598,12 +1601,14 @@ class PlanService extends BaseService {
           cropPOfftake = crop.Yield ? crop.Yield : 50;
         }
       }
-      const previousCrop = await this.findPreviousCrop(
-        field.ID,
-        crop.Year,
-        allCropData,
-        transactionalManager
-      );
+     
+        const previousCrop =
+          await this.CalculatePreviousCropService.findPreviousCrop(
+            field.ID,
+            crop.Year,
+            transactionalManager
+          );
+
 
       if (crop.CropTypeID === CropTypeMapper.OTHER || !previousCrop) {
         await this.savedDefault(cropData, userId, transactionalManager);
@@ -1645,10 +1650,7 @@ class PlanService extends BaseService {
                 );
               }
 
-              //  return {
-              //    message: "Default crop saved",
-              //    Recommendations,
-              //  };
+             
             } catch (error) {
               console.error(
                 `Error while saving PKBalance Data FieldId: ${fieldId} And Year:${crop?.Year}:`,
@@ -1681,10 +1683,7 @@ class PlanService extends BaseService {
                   error
                 );
               });
-              // return {
-              //   message: "Default crop saved",
-              //   Recommendations,
-              // }; 
+            
           }
         }
 
@@ -2062,15 +2061,7 @@ const savedCrop = await transactionalManager.save(
         }
       }
 
-      // Retrieve the management period that matches the crop and defoliationId.
-      // const managementPeriods = await transactionalManager.find(
-      //   ManagementPeriodEntity,
-      //   { where: { CropID: cropID, Defoliation: defoliationId } }
-      // );
-
-      // if (!managementPeriods.length) continue;
-
-      // const managementPeriod = managementPeriods[0];
+     
 
       // Check if a recommendation exists for this management period
       const existingRecommendation = await transactionalManager.findOne(

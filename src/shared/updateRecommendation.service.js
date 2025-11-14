@@ -44,6 +44,7 @@ const { CalculateTotalAvailableNForNextYear } = require("./calculate-next-year-a
 const { CalculateNextDefoliationService } = require("./calculate-next-defoliation-totalN");
 const { CalculatePKBalanceOther } = require("./calculate-pk-balance-other");
 const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
+const { CalculatePreviousCropService } = require("./previous-year-crop-service");
 
 
 class UpdateRecommendation {
@@ -101,6 +102,7 @@ class UpdateRecommendation {
     this.CalculateNextDefoliationService =
       new CalculateNextDefoliationService();
     this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
+    this.CalculatePreviousCropService = new CalculatePreviousCropService();
   }
 
   async getYearsGreaterThanGivenYear(fieldID, year) {
@@ -895,11 +897,14 @@ class UpdateRecommendation {
           cropPOfftake = cropData.Yield ? cropData.Yield : 50;
         }
       }
-      const previousCrop = await this.findPreviousCrop(
-        transactionalManager,
-        fieldData.ID,
-        cropData.Year
-      );
+     
+        const previousCrop =
+          await this.CalculatePreviousCropService.findPreviousCrop(
+            fieldData.ID,
+            cropData.Year,
+            transactionalManager
+          );
+
 
       if (
         cropData.CropTypeID === CropTypeMapper.OTHER ||
@@ -1260,11 +1265,14 @@ class UpdateRecommendation {
           cropPOfftake = crop.Yield ? crop.Yield : 50;
         }
       }
-      const previousCrop = await this.findPreviousCrop(
-        transactionalManager,
-        field.ID,
-        crop.Year
-      );
+     
+        const previousCrop =
+          await this.CalculatePreviousCropService.findPreviousCrop(
+            field.ID,
+            crop.Year,
+            transactionalManager
+          );
+
 
       if (
         crop.CropTypeID === CropTypeMapper.OTHER ||
@@ -2268,33 +2276,7 @@ class UpdateRecommendation {
     allRecommendations
   ) {
     // Prepare cropOrderData with the values from latestSoilAnalysis, snsAnalysesData, and mannerOutputReq
-    // let cropOrderData = {
-    //   CropN: null,
-    //   ManureN: mannerOutputs.data.currentCropAvailableN,
-    //   FertilizerN: null,
-    //   CropP2O5: null,
-    //   ManureP2O5: mannerOutputs.data.cropAvailableP2O5 || null,
-    //   FertilizerP2O5: null,
-    //   ManureK2O: mannerOutputs.data.cropAvailableK2O || null,
-    //   CropMgO: null,
-    //   ManureMgO: null,
-    //   FertilizerMgO: null,
-    //   CropSO3: null,
-    //   ManureSO3: null,
-    //   FertilizerSO3: null,
-    //   CropNa2O: null, // assuming Na2O is present in mannerOutputReq if not remove this
-    //   ManureNa2O: null,
-    //   FertilizerNa2O: null, // assuming Na2O is present
-    //   CropLime: null,
-    //   ManureLime: null,
-    //   FertilizerLime: null, // Assuming no data for FertilizerLime
-    //   PH: latestSoilAnalysis?.PH?.toString() || null,
-    //   SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
-    //   PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
-    //   KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
-    //   MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-    //   SIndex: null,
-    // };
+   
     if (mannerOutputs.length == 0) {
       mannerOutputs = null;
     }
@@ -2337,9 +2319,7 @@ class UpdateRecommendation {
 
     let  managementPeriods=[];
     if (organicManure) {
-      // recommendation = allRecommendations.find(
-      //   (rec) => rec.ManagementPeriodID === organicManure.ManagementPeriodID
-      // );
+     
        managementPeriods = [
          await transactionalManager.findOne(ManagementPeriodEntity, {
            where: { ID: organicManure.ManagementPeriodID },
@@ -2357,16 +2337,7 @@ class UpdateRecommendation {
     }
     let updatedRecommendations = [];
 
-    // if (recommendation) {
-    //   // If a recommendation exists, update it
-    //   recommendation = {
-    //     ...recommendation,
-    //     ...cropOrderData,
-    //     ModifiedOn: new Date(),
-    //     ModifiedByID: userId,
-    //   };
-    //   await transactionalManager.save(RecommendationEntity, recommendation);
-    // }
+    
     for (const period of managementPeriods) {
       let recommendation = allRecommendations.find(
         (rec) => rec.ManagementPeriodID === period.ID
@@ -2664,11 +2635,14 @@ class UpdateRecommendation {
         HttpStatus.BAD_REQUEST
       );
     }
-    const previousCrop = await this.findPreviousCrop(
-      transactionalManager,
-      field.ID,
-      crop.Year
-    );
+   
+      const previousCrop =
+        await this.CalculatePreviousCropService.findPreviousCrop(
+          field.ID,
+          crop.Year,
+          transactionalManager
+        );
+
 
     const arableBody = await this.buildArableBody(
       dataMultipleCrops,
@@ -3068,11 +3042,14 @@ class UpdateRecommendation {
         HttpStatus.BAD_REQUEST
       );
     }
-    const previousCrop = await this.findPreviousCrop(
-      transactionalManager,
-      field.ID,
-      crop.Year
-    );
+   
+      const previousCrop =
+        await this.CalculatePreviousCropService.findPreviousCrop(
+          field.ID,
+          crop.Year,
+          transactionalManager
+        );
+
 
     const excessRainfall = await this.getWinterExcessRainfall(
       farm.ID,
