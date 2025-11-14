@@ -22,35 +22,6 @@ class WarningMessageService extends BaseService {
       AppDataSource.getRepository(CropEntity);
   }
 
-
-  // async getWarningMessageByFieldId(fieldId) {
-  //   let warningMessageData = null;
-
-  //   if (fieldId !== null && fieldId !== undefined) {
-  //     warningMessageData = await this.repository.find({
-  //       where: {
-  //         FieldID: fieldId
-  //       }
-  //     });
-  //   } 
-
-  //   return { WarningMessage: warningMessageData };
-  // }
-//    async getWarningMessageByFieldId(fieldIds, harvestYear) {
-//   if (!fieldId || !harvestYear) return [];
-
-//   const data = await this.repository
-//     .createQueryBuilder("wm")
-//     .leftJoin("wm.WarningCode", "wc")
-//     .leftJoin("wm.Crop", "c")
-//     .where("wm.FieldID = :fieldId", { fieldId })
-//     .andWhere("c.Year = :harvestYear", { harvestYear })
-//     .select("DISTINCT wc.Name", "Name")
-//     .getRawMany();
-
-//   return data.map(d => d.Name);
-// }
-
 async getWarningMessageByFieldIdsAndYear(fieldIds, harvestYear) {
   if (!fieldIds || !Array.isArray(fieldIds) || fieldIds.length === 0 || !harvestYear) {
     return [];
