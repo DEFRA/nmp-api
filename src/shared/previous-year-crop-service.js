@@ -57,19 +57,19 @@ class CalculatePreviousCropService {
       return null;
     }
 
-    const allThreeAreOther =
-      lastYearCrop.CropTypeID === CropTypeMapper.OTHER &&
-      secondLastYearCrop.CropTypeID === CropTypeMapper.OTHER &&
-      thirdLastYearCrop.CropTypeID === CropTypeMapper.OTHER;
+    // const allThreeAreOther =
+    //   lastYearCrop.CropTypeID === CropTypeMapper.OTHER &&
+    //   secondLastYearCrop.CropTypeID === CropTypeMapper.OTHER &&
+    //   thirdLastYearCrop.CropTypeID === CropTypeMapper.OTHER;
 
-    if (allThreeAreOther) {
-      return null;
-    }
+    // if (allThreeAreOther) {
+    //   return null;
+    // }
 
-    // ❌ If LAST YEAR crop (Y-1) is OTHER → return null
-    if (lastYearCrop.CropTypeID === CropTypeMapper.OTHER) {
-      return null;
-    }
+    // // ❌ If LAST YEAR crop (Y-1) is OTHER → return null
+    // if (lastYearCrop.CropTypeID === CropTypeMapper.OTHER) {
+    //   return null;
+    // }
 
     // 3️⃣ GET PREVIOUS YEAR CROP (Y-1 AGAIN) FOR FINAL RETURN
     let previousYearCrops = await transactionalManager.find(CropEntity, {
