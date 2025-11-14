@@ -1083,301 +1083,61 @@ class OrganicManureService extends BaseService {
       where: { ManagementPeriodID: secondCropManagementPeriodId.ID },
     });
   }
-  async saveRecommendationForMultipleCrops(
-    transactionalManager,
-    nutrientRecommendationsData,
-    mannerOutputs,
-    firstCropMannerOutput,
-    nutrientRecommendationnReqBody,
-    OrganicManure,
-    userId,
-    cropData,
-    dataMultipleCrops,
-    latestSoilAnalysis,
-    snsAnalysesData,
-    allRecommendations
-  ) {
-    let cropOrder1Data = {
+
+  async buildCropOrderData(OrganicManure, mannerOutputs, latestSoilAnalysis) {
+    return {
       CropN: null,
-      ManureN: null,
+      NBalance: null,
+      ManureN: mannerOutputs
+        ? mannerOutputs[0].availableN
+        : OrganicManure.AvailableN,
       FertilizerN: null,
+
       CropP2O5: null,
-      ManureP2O5: null,
+      PBalance: null,
+      ManureP2O5: mannerOutputs
+        ? mannerOutputs[0].availableP
+        : OrganicManure.AvailableP2O5,
       FertilizerP2O5: null,
+
       CropK2O: null,
-      ManureK2O: null,
+      KBalance: null,
+      ManureK2O: mannerOutputs
+        ? mannerOutputs[0].availableK
+        : OrganicManure.AvailableK2O,
       FertilizerK2O: null,
+
       CropMgO: null,
+      MgBalance: null,
       ManureMgO: null,
       FertilizerMgO: null,
+
       CropSO3: null,
-      ManureSO3: null,
+      SBalance: null,
+      ManureSO3: mannerOutputs
+        ? mannerOutputs[0].availableS
+        : OrganicManure.AvailableSO3,
       FertilizerSO3: null,
+
       CropNa2O: null,
+      NaBalance: null,
       ManureNa2O: null,
       FertilizerNa2O: null,
+
       CropLime: null,
+      LimeBalance: null,
       ManureLime: null,
       FertilizerLime: null,
-      PH: latestSoilAnalysis?.PH?.toString(),
+
+      PH: latestSoilAnalysis?.PH?.toString() || null,
       SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
+
       SIndex: null,
       NIndex: null,
     };
-
-    let cropOrder2Data = {
-      ...cropOrder1Data,
-    };
-
-    const firstCrop = dataMultipleCrops?.find((crop) => crop.CropOrder === 1);
-    const secondCrop = dataMultipleCrops?.find((crop) => crop.CropOrder === 2);
-
-    const recommendationMap = allRecommendations.reduce(
-      (acc, recommendation) => {
-        acc[recommendation.ManagementPeriodID] = recommendation;
-        return acc;
-      },
-      {}
-    );
-
-    // Get ManagementPeriodID for first crop
-    let firstCropSaveData = null;
-    if (firstCrop) {
-      const firstCropManagementPeriodId =
-        await this.managementPeriodRepository.findOneBy({
-          CropID: firstCrop.ID,
-        });
-      // mannerOutputs 2nd crop when
-      for (const calculation of nutrientRecommendationsData?.calculations ||
-        []) {
-        if (calculation.sequenceId === 1) {
-          switch (calculation.nutrientId) {
-            case 0:
-              cropOrder1Data.CropN = calculation.recommendation;
-              cropOrder1Data.ManureN =
-                firstCropMannerOutput ||
-                (mannerOutputs && cropData.CropOrder == 1)
-                  ? nutrientRecommendationnReqBody.field.mannerOutputs[0]
-                      ?.availableN
-                  : cropData.CropOrder == 1
-                  ? OrganicManure.AvailableN
-                  : null;
-              cropOrder1Data.FertilizerN = calculation.cropNeed;
-              cropOrder1Data.NIndex = calculation.indexpH;
-              break;
-            case 1:
-              cropOrder1Data.CropP2O5 = calculation.recommendation;
-              cropOrder1Data.ManureP2O5 =
-                firstCropMannerOutput ||
-                (mannerOutputs && cropData.CropOrder == 1)
-                  ? nutrientRecommendationnReqBody.field.mannerOutputs[0]
-                      ?.availableP
-                  : cropData.CropOrder == 1
-                  ? OrganicManure.AvailableP2O5
-                  : null;
-              cropOrder1Data.FertilizerP2O5 = calculation.cropNeed;
-              break;
-            case 2:
-              cropOrder1Data.CropK2O = calculation.recommendation;
-              cropOrder1Data.ManureK2O =
-                firstCropMannerOutput ||
-                (mannerOutputs && cropData.CropOrder == 1)
-                  ? nutrientRecommendationnReqBody.field.mannerOutputs[0]
-                      ?.availableK
-                  : cropData.CropOrder == 1
-                  ? OrganicManure.AvailableK2O
-                  : null;
-              cropOrder1Data.FertilizerK2O = calculation.cropNeed;
-              break;
-            case 3:
-              cropOrder1Data.CropMgO = calculation.recommendation;
-              cropOrder1Data.ManureMgO = null;
-              cropOrder1Data.FertilizerMgO = calculation.cropNeed;
-              break;
-            case 4:
-              cropOrder1Data.CropNa2O = calculation.recommendation;
-              // cropOrder1Data.ManureNa2O = calculation.applied;
-              cropOrder1Data.FertilizerNa2O = calculation.cropNeed;
-              break;
-            case 5:
-              cropOrder1Data.CropSO3 = calculation.recommendation;
-              cropOrder1Data.ManureSO3 =
-                firstCropMannerOutput ||
-                (mannerOutputs && cropData.CropOrder == 1)
-                  ? nutrientRecommendationnReqBody.field.mannerOutputs[0]
-                      ?.availableS
-                  : cropData.CropOrder == 1
-                  ? OrganicManure.AvailableSO3
-                  : null;
-              cropOrder1Data.FertilizerSO3 = calculation.cropNeed;
-              break;
-            case 6:
-              cropOrder1Data.CropLime = calculation.recommendation;
-              cropOrder1Data.ManureLime = null;
-              cropOrder1Data.FertilizerLime = calculation.cropNeed;
-              break;
-          }
-        }
-      }
-
-      firstCropSaveData = recommendationMap[firstCropManagementPeriodId.ID];
-
-      if (firstCropSaveData) {
-        firstCropSaveData = {
-          ...firstCropSaveData,
-          ...cropOrder1Data,
-          ModifiedOn: new Date(),
-          ModifiedByID: userId,
-        };
-        await transactionalManager.save(
-          RecommendationEntity,
-          firstCropSaveData
-        );
-      } else {
-        firstCropSaveData = this.RecommendationRepository.create({
-          ...cropOrder1Data,
-          ManagementPeriodID: firstCropManagementPeriodId.ID,
-          Comments:
-            "Reference Value: " +
-            nutrientRecommendationsData.referenceValue +
-            "\nVersion: " +
-            nutrientRecommendationsData.version,
-          CreatedOn: new Date(),
-          CreatedByID: userId,
-        });
-        await transactionalManager.save(
-          RecommendationEntity,
-          firstCropSaveData
-        );
-      }
-    }
-
-    // Get ManagementPeriodID for second crop if it exists
-    let secondCropSaveData = null;
-    if (secondCrop) {
-      const secondCropManagementPeriodId =
-        await this.managementPeriodRepository.findOneBy({
-          CropID: secondCrop.ID,
-        });
-
-      nutrientRecommendationsData?.calculations?.forEach(
-        async (calculation) => {
-          if (calculation.sequenceId === 2) {
-            switch (calculation.nutrientId) {
-              case 0:
-                cropOrder2Data.CropN = calculation.recommendation;
-                cropOrder2Data.ManureN = mannerOutputs?.data
-                  ? firstCropMannerOutput?.data && mannerOutputs?.data
-                    ? nutrientRecommendationnReqBody.field.mannerOutputs[1]
-                        .availableN
-                    : nutrientRecommendationnReqBody.field.mannerOutputs[0]
-                        .availableN
-                  : cropData.CropOrder == 2
-                  ? OrganicManure.AvailableN
-                  : null;
-                cropOrder2Data.FertilizerN = calculation.cropNeed;
-                cropOrder2Data.NIndex = calculation.indexpH;
-                break;
-              case 1:
-                cropOrder2Data.CropP2O5 = calculation.recommendation;
-                cropOrder2Data.ManureP2O5 = mannerOutputs?.data
-                  ? firstCropMannerOutput?.data && mannerOutputs?.data
-                    ? nutrientRecommendationnReqBody.field.mannerOutputs[1]
-                        ?.availableP
-                    : nutrientRecommendationnReqBody.field.mannerOutputs[0]
-                        ?.availableP
-                  : cropData.CropOrder == 2
-                  ? OrganicManure.AvailableP2O5
-                  : null;
-                cropOrder2Data.FertilizerP2O5 = calculation.cropNeed;
-                break;
-              case 2:
-                cropOrder2Data.CropK2O = calculation.recommendation;
-                cropOrder2Data.ManureK2O = mannerOutputs?.data
-                  ? firstCropMannerOutput?.data && mannerOutputs?.data
-                    ? nutrientRecommendationnReqBody.field.mannerOutputs[1]
-                        ?.availableK
-                    : nutrientRecommendationnReqBody.field.mannerOutputs[0]
-                        ?.availableK
-                  : cropData.CropOrder == 2
-                  ? OrganicManure.AvailableK2O
-                  : null;
-                cropOrder2Data.FertilizerK2O = calculation.cropNeed;
-                break;
-              case 3:
-                cropOrder2Data.CropMgO = calculation.recommendation;
-                cropOrder2Data.ManureMgO = null;
-                cropOrder2Data.FertilizerMgO = calculation.cropNeed;
-                break;
-              case 4:
-                cropOrder2Data.CropNa2O = calculation.recommendation;
-                // cropOrder2Data.ManureNa2O = calculation.applied;
-                cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
-                break;
-              case 5:
-                cropOrder2Data.CropSO3 = calculation.recommendation;
-                cropOrder2Data.ManureSO3 = mannerOutputs?.data
-                  ? firstCropMannerOutput?.data && mannerOutputs?.data
-                    ? nutrientRecommendationnReqBody.field.mannerOutputs[1]
-                        ?.availableS
-                    : nutrientRecommendationnReqBody.field.mannerOutputs[0]
-                        ?.availableS
-                  : cropData.CropOrder == 2
-                  ? OrganicManure.AvailableSO3
-                  : null;
-                cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
-                break;
-              case 6:
-                cropOrder2Data.CropLime = calculation.recommendation;
-                cropOrder2Data.ManureLime = null;
-                cropOrder2Data.FertilizerLime = calculation.cropNeed;
-                break;
-            }
-          }
-        }
-      );
-
-      secondCropSaveData = recommendationMap[secondCropManagementPeriodId.ID];
-
-      if (secondCropSaveData) {
-        secondCropSaveData = {
-          ...secondCropSaveData,
-          ...cropOrder2Data,
-          ModifiedOn: new Date(),
-          ModifiedByID: userId,
-        };
-        await transactionalManager.save(
-          RecommendationEntity,
-          secondCropSaveData
-        );
-      } else {
-        secondCropSaveData = this.RecommendationRepository.create({
-          ...cropOrder2Data,
-          ManagementPeriodID: secondCropManagementPeriodId.ID,
-          Comments:
-            "Reference Value: " +
-            nutrientRecommendationsData.referenceValue +
-            "\nVersion: " +
-            nutrientRecommendationsData.version,
-          CreatedOn: new Date(),
-          CreatedByID: userId,
-        });
-        await transactionalManager.save(
-          RecommendationEntity,
-          secondCropSaveData
-        );
-      }
-    }
-
-    // Return the saved data for one or both crops based on the input
-    if (secondCrop) {
-      return { firstCropSaveData, secondCropSaveData };
-    } else {
-      return { firstCropSaveData };
-    }
   }
 
   async saveRecommendationForOtherCrops(
@@ -1391,44 +1151,12 @@ class OrganicManureService extends BaseService {
   ) {
     console.log("mannerOutputs", mannerOutputs[0].availableN);
     // Prepare cropOrderData with the values from latestSoilAnalysis, snsAnalysesData, and mannerOutputReq
-    let cropOrderData = {
-      CropN: null,
-      ManureN: mannerOutputs
-        ? mannerOutputs[0].availableN
-        : OrganicManure.AvailableN,
-      FertilizerN: null,
-      CropP2O5: null,
-      ManureP2O5: mannerOutputs
-        ? mannerOutputs[0].availableP
-        : OrganicManure.AvailableP2O5,
-      FertilizerP2O5: null,
-      CropK2O: null,
-      ManureK2O: mannerOutputs
-        ? mannerOutputs[0].availableK
-        : OrganicManure.AvailableK2O,
-      FertilizerK2O: null,
-      CropMgO: null,
-      ManureMgO: null,
-      FertilizerMgO: null,
-      CropSO3: null,
-      ManureSO3: mannerOutputs
-        ? mannerOutputs[0].availableS
-        : OrganicManure.AvailableSO3,
-      FertilizerSO3: null,
-      CropNa2O: null, // assuming Na2O is present in mannerOutputReq if not remove this
-      ManureNa2O: null,
-      FertilizerNa2O: null, // assuming Na2O is present
-      CropLime: null,
-      ManureLime: null,
-      FertilizerLime: null, // Assuming no data for FertilizerLime
-      PH: latestSoilAnalysis?.PH?.toString() || null,
-      SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
-      PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
-      KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
-      MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex: null,
-      NIndex: null,
-    };
+    // ⬇️ Now simply call the new function
+    const cropOrderData = await this.buildCropOrderData(
+      OrganicManure,
+      mannerOutputs,
+      latestSoilAnalysis
+    );
 
     // Check if there's an existing recommendation for the current OrganicManure.ManagementPeriodID
     let recommendation = allRecommendations.find(
@@ -1476,7 +1204,7 @@ class OrganicManureService extends BaseService {
         ...(organicManureData.OrganicManure.ID == 0 ? { ID: null } : {}),
 
         CreatedByID: userId,
-        CreatedOn: new Date()
+        CreatedOn: new Date(),
       })
     );
     organicManures.push(savedOrganicManure);
@@ -1848,12 +1576,19 @@ class OrganicManureService extends BaseService {
       // Initialize crop recommendation object for this defoliation group
       const cropRecData = {
         CropN: null,
+        NBalance: null,
         CropP2O5: null,
+        PBalance: null,
         CropK2O: null,
+        KBalance: null,
         CropMgO: null,
+        MgBalance: null,
         CropSO3: null,
+        SBalance: null,
         CropNa2O: null,
+        NaBalance: null,
         CropLime: null,
+        LimeBalance: null,
         FertilizerN: null,
         FertilizerP2O5: null,
         FertilizerK2O: null,
@@ -1883,7 +1618,8 @@ class OrganicManureService extends BaseService {
             //   relevantMannerOutput != null
             //     ? relevantMannerOutput?.availableN
             //     : availableNForNextDefoliation + nextCropAvailableN;
-            cropRecData.ManureN = calc.applied;
+            cropRecData.ManureN = calc.manures;
+            cropRecData.NBalance = calc.pkBalance;
             cropRecData.NIndex = calc.indexpH;
             break;
           case 1:
@@ -1892,7 +1628,8 @@ class OrganicManureService extends BaseService {
             //   relevantMannerOutput != null
             //     ? relevantMannerOutput?.availableP
             //     : null;
-            cropRecData.ManureP2O5 = calc.applied;
+            cropRecData.ManureP2O5 = calc.manures;
+            cropRecData.PBalance = calc.pkBalance;
             cropRecData.FertilizerP2O5 = calc.cropNeed;
             break;
           case 2:
@@ -1901,15 +1638,18 @@ class OrganicManureService extends BaseService {
             //   relevantMannerOutput != null
             //     ? relevantMannerOutput?.availableK
             //     : null;
-            cropRecData.ManureK2O = calc.applied;
+            cropRecData.ManureK2O = calc.manures;
+            cropRecData.KBalance = calc.pkBalance;
             cropRecData.FertilizerK2O = calc.cropNeed;
             break;
           case 3:
             cropRecData.CropMgO = calc.recommendation;
+            cropRecData.MgBalance = calc.pkBalance;
             cropRecData.FertilizerMgO = calc.cropNeed;
             break;
           case 4:
             cropRecData.CropNa2O = calc.recommendation;
+            cropRecData.NaBalance = calc.pkBalance;
             cropRecData.FertilizerNa2O = calc.cropNeed;
             break;
           case 5:
@@ -1918,11 +1658,13 @@ class OrganicManureService extends BaseService {
             //   relevantMannerOutput != null
             //     ? relevantMannerOutput?.availableS
             //     : null;
-            cropRecData.ManureSO3 = calc.applied;
+            cropRecData.ManureSO3 = calc.manures;
+            cropRecData.SBalance = calc.pkBalance;
             cropRecData.FertilizerSO3 = calc.cropNeed;
             break;
           case 6:
             cropRecData.CropLime = calc.recommendation;
+            cropRecData.LimeBalance = calc.pkBalance;
             cropRecData.FertilizerLime = calc.cropNeed;
             break;
           default:
