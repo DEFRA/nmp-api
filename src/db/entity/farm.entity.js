@@ -134,10 +134,6 @@ const FarmEntity = new EntitySchema({
       length: 255,
       nullable: true,
     },
-    LastHarvestYear: {
-      type: "int",
-      nullable: true,
-    },
     CountryID: {
       type: "int",
       default: 1,
