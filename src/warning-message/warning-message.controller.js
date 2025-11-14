@@ -12,7 +12,7 @@ class WarningMessageController {
   }
 
   
-  async getWarningMessageByFieldId() {
+  async getWarningMessageByFieldIdAndYear() {
     const { fieldId } = this.#request.params;
     const { harvestYear } = this.#request.query;
 
@@ -21,7 +21,7 @@ class WarningMessageController {
       const fieldIds = fieldId.split(",").map((id) => Number.parseInt(id));
 
       const result =
-        await this.#WarningMessageService.getWarningMessageByFieldIds(
+        await this.#WarningMessageService.getWarningMessageByFieldIdsAndYear(
           fieldIds,harvestYear
         );
       return this.#h.response(result);

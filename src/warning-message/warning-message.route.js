@@ -36,7 +36,7 @@ module.exports = [
     },
     handler: async (request, h) => {
       const controller = new WarningMessageController(request, h);
-      return controller.getWarningMessageByFieldId();
+      return controller.getWarningMessageByFieldIdAndYear();
     },
   }
 ];

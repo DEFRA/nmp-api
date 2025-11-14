@@ -51,7 +51,7 @@ class WarningMessageService extends BaseService {
 //   return data.map(d => d.Name);
 // }
 
-async getWarningMessageByFieldIds(fieldIds, harvestYear) {
+async getWarningMessageByFieldIdsAndYear(fieldIds, harvestYear) {
   if (!fieldIds || !Array.isArray(fieldIds) || fieldIds.length === 0 || !harvestYear) {
     return [];
   }
