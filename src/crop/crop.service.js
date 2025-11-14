@@ -2036,12 +2036,19 @@ class CropService extends BaseService {
       // Initialize crop recommendation object for this defoliation group
       const cropRecData = {
         CropN: null,
+        NBalance: null,
         CropP2O5: null,
+        PBalance: null,
         CropK2O: null,
+        KBalance: null,
         CropMgO: null,
+        MgBalance: null,
         CropSO3: null,
+        SBalance: null,
         CropNa2O: null,
+        NaBalance: null,
         CropLime: null,
+        LimeBalance: null,
         FertilizerN: null,
         FertilizerP2O5: null,
         FertilizerK2O: null,
@@ -2067,38 +2074,41 @@ class CropService extends BaseService {
           case 0:
             cropRecData.CropN = calc.recommendation;
             cropRecData.FertilizerN = calc.cropNeed;
-            cropRecData.ManureN =
-              relevantMannerOutput != null ? calc.applied : null;
+            cropRecData.ManureN = relevantMannerOutput != null ? calc.manures : null;
+            cropRecData.NBalance = calc.pkBalance;    
             cropRecData.NIndex = calc.indexpH;
             break;
           case 1:
             cropRecData.CropP2O5 = calc.recommendation;
-            cropRecData.ManureP2O5 =
-              relevantMannerOutput != null ? calc.applied : null;
+            cropRecData.ManureP2O5 = relevantMannerOutput != null ? calc.manures : null;
+            cropRecData.PBalance = calc.pkBalance;    
             cropRecData.FertilizerP2O5 = calc.cropNeed;
             break;
           case 2:
             cropRecData.CropK2O = calc.recommendation;
-            cropRecData.ManureK2O =
-              relevantMannerOutput != null ? calc.applied : null;
+            cropRecData.ManureK2O = relevantMannerOutput != null ? calc.manures : null;
+            cropRecData.KBalance = calc.pkBalance;    
             cropRecData.FertilizerK2O = calc.cropNeed;
             break;
           case 3:
             cropRecData.CropMgO = calc.recommendation;
+            cropRecData.MgBalance = calc.pkBalance;    
             cropRecData.FertilizerMgO = calc.cropNeed;
             break;
           case 4:
             cropRecData.CropNa2O = calc.recommendation;
+            cropRecData.NaBalance = calc.pkBalance;    
             cropRecData.FertilizerNa2O = calc.cropNeed;
             break;
           case 5:
             cropRecData.CropSO3 = calc.recommendation;
-            cropRecData.ManureSO3 =
-              relevantMannerOutput != null ? calc.applied : null;
+            cropRecData.ManureSO3 = relevantMannerOutput != null ? calc.manures : null;
+            cropRecData.SBalance = calc.pkBalance;    
             cropRecData.FertilizerSO3 = calc.cropNeed;
             break;
           case 6:
             cropRecData.CropLime = calc.recommendation;
+            cropRecData.LimeBalance = calc.pkBalance;    
             cropRecData.FertilizerLime = calc.cropNeed;
             break;
           default:
