@@ -2,7 +2,7 @@ const Joi = require("joi");
 const { WarningMessageController } = require("./warning-message.controller");
 const { WarningMessageDto } = require("./dto/warning-message.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
-
+const BAD_REQUEST = 400;
 module.exports = [
   {
     method: "GET",
@@ -29,7 +29,7 @@ module.exports = [
                 request,
               })
             )
-            .code(400)
+            .code(BAD_REQUEST)
             .takeover();
         },
       },
