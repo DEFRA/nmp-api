@@ -50,6 +50,7 @@ const { CalculateTotalAvailableNForNextYear } = require("./calculate-next-year-a
 const { CalculateNextDefoliationService } = require("./calculate-next-defoliation-totalN");
 const { CalculatePKBalanceOther } = require("./calculate-pk-balance-other");
 const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
+const { CalculatePreviousCropService } = require("./previous-year-crop-service");
 
 
 class UpdateRecommendationChanges {
@@ -106,6 +107,7 @@ class UpdateRecommendationChanges {
     this.CalculateNextDefoliationService =
       new CalculateNextDefoliationService();
     this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
+    this.CalculatePreviousCropService = new CalculatePreviousCropService();
   }
 
   async getYearsGreaterThanGivenYear(fieldID, year) {
@@ -953,11 +955,14 @@ class UpdateRecommendationChanges {
           cropPOfftake = cropData.Yield ? cropData.Yield : 50;
         }
       }
-          const previousCrop = await this.findPreviousCrop(
-            transactionalManager,
-            fieldData.ID,
-            cropData.Year
-          );
+         
+            const previousCrop =
+              await this.CalculatePreviousCropService.findPreviousCrop(
+                fieldData.ID,
+                cropData.Year,
+                transactionalManager
+              );
+
 
       if (
         cropData.CropTypeID === CropTypeMapper.OTHER ||
@@ -1326,11 +1331,13 @@ class UpdateRecommendationChanges {
         }
       }
 
-          const previousCrop = await this.findPreviousCrop(
-            transactionalManager,
-            field.ID,
-            crop.Year
-          );
+          
+            const previousCrop =
+              await this.CalculatePreviousCropService.findPreviousCrop(
+                field.ID,
+                crop.Year,
+                transactionalManager
+              );
 
 
       if (
@@ -2623,11 +2630,13 @@ class UpdateRecommendationChanges {
         HttpStatus.BAD_REQUEST
       );
     }
-    const previousCrop = await this.findPreviousCrop(
-      transactionalManager,
-      field.ID,
-      crop.Year
-    );
+   
+      const previousCrop =
+        await this.CalculatePreviousCropService.findPreviousCrop(
+          field.ID,
+          crop.Year,
+          transactionalManager
+        );
 
     const arableBody = await this.buildArableBody(
       dataMultipleCrops,
@@ -3029,11 +3038,13 @@ class UpdateRecommendationChanges {
         HttpStatus.BAD_REQUEST
       );
     }
-    const previousCrop = await this.findPreviousCrop(
-      transactionalManager,
-      field.ID,
-      crop.Year
-    );
+  
+      const previousCrop =
+        await this.CalculatePreviousCropService.findPreviousCrop(
+          field.ID,
+          crop.Year,
+          transactionalManager
+        );
 
     const excessRainfall = await this.getWinterExcessRainfall(
       farm.ID,
