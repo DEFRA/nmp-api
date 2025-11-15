@@ -2,7 +2,7 @@ const Joi = require("joi");
 const { PreviousCroppingController } = require("./previous-cropping.controller");
 const { CreatePreviousCroppingDto } = require("./dto/previous-cropping.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
-
+const BAD_REQUEST = 400;
 module.exports = [
   {
     method: "GET",
@@ -124,7 +124,7 @@ module.exports = [
                 request,
               })
             )
-            .code(400)
+            .code(BAD_REQUEST)
             .takeover();
         },
       },
