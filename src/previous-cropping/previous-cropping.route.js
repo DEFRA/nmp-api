@@ -70,6 +70,38 @@ module.exports = [
       return controller.getPreviousCroppingPreviousYearsDataByFieldIdAndYear();
     },
   },
+
+{
+    method: "GET",
+    path: "/previous-cropping-oldest-years/{farmId}",
+    options: {
+      tags: ["api", "Previous Cropping"],
+      description: "Get oldest previous croppping year by Farm ID",
+      validate: {
+        params: Joi.object({
+          farmId: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new PreviousCroppingController(request, h);
+      return controller.getOldestPreviousCroppingYearByFarmId();
+    },
+  },
+
   {
     method: "PUT",
     path: "/previous-cropping/mergePreviousCrop",

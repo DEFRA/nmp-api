@@ -6,6 +6,7 @@ const { AppDataSource } = require("../db/data-source");
 const { MoreThan, Between } = require("typeorm");
 const { UpdateRecommendationChanges } = require("../shared/updateRecommendationsChanges");
 const { CropEntity } = require("../db/entity/crop.entity");
+const { FieldEntity } = require("../db/entity/field.entity");
 const {
   UpdateRecommendation,
 } = require("../shared/updateRecommendation.service");
@@ -17,6 +18,7 @@ class PreviousCroppingService extends BaseService {
     this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
     this.cropRepository = AppDataSource.getRepository(CropEntity);
     this.UpdateRecommendation = new UpdateRecommendation();
+    this.fieldRepository=AppDataSource.getRepository(FieldEntity);
   }
 
   async mergePreviousCropping(previousCroppingBody, userId, request) {
@@ -165,6 +167,24 @@ class PreviousCroppingService extends BaseService {
 
     return { PreviousCropping: previousCroppingData };
   }
+
+  async getOldestPreviousCroppingYearByFarmId(farmId) {
+  if (!farmId) {
+    return { PreviousCropping: null };
+  }
+
+  const previousCroppingData = await this.repository
+  .createQueryBuilder("pc")
+  .leftJoin("pc.Fields", "f") 
+  .where("f.FarmID = :farmId", { farmId })
+  .orderBy("pc.HarvestYear", "ASC")
+  .select("pc.HarvestYear", "HarvestYear")
+  .getRawOne();
+
+return { OldestPreviousCropping: previousCroppingData?.HarvestYear || null };
+
+}
+
 }
 
 module.exports = { PreviousCroppingService };
