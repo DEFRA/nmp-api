@@ -50,6 +50,24 @@ class PreviousCroppingController {
     }
   }
 
+  async getOldestPreviousCroppingYearByFarmId() {
+    const { farmId } = this.#request.params;
+
+    try {
+     
+      // Previous croppping related data for the field
+      const result =
+        await this.#PreviousCroppingService.getOldestPreviousCroppingYearByFarmId(
+          farmId
+        );
+
+      // Return the Previous croppping objects with related data
+      return this.#h.response(result);
+    } catch (error) {
+      return this.#h.response({ error: error.message }).code(400);
+    }
+  }
+
   async mergePreviousCropping() {
     const { PreviousCroppings } = this.#request.payload;
     const userId = this.#request.userId;
