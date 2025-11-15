@@ -54,7 +54,7 @@ class PreviousCroppingController {
     const { farmId } = this.#request.params;
 
     try {
-     const BAD_REQUEST = 400;
+     
       // Previous croppping related data for the field
       const result =
         await this.#PreviousCroppingService.getOldestPreviousCroppingYearByFarmId(
@@ -64,7 +64,7 @@ class PreviousCroppingController {
       // Return the Previous croppping objects with related data
       return this.#h.response(result);
     } catch (error) {
-      return this.#h.response({ error: error.message }).code(BAD_REQUEST);
+      return this.#h.response({ error: error.message }).code(400);
     }
   }
 
