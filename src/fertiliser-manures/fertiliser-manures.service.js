@@ -407,17 +407,26 @@ class FertiliserManuresService extends BaseService {
                   updatePKBalance
                 );
               }
+              console.log("cropData.FieldID", cropData[0].FieldID);
+              console.log("cropData.Year", cropData[0].FieldID);
+               await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+                 cropData[0].FieldID,
+                 cropData[0].Year,
+                 request,
+                 userId,
+                 transactionalManager
+               );
                    const nextAvailableCrop = await this.cropRepository.findOne({
                      where: {
-                       FieldID: cropData.FieldID,
-                       Year: MoreThan(cropData.Year),
+                       FieldID: cropData[0].FieldID,
+                       Year: MoreThan(cropData[0].Year),
                      },
                      order: { Year: "ASC" },
                    });
 
                    if (nextAvailableCrop) {
                      this.UpdateRecommendation.updateRecommendationsForField(
-                       cropData.FieldID,
+                       cropData[0].FieldID,
                        nextAvailableCrop.Year,
                        request,
                        userId
@@ -425,6 +434,29 @@ class FertiliserManuresService extends BaseService {
                    }
             }
           }
+        }
+        await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+          cropData[0].FieldID,
+          cropData[0].Year,
+          request,
+          userId,
+          transactionalManager
+        );
+        const nextAvailableCrop = await this.cropRepository.findOne({
+          where: {
+            FieldID: cropData[0].FieldID,
+            Year: MoreThan(cropData[0].Year),
+          },
+          order: { Year: "ASC" },
+        });
+
+        if (nextAvailableCrop) {
+          this.UpdateRecommendation.updateRecommendationsForField(
+            cropData[0].FieldID,
+            nextAvailableCrop.Year,
+            request,
+            userId
+          );
         }
       }
       return fertiliserManures;

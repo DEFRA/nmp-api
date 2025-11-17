@@ -69,7 +69,7 @@ class ExcessRainfallService extends BaseService {
   async updateRecommendationsForFields(fieldIds, year, request, userId) {
     
     for (const fieldId of fieldIds) {
-      try {
+    
         // Process one fieldId at a time
         this.UpdateRecommendation.updateRecommendationsForField(
           fieldId,
@@ -95,9 +95,7 @@ class ExcessRainfallService extends BaseService {
               error
             );
           });
-      } catch (error) {
-        console.error(`Error processing FieldID: ${fieldId}`, error);
-      }
+    
     }
   }
 

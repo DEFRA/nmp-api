@@ -199,6 +199,18 @@ const UserEntity = new EntitySchema({
       inverseSide: "ModifiedBy",
       joinColumn: { name: "ID" },
     },
+    CreatedPreviousCroppings: {
+      type: "one-to-many",
+      target: "PreviousCroppings",
+      inverseSide: "ModifiedByUser",
+      joinColumn: { name: "ID" },
+    },
+    ModifiedPreviousCroppings: {
+      type: "one-to-many",
+      target: "PreviousCroppings",
+      inverseSide: "ModifiedByUser",
+      joinColumn: { name: "ID" },
+    },
   },
 });
 
