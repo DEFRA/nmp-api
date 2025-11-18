@@ -1138,7 +1138,7 @@ class UpdateRecommendationChanges {
         previousCrop
       );
 
-      if (saveAndUpdatePKBalance) {
+      if (saveAndUpdatePKBalanceArableOrGrass) {
         await transactionalManager.save(
           PKBalanceEntity,
           saveAndUpdatePKBalanceArableOrGrass.saveAndUpdatePKBalance
