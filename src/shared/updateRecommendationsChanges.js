@@ -1025,18 +1025,7 @@ class UpdateRecommendationChanges {
           transactionalManager,
           request
         );
-      console.log(
-        "nutrientRecommendationnReqBody",
-        nutrientRecommendationnReqBody
-      );
-      console.log(
-        "nutrientRecommendationnReqBodymanner",
-        nutrientRecommendationnReqBody.field.mannerOutputs
-      );
-      console.log(
-        "nutrientRecommendationnReqBodysns",
-        nutrientRecommendationnReqBody.field.soil.soilAnalyses
-      );
+    
 
       nutrientRecommendationsData = await this.getNutrientRecommendationsData(
         nutrientRecommendationnReqBody
@@ -1133,7 +1122,7 @@ class UpdateRecommendationChanges {
           );
         }
       }
-      const saveAndUpdatePKBalance = await this.UpdatePKBalance(
+      const saveAndUpdatePKBalanceArableOrGrass = await this.UpdatePKBalance(
         fieldData.ID,
         cropData,
         nutrientRecommendationsData,
@@ -1152,19 +1141,14 @@ class UpdateRecommendationChanges {
       if (saveAndUpdatePKBalance) {
         await transactionalManager.save(
           PKBalanceEntity,
-          saveAndUpdatePKBalance.saveAndUpdatePKBalance
+          saveAndUpdatePKBalanceArableOrGrass.saveAndUpdatePKBalance
         );
       }
 
-      // await this.saveOrUpdateArableNotes(
-      //   arableNotes,
-      //   savedData,
-      //   transactionalManager,
-      //   userId
-      // );
+     
       return {
         savedRecommendationsData: Recommendations,
-        saveAndUpdatePKBalance: saveAndUpdatePKBalance,
+        saveAndUpdatePKBalance: saveAndUpdatePKBalanceArableOrGrass,
       };
     }
   }
