@@ -980,7 +980,7 @@ class UpdateRecommendationChanges {
           allRecommendations
         );
 
-        let saveAndUpdatePKBalance = await this.UpdatePKBalance(
+        const saveAndUpdatePKBalance = await this.UpdatePKBalance(
           fieldData.ID,
           cropData,
           nutrientRecommendationsData,
@@ -1025,18 +1025,7 @@ class UpdateRecommendationChanges {
           transactionalManager,
           request
         );
-      console.log(
-        "nutrientRecommendationnReqBody",
-        nutrientRecommendationnReqBody
-      );
-      console.log(
-        "nutrientRecommendationnReqBodymanner",
-        nutrientRecommendationnReqBody.field.mannerOutputs
-      );
-      console.log(
-        "nutrientRecommendationnReqBodysns",
-        nutrientRecommendationnReqBody.field.soil.soilAnalyses
-      );
+    
 
       nutrientRecommendationsData = await this.getNutrientRecommendationsData(
         nutrientRecommendationnReqBody
@@ -1133,7 +1122,7 @@ class UpdateRecommendationChanges {
           );
         }
       }
-      let saveAndUpdatePKBalance = await this.UpdatePKBalance(
+      const saveAndUpdatePKBalanceArableOrGrass = await this.UpdatePKBalance(
         fieldData.ID,
         cropData,
         nutrientRecommendationsData,
@@ -1149,22 +1138,17 @@ class UpdateRecommendationChanges {
         previousCrop
       );
 
-      if (saveAndUpdatePKBalance) {
+      if (saveAndUpdatePKBalanceArableOrGrass) {
         await transactionalManager.save(
           PKBalanceEntity,
-          saveAndUpdatePKBalance.saveAndUpdatePKBalance
+          saveAndUpdatePKBalanceArableOrGrass.saveAndUpdatePKBalance
         );
       }
 
-      // await this.saveOrUpdateArableNotes(
-      //   arableNotes,
-      //   savedData,
-      //   transactionalManager,
-      //   userId
-      // );
+     
       return {
         savedRecommendationsData: Recommendations,
-        saveAndUpdatePKBalance: saveAndUpdatePKBalance,
+        saveAndUpdatePKBalance: saveAndUpdatePKBalanceArableOrGrass,
       };
     }
   }
@@ -1359,7 +1343,7 @@ class UpdateRecommendationChanges {
               snsAnalysesData,
               allRecommendations
             );
-          let saveAndUpdatePKBalance = await this.UpdatePKBalance(
+          const saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldId,
             crop,
             nutrientRecommendationsData,
@@ -1431,7 +1415,7 @@ class UpdateRecommendationChanges {
         }
 
         try {
-          let saveAndUpdatePKBalance = await this.UpdatePKBalance(
+          const saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldId,
             crop,
             nutrientRecommendationsData,
@@ -2038,6 +2022,19 @@ class UpdateRecommendationChanges {
           Year: crop.Year,
         },
       });
+
+       if (Object.keys(latestSoilAnalysis).length > 0) {
+         if (latestSoilAnalysis.PotassiumIndex == null) {
+           kBalance = 0;
+         }
+
+         if (latestSoilAnalysis.PhosphorusIndex == null) {
+           pBalance = 0;
+         }
+       } else {
+         pBalance = 0; 
+         kBalance = 0;
+       }
       if (pkBalance) {
         const updateData = {
           Year: year,
