@@ -1910,7 +1910,8 @@ class OrganicManureService extends BaseService {
            pBalance = 0;
          }
        } else {
-         (pBalance = 0), (kBalance = 0);
+         pBalance = 0;
+         kBalance = 0;
        }
       if (pkBalance) {
         const updateData = {
@@ -2846,7 +2847,8 @@ class OrganicManureService extends BaseService {
                    pBalance = 0;
                  }
                } else {
-                 (pBalance = 0), (kBalance = 0);
+                 pBalance = 0; 
+                 kBalance = 0;
                }
 
               if (pkBalanceData) {

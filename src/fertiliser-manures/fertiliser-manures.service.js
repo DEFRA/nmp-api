@@ -400,7 +400,8 @@ class FertiliserManuresService extends BaseService {
                      pBalance = 0;
                    }
                  } else {
-                   (pBalance = 0), (kBalance = 0);
+                   pBalance = 0;
+                   kBalance = 0;
                  }
                 const updateData = {
                   Year: cropData[0]?.Year,
