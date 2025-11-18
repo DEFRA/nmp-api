@@ -1900,6 +1900,19 @@ class OrganicManureService extends BaseService {
           Year: crop.Year,
         },
       });
+
+       if (Object.keys(latestSoilAnalysis).length > 0) {
+         if (latestSoilAnalysis.PotassiumIndex == null) {
+           kBalance = 0;
+         }
+
+         if (latestSoilAnalysis.PhosphorusIndex == null) {
+           pBalance = 0;
+         }
+       } else {
+         pBalance = 0;
+         kBalance = 0;
+       }
       if (pkBalance) {
         const updateData = {
           Year: year,
@@ -2530,7 +2543,7 @@ class OrganicManureService extends BaseService {
             OrganicManure.ManagementPeriodID
           );
           let nutrientRecommendationsData = null;
-          let saveAndUpdatePKBalance = await this.createOrUpdatePKBalance(
+          const saveAndUpdatePKBalance = await this.createOrUpdatePKBalance(
             fieldData.ID,
             cropData,
             nutrientRecommendationsData,
@@ -2771,10 +2784,7 @@ class OrganicManureService extends BaseService {
             } else {
               let pBalance = 0;
               let kBalance = 0;
-              console.log(
-                "organicManureData.managementPeriodID",
-                OrganicManure.ManagementPeriodID
-              );
+             
               // for (const manPeriodId of organicManureData.managementPeriodID) {
               const fertiliserData = await this.getP205AndK20fromfertiliser(
                 OrganicManure.ManagementPeriodID
@@ -2827,6 +2837,19 @@ class OrganicManureService extends BaseService {
                 cropData?.Year,
                 allPKBalanceData
               );
+
+               if (Object.keys(latestSoilAnalysis).length > 0) {
+                 if (latestSoilAnalysis.PotassiumIndex == null) {
+                   kBalance = 0;
+                 }
+
+                 if (latestSoilAnalysis.PhosphorusIndex == null) {
+                   pBalance = 0;
+                 }
+               } else {
+                 pBalance = 0; 
+                 kBalance = 0;
+               }
 
               if (pkBalanceData) {
                 const updateData = {
