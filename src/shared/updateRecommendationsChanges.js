@@ -980,7 +980,7 @@ class UpdateRecommendationChanges {
           allRecommendations
         );
 
-        let saveAndUpdatePKBalance = await this.UpdatePKBalance(
+        const saveAndUpdatePKBalance = await this.UpdatePKBalance(
           fieldData.ID,
           cropData,
           nutrientRecommendationsData,
@@ -1133,7 +1133,7 @@ class UpdateRecommendationChanges {
           );
         }
       }
-      let saveAndUpdatePKBalance = await this.UpdatePKBalance(
+      const saveAndUpdatePKBalance = await this.UpdatePKBalance(
         fieldData.ID,
         cropData,
         nutrientRecommendationsData,
@@ -1359,7 +1359,7 @@ class UpdateRecommendationChanges {
               snsAnalysesData,
               allRecommendations
             );
-          let saveAndUpdatePKBalance = await this.UpdatePKBalance(
+          const saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldId,
             crop,
             nutrientRecommendationsData,
@@ -1431,7 +1431,7 @@ class UpdateRecommendationChanges {
         }
 
         try {
-          let saveAndUpdatePKBalance = await this.UpdatePKBalance(
+          const saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldId,
             crop,
             nutrientRecommendationsData,

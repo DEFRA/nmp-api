@@ -2542,7 +2542,7 @@ class OrganicManureService extends BaseService {
             OrganicManure.ManagementPeriodID
           );
           let nutrientRecommendationsData = null;
-          let saveAndUpdatePKBalance = await this.createOrUpdatePKBalance(
+          const saveAndUpdatePKBalance = await this.createOrUpdatePKBalance(
             fieldData.ID,
             cropData,
             nutrientRecommendationsData,

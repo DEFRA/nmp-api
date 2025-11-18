@@ -1617,7 +1617,7 @@ class PlanService extends BaseService {
             if (isSoilAnalysisHavePAndK) {
               if (cropPlanOfNextYear.length == 0) {
                 try {
-                  let saveAndUpdatePKBalance =
+                  const saveAndUpdatePKBalance =
                     await this.createOrUpdatePKBalance(
                       fieldId,
                       crop,

@@ -1257,7 +1257,7 @@ class UpdateRecommendation {
               snsAnalysesData,
               allRecommendations
             );
-          let saveAndUpdatePKBalance = await this.UpdatePKBalance(
+          const saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldId,
             crop,
             nutrientRecommendationsData,
@@ -1329,7 +1329,7 @@ class UpdateRecommendation {
         }
 
         try {
-          let saveAndUpdatePKBalance = await this.UpdatePKBalance(
+          const saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldId,
             crop,
             nutrientRecommendationsData,
