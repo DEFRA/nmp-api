@@ -757,43 +757,7 @@ class UpdateRecommendation {
           snsAnalysesData.push(firstCropSnsAnalysis);
         }
 
-        // firstCropManagementPeriods = managementPeriods.find(
-        //   (mp) => mp.CropID == firstCrop.ID
-        // );
-        // const firstCropOrganicManureExist =
-        //   organicManureAllData.find(
-        //     (organicManure) =>
-        //       organicManure.ManagementPeriodID == firstCropManagementPeriods.ID
-        //   ) ?? null;
-        // if (firstCropOrganicManureExist) {
-        //   firstCropDataManureApplications = await this.buildManureApplications(
-        //     firstCropManagementPeriods.ID,
-        //     organicManureAllData,
-        //     organicManure,
-        //     request
-        //   );
-        // }
-        // if (firstCropDataManureApplications) {
-        //   mannerOutputFirstReq = await this.buildMannerOutputReq(
-        //     fieldID,
-        //     firstCropDataManureApplications,
-        //     request,
-        //     cropData,
-        //     farmData,
-        //     fieldData,
-        //     cropTypeLinkingData,
-        //     soilTypeTextureData
-        //   );
-        // }
-
-        // if (mannerOutputFirstReq) {
-        //   firstCropMannerOutput =
-        //     await this.MannerCalculateNutrientsService.postData(
-        //       "/calculate-nutrients",
-        //       mannerOutputFirstReq,
-        //       request
-        //     );
-        // }
+       
 
         // Find the crop where CropOrder == 2
         const secondCrop = dataMultipleCrops.find(
@@ -1969,6 +1933,18 @@ class UpdateRecommendation {
           Year: crop.Year,
         },
       });
+
+       if (Object.keys(latestSoilAnalysis).length > 0) {
+         if (latestSoilAnalysis.PotassiumIndex == null) {
+           kBalance = 0;
+         }
+
+         if (latestSoilAnalysis.PhosphorusIndex == null) {
+           pBalance = 0;
+         }
+       } else {
+         (pBalance = 0), (kBalance = 0);
+       }
       if (pkBalance) {
         const updateData = {
           Year: year,

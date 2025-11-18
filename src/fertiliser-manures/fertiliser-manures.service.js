@@ -352,20 +352,18 @@ class FertiliserManuresService extends BaseService {
                   totalP205AndK20.k20 +
                   fertiliserManureData[0]?.FertiliserManure.K2O -
                   recommandationData.k20;
+                   const farmData = await this.farmRepository.findOneBy({
+                     ID: fieldData[0].FarmID,
+                   });
 
-                if (cropData[0].CropTypeID == CropTypeMapper.OTHER) {
-                  const farmData = await this.farmRepository.findOneBy({
-                    ID: fieldData[0].FarmID,
-                  });
-
-                  const rb209CountryData = await transactionalManager.findOne(
-                    CountryEntity,
-                    {
-                      where: {
-                        ID: farmData.CountryID,
-                      },
-                    }
-                  );
+                   const rb209CountryData = await transactionalManager.findOne(
+                     CountryEntity,
+                     {
+                       where: {
+                         ID: farmData.CountryID,
+                       },
+                     }
+                   );
 
                   const {
                     latestSoilAnalysis,
@@ -377,6 +375,11 @@ class FertiliserManuresService extends BaseService {
                     cropData[0]?.Year,
                     rb209CountryData.RB209CountryID
                   );
+
+                if (cropData[0].CropTypeID == CropTypeMapper.OTHER) {
+                 
+
+                  
                   const otherPKBalance =
                     await this.CalculatePKBalanceOther.calculatePKBalanceOther(
                       cropData[0],
@@ -387,6 +390,18 @@ class FertiliserManuresService extends BaseService {
                   pBalance = otherPKBalance.pBalance;
                   kBalance = otherPKBalance.kBalance;
                 }
+
+                 if (Object.keys(latestSoilAnalysis).length > 0) {
+                   if (latestSoilAnalysis.PotassiumIndex == null) {
+                     kBalance = 0;
+                   }
+
+                   if (latestSoilAnalysis.PhosphorusIndex == null) {
+                     pBalance = 0;
+                   }
+                 } else {
+                   (pBalance = 0), (kBalance = 0);
+                 }
                 const updateData = {
                   Year: cropData[0]?.Year,
                   FieldID: fieldData[0]?.ID,
@@ -407,8 +422,7 @@ class FertiliserManuresService extends BaseService {
                   updatePKBalance
                 );
               }
-              console.log("cropData.FieldID", cropData[0].FieldID);
-              console.log("cropData.Year", cropData[0].FieldID);
+          
                await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
                  cropData[0].FieldID,
                  cropData[0].Year,

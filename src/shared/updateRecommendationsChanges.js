@@ -2038,6 +2038,18 @@ class UpdateRecommendationChanges {
           Year: crop.Year,
         },
       });
+
+       if (Object.keys(latestSoilAnalysis).length > 0) {
+         if (latestSoilAnalysis.PotassiumIndex == null) {
+           kBalance = 0;
+         }
+
+         if (latestSoilAnalysis.PhosphorusIndex == null) {
+           pBalance = 0;
+         }
+       } else {
+         (pBalance = 0), (kBalance = 0);
+       }
       if (pkBalance) {
         const updateData = {
           Year: year,
