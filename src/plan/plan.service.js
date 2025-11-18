@@ -2343,7 +2343,8 @@ const savedCrop = await transactionalManager.save(
             pBalance=0;
           }
       }else{
-         pBalance = 0, kBalance = 0;
+         pBalance = 0; 
+         kBalance = 0;
       }
         if (pkBalanceData) {
           const updateData = {
