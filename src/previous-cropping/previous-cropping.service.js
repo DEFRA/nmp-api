@@ -168,7 +168,7 @@ class PreviousCroppingService extends BaseService {
     return { PreviousCropping: previousCroppingData };
   }
 
-  async getOldestPreviousCroppingYearByFarmId(farmId) {
+  async getPreviousCroppingYearByFarmId(farmId) {
   if (!farmId) {
     return { PreviousCropping: null };
   }
@@ -177,7 +177,7 @@ class PreviousCroppingService extends BaseService {
   .createQueryBuilder("pc")
   .leftJoin("pc.Fields", "f") 
   .where("f.FarmID = :farmId", { farmId })
-  .orderBy("pc.HarvestYear", "ASC")
+  .orderBy("pc.HarvestYear", "DESC")
   .select("pc.HarvestYear", "HarvestYear")
   .getRawOne();
 

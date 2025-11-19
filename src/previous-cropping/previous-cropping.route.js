@@ -73,10 +73,10 @@ module.exports = [
 
 {
     method: "GET",
-    path: "/previous-cropping-oldest-years/{farmId}",
+    path: "/previous-cropping-year/{farmId}",
     options: {
       tags: ["api", "Previous Cropping"],
-      description: "Get oldest previous croppping year by Farm ID",
+      description: "Get previous croppping year by Farm ID",
       validate: {
         params: Joi.object({
           farmId: Joi.number().integer().required(),
@@ -98,7 +98,7 @@ module.exports = [
     },
     handler: async (request, h) => {
       const controller = new PreviousCroppingController(request, h);
-      return controller.getOldestPreviousCroppingYearByFarmId();
+      return controller.getPreviousCroppingYearByFarmId();
     },
   },
 
