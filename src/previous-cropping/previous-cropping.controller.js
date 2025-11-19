@@ -50,14 +50,14 @@ class PreviousCroppingController {
     }
   }
 
-  async getOldestPreviousCroppingYearByFarmId() {
+  async getPreviousCroppingYearByFarmId() {
     const { farmId } = this.#request.params;
 
     try {
      
       // Previous croppping related data for the field
       const result =
-        await this.#PreviousCroppingService.getOldestPreviousCroppingYearByFarmId(
+        await this.#PreviousCroppingService.getPreviousCroppingYearByFarmId(
           farmId
         );
 
