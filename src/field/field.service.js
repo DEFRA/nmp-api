@@ -804,14 +804,21 @@ class FieldService extends BaseService {
         const crops = await this.cropRepository.find({
           where: { FieldID: field.ID, Year: year },
         });
-        const previousCropData = await this.cropRepository.findOne({
+        let previousCropData = await this.cropRepository.findOne({
           where: { FieldID: field.ID, Year: year - 1 },
       select: ["CropTypeID"],
       order: {
         CreatedOn: "DESC"  // Order by createdDate in descending order
       },
       });
-      
+      // if no plan in previous year. Fetch from previous crop history
+      if(previousCropData==null)
+      {
+          previousCropData = await this.previousCroppingRepository.findOne({
+                where: { FieldID: field.ID, HarvestYear: year-1 },
+                select: ["CropTypeID"],
+              });
+      }
       const previousCropTypeName = previousCropData 
         ? await this.getCropTypeName(previousCropData.CropTypeID,cropTypeAllData)
         : null;
