@@ -183,7 +183,11 @@ const oldestThree = await this.repository
   .limit(yearsLimit)
   .getRawMany();
 
-const topOneFromOldestThree = oldestThree[2];
+   let topOneFromOldestThree = null;
+
+   if (oldestThree.length > 0) {
+     topOneFromOldestThree = oldestThree[oldestThree.length - 1];  
+    }
 
 
 return { OldestPreviousCropping: topOneFromOldestThree?.HarvestYear || null };
