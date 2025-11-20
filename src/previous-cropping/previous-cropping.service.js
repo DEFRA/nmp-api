@@ -172,6 +172,7 @@ class PreviousCroppingService extends BaseService {
   if (!farmId) {
     return { PreviousCropping: null };
   }
+const yearsLimit = 3;
 
 const oldestThree = await this.repository
   .createQueryBuilder("pc")
@@ -179,7 +180,7 @@ const oldestThree = await this.repository
   .where("f.FarmID = :farmId", { farmId })
   .select("DISTINCT pc.HarvestYear", "HarvestYear")
   .orderBy("pc.HarvestYear", "ASC")
-  .limit(3)
+  .limit(yearsLimit)
   .getRawMany();
 
 const topOneFromOldestThree = oldestThree[2];
