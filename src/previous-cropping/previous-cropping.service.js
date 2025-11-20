@@ -173,15 +173,19 @@ class PreviousCroppingService extends BaseService {
     return { PreviousCropping: null };
   }
 
-  const previousCroppingData = await this.repository
+const oldestThree = await this.repository
   .createQueryBuilder("pc")
-  .leftJoin("pc.Fields", "f") 
+  .leftJoin("pc.Fields", "f")
   .where("f.FarmID = :farmId", { farmId })
-  .orderBy("pc.HarvestYear", "DESC")
-  .select("pc.HarvestYear", "HarvestYear")
-  .getRawOne();
+  .select("DISTINCT pc.HarvestYear", "HarvestYear")
+  .orderBy("pc.HarvestYear", "ASC")
+  .limit(3)
+  .getRawMany();
 
-return { OldestPreviousCropping: previousCroppingData?.HarvestYear || null };
+const topOneFromOldestThree = oldestThree[2];
+
+
+return { OldestPreviousCropping: topOneFromOldestThree?.HarvestYear || null };
 
 }
 
