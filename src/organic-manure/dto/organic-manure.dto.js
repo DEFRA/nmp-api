@@ -82,11 +82,11 @@ const UpdateOrganicManureEntitySchema = Joi.object({
   MoistureID: Joi.number().integer().allow(null),
   AutumnCropNitrogenUptake: Joi.number().integer().precision(2).default(0),
   AvailableNForNMax: Joi.number().precision(3).allow(null),
-  FieldName: Joi.string().optional().allow(null),
-  EncryptedCounter: Joi.string().optional().allow(null),
-  Defoliation: Joi.number().integer().optional().allow(null),
-  FieldID: Joi.number().integer().allow(null),
-  DefoliationName: Joi.string().optional().allow(null),
+  // FieldName: Joi.string().optional().allow(null),
+  // EncryptedCounter: Joi.string().optional().allow(null),
+  // Defoliation: Joi.number().integer().optional().allow(null),
+  // FieldID: Joi.number().integer().allow(null),
+  // DefoliationName: Joi.string().optional().allow(null),
   AvailableNForNextYear: Joi.number().precision(3).allow(null),
   AvailableNForNextDefoliation: Joi.number().precision(3).allow(null)
 });

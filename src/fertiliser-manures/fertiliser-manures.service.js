@@ -538,11 +538,11 @@ class FertiliserManuresService extends BaseService {
           ID,
           CreatedByID,
           CreatedOn,
-          FieldName,
-          EncryptedCounter,
-          Defoliation,
-          FieldID,
-          DefoliationName,
+          // FieldName,
+          // EncryptedCounter,
+          // Defoliation,
+          // FieldID,
+          // DefoliationName,
           ...updatedData
         } = inorganicManure;
         // Update fertiliseremanure

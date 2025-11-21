@@ -3410,11 +3410,11 @@ class OrganicManureService extends BaseService {
           ID,
           CreatedByID,
           CreatedOn,
-          FieldName,
-          EncryptedCounter,
-          Defoliation,
-          FieldID,
-          DefoliationName,
+          // FieldName,
+          // EncryptedCounter,
+          // Defoliation,
+          // FieldID,
+          // DefoliationName,
           ...updatedData
         } = OrganicManure;
         // 🔄 Update recommendations
