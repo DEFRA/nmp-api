@@ -537,12 +537,7 @@ class FertiliserManuresService extends BaseService {
         const {
           ID,
           CreatedByID,
-          CreatedOn,
-          // FieldName,
-          // EncryptedCounter,
-          // Defoliation,
-          // FieldID,
-          // DefoliationName,
+          CreatedOn,    
           ...updatedData
         } = inorganicManure;
         // Update fertiliseremanure

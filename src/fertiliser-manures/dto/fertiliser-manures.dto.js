@@ -22,11 +22,6 @@ const FertiliserManureDto = Joi.object({
   Lime: Joi.number().precision(3).required(),
   NH4N: Joi.number().precision(3).required(),
   NO3N: Joi.number().precision(3).required(),
-  // FieldName: Joi.string().optional().allow(null),
-  // EncryptedCounter: Joi.string().optional().allow(null),
-  // Defoliation: Joi.number().integer().optional().allow(null),
-  // FieldID: Joi.number().integer().allow(null),
-  // DefoliationName: Joi.string().optional().allow(null)
 }).required();
 
 
