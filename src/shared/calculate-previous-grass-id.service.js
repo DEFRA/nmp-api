@@ -396,7 +396,7 @@ class CalculateGrassHistoryAndPreviousGrass {
       );
       let fieldType = crop?.FieldType ?? null;
 
-      if (fieldType!=null) {
+      if (fieldType==null) {
         const prevGrass = await transactionalManager.findOne(
           PreviousCroppingEntity,
           {
@@ -431,10 +431,10 @@ class CalculateGrassHistoryAndPreviousGrass {
             where: { FieldID: fieldId, HarvestYear: harvestYear - 4 },
           }
         );
-        if (prevGrass.CropTypeID == CropTypeMapper.GRASS) fieldType4 = FieldTypeMapper.GRASS;
+        if (prevGrass!=null&&prevGrass.CropTypeID == CropTypeMapper.GRASS) fieldType4 = FieldTypeMapper.GRASS;
       }
 
-      if (fieldType4 === FieldTypeMapper.GRASS)
+      if (fieldType4!=null&&fieldType4 === FieldTypeMapper.GRASS)
         fieldTypes.push(FieldTypeMapper.GRASS);
     }
 
