@@ -45,5 +45,7 @@ module.exports = [
   ...require("./store-capacities/store-capacities.route"),
   ...require("./material-states/material-states.route"),
   ...require("./solid-manure-types/solid-manure-types.route"),
-  ...require("./bank-slope-angles/bank-slope-angles.route")
+  ...require("./bank-slope-angles/bank-slope-angles.route"),
+  ...require("./previous-cropping/previous-cropping.route"),
+  ...require("./warning-message/warning-message.route")
 ];

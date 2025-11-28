@@ -8,6 +8,8 @@ const { SoilTypeSoilTextureEntity } = require("../db/entity/soil-type-soil-textu
 const MannerCalculateNutrientsService = require("../vendors/manner/calculate-nutrients/calculate-nutrients.service");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
 const { CalculateTotalAvailableNForNextYear } = require("./calculate-next-year-available-n");
+const { RunTypeMapper } = require("../constants/run-type-mapper");
+const { CountryEntity } = require("../db/entity/country.entity");
 
 class CalculateMannerOutputService {
   constructor() {
@@ -225,12 +227,20 @@ class CalculateMannerOutputService {
     cropTypeLinkingData,
     organicManureData,
     manureApplications,
-    soilTypeTextureData
+    soilTypeTextureData,
+    transactionalManager
   ) {
+    const rb209CountryData = await transactionalManager.findOne(CountryEntity, {
+      where: {
+        ID: farmData.CountryID,
+      },
+    });
     return {
-      runType: farmData.EnglishRules ? 3 : 4,
+      runType: farmData.EnglishRules
+        ? RunTypeMapper.MANNERENGLAND
+        : RunTypeMapper.MANNERSCOTLAND,
       postcode: farmData.ClimateDataPostCode.split(" ")[0],
-      countryID: farmData.EnglishRules ? 1 : 2,
+      countryID: rb209CountryData.RB209CountryID,
       field: {
         fieldID: fieldData.ID,
         fieldName: fieldData.Name,
@@ -332,7 +342,8 @@ class CalculateMannerOutputService {
             cropTypeLinkingData,
             organicManure,
             manureApplications,
-            soilTypeTextureData
+            soilTypeTextureData,
+            transactionalManager
           );
         } else {
           console.log("there is no manure for the crop");

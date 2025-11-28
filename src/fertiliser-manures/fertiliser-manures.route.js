@@ -5,6 +5,7 @@ const {
 const {
   CreateFertiliserManuresDto,
   updateFertiliserManuresDto,
+  UpdateFertiliserManuresDto,
 } = require("./dto/fertiliser-manures.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 
@@ -238,7 +239,7 @@ module.exports = [
       return getController(request, h).deleteFertiliserManureByIds();
     },
   },
- {
+  {
     method: "GET",
     path: "/fertiliser-manures/total-nitrogen-by/{managementPeriodID}",
     handler: async (request, h) => {
@@ -266,5 +267,5 @@ module.exports = [
         },
       },
     },
-  }
+  },
 ];

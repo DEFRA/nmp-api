@@ -326,5 +326,5 @@ module.exports = [
       const controller = new FieldController(request, h);
       return controller.getFieldRelatedData();
     },
-  },
+  }
 ];

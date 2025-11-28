@@ -87,6 +87,23 @@ const PreviousGrassesSchema = Joi.object({
   ModifiedByID: Joi.number().integer().allow(null),
 }).required();
 
+const PreviousCroppingSchema = Joi.object({
+  ID: Joi.number().integer().allow(null),
+  FieldID: Joi.number().integer().required(),
+  CropGroupID: Joi.number().integer().required(),
+  CropTypeID: Joi.number().integer().required(),
+  HasGrassInLastThreeYear: Joi.boolean().required(),
+  HarvestYear: Joi.number().integer().allow(null),
+  LayDuration: Joi.number().integer().allow(null),
+  GrassManagementOptionID: Joi.number().integer().allow(null),
+  HasGreaterThan30PercentClover: Joi.boolean().allow(null),
+  SoilNitrogenSupplyItemID: Joi.number().integer().allow(null),
+  CreatedOn: Joi.date().iso().allow(null),
+  CreatedByID: Joi.number().integer().allow(null),
+  ModifiedOn: Joi.date().iso().allow(null),
+  ModifiedByID: Joi.number().integer().allow(null),
+  Action: Joi.number().integer().allow(null).optional()
+}).required();
 const PKBalanceSchema = Joi.object({
   Year: Joi.number().required(),
   FieldID: Joi.number().allow(null).optional(),
@@ -102,13 +119,13 @@ const PKBalanceSchema = Joi.object({
 const UpdateFieldDtoSchema = Joi.object({
   Field: FieldEntitySchema,
   SoilAnalysis: SoilAnalysisSchema.allow(null).optional(),
-  Crops: Joi.array()
-    .items(CreateCropWithManagementPeriodsDto)
-    .allow(null)
-    .required(),
+  // Crops: Joi.array()
+  //   .items(CreateCropWithManagementPeriodsDto)
+  //   .allow(null)
+  //   .required(),
   PKBalance: PKBalanceSchema.allow(null).optional(),
-  PreviousGrasses: Joi.array()
-    .items(PreviousGrassesSchema)
+  PreviousCroppings: Joi.array()
+    .items(PreviousCroppingSchema)
     .allow(null)
     .optional(),
 });
@@ -116,10 +133,10 @@ const UpdateFieldDtoSchema = Joi.object({
 const CreateFieldWithSoilAnalysisAndCropsDto = Joi.object({
   Field: FieldEntitySchema,
   SoilAnalysis: SoilAnalysisSchema.allow(null).optional(),
-  Crops: Joi.array().items(CreateCropWithManagementPeriodsDto).required(),
+  //Crops: Joi.array().items(CreateCropWithManagementPeriodsDto).required(),
   PKBalance: PKBalanceSchema.allow(null).optional(),
-  PreviousGrasses: Joi.array()
-    .items(PreviousGrassesSchema)
+  PreviousCroppings: Joi.array()
+    .items(PreviousCroppingSchema)
     .allow(null)
     .optional(),
 });

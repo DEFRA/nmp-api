@@ -19,11 +19,20 @@ const { MoreThan } = require("typeorm");
 const {
   UpdateRecommendationChanges,
 } = require("../shared/updateRecommendationsChanges");
+const { CropTypeMapper } = require("../constants/crop-type-mapper");
+const { CountryEntity } = require("../db/entity/country.entity");
+const { FarmEntity } = require("../db/entity/farm.entity");
+const { HandleSoilAnalysisService } = require("../shared/handle-soil-analysis");
+const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-other");
+const { WarningMessagesEntity } = require("../db/entity/warning-message.entity");
+const { CreateOrUpdateWarningMessage } = require("../shared/create-update-warning-messages.service");
+const { WarningCodesMapper } = require("../constants/warning-codes-mapper");
 
 class FertiliserManuresService extends BaseService {
   constructor() {
     super(FertiliserManuresEntity);
     this.repository = AppDataSource.getRepository(FertiliserManuresEntity);
+    this.warningMessageRepository = AppDataSource.getRepository(WarningMessagesEntity);
     this.organicManureRepository =
       AppDataSource.getRepository(OrganicManureEntity);
     this.RecommendationRepository =
@@ -38,6 +47,12 @@ class FertiliserManuresService extends BaseService {
     this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
     this.soilAnalysisRepository =
       AppDataSource.getRepository(SoilAnalysisEntity);
+    this.farmRepository = AppDataSource.getRepository(FarmEntity);
+    this.HandleSoilAnalysisService = new HandleSoilAnalysisService();
+    this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
+    this.CreateOrUpdateWarningMessage = new CreateOrUpdateWarningMessage();
+
+      
   }
   async getFertiliserManureNitrogenSum(
     fieldId,
@@ -151,21 +166,65 @@ class FertiliserManuresService extends BaseService {
     const managementPeriodAllData =
       await this.managementPeriodRepository.find();
     const fieldAllData = await this.fieldRepository.find();
+      const fertiliserAllData = await this.repository.find();
+   
 
-    const fertiliserAllData = await this.repository.find();
     return await AppDataSource.transaction(async (transactionalManager) => {
-      const fertiliserManures = fertiliserManureData.map(({ ID, ...rest }) => ({
-        ...rest,
-        CreatedByID: userId,
-        CreatedOn: new Date(),
-      }));
+      // const fertiliserManures = fertiliserManureData.map(
+      //   ({ ID, WarningMessages, ...rest }) => ({
+      //     ...rest,
+      //     CreatedByID: userId,
+      //     CreatedOn: new Date(),
+      //   })
+      console.log("fertiliserManureData",fertiliserManureData);
+      console.log(
+        "fertiliserManureData.FertiliserManure",
+        fertiliserManureData.FertiliserManure
+      );
+    
+      // );
+  let fertiliserManures =[];
+      for (const fertiliser of fertiliserManureData) {
+          const fertiliserManure = fertiliser.FertiliserManure;
+        // Save fertiliser first
+        const savedFertiliser = await transactionalManager.save(
+          FertiliserManuresEntity,
+          this.repository.create({
+            ...fertiliserManure,
+            CreatedByID: userId,
+            CreatedOn: new Date(),
+          })
+        );
+      fertiliserManures.push(savedFertiliser);
+        // Now save its WarningMessages (if any)
+        const warningMessage = fertiliser.WarningMessages
+        if (warningMessage && warningMessage?.length > 0) {
+          const warningMessagesToSave = warningMessage.map((msg) =>
+            this.warningMessageRepository.create({
+              ...msg,
+              JoiningID:
+                msg?.WarningCodeID == WarningCodesMapper.NMAXLIMIT
+                  ? msg.FieldID
+                  : savedFertiliser.ID,
+              CreatedByID: userId,
+              CreatedOn: new Date(),
+            })
+          );
+
+         const savedWarningMessage = await transactionalManager.save(
+            WarningMessagesEntity,
+            warningMessagesToSave
+          );
+          
+        }
+      }
+
       const soilAnalysisAllData = await this.soilAnalysisRepository.find();
       const pkBalanceAllData = await this.pkBalanceRepository.find();
 
-      const savedFertiliserManures = await transactionalManager.save(
-        FertiliserManuresEntity,
-        fertiliserManures
-      );
+    
+
+ 
 
       // const managementPeriodData =
       //   await this.managementPeriodRepository.findOneBy({
@@ -287,12 +346,63 @@ class FertiliserManuresService extends BaseService {
               if (totalP205AndK20 && recommandationData) {
                 let pBalance =
                   totalP205AndK20.p205 +
-                  fertiliserManureData[0]?.P2O5 -
+                  fertiliserManureData[0]?.FertiliserManure.P2O5 -
                   recommandationData.p205;
                 let kBalance =
                   totalP205AndK20.k20 +
-                  fertiliserManureData[0]?.K2O -
+                  fertiliserManureData[0]?.FertiliserManure.K2O -
                   recommandationData.k20;
+                   const farmData = await this.farmRepository.findOneBy({
+                     ID: fieldData[0].FarmID,
+                   });
+
+                   const rb209CountryData = await transactionalManager.findOne(
+                     CountryEntity,
+                     {
+                       where: {
+                         ID: farmData.CountryID,
+                       },
+                     }
+                   );
+
+                  const {
+                    latestSoilAnalysis,
+                    errors: soilAnalysisErrors,
+                    soilAnalysisRecords,
+                  } = await this.HandleSoilAnalysisService.handleSoilAnalysisValidation(
+                    fieldData[0].ID,
+                    fieldData[0].Name,
+                    cropData[0]?.Year,
+                    rb209CountryData.RB209CountryID
+                  );
+
+                if (cropData[0].CropTypeID == CropTypeMapper.OTHER) {
+                 
+
+                  
+                  const otherPKBalance =
+                    await this.CalculatePKBalanceOther.calculatePKBalanceOther(
+                      cropData[0],
+                      latestSoilAnalysis,
+                      transactionalManager
+                    );
+
+                  pBalance = otherPKBalance.pBalance;
+                  kBalance = otherPKBalance.kBalance;
+                }
+
+                 if (Object.keys(latestSoilAnalysis).length > 0) {
+                   if (latestSoilAnalysis.PotassiumIndex == null) {
+                     kBalance = 0;
+                   }
+
+                   if (latestSoilAnalysis.PhosphorusIndex == null) {
+                     pBalance = 0;
+                   }
+                 } else {
+                   pBalance = 0;
+                   kBalance = 0;
+                 }
                 const updateData = {
                   Year: cropData[0]?.Year,
                   FieldID: fieldData[0]?.ID,
@@ -313,11 +423,58 @@ class FertiliserManuresService extends BaseService {
                   updatePKBalance
                 );
               }
+          
+               await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+                 cropData[0].FieldID,
+                 cropData[0].Year,
+                 request,
+                 userId,
+                 transactionalManager
+               );
+                   const nextAvailableCrop = await this.cropRepository.findOne({
+                     where: {
+                       FieldID: cropData[0].FieldID,
+                       Year: MoreThan(cropData[0].Year),
+                     },
+                     order: { Year: "ASC" },
+                   });
+
+                   if (nextAvailableCrop) {
+                     this.UpdateRecommendation.updateRecommendationsForField(
+                       cropData[0].FieldID,
+                       nextAvailableCrop.Year,
+                       request,
+                       userId
+                     );
+                   }
             }
           }
         }
+        await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+          cropData[0].FieldID,
+          cropData[0].Year,
+          request,
+          userId,
+          transactionalManager
+        );
+        const nextAvailableCrop = await this.cropRepository.findOne({
+          where: {
+            FieldID: cropData[0].FieldID,
+            Year: MoreThan(cropData[0].Year),
+          },
+          order: { Year: "ASC" },
+        });
+
+        if (nextAvailableCrop) {
+          this.UpdateRecommendation.updateRecommendationsForField(
+            cropData[0].FieldID,
+            nextAvailableCrop.Year,
+            request,
+            userId
+          );
+        }
       }
-      return savedFertiliserManures;
+      return fertiliserManures;
     });
   }
 
@@ -368,6 +525,8 @@ class FertiliserManuresService extends BaseService {
     return await AppDataSource.transaction(async (transactionalManager) => {
       const updatedFertilisers = [];
       for (const manure of updatedFertiliserManureData) {
+        const inorganicManure = manure.FertiliserManure;
+        const warningMessages = manure.WarningMessages; 
         // const {
         //   ID,
         //   CreatedByID,
@@ -378,14 +537,9 @@ class FertiliserManuresService extends BaseService {
         const {
           ID,
           CreatedByID,
-          CreatedOn,
-          FieldName,
-          EncryptedCounter,
-          Defoliation,
-          FieldID,
-          DefoliationName,
+          CreatedOn,    
           ...updatedData
-        } = manure;
+        } = inorganicManure;
         // Update fertiliseremanure
         const result = await transactionalManager.update(
           FertiliserManuresEntity,
@@ -396,6 +550,13 @@ class FertiliserManuresService extends BaseService {
             ModifiedOn: new Date(),
           }
         );
+
+        let updatedWarningMessages = await this.CreateOrUpdateWarningMessage.syncWarningMessages(
+                    warningMessages,
+                    transactionalManager,
+                    userId
+                  );
+
 
         if (result.affected === 0) {
           console.log(`Fertiliser Manures with ID ${ID} not found`);
@@ -417,13 +578,13 @@ class FertiliserManuresService extends BaseService {
           where: { ID: managementPeriod.CropID },
         });
 
-        await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
-          crop.FieldID,
-          crop.Year,
-          request,
-          userId,
-          transactionalManager
-        );
+        // await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+        //   crop.FieldID,
+        //   crop.Year,
+        //   request,
+        //   userId,
+        //   transactionalManager
+        // );
 
         // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
         const nextAvailableCrop = await this.cropRepository.findOne({

@@ -154,13 +154,14 @@ class CropController {
   async createNutrientsRecommendationForFieldByFieldId() {
     const body = this.#request.payload;
     const userId = this.#request.userId;
-    this.#request;
+    let transaction=null
     try {
       const data =
         await this.#planService.createNutrientsRecommendationForField(
           body.Crops,
           userId,
-          this.#request
+          this.#request,
+          transaction
         );
       return this.#h.response(data);
     } catch (error) {
@@ -268,14 +269,16 @@ class CropController {
   async deleteCropsByIds() {
     const { cropIds } = this.#request.payload;
     const userId = this.#request.userId;
+      let transaction = null;
 
     try {
       // Loop through each cropId and call the service method to delete it
       for (let cropId of cropIds) {
-        const result = await this.#cropService.deleteCropById(
+        const result = await this.#cropService.deleteCrop(
           cropId,
           userId,
-          this.#request
+          this.#request,
+          transaction
         );
 
         if (result?.affectedRows === 0) {
@@ -295,7 +298,7 @@ class CropController {
     const { farmId } = this.#request.query;
 
     try {
-      const cropIdsArray = cropIds.split(",").map((id) => parseInt(id));
+      const cropIdsArray = cropIds.split(",").map((id) => Number.parseInt(id));
       const cropGroupNameAlreadyExist =
         await this.#cropService.CropGroupNameExists(
           cropIdsArray,
@@ -334,11 +337,13 @@ class CropController {
     try {
       const body = this.#request.payload;
       const userId = this.#request.userId;
+      let transaction = null;
 
-      const updatedResults = await this.#cropService.updateCrop(
+      const updatedResults = await this.#cropService.updateCropData(
         body,
         userId,
-        this.#request
+        this.#request,
+        transaction
       );
 
       return this.#h.response({
@@ -367,6 +372,28 @@ class CropController {
       return this.#h.response(results);
     } catch (error) {
       console.error("Error copying crop:", error);
+      return this.#h.response({
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  }
+
+async MergeCrop(){
+ try {
+      const body = this.#request.payload;
+      const userId = this.#request.userId;
+
+      const results = await this.#cropService.MergeCrop(
+        // body,
+        userId,
+        body,
+        this.#request
+      );
+
+      return this.#h.response(results);
+    } catch (error) {
+      console.error("Error merging crop:", error);
       return this.#h.response({
         message: "Internal Server Error",
         error: error.message,
