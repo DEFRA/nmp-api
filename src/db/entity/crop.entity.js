@@ -192,6 +192,12 @@ const CropEntity = new EntitySchema({
       joinColumn: { name: "CropID" },
       inverseSide: "Crop",
     },
+    WarningMessages: {
+      type: "one-to-many",
+      target: "WarningMessages",
+      joinColumn: { name: "ID" },
+      inverseSide: "Crop",
+    }
   },
 });
  

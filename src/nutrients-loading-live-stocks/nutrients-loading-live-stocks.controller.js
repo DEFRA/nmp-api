@@ -23,6 +23,16 @@ class NutrientsLoadingLiveStocksController {
       console.error("Error in getByFarmId:", error);
     }
   }
+  async getById() {
+    const { id } = this.#request.params;
+    try {
+      const record = await this.#service.getById(id);
+      return this.#h.response(record);
+    } catch (error) {
+      console.error("Error in getById:", error);
+      return this.#h.response(error);
+    }
+  }
 
   async createNutrientsLiveStocks() {
     const payload = this.#request.payload;
@@ -38,6 +48,37 @@ class NutrientsLoadingLiveStocksController {
       console.error("Error in create:", error);
     }
   }
+
+  async updateNutrientsLoadingLiveStocks() {
+    const payload = this.#request.payload;
+    const userId = this.#request.userId;
+
+    try {
+      const updated = await this.#service.updateNutrientsLoadingLiveStocks(
+        payload,
+        userId,
+        this.#request
+      );
+      return this.#h.response(updated);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+
+  async deleteNutrientsLoadingLivestockById() {
+        const { nutrientsLoadingLivestockId } = this.#request.params;
+        try {
+          const result = await this.#service.deleteNutrientsLoadingLivestockById(
+            nutrientsLoadingLivestockId
+          );
+          if (result?.affectedRows === 0) {
+            throw boom.notFound(`NutrientsLoadingLivestock with ID ${nutrientsLoadingLivestockId} not found.`);
+          }
+          return this.#h.response({ message: "NutrientsLoadingLivestock deleted successfully." });
+        } catch (error) {
+          return this.#h.response({ error: error.message });
+        }
+      }
 }
 
 module.exports = { NutrientsLoadingLiveStocksController };

@@ -1,5 +1,6 @@
 const boom = require("@hapi/boom");
 const { UserExtensionService } = require("./user-extension.service");
+const { StaticStrings } = require("../shared/static.string");
 
 class UserExtensionController {
   #request;
