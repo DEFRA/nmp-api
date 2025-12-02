@@ -458,7 +458,7 @@ class CalculateGrassHistoryAndPreviousGrass {
               where: { FieldID: fieldId, HarvestYear: harvestYear - i },
             }
           );
-          if (prevGrass.CropTypeID == CropTypeMapper.GRASS) fieldTypeX = FieldTypeMapper.GRASS;
+          if (prevGrass?.CropTypeID == CropTypeMapper.GRASS) fieldTypeX = FieldTypeMapper.GRASS;
         }
 
         if (fieldTypeX === FieldTypeMapper.GRASS) {
