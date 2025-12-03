@@ -2975,6 +2975,17 @@ if(cropIds.length>0)
       return (createdPlan!=null?true:false)
     });
   }
+
+  async getPlanByFieldIdAndYear(fieldId, year) {
+    const cropData = await this.repository.find({
+      where: {
+        FieldID: fieldId,
+        Year: year
+      },
+    });
+   
+    return cropData
+  }
 }
 
 module.exports = { CropService };
