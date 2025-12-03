@@ -633,10 +633,6 @@ class OrganicManureService extends BaseService {
           ...(soilAnalysis.SulphurDeficient && {
             sulphurDeficient: soilAnalysis.SulphurDeficient,
           }),
-          ...(soilAnalysis.SoilNitrogenSupplyIndex != null && {
-            snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
-            snsMethodologyId: 4,
-          }),
           ...(soilAnalysis.PhosphorusIndex != null && {
             pIndexId: soilAnalysis.PhosphorusIndex,
             pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
