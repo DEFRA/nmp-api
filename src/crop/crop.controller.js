@@ -406,8 +406,6 @@ async MergeCrop(){
     const { year } = this.#request.query;
 
     try {
-      console.log('fieldId123',fieldId)
-      console.log('year123',year)
       const cropData =
         await this.#cropService.getPlanByFieldIdAndYear(
           fieldId,
