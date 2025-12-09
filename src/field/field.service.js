@@ -811,7 +811,7 @@ class FieldService extends BaseService {
           order: { Date: "DESC" }, // Order by date, most recent first
         });
 
-        const soilAnalysis = soilAnalysisRecords ? soilAnalysisRecords : null;
+        const soilAnalysis = soilAnalysisRecords.length>0 ? soilAnalysisRecords : null;
 
         if (crops != null) {
           for (const crop of crops) {
@@ -1033,9 +1033,10 @@ class FieldService extends BaseService {
         const soilTypeName = soil?.soilType;
         // Get SulphurDeficient from soilAnalysis
         const sulphurDeficient =
-          soilAnalysis != null ? soilAnalysis?.SulphurDeficient : null;
+          soilAnalysis != null ? soilAnalysis[0].SulphurDeficient : null;
         // Create soilDetails object
         const soilDetails = {
+          SoilTypeId:field.SoilTypeID,
           SoilTypeName: soilTypeName,
           PotashReleasingClay: field.SoilReleasingClay,
           SulphurDeficient: sulphurDeficient,
