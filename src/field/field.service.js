@@ -811,7 +811,7 @@ class FieldService extends BaseService {
           order: { Date: "DESC" }, // Order by date, most recent first
         });
 
-        const soilAnalysis = soilAnalysisRecords.length>0 ? soilAnalysisRecords : null;
+        const soilAnalysis = soilAnalysisRecords ? soilAnalysisRecords : null;
 
         if (crops != null) {
           for (const crop of crops) {
