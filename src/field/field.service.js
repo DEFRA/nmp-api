@@ -1033,9 +1033,10 @@ class FieldService extends BaseService {
         const soilTypeName = soil?.soilType;
         // Get SulphurDeficient from soilAnalysis
         const sulphurDeficient =
-          soilAnalysis != null ? soilAnalysis?.SulphurDeficient : null;
+          soilAnalysis != null ? soilAnalysis[0].SulphurDeficient : null;
         // Create soilDetails object
         const soilDetails = {
+          SoilTypeId:field.SoilTypeID,
           SoilTypeName: soilTypeName,
           PotashReleasingClay: field.SoilReleasingClay,
           SulphurDeficient: sulphurDeficient,
