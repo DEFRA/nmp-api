@@ -48,13 +48,13 @@ module.exports = [
     path: "/crops/plans/fields/{harvestYear}",
     options: {
       tags: ["api", "Crop"],
-      description: "Get crops plans field by harvest year and cropTypeID",
+      description: "Get crops plans field by harvest year and cropGroupName",
       validate: {
         params: Joi.object({
           harvestYear: Joi.number().integer().required(),
         }),
         query: Joi.object({
-          cropTypeId: Joi.number().integer().optional(),
+          cropGroupName: Joi.string().optional(),
           farmId: Joi.number().integer().required(),
         }),
         failAction: (request, h, err) => {
@@ -74,7 +74,7 @@ module.exports = [
     },
     handler: async (request, h) => {
       const controller = new CropController(request, h);
-      return controller.getCropsPlansFieldsByHarvestYearAndCropTypeId();
+      return controller.getCropsPlansFieldsByHarvestYearAndCropGroupName();
     },
   },
   {
@@ -121,7 +121,7 @@ module.exports = [
           harvestYear: Joi.number().integer().required(),
         }),
         query: Joi.object({
-          cropTypeId: Joi.number().integer().optional(),
+          cropGroupName: Joi.string().optional(),
           fieldIds: Joi.string()
             .required()
             .description("Comma separated Field Ids, e.g. 1,2,3"),
@@ -594,6 +594,39 @@ module.exports = [
             .takeover();
         },
       },
+    },
+  },
+    {
+    method: "GET",
+    path: "/crops/plan/{fieldId}",
+    options: {
+      tags: ["api", "Crop"],      
+      description: "Get Crop plans by fieldId and harvest year",
+      validate: {
+        params: Joi.object({
+          fieldId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          year: Joi.number().integer().required()
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new CropController(request, h);
+      return controller.getPlanByFieldIdAndYear();
     },
   },
 ];

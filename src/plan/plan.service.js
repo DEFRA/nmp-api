@@ -2162,19 +2162,19 @@ const savedCrop = await transactionalManager.save(
       CreatedByID: userId,
     });
   }
-  async getCropsPlanFields(farmId, harvestYear, cropTypeID) {
+  async getCropsPlanFields(farmId, harvestYear, cropGroupName) {
     try {
       const storedProcedure =
-        "EXEC dbo.spCrops_GetCropPlansFieldsByHarvestYear @farmId = @0, @harvestYear = @1, @cropTypeId = @2";
+        "EXEC dbo.spCrops_GetCropPlansFieldsByHarvestYear @farmId = @0, @harvestYear = @1, @cropGroupName = @2";
       const plans = await AppDataSource.query(storedProcedure, [
         farmId,
         harvestYear,
-        cropTypeID,
+        cropGroupName,
       ]);
       return plans;
     } catch (error) {
       console.error(
-        "Error while fetching crop plans fields join data using farmId, harvest year and crop typeId:",
+        "Error while fetching crop plans fields join data using farmId, harvest year and cropGroupName:",
         error
       );
       throw error;
@@ -2257,17 +2257,17 @@ const savedCrop = await transactionalManager.save(
   async getCropsPlansManagementPeriodIds(
     fieldIds,
     harvestYear,
-    cropTypeId,
+    cropGroupName,
     cropOrder
   ) {
     try {
       //cropOrder = cropOrder || 1;
       const storedProcedure =
-        "EXEC dbo.spCrops_GetCropPlansManagementPeriodByHarvestYear @fieldIds = @0, @harvestYear = @1, @cropTypeId = @2 , @cropOrder = @3";
+        "EXEC dbo.spCrops_GetCropPlansManagementPeriodByHarvestYear @fieldIds = @0, @harvestYear = @1, @cropGroupName = @2 , @cropOrder = @3";
       const plans = await this.executeQuery(storedProcedure, [
         fieldIds,
         harvestYear,
-        cropTypeId,
+        cropGroupName,
         cropOrder,
       ]);
       return { ManagementPeriods: plans };
