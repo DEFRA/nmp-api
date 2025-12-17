@@ -2,32 +2,114 @@ const { In } = require("typeorm");
 const {
   WarningMessagesEntity,
 } = require("../db/entity/warning-message.entity");
+const { ManagementPeriodEntity } = require("../db/entity/management-period.entity");
+const { CropEntity } = require("../db/entity/crop.entity");
 
 class CreateOrUpdateWarningMessage {
   constructor() {}
 
   async syncWarningMessages(
+    managementPeriodID,
+    manure,
     warningMessagesArray,
     transactionalManager,
     userId
   ) {
-    if (
-      !Array.isArray(warningMessagesArray) ||
-      warningMessagesArray.length === 0
-    )
-      return;
+    // if (
+    //   !Array.isArray(warningMessagesArray) ||
+    //   warningMessagesArray.length === 0
+    // )
+    //   return;
 
-    const fieldID = warningMessagesArray[0].FieldID;
-    const cropID = warningMessagesArray[0].CropID;
-    const joiningID = warningMessagesArray[0].JoiningID ?? null;
+    // -------------------------------
+    // 1️⃣ Get Management Period
+    // -------------------------------
+    const managementPeriodData = await transactionalManager.findOne(
+      ManagementPeriodEntity,
+      { where: { ID: managementPeriodID } }
+    );
 
-    // Fetch existing DB entries
-    const existingMessages = await transactionalManager.find(
+    if (!managementPeriodData) {
+      throw new Error(
+        `ManagementPeriod not found for ID ${managementPeriodID}`
+      );
+    }
+
+    // -------------------------------
+    // 2️⃣ Get Crop from ManagementPeriod
+    // -------------------------------
+    const cropData = await transactionalManager.findOne(CropEntity, {
+      where: { ID: managementPeriodData.CropID },
+    });
+
+    if (!cropData) {
+      throw new Error(`Crop not found for ID ${managementPeriodData.CropID}`);
+    }
+
+    const cropID = cropData.ID;
+    const fieldID = cropData.FieldID;
+
+    // -------------------------------
+    // 3️⃣ Fetch existing messages
+    //     Case 1: JoiningID = manureID
+    //     Case 2: JoiningID = fieldID
+    // -------------------------------
+    const existingByManure = await transactionalManager.find(
       WarningMessagesEntity,
       {
-        where: { FieldID: fieldID, CropID: cropID, JoiningID: joiningID },
+        where: {
+          FieldID: fieldID,
+          CropID: cropID,
+          JoiningID: manure.ID,
+        },
       }
     );
+
+    const existingByField = await transactionalManager.find(
+      WarningMessagesEntity,
+      {
+        where: {
+          FieldID: fieldID,
+          CropID: cropID,
+          JoiningID: fieldID,
+        },
+      }
+    );
+
+    // -------------------------------
+    // 4️⃣ Merge & de-duplicate
+    // -------------------------------
+    const existingMessagesMap = new Map();
+
+    [...existingByManure, ...existingByField].forEach((msg) => {
+      existingMessagesMap.set(msg.ID, msg);
+    });
+
+    const existingMessages = Array.from(existingMessagesMap?.values());
+    const incomeingWarning = warningMessagesArray[0] ?? [];
+
+    // Treat null or empty array the same way
+    if (
+      warningMessagesArray == null ||
+      (Array.isArray(warningMessagesArray) && incomeingWarning?.length == 0)
+    ) {
+  
+      // Case 1: No incoming warnings AND no existing messages → just return
+      if (!existingMessages || existingMessages?.length == 0) {
+        return;
+      }
+
+      // Case 2: No incoming warnings BUT existing messages present → delete them
+      await transactionalManager.delete(WarningMessagesEntity, {
+        ID: In(existingMessages.map((m) => m.ID)),
+      });
+
+      console.log(
+        `🗑️ WarningMessages deleted for FieldID=${fieldID}, CropID=${cropID}`
+      );
+
+      return;
+    }
 
     // Helper for equality check (ignores IDs/timestamps)
     const areMessagesEqual = (a, b) => {
@@ -97,7 +179,7 @@ class CreateOrUpdateWarningMessage {
     }
 
     console.log(
-      `✅ WarningMessages synced successfully for FieldID=${fieldID}, CropID=${cropID}, JoiningID=${joiningID}`
+      `✅ WarningMessages synced successfully for FieldID=${fieldID}, CropID=${cropID}`
     );
   }
 }
