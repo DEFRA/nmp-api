@@ -676,7 +676,7 @@ class FieldService extends BaseService {
     const previousCroppingData = await this.previousCroppingRepository.findOne({
       where: { FieldID: fieldID },
     });
-    if (previousCroppingData.CropTypeID == CropTypeMapper.GRASS) {
+    if (previousCroppingData!=null&&previousCroppingData.CropTypeID == CropTypeMapper.GRASS) {
       previousGrasses = previousCroppingData;
     }
     return previousGrasses;
@@ -811,8 +811,7 @@ class FieldService extends BaseService {
           order: { Date: "DESC" }, // Order by date, most recent first
         });
 
-        const soilAnalysis = soilAnalysisRecords ? soilAnalysisRecords : null;
-
+        const soilAnalysis = soilAnalysisRecords.length > 0  ? soilAnalysisRecords : null;
         if (crops != null) {
           for (const crop of crops) {
             if (crop.CropTypeID == 140) {
@@ -1033,9 +1032,10 @@ class FieldService extends BaseService {
         const soilTypeName = soil?.soilType;
         // Get SulphurDeficient from soilAnalysis
         const sulphurDeficient =
-          soilAnalysis != null ? soilAnalysis?.SulphurDeficient : null;
+          (soilAnalysis != null&&soilAnalysis.length>0) ? soilAnalysis[0]?.SulphurDeficient : null;
         // Create soilDetails object
         const soilDetails = {
+          SoilTypeId:field.SoilTypeID,
           SoilTypeName: soilTypeName,
           PotashReleasingClay: field.SoilReleasingClay,
           SulphurDeficient: sulphurDeficient,
