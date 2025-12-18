@@ -676,7 +676,7 @@ class FieldService extends BaseService {
     const previousCroppingData = await this.previousCroppingRepository.findOne({
       where: { FieldID: fieldID },
     });
-    if (previousCroppingData.CropTypeID == CropTypeMapper.GRASS) {
+    if (previousCroppingData!=null&&previousCroppingData.CropTypeID == CropTypeMapper.GRASS) {
       previousGrasses = previousCroppingData;
     }
     return previousGrasses;
