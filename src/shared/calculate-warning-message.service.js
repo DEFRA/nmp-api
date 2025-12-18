@@ -146,6 +146,18 @@ class CalculateWarningMessageService {
     });
   }
 
+  async isClosedPeriodOrganicManureBreached(sp) {
+    const common =
+      !sp.RegisteredOrganicProducer &&
+      sp.IsHighRanManures &&
+      sp.IsWithinClosedPeriod;
+
+    return this.isEnglandOrWales({
+      isEngland: sp.IsFieldInEngland && common,
+      isWales: sp.IsFieldInWelsh && common,
+    });
+  }
+
   async calculateOrganicManureWarningMessage(
     transactionalManager,
     organicManure
@@ -285,9 +297,7 @@ class CalculateWarningMessageService {
       "EXEC spWarning_ComputeNMaxRateCombined @ManureID = @0",
       [organicManure.ID]
     );
-        const isNMaxLimitEngOrWale = await this.isNMaxLimitBreached(
-          spNMaxManure
-        );
+    const isNMaxLimitEngOrWale = await this.isNMaxLimitBreached(spNMaxManure);
     if (isNMaxLimitEngOrWale) {
       const template = await this.getWarningTemplate(
         transactionalManager,
@@ -315,61 +325,33 @@ class CalculateWarningMessageService {
     // 5️⃣ FIFTH WARNING — Closed Period Organic Manure
     // ======================================================================
 
-    const spCheckClosedPeriod =
-      "EXEC spWarning_CheckClosedPeriodOrganicManure @OrganicManureID = @0";
-
-    const spCheckClosedPeriodResult = await transactionalManager.query(
-      spCheckClosedPeriod,
+    const spCheckClosedPeriod = await this.executeWarningSP(
+      transactionalManager,
+      "EXEC spWarning_CheckClosedPeriodOrganicManure @OrganicManureID = @0",
       [organicManure.ID]
     );
 
-    const spCheckClosedPeriodData = spCheckClosedPeriod[0];
+     const isClosedPeriodManureEngOrWales= await this.isClosedPeriodOrganicManureBreached(spCheckClosedPeriod);
 
-    // -------------------------------
-    // England Conditions
-    // -------------------------------
-    const isEnglandFifth =
-      spCheckClosedPeriodData.IsFieldInEngland == 1 &&
-      spCheckClosedPeriodData.RegisteredOrganicProducer == 0 &&
-      spCheckClosedPeriodData.IsHighRanManures == 1 &&
-      spCheckClosedPeriodData.IsWithinClosedPeriod == 1;
+    if (isClosedPeriodManureEngOrWales) {
+      const template = await this.getWarningTemplate(
+        transactionalManager,
+        farm.CountryID,
+        WarningKeyMapper.HIGHNORGANICMANURECLOSEDPERIOD
+      );
 
-    // -------------------------------
-    // Wales Conditions
-    // -------------------------------
-    const isWalesFifth =
-      spCheckClosedPeriodData.IsFieldInWelsh == 1 &&
-      spCheckClosedPeriodData.RegisteredOrganicProducer == 0 &&
-      spCheckClosedPeriodData.IsHighRanManures == 1 &&
-      spCheckClosedPeriodData.IsWithinClosedPeriod == 1;
+      const buildLocalizedWarning = await this.buildLocalizedWarning(template);
 
-    if (isEnglandFifth || isWalesFifth) {
-      const template = await transactionalManager.findOne(WarningsEntity, {
-        where: {
-          CountryID: farm.CountryID,
-          WarningKey: WarningKeyMapper.HIGHNORGANICMANURECLOSEDPERIOD,
-        },
-      });
-
-      if (template) {
-        const localized = {
-          Header: template.Header,
-          Para1: template.Para1,
-          Para2: template.Para2,
-          Para3: template.Para3,
-        };
-
-        warningMessages.push(
-          await this.createWarningMessage(
-            field.ID,
-            crop.ID,
-            organicManure,
-            localized,
-            WarningCodesMapper.CLOSEDPERIODORGANICMANURE,
-            WarningLevelMapper.MANURE
-          )
-        );
-      }
+      warningMessages.push(
+        await this.createWarningMessage(
+          field.ID,
+          crop.ID,
+          organicManure,
+          buildLocalizedWarning,
+          WarningCodesMapper.CLOSEDPERIODORGANICMANURE,
+          WarningLevelMapper.MANURE
+        )
+      );
     }
 
     // ======================================================================
