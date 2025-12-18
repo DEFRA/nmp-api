@@ -116,7 +116,6 @@ class OrganicManureService extends BaseService {
     this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
     this.CreateOrUpdateWarningMessage = new CreateOrUpdateWarningMessage();
     this.CreateOrUpdateWarningMessage = new CreateOrUpdateWarningMessage();
-    this.CalculateWarningMessageService = new CalculateWarningMessageService();
     this.CalculatePreviousCropService = new CalculatePreviousCropService();
     
   }
