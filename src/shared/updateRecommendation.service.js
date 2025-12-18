@@ -47,6 +47,7 @@ const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entit
 const { CalculatePreviousCropService } = require("./previous-year-crop-service");
 const { CalculateWarningMessageService } = require("./calculate-warning-message.service");
 const { CreateOrUpdateWarningMessage } = require("./create-update-warning-messages.service");
+const { CalculateFutureWarningMessageService } = require("./calculate-warning-messages-future-years");
 
 
 class UpdateRecommendation {
@@ -107,6 +108,8 @@ class UpdateRecommendation {
     this.CalculatePreviousCropService = new CalculatePreviousCropService();
     this.CalculateWarningMessageService = new CalculateWarningMessageService();
     this.CreateOrUpdateWarningMessage = new CreateOrUpdateWarningMessage();
+    this.CalculateFutureWarningMessageService =
+      new CalculateFutureWarningMessageService();
   }
 
   async getYearsGreaterThanGivenYear(fieldID, year) {
@@ -1001,7 +1004,7 @@ class UpdateRecommendation {
       // 3. If fertiliser → call fertiliser warning service
       if (manure.isFertiliserManure === true) {
         warnings =
-          await this.CalculateWarningMessageService.calculateFertiliserWarningMessage(
+          await this.CalculateFutureWarningMessageService.calculateFertiliserWarningMessage(
             transactionalManager,
             manure
           );
@@ -1013,7 +1016,7 @@ class UpdateRecommendation {
       if (manure.isOrganicManure === true) {
       
         warnings =
-          await this.CalculateWarningMessageService.calculateOrganicManureWarningMessage(
+          await this.CalculateFutureWarningMessageService.calculateOrganicManureWarningMessage(
             transactionalManager,
             manure
           );
