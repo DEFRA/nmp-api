@@ -772,65 +772,9 @@ class UpdateRecommendation {
         if (secondCropSnsAnalysis) {
           snsAnalysesData.push(secondCropSnsAnalysis);
         }
-        // const secondCropManagementPeriods = managementPeriods.find(
-        //   (mp) => mp.CropID == secondCrop.ID
-        // );
-        // const secondCropOrganicManureExist =
-        //   organicManureAllData.find(
-        //     (organicManure) =>
-        //       organicManure.ManagementPeriodID == secondCropManagementPeriods.ID
-        //   ) ?? null;
-        // if (secondCropOrganicManureExist) {
-        //   secondCropDataManureApplications = await this.buildManureApplications(
-        //     secondCropManagementPeriods.ID,
-        //     organicManureAllData,
-        //     organicManure,
-        //     request
-        //   );
-        // }
-        // if (secondCropDataManureApplications) {
-        //   mannerOutputSecondReq = await this.buildMannerOutputReq(
-        //     fieldID,
-        //     secondCropDataManureApplications,
-        //     request,
-        //     cropData,
-        //     farmData,
-        //     fieldData,
-        //     cropTypeLinkingData,
-        //     soilTypeTextureData
-        //   );
-        // }
-        // if (mannerOutputSecondReq) {
-        //   secondCropMannerOutput =
-        //     await this.MannerCalculateNutrientsService.postData(
-        //       "/calculate-nutrients",
-        //       mannerOutputSecondReq,
-        //       request
-        //     );
-        // }
+        
       } else {
-        // manureApplications = await this.buildManureApplications(
-        //   organicManure.ManagementPeriodID,
-        //   organicManureAllData,
-        //   organicManure,
-        //   request
-        // );
-
-        // mannerOutputReq = await this.buildMannerOutputReq(
-        //   fieldID,
-        //   manureApplications,
-        //   request,
-        //   cropData,
-        //   farmData,
-        //   fieldData,
-        //   cropTypeLinkingData,
-        //   soilTypeTextureData
-        // );
-
-        // mannerOutputs = await this.processMannerOutputs(
-        //   mannerOutputReq,
-        //   request
-        // );
+        
         snsAnalysesData = await this.getSnsAnalysesData(
           transactionalManager,
           cropData
@@ -909,16 +853,7 @@ class UpdateRecommendation {
             saveAndUpdatePKBalance.saveAndUpdatePKBalance
           );
         }
-        // for (){
-        //   if(organicmanure){
-
-        //     calculateWarningMessage(transactionalmanager,organicManure);
-        //   }else if(fertiliser){
-
-        //     calculateWarningMessage(transactionalmanager,organicManure);
-        //   }
-
-        // }
+        
 
         return {
           otherOrganicManures: organicManures,
@@ -965,43 +900,7 @@ class UpdateRecommendation {
         savedRecommendationComment = [],
         Recommendations = [];
 
-      //   for (const cropData of dataMultipleCrops) {
-      //   savedRecommendation = await this.buildCropRecommendationDataForManure(
-      //     cropData,
-      //     latestSoilAnalysis,
-      //     nutrientRecommendationsData,
-      //     transactionalManager,
-      //     userId,
-      //     mannerOutputs
-      //   );
-
-      //   savedRecommendationComment = await this.saveMultipleRecommendationForManure(
-      //     Recommendations,
-      //     cropData,
-      //     savedRecommendation[0],
-      //     transactionalManager,
-      //     nutrientRecommendationsData,
-      //     userId
-      //   );
-
-      // }
-
-      // const savedData = await this.saveRecommendationsForMultipleCrops(
-      //   transactionalManager,
-      //   nutrientRecommendationsData,
-      //   nutrientRecommendationnReqBody,
-      //   mannerOutputs,
-      //   firstCropMannerOutput,
-      //   secondCropMannerOutput,
-      //   userId,
-      //   cropData,
-      //   dataMultipleCrops,
-      //   latestSoilAnalysis,
-      //   snsAnalysesData,
-      //   allRecommendations
-      // );
-
-      // console.log("savedData", savedData);
+     
 
       for (const cropData of dataMultipleCrops) {
         savedRecommendation = await this.buildCropRecommendationDataForManure(
@@ -1076,16 +975,7 @@ class UpdateRecommendation {
         );
       }
 
-      // await this.saveOrUpdateArableNotes(
-      //   arableNotes,
-      //   savedData,
-      //   transactionalManager,
-      //   userId
-      // );
-      // return {
-      //   savedRecommendationsData: Recommendations,
-      //   saveAndUpdatePKBalance: saveAndUpdatePKBalance,
-      // };
+    
     }
 
     // 1. Extract ManagementPeriodID from the first OrganicManure (all same)
@@ -1132,14 +1022,12 @@ class UpdateRecommendation {
       // 5. Push results safely (in case function returns array or null)
       if (Array.isArray(warnings) && warnings.length > 0) {
         finalWarnings.push(...warnings);
-      } else if (warnings) {
-        finalWarnings.push(warnings);
-      }
+      } 
       //for (const warning of finalWarnings) {
         await this.CreateOrUpdateWarningMessage.syncWarningMessages(
           manure.ManagementPeriodID,
           manure,
-          finalWarnings,
+          finalWarnings,  
           transactionalManager,
           userId
         );
@@ -1716,10 +1604,7 @@ class UpdateRecommendation {
 
       // 5. Normalize warnings (array | single | null)
       const normalizedWarnings = Array.isArray(warnings)
-        ? warnings
-        : warnings
-        ? [warnings]
-        : [];
+    
 
       // 6. Sync warnings one-by-one for this manure
       for (const warning of normalizedWarnings) {

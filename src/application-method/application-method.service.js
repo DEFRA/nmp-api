@@ -40,7 +40,7 @@ class ApplicationMethodService extends BaseService {
   async getApplicationMethodById(id) {
     const { records } = await this.getById(id);
     if (!records) {
-      throw boom.notFound(`Application Method with ID ${id} not found`);
+     console.log(`Application Method with ID ${id} not found`);
     }
     return records;
   }

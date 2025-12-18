@@ -16,11 +16,16 @@ class CalculateWarningMessageService {
   constructor() {}
 
   async bindNumberedPlaceholders(localizedObj, valuesArray) {
-    if (!localizedObj) return localizedObj;
+    if (!localizedObj) {
+
+      return localizedObj;
+    }
     const cloned = { ...localizedObj };
 
     const replaceInString = (text) => {
-      if (typeof text !== "string") return text;
+      if (typeof text !== "string") {
+        return text;
+      }
       let updated = text;
       valuesArray.forEach((value, idx) => {
         updated = updated.split(`{${idx}}`).join(String(value));
@@ -64,7 +69,7 @@ class CalculateWarningMessageService {
   }
 
   async calculateOrganicManureWarningMessage(transactionalManager, organicManure) {
-    let warningMessages = [];
+    const warningMessages = [];
 
     // ----------------------------------------------------------------------
     // LOAD MANAGEMENT PERIOD, CROP, FIELD, FARM
@@ -903,7 +908,7 @@ class CalculateWarningMessageService {
   }
 
   async calculateFertiliserWarningMessage(transactionalManager, fertiliser) {
-    let warningMessages = [];
+    const warningMessages = [];
 
     // ----------------------------------------------------------------------
     // LOAD MANAGEMENT PERIOD, CROP, FIELD, FARM  (same pattern as OM)

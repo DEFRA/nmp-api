@@ -52,7 +52,7 @@ class FarmService extends BaseService {
   }
 
   async createFarm(farm, userId) {
-    let farmBody = farm.Farm;
+    const farmBody = farm.Farm;
     const farmExists = await this.farmExistsByNameAndPostcode(
       farmBody.Name.trim(),
       farmBody.Postcode.trim()
