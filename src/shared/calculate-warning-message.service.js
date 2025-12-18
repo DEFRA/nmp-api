@@ -102,6 +102,19 @@ class CalculateWarningMessageService {
     });
   }
 
+  async isEnglandOrWales({ isEngland, isWales }) {
+    return isEngland || isWales;
+  }
+
+  async isYearlyNLimitBreached(sp) {
+    const common = sp.IsOrganicManureNFieldLimit;
+
+    return this.isEnglandOrWales({
+      isEngland: sp.IsFieldEngland && sp.IsWithinNvz && common,
+      isWales: sp.IsFieldWelsh && common,
+    });
+  }
+
   async calculateOrganicManureWarningMessage(
     transactionalManager,
     organicManure
@@ -132,147 +145,129 @@ class CalculateWarningMessageService {
     // 1️⃣ FIRST WARNING — Yearly N limit (250 limit)
     // ======================================================================
 
-      const spNFieldLimit = await this.executeWarningSP(
+    const spNFieldLimit = await this.executeWarningSP(
+      transactionalManager,
+      "EXEC spWarning_CheckOrganicManureNFieldLimitYear @OrganicManureID = @0",
+      [organicManure.ID]
+    );
+
+    // const isEnglandFirst =
+    //   spNFieldLimit.IsFieldEngland &&
+    //   spNFieldLimit.IsWithinNvz &&
+    //   spNFieldLimit.IsOrganicManureNFieldLimit;
+
+    // const isWalesFirst =
+    //   spNFieldLimit.IsFieldWelsh && spNFieldLimit.IsOrganicManureNFieldLimit;
+
+      const isEnglandAndWales = await this.isYearlyNLimitBreached(spNFieldLimit)
+
+    if (isEnglandAndWales) {
+      const template = await this.getWarningTemplate(
         transactionalManager,
-        "EXEC spWarning_CheckOrganicManureNFieldLimitYear @OrganicManureID = @0",
-        [organicManure.ID]
+        farm.CountryID,
+        WarningKeyMapper.ORGANICMANURENFIELDLIMIT
       );
 
+      const buildLocalizedWarning = await this.buildLocalizedWarning(template);
 
-    const isEnglandFirst =
-      spNFieldLimit.IsFieldEngland &&
-      spNFieldLimit.IsWithinNvz &&
-      spNFieldLimit.IsOrganicManureNFieldLimit;
-
-    const isWalesFirst =
-      spNFieldLimit.IsFieldWelsh &&
-      spNFieldLimit.IsOrganicManureNFieldLimit;
-
-    if (isEnglandFirst || isWalesFirst) {
-      
-
-          const template = await this.getWarningTemplate(
-            transactionalManager,
-            farm.CountryID,
-            WarningKeyMapper.ORGANICMANURENFIELDLIMIT
-          );
-
-          const buildLocalizedWarning = await this.buildLocalizedWarning(
-            template
-          );
-
-        warningMessages.push(
-          await this.createWarningMessage(
-            field.ID,
-            crop.ID,
-            organicManure,
-            buildLocalizedWarning,
-            WarningCodesMapper.FIELDNLIMIT,
-            WarningLevelMapper.MANURE
-          )
-        );
-      
+      warningMessages.push(
+        await this.createWarningMessage(
+          field.ID,
+          crop.ID,
+          organicManure,
+          buildLocalizedWarning,
+          WarningCodesMapper.FIELDNLIMIT,
+          WarningLevelMapper.MANURE
+        )
+      );
     }
 
     // ======================================================================
     // 2️⃣ SECOND WARNING — 2-year compost limit (Green compost)
     // ======================================================================
 
-
-
-      const spNFieldLimitCompost = await this.executeWarningSP(
-        transactionalManager,
-        "EXEC spWarning_CheckOrganicManureNFieldLimitComposts @OrganicManureID = @0",
-        [organicManure.ID]
-      );
-
+    const spNFieldLimitCompost = await this.executeWarningSP(
+      transactionalManager,
+      "EXEC spWarning_CheckOrganicManureNFieldLimitComposts @OrganicManureID = @0",
+      [organicManure.ID]
+    );
 
     const isEnglandSecond =
       spNFieldLimitCompost.IsFieldEngland &&
       spNFieldLimitCompost.IsFieldWithinNvz &&
       spNFieldLimitCompost.IsGreenCompost &&
-      spNFieldLimitCompost.IsRestrictedCropNotPresent  &&
-      spNFieldLimitCompost.IsTotalNitrogenAboveLimit ;
+      spNFieldLimitCompost.IsRestrictedCropNotPresent &&
+      spNFieldLimitCompost.IsTotalNitrogenAboveLimit;
 
     const isWalesSecond =
-      spNFieldLimitCompost.IsFieldWelsh  &&
-      spNFieldLimitCompost.IsGreenCompost  &&
-      spNFieldLimitCompost.IsRestrictedCropNotPresent  &&
-      spNFieldLimitCompost.IsTotalNitrogenAboveLimit ;
+      spNFieldLimitCompost.IsFieldWelsh &&
+      spNFieldLimitCompost.IsGreenCompost &&
+      spNFieldLimitCompost.IsRestrictedCropNotPresent &&
+      spNFieldLimitCompost.IsTotalNitrogenAboveLimit;
 
     if (isEnglandSecond || isWalesSecond) {
-     
-          const template = await this.getWarningTemplate(
-            transactionalManager,
-            farm.CountryID,
-            WarningKeyMapper.ORGANICMANURENFIELDLIMITCOMPOST
-          );
+      const template = await this.getWarningTemplate(
+        transactionalManager,
+        farm.CountryID,
+        WarningKeyMapper.ORGANICMANURENFIELDLIMITCOMPOST
+      );
 
-          const buildLocalizedWarning = await this.buildLocalizedWarning(
-            template
-          );
+      const buildLocalizedWarning = await this.buildLocalizedWarning(template);
 
-        warningMessages.push(
-          await this.createWarningMessage(
-            field.ID,
-            crop.ID,
-            organicManure,
-            buildLocalizedWarning,
-            WarningCodesMapper.FIELDNLIMIT,
-            WarningLevelMapper.MANURE
-          )
-        );
-      
+      warningMessages.push(
+        await this.createWarningMessage(
+          field.ID,
+          crop.ID,
+          organicManure,
+          buildLocalizedWarning,
+          WarningCodesMapper.FIELDNLIMIT,
+          WarningLevelMapper.MANURE
+        )
+      );
     }
 
     // ======================================================================
     // 3️⃣ THIRD WARNING — 4-year compost for specific crops
     // ======================================================================
 
- 
-      const spNFieldCompostsCropTypeSpecific = await this.executeWarningSP(
-        transactionalManager,
-        "EXEC spWarning_OrganicManureNFieldLimitCompostsCropTypeSpecific @OrganicManureID = @0 ",
-        [organicManure.ID]
-      );
-
+    const spNFieldCompostsCropTypeSpecific = await this.executeWarningSP(
+      transactionalManager,
+      "EXEC spWarning_OrganicManureNFieldLimitCompostsCropTypeSpecific @OrganicManureID = @0 ",
+      [organicManure.ID]
+    );
 
     const isEnglandThird =
       spNFieldCompostsCropTypeSpecific.IsFieldInEngland &&
       spNFieldCompostsCropTypeSpecific.IsFieldWithinNVZ &&
       spNFieldCompostsCropTypeSpecific.IsGreenCompost &&
       spNFieldCompostsCropTypeSpecific.IsAllowedCrops &&
-      spNFieldCompostsCropTypeSpecific.IsTotalNAboveLimit; ;
+      spNFieldCompostsCropTypeSpecific.IsTotalNAboveLimit;
 
     const isWalesThird =
       spNFieldCompostsCropTypeSpecific.IsFieldInWelsh &&
       spNFieldCompostsCropTypeSpecific.IsGreenCompost &&
       spNFieldCompostsCropTypeSpecific.IsAllowedCrops &&
-      spNFieldCompostsCropTypeSpecific.IsTotalNAboveLimit; ;
+      spNFieldCompostsCropTypeSpecific.IsTotalNAboveLimit;
 
     if (isEnglandThird || isWalesThird) {
-            const template = await this.getWarningTemplate(
-              transactionalManager,
-              farm.CountryID,
-              WarningKeyMapper.ORGANICMANURENFIELDLIMITCOMPOSTMULCH
-            );
+      const template = await this.getWarningTemplate(
+        transactionalManager,
+        farm.CountryID,
+        WarningKeyMapper.ORGANICMANURENFIELDLIMITCOMPOSTMULCH
+      );
 
-          const buildLocalizedWarning = await this.buildLocalizedWarning(
-            template
-          );
+      const buildLocalizedWarning = await this.buildLocalizedWarning(template);
 
-
-        warningMessages.push(
-          await this.createWarningMessage(
-            field.ID,
-            crop.ID,
-            organicManure,
-            buildLocalizedWarning,
-            WarningCodesMapper.FIELDNLIMIT,
-            WarningLevelMapper.MANURE
-          )
-        );
-      
+      warningMessages.push(
+        await this.createWarningMessage(
+          field.ID,
+          crop.ID,
+          organicManure,
+          buildLocalizedWarning,
+          WarningCodesMapper.FIELDNLIMIT,
+          WarningLevelMapper.MANURE
+        )
+      );
     }
 
     // ======================================================================
@@ -290,24 +285,24 @@ class CalculateWarningMessageService {
     // -------------------------------
     const isEnglandFourth =
       spNMaxManure.IsFieldEngland &&
-      spNMaxManure.IsFieldWithinNVZ  &&
+      spNMaxManure.IsFieldWithinNVZ &&
       spNMaxManure.IsCropTypeHasNMax &&
-      spNMaxManure.IsNExceeding ;
+      spNMaxManure.IsNExceeding;
 
     // -------------------------------
     // Wales logic
     // -------------------------------
     const isWalesFourth =
       spNMaxManure.IsFieldWales &&
-      spNMaxManure.IsCropTypeHasNMax  &&
-      spNMaxManure.IsNExceeding ;
+      spNMaxManure.IsCropTypeHasNMax &&
+      spNMaxManure.IsNExceeding;
 
     if (isEnglandFourth || isWalesFourth) {
-    const template = await this.getWarningTemplate(
-      transactionalManager,
-      farm.CountryID,
-      WarningKeyMapper.NMAXLIMIT
-    );
+      const template = await this.getWarningTemplate(
+        transactionalManager,
+        farm.CountryID,
+        WarningKeyMapper.NMAXLIMIT
+      );
 
       const buildLocalizedWarning = await this.buildLocalizedWarning(template, [
         spNMaxManure.ComputedNMaxRate,
