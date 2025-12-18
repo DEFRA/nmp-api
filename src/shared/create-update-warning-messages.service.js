@@ -15,11 +15,7 @@ class CreateOrUpdateWarningMessage {
     transactionalManager,
     userId
   ) {
-    // if (
-    //   !Array.isArray(warningMessagesArray) ||
-    //   warningMessagesArray.length === 0
-    // )
-    //   return;
+  
 
     // -------------------------------
     // 1️⃣ Get Management Period
@@ -90,12 +86,12 @@ class CreateOrUpdateWarningMessage {
 
     // Treat null or empty array the same way
     if (
-      warningMessagesArray == null ||
-      (Array.isArray(warningMessagesArray) && incomeingWarning?.length == 0)
+      warningMessagesArray === null ||
+      (Array.isArray(warningMessagesArray) && incomeingWarning?.length === 0)
     ) {
   
       // Case 1: No incoming warnings AND no existing messages → just return
-      if (!existingMessages || existingMessages?.length == 0) {
+      if (!existingMessages || existingMessages?.length === 0) {
         return;
       }
 

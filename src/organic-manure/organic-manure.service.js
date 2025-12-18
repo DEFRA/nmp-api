@@ -59,7 +59,7 @@ const { CreateOrUpdateWarningMessage } = require("../shared/create-update-warnin
 const { WarningCodesMapper } = require("../constants/warning-codes-mapper");
 const { RunTypeMapper } = require("../constants/run-type-mapper");
 const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
-const { CalculateWarningMessageService } = require("../shared/calculate-warning-message.service");
+
 const { CalculatePreviousCropService } = require("../shared/previous-year-crop-service");
 
 class OrganicManureService extends BaseService {

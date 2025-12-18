@@ -45,7 +45,7 @@ const { CalculateNextDefoliationService } = require("./calculate-next-defoliatio
 const { CalculatePKBalanceOther } = require("./calculate-pk-balance-other");
 const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
 const { CalculatePreviousCropService } = require("./previous-year-crop-service");
-const { CalculateWarningMessageService } = require("./calculate-warning-message.service");
+
 const { CreateOrUpdateWarningMessage } = require("./create-update-warning-messages.service");
 const { CalculateFutureWarningMessageService } = require("./calculate-warning-messages-future-years");
 
@@ -106,7 +106,7 @@ class UpdateRecommendation {
       new CalculateNextDefoliationService();
     this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
     this.CalculatePreviousCropService = new CalculatePreviousCropService();
-    this.CalculateWarningMessageService = new CalculateWarningMessageService();
+  
     this.CreateOrUpdateWarningMessage = new CreateOrUpdateWarningMessage();
     this.CalculateFutureWarningMessageService =
       new CalculateFutureWarningMessageService();
@@ -993,7 +993,7 @@ class UpdateRecommendation {
       [managementPeriodId]
     );
 
-    const finalWarnings = [];
+ 
 
     // 2. Loop through each manure item
     for (const manure of combinedManures) {
@@ -1026,7 +1026,7 @@ class UpdateRecommendation {
       if (Array.isArray(warnings) && warnings.length > 0) {
         finalWarnings.push(...warnings);
       } 
-      //for (const warning of finalWarnings) {
+    
         await this.CreateOrUpdateWarningMessage.syncWarningMessages(
           manure.ManagementPeriodID,
           manure,
@@ -1034,7 +1034,7 @@ class UpdateRecommendation {
           transactionalManager,
           userId
         );
-      //}
+
     }
   }
 

@@ -48,7 +48,10 @@ class CalculateFutureWarningMessageService {
   }
 
   async bind(template, values = []) {
-    if (!template || values.length === 0) return template;
+    if (!template || values.length === 0)
+        {
+        return template;
+        } 
 
     const replace = (text) =>
       typeof text === "string"
@@ -82,7 +85,9 @@ class CalculateFutureWarningMessageService {
   }
 
   async formatToDayMonth(date) {
-    if (!date) return "";
+    if (!date) {
+      return "";
+    }
     return new Date(date).toLocaleDateString("en-GB", {
       day: "numeric",
       month: "long",
@@ -105,8 +110,6 @@ class CalculateFutureWarningMessageService {
       sp.IsGreenCompost &&
       sp.IsRestrictedCropNotPresent &&
       sp.IsTotalNitrogenAboveLimit;
-      console.log("check",c)
-
     return (
       (sp.IsFieldEngland && sp.IsFieldWithinNvz && c) || (sp.IsFieldWelsh && c)
     );
