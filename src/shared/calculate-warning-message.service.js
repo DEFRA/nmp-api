@@ -137,6 +137,15 @@ class CalculateWarningMessageService {
     });
   }
 
+  async isNMaxLimitBreached(sp) {
+    const common = sp.IsCropTypeHasNMax && sp.IsNExceeding;
+
+    return this.isEnglandOrWales({
+      isEngland: sp.IsFieldEngland && sp.IsFieldWithinNVZ && common,
+      isWales: sp.IsFieldWales && common,
+    });
+  }
+
   async calculateOrganicManureWarningMessage(
     transactionalManager,
     organicManure
@@ -241,12 +250,10 @@ class CalculateWarningMessageService {
       [organicManure.ID]
     );
 
-   
-
-
-  const isSpecificCropsEngOrWale = await this.isFourYearCompostCropLimitBreached(
-    spNFieldCompostsCropTypeSpecific
-  );
+    const isSpecificCropsEngOrWale =
+      await this.isFourYearCompostCropLimitBreached(
+        spNFieldCompostsCropTypeSpecific
+      );
 
     if (isSpecificCropsEngOrWale) {
       const template = await this.getWarningTemplate(
@@ -278,25 +285,10 @@ class CalculateWarningMessageService {
       "EXEC spWarning_ComputeNMaxRateCombined @ManureID = @0",
       [organicManure.ID]
     );
-
-    // -------------------------------
-    // England logic
-    // -------------------------------
-    const isEnglandFourth =
-      spNMaxManure.IsFieldEngland &&
-      spNMaxManure.IsFieldWithinNVZ &&
-      spNMaxManure.IsCropTypeHasNMax &&
-      spNMaxManure.IsNExceeding;
-
-    // -------------------------------
-    // Wales logic
-    // -------------------------------
-    const isWalesFourth =
-      spNMaxManure.IsFieldWales &&
-      spNMaxManure.IsCropTypeHasNMax &&
-      spNMaxManure.IsNExceeding;
-
-    if (isEnglandFourth || isWalesFourth) {
+        const isNMaxLimitEngOrWale = await this.isNMaxLimitBreached(
+          spNMaxManure
+        );
+    if (isNMaxLimitEngOrWale) {
       const template = await this.getWarningTemplate(
         transactionalManager,
         farm.CountryID,
