@@ -115,6 +115,28 @@ class CalculateWarningMessageService {
     });
   }
 
+  async isTwoYearCompostLimitBreached(sp) {
+    const common =
+      sp.IsGreenCompost &&
+      sp.IsRestrictedCropNotPresent &&
+      sp.IsTotalNitrogenAboveLimit;
+
+    return this.isEnglandOrWales({
+      isEngland: sp.IsFieldEngland && sp.IsFieldWithinNvz && common,
+      isWales: sp.IsFieldWelsh && common,
+    });
+  }
+
+  async isFourYearCompostCropLimitBreached(sp) {
+    const common =
+      sp.IsGreenCompost && sp.IsAllowedCrops && sp.IsTotalNAboveLimit;
+
+    return this.isEnglandOrWales({
+      isEngland: sp.IsFieldInEngland && sp.IsFieldWithinNVZ && common,
+      isWales: sp.IsFieldInWelsh && common,
+    });
+  }
+
   async calculateOrganicManureWarningMessage(
     transactionalManager,
     organicManure
@@ -151,17 +173,9 @@ class CalculateWarningMessageService {
       [organicManure.ID]
     );
 
-    // const isEnglandFirst =
-    //   spNFieldLimit.IsFieldEngland &&
-    //   spNFieldLimit.IsWithinNvz &&
-    //   spNFieldLimit.IsOrganicManureNFieldLimit;
+    const isNLimitEngOrWales = await this.isYearlyNLimitBreached(spNFieldLimit);
 
-    // const isWalesFirst =
-    //   spNFieldLimit.IsFieldWelsh && spNFieldLimit.IsOrganicManureNFieldLimit;
-
-      const isEnglandAndWales = await this.isYearlyNLimitBreached(spNFieldLimit)
-
-    if (isEnglandAndWales) {
+    if (isNLimitEngOrWales) {
       const template = await this.getWarningTemplate(
         transactionalManager,
         farm.CountryID,
@@ -192,20 +206,11 @@ class CalculateWarningMessageService {
       [organicManure.ID]
     );
 
-    const isEnglandSecond =
-      spNFieldLimitCompost.IsFieldEngland &&
-      spNFieldLimitCompost.IsFieldWithinNvz &&
-      spNFieldLimitCompost.IsGreenCompost &&
-      spNFieldLimitCompost.IsRestrictedCropNotPresent &&
-      spNFieldLimitCompost.IsTotalNitrogenAboveLimit;
+    const isNCompostEngOrWales = await this.isTwoYearCompostLimitBreached(
+      spNFieldLimitCompost
+    );
 
-    const isWalesSecond =
-      spNFieldLimitCompost.IsFieldWelsh &&
-      spNFieldLimitCompost.IsGreenCompost &&
-      spNFieldLimitCompost.IsRestrictedCropNotPresent &&
-      spNFieldLimitCompost.IsTotalNitrogenAboveLimit;
-
-    if (isEnglandSecond || isWalesSecond) {
+    if (isNCompostEngOrWales) {
       const template = await this.getWarningTemplate(
         transactionalManager,
         farm.CountryID,
@@ -236,20 +241,14 @@ class CalculateWarningMessageService {
       [organicManure.ID]
     );
 
-    const isEnglandThird =
-      spNFieldCompostsCropTypeSpecific.IsFieldInEngland &&
-      spNFieldCompostsCropTypeSpecific.IsFieldWithinNVZ &&
-      spNFieldCompostsCropTypeSpecific.IsGreenCompost &&
-      spNFieldCompostsCropTypeSpecific.IsAllowedCrops &&
-      spNFieldCompostsCropTypeSpecific.IsTotalNAboveLimit;
+   
 
-    const isWalesThird =
-      spNFieldCompostsCropTypeSpecific.IsFieldInWelsh &&
-      spNFieldCompostsCropTypeSpecific.IsGreenCompost &&
-      spNFieldCompostsCropTypeSpecific.IsAllowedCrops &&
-      spNFieldCompostsCropTypeSpecific.IsTotalNAboveLimit;
 
-    if (isEnglandThird || isWalesThird) {
+  const isSpecificCropsEngOrWale = await this.isFourYearCompostCropLimitBreached(
+    spNFieldCompostsCropTypeSpecific
+  );
+
+    if (isSpecificCropsEngOrWale) {
       const template = await this.getWarningTemplate(
         transactionalManager,
         farm.CountryID,
