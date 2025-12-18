@@ -14,7 +14,7 @@ class CalculateFutureWarningMessageService {
   /* =====================================================
      COMMON HELPERS
   ===================================================== */
-  constructor (){}
+  constructor() {}
 
   async loadContext(manager, managementPeriodId) {
     const mp = await manager.findOne(ManagementPeriodEntity, {
@@ -48,10 +48,9 @@ class CalculateFutureWarningMessageService {
   }
 
   async bind(template, values = []) {
-    if (!template || values.length === 0)
-        {
-        return template;
-        } 
+    if (!template || values.length === 0) {
+      return template;
+    }
 
     const replace = (text) =>
       typeof text === "string"
@@ -358,7 +357,7 @@ class CalculateFutureWarningMessageService {
     );
   }
 
-  async fertiliserNMax(sp) {
+  async fertiliserNMaxCheck(sp) {
     return (
       (sp.IsFieldEngland &&
         sp.IsFieldWithinNVZ &&
@@ -495,7 +494,7 @@ class CalculateFutureWarningMessageService {
       );
 
       warnings.push(
-       await this.buildMessage({
+        await this.buildMessage({
           field: context.field,
           crop: context.crop,
           joining: r.join === "FIELD" ? context.field : manure,
@@ -580,7 +579,7 @@ class CalculateFutureWarningMessageService {
       },
       {
         sql: "EXEC spWarning_ComputeNMaxRateCombined @ManureID=@0",
-        predicate: this.fertiliserNMax,
+        predicate: this.fertiliserNMaxCheck,
         key: WarningKeyMapper.NMAXLIMIT,
         code: WarningCodesMapper.NMAXLIMIT,
         join: "FIELD",
@@ -605,7 +604,7 @@ class CalculateFutureWarningMessageService {
       );
 
       warnings.push(
-      await this.buildMessage({
+        await this.buildMessage({
           field: context.field,
           crop: context.crop,
           joining: r.join === "FIELD" ? context.field : fertiliser,
