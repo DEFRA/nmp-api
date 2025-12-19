@@ -360,11 +360,8 @@ class CalculateFutureWarningMessageService {
      ORGANIC MANURE EXECUTION
   ===================================================== */
 
-  async calculateOrganicManureWarningMessage(manager, manure) {
-    const context = await this.loadContext(manager, manure.ManagementPeriodID);
-    const warnings = [];
-
-    const rules = [
+  async getOrganicManureRules(manure) {
+    return [
       {
         sql: "EXEC spWarning_CheckOrganicManureNFieldLimitYear @OrganicManureID=@0",
         predicate: this.yearlyN,
@@ -392,7 +389,7 @@ class CalculateFutureWarningMessageService {
         key: WarningKeyMapper.NMAXLIMIT,
         code: WarningCodesMapper.NMAXLIMIT,
         join: "FIELD",
-        values: async (sp) => [sp.ComputedNMaxRate],
+        values: (sp) => [sp.ComputedNMaxRate],
       },
       {
         sql: "EXEC spWarning_CheckClosedPeriodOrganicManure @OrganicManureID=@0",
@@ -465,6 +462,13 @@ class CalculateFutureWarningMessageService {
         join: manure,
       },
     ];
+  }
+
+  async calculateOrganicManureWarningMessage(manager, manure) {
+    const context = await this.loadContext(manager, manure.ManagementPeriodID);
+    const warnings = [];
+
+    const rules = await this.getOrganicManureRules(manure);
 
     for (const r of rules) {
       const sp = await this.execSP(manager, r.sql, [manure.ID]);
