@@ -122,7 +122,7 @@ class FarmService extends BaseService {
           );
         }
         if (updateResult.affected === 0) {
-          throw boom.notFound(`Farm with ID ${farmId} not found`);
+          console.log(`Farm with ID ${farmId} not found`);
         }
         if (
           updatedFarmData.FieldsAbove300SeaLevel !==

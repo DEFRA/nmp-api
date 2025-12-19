@@ -14,7 +14,7 @@ class CalculateFutureWarningMessageService {
   /* =====================================================
      COMMON HELPERS
   ===================================================== */
-  constructor() {}
+
 
   async loadContext(manager, managementPeriodId) {
     const mp = await manager.findOne(ManagementPeriodEntity, {
@@ -357,15 +357,7 @@ class CalculateFutureWarningMessageService {
     );
   }
 
-  async fertiliserNMaxCheck(sp) {
-    return (
-      (sp.IsFieldEngland &&
-        sp.IsFieldWithinNVZ &&
-        sp.IsCropTypeHasNMax &&
-        sp.IsNExceeding) ||
-      (sp.IsFieldWales && sp.IsCropTypeHasNMax && sp.IsNExceeding)
-    );
-  }
+ 
 
   /* =====================================================
      ORGANIC MANURE EXECUTION
@@ -579,7 +571,7 @@ class CalculateFutureWarningMessageService {
       },
       {
         sql: "EXEC spWarning_ComputeNMaxRateCombined @ManureID=@0",
-        predicate: this.fertiliserNMaxCheck,
+        predicate: this.manureNMax,
         key: WarningKeyMapper.NMAXLIMIT,
         code: WarningCodesMapper.NMAXLIMIT,
         join: "FIELD",
