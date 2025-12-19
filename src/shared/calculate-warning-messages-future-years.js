@@ -15,7 +15,6 @@ class CalculateFutureWarningMessageService {
      COMMON HELPERS
   ===================================================== */
 
-
   async loadContext(manager, managementPeriodId) {
     const mp = await manager.findOne(ManagementPeriodEntity, {
       where: { ID: managementPeriodId },
@@ -124,13 +123,13 @@ class CalculateFutureWarningMessageService {
   }
 
   async manureNMax(sp) {
-    return (
-      (sp.IsFieldEngland &&
-        sp.IsFieldWithinNVZ &&
-        sp.IsCropTypeHasNMax &&
-        sp.IsNExceeding) ||
-      (sp.IsFieldWales && sp.IsCropTypeHasNMax && sp.IsNExceeding)
-    );
+    const exceedsNMax = sp.IsCropTypeHasNMax && sp.IsNExceeding;
+
+    const isEngland = sp.IsFieldEngland && sp.IsFieldWithinNVZ;
+
+    const isWales = sp.IsFieldWales;
+
+    return exceedsNMax && (isEngland || isWales);
   }
 
   async closedPeriod(sp) {
@@ -356,8 +355,6 @@ class CalculateFutureWarningMessageService {
         (sp.IsGrassCropType || sp.IsWinterOilSeedRapeCropType))
     );
   }
-
- 
 
   /* =====================================================
      ORGANIC MANURE EXECUTION
