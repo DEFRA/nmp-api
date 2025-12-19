@@ -31,20 +31,19 @@ async getWarningMessageByFieldIdsAndYear(fieldIds, harvestYear) {
 
   // Loop through each fieldId
   for (const fieldId of fieldIds) {
-    const data = await this.repository
+      const data = await this.repository
       .createQueryBuilder("wm")
-      .leftJoin("wm.WarningCode", "wc")
       .leftJoin("wm.Crop", "c")
       .where("wm.FieldID = :fieldId", { fieldId })
       .andWhere("c.Year = :harvestYear", { harvestYear })
-      .select("DISTINCT wc.Name", "Name")
+      .select("DISTINCT wm.Header", "Header")
       .getRawMany();
 
     // Push results with fieldId included
     data.forEach(d => {
       results.push({
         fieldId,
-        warningCode: d.Name
+        warningHeader: d.Header
       });
     });
   }

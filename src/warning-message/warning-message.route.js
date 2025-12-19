@@ -9,7 +9,7 @@ module.exports = [
     path: "/warning-message/{fieldId}",
     options: {
       tags: ["api", "Warning Message"],
-      description: "Get warning messages by field id and harvest year",
+      description: "Get warning message headers by field ID and harvest year",
       validate: {
               params: Joi.object({
                 fieldId: Joi.string()
