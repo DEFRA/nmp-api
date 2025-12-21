@@ -6,7 +6,20 @@ const { ManagementPeriodEntity } = require("../db/entity/management-period.entit
 const { CropEntity } = require("../db/entity/crop.entity");
 
 class CreateOrUpdateWarningMessage {
-  constructor() {}
+  async getCropAndField(manager, managementPeriodID) {
+    const mp = await manager.findOne(ManagementPeriodEntity, {
+      where: { ID: managementPeriodID },
+    });
+    if (!mp)
+      throw new Error(`ManagementPeriod ${managementPeriodID} not found`);
+
+    const crop = await manager.findOne(CropEntity, {
+      where: { ID: mp.CropID },
+    });
+    if (!crop) throw new Error(`Crop ${mp.CropID} not found`);
+
+    return { cropID: crop.ID, fieldID: crop.FieldID };
+  }
 
   async syncWarningMessages(
     managementPeriodID,
@@ -16,35 +29,13 @@ class CreateOrUpdateWarningMessage {
     userId
   ) {
   
-
-    // -------------------------------
-    // 1️⃣ Get Management Period
-    // -------------------------------
-    const managementPeriodData = await transactionalManager.findOne(
-      ManagementPeriodEntity,
-      { where: { ID: managementPeriodID } }
-    );
-
-    if (!managementPeriodData) {
-      throw new Error(
-        `ManagementPeriod not found for ID ${managementPeriodID}`
+  
+      const { cropID, fieldID } = await this.getCropAndField(
+        transactionalManager,
+        managementPeriodID
       );
-    }
 
-    // -------------------------------
-    // 2️⃣ Get Crop from ManagementPeriod
-    // -------------------------------
-    const cropData = await transactionalManager.findOne(CropEntity, {
-      where: { ID: managementPeriodData.CropID },
-    });
-
-    if (!cropData) {
-      throw new Error(`Crop not found for ID ${managementPeriodData.CropID}`);
-    }
-
-    const cropID = cropData.ID;
-    const fieldID = cropData.FieldID;
-
+   
     // -------------------------------
     // 3️⃣ Fetch existing messages
     //     Case 1: JoiningID = manureID
@@ -89,7 +80,6 @@ class CreateOrUpdateWarningMessage {
       warningMessagesArray === null ||
       (Array.isArray(warningMessagesArray) && incomeingWarning?.length === 0)
     ) {
-  
       // Case 1: No incoming warnings AND no existing messages → just return
       if (!existingMessages || existingMessages?.length === 0) {
         return;
