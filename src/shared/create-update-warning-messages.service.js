@@ -10,15 +10,30 @@ class CreateOrUpdateWarningMessage {
     const mp = await manager.findOne(ManagementPeriodEntity, {
       where: { ID: managementPeriodID },
     });
-    if (!mp)
-      throw new Error(`ManagementPeriod ${managementPeriodID} not found`);
-
+    if (!mp) {
+      console.log(`ManagementPeriod ${managementPeriodID} not found`);
+    }
     const crop = await manager.findOne(CropEntity, {
       where: { ID: mp.CropID },
     });
-    if (!crop) throw new Error(`Crop ${mp.CropID} not found`);
-
+    if (!crop) {
+      console.log(`Crop ${mp.CropID} not found`);
+    }
     return { cropID: crop.ID, fieldID: crop.FieldID };
+  }
+
+  async getExistingMessages(manager, fieldID, cropID, manureID) {
+    const byManure = await manager.find(WarningMessagesEntity, {
+      where: { FieldID: fieldID, CropID: cropID, JoiningID: manureID },
+    });
+
+    const byField = await manager.find(WarningMessagesEntity, {
+      where: { FieldID: fieldID, CropID: cropID, JoiningID: fieldID },
+    });
+
+    const map = new Map();
+    [...byManure, ...byField].forEach((m) => map.set(m.ID, m));
+    return Array.from(map.values());
   }
 
   async syncWarningMessages(
@@ -28,51 +43,18 @@ class CreateOrUpdateWarningMessage {
     transactionalManager,
     userId
   ) {
-  
-  
-      const { cropID, fieldID } = await this.getCropAndField(
-        transactionalManager,
-        managementPeriodID
-      );
-
-   
-    // -------------------------------
-    // 3️⃣ Fetch existing messages
-    //     Case 1: JoiningID = manureID
-    //     Case 2: JoiningID = fieldID
-    // -------------------------------
-    const existingByManure = await transactionalManager.find(
-      WarningMessagesEntity,
-      {
-        where: {
-          FieldID: fieldID,
-          CropID: cropID,
-          JoiningID: manure.ID,
-        },
-      }
+    const { cropID, fieldID } = await this.getCropAndField(
+      transactionalManager,
+      managementPeriodID
     );
 
-    const existingByField = await transactionalManager.find(
-      WarningMessagesEntity,
-      {
-        where: {
-          FieldID: fieldID,
-          CropID: cropID,
-          JoiningID: fieldID,
-        },
-      }
+    const existingMessages = await this.getExistingMessages(
+      transactionalManager,
+      fieldID,
+      cropID,
+      manure.ID
     );
 
-    // -------------------------------
-    // 4️⃣ Merge & de-duplicate
-    // -------------------------------
-    const existingMessagesMap = new Map();
-
-    [...existingByManure, ...existingByField].forEach((msg) => {
-      existingMessagesMap.set(msg.ID, msg);
-    });
-
-    const existingMessages = Array.from(existingMessagesMap?.values());
     const incomeingWarning = warningMessagesArray[0] ?? [];
 
     // Treat null or empty array the same way
