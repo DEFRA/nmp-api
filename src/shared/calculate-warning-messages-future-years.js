@@ -16,7 +16,7 @@ class CalculateFutureWarningMessageService {
      COMMON HELPERS
   ===================================================== */
 
-  constructor () {
+  constructor() {
     this.GetWarningRulesAndSpService = new GetWarningRulesAndSpService();
   }
 
@@ -147,18 +147,19 @@ class CalculateFutureWarningMessageService {
   }
 
   async sixthExclusion(sp) {
+    const commonConditions =
+      sp.IsHighRanManures &&
+      sp.InsideClosedPeriod &&
+      sp.IsRestrictedCropTypeNotExist;
+
+    const englandConditions =
+      sp.IsFieldInEngland && sp.IsWithinNVZ && sp.IsFarmRegisteredOrganic;
+
+    const walesConditions = sp.IsFieldInWelsh && sp.IsFarmRegisteredOrganic;
+
     return (
-      (sp.IsFieldInEngland &&
-        sp.IsWithinNVZ &&
-        sp.IsFarmRegisteredOrganic &&
-        sp.IsHighRanManures &&
-        sp.InsideClosedPeriod &&
-        sp.IsRestrictedCropTypeNotExist) ||
-      (sp.IsFieldInWelsh &&
-        !sp.IsFarmRegisteredOrganic &&
-        sp.IsHighRanManures &&
-        sp.InsideClosedPeriod &&
-        sp.IsRestrictedCropTypeNotExist)
+      (englandConditions && commonConditions) ||
+      (walesConditions && commonConditions)
     );
   }
 
@@ -365,26 +366,29 @@ class CalculateFutureWarningMessageService {
      ORGANIC MANURE EXECUTION
   ===================================================== */
 
-  
-
   async calculateOrganicManureWarningMessage(manager, manure) {
     const context = await this.loadContext(manager, manure.ManagementPeriodID);
     const warnings = [];
 
-
-    const rules = await this.GetWarningRulesAndSpService.getOrganicManureRules(manure,this);
-
+    const rules = await this.GetWarningRulesAndSpService.getOrganicManureRules(
+      manure,
+      this
+    );
 
     for (const r of rules) {
       const sp = await this.execSP(manager, r.sql, [manure.ID]);
-      if (!sp || !(await r.predicate.call(this, sp))) continue;
+      if (!sp || !(await r.predicate.call(this, sp))) {
+        continue;
+      }
 
       const template = await this.getTemplate(
         manager,
         context.farm.CountryID,
         r.key
       );
-      if (!template) continue;
+      if (!template) {
+        continue;
+      }
 
       const localized = await this.bind(
         template,
@@ -410,8 +414,6 @@ class CalculateFutureWarningMessageService {
      FERTILISER EXECUTION
   ===================================================== */
 
-
-
   async calculateFertiliserWarningMessage(manager, fertiliser) {
     const context = await this.loadContext(
       manager,
@@ -419,22 +421,26 @@ class CalculateFutureWarningMessageService {
     );
     const warnings = [];
 
-     const rules = await this.GetWarningRulesAndSpService.getFertiliserRules(
-    fertiliser,
-    this,
-    this.formatToDayMonth.bind(this)
-  );;
+    const rules = await this.GetWarningRulesAndSpService.getFertiliserRules(
+      fertiliser,
+      this,
+      this.formatToDayMonth.bind(this)
+    );
 
     for (const r of rules) {
       const sp = await this.execSP(manager, r.sql, [fertiliser.ID]);
-      if (!sp || !(await r.predicate.call(this, sp))) continue;
+      if (!sp || !(await r.predicate.call(this, sp))) {
+        continue;
+      }
 
       const template = await this.getTemplate(
         manager,
         context.farm.CountryID,
         r.key
       );
-      if (!template) continue;
+      if (!template) {
+        continue;
+      }
 
       const localized = await this.bind(
         template,
