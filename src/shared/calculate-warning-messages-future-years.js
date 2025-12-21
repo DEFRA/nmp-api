@@ -164,59 +164,66 @@ class CalculateFutureWarningMessageService {
   }
 
   async seventhFeb(sp) {
-    return (
-      (sp.IsFieldInEngland &&
-        sp.IsWithinNVZ &&
-        sp.RegisteredOrganicProducer &&
-        sp.IsHighRanManures &&
-        sp.InsideClosedPeriodToFeb &&
-        sp.IsAllowedCrop &&
-        sp.IsTotalClosedPeriodNAboveLimit) ||
-      (sp.IsFieldInWelsh &&
-        !sp.RegisteredOrganicProducer &&
-        sp.IsHighRanManures &&
-        sp.InsideClosedPeriodToFeb &&
-        sp.IsAllowedCrop &&
-        sp.IsTotalClosedPeriodNAboveLimit)
-    );
+    const isEngland = sp.IsFieldInEngland && sp.IsWithinNVZ;
+    const isWales = sp.IsFieldInWelsh;
+
+    const commonConditions =
+      sp.RegisteredOrganicProducer &&
+      sp.IsHighRanManures &&
+      sp.InsideClosedPeriodToFeb &&
+      sp.IsAllowedCrop &&
+      sp.IsTotalClosedPeriodNAboveLimit;
+
+    return (isEngland || isWales) && commonConditions;
   }
 
   async eighth28Day(sp) {
-    return (
-      sp.IsFieldInEngland &&
-      sp.IsWithinNvz &&
-      sp.IsRegisteredOrganicProducer &&
+    const baseField =
+      sp.IsFieldInEngland && sp.IsWithinNvz && sp.IsRegisteredOrganicProducer;
+
+    const manureAndPeriod =
       sp.IsHighRanManures &&
       sp.IsInsideClosedPeriodToFebruary &&
-      sp.IsCropTypeAllowed &&
-      (sp.IsCurrentNitrogenAboveFifty ||
-        sp.IsTotalClosedPeriodNitrogenAboveOneHundredFifty ||
-        sp.IsPreviousApplicationWithinTwentyEightDays)
-    );
+      sp.IsCropTypeAllowed;
+
+    const exceedsLimit =
+      sp.IsCurrentNitrogenAboveFifty ||
+      sp.IsTotalClosedPeriodNitrogenAboveOneHundredFifty ||
+      sp.IsPreviousApplicationWithinTwentyEightDays;
+
+    return baseField && manureAndPeriod && exceedsLimit;
   }
 
   async ninthGrass(sp) {
-    return (
-      sp.IsFieldInEngland &&
-      sp.IsWithinNvz &&
+    const isEnglandGrass =
+      sp.IsFieldInEngland && sp.IsWithinNvz && sp.IsGrassCropType;
+
+    const isClosedPeriodOrganic =
       sp.IsRegisteredOrganicProducer &&
       sp.IsHighRanManures &&
-      sp.IsInsideClosedPeriodToOctober &&
-      sp.IsGrassCropType &&
-      (sp.IsTotalClosedPeriodNitrogenAboveOneHundredFifty ||
-        sp.IsAnyOrganicManureAboveForty)
-    );
+      sp.IsInsideClosedPeriodToOctober;
+
+    const exceedsNitrogenLimit =
+      sp.IsTotalClosedPeriodNitrogenAboveOneHundredFifty ||
+      sp.IsAnyOrganicManureAboveForty;
+
+    return isEnglandGrass && isClosedPeriodOrganic && exceedsNitrogenLimit;
   }
 
   async tenthOSR(sp) {
+    const isEngland = sp.IsFieldInEngland && sp.IsWithinNvz;
+
+    const isEligibleProducer =
+      sp.IsRegisteredOrganicProducer && sp.IsHighRanManures;
+
+    const isOctoberOSR =
+      sp.IsInsideClosedPeriodToOctober && sp.IsWinterOilSeedRapeCropType;
+
+    const isNitrogenExceeded =
+      sp.IsTotalClosedPeriodNitrogenAboveOneHundredFifty;
+
     return (
-      sp.IsFieldInEngland &&
-      sp.IsWithinNvz &&
-      sp.IsRegisteredOrganicProducer &&
-      sp.IsHighRanManures &&
-      sp.IsInsideClosedPeriodToOctober &&
-      sp.IsWinterOilSeedRapeCropType &&
-      sp.IsTotalClosedPeriodNitrogenAboveOneHundredFifty
+      isEngland && isEligibleProducer && isOctoberOSR && isNitrogenExceeded
     );
   }
 
@@ -231,45 +238,46 @@ class CalculateFutureWarningMessageService {
   }
 
   async twelfthSlurry(sp) {
-    return (
-      (sp.IsFieldInEngland &&
-        sp.IsWithinNvz &&
-        sp.IsInsideClosedPeriodToFebruary &&
-        sp.IsAllowedManureType &&
-        sp.IsApplicationRateAboveThirty) ||
-      (sp.IsFieldInWales &&
-        sp.IsInsideClosedPeriodToFebruary &&
-        sp.IsAllowedManureType &&
-        sp.IsApplicationRateAboveThirty)
-    );
+    const isEngland =
+      sp.IsFieldInEngland &&
+      sp.IsWithinNvz &&
+      sp.IsInsideClosedPeriodToFebruary;
+
+    const isWales = sp.IsFieldInWales && sp.IsInsideClosedPeriodToFebruary;
+
+    const common = sp.IsAllowedManureType && sp.IsApplicationRateAboveThirty;
+
+    return (isEngland || isWales) && common;
   }
 
   async thirteenthPoultry(sp) {
+    const commonConditions =
+      sp.IsInsideClosedPeriodToFebruary &&
+      sp.IsAllowedPoultryManure &&
+      sp.IsApplicationRateAboveEight;
+
+    const englandConditions = sp.IsFieldInEngland && sp.IsWithinNvz;
+
+    const walesConditions = sp.IsFieldInWales;
+
     return (
-      (sp.IsFieldInEngland &&
-        sp.IsWithinNvz &&
-        sp.IsInsideClosedPeriodToFebruary &&
-        sp.IsAllowedPoultryManure &&
-        sp.IsApplicationRateAboveEight) ||
-      (sp.IsFieldInWales &&
-        sp.IsInsideClosedPeriodToFebruary &&
-        sp.IsAllowedPoultryManure &&
-        sp.IsApplicationRateAboveEight)
+      (englandConditions && commonConditions) ||
+      (walesConditions && commonConditions)
     );
   }
 
   async fourteenthGap(sp) {
-    return (
-      (sp.IsFieldInEngland &&
-        sp.IsWithinNvz &&
-        sp.IsInsideClosedPeriodToFebruary &&
-        sp.IsAllowedManureType &&
-        sp.IsPreviousApplicationWithinTwentyDays) ||
-      (sp.IsFieldInWales &&
-        sp.IsInsideClosedPeriodToFebruary &&
-        sp.IsAllowedManureType &&
-        sp.IsPreviousApplicationWithinTwentyDays)
-    );
+    const isInsideClosedPeriod =
+      sp.IsInsideClosedPeriodToFebruary &&
+      sp.IsAllowedManureType &&
+      sp.IsPreviousApplicationWithinTwentyDays;
+
+    const england =
+      sp.IsFieldInEngland && sp.IsWithinNvz && isInsideClosedPeriod;
+
+    const wales = sp.IsFieldInWales && isInsideClosedPeriod;
+
+    return england || wales;
   }
 
   /* =====================================================
@@ -277,89 +285,79 @@ class CalculateFutureWarningMessageService {
   ===================================================== */
 
   async fertClosedPeriodCrop(sp) {
-    return (
-      (sp.IsFieldInEngland &&
-        sp.IsFieldWithinNVZ &&
-        sp.IsApplicationInsideClosedPeriod &&
-        sp.IsCropTypeAllowed) ||
-      (sp.IsFieldInWales &&
-        sp.IsApplicationInsideClosedPeriod &&
-        sp.IsCropTypeAllowed)
-    );
+    const common = sp.IsApplicationInsideClosedPeriod && sp.IsCropTypeAllowed;
+
+    const england = sp.IsFieldInEngland && sp.IsFieldWithinNVZ && common;
+
+    const wales = sp.IsFieldInWales && common;
+
+    return england || wales;
   }
 
   async fertClosedPeriodMaxN(sp) {
-    return (
-      (sp.IsFieldInEngland &&
-        sp.IsWithinNVZ &&
-        sp.IsApplicationInsideClosedPeriod &&
-        sp.IsAllowedCropType &&
-        sp.IsTotalNAboveLimit) ||
-      (sp.IsFieldInWales &&
-        sp.IsApplicationInsideClosedPeriod &&
-        sp.IsAllowedCropType &&
-        sp.IsTotalNAboveLimit)
-    );
+    const common =
+      sp.IsApplicationInsideClosedPeriod &&
+      sp.IsAllowedCropType &&
+      sp.IsTotalNAboveLimit;
+
+    const england = sp.IsFieldInEngland && sp.IsWithinNVZ;
+    const wales = sp.IsFieldInWales;
+
+    return common && (england || wales);
   }
 
   async fertTwentyEightDay(sp) {
-    return (
-      (sp.IsFieldInEngland &&
-        sp.IsWithinNVZ &&
-        sp.IsInsideClosedPeriod &&
-        sp.IsCropTypeAllowed &&
-        (sp.IsCurrentNAbove50 ||
-          sp.IsTotalNAbove100 ||
-          sp.IsPreviousApplicationWithin28Days)) ||
-      (sp.IsFieldInWales &&
-        sp.IsInsideClosedPeriod &&
-        sp.IsCropTypeAllowed &&
-        (sp.IsCurrentNAbove50 ||
-          sp.IsTotalNAbove100 ||
-          sp.IsPreviousApplicationWithin28Days))
-    );
+    const englandBase =
+      sp.IsFieldInEngland &&
+      sp.IsWithinNVZ &&
+      sp.IsInsideClosedPeriod &&
+      sp.IsCropTypeAllowed;
+
+    const walesBase =
+      sp.IsFieldInWales && sp.IsInsideClosedPeriod && sp.IsCropTypeAllowed;
+
+    const nThresholdBreached =
+      sp.IsCurrentNAbove50 ||
+      sp.IsTotalNAbove100 ||
+      sp.IsPreviousApplicationWithin28Days;
+
+    return (englandBase || walesBase) && nThresholdBreached;
   }
 
   async fertOctoberLimit(sp) {
-    return (
-      (sp.IsFieldInEngland &&
-        sp.IsWithinNVZ &&
-        sp.IsInsideClosedPeriodToOctober &&
-        sp.IsCropTypeAllowed &&
-        sp.IsTotalNAbove30) ||
-      (sp.IsFieldInWales &&
-        sp.IsInsideClosedPeriodToOctober &&
-        sp.IsCropTypeAllowed &&
-        sp.IsTotalNAbove30)
-    );
+    const common =
+      sp.IsInsideClosedPeriodToOctober &&
+      sp.IsCropTypeAllowed &&
+      sp.IsTotalNAbove30;
+
+    const england = sp.IsFieldInEngland && sp.IsWithinNVZ && common;
+    const wales = sp.IsFieldInWales && common;
+
+    return england || wales;
   }
 
   async fertOctoberGrass(sp) {
-    return (
-      (sp.IsFieldInEngland &&
-        sp.IsWithinNVZ &&
-        sp.IsGrassCropType &&
-        sp.IsInsideClosedPeriodToOctober &&
-        sp.IsCurrentNAbove40 &&
-        sp.IsTotalClosedPeriodNAbove80) ||
-      (sp.IsFieldInWales &&
-        sp.IsGrassCropType &&
-        sp.IsInsideClosedPeriodToOctober &&
-        sp.IsCurrentNAbove40 &&
-        sp.IsTotalClosedPeriodNAbove80)
-    );
+    const common =
+      sp.IsGrassCropType &&
+      sp.IsInsideClosedPeriodToOctober &&
+      sp.IsCurrentNAbove40 &&
+      sp.IsTotalClosedPeriodNAbove80;
+
+    const england = sp.IsFieldInEngland && sp.IsWithinNVZ;
+    const wales = sp.IsFieldInWales;
+
+    return common && (england || wales);
   }
 
   async fertOct31(sp) {
-    return (
-      (sp.IsFieldInEngland &&
-        sp.IsWithinNVZ &&
-        sp.IsApplicationInsideOct31ToClosedPeriod &&
-        (sp.IsGrassCropType || sp.IsWinterOilSeedRapeCropType)) ||
-      (sp.IsFieldInWales &&
-        sp.IsApplicationInsideOct31ToClosedPeriod &&
-        (sp.IsGrassCropType || sp.IsWinterOilSeedRapeCropType))
-    );
+    const isEngland = sp.IsFieldInEngland && sp.IsWithinNVZ;
+    const isWales = sp.IsFieldInWales;
+
+    const insidePeriod = sp.IsApplicationInsideOct31ToClosedPeriod;
+
+    const isRelevantCrop = sp.IsGrassCropType || sp.IsWinterOilSeedRapeCropType;
+
+    return insidePeriod && isRelevantCrop && (isEngland || isWales);
   }
 
   /* =====================================================
