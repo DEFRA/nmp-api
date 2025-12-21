@@ -26,7 +26,7 @@ module.exports = [
                 request,
               })
             )
-            .code(400)
+            .code()
             .takeover();
         },
       },
