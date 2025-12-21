@@ -54,7 +54,7 @@ class GetWarningRulesAndSpService {
     ];
   }
 
-  async getNMaxRules(manure, predicates) {
+  async getNMaxRules(_manure, predicates) {
     return [
       {
         sql: "EXEC spWarning_ComputeNMaxRateCombined @ManureID=@0",
