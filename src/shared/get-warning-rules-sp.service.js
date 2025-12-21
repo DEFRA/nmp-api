@@ -184,9 +184,6 @@ async getFertiliserRules(fertiliser, predicates, formatToDayMonth) {
       values: (sp) => [sp.ComputedNMaxRate],
     },
   ];
-
-
-
 }
 
 }
