@@ -107,16 +107,9 @@ class FarmService extends BaseService {
           }
         );
 
-        const isCountryUpdated =
-          updatedFarmData.CountryID &&
-          updatedFarmData.CountryID !== existingFarm.CountryID;
-
-        if (
-          isCountryUpdated &&
-          updatedFarmData.CountryID === CountryMapper.WELSH
-        ) {
-          await transactionalManager.update(
-            FieldEntity,
+        const isCountryUpdated =updatedFarmData.CountryID && updatedFarmData.CountryID !== existingFarm.CountryID;
+         if ( isCountryUpdated && updatedFarmData.CountryID === CountryMapper.WELSH) {
+          await transactionalManager.update( FieldEntity,
             { FarmID: farmId },
             { IsWithinNVZ: true }
           );
@@ -131,8 +124,7 @@ class FarmService extends BaseService {
         ) {
           const fieldUpdateData = {};
           if (
-            updatedFarmData.FieldsAbove300SeaLevel !==
-            FieldAbove300SeaLevelMapper.SomeFieldsAbove300m
+            updatedFarmData.FieldsAbove300SeaLevel !== FieldAbove300SeaLevelMapper.SomeFieldsAbove300m
           ) {
             fieldUpdateData.IsAbove300SeaLevel =
               updatedFarmData.FieldsAbove300SeaLevel ===
@@ -148,15 +140,12 @@ class FarmService extends BaseService {
             fieldUpdateData
           );
         }
-
-
         await this.ProcessFieldsService.processFieldsForRecommendation(
           farmId,
           request,
           userId,
           transactionalManager
         );
-
         const updatedFarm = await transactionalManager.findOne(FarmEntity, {
           where: { ID: farmId },
         });
