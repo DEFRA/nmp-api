@@ -9,11 +9,16 @@ const { WarningsEntity } = require("../db/entity/warning.entity");
 const { WarningKeyMapper } = require("../constants/warning-key-mapper");
 const { WarningCodesMapper } = require("../constants/warning-codes-mapper");
 const { WarningLevelMapper } = require("../constants/warning-levels-mapper");
+const { GetWarningRulesAndSpService } = require("./get-warning-rules-sp.service");
 
 class CalculateFutureWarningMessageService {
   /* =====================================================
      COMMON HELPERS
   ===================================================== */
+
+  constructor () {
+    this.GetWarningRulesAndSpService = new GetWarningRulesAndSpService();
+  }
 
   async loadContext(manager, managementPeriodId) {
     const mp = await manager.findOne(ManagementPeriodEntity, {
@@ -360,115 +365,15 @@ class CalculateFutureWarningMessageService {
      ORGANIC MANURE EXECUTION
   ===================================================== */
 
-  async getOrganicManureRules(manure) {
-    return [
-      {
-        sql: "EXEC spWarning_CheckOrganicManureNFieldLimitYear @OrganicManureID=@0",
-        predicate: this.yearlyN,
-        key: WarningKeyMapper.ORGANICMANURENFIELDLIMIT,
-        code: WarningCodesMapper.FIELDNLIMIT,
-        join: manure,
-      },
-      {
-        sql: "EXEC spWarning_CheckOrganicManureNFieldLimitComposts @OrganicManureID=@0",
-        predicate: this.twoYearCompost,
-        key: WarningKeyMapper.ORGANICMANURENFIELDLIMITCOMPOST,
-        code: WarningCodesMapper.FIELDNLIMIT,
-        join: manure,
-      },
-      {
-        sql: "EXEC spWarning_OrganicManureNFieldLimitCompostsCropTypeSpecific @OrganicManureID=@0",
-        predicate: this.fourYearCompost,
-        key: WarningKeyMapper.ORGANICMANURENFIELDLIMITCOMPOSTMULCH,
-        code: WarningCodesMapper.FIELDNLIMIT,
-        join: manure,
-      },
-      {
-        sql: "EXEC spWarning_ComputeNMaxRateCombined @ManureID=@0",
-        predicate: this.manureNMax,
-        key: WarningKeyMapper.NMAXLIMIT,
-        code: WarningCodesMapper.NMAXLIMIT,
-        join: "FIELD",
-        values: (sp) => [sp.ComputedNMaxRate],
-      },
-      {
-        sql: "EXEC spWarning_CheckClosedPeriodOrganicManure @OrganicManureID=@0",
-        predicate: this.closedPeriod,
-        key: WarningKeyMapper.HIGHNORGANICMANURECLOSEDPERIOD,
-        code: WarningCodesMapper.CLOSEDPERIODORGANICMANURE,
-        join: manure,
-      },
-      {
-        sql: "EXEC spWarning_CheckClosedPeriodOrganicManureExclusion @OrganicManureID=@0",
-        predicate: this.sixthExclusion,
-        key: WarningKeyMapper.HIGHNORGANICMANURECLOSEDPERIODORGANICFARM,
-        code: WarningCodesMapper.CLOSEDPERIODORGANICMANURE,
-        join: manure,
-      },
-      {
-        sql: "EXEC spWarning_CheckClosedPeriodFebNLimit @OrganicManureID=@0",
-        predicate: this.seventhFeb,
-        key: WarningKeyMapper.HIGHNORGANICMANUREMAXRATE,
-        code: WarningCodesMapper.MANUREAPPLICATIONLIMITCLOSEFEB201350,
-        join: manure,
-      },
-      {
-        sql: "EXEC spWarning_CheckClosedPeriodTwentyEightDayLimit @OrganicManureId=@0",
-        predicate: this.eighth28Day,
-        key: WarningKeyMapper.HIGHNORGANICMANUREMAXRATEWEEKS,
-        code: WarningCodesMapper.MANUREAPPLICATIONLIMITCLOSEFEB201350,
-        join: manure,
-      },
-      {
-        sql: "EXEC spWarning_CheckClosedPeriodOctoberGrassLimit @OrganicManureID=@0",
-        predicate: this.ninthGrass,
-        key: WarningKeyMapper.HIGHNORGANICMANUREMAXRATEGRASS,
-        code: WarningCodesMapper.MANUREAPPLICATIONLIMITCLOSEFEB201350,
-        join: manure,
-      },
-      {
-        sql: "EXEC spWarning_CheckClosedPeriodOctoberWinterOilSeedRapeLimit @OrganicManureID=@0",
-        predicate: this.tenthOSR,
-        key: WarningKeyMapper.HIGHNORGANICMANUREMAXRATEOSR,
-        code: WarningCodesMapper.MANUREAPPLICATIONLIMITCLOSEFEB201350,
-        join: manure,
-      },
-      {
-        sql: "EXEC spWarning_CheckClosedPeriodOctoberGrassAndWinterOilSeedRape @OrganicManureID=@0",
-        predicate: this.eleventhDateOnly,
-        key: WarningKeyMapper.HIGHNORGANICMANUREDATEONLY,
-        code: WarningCodesMapper.CLOSEDPERIODORGANICMANURE,
-        join: manure,
-      },
-      {
-        sql: "EXEC spWarning_CheckClosedPeriodEndFebruaryManureRate @OrganicManureID=@0",
-        predicate: this.twelfthSlurry,
-        key: WarningKeyMapper.SLURRYMAXRATE,
-        code: WarningCodesMapper.MANUREAPPLICATIONLIMITCLOSEFEB201330,
-        join: manure,
-      },
-      {
-        sql: "EXEC spWarning_CheckClosedPeriodEndFebruaryPoultryManure @OrganicManureID=@0",
-        predicate: this.thirteenthPoultry,
-        key: WarningKeyMapper.POULTRYMANUREMAXAPPLICATIONRATE,
-        code: WarningCodesMapper.MANUREAPPLICATIONLIMITCLOSEFEB201330,
-        join: manure,
-      },
-      {
-        sql: "EXEC spWarning_CheckClosedPeriodEndFebruaryPoultryAndSlurryTypesTwentyDays @OrganicManureID=@0",
-        predicate: this.fourteenthGap,
-        key: WarningKeyMapper.ALLOWWEEKSBETWEENSLURRYPOULTRYAPPLICATIONS,
-        code: WarningCodesMapper.CLOSEDPERIODORGANICMANURE,
-        join: manure,
-      },
-    ];
-  }
+  
 
   async calculateOrganicManureWarningMessage(manager, manure) {
     const context = await this.loadContext(manager, manure.ManagementPeriodID);
     const warnings = [];
 
-    const rules = await this.getOrganicManureRules(manure);
+
+    const rules = await this.GetWarningRulesAndSpService.getOrganicManureRules(manure,this);
+
 
     for (const r of rules) {
       const sp = await this.execSP(manager, r.sql, [manure.ID]);
@@ -505,75 +410,7 @@ class CalculateFutureWarningMessageService {
      FERTILISER EXECUTION
   ===================================================== */
 
-  async getFertiliserRules(fertiliser) {
-    return [
-      {
-        sql: "EXEC spWarning_CheckFertiliserClosedPeriodCropRestriction @FertiliserID=@0",
-        predicate: this.fertClosedPeriodCrop,
-        key: WarningKeyMapper.NITROFERTCLOSEDPERIOD,
-        code: WarningCodesMapper.CLOSEDPERIODFERTILISER,
-        join: fertiliser,
-      },
-      {
-        sql: "EXEC spWarning_CheckFertiliserClosedPeriodNitrogenLimit @FertiliserID=@0",
-        predicate: this.fertClosedPeriodMaxN,
-        key: WarningKeyMapper.INORGNMAXRATE,
-        code: WarningCodesMapper.MAXAPPLICATIONRATEINORGFERTCROPCLOSEDSPREADINGPERIOD,
-        join: fertiliser,
-        values: async (sp) => [
-          await this.formatToDayMonth(sp.ClosedPeriodStartDate),
-          await this.formatToDayMonth(sp.ClosedPeriodEndDate),
-          sp.MaxNitrogenRate,
-        ],
-      },
-      {
-        sql: "EXEC spWarning_CheckFertiliserClosedPeriodTwentyEightDayLimit @FertiliserID=@0",
-        predicate: this.fertTwentyEightDay,
-        key: WarningKeyMapper.INORGNMAXRATEBRASSICA,
-        code: WarningCodesMapper.MAXAPPLICATIONRATEINORGFERTCROPCLOSEDSPREADINGPERIOD,
-        join: fertiliser,
-        values: async (sp) => [
-          await this.formatToDayMonth(sp.ClosedPeriodStart),
-          await this.formatToDayMonth(sp.ClosedPeriodEnd),
-        ],
-      },
-      {
-        sql: "EXEC spWarning_CheckFertiliserClosedPeriodToOctoberLimit @FertiliserID=@0",
-        predicate: this.fertOctoberLimit,
-        key: WarningKeyMapper.INORGNMAXRATEOSR,
-        code: WarningCodesMapper.MAXAPPLICATIONRATEINORGFERTCROPCLOSEDSPREADINGPERIOD,
-        join: fertiliser,
-        values: async (sp) => [
-          await this.formatToDayMonth(sp.ClosedPeriodStart),
-        ],
-      },
-      {
-        sql: "EXEC spWarning_CheckFertiliserClosedPeriodOctoberGrassHighN @FertiliserID=@0",
-        predicate: this.fertOctoberGrass,
-        key: WarningKeyMapper.INORGNMAXRATEGRASS,
-        code: WarningCodesMapper.MAXAPPLICATIONRATEINORGFERTCROPCLOSEDSPREADINGPERIOD,
-        join: fertiliser,
-        values: async (sp) => [
-          await this.formatToDayMonth(sp.ClosedPeriodStart),
-        ],
-      },
-      {
-        sql: "EXEC spWarning_CheckFertiliserClosedPeriodOct31ToClosedPeriod @FertiliserID=@0",
-        predicate: this.fertOct31,
-        key: WarningKeyMapper.INORGFERTDATEONLY,
-        code: WarningCodesMapper.CLOSEDPERIODFERTILISER,
-        join: fertiliser,
-      },
-      {
-        sql: "EXEC spWarning_ComputeNMaxRateCombined @ManureID=@0",
-        predicate: this.fertiliserNMax,
-        key: WarningKeyMapper.NMAXLIMIT,
-        code: WarningCodesMapper.NMAXLIMIT,
-        join: "FIELD", // ✅ joining = Field
-        values: async (sp) => [sp.ComputedNMaxRate],
-      },
-    ];
-  }
+
 
   async calculateFertiliserWarningMessage(manager, fertiliser) {
     const context = await this.loadContext(
@@ -582,7 +419,11 @@ class CalculateFutureWarningMessageService {
     );
     const warnings = [];
 
-     const rules = await this.getFertiliserRules(fertiliser);
+     const rules = await this.GetWarningRulesAndSpService.getFertiliserRules(
+    fertiliser,
+    this,
+    this.formatToDayMonth.bind(this)
+  );;
 
     for (const r of rules) {
       const sp = await this.execSP(manager, r.sql, [fertiliser.ID]);
