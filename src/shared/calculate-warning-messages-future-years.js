@@ -505,14 +505,8 @@ class CalculateFutureWarningMessageService {
      FERTILISER EXECUTION
   ===================================================== */
 
-  async calculateFertiliserWarningMessage(manager, fertiliser) {
-    const context = await this.loadContext(
-      manager,
-      fertiliser.ManagementPeriodID
-    );
-    const warnings = [];
-
-    const rules = [
+  async getFertiliserRules(fertiliser) {
+    return [
       {
         sql: "EXEC spWarning_CheckFertiliserClosedPeriodCropRestriction @FertiliserID=@0",
         predicate: this.fertClosedPeriodCrop,
@@ -572,13 +566,23 @@ class CalculateFutureWarningMessageService {
       },
       {
         sql: "EXEC spWarning_ComputeNMaxRateCombined @ManureID=@0",
-        predicate: this.manureNMax,
+        predicate: this.fertiliserNMax,
         key: WarningKeyMapper.NMAXLIMIT,
         code: WarningCodesMapper.NMAXLIMIT,
-        join: "FIELD",
+        join: "FIELD", // ✅ joining = Field
         values: async (sp) => [sp.ComputedNMaxRate],
       },
     ];
+  }
+
+  async calculateFertiliserWarningMessage(manager, fertiliser) {
+    const context = await this.loadContext(
+      manager,
+      fertiliser.ManagementPeriodID
+    );
+    const warnings = [];
+
+     const rules = await this.getFertiliserRules(fertiliser);
 
     for (const r of rules) {
       const sp = await this.execSP(manager, r.sql, [fertiliser.ID]);
