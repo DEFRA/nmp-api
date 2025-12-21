@@ -36,25 +36,13 @@ class CreateOrUpdateWarningMessage {
     return Array.from(map.values());
   }
 
-  async syncWarningMessages(
-    managementPeriodID,
-    manure,
-    warningMessagesArray,
+  async deleteWarningIfNoIncomingWarning(
     transactionalManager,
-    userId
+    warningMessagesArray,
+    existingMessages,
+    fieldID,
+    cropID
   ) {
-    const { cropID, fieldID } = await this.getCropAndField(
-      transactionalManager,
-      managementPeriodID
-    );
-
-    const existingMessages = await this.getExistingMessages(
-      transactionalManager,
-      fieldID,
-      cropID,
-      manure.ID
-    );
-
     const incomeingWarning = warningMessagesArray[0] ?? [];
 
     // Treat null or empty array the same way
@@ -78,6 +66,34 @@ class CreateOrUpdateWarningMessage {
 
       return;
     }
+  }
+
+  async syncWarningMessages(
+    managementPeriodID,
+    manure,
+    warningMessagesArray,
+    transactionalManager,
+    userId
+  ) {
+    const { cropID, fieldID } = await this.getCropAndField(
+      transactionalManager,
+      managementPeriodID
+    );
+
+    const existingMessages = await this.getExistingMessages(
+      transactionalManager,
+      fieldID,
+      cropID,
+      manure.ID
+    );
+
+    await this.deleteWarningIfNoIncomingWarning(
+      transactionalManager,
+      warningMessagesArray,
+      existingMessages,
+      fieldID,
+      cropID
+    );
 
     // Helper for equality check (ignores IDs/timestamps)
     const areMessagesEqual = (a, b) => {
