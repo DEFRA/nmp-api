@@ -135,9 +135,7 @@ async getFertiliserRules(fertiliser, predicates, formatToDayMonth) {
       sql: "EXEC spWarning_CheckFertiliserClosedPeriodTwentyEightDayLimit @FertiliserID=@0",
       predicate: predicates.fertTwentyEightDay,
       key: WarningKeyMapper.INORGNMAXRATEBRASSICA,
-      code:
-        WarningCodesMapper
-          .MAXAPPLICATIONRATEINORGFERTCROPCLOSEDSPREADINGPERIOD,
+      code:WarningCodesMapper.MAXAPPLICATIONRATEINORGFERTCROPCLOSEDSPREADINGPERIOD,
       join: fertiliser,
       values: async (sp) => [
         await formatToDayMonth(sp.ClosedPeriodStart),
@@ -148,9 +146,7 @@ async getFertiliserRules(fertiliser, predicates, formatToDayMonth) {
       sql: "EXEC spWarning_CheckFertiliserClosedPeriodToOctoberLimit @FertiliserID=@0",
       predicate: predicates.fertOctoberLimit,
       key: WarningKeyMapper.INORGNMAXRATEOSR,
-      code:
-        WarningCodesMapper
-          .MAXAPPLICATIONRATEINORGFERTCROPCLOSEDSPREADINGPERIOD,
+      code:WarningCodesMapper.MAXAPPLICATIONRATEINORGFERTCROPCLOSEDSPREADINGPERIOD,
       join: fertiliser,
       values: async (sp) => [
         await formatToDayMonth(sp.ClosedPeriodStart),
@@ -160,9 +156,7 @@ async getFertiliserRules(fertiliser, predicates, formatToDayMonth) {
       sql: "EXEC spWarning_CheckFertiliserClosedPeriodOctoberGrassHighN @FertiliserID=@0",
       predicate: predicates.fertOctoberGrass,
       key: WarningKeyMapper.INORGNMAXRATEGRASS,
-      code:
-        WarningCodesMapper
-          .MAXAPPLICATIONRATEINORGFERTCROPCLOSEDSPREADINGPERIOD,
+      code:WarningCodesMapper.MAXAPPLICATIONRATEINORGFERTCROPCLOSEDSPREADINGPERIOD,
       join: fertiliser,
       values: async (sp) => [
         await formatToDayMonth(sp.ClosedPeriodStart),
