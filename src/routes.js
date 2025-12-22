@@ -47,5 +47,6 @@ module.exports = [
   ...require("./solid-manure-types/solid-manure-types.route"),
   ...require("./bank-slope-angles/bank-slope-angles.route"),
   ...require("./previous-cropping/previous-cropping.route"),
-  ...require("./warning-message/warning-message.route")
+  ...require("./warning-message/warning-message.route"),
+  ...require("./warning/warning-route"),
 ];

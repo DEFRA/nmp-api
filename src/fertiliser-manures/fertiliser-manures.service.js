@@ -552,6 +552,8 @@ class FertiliserManuresService extends BaseService {
         );
 
         let updatedWarningMessages = await this.CreateOrUpdateWarningMessage.syncWarningMessages(
+                    inorganicManure.ManagementPeriodID,
+                    inorganicManure,
                     warningMessages,
                     transactionalManager,
                     userId

@@ -6,11 +6,15 @@ const { FieldEntity } = require("../db/entity/field.entity");
 const { getRepository } = require("typeorm");
 const {FieldNVZMapper}=require("../constants/field-nvz-mapper");
 const {FieldAbove300SeaLevelMapper}=require("../constants/field-above-300-sea-level-mapper");
+const { CountryMapper } = require("../constants/country-mapper");
+const { ExcessRainfallService } = require("../excess-rainfall/excess-rainfall.service");
+const { ProcessFieldsService } = require("../shared/process-fields-for-recommendations.service");
 
 class FarmService extends BaseService {
   constructor() {
     super(FarmEntity);
     this.repository = getRepository(FarmEntity);
+    this.ProcessFieldsService = new ProcessFieldsService();
   }
   async farmExistsByNameAndPostcode(farmName, postcode, id = null) {
     return (await this.farmCountByNameAndPostcode(farmName, postcode, id)) > 0;
@@ -48,7 +52,7 @@ class FarmService extends BaseService {
   }
 
   async createFarm(farm, userId) {
-    let farmBody = farm.Farm
+    const farmBody = farm.Farm;
     const farmExists = await this.farmExistsByNameAndPostcode(
       farmBody.Name.trim(),
       farmBody.Postcode.trim()
@@ -76,7 +80,7 @@ class FarmService extends BaseService {
     return farm;
   }
 
-  async updateFarm(updatedFarmData, userId, farmId) {
+  async updateFarm(updatedFarmData, userId, farmId, request) {
     const result = await AppDataSource.transaction(
       async (transactionalManager) => {
         const existingFarm = await transactionalManager.findOne(FarmEntity, {
@@ -85,8 +89,14 @@ class FarmService extends BaseService {
         if (!existingFarm) {
           throw boom.notFound(`Farm with ID ${farmId} not found`);
         }
-        const { ID, FullAddress, EncryptedFarmId,CreatedByID,CreatedOn, ...updateData } =
-          updatedFarmData;
+        const {
+          ID,
+          FullAddress,
+          EncryptedFarmId,
+          CreatedByID,
+          CreatedOn,
+          ...updateData
+        } = updatedFarmData;
         const updateResult = await transactionalManager.update(
           FarmEntity,
           farmId,
@@ -96,20 +106,33 @@ class FarmService extends BaseService {
             ModifiedOn: new Date(),
           }
         );
+
+        const isCountryUpdated =updatedFarmData.CountryID && updatedFarmData.CountryID !== existingFarm.CountryID;
+         if ( isCountryUpdated && updatedFarmData.CountryID === CountryMapper.WELSH) {
+          await transactionalManager.update( FieldEntity,
+            { FarmID: farmId },
+            { IsWithinNVZ: true }
+          );
+        }
         if (updateResult.affected === 0) {
-          throw boom.notFound(`Farm with ID ${farmId} not found`);
+          console.log(`Farm with ID ${farmId} not found`);
         }
         if (
-          updatedFarmData.FieldsAbove300SeaLevel !== FieldAbove300SeaLevelMapper.SomeFieldsAbove300m ||
+          updatedFarmData.FieldsAbove300SeaLevel !==
+            FieldAbove300SeaLevelMapper.SomeFieldsAbove300m ||
           updatedFarmData.NVZFields !== FieldNVZMapper.SomeFieldsInNVZ
         ) {
           const fieldUpdateData = {};
-          if (updatedFarmData.FieldsAbove300SeaLevel !== FieldAbove300SeaLevelMapper.SomeFieldsAbove300m) {
+          if (
+            updatedFarmData.FieldsAbove300SeaLevel !== FieldAbove300SeaLevelMapper.SomeFieldsAbove300m
+          ) {
             fieldUpdateData.IsAbove300SeaLevel =
-              updatedFarmData.FieldsAbove300SeaLevel === FieldAbove300SeaLevelMapper.AllFieldsAbove300m;
+              updatedFarmData.FieldsAbove300SeaLevel ===
+              FieldAbove300SeaLevelMapper.AllFieldsAbove300m;
           }
           if (updatedFarmData.NVZFields !== FieldNVZMapper.SomeFieldsInNVZ) {
-            fieldUpdateData.IsWithinNVZ = updatedFarmData.NVZFields === FieldNVZMapper.AllFieldsInNVZ;
+            fieldUpdateData.IsWithinNVZ =
+              updatedFarmData.NVZFields === FieldNVZMapper.AllFieldsInNVZ;
           }
           await transactionalManager.update(
             FieldEntity,
@@ -117,6 +140,12 @@ class FarmService extends BaseService {
             fieldUpdateData
           );
         }
+        await this.ProcessFieldsService.processFieldsForRecommendation(
+          farmId,
+          request,
+          userId,
+          transactionalManager
+        );
         const updatedFarm = await transactionalManager.findOne(FarmEntity, {
           where: { ID: farmId },
         });
