@@ -919,7 +919,7 @@ class UpdateRecommendation {
 
         const hasDefoliationIdInAdviceNotes =
           nutrientRecommendationsData.adviceNotes?.some((note) =>
-            Object.prototype.hasOwnProperty.call(note, "defoliationId")
+            Object.hasOwn(note, "defoliationId")
           );
 
         if (isGrass) {
@@ -977,65 +977,16 @@ class UpdateRecommendation {
           saveAndUpdatePKBalance.saveAndUpdatePKBalance
         );
       }
-
-    
     }
 
     // 1. Extract ManagementPeriodID from the first OrganicManure (all same)
     const managementPeriodId = organicManures?.[0]?.ManagementPeriodID;
 
-
-    // combinedManures is already sorted AND contains flags
-
-    // 1. Call stored procedure – already sorted + flags added by SP
-    const combinedManures = await transactionalManager.query(
-      `EXEC spWarning_GetAllManuresByManagementPeriod @ManagementPeriodID = @0`,
-      [managementPeriodId]
+    await this.processManureWarningsByManagementPeriod(
+      managementPeriodId,
+      transactionalManager,
+      userId
     );
-
- 
-
-    // 2. Loop through each manure item
-    for (const manure of combinedManures) {
-      let warnings = [];
-      const finalWarnings = [];
-
-
-      // 3. If fertiliser → call fertiliser warning service
-      if (manure.isFertiliserManure === true) {
-        warnings =
-          await this.CalculateFutureWarningMessageService.calculateFertiliserWarningMessage(
-            transactionalManager,
-            manure
-          );
-      }
-
-     
-
-      // 4. If organic manure → call organic warning service
-      if (manure.isOrganicManure === true) {
-      
-        warnings =
-          await this.CalculateFutureWarningMessageService.calculateOrganicManureWarningMessage(
-            transactionalManager,
-            manure
-          );
-      }
-
-      // 5. Push results safely (in case function returns array or null)
-      if (Array.isArray(warnings) && warnings.length > 0) {
-        finalWarnings.push(...warnings);
-      } 
-    
-        await this.CreateOrUpdateWarningMessage.syncWarningMessages(
-          manure.ManagementPeriodID,
-          manure,
-          finalWarnings,  
-          transactionalManager,
-          userId
-        );
-
-    }
   }
 
   async saveRecommendationWithoutManure(
@@ -1568,6 +1519,7 @@ class UpdateRecommendation {
       }
 
     }
+
   }
 
   async processManureWarningsByManagementPeriod(
@@ -1581,16 +1533,16 @@ class UpdateRecommendation {
       [managementPeriodId]
     );
 
-    const finalWarnings = [];
 
     // 2. Loop through each manure item
     for (const manure of combinedManures) {
       let warnings = [];
+      const finalWarnings = [];
 
       // 3. Fertiliser warnings
       if (manure.isFertiliserManure === true) {
         warnings =
-          await this.CalculateWarningMessageService.calculateFertiliserWarningMessage(
+          await this.CalculateFutureWarningMessageService.calculateFertiliserWarningMessage(
             transactionalManager,
             manure
           );
@@ -1599,32 +1551,33 @@ class UpdateRecommendation {
       // 4. Organic manure warnings
       if (manure.isOrganicManure === true) {
         warnings =
-          await this.CalculateWarningMessageService.calculateOrganicManureWarningMessage(
+          await this.CalculateFutureWarningMessageService.calculateOrganicManureWarningMessage(
             transactionalManager,
             manure
           );
       }
 
-      // 5. Normalize warnings (array | single | null)
-      const normalizedWarnings = Array.isArray(warnings)
-    
+   
+      // 5. Push results safely (in case function returns array or null)
+      if (Array.isArray(warnings) && warnings.length > 0) {
+        finalWarnings.push(...warnings);
+      }
 
       // 6. Sync warnings one-by-one for this manure
-      for (const warning of normalizedWarnings) {
+    
         await this.CreateOrUpdateWarningMessage.syncWarningMessages(
           manure.ManagementPeriodID,
           manure,
-          [warning],
+          finalWarnings,
           transactionalManager,
           userId
         );
-      }
+      
 
-      // Optional: keep aggregated result if caller needs it
-      finalWarnings.push(...normalizedWarnings);
+      
     }
 
-    return finalWarnings;
+
   }
 
   async buildCropRecommendationData(

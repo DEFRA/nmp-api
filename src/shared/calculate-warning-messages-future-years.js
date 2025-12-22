@@ -360,25 +360,20 @@ class CalculateFutureWarningMessageService {
     return insidePeriod && isRelevantCrop && (isEngland || isWales);
   }
 
-  /* =====================================================
-     ORGANIC MANURE EXECUTION
-  ===================================================== */
+  /* ========= ORGANIC MANURE EXECUTION=========*/
 
   async calculateOrganicManureWarningMessage(manager, manure) {
     const context = await this.loadContext(manager, manure.ManagementPeriodID);
     const warnings = [];
-
     const rules = await this.GetWarningRulesAndSpService.getOrganicManureRules(
       manure,
       this
     );
-
     for (const r of rules) {
       const sp = await this.execSP(manager, r.sql, [manure.ID]);
       if (!sp || !(await r.predicate.call(this, sp))) {
         continue;
       }
-
       const template = await this.getTemplate(
         manager,
         context.farm.CountryID,
@@ -387,7 +382,6 @@ class CalculateFutureWarningMessageService {
       if (!template) {
         continue;
       }
-
       const localized = await this.bind(
         template,
         r.values ? await r.values(sp) : []
