@@ -128,10 +128,13 @@ async checkFieldExists(farmId, name, id = null) {
       const query = this.repository
         .createQueryBuilder("Fields")
         .where("Fields.Name = :name", { name: name.trim() })
-        .andWhere("Fields.FarmID = :farmId", { farmId: farmId })
-        .andWhere(id !== null ? "Fields.ID != :id" : "1 = 1", { id });
+        .andWhere("Fields.FarmID = :farmId", { farmId: farmId });
+        if (id !== null) {
+          query.andWhere("Fields.ID != :id", { id });
+        }
+ 
   
-      return await query.getCount();
+      return  query.getCount();
     }
 
   async getSoilTextureBySoilTypeId(soilTypeId) {
