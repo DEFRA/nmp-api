@@ -130,7 +130,7 @@ async checkFieldExists(farmId, name, id = null) {
         .where("Fields.Name = :name", { name: name.trim() })
         .andWhere("Fields.FarmID = :farmId", { farmId: farmId })
         .andWhere(id !== null ? "Fields.ID != :id" : "1 = 1", { id });
-  const sql = query.getSql();
+  
       return await query.getCount();
     }
 
