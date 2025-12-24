@@ -125,58 +125,6 @@ class CalculateGrassHistoryAndPreviousGrass {
     } else {
       firstHYFieldType = crop1?.FieldType || FieldTypeMapper.ARABLE;
     }
-
-    // -----------------------------
-    // Step 2: Year -2
-    // -----------------------------
-    // const crop2 = await this.getCropForYear(
-    //   field.ID,
-    //   harvestYear - 2,
-    //   transactionalManager
-    // );
-    // let secondHYFieldType = crop2?.FieldType ?? null;
-
-    // if (secondHYFieldType === null) {
-    //   const prevGrass2 = await transactionalManager.findOne(
-    //     PreviousGrassesEntity,
-    //     {
-    //       where: { FieldID: field.ID, HarvestYear: harvestYear - 2 },
-    //     }
-    //   );
-
-    //   if (prevGrass2) {
-    //     secondHYFieldType = FieldTypeMapper.GRASS;
-    //     if (
-    //       isHighClover === null &&
-    //       firstHYFieldType !== FieldTypeMapper.GRASS
-    //     ) {
-    //       isHighClover = prevGrass2.HasGreaterThan30PercentClover ? 1 : 0;
-    //     }
-    //   } else {
-    //     secondHYFieldType = FieldTypeMapper.ARABLE;
-    //   }
-    // } else if (
-    //   secondHYFieldType === FieldTypeMapper.GRASS &&
-    //   isHighClover === null &&
-    //   firstHYFieldType !== FieldTypeMapper.GRASS &&
-    //   crop2
-    // ) {
-    //   if (
-    //     crop2?.CropInfo1 !== null &&
-    //     crop2?.Yield !== null &&
-    //     crop2?.DefoliationSequenceID !== null
-    //   ){
-
-    //     const SwardTypeID = crop2.SwardTypeID;
-    //     isHighClover = [
-    //       SwardTypeMapper.GRASSANDCLOVER,
-    //       SwardTypeMapper.REDCLOVER,
-    //       SwardTypeMapper.LUCERNE,
-    //     ].includes(SwardTypeID)
-    //       ? 1
-    //       : 0;
-    //   }
-    // }
     let secondHYFieldType = null,crop2, prevGrass2
     if (firstHYFieldType !== FieldTypeMapper.GRASS) {
        crop2 = await this.getCropForYear(
