@@ -52,9 +52,19 @@ const WarningsEntity = new EntitySchema({
       nullable: true,
       name: "Para3",
     },
-  },
 
- 
+    WarningCodeID: {
+      type: "int",
+      nullable: false,
+      name: "WarningCodeID",
+    },
+    
+    WarningLevelID: {
+      type: "int",
+      nullable: false,
+      name: "WarningLevelID",
+    },
+  },
 });
 
 module.exports = { WarningsEntity };
