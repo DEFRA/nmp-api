@@ -23,7 +23,10 @@ class ProcessFieldsService {
           where: { FarmID: farmId },
         });
     
-        if (!fields.length) return;
+        if (!fields.length)
+          { 
+          return;
+          }
     
         const fieldIds = fields.map((f) => f.ID);
     
