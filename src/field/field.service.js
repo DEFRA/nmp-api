@@ -115,9 +115,24 @@ class FieldService extends BaseService {
     };
   }
 
-  async checkFieldExists(farmId, name) {
-    return await this.recordExists({ FarmID: farmId, Name: name });
+
+async checkFieldExists(farmId, name, id = null) {
+    return (await this.fieldCountByName(farmId, name, id)) > 0;
   }
+
+  async fieldCountByName(farmId, name, id = null) {
+      if (!farmId || !name) {
+        throw boom.badRequest("Farm Id and Name are required");
+      }
+  
+      const query = this.repository
+        .createQueryBuilder("Fields")
+        .where("Fields.Name = :name", { name: name.trim() })
+        .andWhere("Fields.FarmID = :farmId", { farmId: farmId })
+        .andWhere(id !== null ? "Fields.ID != :id" : "1 = 1", { id });
+  const sql = query.getSql();
+      return await query.getCount();
+    }
 
   async getSoilTextureBySoilTypeId(soilTypeId) {
     const soilTexture = await this.soilTypeSoilTextureRepository.findOneBy({

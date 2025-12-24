@@ -148,6 +148,7 @@ module.exports = [
         }),
         query: Joi.object({
           name: Joi.string().required(),
+          fieldId: Joi.number().optional().allow(null),
         }),
         failAction: (request, h, err) => {
           return h
