@@ -1203,8 +1203,7 @@ class OrganicManureService extends BaseService {
     transactionalManager
   ) {
     let nextCropAvailableN = null;
-    nextCropAvailableN =
-      await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
+    nextCropAvailableN = await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
         CropData.FieldID,
         CropData.Year,
         transactionalManager
@@ -1433,16 +1432,14 @@ class OrganicManureService extends BaseService {
 
         const managementPeriod = managementPeriods[0];
 
-        availableNForNextDefoliation =
-          await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
+        availableNForNextDefoliation = await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
             transactionalManager,
             managementPeriod,
             cropData
           );
 
         if (defoliationId == 1) {
-          nextCropAvailableN =
-            await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
+          nextCropAvailableN = await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
               cropData.FieldID,
               cropData.Year,
               transactionalManager
@@ -1491,30 +1488,18 @@ class OrganicManureService extends BaseService {
           case 0:
             cropRecData.CropN = calc.recommendation;
             cropRecData.FertilizerN = calc.cropNeed;
-            // cropRecData.ManureN =
-            //   relevantMannerOutput != null
-            //     ? relevantMannerOutput?.availableN
-            //     : availableNForNextDefoliation + nextCropAvailableN;
             cropRecData.ManureN = calc.manures;
             cropRecData.NBalance = calc.pkBalance;
             cropRecData.NIndex = calc.indexpH;
             break;
           case 1:
             cropRecData.CropP2O5 = calc.recommendation;
-            // cropRecData.ManureP2O5 =
-            //   relevantMannerOutput != null
-            //     ? relevantMannerOutput?.availableP
-            //     : null;
             cropRecData.ManureP2O5 = calc.manures;
             cropRecData.PBalance = calc.pkBalance;
             cropRecData.FertilizerP2O5 = calc.cropNeed;
             break;
           case 2:
             cropRecData.CropK2O = calc.recommendation;
-            // cropRecData.ManureK2O =
-            //   relevantMannerOutput != null
-            //     ? relevantMannerOutput?.availableK
-            //     : null;
             cropRecData.ManureK2O = calc.manures;
             cropRecData.KBalance = calc.pkBalance;
             cropRecData.FertilizerK2O = calc.cropNeed;
@@ -1531,10 +1516,6 @@ class OrganicManureService extends BaseService {
             break;
           case 5:
             cropRecData.CropSO3 = calc.recommendation;
-            // cropRecData.ManureSO3 =
-            //   relevantMannerOutput != null
-            //     ? relevantMannerOutput?.availableS
-            //     : null;
             cropRecData.ManureSO3 = calc.manures;
             cropRecData.SBalance = calc.pkBalance;
             cropRecData.FertilizerSO3 = calc.cropNeed;

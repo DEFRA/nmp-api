@@ -140,11 +140,10 @@ class FarmService extends BaseService {
             fieldUpdateData
           );
         }
-        await this.ProcessFieldsService.processFieldsForRecommendation(
+        this.ProcessFieldsService.processFieldsForRecommendation(
           farmId,
           request,
-          userId,
-          transactionalManager
+          userId
         );
         const updatedFarm = await transactionalManager.findOne(FarmEntity, {
           where: { ID: farmId },

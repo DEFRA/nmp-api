@@ -69,7 +69,8 @@ class ExcessRainfallService extends BaseService {
   async updateRecommendationsForFields(fieldIds, year, request, userId) {
     
     for (const fieldId of fieldIds) {
-    
+        console.log("fieldcheck", fieldId);
+        console.log("yearoffield",year)
         // Process one fieldId at a time
         this.UpdateRecommendation.updateRecommendationsForField(
           fieldId,
@@ -130,7 +131,7 @@ class ExcessRainfallService extends BaseService {
         const fieldIds = fields.map((field) => field.ID);
 
         // Call the function to update recommendations for all fields in the background
-        await this.updateRecommendationsForFields(
+        this.updateRecommendationsForFields(
           fieldIds,
           year,
           request,

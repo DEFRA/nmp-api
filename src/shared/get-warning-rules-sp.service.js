@@ -193,7 +193,7 @@ class GetWarningRulesAndSpService {
       },
       {
         sql: "EXEC spWarning_ComputeNMaxRateCombined @ManureID=@0",
-        predicate: predicates.fertiliserNMax,
+        predicate: predicates.manureNMax,
         key: WarningKeyMapper.NMAXLIMIT,
         code: WarningCodesMapper.NMAXLIMIT,
         join: "FIELD",

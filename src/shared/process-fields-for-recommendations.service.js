@@ -1,44 +1,66 @@
+const { AppDataSource } = require("../db/data-source");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { FieldEntity } = require("../db/entity/field.entity");
 const { UpdateRecommendation } = require("./updateRecommendation.service");
 
+
+
 class ProcessFieldsService {
   constructor() {
     this.UpdateRecommendation = new UpdateRecommendation();
-
+    this.fieldRespository = AppDataSource.getRepository(FieldEntity);
+    this.cropRespository = AppDataSource.getRepository(CropEntity);
+    
   }
 
   async processFieldsForRecommendation(
     farmId,
     request,
-    userId,
-    transactionalManager
+    userId
   ) {
-    // 1. Fetch all fields for the farm
-    const fields = await transactionalManager.find(FieldEntity, {
-      where: { FarmID: farmId },
-    });
+        // 1️⃣ Fetch all fields for the farm
+        const fields = await this.fieldRespository.find({
+          where: { FarmID: farmId },
+        });
+    
+        if (!fields.length)
+          { 
+          return;
+          }
+    
+        const fieldIds = fields.map((f) => f.ID);
+    
+        // 2️⃣ Fetch oldest crop year per field in ONE query
+        const oldestCrops = await this.cropRespository
+          .createQueryBuilder("crop")
+          .select("crop.FieldID", "FieldID")
+          .addSelect("MIN(crop.Year)", "OldestYear")
+          .where("crop.FieldID IN (:...fieldIds)", { fieldIds })
+          .groupBy("crop.FieldID")
+          .getRawMany();
+    
+        // 3️⃣ Build lookup map → { fieldId: oldestYear }
 
-    for (const field of fields) {
-      const fieldId = field.ID;
+        const oldestYearByFieldId = {};
+        for (const row of oldestCrops) {
+          oldestYearByFieldId[row.FieldID] = Number(row.OldestYear);
+        }
+    
+        // 4️⃣ Loop through fields and call recommendation update
+        for (const field of fields) {
+          const fieldId = field.ID;
+          const oldestYear = oldestYearByFieldId[fieldId] ?? null;
+          if (oldestYear){
+            this.UpdateRecommendation.updateRecommendationsForField(
+              fieldId,
+              oldestYear,
+              request,
+              userId
+            );
+          }
+        }
 
-      // 2. Find oldest crop.Year for this field
-      const oldestCrop = await transactionalManager.findOne(CropEntity, {
 
-        where: { FieldID: fieldId },
-        order: { Year: "ASC" }, // oldest year
-      });
-
-      const oldestYear = oldestCrop?.Year ?? null;
-
-      // 3. Call your recommendation update function
-      this.UpdateRecommendation.updateRecommendationsForField(
-        fieldId,
-        oldestYear,
-        request,
-        userId
-      );
-    }
   }
 }
 

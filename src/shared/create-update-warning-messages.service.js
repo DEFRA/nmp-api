@@ -43,7 +43,11 @@ class CreateOrUpdateWarningMessage {
     fieldID,
     cropID
   ) {
-    const incomeingWarning = warningMessagesArray[0] ?? [];
+   let incomeingWarning = [];
+   if (warningMessagesArray) {
+
+     incomeingWarning = warningMessagesArray[0] ?? [];
+   }
 
     // Treat null or empty array the same way
     if (
@@ -52,7 +56,7 @@ class CreateOrUpdateWarningMessage {
     ) {
       // Case 1: No incoming warnings AND no existing messages → just return
       if (!existingMessages || existingMessages?.length === 0) {
-        return;
+        return [];
       }
 
       // Case 2: No incoming warnings BUT existing messages present → delete them
@@ -64,7 +68,9 @@ class CreateOrUpdateWarningMessage {
         `🗑️ WarningMessages deleted for FieldID=${fieldID}, CropID=${cropID}`
       );
 
-      return;
+      return [];
+    } else {
+      return warningMessagesArray
     }
   }
 
@@ -87,13 +93,16 @@ class CreateOrUpdateWarningMessage {
       manure.ID
     );
 
-    await this.deleteWarningIfNoIncomingWarning(
+    const deleteWarningMessages =await this.deleteWarningIfNoIncomingWarning(
       transactionalManager,
       warningMessagesArray,
       existingMessages,
       fieldID,
       cropID
     );
+     if(deleteWarningMessages.length ===0){
+      return
+     }
 
     // Helper for equality check (ignores IDs/timestamps)
     const areMessagesEqual = (a, b) => {
