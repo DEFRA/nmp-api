@@ -1644,7 +1644,7 @@ class CropService extends BaseService {
     if (!cropType || cropType.cropGroupId === null) {
       throw boom.HttpException(
         `Invalid CropTypeId for crop having field name ${field.Name}`,
-        HttpStatus.BAD_REQUEST
+        StaticStrings.HTTP_STATUS_BAD_REQUEST
       );
     }
     const dataMultipleCrops = await transactionalManager.find(CropEntity, {

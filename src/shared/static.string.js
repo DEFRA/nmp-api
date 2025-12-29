@@ -35,11 +35,6 @@ class StaticStrings {
 
   // API input related messages
   static ERR_INVALID_EMAIL = "Invalid email address!";
-  static ERR_INVALID_USERNAME =
-    "Invalid username! Must contain only letters, numbers, underscores, or hyphens.";
-  static ERR_INVALID_PASSWORD =
-    "Invalid password! Must be at least 8 characters long with at least one uppercase letter, one lowercase letter, one number, and one special character.";
-
   // HTTP status messages
   static HTTP_STATUS_OK = "OK";
   static HTTP_STATUS_CREATED = "Created";
