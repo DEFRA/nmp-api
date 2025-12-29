@@ -2845,7 +2845,7 @@ class UpdateRecommendationChanges {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
           nvzActionProgrammeId: field.NVZProgrammeID,
-          psc: 0, //TODO:: need to find it
+          psc: 0, //need to find it
           pkBalance: {
             phosphate: pkBalanceData == null ? 0 : pkBalanceData.PBalance,
             potash: pkBalanceData == null ? 0 : pkBalanceData.KBalance,
@@ -2860,7 +2860,7 @@ class UpdateRecommendationChanges {
         excessWinterRainfall:
           excessRainfall?.WinterRainfall == null
             ? 0
-            : excessRainfall.WinterRainfall, //TODO:: need to find it
+            : excessRainfall.WinterRainfall, //need to find it
         organicMaterials: [],
         previousCropping: {},
         countryId: rb209CountryId,

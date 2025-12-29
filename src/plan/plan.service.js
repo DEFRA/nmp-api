@@ -469,7 +469,7 @@ class PlanService extends BaseService {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
           nvzActionProgrammeId: field.NVZProgrammeID,
-          psc: 0, //TODO:: need to find it
+          psc: 0, //need to find it
           pkBalance: {
             phosphate: pkBalanceData != null ? pkBalanceData.PBalance : 0,
             potash: pkBalanceData != null ? pkBalanceData.KBalance : 0,
@@ -484,7 +484,7 @@ class PlanService extends BaseService {
         excessWinterRainfall:
           excessRainfall?.WinterRainfall == null
             ? 0
-            : excessRainfall.WinterRainfall, //TODO:: need to find it
+            : excessRainfall.WinterRainfall, //need to find it
         mannerManures:
           mannerOutputs != null && mannerOutputs.length > 0 ? true : false,
         organicMaterials: [],
