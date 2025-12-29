@@ -20,9 +20,6 @@ class StaticStrings {
   static ERR_USERNAME_ALREADY_TAKEN = "Username is already taken.";
   static ERR_LOGIN_FAILED = "Login failed. Invalid credentials.";
   static INFO_LOGOUT_SUCCESSFUL = "Logout successful.";
-  static INFO_PASSWORD_RESET_LINK_SENT =
-    "Password reset link has been sent to your email.";
-  static INFO_PASSWORD_RESET_SUCCESSFUL = "Password reset successful.";
   static ERR_INVALID_RESET_TOKEN = "Invalid or expired reset token.";
   static ERR_RESOURCE_ALREADY_EXISTS = "Resource already exists.";
 
