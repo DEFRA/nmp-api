@@ -18,7 +18,6 @@ class StaticStrings {
   static ERR_INVALID_REQUEST = "Invalid request.";
   static ERR_EMAIL_ALREADY_REGISTERED = "Email is already registered.";
   static ERR_USERNAME_ALREADY_TAKEN = "Username is already taken.";
-  static ERR_PASSWORD_TOO_WEAK = "Password is too weak.";
   static ERR_LOGIN_FAILED = "Login failed. Invalid credentials.";
   static INFO_LOGOUT_SUCCESSFUL = "Logout successful.";
   static INFO_PASSWORD_RESET_LINK_SENT =
