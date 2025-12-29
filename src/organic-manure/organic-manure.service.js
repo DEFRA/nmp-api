@@ -61,6 +61,7 @@ const { RunTypeMapper } = require("../constants/run-type-mapper");
 const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
 
 const { CalculatePreviousCropService } = require("../shared/previous-year-crop-service");
+const { FieldAboveOrBelowSeaLevelMapper } = require("../constants/field-is-above-sea-level");
 
 class OrganicManureService extends BaseService {
   constructor() {
@@ -586,21 +587,21 @@ class OrganicManureService extends BaseService {
           kReleasingClay: field.SoilReleasingClay,
           nvzActionProgrammeId: field.NVZProgrammeID,
           psc:
-            excessRainfall?.WinterRainfall != null
-              ? excessRainfall.WinterRainfall
-              : 0, //TODO:: need to find it, //TODO:: need to find it
+            excessRainfall?.WinterRainfall == null
+              ? 0
+              : excessRainfall.WinterRainfall, //need to find it
           pkBalance: {
-            phosphate: pkBalanceData != null ? pkBalanceData.PBalance : 0,
-            potash: pkBalanceData != null ? pkBalanceData.KBalance : 0,
+            phosphate: pkBalanceData == null ? 0 : pkBalanceData.PBalance,
+            potash: pkBalanceData == null ? 0 : pkBalanceData.KBalance,
           },
           soilAnalyses: [],
         },
         harvestYear: crop.Year,
         area: field.TotalArea,
         postcode: farm.ClimateDataPostCode,
-        altitude: farm.AverageAltitude,
+        altitude:field.IsAbove300SeaLevel === true ? FieldAboveOrBelowSeaLevelMapper.ABOVETHREEHUNDRED : FieldAboveOrBelowSeaLevelMapper.BELOWTHREEHUNDRED,
         rainfallAverage: farm.Rainfall,
-        excessWinterRainfall: 0, //TODO:: need to find it
+        excessWinterRainfall: 0, //need to find it
         mannerManures: true,
         organicMaterials: [],
         mannerOutputs: [],
@@ -2138,7 +2139,7 @@ class OrganicManureService extends BaseService {
 
           organicManures.push(savedOrganicManure);
   
-           let Recommendations = [];
+           const Recommendations = [];
 
           for (const cropData of dataMultipleCrops) {
             const savedRecommendation = await this.buildCropRecommendationData(

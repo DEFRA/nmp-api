@@ -18,12 +18,8 @@ class StaticStrings {
   static ERR_INVALID_REQUEST = "Invalid request.";
   static ERR_EMAIL_ALREADY_REGISTERED = "Email is already registered.";
   static ERR_USERNAME_ALREADY_TAKEN = "Username is already taken.";
-  static ERR_PASSWORD_TOO_WEAK = "Password is too weak.";
   static ERR_LOGIN_FAILED = "Login failed. Invalid credentials.";
   static INFO_LOGOUT_SUCCESSFUL = "Logout successful.";
-  static INFO_PASSWORD_RESET_LINK_SENT =
-    "Password reset link has been sent to your email.";
-  static INFO_PASSWORD_RESET_SUCCESSFUL = "Password reset successful.";
   static ERR_INVALID_RESET_TOKEN = "Invalid or expired reset token.";
   static ERR_RESOURCE_ALREADY_EXISTS = "Resource already exists.";
 
@@ -35,11 +31,6 @@ class StaticStrings {
 
   // API input related messages
   static ERR_INVALID_EMAIL = "Invalid email address!";
-  static ERR_INVALID_USERNAME =
-    "Invalid username! Must contain only letters, numbers, underscores, or hyphens.";
-  static ERR_INVALID_PASSWORD =
-    "Invalid password! Must be at least 8 characters long with at least one uppercase letter, one lowercase letter, one number, and one special character.";
-
   // HTTP status messages
   static HTTP_STATUS_OK = "OK";
   static HTTP_STATUS_CREATED = "Created";
