@@ -112,14 +112,13 @@ class CreateOrUpdateWarningMessage {
         "Para2",
         "Para3",
         "WarningCodeID",
-        "WarningLevelID",
-        "PreviousID",
+        "WarningLevelID"
       ];
       return keysToCompare.every((key) => a[key] === b[key]);
     };
 
     const processedIDs = new Set();
-
+    
     // 2️⃣ Update existing or insert new
     for (const newMsg of warningMessagesArray) {
       const match = existingMessages.find((dbMsg) =>

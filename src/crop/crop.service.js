@@ -61,6 +61,7 @@ const {
   CropTypeLinkingEntity,
 } = require("../db/entity/crop-type-linking.entity");
 const PlanService = require("../plan/plan.service");
+const { FieldAboveOrBelowSeaLevelMapper } = require("../constants/field-is-above-sea-level");
 class CropService extends BaseService {
   constructor() {
     super(CropEntity);
@@ -1723,7 +1724,7 @@ class CropService extends BaseService {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
           nvzActionProgrammeId: field.NVZProgrammeID,
-          psc: 0, //TODO:: need to find it
+          psc: 0, // need to find it
           pkBalance: {
             phosphate: pkBalanceData != null ? pkBalanceData.PBalance : 0,
             potash: pkBalanceData != null ? pkBalanceData.KBalance : 0,
@@ -1733,12 +1734,12 @@ class CropService extends BaseService {
         harvestYear: crop.Year,
         area: field.TotalArea,
         postcode: farm.ClimateDataPostCode,
-        altitude: farm.AverageAltitude,
+        altitude: field.IsAbove300SeaLevel === true ? FieldAboveOrBelowSeaLevelMapper.ABOVETHREEHUNDRED : FieldAboveOrBelowSeaLevelMapper.BELOWTHREEHUNDRED,
         rainfallAverage: farm.Rainfall,
         excessWinterRainfall:
           excessRainfall?.WinterRainfall != null
             ? excessRainfall.WinterRainfall
-            : 0, //TODO:: need to find it
+            : 0, //need to find it
         mannerManures:
           mannerOutput != null && mannerOutput.length > 0 ? true : false,
         organicMaterials: [],

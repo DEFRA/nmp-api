@@ -76,6 +76,7 @@ const { CropTypeLinkingEntity } = require("../db/entity/crop-type-linking.entity
 const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-other");
 const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
 const { CalculatePreviousCropService } = require("../shared/previous-year-crop-service");
+const { FieldAboveOrBelowSeaLevelMapper } = require("../constants/field-is-above-sea-level");
 
 class PlanService extends BaseService {
   constructor() {
@@ -478,12 +479,12 @@ class PlanService extends BaseService {
         harvestYear: crop.Year,
         area: field.TotalArea,
         postcode: farm.ClimateDataPostCode,
-        altitude: farm.AverageAltitude,
+        altitude: field.IsAbove300SeaLevel === true ? FieldAboveOrBelowSeaLevelMapper.ABOVETHREEHUNDRED : FieldAboveOrBelowSeaLevelMapper.BELOWTHREEHUNDRED,
         rainfallAverage: farm.Rainfall,
         excessWinterRainfall:
-          excessRainfall?.WinterRainfall != null
-            ? excessRainfall.WinterRainfall
-            : 0, //TODO:: need to find it
+          excessRainfall?.WinterRainfall == null
+            ? 0
+            : excessRainfall.WinterRainfall, //TODO:: need to find it
         mannerManures:
           mannerOutputs != null && mannerOutputs.length > 0 ? true : false,
         organicMaterials: [],
