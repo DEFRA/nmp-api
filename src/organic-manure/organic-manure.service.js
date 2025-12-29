@@ -2139,7 +2139,7 @@ class OrganicManureService extends BaseService {
 
           organicManures.push(savedOrganicManure);
   
-           let Recommendations = [];
+           const Recommendations = [];
 
           for (const cropData of dataMultipleCrops) {
             const savedRecommendation = await this.buildCropRecommendationData(
