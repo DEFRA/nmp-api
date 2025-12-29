@@ -51,7 +51,7 @@ class GrassGrowthService extends BaseService {
       }
 
       // Determine altitude based on IsAbove300SeaLevel
-      const altitude = field.IsAbove300SeaLevel === true ? 350 : 150;
+      const altitude = field.IsAbove300SeaLevel === true ? 350 : 100; 
 
       // Ensure SoilOverChalk is false if it's null
       const soilOverChalk = field.SoilOverChalk ?? false;

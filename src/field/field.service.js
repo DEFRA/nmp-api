@@ -1461,7 +1461,7 @@ async checkFieldExists(farmId, name, id = null) {
       return defoliationSequenceDescription;
     } catch (error) {
       console.error(
-        `Error fetching Defoliation Sequence for swardTypeId: ${SwardTypeID}&numberOfCuts=${PotentialCut}`,
+        `Error fetching Defoliation Sequence for swardTypeId: & numberOfCuts=${PotentialCut}`,
         error
       );
       return "Unknown";

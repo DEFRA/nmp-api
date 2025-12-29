@@ -48,6 +48,7 @@ const { CalculatePreviousCropService } = require("./previous-year-crop-service")
 
 const { CreateOrUpdateWarningMessage } = require("./create-update-warning-messages.service");
 const { CalculateFutureWarningMessageService } = require("./calculate-warning-messages-future-years");
+const { FieldAboveOrBelowSeaLevelMapper } = require("../constants/field-is-above-sea-level");
 
 
 class UpdateRecommendation {
@@ -2438,22 +2439,22 @@ class UpdateRecommendation {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
           nvzActionProgrammeId: field.NVZProgrammeID,
-          psc: 0, //TODO:: need to find it
+          psc: 0, // need to find it
           pkBalance: {
-            phosphate: pkBalanceData != null ? pkBalanceData.PBalance : 0,
-            potash: pkBalanceData != null ? pkBalanceData.KBalance : 0,
+            phosphate: pkBalanceData == null ? 0 : pkBalanceData.PBalance,
+            potash: pkBalanceData == null ? 0 : pkBalanceData.KBalance,
           },
           soilAnalyses: [],
         },
         harvestYear: crop.Year,
         area: field.TotalArea,
         postcode: farm.ClimateDataPostCode,
-        altitude: farm.AverageAltitude,
+        altitude: field.IsAbove300SeaLevel === true ? FieldAboveOrBelowSeaLevelMapper.ABOVETHREEHUNDRED : FieldAboveOrBelowSeaLevelMapper.BELOWTHREEHUNDRED,
         rainfallAverage: farm.Rainfall,
         excessWinterRainfall:
-          excessRainfall?.WinterRainfall != null
-            ? excessRainfall.WinterRainfall
-            : 0, //TODO:: need to find it
+          excessRainfall?.WinterRainfall == null
+            ? 0
+            : excessRainfall.WinterRainfall, // need to find it
         mannerManures: true,
         organicMaterials: [],
         mannerOutputs: [],
@@ -2472,53 +2473,6 @@ class UpdateRecommendation {
       totals: true,
       referenceValue: `${field.ID}-${crop.ID}-${crop.Year}`,
     };
-
-    // If firstCropMannerOutput and firstCropData are available, add them to mannerOutputs array
-    // if (firstCropMannerOutput?.data && firstCropData) {
-    //   nutrientRecommendationnReqBody.field.mannerOutputs.push({
-    //     id: firstCropData.CropOrder,
-    //     totalN: firstCropMannerOutput.data.totalN,
-    //     availableN: firstCropMannerOutput.data.currentCropAvailableN,
-    //     totalP: firstCropMannerOutput.data.totalP2O5,
-    //     availableP: firstCropMannerOutput.data.cropAvailableP2O5,
-    //     totalK: firstCropMannerOutput.data.totalK2O,
-    //     availableK: firstCropMannerOutput.data.cropAvailableK2O,
-    //     totalS: firstCropMannerOutput.data.totalSO3,
-    //     availableS: firstCropMannerOutput.data.cropAvailableSO3,
-    //     totalM: firstCropMannerOutput.data.totalMgO,
-    //   });
-    // }
-
-    // if (secondCropMannerOutput?.data) {
-    //   // Add current crop mannerOutputs or OrganicManure data
-    //   nutrientRecommendationnReqBody.field.mannerOutputs.push({
-    //     id: firstCropMannerOutput?.data ? 2 : 1,
-    //     totalN: secondCropMannerOutput?.data.totalN,
-    //     availableN: secondCropMannerOutput?.data.currentCropAvailableN,
-    //     totalP: secondCropMannerOutput?.data.totalP2O5,
-    //     availableP: secondCropMannerOutput?.data.cropAvailableP2O5,
-    //     totalK: secondCropMannerOutput?.data.totalK2O,
-    //     availableK: secondCropMannerOutput?.data.cropAvailableK2O,
-    //     totalS: secondCropMannerOutput?.data.totalSO3,
-    //     availableS: secondCropMannerOutput?.data.cropAvailableSO3,
-    //     totalM: secondCropMannerOutput?.data.totalMgO,
-    //   });
-    // } else if (mannerOutputs?.data) {
-    //   // Add current crop mannerOutputs or OrganicManure data
-    //   nutrientRecommendationnReqBody.field.mannerOutputs.push({
-    //     id: firstCropData ? 2 : crop.CropOrder,
-    //     totalN: mannerOutputs?.data?.totalN,
-    //     availableN: mannerOutputs?.data?.currentCropAvailableN,
-    //     totalP: mannerOutputs?.data?.totalP2O5,
-    //     availableP: mannerOutputs?.data?.cropAvailableP2O5,
-    //     totalK: mannerOutputs?.data?.totalK2O,
-    //     availableK: mannerOutputs?.data?.cropAvailableK2O,
-    //     totalS: mannerOutputs?.data?.totalSO3,
-    //     availableS: mannerOutputs?.data?.cropAvailableSO3,
-    //     totalM: mannerOutputs?.data?.totalMgO,
-    //   });
-    // }
-
     nutrientRecommendationnReqBody.field.mannerOutputs = mannerOutputs;
 
     // Add SoilAnalyses data
@@ -2836,22 +2790,22 @@ class UpdateRecommendation {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
           nvzActionProgrammeId: field.NVZProgrammeID,
-          psc: 0, //TODO:: need to find it
+          psc: 0, // need to find it
           pkBalance: {
-            phosphate: pkBalanceData != null ? pkBalanceData.PBalance : 0,
-            potash: pkBalanceData != null ? pkBalanceData.KBalance : 0,
+            phosphate: pkBalanceData == null ? 0 : pkBalanceData.PBalance,
+            potash: pkBalanceData == null ? 0 : pkBalanceData.KBalance,
           },
           soilAnalyses: [],
         },
         harvestYear: crop.Year,
         area: field.TotalArea,
         postcode: farm.ClimateDataPostCode,
-        altitude: farm.AverageAltitude,
+        altitude: field.IsAbove300SeaLevel === true ? FieldAboveOrBelowSeaLevelMapper.ABOVETHREEHUNDRED : FieldAboveOrBelowSeaLevelMapper.BELOWTHREEHUNDRED,
         rainfallAverage: farm.Rainfall,
         excessWinterRainfall:
-          excessRainfall?.WinterRainfall != null
-            ? excessRainfall.WinterRainfall
-            : 0, //TODO:: need to find it
+          excessRainfall?.WinterRainfall == null
+            ? 0
+            : excessRainfall.WinterRainfall, // need to find it
         organicMaterials: [],
         previousCropping: {},
         countryId: rb209CountryId,
