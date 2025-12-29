@@ -589,7 +589,7 @@ class OrganicManureService extends BaseService {
           psc:
             excessRainfall?.WinterRainfall == null
               ? 0
-              : excessRainfall.WinterRainfall, //TODO:: need to find it, //TODO:: need to find it
+              : excessRainfall.WinterRainfall, //need to find it
           pkBalance: {
             phosphate: pkBalanceData == null ? 0 : pkBalanceData.PBalance,
             potash: pkBalanceData == null ? 0 : pkBalanceData.KBalance,
@@ -601,7 +601,7 @@ class OrganicManureService extends BaseService {
         postcode: farm.ClimateDataPostCode,
         altitude:field.IsAbove300SeaLevel === true ? FieldAboveOrBelowSeaLevelMapper.ABOVETHREEHUNDRED : FieldAboveOrBelowSeaLevelMapper.BELOWTHREEHUNDRED,
         rainfallAverage: farm.Rainfall,
-        excessWinterRainfall: 0, //TODO:: need to find it
+        excessWinterRainfall: 0, //need to find it
         mannerManures: true,
         organicMaterials: [],
         mannerOutputs: [],
