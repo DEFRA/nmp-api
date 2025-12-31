@@ -2556,6 +2556,7 @@ class OrganicManureService extends BaseService {
     dateFrom,
     dateTo,
     confirm,
+    organicManureID,
     request
   ) {
     try {
@@ -2599,7 +2600,7 @@ class OrganicManureService extends BaseService {
       }
 
       // Query OrganicManures for these manureTypeIds within the date range
-      const manureTypeExists = await this.repository
+      const query = this.repository
         .createQueryBuilder("organicManure")
         .where("organicManure.ManureTypeID IN (:...manureTypeIds)", {
           manureTypeIds,
@@ -2614,8 +2615,16 @@ class OrganicManureService extends BaseService {
         .andWhere("organicManure.ManagementPeriodID = :managementPeriodID", {
           managementPeriodID,
         })
-        .andWhere("organicManure.Confirm = :confirm", { confirm })
-        .getCount();
+        .andWhere("organicManure.Confirm = :confirm", { confirm });
+
+      if (organicManureID != null) {
+        query.andWhere("organicManure.ID != :organicManureID", {
+          organicManureID,
+        });
+      }
+
+      // Execute query
+      const manureTypeExists = await query.getCount();
 
       // Return true if any matching records are found
       return manureTypeExists > 0;
