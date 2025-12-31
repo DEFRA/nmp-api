@@ -2482,7 +2482,7 @@ class UpdateRecommendationChanges {
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: fieldType,
-        multipleCrops: dataMultipleCrops.length > 1 ? true : false,
+        multipleCrops: dataMultipleCrops.length > 1,
         arable: fieldType == FieldTypeMapper.GRASS ? [] : arableBody,
         grassland: {},
         grass:

@@ -69,10 +69,12 @@ class CalculateFutureWarningMessageService {
       Para1: replace(template.Para1),
       Para2: replace(template.Para2),
       Para3: replace(template.Para3),
+      WarningCodeID: replace(template.WarningCodeID),
+      WarningLevelID: replace(template.WarningLevelID),
     };
   }
 
-  async buildMessage({ field, crop, joining, localized, code, level }) {
+  async buildMessage({ field, crop, joining, localized }) {
     return {
       ID: null,
       FieldID: field.ID,
@@ -82,8 +84,8 @@ class CalculateFutureWarningMessageService {
       Para1: localized?.Para1 ?? null,
       Para2: localized?.Para2 ?? null,
       Para3: localized?.Para3 ?? null,
-      WarningCodeID: code,
-      WarningLevelID: level,
+      WarningCodeID: localized.WarningCodeID ?? null,
+      WarningLevelID: localized.WarningLevelID ?? null,
     };
   }
 
@@ -392,9 +394,7 @@ class CalculateFutureWarningMessageService {
           field: context.field,
           crop: context.crop,
           joining: r.join === "FIELD" ? context.field : manure,
-          localized,
-          code: r.code,
-          level: WarningLevelMapper.MANURE,
+          localized
         })
       );
     }
@@ -444,9 +444,7 @@ class CalculateFutureWarningMessageService {
           field: context.field,
           crop: context.crop,
           joining: r.join === "FIELD" ? context.field : fertiliser,
-          localized,
-          code: r.code,
-          level: WarningLevelMapper.FERTILISER,
+          localized
         })
       );
     }
