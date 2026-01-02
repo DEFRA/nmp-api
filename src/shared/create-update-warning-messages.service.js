@@ -154,7 +154,7 @@ class CreateOrUpdateWarningMessage {
             CreatedByID: userId,
           }
         );
-        if (inserted.identifiers && inserted.identifiers[0]?.ID)
+        if (inserted.identifiers?.[0]?.ID)
           processedIDs.add(inserted.identifiers[0].ID);
       }
     }

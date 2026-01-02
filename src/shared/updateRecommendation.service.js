@@ -293,8 +293,6 @@ class UpdateRecommendation {
     };
 
     const cropNotesByNutrientId = groupNotesByNutrientId(cropNotes);
-    //const secondCropNotesByNutrientId = groupNotesByNutrientId(secondCropNotes);
-
     // Track nutrient IDs that are being processed
     const nutrientIdsInData = [];
 
@@ -487,30 +485,18 @@ class UpdateRecommendation {
           case 0:
             cropRecData.CropN = calc.recommendation;
             cropRecData.FertilizerN = calc.cropNeed;
-            // cropRecData.ManureN =
-            //   relevantMannerOutput != null
-            //     ? relevantMannerOutput?.availableN
-            //     : availableNForNextDefoliation + nextCropAvailableN;
             cropRecData.ManureN = calc.manures;
             cropRecData.NBalance = calc.pkBalance;
             cropRecData.NIndex = calc.indexpH;
             break;
           case 1:
             cropRecData.CropP2O5 = calc.recommendation;
-            // cropRecData.ManureP2O5 =
-            //   relevantMannerOutput != null
-            //     ? relevantMannerOutput?.availableP
-            //     : null;
             cropRecData.ManureP2O5 = calc.manures;
             cropRecData.PBalance = calc.pkBalance;
             cropRecData.FertilizerP2O5 = calc.cropNeed;
             break;
           case 2:
             cropRecData.CropK2O = calc.recommendation;
-            // cropRecData.ManureK2O =
-            //   relevantMannerOutput != null
-            //     ? relevantMannerOutput?.availableK
-            //     : null;
             cropRecData.ManureK2O = calc.manures;
             cropRecData.KBalance = calc.pkBalance;
             cropRecData.FertilizerK2O = calc.cropNeed;
@@ -527,10 +513,6 @@ class UpdateRecommendation {
             break;
           case 5:
             cropRecData.CropSO3 = calc.recommendation;
-            // cropRecData.ManureSO3 =
-            //   relevantMannerOutput != null
-            //     ? relevantMannerOutput?.availableS
-            //     : null;
             cropRecData.ManureSO3 = calc.manures;
             cropRecData.SBalance = calc.pkBalance;
             cropRecData.FertilizerSO3 = calc.cropNeed;
@@ -1360,7 +1342,7 @@ class UpdateRecommendation {
       const finalWarnings = [];
 
       // 3. Fertiliser warnings
-      if (manure.isFertiliserManure === true) {
+      if (manure.isFertiliserManure === true && manure.N > 0) {
         warnings =
           await this.CalculateFutureWarningMessageService.calculateFertiliserWarningMessage(
             transactionalManager,
@@ -1537,16 +1519,6 @@ class UpdateRecommendation {
         }
       }
 
-      // Retrieve the management period that matches the crop and defoliationId.
-      // const managementPeriods = await transactionalManager.find(
-      //   ManagementPeriodEntity,
-      //   { where: { CropID: cropID, Defoliation: defoliationId } }
-      // );
-
-      // if (!managementPeriods.length) continue;
-
-      // const managementPeriod = managementPeriods[0];
-
       // Check if a recommendation exists for this management period
       const existingRecommendation = await transactionalManager.findOne(
         RecommendationEntity,
@@ -1712,12 +1684,6 @@ class UpdateRecommendation {
           }
         }
       }
-      //geting current pKBalance
-      // let pkBalance = await this.getPKBalanceData(
-      //   crop?.Year,
-      //   fieldId,
-      //   pKBalanceAllData
-      // );
 
       let pkBalance = await transactionalManager.findOne(PKBalanceEntity, {
         where: {
@@ -2028,23 +1994,23 @@ class UpdateRecommendation {
     }
     let cropOrderData = {
       CropN: null,
-      ManureN: mannerOutputs != null ? mannerOutputs[0]?.availableN : null,
+      ManureN: mannerOutputs == null ? null : mannerOutputs[0]?.availableN,
       NBalance: null,
       FertilizerN: null,
       CropP2O5: null,
-      ManureP2O5: mannerOutputs != null ? mannerOutputs[0]?.availableP : null,
+      ManureP2O5: mannerOutputs == null ? null : mannerOutputs[0]?.availableP,
       PBalance: null,
       FertilizerP2O5: null,
       CropK2O: null,
       KBalance: null,
       FertilizerK2O: null,
-      ManureK2O: mannerOutputs != null ? mannerOutputs[0]?.availableK : null,
+      ManureK2O: mannerOutputs == null ? null : mannerOutputs[0]?.availableK,
       CropMgO: null,
       MgBalance: null,
       ManureMgO: null,
       FertilizerMgO: null,
       CropSO3: null,
-      ManureSO3: mannerOutputs != null ? mannerOutputs[0]?.availableS : null,
+      ManureSO3: mannerOutputs == null ? null : mannerOutputs[0]?.availableS,
       SBalance: null,
       FertilizerSO3: null,
       CropNa2O: null,
@@ -2251,7 +2217,7 @@ class UpdateRecommendation {
         (cropType) => cropType.cropTypeId === crop.CropTypeID
       );
 
-      if (!currentCropType || currentCropType.cropGroupId == null) {
+      if (currentCropType?.cropGroupId == null) {
         throw new HttpException(
           `Invalid CropTypeId for crop having field name ${field.Name}`,
           HttpStatus.BAD_REQUEST
@@ -2427,7 +2393,7 @@ class UpdateRecommendation {
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: fieldType,
-        multipleCrops: dataMultipleCrops.length > 1 ? true : false,
+        multipleCrops: dataMultipleCrops.length > 1,
         arable: fieldType == FieldTypeMapper.GRASS ? [] : arableBody,
         grassland: {},
         grass:
@@ -2673,11 +2639,7 @@ class UpdateRecommendation {
   }
   async isGrassCropPresent(crop, transaction) {
     if (crop.CropOrder === CropOrderMapper.FIRSTCROP) {
-      if (crop.CropTypeID === CropTypeMapper.GRASS) {
-        return true;
-      } else {
-        return false;
-      }
+      return crop.CropTypeID === CropTypeMapper.GRASS;
     } else if (crop.CropOrder === CropOrderMapper.SECONDCROP) {
       if (crop.CropTypeID === CropTypeMapper.GRASS) {
         return true;
@@ -2687,11 +2649,7 @@ class UpdateRecommendation {
           crop.FieldID,
           crop.Year
         );
-        if (firstCropData.CropTypeID === CropTypeMapper.GRASS) {
-          return true;
-        } else {
-          return false;
-        }
+        return firstCropData.CropTypeID === CropTypeMapper.GRASS;
       }
     }
   }
@@ -2778,7 +2736,7 @@ class UpdateRecommendation {
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: fieldType,
-        multipleCrops: dataMultipleCrops.length > 1 ? true : false,
+        multipleCrops: dataMultipleCrops.length > 1,
         arable: fieldType == FieldTypeMapper.GRASS ? [] : arableBody,
         grassland: {},
         grass:

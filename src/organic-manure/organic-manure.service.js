@@ -2919,13 +2919,13 @@ class OrganicManureService extends BaseService {
           };
         }
 
-        const result = await transactionalManager.update(
+        await transactionalManager.update(
           OrganicManureEntity,
           ID,
           dataToUpdate
         );
 
-        let updatedWarningMessages =
+     
           await this.CreateOrUpdateWarningMessage.syncWarningMessages(
             OrganicManure.ManagementPeriodID,
             OrganicManure,
@@ -3105,10 +3105,7 @@ class OrganicManureService extends BaseService {
         excludedType: 33,
       });
     // Exclude Paper Crumble - Chemically/Physcially Treated
-
     const organicResult = await organicManuresResult.getRawOne();
-    console.log("organicResult", organicResult);
-
     return organicResult.totalN;
   }
 }
