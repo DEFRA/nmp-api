@@ -2509,7 +2509,7 @@ class UpdateRecommendationChanges {
         excessWinterRainfall:
           excessRainfall?.WinterRainfall == null
             ? 0
-            : excessRainfall.WinterRainfallxcessRainfall.WinterRainfall, // need to find it
+            : excessRainfall?.WinterRainfall, // need to find it
         mannerManures: true,
         organicMaterials: [],
         mannerOutputs: [],
