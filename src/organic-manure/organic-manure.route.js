@@ -154,6 +154,7 @@ module.exports = [
           dateFrom: Joi.date().iso().required(),
           dateTo: Joi.date().iso().required(),
           confirm: Joi.boolean(),
+          organicManureID:Joi.number().integer().allow(null).optional()
         }),
         failAction: (request, h, err) => {
           return h

@@ -87,7 +87,7 @@ class OrganicManureController {
     }
   }
   async checkManureExists() {
-    const { managementPeriodID, dateFrom, dateTo, confirm } =
+    const { managementPeriodID, dateFrom, dateTo, confirm, organicManureID } =
       this.#request.query;
 
     try {
@@ -96,6 +96,7 @@ class OrganicManureController {
         dateFrom,
         dateTo,
         confirm,
+        organicManureID,
         this.#request
       );
       return this.#h.response({ exists: manureExists });
