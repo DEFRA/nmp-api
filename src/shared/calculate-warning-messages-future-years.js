@@ -5,10 +5,6 @@ const { CropEntity } = require("../db/entity/crop.entity");
 const { FieldEntity } = require("../db/entity/field.entity");
 const { FarmEntity } = require("../db/entity/farm.entity");
 const { WarningsEntity } = require("../db/entity/warning.entity");
-
-const { WarningKeyMapper } = require("../constants/warning-key-mapper");
-const { WarningCodesMapper } = require("../constants/warning-codes-mapper");
-const { WarningLevelMapper } = require("../constants/warning-levels-mapper");
 const { GetWarningRulesAndSpService } = require("./get-warning-rules-sp.service");
 
 class CalculateFutureWarningMessageService {
@@ -18,6 +14,50 @@ class CalculateFutureWarningMessageService {
 
   constructor() {
     this.GetWarningRulesAndSpService = new GetWarningRulesAndSpService();
+  }
+
+  async commonWarningMessageCalculator(manager, entity, getRulesFn) {
+    const context = await this.loadContext(manager, entity.ManagementPeriodID);
+    const warnings = [];
+
+    const rules = await getRulesFn(
+      entity,
+      this,
+      this.formatToDayMonth?.bind(this)
+    );
+
+    for (const r of rules) {
+      const sp = await this.execSP(manager, r.sql, [entity.ID]);
+      if (!sp || !(await r.predicate.call(this, sp))) {
+        continue;
+      }
+
+      const template = await this.getTemplate(
+        manager,
+        context.farm.CountryID,
+        r.key
+      );
+      if (!template) 
+        {
+        continue;
+        }
+
+      const localized = await this.bind(
+        template,
+        r.values ? await r.values(sp) : []
+      );
+
+      warnings.push(
+        await this.buildMessage({
+          field: context.field,
+          crop: context.crop,
+          joining: r.join === "FIELD" ? context.field : entity,
+          localized,
+        })
+      );
+    }
+
+    return warnings;
   }
 
   async loadContext(manager, managementPeriodId) {
@@ -99,9 +139,7 @@ class CalculateFutureWarningMessageService {
     });
   }
 
-  /* =====================================================
-     ORGANIC MANURE PREDICATES (ASYNC)
-  ===================================================== */
+  /* =========== ORGANIC MANURE PREDICATES (ASYNC) =============== */
 
   async yearlyN(sp) {
     return (
@@ -282,9 +320,7 @@ class CalculateFutureWarningMessageService {
     return england || wales;
   }
 
-  /* =====================================================
-     FERTILISER PREDICATES (ASYNC)
-  ===================================================== */
+  /* ============ FERTILISER PREDICATES (ASYNC) ============= */
 
   async fertClosedPeriodCrop(sp) {
     const common = sp.IsApplicationInsideClosedPeriod && sp.IsCropTypeAllowed;
@@ -362,94 +398,24 @@ class CalculateFutureWarningMessageService {
     return insidePeriod && isRelevantCrop && (isEngland || isWales);
   }
 
-  /* ========= ORGANIC MANURE EXECUTION=========*/
-
-  async calculateOrganicManureWarningMessage(manager, manure) {
-    const context = await this.loadContext(manager, manure.ManagementPeriodID);
-    const warnings = [];
-    const rules = await this.GetWarningRulesAndSpService.getOrganicManureRules(
-      manure,
-      this
+  async calculateFertiliserWarningMessage(manager, fertiliser) {
+    return this.commonWarningMessageCalculator(
+      manager,
+      fertiliser,
+      this.GetWarningRulesAndSpService.getFertiliserRules.bind(
+        this.GetWarningRulesAndSpService
+      )
     );
-    for (const r of rules) {
-      const sp = await this.execSP(manager, r.sql, [manure.ID]);
-      if (!sp || !(await r.predicate.call(this, sp))) {
-        continue;
-      }
-      const template = await this.getTemplate(
-        manager,
-        context.farm.CountryID,
-        r.key
-      );
-      if (!template) {
-        continue;
-      }
-      const localized = await this.bind(
-        template,
-        r.values ? await r.values(sp) : []
-      );
-
-      warnings.push(
-        await this.buildMessage({
-          field: context.field,
-          crop: context.crop,
-          joining: r.join === "FIELD" ? context.field : manure,
-          localized
-        })
-      );
-    }
-
-    return warnings;
   }
 
-  /* =====================================================
-     FERTILISER EXECUTION
-  ===================================================== */
-
-  async calculateFertiliserWarningMessage(manager, fertiliser) {
-    const context = await this.loadContext(
+  async calculateOrganicManureWarningMessage(manager, manure) {
+    return this.commonWarningMessageCalculator(
       manager,
-      fertiliser.ManagementPeriodID
+      manure,
+      this.GetWarningRulesAndSpService.getOrganicManureRules.bind(
+        this.GetWarningRulesAndSpService
+      )
     );
-    const warnings = [];
-
-    const rules = await this.GetWarningRulesAndSpService.getFertiliserRules(
-      fertiliser,
-      this,
-      this.formatToDayMonth.bind(this)
-    );
-
-    for (const r of rules) {
-      const sp = await this.execSP(manager, r.sql, [fertiliser.ID]);
-      if (!sp || !(await r.predicate.call(this, sp))) {
-        continue;
-      }
-
-      const template = await this.getTemplate(
-        manager,
-        context.farm.CountryID,
-        r.key
-      );
-      if (!template) {
-        continue;
-      }
-
-      const localized = await this.bind(
-        template,
-        r.values ? await r.values(sp) : []
-      );
-
-      warnings.push(
-        await this.buildMessage({
-          field: context.field,
-          crop: context.crop,
-          joining: r.join === "FIELD" ? context.field : fertiliser,
-          localized
-        })
-      );
-    }
-
-    return warnings;
   }
 }
 
