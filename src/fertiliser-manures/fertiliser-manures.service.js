@@ -196,7 +196,7 @@ class FertiliserManuresService extends BaseService {
             })
           );
 
-         const savedWarningMessage = await transactionalManager.save(
+        await transactionalManager.save(
             WarningMessagesEntity,
             warningMessagesToSave
           );
@@ -206,15 +206,6 @@ class FertiliserManuresService extends BaseService {
 
       const soilAnalysisAllData = await this.soilAnalysisRepository.find();
       const pkBalanceAllData = await this.pkBalanceRepository.find();
-
-    
-
- 
-
-      // const managementPeriodData =
-      //   await this.managementPeriodRepository.findOneBy({
-      //     ID: fertiliserManureData[0].ManagementPeriodID,
-      //   });
       for (const fertManure of fertiliserManures) {
         const fertiliserData = fertiliserAllData.filter((fertData) => {
           return fertData.ManagementPeriodID === fertManure.ManagementPeriodID;
