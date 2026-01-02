@@ -28,14 +28,19 @@ class CalculateFutureWarningMessageService {
 
     for (const r of rules) {
       const sp = await this.execSP(manager, r.sql, [entity.ID]);
-      if (!sp || !(await r.predicate.call(this, sp))) continue;
+      if (!sp || !(await r.predicate.call(this, sp))) {
+        continue;
+      }
 
       const template = await this.getTemplate(
         manager,
         context.farm.CountryID,
         r.key
       );
-      if (!template) continue;
+      if (!template) 
+        {
+        continue;
+        }
 
       const localized = await this.bind(
         template,
