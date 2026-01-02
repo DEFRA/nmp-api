@@ -165,25 +165,10 @@ class FertiliserManuresService extends BaseService {
     const recommandationAllData = await this.RecommendationRepository.find();
     const managementPeriodAllData =
       await this.managementPeriodRepository.find();
-    const fieldAllData = await this.fieldRepository.find();
-      const fertiliserAllData = await this.repository.find();
-   
-
-    return await AppDataSource.transaction(async (transactionalManager) => {
-      // const fertiliserManures = fertiliserManureData.map(
-      //   ({ ID, WarningMessages, ...rest }) => ({
-      //     ...rest,
-      //     CreatedByID: userId,
-      //     CreatedOn: new Date(),
-      //   })
-      console.log("fertiliserManureData",fertiliserManureData);
-      console.log(
-        "fertiliserManureData.FertiliserManure",
-        fertiliserManureData.FertiliserManure
-      );
-    
-      // );
-  let fertiliserManures =[];
+      const fieldAllData = await this.fieldRepository.find();
+      const fertiliserAllData = await this.repository.find();   
+    return await AppDataSource.transaction(async (transactionalManager) => {          
+    let fertiliserManures =[];
       for (const fertiliser of fertiliserManureData) {
           const fertiliserManure = fertiliser.FertiliserManure;
         // Save fertiliser first
@@ -766,9 +751,7 @@ class FertiliserManuresService extends BaseService {
         managementPeriodID,
       });
 
-    const fertiliserResult = await fertiliserManuresResult.getRawOne();
-    console.log("fertiliserResult", fertiliserResult);
-    
+    const fertiliserResult = await fertiliserManuresResult.getRawOne();  
     return fertiliserResult.totalN;
   }
 }
