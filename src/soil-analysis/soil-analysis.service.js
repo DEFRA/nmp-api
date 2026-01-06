@@ -222,12 +222,12 @@ class SoilAnalysesService extends BaseService {
         },
       });
       if (
-        SoilAnalysis.Potassium != null ||
-        SoilAnalysis.Phosphorus != null ||
-        SoilAnalysis.PotassiumIndex != null ||
-        SoilAnalysis.PhosphorusIndex != null
+        (SoilAnalysis.Potassium != null ||
+          SoilAnalysis.Phosphorus != null ||
+          SoilAnalysis.PotassiumIndex != null ||
+          SoilAnalysis.PhosphorusIndex != null) &&
+          PKBalance
       ) {
-        if (PKBalance) {
           const updateData = {
             Year: PKBalance.Year,
             FieldID: PKBalance.FieldID,
@@ -248,7 +248,7 @@ class SoilAnalysesService extends BaseService {
               saveAndUpdatePKBalance
             );
           }
-        }
+        
       }
 
       await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
