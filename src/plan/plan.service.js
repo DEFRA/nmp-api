@@ -294,30 +294,7 @@ class PlanService extends BaseService {
     return previousCrops[0] || null;
   }
 
-  async isGrassCropPresent(crop, transaction) {
-    if (crop.CropOrder === CropOrderMapper.FIRSTCROP) {
-      if (crop.CropTypeID === CropTypeMapper.GRASS) {
-        return true;
-      } else {
-        return false;
-      }
-    } else if (crop.CropOrder === CropOrderMapper.SECONDCROP) {
-      if (crop.CropTypeID === CropTypeMapper.GRASS) {
-        return true;
-      } else {
-        const firstCropData = await this.getFirstCropData(
-          transaction,
-          crop.FieldID,
-          crop.Year
-        );
-        if (firstCropData.CropTypeID === CropTypeMapper.GRASS) {
-          return true;
-        } else {
-          return false;
-        }
-      }
-    }
-  }
+
   async determineFieldType(crop, transactionalManager) {
     let crops;
 
@@ -449,10 +426,6 @@ class PlanService extends BaseService {
       );
     }
 
-    const isCropGrass = await this.isGrassCropPresent(
-      crop,
-      transactionalManager
-    );
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: fieldType,
@@ -514,10 +487,6 @@ class PlanService extends BaseService {
           ...(soilAnalysis.SulphurDeficient && {
             sulphurDeficient: soilAnalysis.SulphurDeficient,
           }),
-          // ...(soilAnalysis.SoilNitrogenSupplyIndex != null && {
-          //   snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
-          //   snsMethodologyId: 4,
-          // }),
           ...(soilAnalysis.PhosphorusIndex != null && {
             pIndexId: soilAnalysis.PhosphorusIndex,
             pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
@@ -540,18 +509,6 @@ class PlanService extends BaseService {
     if (mannerOutputs != null && mannerOutputs?.length > 0) {
       nutrientRecommendationnReqBody.field.mannerOutputs = mannerOutputs;
     }
-
-    // Add SnsAnalyses data
-    // if (snsAnalysesData) {
-    //   nutrientRecommendationnReqBody.field.soil.soilAnalyses.push({
-    //     soilAnalysisDate: snsAnalysesData.SampleDate, // Using snsAnalysesData.SampleDate
-    //     snsIndexId: snsAnalysesData.SoilNitrogenSupplyIndex, // Using snsAnalysesData.SoilNitrogenSupplyIndex
-    //     snsMethodologyId: 4,
-    //     pMethodologyId: 0,
-    //     kMethodologyId: 4,
-    //     mgMethodologyId: 4,
-    //   });
-    // }
 
     // Add SnsAnalyses data
     if (Array.isArray(snsAnalysesData)) {

@@ -5,7 +5,9 @@ const { CropEntity } = require("../db/entity/crop.entity");
 const { FieldEntity } = require("../db/entity/field.entity");
 const { FarmEntity } = require("../db/entity/farm.entity");
 const { WarningsEntity } = require("../db/entity/warning.entity");
-const { GetWarningRulesAndSpService } = require("./get-warning-rules-sp.service");
+const {
+  GetWarningRulesAndSpService,
+} = require("./get-warning-rules-sp.service");
 
 class CalculateFutureWarningMessageService {
   /* =====================================================
@@ -37,10 +39,9 @@ class CalculateFutureWarningMessageService {
         context.farm.CountryID,
         r.key
       );
-      if (!template) 
-        {
+      if (!template) {
         continue;
-        }
+      }
 
       const localized = await this.bind(
         template,
