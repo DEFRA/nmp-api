@@ -1911,11 +1911,12 @@ class OrganicManureService extends BaseService {
           rb209CountryData.RB209CountryID
         );
         Errors.push(...soilAnalysisErrors);
-        if (Errors.length > 0)
+        if (Errors.length > 0){
           throw new boom.HttpException(
             JSON.stringify(Errors),
             StaticStrings.HTTP_STATUS_BAD_REQUEST
           );
+        }
 
         let snsAnalysesData = null;
 
