@@ -708,15 +708,6 @@ class UpdateRecommendationChanges {
           },
         }
       );
-
-      const cropTypeLinkingData =
-        await this.CropTypeLinkingRepository.findOneBy({
-          CropTypeID: cropData.CropTypeID,
-        });
-      const soilTypeTextureData =
-        await this.soilTypeTextureRepository.findOneBy({
-          SoilTypeID: fieldData.SoilTypeID,
-        });
       const Errors = [];
       const {
         latestSoilAnalysis,

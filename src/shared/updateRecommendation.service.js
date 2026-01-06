@@ -670,19 +670,6 @@ class UpdateRecommendation {
         }
       );
 
-      const cropTypeLinkingData = await transactionalManager.findOne(
-        CropTypeLinkingEntity,
-        {
-          where: { CropTypeID: cropData.CropTypeID },
-        }
-      );
-
-      const soilTypeTextureData = await transactionalManager.findOne(
-        SoilTypeSoilTextureEntity,
-        {
-          where: { SoilTypeID: fieldData.SoilTypeID },
-        }
-      );
       const Errors = [];
       const {
         latestSoilAnalysis,
