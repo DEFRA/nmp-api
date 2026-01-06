@@ -437,7 +437,7 @@ class CalculateGrassHistoryAndPreviousGrass {
       .getRawOne();
     let nitrogenUse = null
     if(isHistoryCrop){
-      let soilNitrogenSupplyItemID = isHistoryCrop.SoilNitrogenSupplyId; 
+      const soilNitrogenSupplyItemID = isHistoryCrop.SoilNitrogenSupplyId; 
       if(soilNitrogenSupplyItemID){
     
        if( soilNitrogenSupplyItemID == SoilNitrogenMapper.LOWN ){
