@@ -84,6 +84,11 @@ const { StoreCapacitiesEntity } = require("./entity/store-capacities.entity.js")
 const { MaterialStatesEntity } = require("./entity/material-states.entity.js");
 const { SolidManureTypesEntity } = require("./entity/solid-manure-types.entity.js");
 const { BankSlopeAnglesEntity } = require("./entity/bank-slope-angles-entity.js");
+const { WarningMessagesEntity } = require("./entity/warning-message.entity.js");
+const { PreviousCroppingEntity } = require("./entity/previous-cropping.entity.js");
+const { WarningCodeEntity } = require("./entity/warning-code.entity.js");
+const { WarningsEntity } = require("./entity/warning.entity.js");
+
 
 
 
@@ -156,7 +161,11 @@ const baseConfig = {
     StoreCapacitiesEntity,
     MaterialStatesEntity,
     SolidManureTypesEntity,
-    BankSlopeAnglesEntity
+    BankSlopeAnglesEntity,
+    WarningMessagesEntity,
+    PreviousCroppingEntity,
+    WarningCodeEntity,
+    WarningsEntity
   ],
   migrations: [],
   subscribers: [],

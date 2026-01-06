@@ -24,6 +24,12 @@ const GrassManagementOptionsEntity = new EntitySchema({
       joinColumn: { name: "ID" },
       inverseSide: "GrassManagementOptions",
     },
+    PreviousCroppingGrassManagementOption: {
+      type: "one-to-many",
+      target: "PreviousCroppings",
+      joinColumn: { name: "ID" },
+      inverseSide: "GrassManagementOptions",
+    },
   },
 });
 

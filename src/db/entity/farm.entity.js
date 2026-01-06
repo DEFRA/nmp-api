@@ -134,10 +134,6 @@ const FarmEntity = new EntitySchema({
       length: 255,
       nullable: true,
     },
-    LastHarvestYear: {
-      type: "int",
-      nullable: true,
-    },
     CountryID: {
       type: "int",
       default: 1,
@@ -159,12 +155,6 @@ const FarmEntity = new EntitySchema({
       target: "Organisation",
       joinColumn: { name: "OrganisationID" },
       inverseSide: "Farms",
-    },
-    FarmManureTypes: {
-      type: "one-to-many",
-      target: "FarmManureType",
-      joinColumn: { name: "ID" },
-      inverseSide: "Farm",
     },
     FarmManureTypes: {
       type: "one-to-many",

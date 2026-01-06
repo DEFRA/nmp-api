@@ -160,6 +160,18 @@ const FieldEntity = new EntitySchema({
       joinColumn: { name: "ID" },
       inverseSide: "Field",
     },
+    WarningMessages: {
+      type: "one-to-many",
+      target: "WarningMessages",
+      joinColumn: { name: "ID" },
+      inverseSide: "Field",
+    },
+    PreviousCropingField: {
+      type: "one-to-many",
+      target: "PreviousCroppings",
+      joinColumn: { name: "ID" },
+      inverseSide: "Fields",
+    },
   },
 });
 

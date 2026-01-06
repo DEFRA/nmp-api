@@ -179,13 +179,37 @@ const UserEntity = new EntitySchema({
       type: "one-to-many",
       target: "StoreCapacities",
       inverseSide: "CreatedBy",
-      joinColumn: { name: "ID" }
+      joinColumn: { name: "ID" },
     },
     ModifiedStoreCapacitiesByUser: {
       type: "one-to-many",
       target: "StoreCapacities",
       inverseSide: "ModifiedBy",
-      joinColumn: { name: "ID" }
+      joinColumn: { name: "ID" },
+    },
+    CreatedWarningMessagesByUser: {
+      type: "one-to-many",
+      target: "WarningMessages",
+      inverseSide: "CreatedBy",
+      joinColumn: { name: "ID" },
+    },
+    ModifiedWarningMessagesByUser: {
+      type: "one-to-many",
+      target: "WarningMessages",
+      inverseSide: "ModifiedBy",
+      joinColumn: { name: "ID" },
+    },
+    CreatedPreviousCroppings: {
+      type: "one-to-many",
+      target: "PreviousCroppings",
+      inverseSide: "ModifiedByUser",
+      joinColumn: { name: "ID" },
+    },
+    ModifiedPreviousCroppings: {
+      type: "one-to-many",
+      target: "PreviousCroppings",
+      inverseSide: "ModifiedByUser",
+      joinColumn: { name: "ID" },
     },
   },
 });

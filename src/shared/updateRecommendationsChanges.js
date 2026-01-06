@@ -49,6 +49,9 @@ const { CalculateMannerOutputService } = require("./calculate-manner-output-serv
 const { CalculateTotalAvailableNForNextYear } = require("./calculate-next-year-available-n");
 const { CalculateNextDefoliationService } = require("./calculate-next-defoliation-totalN");
 const { CalculatePKBalanceOther } = require("./calculate-pk-balance-other");
+const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
+const { CalculatePreviousCropService } = require("./previous-year-crop-service");
+const { FieldAboveOrBelowSeaLevelMapper } = require("../constants/field-is-above-sea-level");
 
 
 class UpdateRecommendationChanges {
@@ -105,7 +108,7 @@ class UpdateRecommendationChanges {
     this.CalculateNextDefoliationService =
       new CalculateNextDefoliationService();
     this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
-
+    this.CalculatePreviousCropService = new CalculatePreviousCropService();
   }
 
   async getYearsGreaterThanGivenYear(fieldID, year) {
@@ -273,11 +276,6 @@ class UpdateRecommendationChanges {
           },
         }
       );
-
-      // const pKBalanceAllData = await this.pkBalanceRepository.find({
-      //   where: { FieldID: fieldID },
-      // });
-
       if (organicManures.length > 0) {
         await this.saveRecommendationWithManure(
           organicManures,
@@ -491,12 +489,19 @@ class UpdateRecommendationChanges {
       // Initialize crop recommendation object for this defoliation group
       const cropRecData = {
         CropN: null,
+        NBalance: null,
         CropP2O5: null,
+        PBalance: null,
         CropK2O: null,
+        KBalance: null,
         CropMgO: null,
+        MgBalance: null,
         CropSO3: null,
+        SBalance: null,
         CropNa2O: null,
+        NaBalance: null,
         CropLime: null,
+        LimeBalance: null,
         FertilizerN: null,
         FertilizerP2O5: null,
         FertilizerK2O: null,
@@ -522,50 +527,41 @@ class UpdateRecommendationChanges {
           case 0:
             cropRecData.CropN = calc.recommendation;
             cropRecData.FertilizerN = calc.cropNeed;
-            // cropRecData.ManureN =
-            //   relevantMannerOutput != null
-            //     ? relevantMannerOutput?.availableN
-            //     : null;
-            cropRecData.ManureN = calc.applied;
+            cropRecData.ManureN = calc.manures;
+            cropRecData.NBalance = calc.pkBalance;    
             cropRecData.NIndex = calc.indexpH;
             break;
           case 1:
             cropRecData.CropP2O5 = calc.recommendation;
-            // cropRecData.ManureP2O5 =
-            //   relevantMannerOutput != null
-            //     ? relevantMannerOutput?.availableP
-            //     : null;
-            cropRecData.ManureP2O5 = calc.applied;
+            cropRecData.ManureP2O5 = calc.manures;
+            cropRecData.PBalance = calc.pkBalance;    
             cropRecData.FertilizerP2O5 = calc.cropNeed;
             break;
           case 2:
             cropRecData.CropK2O = calc.recommendation;
-            // cropRecData.ManureK2O =
-            //   relevantMannerOutput != null
-            //     ? relevantMannerOutput?.availableK
-            //     : null;
-            cropRecData.ManureK2O = calc.applied;
+            cropRecData.ManureK2O = calc.manures;
+            cropRecData.KBalance = calc.pkBalance;    
             cropRecData.FertilizerK2O = calc.cropNeed;
             break;
           case 3:
             cropRecData.CropMgO = calc.recommendation;
+            cropRecData.MgBalance = calc.pkBalance;    
             cropRecData.FertilizerMgO = calc.cropNeed;
             break;
           case 4:
             cropRecData.CropNa2O = calc.recommendation;
+            cropRecData.NaBalance = calc.pkBalance;    
             cropRecData.FertilizerNa2O = calc.cropNeed;
             break;
           case 5:
             cropRecData.CropSO3 = calc.recommendation;
-            // cropRecData.ManureSO3 =
-            //   relevantMannerOutput != null
-            //     ? relevantMannerOutput?.availableS
-            //     : null;
-            cropRecData.ManureSO3 = calc.applied;
+            cropRecData.ManureSO3 = calc.manures;
+            cropRecData.SBalance = calc.pkBalance;    
             cropRecData.FertilizerSO3 = calc.cropNeed;
             break;
           case 6:
             cropRecData.CropLime = calc.recommendation;
+            cropRecData.LimeBalance = calc.pkBalance;    
             cropRecData.FertilizerLime = calc.cropNeed;
             break;
           default:
@@ -798,41 +794,7 @@ class UpdateRecommendationChanges {
         firstCropManagementPeriods = managementPeriods.find(
           (mp) => mp.CropID == firstCrop.ID
         );
-        // const firstCropOrganicManureExist =
-        //   organicManureAllData.find(
-        //     (organicManure) =>
-        //       organicManure.ManagementPeriodID == firstCropManagementPeriods.ID
-        //   ) ?? null;
-        // if (firstCropOrganicManureExist) {
-        //   firstCropDataManureApplications = await this.buildManureApplications(
-        //     firstCropManagementPeriods.ID,
-        //     organicManureAllData,
-        //     organicManure,
-        //     request
-        //   );
-        // }
-        // if (firstCropDataManureApplications) {
-        //   mannerOutputFirstReq = await this.buildMannerOutputReq(
-        //     fieldID,
-        //     firstCropDataManureApplications,
-        //     request,
-        //     cropData,
-        //     farmData,
-        //     fieldData,
-        //     cropTypeLinkingData,
-        //     soilTypeTextureData
-        //   );
-        // }
-
-        // if (mannerOutputFirstReq) {
-        //   firstCropMannerOutput =
-        //     await this.MannerCalculateNutrientsService.postData(
-        //       "/calculate-nutrients",
-        //       mannerOutputFirstReq,
-        //       request
-        //     );
-        // }
-
+        
         // Find the crop where CropOrder == 2
         const secondCrop = dataMultipleCrops.find(
           (crop) => crop.CropOrder === CropOrderMapper.SECONDCROP
@@ -847,62 +809,9 @@ class UpdateRecommendationChanges {
         const secondCropManagementPeriods = managementPeriods.find(
           (mp) => mp.CropID == secondCrop.ID
         );
-        // const secondCropOrganicManureExist =
-        //   organicManureAllData.find(
-        //     (organicManure) =>
-        //       organicManure.ManagementPeriodID == secondCropManagementPeriods.ID
-        //   ) ?? null;
-        // if (secondCropOrganicManureExist) {
-        //   secondCropDataManureApplications = await this.buildManureApplications(
-        //     secondCropManagementPeriods.ID,
-        //     organicManureAllData,
-        //     organicManure,
-        //     request
-        //   );
-        // }
-        // if (secondCropDataManureApplications) {
-        //   mannerOutputSecondReq = await this.buildMannerOutputReq(
-        //     fieldID,
-        //     secondCropDataManureApplications,
-        //     request,
-        //     cropData,
-        //     farmData,
-        //     fieldData,
-        //     cropTypeLinkingData,
-        //     soilTypeTextureData
-        //   );
-        // }
-        // if (mannerOutputSecondReq) {
-        //   secondCropMannerOutput =
-        //     await this.MannerCalculateNutrientsService.postData(
-        //       "/calculate-nutrients",
-        //       mannerOutputSecondReq,
-        //       request
-        //     );
-        // }
+        
       } else {
-        // manureApplications = await this.buildManureApplications(
-        //   organicManure.ManagementPeriodID,
-        //   organicManureAllData,
-        //   organicManure,
-        //   request
-        // );
-
-        // mannerOutputReq = await this.buildMannerOutputReq(
-        //   fieldID,
-        //   manureApplications,
-        //   request,
-        //   cropData,
-        //   farmData,
-        //   fieldData,
-        //   cropTypeLinkingData,
-        //   soilTypeTextureData
-        // );
-
-        // mannerOutputs = await this.processMannerOutputs(
-        //   mannerOutputReq,
-        //   request
-        // );
+        
         snsAnalysesData = await this.getSnsAnalysesData(
           transactionalManager,
           cropData
@@ -927,26 +836,36 @@ class UpdateRecommendationChanges {
         fieldData.ID,
         pKBalanceAllData
       );
-       let cropPOfftake = 0;
-       if (latestSoilAnalysis.PhosphorusIndex) {
-         if (
-           latestSoilAnalysis.PhosphorusIndex < 4 &&
-           (cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP1 ||
-             cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP2 ||
-             cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP3 ||
-             cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP4)
-         ) {
-           cropPOfftake = cropData.Yield ? cropData.Yield : 50;
-         }
-       }
+      let cropPOfftake = 0;
+      if (latestSoilAnalysis.PhosphorusIndex) {
+        if (
+          latestSoilAnalysis.PhosphorusIndex < 4 &&
+          (cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP1 ||
+            cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP2 ||
+            cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP3 ||
+            cropData.CropTypeID == CropTypeMapper.POTATOVARIETYGROUP4)
+        ) {
+          cropPOfftake = cropData.Yield ? cropData.Yield : 50;
+        }
+      }
+         
+            const previousCrop =
+              await this.CalculatePreviousCropService.findPreviousCrop(
+                fieldData.ID,
+                cropData.Year,
+                transactionalManager
+              );
+
+
       if (
-        (cropData.CropTypeID === CropTypeMapper.OTHER &&
-          cropData.CropInfo1 === null) ||
-        cropData.IsBasePlan
+        cropData.CropTypeID === CropTypeMapper.OTHER ||
+        cropData.IsBasePlan ||
+        !previousCrop
       ) {
         const otherRecommendations = await this.saveRecommendationForOtherCrops(
           transactionalManager,
           organicManure,
+          cropData,
           mannerOutputs,
           userId,
           latestSoilAnalysis,
@@ -954,7 +873,7 @@ class UpdateRecommendationChanges {
           allRecommendations
         );
 
-        let saveAndUpdatePKBalance = await this.UpdatePKBalance(
+        const saveAndUpdatePKBalance = await this.UpdatePKBalance(
           fieldData.ID,
           cropData,
           nutrientRecommendationsData,
@@ -966,7 +885,8 @@ class UpdateRecommendationChanges {
           year,
           transactionalManager,
           cropPOfftake,
-          latestSoilAnalysis
+          latestSoilAnalysis,
+          previousCrop
         );
 
         if (saveAndUpdatePKBalance) {
@@ -998,18 +918,7 @@ class UpdateRecommendationChanges {
           transactionalManager,
           request
         );
-      console.log(
-        "nutrientRecommendationnReqBody",
-        nutrientRecommendationnReqBody
-      );
-      console.log(
-        "nutrientRecommendationnReqBodymanner",
-        nutrientRecommendationnReqBody.field.mannerOutputs
-      );
-      console.log(
-        "nutrientRecommendationnReqBodysns",
-        nutrientRecommendationnReqBody.field.soil.soilAnalyses
-      );
+    
 
       nutrientRecommendationsData = await this.getNutrientRecommendationsData(
         nutrientRecommendationnReqBody
@@ -1020,42 +929,6 @@ class UpdateRecommendationChanges {
       let savedRecommendation,
         savedRecommendationComment = [],
         Recommendations = [];
-
-      // for (const cropData of dataMultipleCrops) {
-      //   savedRecommendation = await this.buildCropRecommendationDataForManure(
-      //     cropData,
-      //     latestSoilAnalysis,
-      //     nutrientRecommendationsData,
-      //     transactionalManager,
-      //     userId,
-      //     mannerOutputs
-      //   );
-
-      //   savedRecommendationComment =
-      //     await this.saveMultipleRecommendationForManure(
-      //       Recommendations,
-      //       cropData,
-      //       savedRecommendation[0],
-      //       transactionalManager,
-      //       nutrientRecommendationsData,
-      //       userId
-      //     );
-      // }
-
-      // const savedData = await this.saveRecommendationsForMultipleCrops(
-      //   transactionalManager,
-      //   nutrientRecommendationsData,
-      //   nutrientRecommendationnReqBody,
-      //   mannerOutputs,
-      //   firstCropMannerOutput,
-      //   secondCropMannerOutput,
-      //   userId,
-      //   cropData,
-      //   dataMultipleCrops,
-      //   latestSoilAnalysis,
-      //   snsAnalysesData,
-      //   allRecommendations
-      // );
       for (const cropData of dataMultipleCrops) {
         savedRecommendation = await this.buildCropRecommendationDataForManure(
           cropData,
@@ -1106,7 +979,7 @@ class UpdateRecommendationChanges {
           );
         }
       }
-      let saveAndUpdatePKBalance = await this.UpdatePKBalance(
+      const saveAndUpdatePKBalanceArableOrGrass = await this.UpdatePKBalance(
         fieldData.ID,
         cropData,
         nutrientRecommendationsData,
@@ -1118,25 +991,21 @@ class UpdateRecommendationChanges {
         year,
         transactionalManager,
         cropPOfftake,
-        latestSoilAnalysis
+        latestSoilAnalysis,
+        previousCrop
       );
 
-      if (saveAndUpdatePKBalance) {
+      if (saveAndUpdatePKBalanceArableOrGrass) {
         await transactionalManager.save(
           PKBalanceEntity,
-          saveAndUpdatePKBalance.saveAndUpdatePKBalance
+          saveAndUpdatePKBalanceArableOrGrass.saveAndUpdatePKBalance
         );
       }
 
-      // await this.saveOrUpdateArableNotes(
-      //   arableNotes,
-      //   savedData,
-      //   transactionalManager,
-      //   userId
-      // );
+     
       return {
         savedRecommendationsData: Recommendations,
-        saveAndUpdatePKBalance: saveAndUpdatePKBalance,
+        saveAndUpdatePKBalance: saveAndUpdatePKBalanceArableOrGrass,
       };
     }
   }
@@ -1278,6 +1147,17 @@ class UpdateRecommendationChanges {
         fieldId,
         pKBalanceAllData
       );
+      let newOrganicManure = null,mannerOutputs=null;
+       mannerOutputs =
+         await this.CalculateMannerOutput.calculateMannerOutputForOrganicManure(
+           crop,
+           newOrganicManure,
+           farm,
+           field,
+           transactionalManager,
+           request
+         );
+
 
       let cropPOfftake = 0;
       if (latestSoilAnalysis.PhosphorusIndex) {
@@ -1292,9 +1172,35 @@ class UpdateRecommendationChanges {
         }
       }
 
-      if (crop.CropTypeID === CropTypeMapper.OTHER || crop?.IsBasePlan) {
+          
+            const previousCrop =
+              await this.CalculatePreviousCropService.findPreviousCrop(
+                field.ID,
+                crop.Year,
+                transactionalManager
+              );
+
+
+      if (
+        crop.CropTypeID === CropTypeMapper.OTHER ||
+        crop?.IsBasePlan ||
+        !previousCrop
+      ) {
+        let organicManure = null;
+
         try {
-          let saveAndUpdatePKBalance = await this.UpdatePKBalance(
+          const otherRecommendations =
+            await this.saveRecommendationForOtherCrops(
+              transactionalManager,
+              organicManure,
+              crop,
+              mannerOutputs,
+              userId,
+              latestSoilAnalysis,
+              snsAnalysesData,
+              allRecommendations
+            );
+          const saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldId,
             crop,
             nutrientRecommendationsData,
@@ -1306,7 +1212,8 @@ class UpdateRecommendationChanges {
             year,
             transactionalManager,
             cropPOfftake,
-            latestSoilAnalysis
+            latestSoilAnalysis,
+            previousCrop
           );
 
           if (saveAndUpdatePKBalance) {
@@ -1350,9 +1257,8 @@ class UpdateRecommendationChanges {
         );
         if (
           !nutrientRecommendationsData ||
-          !nutrientRecommendationsData.calculations == null ||
-          !nutrientRecommendationsData.adviceNotes == null ||
-          nutrientRecommendationsData.data?.error
+          nutrientRecommendationsData?.calculations == null ||
+          nutrientRecommendationsData?.adviceNotes == null 
         ) {
           throw boom.badData(`${nutrientRecommendationsData.data.error}`);
         } else if (nutrientRecommendationsData.data?.Invalid) {
@@ -1366,7 +1272,7 @@ class UpdateRecommendationChanges {
         }
 
         try {
-          let saveAndUpdatePKBalance = await this.UpdatePKBalance(
+          const saveAndUpdatePKBalance = await this.UpdatePKBalance(
             fieldId,
             crop,
             nutrientRecommendationsData,
@@ -1378,7 +1284,8 @@ class UpdateRecommendationChanges {
             year,
             transactionalManager,
             cropPOfftake,
-            latestSoilAnalysis
+            latestSoilAnalysis,
+            previousCrop
           );
 
           if (saveAndUpdatePKBalance) {
@@ -1394,202 +1301,7 @@ class UpdateRecommendationChanges {
           );
         }
       }
-      let savedRecommendation;
-      let mannerOutputs = [];
-      // if (crop.CropOrder == CropOrderMapper.SECONDCROP) {
-      //   const firstCropData = await this.getFirstCropData(
-      //     transactionalManager,
-      //     field.ID,
-      //     crop.Year
-      //   );
-
-      //   const cropFirstSavedRecommedndationData =
-      //     await this.buildCropRecommendationData(
-      //       firstCropData,
-      //       latestSoilAnalysis,
-      //       nutrientRecommendationsData,
-      //       transactionalManager,
-      //       userId
-      //     );
-
-      //   const managementPeriodData = await this.getManagementPeriod(
-      //     transactionalManager,
-      //     firstCropData.ID
-      //   );
-
-      //   const cropSecondSavedRecommedndationData =
-      //     await this.buildCropRecommendationData(
-      //       crop,
-      //       latestSoilAnalysis,
-      //       nutrientRecommendationsData,
-      //       transactionalManager,
-      //       userId
-      //     );
-
-      //   // const savedMultipleCropRecommendation =
-      //   //   await this.saveRecommendationForMutipleCrops(
-      //   //     transactionalManager,
-      //   //     nutrientRecommendationsData,
-      //   //     firstCropData,
-      //   //     managementPeriodData,
-      //   //     secondCropManagementData,
-      //   //     latestSoilAnalysis,
-      //   //     snsAnalysesData,
-      //   //     allRecommendations,
-      //   //     userId
-      //   //   );
-      //   const isGrassCrops = await this.isGrassCropPresent(
-      //     crop,
-      //     transactionalManager
-      //   );
-      //   if (isGrassCrops) {
-      //     const savedFirstRecommendationComment =
-      //       await this.saveMultipleRecommendation(
-      //         Recommendations,
-      //         cropFirstSavedRecommedndationData[0],
-      //         cropSecondSavedRecommedndationData[0],
-      //         transactionalManager,
-      //         nutrientRecommendationsData,
-      //         userId
-      //       );
-      //   }
-      // } else {
-      //   const cropNutrientsValue = {};
-      //   nutrientRecommendationsData.calculations.forEach((recommendation) => {
-      //     cropNutrientsValue[NutrientsMapper[recommendation.nutrientId]] =
-      //       recommendation.cropNeedValue;
-      //   });
-      //   // const existingRecommendation = await this.repository.findOne({
-      //   //   where: { ManagementPeriodID: ManagementPeriods[0].ID },
-      //   // });
-      //   const existingRecommendation = allRecommendations.find(
-      //     (mp) => mp.ManagementPeriodID === secondCropManagementData.ID
-      //   );
-      //   let mannerOutputs = null,
-      //     firstCropMannerOutput = null,
-      //     secondCropMannerOutput = null;
-      //   const nutrientRecommendationnReqBodywithoutManure = null;
-      //   // let savedData = await this.saveRecommendationsForMultipleCrops(
-      //   //   transactionalManager,
-      //   //   nutrientRecommendationsData,
-      //   //   nutrientRecommendationnReqBodywithoutManure,
-      //   //   mannerOutputs,
-      //   //   firstCropMannerOutput,
-      //   //   secondCropMannerOutput,
-      //   //   userId,
-      //   //   crop,
-      //   //   dataMultipleCrops,
-      //   //   latestSoilAnalysis,
-      //   //   snsAnalysesData,
-      //   //   allRecommendations
-      //   // );
-
-      //   const cropSavedRecommedndationData =
-      //     await this.buildCropRecommendationData(
-      //       crop,
-      //       latestSoilAnalysis,
-      //       nutrientRecommendationsData,
-      //       transactionalManager,
-      //       userId
-      //     );
-
-      //   //savedRecommendation = savedData.firstCropSaveData;
-      //   if (crop.CropTypeID !== CropTypeMapper.GRASS) {
-      //     savedRecommendation = cropSavedRecommedndationData[0];
-
-      //     const RecommendationComments = [];
-      //     const notesByNutrient =
-      //       nutrientRecommendationsData?.adviceNotes?.reduce(
-      //         (acc, adviceNote) => {
-      //           if (!acc[adviceNote?.nutrientId]) {
-      //             acc[adviceNote?.nutrientId] = [];
-      //           }
-      //           acc[adviceNote?.nutrientId].push(adviceNote?.note); // Group notes by nutrientId
-      //           return acc;
-      //         },
-      //         {}
-      //       );
-      //     // Fetch all existing comments related to the savedRecommendation.ID at once
-
-      //     const existingallComments = await transactionalManager.find(
-      //       RecommendationCommentEntity,
-      //       {
-      //         where: {
-      //           RecommendationID: savedRecommendation?.ID,
-      //         },
-      //       }
-      //     );
-
-      //     for (const existingComment of existingallComments) {
-      //       const nutrientIdExists = Object.keys(notesByNutrient).some(
-      //         (nutrientId) => parseInt(nutrientId) === existingComment.Nutrient
-      //       );
-
-      //       // If the nutrientId does not exist, delete the comment using transactionalManager
-      //       if (!nutrientIdExists) {
-      //         await transactionalManager.delete(RecommendationCommentEntity, {
-      //           ID: existingComment.ID,
-      //         });
-      //       }
-      //     }
-      //     for (const nutrientId in notesByNutrient) {
-      //       const concatenatedNote =
-      //         notesByNutrient[nutrientId]?.join(" <br/>"); // Concatenate notes for the same nutrientId
-
-      //       // Check if a recommendation comment already exists for the Nutrient in the fetched data
-      //       const alreadyExistingComment = existingallComments.find(
-      //         (comment) => comment.Nutrient === parseInt(nutrientId)
-      //       );
-
-      //       let newComment;
-
-      //       if (alreadyExistingComment) {
-      //         // Update the existing comment
-      //         alreadyExistingComment.Comment = concatenatedNote; // Update the comment with the concatenated notes
-      //         alreadyExistingComment.ModifiedOn = new Date(); // Optionally track when the comment was modified
-      //         alreadyExistingComment.ModifiedByID = userId;
-
-      //         // Save the updated comment
-      //         newComment = await transactionalManager.save(
-      //           RecommendationCommentEntity,
-      //           alreadyExistingComment
-      //         );
-      //       } else {
-      //         // Create a new recommendation comment if it doesn't exist
-      //         newComment = this.recommendationCommentRepository.create({
-      //           Nutrient: parseInt(nutrientId),
-      //           Comment: concatenatedNote, // Store concatenated notes
-      //           RecommendationID: savedRecommendation?.ID,
-      //           CreatedOn: new Date(),
-      //           CreatedByID: userId,
-      //         });
-
-      //         // Save the new comment
-      //         newComment = await transactionalManager.save(
-      //           RecommendationCommentEntity,
-      //           newComment
-      //         );
-      //       }
-      //     }
-      //     // After updating or creating new comments, check for comments in existingallComments
-      //     // for (const existingComment of existingallComments) {
-      //     //   const nutrientIdExists = Object.keys(notesByNutrient).some(
-      //     //     (nutrientId) => parseInt(nutrientId) === existingComment.Nutrient
-      //     //   );
-
-      //     //   // If the nutrientId does not exist, delete the comment using transactionalManager
-      //     //   if (!nutrientIdExists) {
-      //     //     await transactionalManager.delete(RecommendationCommentEntity, {
-      //     //       ID: existingComment.ID,
-      //     //     });
-      //     //   }
-      //     // }
-      //     Recommendations.push({
-      //       Recommendation: savedRecommendation,
-      //       RecommendationComments,
-      //     });
-      //   }
-      // }
+      let savedRecommendation;     
 
       for (const cropData of dataMultipleCrops) {
         savedRecommendation = await this.buildCropRecommendationData(
@@ -1719,18 +1431,25 @@ class UpdateRecommendationChanges {
       // Initialize crop recommendation object for this defoliation group
       const cropRecData = {
         CropN: null,
+        NBalance: null,
         ManureN: null,
         CropP2O5: null,
+        PBalance: null,
         ManureP2O5: null,
         CropK2O: null,
+        KBalance: null,
         ManureK2O: null,
         CropMgO: null,
+        MgBalance: null,
         ManureMgO: null,
         CropSO3: null,
+        SBalance: null,
         ManureSO3: null,
         CropNa2O: null,
+        NaBalance: null,
         ManureNa2O: null,
         CropLime: null,
+        LimeBalance: null,
         FertilizerN: null,
         FertilizerP2O5: null,
         FertilizerK2O: null,
@@ -1760,46 +1479,43 @@ class UpdateRecommendationChanges {
               availableNForNextDefoliation + nextCropAvailableN == 0
                 ? null
                 : availableNForNextDefoliation + nextCropAvailableN;
+            cropRecData.NBalance = calc.pkBalance;        
             cropRecData.NIndex = calc.indexpH;
             break;
           case 1:
             cropRecData.CropP2O5 = calc.recommendation;
+            cropRecData.PBalance = calc.pkBalance;    
             cropRecData.FertilizerP2O5 = calc.cropNeed;
             break;
           case 2:
             cropRecData.CropK2O = calc.recommendation;
+            cropRecData.KBalance = calc.pkBalance;    
             cropRecData.FertilizerK2O = calc.cropNeed;
             break;
           case 3:
             cropRecData.CropMgO = calc.recommendation;
+            cropRecData.MgBalance = calc.pkBalance;    
             cropRecData.FertilizerMgO = calc.cropNeed;
             break;
           case 4:
             cropRecData.CropNa2O = calc.recommendation;
+            cropRecData.NaBalance = calc.pkBalance;    
             cropRecData.FertilizerNa2O = calc.cropNeed;
             break;
           case 5:
             cropRecData.CropSO3 = calc.recommendation;
+            cropRecData.SBalance = calc.pkBalance;    
             cropRecData.FertilizerSO3 = calc.cropNeed;
             break;
           case 6:
             cropRecData.CropLime = calc.recommendation;
+            cropRecData.LimeBalance = calc.pkBalance;    
             cropRecData.FertilizerLime = calc.cropNeed;
             break;
           default:
             console.warn(`Unhandled nutrientId: ${calc.nutrientId}`);
         }
       }
-
-      // // Retrieve the management period that matches the crop and defoliationId.
-      // const managementPeriods = await transactionalManager.find(
-      //   ManagementPeriodEntity,
-      //   { where: { CropID: cropID, Defoliation: defoliationId } }
-      // );
-
-      // if (!managementPeriods.length) continue;
-
-      // const managementPeriod = managementPeriods[0];
 
       // Check if a recommendation exists for this management period
       const existingRecommendation = await transactionalManager.findOne(
@@ -1904,26 +1620,25 @@ class UpdateRecommendationChanges {
     year,
     transactionalManager,
     cropPOfftake,
-    latestSoilAnalysis
+    latestSoilAnalysis,
+    previousCrop
   ) {
     try {
       let pBalance = 0;
       let kBalance = 0;
       let saveAndUpdatePKBalance;
-      
-      if(crop.CropTypeID == CropTypeMapper.OTHER ){
-         
-         const otherPKBalance =
-           await this.CalculatePKBalanceOther.calculatePKBalanceOther(
-             crop,
-             latestSoilAnalysis,
-             transactionalManager
-           );
 
-         pBalance = otherPKBalance.pBalance;
-         kBalance = otherPKBalance.kBalance;
+      if (crop.CropTypeID == CropTypeMapper.OTHER) {
+        const otherPKBalance =
+          await this.CalculatePKBalanceOther.calculatePKBalanceOther(
+            crop,
+            latestSoilAnalysis,
+            transactionalManager
+          );
 
-      }else if (crop.IsBasePlan) {
+        pBalance = otherPKBalance.pBalance;
+        kBalance = otherPKBalance.kBalance;
+      } else if (crop.IsBasePlan || !previousCrop) {
         if (pkBalanceData) {
           pBalance =
             (fertiliserData == null ? 0 : fertiliserData.p205) -
@@ -1959,6 +1674,19 @@ class UpdateRecommendationChanges {
           Year: crop.Year,
         },
       });
+
+       if (Object.keys(latestSoilAnalysis).length > 0) {
+         if (latestSoilAnalysis.PotassiumIndex == null) {
+           kBalance = 0;
+         }
+
+         if (latestSoilAnalysis.PhosphorusIndex == null) {
+           pBalance = 0;
+         }
+       } else {
+         pBalance = 0; 
+         kBalance = 0;
+       }
       if (pkBalance) {
         const updateData = {
           Year: year,
@@ -1989,324 +1717,8 @@ class UpdateRecommendationChanges {
       throw error;
     }
   }
-  async saveRecommendationForMutipleCrops(
-    transactionalManager,
-    nutrientRecommendationsData,
-    firstCropData,
-    managementPeriodData,
-    secondCropManagementData,
-    latestSoilAnalysis,
-    snsAnalysesData,
-    allRecommendations,
-    userId
-  ) {
-    // Initialize variables for recommendations for both Crop Orders
-    let cropOrder1Data = {
-      CropN: null,
-      ManureN: null,
-      FertilizerN: null,
-      CropP2O5: null,
-      ManureP2O5: null,
-      FertilizerP2O5: null,
-      CropK2O: null,
-      ManureK2O: null,
-      FertilizerK2O: null,
-      CropMgO: null,
-      ManureMgO: null,
-      FertilizerMgO: null,
-      CropSO3: null,
-      ManureSO3: null,
-      FertilizerSO3: null,
-      CropNa2O: null,
-      ManureNa2O: null,
-      FertilizerNa2O: null,
-      CropLime: null,
-      ManureLime: null,
-      FertilizerLime: null,
-      PH: latestSoilAnalysis?.PH?.toString() || null,
-      SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
-      PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
-      KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
-      MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex: null,
-      NIndex: null,
-    };
-
-    let cropOrder2Data = {
-      CropN: null,
-      ManureN: null,
-      FertilizerN: null,
-      CropP2O5: null,
-      ManureP2O5: null,
-      FertilizerP2O5: null,
-      CropK2O: null,
-      ManureK2O: null,
-      FertilizerK2O: null,
-      CropMgO: null,
-      ManureMgO: null,
-      FertilizerMgO: null,
-      CropSO3: null,
-      ManureSO3: null,
-      FertilizerSO3: null,
-      CropNa2O: null,
-      ManureNa2O: null,
-      FertilizerNa2O: null,
-      CropLime: null,
-      ManureLime: null,
-      FertilizerLime: null,
-      PH: latestSoilAnalysis?.PH?.toString() || null,
-      SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
-      PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
-      KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
-      MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex: null,
-      NIndex: null,
-    };
-
-    // Iterate through the nutrient recommendations data
-    for (const calculation of nutrientRecommendationsData.calculations) {
-      const nutrientId = calculation.nutrientId;
-      const sequenceId = calculation.sequenceId;
-      switch (nutrientId) {
-        case 0:
-          // Nitrogen (N) handling
-          if (sequenceId === 1) {
-            cropOrder1Data.CropN = calculation.recommendation;
-            // cropOrder1Data.ManureN = calculation.applied;
-            cropOrder1Data.FertilizerN = calculation.cropNeed;
-            cropOrder1Data.NIndex = calculation.indexpH;
-          } else if (sequenceId === 2) {
-            cropOrder2Data.CropN = calculation.recommendation;
-            // cropOrder2Data.ManureN = calculation.applied;
-            cropOrder2Data.FertilizerN = calculation.cropNeed;
-            cropOrder2Data.NIndex = calculation.indexpH;
-          }
-          break;
-
-        case 1:
-          // Phosphorus (P2O5) handling
-          if (sequenceId === 1) {
-            cropOrder1Data.CropP2O5 = calculation.recommendation;
-            // cropOrder1Data.ManureP2O5 = calculation.applied;
-            cropOrder1Data.FertilizerP2O5 = calculation.cropNeed;
-          } else if (sequenceId === 2) {
-            cropOrder2Data.CropP2O5 = calculation.recommendation;
-            // cropOrder2Data.ManureP2O5 = calculation.applied;
-            cropOrder2Data.FertilizerP2O5 = calculation.cropNeed;
-          }
-          break;
-
-        case 2:
-          // Potassium (K2O) handling
-          if (sequenceId === 1) {
-            cropOrder1Data.CropK2O = calculation.recommendation;
-            // cropOrder1Data.ManureK2O = calculation.applied;
-            cropOrder1Data.FertilizerK2O = calculation.cropNeed;
-          } else if (sequenceId === 2) {
-            cropOrder2Data.CropK2O = calculation.recommendation;
-            // cropOrder2Data.ManureK2O = calculation.applied;
-            cropOrder2Data.FertilizerK2O = calculation.cropNeed;
-          }
-          break;
-
-        case 3:
-          // Magnesium (MgO) handling
-          if (sequenceId === 1) {
-            cropOrder1Data.CropMgO = calculation.recommendation;
-            // cropOrder1Data.ManureMgO = calculation.applied;
-            cropOrder1Data.FertilizerMgO = calculation.cropNeed;
-          } else if (sequenceId === 2) {
-            cropOrder2Data.CropMgO = calculation.recommendation;
-            // cropOrder2Data.ManureMgO = calculation.applied;
-            cropOrder2Data.FertilizerMgO = calculation.cropNeed;
-          }
-          break;
-
-        case 4:
-          // Sodium (Na2O) handling
-          if (sequenceId === 1) {
-            cropOrder1Data.CropNa2O = calculation.recommendation;
-            // cropOrder1Data.ManureNa2O = calculation.applied;
-            cropOrder1Data.FertilizerNa2O = calculation.cropNeed;
-          } else if (sequenceId === 2) {
-            cropOrder2Data.CropNa2O = calculation.recommendation;
-            // cropOrder2Data.ManureNa2O = calculation.applied;
-            cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
-          }
-          break;
-
-        case 5:
-          // Sulfur (SO3) handling
-          if (sequenceId === 1) {
-            cropOrder1Data.CropSO3 = calculation.recommendation;
-            // cropOrder1Data.ManureSO3 = calculation.applied;
-            cropOrder1Data.FertilizerSO3 = calculation.cropNeed;
-          } else if (sequenceId === 2) {
-            cropOrder2Data.CropSO3 = calculation.recommendation;
-            // cropOrder2Data.ManureSO3 = calculation.applied;
-            cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
-          }
-          break;
-
-        case 6:
-          // Lime handling
-          if (sequenceId === 1) {
-            cropOrder1Data.CropLime = calculation.recommendation;
-            // cropOrder1Data.ManureLime = calculation.applied;
-            cropOrder1Data.FertilizerLime = calculation.cropNeed;
-          } else if (sequenceId === 2) {
-            cropOrder2Data.CropLime = calculation.recommendation;
-            // cropOrder2Data.ManureLime = calculation.applied;
-            cropOrder2Data.FertilizerLime = calculation.cropNeed;
-          }
-          break;
-
-        default:
-          break;
-      }
-    }
-
-    // Save or update for Crop Order 1
-    let firstCropSaveData = await this.getRecommendationByManagementPeriodID(
-      managementPeriodData.ID,
-      allRecommendations
-    );
-
-    if (firstCropSaveData) {
-      // Update existing recommendation
-      firstCropSaveData = {
-        ...firstCropSaveData,
-        ...cropOrder1Data,
-        ModifiedByID: userId,
-        ModifiedOn: new Date(),
-        Comments: `Reference Value: ${nutrientRecommendationsData.referenceValue}\nVersion: ${nutrientRecommendationsData.versionNumber}`,
-      };
-      await transactionalManager.save(RecommendationEntity, firstCropSaveData);
-    }
-
-    // Save or update for Crop Order 2
-    let secondCropSaveData = await this.getRecommendationByManagementPeriodID(
-      secondCropManagementData.ID,
-      allRecommendations
-    );
-
-    if (secondCropSaveData) {
-      // Update existing recommendation
-      secondCropSaveData = {
-        ...secondCropSaveData,
-        ...cropOrder2Data,
-        ModifiedByID: userId,
-        ModifiedOn: new Date(),
-        Comments: `Reference Value: ${nutrientRecommendationsData.referenceValue}\nVersion: ${nutrientRecommendationsData.versionNumber}`,
-      };
-      await transactionalManager.save(RecommendationEntity, secondCropSaveData);
-    }
-
-    return {
-      firstCropSaveData,
-      secondCropSaveData,
-    };
-  }
-  // async saveMultipleRecommendation(
-  //   Recommendations,
-  //   firstCropSaveData, // First crop data
-  //   secondCropSaveData, // Second crop data
-  //   transactionalManager,
-  //   nutrientRecommendationsData,
-  //   userId
-  // ) {
-  //   const RecommendationComments = [];
-
-  //   // Separate advice notes by sequenceId for first crop (sequenceId = 1) and second crop (sequenceId = 2)
-  //   const firstCropNotes = nutrientRecommendationsData?.adviceNotes?.filter(
-  //     (note) => note.sequenceId === 1
-  //   );
-  //   const secondCropNotes = nutrientRecommendationsData?.adviceNotes?.filter(
-  //     (note) => note.sequenceId === 2
-  //   );
-
-  //   // Helper function to group notes by nutrientId and concatenate them
-  //   const groupNotesByNutrientId = (notes) => {
-  //     return notes.reduce((acc, adviceNote) => {
-  //       const nutrientId = adviceNote.nutrientId;
-  //       if (!acc[nutrientId]) {
-  //         acc[nutrientId] = [];
-  //       }
-  //       acc[nutrientId].push(adviceNote.note); // Group notes by nutrientId
-  //       return acc;
-  //     }, {});
-  //   };
-
-  //   const firstCropNotesByNutrientId = groupNotesByNutrientId(firstCropNotes);
-  //   const secondCropNotesByNutrientId = groupNotesByNutrientId(secondCropNotes);
-
-  //   // Track nutrient IDs that are being processed
-  //   const nutrientIdsInData = [];
-
-  //   // Function to handle saving comments (with updates or creations)
-  //   const saveComments = async (notesByNutrientId, savedCrop) => {
-  //     const existingComments = await transactionalManager.find(
-  //       RecommendationCommentEntity,
-  //       { where: { RecommendationID: savedCrop.ID } }
-  //     );
-
-  //     for (const nutrientId in notesByNutrientId) {
-  //       const concatenatedNote = notesByNutrientId[nutrientId].join(" <br/>"); // Concatenate notes for the same nutrientId
-
-  //       // Add nutrientId to the processed list
-  //       nutrientIdsInData.push(parseInt(nutrientId));
-
-  //       // Check if the comment already exists for this nutrientId in the database
-  //       const existingComment = existingComments.find(
-  //         (comment) => comment.Nutrient === parseInt(nutrientId)
-  //       );
-
-  //       if (existingComment) {
-  //         // Update existing comment if found
-  //         existingComment.Comment = concatenatedNote;
-  //         existingComment.ModifiedOn = new Date();
-  //         existingComment.ModifiedByID = userId;
-
-  //         const updatedComment = await transactionalManager.save(
-  //           RecommendationCommentEntity,
-  //           existingComment
-  //         );
-  //         RecommendationComments.push(updatedComment);
-  //       }
-  //     }
-
-  //     // Remove comments from the database if the nutrientId is not in the new data
-  //     const commentsToDelete = existingComments?.filter(
-  //       (comment) => !nutrientIdsInData.includes(comment.Nutrient)
-  //     );
-
-  //     if (commentsToDelete.length > 0) {
-  //       await transactionalManager.remove(
-  //         RecommendationCommentEntity,
-  //         commentsToDelete
-  //       );
-  //     }
-  //   };
-
-  //   // Handle notes for the first crop (sequenceId = 1)
-  //   await saveComments(firstCropNotesByNutrientId, firstCropSaveData);
-
-  //   // Handle notes for the second crop (sequenceId = 2)
-  //   await saveComments(secondCropNotesByNutrientId, secondCropSaveData);
-
-  //   // Push the first crop recommendation and its comments to the final result array
-  //   Recommendations.push({
-  //     Recommendation: firstCropSaveData, // First crop recommendation
-  //     RecommendationComments,
-  //   });
-
-  //   // Push the second crop recommendation and its comments to the final result array
-  //   Recommendations.push({
-  //     Recommendation: secondCropSaveData, // Second crop recommendation
-  //     RecommendationComments,
-  //   });
-  // }
-
+ 
+  
   async saveMultipleRecommendation(
     Recommendations,
     savedCrop,
@@ -2572,35 +1984,47 @@ class UpdateRecommendationChanges {
   }
   async saveRecommendationForOtherCrops(
     transactionalManager,
-    OrganicManure,
+    organicManure,
+    crop,
     mannerOutputs,
     userId,
     latestSoilAnalysis,
     snsAnalysesData,
     allRecommendations
   ) {
-    // Prepare cropOrderData with the values from latestSoilAnalysis, snsAnalysesData, and mannerOutputReq
+    if(mannerOutputs.length == 0){
+      mannerOutputs = null
+    }
+    //console.log("mannerOutputs[0]?.availableS", mannerOutputs[0]?.availableS);
     let cropOrderData = {
       CropN: null,
-      ManureN: mannerOutputs[0].availableN,
+      ManureN: mannerOutputs != null ? mannerOutputs[0]?.availableN : null,
+      NBalance: null,
       FertilizerN: null,
       CropP2O5: null,
-      ManureP2O5: mannerOutputs[0].availableP || null,
+      ManureP2O5: mannerOutputs != null ? mannerOutputs[0]?.availableP : null,
+      PBalance: null,
       FertilizerP2O5: null,
-      ManureK2O: mannerOutputs[0].availableK || null,
+      CropK2O: null,
+      ManureK2O: mannerOutputs != null ? mannerOutputs[0]?.availableK : null,
+      KBalance: null,
+      FertilizerK2O: null,
       CropMgO: null,
       ManureMgO: null,
+      MgBalance: null,
       FertilizerMgO: null,
       CropSO3: null,
-      ManureSO3: mannerOutputs[0].availableS || null,
-      ManureSO3: null,
+      ManureSO3: mannerOutputs != null ? mannerOutputs[0]?.availableS : null,
+      SBalance: null,
       FertilizerSO3: null,
-      CropNa2O: null, // assuming Na2O is present in mannerOutputReq if not remove this
+      CropNa2O: null,
       ManureNa2O: null,
-      FertilizerNa2O: null, // assuming Na2O is present
+      NaBalance: null,
+      FertilizerNa2O: null,
       CropLime: null,
       ManureLime: null,
-      FertilizerLime: null, // Assuming no data for FertilizerLime
+      LimeBalance: null,
+      FertilizerLime: null,
       PH: latestSoilAnalysis?.PH?.toString() || null,
       SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
@@ -2609,10 +2033,22 @@ class UpdateRecommendationChanges {
       SIndex: null,
     };
 
-    // Check if there's an existing recommendation for the current OrganicManure.ManagementPeriodID
-    let recommendation = allRecommendations.find(
-      (rec) => rec.ManagementPeriodID === OrganicManure.ManagementPeriodID
-    );
+    let recommendation;
+    if (organicManure) {
+      recommendation = allRecommendations.find(
+        (rec) => rec.ManagementPeriodID === organicManure.ManagementPeriodID
+      );
+    }else{
+        const managementPeriod = await transactionalManager.findOne(
+          ManagementPeriodEntity,
+          { where: { CropID: crop.ID } }
+        );
+       
+        recommendation = allRecommendations.find(
+          (rec) =>
+            rec.ManagementPeriodID === managementPeriod.ID
+        );
+    }
 
     if (recommendation) {
       // If a recommendation exists, update it
@@ -2734,299 +2170,7 @@ class UpdateRecommendationChanges {
       return recommendationComments;
     }
   }
-  async saveRecommendationsForMultipleCrops(
-    transactionalManager,
-    nutrientRecommendationsData,
-    nutrientRecommendationnReqBody,
-    mannerOutputs,
-    firstCropMannerOutput,
-    secondCropMannerOutput,
-    userId,
-    cropData,
-    dataMultipleCrops,
-    latestSoilAnalysis,
-    snsAnalysesData,
-    allRecommendations
-  ) {
-    let cropOrder1Data = {
-      CropN: null,
-      ManureN: null,
-      FertilizerN: null,
-      CropP2O5: null,
-      ManureP2O5: null,
-      FertilizerP2O5: null,
-      CropK2O: null,
-      ManureK2O: null,
-      FertilizerK2O: null,
-      CropMgO: null,
-      ManureMgO: null,
-      FertilizerMgO: null,
-      CropSO3: null,
-      ManureSO3: null,
-      FertilizerSO3: null,
-      CropNa2O: null,
-      ManureNa2O: null,
-      FertilizerNa2O: null,
-      CropLime: null,
-      ManureLime: null,
-      FertilizerLime: null,
-      PH: latestSoilAnalysis?.PH?.toString() || null,
-      SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
-      PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
-      KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
-      MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex: null,
-      NIndex: null,
-    };
-
-    let cropOrder2Data = {
-      ...cropOrder1Data,
-    };
-
-    const firstCrop = dataMultipleCrops?.find(
-      (crop) => crop.CropOrder === CropOrderMapper.FIRSTCROP
-    );
-    const secondCrop = dataMultipleCrops?.find(
-      (crop) => crop.CropOrder === CropOrderMapper.SECONDCROP
-    );
-
-    const recommendationMap = allRecommendations.reduce(
-      (acc, recommendation) => {
-        acc[recommendation.ManagementPeriodID] = recommendation;
-        return acc;
-      },
-      {}
-    );
-
-    // Get ManagementPeriodID for first crop
-    let firstCropSaveData = null;
-    if (firstCrop) {
-      const firstCropManagementPeriodId = await transactionalManager.findOne(
-        ManagementPeriodEntity,
-        {
-          where: {
-            CropID: firstCrop.ID,
-          },
-        }
-      );
-
-      for (const calculation of nutrientRecommendationsData?.calculations ||
-        []) {
-        if (calculation.sequenceId === 1) {
-          switch (calculation.nutrientId) {
-            case 0:
-              cropOrder1Data.CropN = calculation.recommendation;
-              if (mannerOutputs?.data) {
-                cropOrder1Data.ManureN =
-                  mannerOutputs.data.currentCropAvailableN;
-              } else if (firstCropMannerOutput?.data) {
-                cropOrder1Data.ManureN =
-                  firstCropMannerOutput.data.currentCropAvailableN;
-              }
-
-              cropOrder1Data.FertilizerN = calculation.cropNeed;
-              cropOrder1Data.NIndex = calculation.indexpH;
-              break;
-            case 1:
-              cropOrder1Data.CropP2O5 = calculation.recommendation;
-              if (mannerOutputs?.data) {
-                cropOrder1Data.ManureP2O5 =
-                  mannerOutputs.data.cropAvailableP2O5;
-              } else if (firstCropMannerOutput?.data) {
-                cropOrder1Data.ManureP2O5 =
-                  firstCropMannerOutput.data.cropAvailableP2O5;
-              }
-              cropOrder1Data.FertilizerP2O5 = calculation.cropNeed;
-              break;
-            case 2:
-              cropOrder1Data.CropK2O = calculation.recommendation;
-              if (mannerOutputs?.data) {
-                cropOrder1Data.ManureK2O = mannerOutputs.data.cropAvailableK2O;
-              } else if (firstCropMannerOutput?.data) {
-                cropOrder1Data.ManureK2O =
-                  firstCropMannerOutput.data.cropAvailableK2O;
-              }
-              cropOrder1Data.FertilizerK2O = calculation.cropNeed;
-              break;
-            case 3:
-              cropOrder1Data.CropMgO = calculation.recommendation;
-              cropOrder1Data.ManureMgO = null;
-              cropOrder1Data.FertilizerMgO = calculation.cropNeed;
-              break;
-            case 4:
-              cropOrder1Data.CropNa2O = calculation.recommendation;
-              //cropOrder2Data.ManureNa2O = calculation.applied;
-              cropOrder1Data.FertilizerNa2O = calculation.cropNeed;
-              break;
-            case 5:
-              cropOrder1Data.CropSO3 = calculation.recommendation;
-              if (mannerOutputs?.data) {
-                cropOrder1Data.ManureSO3 = mannerOutputs.data.cropAvailableSO3;
-              } else if (firstCropMannerOutput?.data) {
-                cropOrder1Data.ManureSO3 =
-                  firstCropMannerOutput.data.cropAvailableSO3;
-              }
-              cropOrder1Data.FertilizerSO3 = calculation.cropNeed;
-              break;
-            case 6:
-              cropOrder1Data.CropLime = calculation.recommendation;
-              cropOrder1Data.ManureLime = null;
-              cropOrder1Data.FertilizerLime = calculation.cropNeed;
-              break;
-          }
-        }
-      }
-
-      firstCropSaveData = recommendationMap[firstCropManagementPeriodId.ID];
-
-      if (firstCropSaveData) {
-        firstCropSaveData = {
-          ...firstCropSaveData,
-          ...cropOrder1Data,
-          ModifiedOn: new Date(),
-          ModifiedByID: userId,
-        };
-        await transactionalManager.save(
-          RecommendationEntity,
-          firstCropSaveData
-        );
-      } else {
-        firstCropSaveData = this.RecommendationRepository.create({
-          ...cropOrder1Data,
-          ManagementPeriodID: firstCropManagementPeriodId.ID,
-          Comments:
-            "Reference Value: " +
-            nutrientRecommendationsData.referenceValue +
-            "\nVersion: " +
-            nutrientRecommendationsData.version,
-          CreatedOn: new Date(),
-          CreatedByID: userId,
-        });
-        await transactionalManager.save(
-          RecommendationEntity,
-          firstCropSaveData
-        );
-      }
-    }
-
-    // Get ManagementPeriodID for second crop if it exists
-    let secondCropSaveData = null;
-    if (secondCrop) {
-      const secondCropManagementPeriodId = await transactionalManager.findOne(
-        ManagementPeriodEntity,
-        {
-          where: {
-            CropID: secondCrop.ID,
-          },
-        }
-      );
-
-      for (const calculation of nutrientRecommendationsData?.calculations ||
-        []) {
-        if (calculation.sequenceId === 2) {
-          switch (calculation.nutrientId) {
-            case 0:
-              cropOrder2Data.CropN = calculation.recommendation;
-              if (mannerOutputs?.data) {
-                cropOrder2Data.ManureN =
-                  mannerOutputs.data.currentCropAvailableN;
-              } else if (secondCropMannerOutput?.data) {
-                cropOrder2Data.ManureN =
-                  secondCropMannerOutput.data.currentCropAvailableN;
-              }
-              cropOrder2Data.FertilizerN = calculation.cropNeed;
-              cropOrder2Data.NIndex = calculation.indexpH;
-              break;
-            case 1:
-              cropOrder2Data.CropP2O5 = calculation.recommendation;
-              if (mannerOutputs?.data) {
-                cropOrder2Data.ManureP2O5 =
-                  mannerOutputs.data.cropAvailableP2O5;
-              } else if (secondCropMannerOutput?.data) {
-                cropOrder2Data.ManureP2O5 =
-                  secondCropMannerOutput.data.cropAvailableP2O5;
-              }
-              cropOrder2Data.FertilizerP2O5 = calculation.cropNeed;
-              break;
-            case 2:
-              cropOrder2Data.CropK2O = calculation.recommendation;
-              if (mannerOutputs?.data) {
-                cropOrder2Data.ManureK2O = mannerOutputs.data.cropAvailableK2O;
-              } else if (secondCropMannerOutput?.data) {
-                cropOrder2Data.ManureK2O =
-                  secondCropMannerOutput.data.cropAvailableK2O;
-              }
-
-              cropOrder2Data.FertilizerK2O = calculation.cropNeed;
-              break;
-            case 3:
-              cropOrder2Data.CropMgO = calculation.recommendation;
-              cropOrder2Data.ManureMgO = null;
-              cropOrder2Data.FertilizerMgO = calculation.cropNeed;
-              break;
-            case 4:
-              cropOrder2Data.CropNa2O = calculation.recommendation;
-              // cropOrder2Data.ManureNa2O = calculation.applied;
-              cropOrder2Data.FertilizerNa2O = calculation.cropNeed;
-              break;
-            case 5:
-              cropOrder2Data.CropSO3 = calculation.recommendation;
-              if (mannerOutputs?.data) {
-                cropOrder2Data.ManureSO3 = mannerOutputs.data.cropAvailableSO3;
-              } else if (secondCropMannerOutput?.data) {
-                cropOrder2Data.ManureSO3 =
-                  secondCropMannerOutput.data.cropAvailableSO3;
-              }
-              cropOrder2Data.FertilizerSO3 = calculation.cropNeed;
-              break;
-            case 6:
-              cropOrder2Data.CropLime = calculation.recommendation;
-              cropOrder2Data.ManureLime = null;
-              cropOrder2Data.FertilizerLime = calculation.cropNeed;
-              break;
-          }
-        }
-      }
-
-      secondCropSaveData = recommendationMap[secondCropManagementPeriodId.ID];
-
-      if (secondCropSaveData) {
-        secondCropSaveData = {
-          ...secondCropSaveData,
-          ...cropOrder2Data,
-          ModifiedOn: new Date(),
-          ModifiedByID: userId,
-        };
-        await transactionalManager.save(
-          RecommendationEntity,
-          secondCropSaveData
-        );
-      } else {
-        secondCropSaveData = this.RecommendationRepository.create({
-          ...cropOrder2Data,
-          ManagementPeriodID: secondCropManagementPeriodId.ID,
-          Comments:
-            "Reference Value: " +
-            nutrientRecommendationsData.referenceValue +
-            "\nVersion: " +
-            nutrientRecommendationsData.version,
-          CreatedOn: new Date(),
-          CreatedByID: userId,
-        });
-        await transactionalManager.save(
-          RecommendationEntity,
-          secondCropSaveData
-        );
-      }
-    }
-
-    // Return the saved data for one or both crops based on the input
-    if (secondCrop) {
-      return { firstCropSaveData, secondCropSaveData };
-    } else {
-      return { firstCropSaveData };
-    }
-  }
+  
   async getNutrientRecommendationsData(nutrientRecommendationnReqBody) {
     return await this.rB209RecommendationService.postData(
       "Recommendation/Recommendations",
@@ -3135,11 +2279,13 @@ class UpdateRecommendationChanges {
         HttpStatus.BAD_REQUEST
       );
     }
-    const previousCrop = await this.findPreviousCrop(
-      transactionalManager,
-      field.ID,
-      crop.Year
-    );
+   
+      const previousCrop =
+        await this.CalculatePreviousCropService.findPreviousCrop(
+          field.ID,
+          crop.Year,
+          transactionalManager
+        );
 
     const arableBody = await this.buildArableBody(
       dataMultipleCrops,
@@ -3182,7 +2328,7 @@ class UpdateRecommendationChanges {
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: fieldType,
-        multipleCrops: dataMultipleCrops.length > 1 ? true : false,
+        multipleCrops: dataMultipleCrops.length > 1,
         arable: fieldType == FieldTypeMapper.GRASS ? [] : arableBody,
         grassland: {},
         grass:
@@ -3194,22 +2340,22 @@ class UpdateRecommendationChanges {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
           nvzActionProgrammeId: field.NVZProgrammeID,
-          psc: 0, //TODO:: need to find it
+          psc: 0, // need to find it
           pkBalance: {
-            phosphate: pkBalanceData != null ? pkBalanceData.PBalance : 0,
-            potash: pkBalanceData != null ? pkBalanceData.KBalance : 0,
+            phosphate: pkBalanceData == null ? 0 : pkBalanceData.PBalance,
+            potash: pkBalanceData == null ? 0 : pkBalanceData.KBalance,
           },
           soilAnalyses: [],
         },
         harvestYear: crop.Year,
         area: field.TotalArea,
         postcode: farm.ClimateDataPostCode,
-        altitude: farm.AverageAltitude,
+        altitude: field.IsAbove300SeaLevel === true ? FieldAboveOrBelowSeaLevelMapper.ABOVETHREEHUNDRED : FieldAboveOrBelowSeaLevelMapper.BELOWTHREEHUNDRED,
         rainfallAverage: farm.Rainfall,
         excessWinterRainfall:
-          excessRainfall?.WinterRainfall != null
-            ? excessRainfall.WinterRainfall
-            : 0, //TODO:: need to find it
+          excessRainfall?.WinterRainfall == null
+            ? 0
+            : excessRainfall?.WinterRainfall, // need to find it
         mannerManures: true,
         organicMaterials: [],
         mannerOutputs: [],
@@ -3228,54 +2374,7 @@ class UpdateRecommendationChanges {
       totals: true,
       referenceValue: `${field.ID}-${crop.ID}-${crop.Year}`,
     };
-
-    // // If firstCropMannerOutput and firstCropData are available, add them to mannerOutputs array
-    // if (firstCropMannerOutput?.data && firstCropData) {
-    //   nutrientRecommendationnReqBody.field.mannerOutputs.push({
-    //     id: firstCropData.CropOrder,
-    //     totalN: firstCropMannerOutput.data.totalN,
-    //     availableN: firstCropMannerOutput.data.currentCropAvailableN,
-    //     totalP: firstCropMannerOutput.data.totalP2O5,
-    //     availableP: firstCropMannerOutput.data.cropAvailableP2O5,
-    //     totalK: firstCropMannerOutput.data.totalK2O,
-    //     availableK: firstCropMannerOutput.data.cropAvailableK2O,
-    //     totalS: firstCropMannerOutput.data.totalSO3,
-    //     availableS: firstCropMannerOutput.data.cropAvailableSO3,
-    //     totalM: firstCropMannerOutput.data.totalMgO,
-    //   });
-    // }
-
-    // if (secondCropMannerOutput?.data) {
-    //   // Add current crop mannerOutputs or OrganicManure data
-    //   nutrientRecommendationnReqBody.field.mannerOutputs.push({
-    //     id: firstCropMannerOutput?.data ? 2 : 1,
-    //     totalN: secondCropMannerOutput?.data.totalN,
-    //     availableN: secondCropMannerOutput?.data.currentCropAvailableN,
-    //     totalP: secondCropMannerOutput?.data.totalP2O5,
-    //     availableP: secondCropMannerOutput?.data.cropAvailableP2O5,
-    //     totalK: secondCropMannerOutput?.data.totalK2O,
-    //     availableK: secondCropMannerOutput?.data.cropAvailableK2O,
-    //     totalS: secondCropMannerOutput?.data.totalSO3,
-    //     availableS: secondCropMannerOutput?.data.cropAvailableSO3,
-    //     totalM: secondCropMannerOutput?.data.totalMgO,
-    //   });
-    // } else if (mannerOutputs?.data) {
-    //   // Add current crop mannerOutputs or OrganicManure data
-    //   nutrientRecommendationnReqBody.field.mannerOutputs.push({
-    //     id: firstCropData ? 2 : crop.CropOrder,
-    //     totalN: mannerOutputs?.data?.totalN,
-    //     availableN: mannerOutputs?.data?.currentCropAvailableN,
-    //     totalP: mannerOutputs?.data?.totalP2O5,
-    //     availableP: mannerOutputs?.data?.cropAvailableP2O5,
-    //     totalK: mannerOutputs?.data?.totalK2O,
-    //     availableK: mannerOutputs?.data?.cropAvailableK2O,
-    //     totalS: mannerOutputs?.data?.totalSO3,
-    //     availableS: mannerOutputs?.data?.cropAvailableSO3,
-    //     totalM: mannerOutputs?.data?.totalMgO,
-    //   });
-    // }
     nutrientRecommendationnReqBody.field.mannerOutputs = mannerOutputs;
-
     // Add SoilAnalyses data
     if (soilAnalysis) {
       soilAnalysis.forEach((soilAnalysis) => {
@@ -3287,11 +2386,6 @@ class UpdateRecommendationChanges {
           ...(soilAnalysis.SulphurDeficient != null && {
             sulphurDeficient: soilAnalysis.SulphurDeficient,
           }),
-          ...(soilAnalysis.SoilNitrogenSupplyIndex != null && {
-            snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
-            snsMethodologyId: 4,
-          }),
-
           ...(soilAnalysis.PhosphorusIndex != null && {
             pIndexId: soilAnalysis.PhosphorusIndex,
             pMethodologyId: soilAnalysis.PhosphorusMethodologyID,
@@ -3411,6 +2505,15 @@ class UpdateRecommendationChanges {
         Year: currentYear - 1,
       },
     });
+     
+    let prevCrop = null;
+     if (previousCrops.length == 0) {
+       // Check PreviousCrop
+       prevCrop = await transactionalManager.findOne(PreviousCroppingEntity, {
+         where: { FieldID: fieldID, HarvestYear: currentYear - 1 },
+       });
+       return prevCrop;
+     }
 
     // If more than one crop is found, filter for CropOrder = 2
     if (previousCrops.length > 1) {
@@ -3532,11 +2635,13 @@ class UpdateRecommendationChanges {
         HttpStatus.BAD_REQUEST
       );
     }
-    const previousCrop = await this.findPreviousCrop(
-      transactionalManager,
-      field.ID,
-      crop.Year
-    );
+  
+      const previousCrop =
+        await this.CalculatePreviousCropService.findPreviousCrop(
+          field.ID,
+          crop.Year,
+          transactionalManager
+        );
 
     const excessRainfall = await this.getWinterExcessRainfall(
       farm.ID,
@@ -3586,22 +2691,22 @@ class UpdateRecommendationChanges {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
           nvzActionProgrammeId: field.NVZProgrammeID,
-          psc: 0, //TODO:: need to find it
+          psc: 0, //need to find it
           pkBalance: {
-            phosphate: pkBalanceData != null ? pkBalanceData.PBalance : 0,
-            potash: pkBalanceData != null ? pkBalanceData.KBalance : 0,
+            phosphate: pkBalanceData == null ? 0 : pkBalanceData.PBalance,
+            potash: pkBalanceData == null ? 0 : pkBalanceData.KBalance,
           },
           soilAnalyses: [],
         },
         harvestYear: crop.Year,
         area: field.TotalArea,
         postcode: farm.ClimateDataPostCode,
-        altitude: farm.AverageAltitude,
+        altitude: field.IsAbove300SeaLevel === true ? FieldAboveOrBelowSeaLevelMapper.ABOVETHREEHUNDRED : FieldAboveOrBelowSeaLevelMapper.BELOWTHREEHUNDRED,
         rainfallAverage: farm.Rainfall,
         excessWinterRainfall:
-          excessRainfall?.WinterRainfall != null
-            ? excessRainfall.WinterRainfall
-            : 0, //TODO:: need to find it
+          excessRainfall?.WinterRainfall == null
+            ? 0
+            : excessRainfall.WinterRainfall, //need to find it
         organicMaterials: [],
         previousCropping: {},
         countryId: rb209CountryId,
@@ -3628,10 +2733,6 @@ class UpdateRecommendationChanges {
           ...(soilAnalysis.PH != null && { soilpH: soilAnalysis.PH }),
           ...(soilAnalysis.SulphurDeficient != null && {
             sulphurDeficient: soilAnalysis.SulphurDeficient,
-          }),
-          ...(soilAnalysis.SoilNitrogenSupplyIndex != null && {
-            snsIndexId: soilAnalysis.SoilNitrogenSupplyIndex,
-            snsMethodologyId: 4,
           }),
           ...(soilAnalysis.PhosphorusIndex != null && {
             pIndexId: soilAnalysis.PhosphorusIndex,
@@ -3712,7 +2813,7 @@ class UpdateRecommendationChanges {
             ? null
             : cropType?.cropGroupId !== undefined &&
               cropType?.cropGroupId !== null
-            ? cropType.cropGroupId
+            ? cropType?.cropGroupId
             : null,
         previousCropTypeId:
           previousCrop?.CropTypeID == CropTypeMapper.GRASS

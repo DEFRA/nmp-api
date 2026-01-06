@@ -70,9 +70,10 @@ class FieldController {
 
   async checkFarmFieldExists() {
     const { farmId } = this.#request.params;
-    const { name } = this.#request.query;
+      const {name}=this.#request.query;
+      const {fieldId}=this.#request.query;
     try {
-      const exists = await this.#fieldService.checkFieldExists(farmId, name);
+      const exists = await this.#fieldService.checkFieldExists(farmId, name,fieldId);
 
       return this.#h.response({ exists });
     } catch (error) {
@@ -83,10 +84,10 @@ class FieldController {
   async updateField() {
     const { fieldId } = this.#request.params;
     const userId = this.#request.userId;
-    const { Field } = this.#request.payload;
+    const payload = this.#request.payload;
     try {
       const updatedField = await this.#fieldService.updateField(
-        Field,
+        payload,
         userId,
         fieldId,
         this.#request
@@ -143,7 +144,7 @@ class FieldController {
 
   async getFieldRelatedData() {
     const { fieldId } = this.#request.params;
-     const { year } = this.#request.query;
+    const { year } = this.#request.query;
 
     try {
       // Handle multiple FieldIDs, split by comma if needed (if multiple IDs are passed)
@@ -162,6 +163,7 @@ class FieldController {
       return this.#h.response({ error: error.message }).code(400);
     }
   }
+
 }
 
 module.exports = { FieldController };

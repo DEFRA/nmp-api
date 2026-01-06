@@ -33,7 +33,6 @@ const FarmDto = Joi.object({
   CreatedByID: Joi.number().allow(null),
   ModifiedOn: Joi.date().allow(null),
   ModifiedByID: Joi.date().allow(null),
-  LastHarvestYear: Joi.number().required().allow(null),
 });
 const FarmUpdateDto = FarmDto.keys({
     ID: Joi.number().required()  

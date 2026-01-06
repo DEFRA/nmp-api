@@ -14,8 +14,7 @@ module.exports = [
     path: "/organic-manures/total-nitrogen/{fieldId}",
     options: {
       tags: ["api", "Organic Manure"],
-      description:
-        "Get Total Nitrogen by fieldID and Application Date Range",
+      description: "Get Total Nitrogen by fieldID and Application Date Range",
       validate: {
         params: Joi.object({
           fieldId: Joi.number().integer().required(),
@@ -155,6 +154,7 @@ module.exports = [
           dateFrom: Joi.date().iso().required(),
           dateTo: Joi.date().iso().required(),
           confirm: Joi.boolean(),
+          organicManureID:Joi.number().integer().allow(null).optional()
         }),
         failAction: (request, h, err) => {
           return h
@@ -300,32 +300,36 @@ module.exports = [
     },
   },
   {
-      method: "GET",
-      path: "/organic-manure/total-nitrogen-by/{managementPeriodID}",
-      handler: async (request, h) => {
-        return getController(request, h).getTotalAvailableNitrogenByManagementPeriodID();
-      },
-      options: {
-        tags: ["api", "Organic Manure"],
-        description: "Get Organic Manure Total Available Nitrogen by managementPeriodID",
-        validate: {
-          params: Joi.object({
-            managementPeriodID: Joi.number().required(),
-          }),
-          failAction: (request, h, err) => {
-            return h
-              .response(
-                formatErrorResponse({
-                  source: {
-                    error: err,
-                  },
-                  request,
-                })
-              )
-              .code(400)
-              .takeover();
-          },
+    method: "GET",
+    path: "/organic-manure/total-nitrogen-by/{managementPeriodID}",
+    handler: async (request, h) => {
+      return getController(
+        request,
+        h
+      ).getTotalAvailableNitrogenByManagementPeriodID();
+    },
+    options: {
+      tags: ["api", "Organic Manure"],
+      description:
+        "Get Organic Manure Total Available Nitrogen by managementPeriodID",
+      validate: {
+        params: Joi.object({
+          managementPeriodID: Joi.number().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
         },
       },
-    }
+    },
+  },
 ];
