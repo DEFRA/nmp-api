@@ -130,7 +130,7 @@ class SoilAnalysesService extends BaseService {
                 );
               } else {
                 console.log(
-                  "updateRecommendationAndOrganicManure result:",
+                  "result:",
                   res
                 );
               }
