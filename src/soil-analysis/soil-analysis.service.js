@@ -34,7 +34,7 @@ class SoilAnalysesService extends BaseService {
           FieldID: soilAnalysis.FieldID,
         },
       });
-      console.log("pkBalanceEntry", pkBalanceEntry);
+     
       let newPKBalanceData = null;
 
       if (
@@ -49,6 +49,7 @@ class SoilAnalysesService extends BaseService {
           newPKBalanceData = await transactionalManager.save(PKBalanceEntity, {
             ...updatedPKBalanceData,
             CreatedByID: userId,
+            CreatedOn: new Date()
           });
         }
       } else {
@@ -96,27 +97,26 @@ class SoilAnalysesService extends BaseService {
             );
           }
         }
+      }
+        await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+          soilAnalysis.FieldID,
+          soilAnalysis.Year,
+          request,
+          userId,
+          transactionalManager
+        );
 
-         await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
-           soilAnalysis.FieldID,
-           soilAnalysis.Year,
-           request,
-           userId,
-           transactionalManager
-         );
-
-         const nextAvailableCrop = await transactionalManager.findOne(
-           CropEntity,
-           {
-             where: {
-               FieldID: soilAnalysis.FieldID,
-               Year: MoreThan(soilAnalysis.Year),
-             },
-             order: { Year: "ASC" },
-           }
-         );
+        const nextAvailableCrop = await transactionalManager.findOne(
+          CropEntity,
+          {
+            where: {
+              FieldID: soilAnalysis.FieldID,
+              Year: MoreThan(soilAnalysis.Year),
+            },
+            order: { Year: "ASC" },
+          }
+        );
         if (nextAvailableCrop) {
-
           this.UpdateRecommendation.updateRecommendationsForField(
             soilAnalysis.FieldID,
             nextAvailableCrop.Year,
@@ -129,7 +129,10 @@ class SoilAnalysesService extends BaseService {
                   "updateRecommendationAndOrganicManure returned undefined"
                 );
               } else {
-                console.log("updateRecommendationAndOrganicManure result:", res);
+                console.log(
+                  "updateRecommendationAndOrganicManure result:",
+                  res
+                );
               }
             })
             .catch((error) => {
@@ -139,7 +142,6 @@ class SoilAnalysesService extends BaseService {
               );
             });
         }
-      }
 
       return { soilAnalysis, PKBalance };
       // return soilAnalysis;
