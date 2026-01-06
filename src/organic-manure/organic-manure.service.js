@@ -627,7 +627,7 @@ class OrganicManureService extends BaseService {
             soilAnalysisDate: soilAnalysis.Date,
           }),
           ...(soilAnalysis.PH != null && { soilpH: soilAnalysis.PH }),
-          ...(soilAnalysis.SulphurDeficient && {
+          ...(soilAnalysis.SulphurDeficient !=null && {
             sulphurDeficient: soilAnalysis.SulphurDeficient,
           }),
           ...(soilAnalysis.PhosphorusIndex != null && {
@@ -758,6 +758,7 @@ class OrganicManureService extends BaseService {
 
     // Define the fields we want the latest values for
     const fieldsToTrack = [
+      "SulphurDeficient",
       "PH",
       "SoilNitrogenSupplyIndex",
       "PhosphorusIndex",
