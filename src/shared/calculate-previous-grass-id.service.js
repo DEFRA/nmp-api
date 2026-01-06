@@ -425,14 +425,19 @@ class CalculateGrassHistoryAndPreviousGrass {
     let organicNextDefoliationN = 0;
     let organicPrevYearNextYearN = 0;
     let fertiliserN = 0;
-    let isHistoryCrop
-    isHistoryCrop = await transactionalManager.findOne(
-      PreviousCroppingEntity,
-      {where : {ID:crop.ID}}
-    )
+    const isHistoryCrop = await transactionalManager
+      .createQueryBuilder(PreviousCroppingEntity, "pc")
+      .leftJoin(
+        SoilNitrogenSupplyItemsEntity,
+        "sns",
+        "sns.ID = pc.SoilNitrogenSupplyItemID"
+      )
+      .select(["sns.SoilNitrogenSupplyId AS SoilNitrogenSupplyId"])
+      .where("pc.ID = :id", { id: crop.ID })
+      .getRawOne();
     let nitrogenUse = null
     if(isHistoryCrop){
-      let soilNitrogenSupplyItemID = isHistoryCrop.SoilNitrogenSupplyItemID 
+      let soilNitrogenSupplyItemID = isHistoryCrop.SoilNitrogenSupplyId; 
       if(soilNitrogenSupplyItemID){
     
        if( soilNitrogenSupplyItemID == SoilNitrogenMapper.LOWN ){
