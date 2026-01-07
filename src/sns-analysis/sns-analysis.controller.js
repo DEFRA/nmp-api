@@ -1,4 +1,5 @@
 const { SnsAnalysisService } = require("./sns-analysis.service");
+const boom = require("@hapi/boom");
 
 class SNSAnalysesController {
   #request;
