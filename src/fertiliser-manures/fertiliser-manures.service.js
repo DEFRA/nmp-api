@@ -27,6 +27,7 @@ const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-othe
 const { WarningMessagesEntity } = require("../db/entity/warning-message.entity");
 const { CreateOrUpdateWarningMessage } = require("../shared/create-update-warning-messages.service");
 const { WarningCodesMapper } = require("../constants/warning-codes-mapper");
+const { ManureTypeMapper } = require("../constants/manure-type-mapper");
 
 class FertiliserManuresService extends BaseService {
   constructor() {
@@ -144,7 +145,8 @@ class FertiliserManuresService extends BaseService {
       .andWhere(
         "organicManures.ManureTypeID NOT IN (:...excludedManureTypes)",
         {
-          excludedManureTypes: [40, 33, 34],
+          excludedManureTypes: [ManureTypeMapper.StrawMulch, 
+            ManureTypeMapper.PaperCrumbleBiologicallyTreated, ManureTypeMapper.PaperCrumbleChemicallyPhysciallyTreated],
         }
       ); //exclude StrawMulch, PaperCrumbleChemicallyPhysciallyTreated,PaperCrumbleBiologicallyTreated
     // const organicManuresResult = await this.repository

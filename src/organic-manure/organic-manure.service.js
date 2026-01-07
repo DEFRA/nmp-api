@@ -65,7 +65,7 @@ const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entit
 const { CalculatePreviousCropService } = require("../shared/previous-year-crop-service");
 const { FieldAboveOrBelowSeaLevelMapper } = require("../constants/field-is-above-sea-level");
 const { StaticStrings } = require("../shared/static.string");
-
+const { ManureTypeMapper } = require("../constants/manure-type-mapper");
 class OrganicManureService extends BaseService {
   constructor() {
     super(OrganicManureEntity);
@@ -2831,7 +2831,8 @@ class OrganicManureService extends BaseService {
       .andWhere(
         "organicManures.ManureTypeID NOT IN (:...excludedManureTypes)",
         {
-          excludedManureTypes: [40, 33, 34],
+          excludedManureTypes: [ManureTypeMapper.StrawMulch, 
+            ManureTypeMapper.PaperCrumbleBiologicallyTreated, ManureTypeMapper.PaperCrumbleChemicallyPhysciallyTreated],
         }
       ); //exclude StrawMulch, PaperCrumbleChemicallyPhysciallyTreated,PaperCrumbleBiologicallyTreated
     const organicResult = await organicManuresResult.getRawOne();
