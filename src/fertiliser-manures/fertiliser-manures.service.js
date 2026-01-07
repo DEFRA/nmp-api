@@ -140,8 +140,13 @@ class FertiliserManuresService extends BaseService {
       .where("organicManures.ManagementPeriodID = :managementPeriodID", {
         managementPeriodID,
       })
-      .andWhere("organicManures.Confirm = :confirm", { confirm });
-
+      .andWhere("organicManures.Confirm = :confirm", { confirm })
+      .andWhere(
+        "organicManures.ManureTypeID NOT IN (:...excludedManureTypes)",
+        {
+          excludedManureTypes: [40, 33, 34],
+        }
+      ); //exclude StrawMulch, PaperCrumbleChemicallyPhysciallyTreated,PaperCrumbleBiologicallyTreated
     // const organicManuresResult = await this.repository
     //   .createQueryBuilder("O") // O = OrganicManures
     //   .select("SUM(O.AvailableNForNMax)", "totalN")
