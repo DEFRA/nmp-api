@@ -916,113 +916,6 @@ class CropService extends BaseService {
             cropEntry.ManagementPeriods
           );
 
-        // // 1. Fetch all existing ManagementPeriods for this crop
-        // const existingPeriods = await transactionalManager.find(
-        //   ManagementPeriodEntity,
-        //   {
-        //     where: { CropID: ID },
-        //   }
-        // );
-        // const existingPeriodIDs = new Set(existingPeriods.map((p) => p.ID));
-
-        // // 2. Extract IDs from request
-        // const requestPeriodIDs = new Set(
-        //   (cropEntry.ManagementPeriods || []).map((p) => p.ID).filter(Boolean)
-        // );
-
-        // // 3. Prepare result array
-        // const updatedManagementPeriods = [];
-
-        // // 4. Handle insert/update
-        // for (const period of cropEntry.ManagementPeriods || []) {
-        //   const {
-        //     ID: periodID,
-        //     CreatedByID,
-        //     CreatedOn,
-        //     ...periodDataToUpdate
-        //   } = period;
-
-        //   if (periodID && existingPeriodIDs.has(periodID)) {
-        //     // Update existing
-        //     await transactionalManager.update(
-        //       ManagementPeriodEntity,
-        //       periodID,
-        //       {
-        //         ...periodDataToUpdate,
-        //         ModifiedByID: userId,
-        //         ModifiedOn: new Date(),
-        //       }
-        //     );
-
-        //     const updatedPeriod = await transactionalManager.findOne(
-        //       ManagementPeriodEntity,
-        //       { where: { ID: periodID } }
-        //     );
-
-        //     if (updatedPeriod) {
-        //       updatedManagementPeriods.push(updatedPeriod);
-        //     }
-        //   } else {
-        //     const newPeriod = await transactionalManager.save(
-        //       ManagementPeriodEntity,
-        //       {
-        //         ...periodDataToUpdate,
-        //         CropID: ID,
-        //         CreatedByID: userId,
-        //         CreatedOn: new Date(),
-        //         ModifiedByID: userId,
-        //         ModifiedOn: new Date(),
-        //       }
-        //     );
-
-        //     if (newPeriod) {
-        //       updatedManagementPeriods.push(newPeriod);
-        //       requestPeriodIDs.add(newPeriod.ID); // important for later delete filtering
-        //     }
-        //   }
-        // }
-
-        // // 5. Delete missing periods and their associated records
-        // const periodIDsToDelete = [...existingPeriodIDs].filter(
-        //   (existingID) => !requestPeriodIDs.has(existingID)
-        // );
-
-        // for (const oldID of periodIDsToDelete) {
-        //   // 1. Delete OrganicManure entries
-        //   await transactionalManager.delete(OrganicManureEntity, {
-        //     ManagementPeriodID: oldID,
-        //   });
-
-        //   // 2. Delete FertiliserManure entries
-        //   await transactionalManager.delete(FertiliserManuresEntity, {
-        //     ManagementPeriodID: oldID,
-        //   });
-
-        //   // 3. Find and delete Recommendations and their Comments
-        //   const recommendations = await transactionalManager.find(
-        //     RecommendationEntity,
-        //     {
-        //       where: { ManagementPeriodID: oldID },
-        //     }
-        //   );
-
-        //   for (const recommendation of recommendations) {
-        //     // 3a. Delete comments tied to this recommendation
-        //     await transactionalManager.delete(RecommendationCommentEntity, {
-        //       RecommendationID: recommendation.ID,
-        //     });
-
-        //     // 3b. Delete the recommendation itself
-        //     await transactionalManager.delete(RecommendationEntity, {
-        //       ID: recommendation.ID,
-        //     });
-        //   }
-
-        //   // 4. Finally, delete the ManagementPeriod itself
-        //   await transactionalManager.delete(ManagementPeriodEntity, {
-        //     ID: oldID,
-        //   });
-        // }
 
         // Recommendation update
         await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
@@ -1770,7 +1663,7 @@ class CropService extends BaseService {
             soilAnalysisDate: soilAnalysis.Date,
           }),
           ...(soilAnalysis.PH != null && { soilpH: soilAnalysis.PH }),
-          ...(soilAnalysis.SulphurDeficient && {
+          ...(soilAnalysis.SulphurDeficient !=null && {
             sulphurDeficient: soilAnalysis.SulphurDeficient,
           }),
           ...(soilAnalysis.PhosphorusIndex != null && {
@@ -2456,13 +2349,7 @@ class CropService extends BaseService {
           rb209CountryData.RB209CountryID,
           transactionalManager
         );
-        // const snsAnalysisData = await transactionalManager.findOne(
-        //   SnsAnalysesEntity,
-        //   {
-        //     where: { CropID: crop.ID },
-        //   }
-        // );
-        //const snsAnalysesData = await this.getSnsAnalysesData(crop?.ID);
+ 
         const snsAnalysisData =
           await this.CalculateCropsSnsAnalysis.getCropsSnsAnalyses(
             transactionalManager,

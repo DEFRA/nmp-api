@@ -1,6 +1,8 @@
 const { AppDataSource } = require("../db/data-source");
 const { MoreThan } = require("typeorm");
 const { CropEntity } = require("../db/entity/crop.entity");
+const boom = require("@hapi/boom");
+
 const {
   FarmManureTypeEntity,
 } = require("../db/entity/farm-manure-type.entity");
@@ -62,6 +64,7 @@ const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entit
 
 const { CalculatePreviousCropService } = require("../shared/previous-year-crop-service");
 const { FieldAboveOrBelowSeaLevelMapper } = require("../constants/field-is-above-sea-level");
+const { StaticStrings } = require("../shared/static.string");
 
 class OrganicManureService extends BaseService {
   constructor() {
@@ -263,9 +266,9 @@ class OrganicManureService extends BaseService {
       );
 
       if (!currentCropType || currentCropType.cropGroupId == null) {
-        throw new HttpException(
+        throw new boom.HttpException(
           `Invalid CropTypeId for crop having field name ${field.Name}`,
-          HttpStatus.BAD_REQUEST
+          StaticStrings.HTTP_STATUS_BAD_REQUEST
         );
       }
       let expectedYield = crop.Yield,
@@ -627,7 +630,7 @@ class OrganicManureService extends BaseService {
             soilAnalysisDate: soilAnalysis.Date,
           }),
           ...(soilAnalysis.PH != null && { soilpH: soilAnalysis.PH }),
-          ...(soilAnalysis.SulphurDeficient && {
+          ...(soilAnalysis.SulphurDeficient !=null && {
             sulphurDeficient: soilAnalysis.SulphurDeficient,
           }),
           ...(soilAnalysis.PhosphorusIndex != null && {
@@ -758,6 +761,7 @@ class OrganicManureService extends BaseService {
 
     // Define the fields we want the latest values for
     const fieldsToTrack = [
+      "SulphurDeficient",
       "PH",
       "SoilNitrogenSupplyIndex",
       "PhosphorusIndex",
@@ -1907,11 +1911,12 @@ class OrganicManureService extends BaseService {
           rb209CountryData.RB209CountryID
         );
         Errors.push(...soilAnalysisErrors);
-        if (Errors.length > 0)
-          throw new HttpException(
+        if (Errors.length > 0){
+          throw new boom.HttpException(
             JSON.stringify(Errors),
-            HttpStatus.BAD_REQUEST
+            StaticStrings.HTTP_STATUS_BAD_REQUEST
           );
+        }
 
         let snsAnalysesData = null;
 

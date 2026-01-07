@@ -484,7 +484,7 @@ class PlanService extends BaseService {
             soilAnalysisDate: soilAnalysis.Date,
           }),
           ...(soilAnalysis.PH != null && { soilpH: soilAnalysis.PH }),
-          ...(soilAnalysis.SulphurDeficient && {
+          ...(soilAnalysis.SulphurDeficient !=null && {
             sulphurDeficient: soilAnalysis.SulphurDeficient,
           }),
           ...(soilAnalysis.PhosphorusIndex != null && {
@@ -669,6 +669,7 @@ class PlanService extends BaseService {
 
     // Define the fields we want the latest values for
     const fieldsToTrack = [
+      "SulphurDeficient",
       "PH",
       "SoilNitrogenSupplyIndex",
       "PhosphorusIndex",

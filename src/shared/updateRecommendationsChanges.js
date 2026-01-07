@@ -52,6 +52,7 @@ const { CalculatePKBalanceOther } = require("./calculate-pk-balance-other");
 const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
 const { CalculatePreviousCropService } = require("./previous-year-crop-service");
 const { FieldAboveOrBelowSeaLevelMapper } = require("../constants/field-is-above-sea-level");
+const { StaticStrings } = require("./static.string");
 
 
 class UpdateRecommendationChanges {
@@ -707,15 +708,6 @@ class UpdateRecommendationChanges {
           },
         }
       );
-
-      const cropTypeLinkingData =
-        await this.CropTypeLinkingRepository.findOneBy({
-          CropTypeID: cropData.CropTypeID,
-        });
-      const soilTypeTextureData =
-        await this.soilTypeTextureRepository.findOneBy({
-          SoilTypeID: fieldData.SoilTypeID,
-        });
       const Errors = [];
       const {
         latestSoilAnalysis,
@@ -731,7 +723,10 @@ class UpdateRecommendationChanges {
       Errors.push(...soilAnalysisErrors);
 
       if (Errors.length > 0) {
-        throw new HttpException(JSON.stringify(Errors), HttpStatus.BAD_REQUEST);
+        throw new boom.HttpException(
+          JSON.stringify(Errors),
+          StaticStrings.HTTP_STATUS_BAD_REQUEST
+        );
       }
       const pKBalanceAllData = await transactionalManager.find(
         PKBalanceEntity,
@@ -2202,9 +2197,9 @@ class UpdateRecommendationChanges {
       );
 
       if (!currentCropType || currentCropType.cropGroupId == null) {
-        throw new HttpException(
+        throw new boom.HttpException(
           `Invalid CropTypeId for crop having field name ${field.Name}`,
-          HttpStatus.BAD_REQUEST
+          StaticStrings.HTTP_STATUS_BAD_REQUEST
         );
       }
       let expectedYield = crop.Yield,
@@ -2274,9 +2269,9 @@ class UpdateRecommendationChanges {
       Array.isArray(dataMultipleCrops) && dataMultipleCrops.length > 1;
 
     if (!cropType || cropType.cropGroupId === null) {
-      throw new HttpException(
+      throw new boom.HttpException(
         `Invalid CropTypeId for crop having field name ${field.Name}`,
-        HttpStatus.BAD_REQUEST
+        StaticStrings.HTTP_STATUS_BAD_REQUEST
       );
     }
    
@@ -2632,7 +2627,7 @@ class UpdateRecommendationChanges {
     if (!cropType || cropType.cropGroupId === null) {
       throw boom.HttpException(
         `Invalid CropTypeId for crop having field name ${field.Name}`,
-        HttpStatus.BAD_REQUEST
+        StaticStrings.HTTP_STATUS_BAD_REQUEST
       );
     }
   
