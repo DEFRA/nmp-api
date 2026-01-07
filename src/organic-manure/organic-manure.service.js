@@ -630,7 +630,7 @@ class OrganicManureService extends BaseService {
             soilAnalysisDate: soilAnalysis.Date,
           }),
           ...(soilAnalysis.PH != null && { soilpH: soilAnalysis.PH }),
-          ...(soilAnalysis.SulphurDeficient !=null && {
+          ...(soilAnalysis.SulphurDeficient != null && {
             sulphurDeficient: soilAnalysis.SulphurDeficient,
           }),
           ...(soilAnalysis.PhosphorusIndex != null && {
@@ -1911,7 +1911,7 @@ class OrganicManureService extends BaseService {
           rb209CountryData.RB209CountryID
         );
         Errors.push(...soilAnalysisErrors);
-        if (Errors.length > 0){
+        if (Errors.length > 0) {
           throw new boom.HttpException(
             JSON.stringify(Errors),
             StaticStrings.HTTP_STATUS_BAD_REQUEST
@@ -2376,6 +2376,94 @@ class OrganicManureService extends BaseService {
     });
   }
 
+  async checkManureExists(
+    managementPeriodID,
+    dateFrom,
+    dateTo,
+    confirm,
+    organicManureID,
+    request
+  ) {
+    try {
+      // Fetch all manure types from the API
+      const allManureTypes = await this.MannerManureTypesService.getData(
+        "/manure-types",
+        request
+      );
+
+      if (!allManureTypes?.data || allManureTypes.data.length === 0) {
+        // Log a error if no manure types are returned
+        console.error("No manure types returned from the Manner API");
+      }
+
+      // Filter manure types: IsLiquid is true OR ManureTypeID = 8 (for Poultry manure)
+      const ManureTypes = Object.freeze({
+        PoultryManure: 8,
+        PigSlurry: 12,
+        SeparatedCattleSlurryStrainerBox: 13,
+        SeparatedCattleSlurryWeepingWall: 14,
+        SeparatedCattleSlurryMechanicalSeparator: 15,
+        SeparatedPigSlurryLiquidPortion: 18,
+        CattleSlurry: 45,
+      });
+
+      const liquidManureTypes = allManureTypes?.data?.filter((manure) =>
+        Object.values(ManureTypes).includes(manure.id)
+      );
+
+      if (!liquidManureTypes || liquidManureTypes.length === 0) {
+        // Log a warning if no liquid or poultry manure types are found
+        console.warn("No valid liquid or poultry manure types found");
+      }
+
+      // Extract manureTypeIds from the filtered result
+      const manureTypeIds = liquidManureTypes.map((manure) => manure.id);
+
+      // If no valid manureTypeIds, return false
+      if (!manureTypeIds || manureTypeIds.length === 0) {
+        return false; // No valid manure types found
+      }
+
+      // Query OrganicManures for these manureTypeIds within the date range
+      const query = this.repository
+        .createQueryBuilder("organicManure")
+        .where("organicManure.ManureTypeID IN (:...manureTypeIds)", {
+          manureTypeIds,
+        })
+        .andWhere(
+          "organicManure.ApplicationDate BETWEEN :dateFrom AND :dateTo",
+          {
+            dateFrom,
+            dateTo,
+          }
+        )
+        .andWhere("organicManure.ManagementPeriodID = :managementPeriodID", {
+          managementPeriodID,
+        })
+        .andWhere("organicManure.Confirm = :confirm", { confirm });
+
+      if (organicManureID != null) {
+        query.andWhere("organicManure.ID != :organicManureID", {
+          organicManureID,
+        });
+      }
+
+      // Execute query
+      const manureTypeExists = await query.getCount();
+
+      // Return true if any matching records are found
+      return manureTypeExists > 0;
+    } catch (error) {
+      // Log the error for debugging purposes
+      console.error("Error checking for manure existence:", error.message);
+
+      // You can choose to throw the error or handle it silently
+      throw new Error(
+        "Failed to check manure existence due to an internal error"
+      );
+    }
+  }
+
   async getP205AndK20fromfertiliser(managementPeriodId) {
     let sumOfP205 = 0;
     let sumOfK20 = 0;
@@ -2831,8 +2919,11 @@ class OrganicManureService extends BaseService {
       .andWhere(
         "organicManures.ManureTypeID NOT IN (:...excludedManureTypes)",
         {
-          excludedManureTypes: [ManureTypeMapper.StrawMulch, 
-            ManureTypeMapper.PaperCrumbleBiologicallyTreated, ManureTypeMapper.PaperCrumbleChemicallyPhysciallyTreated],
+          excludedManureTypes: [
+            ManureTypeMapper.StrawMulch,
+            ManureTypeMapper.PaperCrumbleBiologicallyTreated,
+            ManureTypeMapper.PaperCrumbleChemicallyPhysciallyTreated,
+          ],
         }
       ); //exclude StrawMulch, PaperCrumbleChemicallyPhysciallyTreated,PaperCrumbleBiologicallyTreated
     const organicResult = await organicManuresResult.getRawOne();
