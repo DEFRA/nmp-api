@@ -821,15 +821,7 @@ async checkFieldExists(farmId, name, id = null) {
         // if (Errors.length > 0) {
         //   throw new Error(JSON.stringify(Errors));
         // }
-        const soilAnalysisRecords = await this.soilAnalysisRepository.find({
-          where: {
-            FieldID: field.ID,
-            Year: year,
-          },
-          order: { Date: "DESC" }, // Order by date, most recent first
-        });
-
-        const soilAnalysis = soilAnalysisRecords.length > 0  ? soilAnalysisRecords : null;
+        let soilAnalysis=null;        
         if (crops != null) {
           for (const crop of crops) {
             if (crop.CropTypeID == 140) {
@@ -874,6 +866,7 @@ async checkFieldExists(farmId, name, id = null) {
 
         const cropsWithManagement = [];
         for (const crop of crops) {
+          let isSoilAnalysisAdded=null;
           try {
             // Fetch SNS analysis
             const snsAnalysis = await this.snsAnalysisRepository.findOne({
@@ -937,6 +930,35 @@ async checkFieldExists(farmId, name, id = null) {
                   where: { ManagementPeriodID: managementPeriod.ID },
                 });
 
+                if(isSoilAnalysisAdded==null)
+                {
+                const currentYear = year;
+                const fiveYearsAgo = year - 5;
+                const soilAnalysisRecordsList = await this.soilAnalysisRepository.find({
+                where: {
+                  FieldID: field.ID,
+                  Year: Between(fiveYearsAgo, currentYear),
+                },
+                order: { Date: "DESC" }, // Most recent first
+                take: 1, // Only 1 record
+               });
+
+                const soilAnalysisRecords = soilAnalysisRecordsList[0] || null;       
+
+                //fetch soil aalysis data
+                if (recommendation&&soilAnalysisRecords!=null) {
+                soilAnalysis = {
+            Date: soilAnalysisRecords.Date,
+            PH: recommendation.PH,
+            PhosphorusIndex: recommendation.PIndex,
+            PotassiumIndex: recommendation.KIndex,
+            MagnesiumIndex: recommendation.MgIndex,
+          };            
+                isSoilAnalysisAdded = true;
+                } else {
+                  soilAnalysis = null;
+                }
+              }
               // Fetch recommendations using stored procedure
               const storedProcedure =
                 "EXEC dbo.spRecommendations_GetRecommendations @fieldId = @0, @harvestYear = @1";
@@ -1050,7 +1072,7 @@ async checkFieldExists(farmId, name, id = null) {
         const soilTypeName = soil?.soilType;
         // Get SulphurDeficient from soilAnalysis
         const sulphurDeficient =
-          (soilAnalysis != null&&soilAnalysis.length>0) ? soilAnalysis[0]?.SulphurDeficient : null;
+          soilAnalysis != null ? soilAnalysis.SulphurDeficient : null;
         // Create soilDetails object
         const soilDetails = {
           SoilTypeId:field.SoilTypeID,
