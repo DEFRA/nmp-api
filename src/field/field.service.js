@@ -932,8 +932,9 @@ async checkFieldExists(farmId, name, id = null) {
 
                 if(isSoilAnalysisAdded==null)
                 {
+                  const fiveYearBack = 5;
+              const fiveYearsAgo = year - fiveYearBack;
                 const currentYear = year;
-                const fiveYearsAgo = year - 5;
                 const soilAnalysisRecordsList = await this.soilAnalysisRepository.find({
                 where: {
                   FieldID: field.ID,
@@ -1072,8 +1073,7 @@ async checkFieldExists(farmId, name, id = null) {
         );
         const soilTypeName = soil?.soilType;
         // Get SulphurDeficient from soilAnalysis
-        const sulphurDeficient =
-          soilAnalysis != null ? soilAnalysis.SulphurDeficient : null;
+        const sulphurDeficient = soilAnalysis?.SulphurDeficient ?? null;
         // Create soilDetails object
         const soilDetails = {
           SoilTypeId:field.SoilTypeID,
