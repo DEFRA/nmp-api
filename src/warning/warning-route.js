@@ -5,6 +5,18 @@ const { WarningController } = require("./warning-controller");
 module.exports = [
   {
     method: "GET",
+    path: "/warning",
+    options: {
+      tags: ["api", "Warning"],
+      description: "Get all Warnings",
+    },
+    handler: async (request, h) => {
+      const controller = new WarningController(request, h);
+      return controller.getAll();
+    },
+  },
+  {
+    method: "GET",
     path: "/warning/{CountryID}",
     options: {
       tags: ["api", "Warning"],
