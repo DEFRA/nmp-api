@@ -948,6 +948,7 @@ async checkFieldExists(farmId, name, id = null) {
                 //fetch soil aalysis data
                 if (recommendation&&soilAnalysisRecords!=null) {
                 soilAnalysis = {
+            SulphurDeficient: soilAnalysisRecords.SulphurDeficient,
             Date: soilAnalysisRecords.Date,
             PH: recommendation.PH,
             PhosphorusIndex: recommendation.PIndex,
