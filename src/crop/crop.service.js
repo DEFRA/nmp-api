@@ -1625,9 +1625,6 @@ class CropService extends BaseService {
           soilAnalyses: [],
         },
         harvestYear: crop.Year,
-        area: field.TotalArea,
-        postcode: farm.ClimateDataPostCode,
-        altitude: field.IsAbove300SeaLevel === true ? FieldAboveOrBelowSeaLevelMapper.ABOVETHREEHUNDRED : FieldAboveOrBelowSeaLevelMapper.BELOWTHREEHUNDRED,
         rainfallAverage: farm.Rainfall,
         excessWinterRainfall:
           excessRainfall?.WinterRainfall != null
