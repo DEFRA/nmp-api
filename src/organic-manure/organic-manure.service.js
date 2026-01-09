@@ -222,6 +222,17 @@ class OrganicManureService extends BaseService {
     return manureTypeIds;
   }
 
+  async getManureTypeIdsByManagementPeriod(managementPeriodID) {
+    const rows = await this.repository.find({
+      select: ["ManureTypeID"],
+      where: {
+        ManagementPeriodID: managementPeriodID,
+      },
+    });
+
+    return rows.map((r) => r.ManureTypeID);
+  }
+
   async getFirstCropData(transactionalManager, FieldID, Year) {
     const data = await transactionalManager.findOne(CropEntity, {
       where: {
@@ -1799,7 +1810,7 @@ class OrganicManureService extends BaseService {
           OrganicManure.NH4N + OrganicManure.NO3N + OrganicManure.UricAcid >
           OrganicManure.N
         ) {
-          throw new BadRequestException(
+          console.log(
             "NH4N + NO3N + UricAcid must be less than or equal to TotalN"
           );
         }
@@ -2376,6 +2387,7 @@ class OrganicManureService extends BaseService {
     dateTo,
     confirm,
     organicManureID,
+    isSlurryOnly,
     request
   ) {
     try {
@@ -2391,15 +2403,9 @@ class OrganicManureService extends BaseService {
       }
 
       // Filter manure types: IsLiquid is true OR ManureTypeID = 8 (for Poultry manure)
-      const ManureTypes = Object.freeze({
-        PoultryManure: 8,
-        PigSlurry: 12,
-        SeparatedCattleSlurryStrainerBox: 13,
-        SeparatedCattleSlurryWeepingWall: 14,
-        SeparatedCattleSlurryMechanicalSeparator: 15,
-        SeparatedPigSlurryLiquidPortion: 18,
-        CattleSlurry: 45,
-      });
+        const ManureTypes = allManureTypes.data.filter((manure) =>
+          isSlurryOnly ? manure.IsSlurry === true : manure.IsLiquid === true
+        );
 
       const liquidManureTypes = allManureTypes?.data?.filter((manure) =>
         Object.values(ManureTypes).includes(manure.id)

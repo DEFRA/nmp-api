@@ -114,6 +114,36 @@ module.exports = [
       },
     },
   },
+
+  {
+    method: "GET",
+    path: "/organic-manures/manure-types/{managementPeriodID}",
+    options: {
+      tags: ["api", "Organic Manure"],
+      description: "Get ManureType IDs by ManagementPeriodID",
+      validate: {
+        params: Joi.object({
+          managementPeriodID: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code()
+            .takeover();
+        },
+      },
+      handler: async (request, h) => {
+        return getController(request, h).getManureTypeIdsByManagementPeriod();
+      },
+    },
+  },
   {
     method: "POST",
     path: "/organic-manures",
@@ -154,7 +184,8 @@ module.exports = [
           dateFrom: Joi.date().iso().required(),
           dateTo: Joi.date().iso().required(),
           confirm: Joi.boolean(),
-          organicManureID:Joi.number().integer().allow(null).optional()
+          organicManureID: Joi.number().integer().allow(null).optional(),
+          isSlurryOnly: Joi.boolean()
         }),
         failAction: (request, h, err) => {
           return h
