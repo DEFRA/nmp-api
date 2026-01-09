@@ -11,13 +11,14 @@ const getController = (request, h) => new OrganicManureController(request, h);
 module.exports = [
   {
     method: "GET",
-    path: "/organic-manures/total-nitrogen/{fieldId}",
+    path: "/organic-manures/total-nitrogen/{managementPeriodID}",
     options: {
       tags: ["api", "Organic Manure"],
-      description: "Get Total Nitrogen by fieldID and Application Date Range",
+      description:
+        "Get Total Nitrogen by managementPeriodID and Application Date Range",
       validate: {
         params: Joi.object({
-          fieldId: Joi.number().integer().required(),
+          managementPeriodID: Joi.number().integer().required(),
         }),
         query: Joi.object({
           fromDate: Joi.date().iso().required(),
@@ -185,7 +186,7 @@ module.exports = [
           dateTo: Joi.date().iso().required(),
           confirm: Joi.boolean(),
           organicManureID: Joi.number().integer().allow(null).optional(),
-          isSlurryOnly: Joi.boolean()
+          isSlurryOnly: Joi.boolean(),
         }),
         failAction: (request, h, err) => {
           return h
