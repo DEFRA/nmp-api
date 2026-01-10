@@ -103,7 +103,7 @@ class OrganicManureController {
     }
   }
   async checkManureExists() {
-    const { managementPeriodID, dateFrom, dateTo, confirm, organicManureID } =
+    const { managementPeriodID, dateFrom, dateTo, confirm, isSlurryOnly, organicManureID } =
       this.#request.query;
 
     try {
