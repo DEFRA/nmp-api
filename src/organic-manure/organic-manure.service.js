@@ -123,7 +123,7 @@ class OrganicManureService extends BaseService {
     this.CalculatePreviousCropService = new CalculatePreviousCropService();
   }
 
-  async getTotalNitrogen(
+  async getTotalNitrogenByManagementPeriod(
     managementPeriodID,
     fromDate,
     toDate,
@@ -157,6 +157,35 @@ class OrganicManureService extends BaseService {
 
     const result = await query.getRawOne();
     return result?.totalN ?? 0;
+  }
+
+  async getTotalNitrogen(fieldId, fromDate, toDate, confirm, organicManureID) {
+    // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
+    const fromDateFormatted = new Date(fromDate);
+    fromDateFormatted.setHours(0, 0, 0, 0); // Set time to start of the day
+
+    const toDateFormatted = new Date(toDate);
+    toDateFormatted.setHours(23, 59, 59, 999); // Set time to end of the day
+
+    const query = await this.repository
+      .createQueryBuilder("O") // O = OrganicManures
+      .select("SUM(O.N * O.ApplicationRate)", "totalN")
+      .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
+      .innerJoin("Crops", "C", "M.CropID = C.ID")
+      .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
+      .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
+        fromDate: fromDateFormatted,
+        toDate: toDateFormatted,
+      })
+      .andWhere("O.Confirm = :confirm", { confirm });
+    if (organicManureID != null) {
+      query.andWhere("O.ID != :organicManureID", {
+        organicManureID,
+      });
+    }
+    const result = await query.getRawOne();
+
+    return result.totalN;
   }
 
   async getTotalNitrogenIfIsGreenFoodCompost(

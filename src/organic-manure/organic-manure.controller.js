@@ -12,13 +12,31 @@ class OrganicManureController {
     this.#organicManureService = new OrganicManureService();
   }
 
-  async getTotalNitrogen() {
+  async getTotalNitrogenByManagementPeriod() {
     const { managementPeriodID } = this.#request.params;
     const { fromDate, toDate, confirm, organicManureID } = this.#request.query;
 
     try {
+      const records =
+        await this.#organicManureService.getTotalNitrogenByManagementPeriod(
+          managementPeriodID,
+          fromDate,
+          toDate,
+          confirm,
+          organicManureID
+        );
+      return this.#h.response({ TotalN: records });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+  async getTotalNitrogen() {
+    const { fieldId } = this.#request.params;
+    const { fromDate, toDate, confirm, organicManureID } = this.#request.query;
+
+    try {
       const records = await this.#organicManureService.getTotalNitrogen(
-        managementPeriodID,
+        fieldId,
         fromDate,
         toDate,
         confirm,
@@ -103,8 +121,14 @@ class OrganicManureController {
     }
   }
   async checkManureExists() {
-    const { managementPeriodID, dateFrom, dateTo, confirm, isSlurryOnly, organicManureID } =
-      this.#request.query;
+    const {
+      managementPeriodID,
+      dateFrom,
+      dateTo,
+      confirm,
+      isSlurryOnly,
+      organicManureID,
+    } = this.#request.query;
 
     try {
       const manureExists = await this.#organicManureService.checkManureExists(
