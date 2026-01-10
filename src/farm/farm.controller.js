@@ -114,7 +114,9 @@ class FarmController {
       const updatedFarm = await this.#farmService.updateFarm(
         Farm,
         userId,
-        Farm.ID
+        Farm.ID,
+        this.#request
+
       );
       return this.#h.response({ Farm: updatedFarm });
     } catch (error) {

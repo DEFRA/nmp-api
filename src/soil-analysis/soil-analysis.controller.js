@@ -1,4 +1,5 @@
 const { SoilAnalysesService } = require("./soil-analysis.service");
+const boom = require("@hapi/boom");
 
 class SoilAnalysesController {
   #request;

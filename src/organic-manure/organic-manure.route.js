@@ -11,6 +11,42 @@ const getController = (request, h) => new OrganicManureController(request, h);
 module.exports = [
   {
     method: "GET",
+    path: "/organic-manures/total-nitrogen-by-management-period/{managementPeriodID}",
+    options: {
+      tags: ["api", "Organic Manure"],
+      description:
+        "Get Total Nitrogen by managementPeriodID and Application Date Range",
+      validate: {
+        params: Joi.object({
+          managementPeriodID: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          fromDate: Joi.date().iso().required(),
+          toDate: Joi.date().iso().required(),
+          confirm: Joi.boolean().required(),
+          organicManureID: Joi.number().integer().allow(null).optional(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code()
+            .takeover();
+        },
+      },
+      handler: async (request, h) => {
+        return getController(request, h).getTotalNitrogenByManagementPeriod();
+      },
+    },
+  },
+  {
+    method: "GET",
     path: "/organic-manures/total-nitrogen/{fieldId}",
     options: {
       tags: ["api", "Organic Manure"],
@@ -35,7 +71,7 @@ module.exports = [
                 request,
               })
             )
-            .code(400)
+            .code()
             .takeover();
         },
       },
@@ -114,6 +150,36 @@ module.exports = [
       },
     },
   },
+
+  {
+    method: "GET",
+    path: "/organic-manures/manure-types/{managementPeriodID}",
+    options: {
+      tags: ["api", "Organic Manure"],
+      description: "Get ManureType IDs by ManagementPeriodID",
+      validate: {
+        params: Joi.object({
+          managementPeriodID: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code()
+            .takeover();
+        },
+      },
+      handler: async (request, h) => {
+        return getController(request, h).getManureTypeIdsByManagementPeriod();
+      },
+    },
+  },
   {
     method: "POST",
     path: "/organic-manures",
@@ -154,6 +220,8 @@ module.exports = [
           dateFrom: Joi.date().iso().required(),
           dateTo: Joi.date().iso().required(),
           confirm: Joi.boolean(),
+          organicManureID: Joi.number().integer().allow(null).optional(),
+          isSlurryOnly: Joi.boolean(),
         }),
         failAction: (request, h, err) => {
           return h

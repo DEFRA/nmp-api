@@ -70,9 +70,10 @@ class FieldController {
 
   async checkFarmFieldExists() {
     const { farmId } = this.#request.params;
-    const { name } = this.#request.query;
+      const {name}=this.#request.query;
+      const {fieldId}=this.#request.query;
     try {
-      const exists = await this.#fieldService.checkFieldExists(farmId, name);
+      const exists = await this.#fieldService.checkFieldExists(farmId, name,fieldId);
 
       return this.#h.response({ exists });
     } catch (error) {

@@ -124,7 +124,7 @@ class CropController {
       const confirm = !!type;
       const records = await this.#planService.getPlans(farmId, confirm);
       if (records.length === 0) {
-        throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
+      console.log(StaticStrings.HTTP_STATUS_NOT_FOUND);
       }
       return this.#h.response(records);
     } catch (error) {

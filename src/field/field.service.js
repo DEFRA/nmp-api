@@ -115,9 +115,27 @@ class FieldService extends BaseService {
     };
   }
 
-  async checkFieldExists(farmId, name) {
-    return await this.recordExists({ FarmID: farmId, Name: name });
+
+async checkFieldExists(farmId, name, id = null) {
+    return (await this.fieldCountByName(farmId, name, id)) > 0;
   }
+
+  async fieldCountByName(farmId, name, id = null) {
+      if (!farmId || !name) {
+        throw boom.badRequest("Farm Id and Name are required");
+      }
+  
+      const query = this.repository
+        .createQueryBuilder("Fields")
+        .where("Fields.Name = :name", { name: name.trim() })
+        .andWhere("Fields.FarmID = :farmId", { farmId: farmId });
+        if (id !== null) {
+          query.andWhere("Fields.ID != :id", { id });
+        }
+ 
+  
+      return  query.getCount();
+    }
 
   async getSoilTextureBySoilTypeId(soilTypeId) {
     const soilTexture = await this.soilTypeSoilTextureRepository.findOneBy({
@@ -803,15 +821,7 @@ class FieldService extends BaseService {
         // if (Errors.length > 0) {
         //   throw new Error(JSON.stringify(Errors));
         // }
-        const soilAnalysisRecords = await this.soilAnalysisRepository.find({
-          where: {
-            FieldID: field.ID,
-            Year: year,
-          },
-          order: { Date: "DESC" }, // Order by date, most recent first
-        });
-
-        const soilAnalysis = soilAnalysisRecords.length > 0  ? soilAnalysisRecords : null;
+        let soilAnalysis=null;        
         if (crops != null) {
           for (const crop of crops) {
             if (crop.CropTypeID == 140) {
@@ -856,6 +866,7 @@ class FieldService extends BaseService {
 
         const cropsWithManagement = [];
         for (const crop of crops) {
+          let isSoilAnalysisAdded=null;
           try {
             // Fetch SNS analysis
             const snsAnalysis = await this.snsAnalysisRepository.findOne({
@@ -919,6 +930,37 @@ class FieldService extends BaseService {
                   where: { ManagementPeriodID: managementPeriod.ID },
                 });
 
+                if(isSoilAnalysisAdded==null)
+                {
+                  const fiveYearBack = 5;
+              const fiveYearsAgo = year - fiveYearBack;
+                const currentYear = year;
+                const soilAnalysisRecordsList = await this.soilAnalysisRepository.find({
+                where: {
+                  FieldID: field.ID,
+                  Year: Between(fiveYearsAgo, currentYear),
+                },
+                order: { Date: "DESC" }, // Most recent first
+                take: 1, // Only 1 record
+               });
+
+                const soilAnalysisRecords = soilAnalysisRecordsList[0] || null;       
+
+                //fetch soil aalysis data
+                if (recommendation&&soilAnalysisRecords!=null) {
+                soilAnalysis = {
+            SulphurDeficient: soilAnalysisRecords.SulphurDeficient,
+            Date: soilAnalysisRecords.Date,
+            PH: recommendation.PH,
+            PhosphorusIndex: recommendation.PIndex,
+            PotassiumIndex: recommendation.KIndex,
+            MagnesiumIndex: recommendation.MgIndex,
+          };            
+                isSoilAnalysisAdded = true;
+                } else {
+                  soilAnalysis = null;
+                }
+              }
               // Fetch recommendations using stored procedure
               const storedProcedure =
                 "EXEC dbo.spRecommendations_GetRecommendations @fieldId = @0, @harvestYear = @1";
@@ -1031,8 +1073,7 @@ class FieldService extends BaseService {
         );
         const soilTypeName = soil?.soilType;
         // Get SulphurDeficient from soilAnalysis
-        const sulphurDeficient =
-          (soilAnalysis != null&&soilAnalysis.length>0) ? soilAnalysis[0]?.SulphurDeficient : null;
+        const sulphurDeficient = soilAnalysis?.SulphurDeficient ?? null;
         // Create soilDetails object
         const soilDetails = {
           SoilTypeId:field.SoilTypeID,
@@ -1443,7 +1484,7 @@ class FieldService extends BaseService {
       return defoliationSequenceDescription;
     } catch (error) {
       console.error(
-        `Error fetching Defoliation Sequence for swardTypeId: ${SwardTypeID}&numberOfCuts=${PotentialCut}`,
+        `Error fetching Defoliation Sequence for swardTypeId: & numberOfCuts=${PotentialCut}`,
         error
       );
       return "Unknown";
