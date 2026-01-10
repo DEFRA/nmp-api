@@ -193,12 +193,15 @@ class UpdateRecommendation {
   }
 
   async updateRecommendationAndOrganicManure(fieldID, year, request, userId) {
-
     return await AppDataSource.transaction(async (transactionalManager) => {
       const allCropData = await transactionalManager.find(CropEntity, {
         where: { FieldID: fieldID },
       });
       const allCropIds = allCropData.map((crop) => crop.ID);
+      // Fetch cropTypes list once for all crops
+      const cropTypesList = await this.rB209ArableService.getData(
+        "/Arable/CropTypes"
+      );
       const allManagementPeriods = await this.getManagementPeriods(
         transactionalManager,
         allCropIds
@@ -242,7 +245,8 @@ class UpdateRecommendation {
             transactionalManager,
             userId,
             allRecommendations,
-            year
+            year,
+            cropTypesList
           );
         } else {
           await this.saveRecommendationWithoutManure(
@@ -254,7 +258,8 @@ class UpdateRecommendation {
             transactionalManager,
             userId,
             allRecommendations,
-            year
+            year,
+            cropTypesList
           );
         }
         await transactionalManager.delete(InprogressCalculationsEntity, {
@@ -636,7 +641,8 @@ class UpdateRecommendation {
     transactionalManager,
     userId,
     allRecommendations,
-    year
+    year,
+    cropTypesList
   ) {
     console.log("FUNCTION WITH MANURE STARTED");
     for (const organicManure of organicManures) {
@@ -859,6 +865,7 @@ class UpdateRecommendation {
           organicManure,
           pkBalanceData,
           rb209CountryData.RB209CountryID,
+          cropTypesList,
           transactionalManager,
           request
         );
@@ -878,7 +885,7 @@ class UpdateRecommendation {
       nutrientRecommendationsData = await this.getNutrientRecommendationsData(
         nutrientRecommendationnReqBody
       );
-  
+
       let arableNotes = nutrientRecommendationsData.adviceNotes;
       let savedRecommendation,
         savedRecommendationComment = [],
@@ -960,7 +967,7 @@ class UpdateRecommendation {
 
     // 1. Extract ManagementPeriodID from the first OrganicManure (all same)
     const managementPeriodId = organicManures?.[0]?.ManagementPeriodID;
- 
+
     await this.processManureWarningsByManagementPeriod(
       managementPeriodId,
       transactionalManager,
@@ -977,7 +984,8 @@ class UpdateRecommendation {
     transactionalManager,
     userId,
     allRecommendations,
-    year
+    year,
+    cropTypesList
   ) {
     console.log("WITHOUT MANURE STARTED");
     let Recommendations = [];
@@ -1193,6 +1201,7 @@ class UpdateRecommendation {
             crop,
             pkBalanceData,
             rb209CountryData.RB209CountryID,
+            cropTypesList,
             request,
             transactionalManager
           );
@@ -1204,7 +1213,11 @@ class UpdateRecommendation {
         nutrientRecommendationsData = await this.getNutrientRecommendationsData(
           nutrientRecommendationnReqBody
         );
-        console.log("checkingdatachangewithoutmanure",field.ID,nutrientRecommendationsData);
+        console.log(
+          "checkingdatachangewithoutmanure",
+          field.ID,
+          nutrientRecommendationsData
+        );
         if (
           !nutrientRecommendationsData ||
           nutrientRecommendationsData?.calculations == null ||
@@ -2188,6 +2201,7 @@ class UpdateRecommendation {
   async buildArableBody(
     dataMultipleCrops, // Accept either a single crop or multiple crops
     field,
+    cropTypesList,
     transactionalManager
   ) {
     const arableBody = [];
@@ -2196,11 +2210,6 @@ class UpdateRecommendation {
     const crops = Array.isArray(dataMultipleCrops)
       ? dataMultipleCrops
       : [dataMultipleCrops];
-
-    // Fetch cropTypes list once for all crops
-    const cropTypesList = await this.rB209ArableService.getData(
-      "/Arable/CropTypes"
-    );
 
     // Iterate over crops (single or multiple)
     for (const crop of crops) {
@@ -2306,12 +2315,10 @@ class UpdateRecommendation {
     organicManureData,
     pkBalanceData,
     rb209CountryId,
+    cropTypesList,
     transactionalManager,
     request
   ) {
-    const cropTypesList = await this.rB209ArableService.getData(
-      "/Arable/CropTypes"
-    );
     const grassGrowthClass =
       await this.grassGrowthClass.calculateGrassGrowthClassByFieldId(
         field.ID,
@@ -2345,6 +2352,7 @@ class UpdateRecommendation {
     const arableBody = await this.buildArableBody(
       dataMultipleCrops,
       field,
+      cropTypesList,
       transactionalManager
     );
     const grassObject = await this.buildGrassObject(
@@ -2650,12 +2658,11 @@ class UpdateRecommendation {
     crop,
     pkBalanceData,
     rb209CountryId,
+    cropTypesList,
     request,
     transactionalManager
   ) {
-    const cropTypesList = await this.rB209ArableService.getData(
-      "/Arable/CropTypes"
-    );
+   
     const grassGrowthClass =
       await this.grassGrowthClass.calculateGrassGrowthClassByFieldId(
         field.ID,
@@ -2701,6 +2708,7 @@ class UpdateRecommendation {
     const arableBody = await this.buildArableBody(
       dataMultipleCrops,
       field,
+      cropTypesList,
       transactionalManager
     );
     let grassHistoryID = null;
