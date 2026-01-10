@@ -144,28 +144,59 @@ class NutrientsLoadingLiveStocksService extends BaseService {
     return result;
   }
    async deleteNutrientsLoadingLivestockById(nutrientsLoadingLivestockId) {
-    // Check if the NutrientsLoadingLivestock exists
-    const nutrientsLoadingLivestockData = await this.repository.findOne({
-      where: { ID: nutrientsLoadingLivestockId },
-    });
+  // 1. Check record exists
+  const nutrientsLoadingLivestockData = await this.repository.findOne({
+    where: { ID: nutrientsLoadingLivestockId },
+  });
 
-    // If the NutrientsLoadingLivestock does not exist, throw a not found error
-    if (nutrientsLoadingLivestockData == null) {
-      throw boom.notFound(
-        `NutrientsLoadingLivestock with ID ${nutrientsLoadingLivestockId} not found`
-      );
-    }
+  if (!nutrientsLoadingLivestockData) {
+    throw boom.notFound(
+      `NutrientsLoadingLivestock with ID ${nutrientsLoadingLivestockId} not found`
+    );
+  }
 
-    try {
-      // Call the stored procedure to delete the NutrientsLoadingLivestock
+  const { FarmID, CalendarYear } = nutrientsLoadingLivestockData;
+
+  try {
+    await AppDataSource.transaction(async (transactionalManager) => {
+      // 2. Delete using Stored Procedure
       const storedProcedure =
         "EXEC [dbo].[spNutrientsLoadingLiveStocks_DeleteNutrientsLoadingLiveStocks] @NutrientsLoadingLiveStockID = @0";
-      await AppDataSource.query(storedProcedure, [nutrientsLoadingLivestockId]);
-    } catch (error) {
-      // Log the error and throw an internal server error
-      console.error("Error deleting NutrientsLoadingLivestock:", error);
-    }
+
+      await transactionalManager.query(storedProcedure, [
+        nutrientsLoadingLivestockId,
+      ]);
+
+      // 3. Check remaining records for same FarmID + CalendarYear
+      const remainingCount = await transactionalManager.count(
+        NutrientsLoadingLiveStocksEntity,
+        {
+          where: {
+            FarmID: FarmID,
+            CalendarYear: CalendarYear,
+          },
+        }
+      );
+
+      // 4. If no records left → update FarmDetails
+      if (remainingCount === 0) {
+        await transactionalManager.update(
+          NutrientsLoadingFarmDetailsEntity,
+          {
+            FarmID: FarmID,
+            CalendarYear: CalendarYear,
+          },
+          {
+            IsAnyLivestockNumber: null,
+          }
+        );
+      }
+    });
+  } catch (error) {
+    // Log the error and throw an internal server error
+    console.error("Error deleting NutrientsLoadingLivestock:", error);
   }
+}
 }
 
 module.exports = { NutrientsLoadingLiveStocksService };

@@ -125,58 +125,6 @@ class CalculateGrassHistoryAndPreviousGrass {
     } else {
       firstHYFieldType = crop1?.FieldType || FieldTypeMapper.ARABLE;
     }
-
-    // -----------------------------
-    // Step 2: Year -2
-    // -----------------------------
-    // const crop2 = await this.getCropForYear(
-    //   field.ID,
-    //   harvestYear - 2,
-    //   transactionalManager
-    // );
-    // let secondHYFieldType = crop2?.FieldType ?? null;
-
-    // if (secondHYFieldType === null) {
-    //   const prevGrass2 = await transactionalManager.findOne(
-    //     PreviousGrassesEntity,
-    //     {
-    //       where: { FieldID: field.ID, HarvestYear: harvestYear - 2 },
-    //     }
-    //   );
-
-    //   if (prevGrass2) {
-    //     secondHYFieldType = FieldTypeMapper.GRASS;
-    //     if (
-    //       isHighClover === null &&
-    //       firstHYFieldType !== FieldTypeMapper.GRASS
-    //     ) {
-    //       isHighClover = prevGrass2.HasGreaterThan30PercentClover ? 1 : 0;
-    //     }
-    //   } else {
-    //     secondHYFieldType = FieldTypeMapper.ARABLE;
-    //   }
-    // } else if (
-    //   secondHYFieldType === FieldTypeMapper.GRASS &&
-    //   isHighClover === null &&
-    //   firstHYFieldType !== FieldTypeMapper.GRASS &&
-    //   crop2
-    // ) {
-    //   if (
-    //     crop2?.CropInfo1 !== null &&
-    //     crop2?.Yield !== null &&
-    //     crop2?.DefoliationSequenceID !== null
-    //   ){
-
-    //     const SwardTypeID = crop2.SwardTypeID;
-    //     isHighClover = [
-    //       SwardTypeMapper.GRASSANDCLOVER,
-    //       SwardTypeMapper.REDCLOVER,
-    //       SwardTypeMapper.LUCERNE,
-    //     ].includes(SwardTypeID)
-    //       ? 1
-    //       : 0;
-    //   }
-    // }
     let secondHYFieldType = null,crop2, prevGrass2
     if (firstHYFieldType !== FieldTypeMapper.GRASS) {
        crop2 = await this.getCropForYear(
@@ -477,14 +425,19 @@ class CalculateGrassHistoryAndPreviousGrass {
     let organicNextDefoliationN = 0;
     let organicPrevYearNextYearN = 0;
     let fertiliserN = 0;
-    let isHistoryCrop
-    isHistoryCrop = await transactionalManager.findOne(
-      PreviousCroppingEntity,
-      {where : {ID:crop.ID}}
-    )
+    const isHistoryCrop = await transactionalManager
+      .createQueryBuilder(PreviousCroppingEntity, "pc")
+      .leftJoin(
+        SoilNitrogenSupplyItemsEntity,
+        "sns",
+        "sns.ID = pc.SoilNitrogenSupplyItemID"
+      )
+      .select(["sns.SoilNitrogenSupplyId AS SoilNitrogenSupplyId"])
+      .where("pc.ID = :id", { id: crop.ID })
+      .getRawOne();
     let nitrogenUse = null
     if(isHistoryCrop){
-      let soilNitrogenSupplyItemID = isHistoryCrop.SoilNitrogenSupplyItemID 
+      const soilNitrogenSupplyItemID = isHistoryCrop.SoilNitrogenSupplyId; 
       if(soilNitrogenSupplyItemID){
     
        if( soilNitrogenSupplyItemID == SoilNitrogenMapper.LOWN ){
@@ -626,12 +579,24 @@ class CalculateGrassHistoryAndPreviousGrass {
       }
 
       // Check PreviousGrassesEntity
-      const prevGrass = await transactionalManager.findOne(
-        PreviousCroppingEntity,
-        {
-          where: { FieldID: fieldId, HarvestYear: y },
-        }
-      );
+     const prevGrass = await transactionalManager
+       .createQueryBuilder(PreviousCroppingEntity, "pc")
+       .leftJoin(
+         SoilNitrogenSupplyItemsEntity,
+         "sns",
+         "sns.ID = pc.SoilNitrogenSupplyItemID"
+       )
+       .select([
+         "pc.ID AS ID",
+         "pc.CropTypeID AS CropTypeID",
+         "pc.GrassManagementOptionID AS GrassManagementOptionID",
+         "pc.HasGreaterThan30PercentClover AS HasGreaterThan30PercentClover",
+         "pc.SoilNitrogenSupplyItemID AS SoilNitrogenSupplyItemID",
+         "sns.SoilNitrogenSupplyId AS SoilNitrogenSupplyId",
+       ])
+       .where("pc.FieldID = :fieldId", { fieldId })
+       .andWhere("pc.HarvestYear = :year", { year: y })
+       .getRawOne();
 
       if (prevGrass && prevGrass.CropTypeID == CropTypeMapper.GRASS) {
         const mgmtId = prevGrass.GrassManagementOptionID;
@@ -650,7 +615,7 @@ class CalculateGrassHistoryAndPreviousGrass {
         if (prevGrass.HasGreaterThan30PercentClover) {
           nitrogenUse = CloverMapper.HighClover;
         } else {
-          const nitrogenId = prevGrass.SoilNitrogenSupplyItemID;
+          const nitrogenId = prevGrass.SoilNitrogenSupplyId;
           if (nitrogenId === SoilNitrogenMapper.HIGHN) nitrogenUse = CloverMapper.HighClover;
           else if (nitrogenId === SoilNitrogenMapper.MODERATEN)
             nitrogenUse = CloverMapper.ModerateClover;

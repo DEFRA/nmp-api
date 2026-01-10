@@ -88,6 +88,7 @@ const { BankSlopeAnglesEntity } = require("./entity/bank-slope-angles-entity.js"
 const { WarningMessagesEntity } = require("./entity/warning-message.entity.js");
 const { PreviousCroppingEntity } = require("./entity/previous-cropping.entity.js");
 const { WarningCodeEntity } = require("./entity/warning-code.entity.js");
+const { WarningsEntity } = require("./entity/warning.entity.js");
 
 
 
@@ -162,7 +163,8 @@ const baseConfig = {
     BankSlopeAnglesEntity,
     WarningMessagesEntity,
     PreviousCroppingEntity,
-    WarningCodeEntity
+    WarningCodeEntity,
+    WarningsEntity
   ],
 };
 

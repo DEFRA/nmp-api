@@ -27,6 +27,7 @@ const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-othe
 const { WarningMessagesEntity } = require("../db/entity/warning-message.entity");
 const { CreateOrUpdateWarningMessage } = require("../shared/create-update-warning-messages.service");
 const { WarningCodesMapper } = require("../constants/warning-codes-mapper");
+const { ManureTypeMapper } = require("../constants/manure-type-mapper");
 
 class FertiliserManuresService extends BaseService {
   constructor() {
@@ -140,8 +141,14 @@ class FertiliserManuresService extends BaseService {
       .where("organicManures.ManagementPeriodID = :managementPeriodID", {
         managementPeriodID,
       })
-      .andWhere("organicManures.Confirm = :confirm", { confirm });
-
+      .andWhere("organicManures.Confirm = :confirm", { confirm })
+      .andWhere(
+        "organicManures.ManureTypeID NOT IN (:...excludedManureTypes)",
+        {
+          excludedManureTypes: [ManureTypeMapper.StrawMulch, 
+            ManureTypeMapper.PaperCrumbleBiologicallyTreated, ManureTypeMapper.PaperCrumbleChemicallyPhysciallyTreated],
+        }
+      ); //exclude StrawMulch, PaperCrumbleChemicallyPhysciallyTreated,PaperCrumbleBiologicallyTreated
     // const organicManuresResult = await this.repository
     //   .createQueryBuilder("O") // O = OrganicManures
     //   .select("SUM(O.AvailableNForNMax)", "totalN")
@@ -165,25 +172,10 @@ class FertiliserManuresService extends BaseService {
     const recommandationAllData = await this.RecommendationRepository.find();
     const managementPeriodAllData =
       await this.managementPeriodRepository.find();
-    const fieldAllData = await this.fieldRepository.find();
-      const fertiliserAllData = await this.repository.find();
-   
-
-    return await AppDataSource.transaction(async (transactionalManager) => {
-      // const fertiliserManures = fertiliserManureData.map(
-      //   ({ ID, WarningMessages, ...rest }) => ({
-      //     ...rest,
-      //     CreatedByID: userId,
-      //     CreatedOn: new Date(),
-      //   })
-      console.log("fertiliserManureData",fertiliserManureData);
-      console.log(
-        "fertiliserManureData.FertiliserManure",
-        fertiliserManureData.FertiliserManure
-      );
-    
-      // );
-  let fertiliserManures =[];
+      const fieldAllData = await this.fieldRepository.find();
+      const fertiliserAllData = await this.repository.find();   
+    return await AppDataSource.transaction(async (transactionalManager) => {          
+    let fertiliserManures =[];
       for (const fertiliser of fertiliserManureData) {
           const fertiliserManure = fertiliser.FertiliserManure;
         // Save fertiliser first
@@ -211,7 +203,7 @@ class FertiliserManuresService extends BaseService {
             })
           );
 
-         const savedWarningMessage = await transactionalManager.save(
+        await transactionalManager.save(
             WarningMessagesEntity,
             warningMessagesToSave
           );
@@ -221,15 +213,6 @@ class FertiliserManuresService extends BaseService {
 
       const soilAnalysisAllData = await this.soilAnalysisRepository.find();
       const pkBalanceAllData = await this.pkBalanceRepository.find();
-
-    
-
- 
-
-      // const managementPeriodData =
-      //   await this.managementPeriodRepository.findOneBy({
-      //     ID: fertiliserManureData[0].ManagementPeriodID,
-      //   });
       for (const fertManure of fertiliserManures) {
         const fertiliserData = fertiliserAllData.filter((fertData) => {
           return fertData.ManagementPeriodID === fertManure.ManagementPeriodID;
@@ -552,6 +535,8 @@ class FertiliserManuresService extends BaseService {
         );
 
         let updatedWarningMessages = await this.CreateOrUpdateWarningMessage.syncWarningMessages(
+                    inorganicManure.ManagementPeriodID,
+                    inorganicManure,
                     warningMessages,
                     transactionalManager,
                     userId
@@ -764,9 +749,7 @@ class FertiliserManuresService extends BaseService {
         managementPeriodID,
       });
 
-    const fertiliserResult = await fertiliserManuresResult.getRawOne();
-    console.log("fertiliserResult", fertiliserResult);
-    
+    const fertiliserResult = await fertiliserManuresResult.getRawOne();  
     return fertiliserResult.totalN;
   }
 }
