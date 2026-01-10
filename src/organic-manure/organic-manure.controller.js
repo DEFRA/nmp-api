@@ -13,12 +13,12 @@ class OrganicManureController {
   }
 
   async getTotalNitrogen() {
-    const { fieldId } = this.#request.params;
+    const { managementPeriodID } = this.#request.params;
     const { fromDate, toDate, confirm, organicManureID } = this.#request.query;
 
     try {
       const records = await this.#organicManureService.getTotalNitrogen(
-        fieldId,
+        managementPeriodID,
         fromDate,
         toDate,
         confirm,
