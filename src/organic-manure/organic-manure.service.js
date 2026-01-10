@@ -123,6 +123,42 @@ class OrganicManureService extends BaseService {
     this.CalculatePreviousCropService = new CalculatePreviousCropService();
   }
 
+  async getTotalNitrogenByManagementPeriod(
+    managementPeriodID,
+    fromDate,
+    toDate,
+    confirm,
+    organicManureID
+  ) {
+    // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
+    const fromDateFormatted = new Date(fromDate);
+    fromDateFormatted.setHours(0, 0, 0, 0);
+
+    const toDateFormatted = new Date(toDate);
+    toDateFormatted.setHours(23, 59, 59, 999);
+
+    const query = this.repository
+      .createQueryBuilder("O") // O = OrganicManures
+      .select("SUM(O.N * O.ApplicationRate)", "totalN")
+      .where("O.ManagementPeriodID = :managementPeriodID", {
+        managementPeriodID,
+      })
+      .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
+        fromDate: fromDateFormatted,
+        toDate: toDateFormatted,
+      })
+      .andWhere("O.Confirm = :confirm", { confirm });
+
+    if (organicManureID != null) {
+      query.andWhere("O.ID != :organicManureID", {
+        organicManureID,
+      });
+    }
+
+    const result = await query.getRawOne();
+    return result?.totalN ?? 0;
+  }
+
   async getTotalNitrogen(fieldId, fromDate, toDate, confirm, organicManureID) {
     // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
     const fromDateFormatted = new Date(fromDate);
@@ -151,6 +187,7 @@ class OrganicManureService extends BaseService {
 
     return result.totalN;
   }
+
   async getTotalNitrogenIfIsGreenFoodCompost(
     fieldId,
     fromDate,
@@ -220,6 +257,17 @@ class OrganicManureService extends BaseService {
 
     const manureTypeIds = organicManures.map((data) => data.ManureTypeID);
     return manureTypeIds;
+  }
+
+  async getManureTypeIdsByManagementPeriod(managementPeriodID) {
+    const rows = await this.repository.find({
+      select: ["ManureTypeID"],
+      where: {
+        ManagementPeriodID: managementPeriodID,
+      },
+    });
+
+    return rows.map((r) => r.ManureTypeID);
   }
 
   async getFirstCropData(transactionalManager, FieldID, Year) {
@@ -1799,7 +1847,7 @@ class OrganicManureService extends BaseService {
           OrganicManure.NH4N + OrganicManure.NO3N + OrganicManure.UricAcid >
           OrganicManure.N
         ) {
-          throw new BadRequestException(
+          console.log(
             "NH4N + NO3N + UricAcid must be less than or equal to TotalN"
           );
         }
@@ -2376,6 +2424,7 @@ class OrganicManureService extends BaseService {
     dateTo,
     confirm,
     organicManureID,
+    isSlurryOnly,
     request
   ) {
     try {
@@ -2391,27 +2440,14 @@ class OrganicManureService extends BaseService {
       }
 
       // Filter manure types: IsLiquid is true OR ManureTypeID = 8 (for Poultry manure)
-      const ManureTypes = Object.freeze({
-        PoultryManure: 8,
-        PigSlurry: 12,
-        SeparatedCattleSlurryStrainerBox: 13,
-        SeparatedCattleSlurryWeepingWall: 14,
-        SeparatedCattleSlurryMechanicalSeparator: 15,
-        SeparatedPigSlurryLiquidPortion: 18,
-        CattleSlurry: 45,
-      });
-
-      const liquidManureTypes = allManureTypes?.data?.filter((manure) =>
-        Object.values(ManureTypes).includes(manure.id)
-      );
-
-      if (!liquidManureTypes || liquidManureTypes.length === 0) {
-        // Log a warning if no liquid or poultry manure types are found
-        console.warn("No valid liquid or poultry manure types found");
-      }
+       const SlurryOrRanManureTypes = allManureTypes.data.filter((manure) =>
+          isSlurryOnly
+            ? manure.isSlurry === true
+            : manure.highReadilyAvailableNitrogen === true
+        );
 
       // Extract manureTypeIds from the filtered result
-      const manureTypeIds = liquidManureTypes.map((manure) => manure.id);
+      const manureTypeIds = SlurryOrRanManureTypes.map((manure) => manure.id);
 
       // If no valid manureTypeIds, return false
       if (!manureTypeIds || manureTypeIds.length === 0) {
