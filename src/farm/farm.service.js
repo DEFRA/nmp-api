@@ -90,7 +90,10 @@ class FarmService extends BaseService {
         .where("farm.ID = :farmID", { farmID })
         .getRawAndEntities();
 
-      if (!record.entities.length) return null;
+      if (!record.entities.length) 
+        {
+        return null;
+        }
 
       // attach RB209CountryID into farm record
       record.entities[0].Rb209CountryID = record.raw[0]?.RB209CountryID ?? null;
@@ -128,7 +131,6 @@ class FarmService extends BaseService {
             ModifiedOn: new Date(),
           }
         );
-
         const isCountryUpdated =
           updatedFarmData.CountryID &&
           updatedFarmData.CountryID !== existingFarm.CountryID;
@@ -145,27 +147,20 @@ class FarmService extends BaseService {
         if (updateResult.affected === 0) {
           console.log(`Farm with ID ${farmId} not found`);
         }
-        if (
-          updatedFarmData.FieldsAbove300SeaLevel !==
-            FieldAbove300SeaLevelMapper.SomeFieldsAbove300m ||
-          updatedFarmData.NVZFields !== FieldNVZMapper.SomeFieldsInNVZ
-        ) {
+        if (updatedFarmData.FieldsAbove300SeaLevel !== FieldAbove300SeaLevelMapper.SomeFieldsAbove300m || updatedFarmData.NVZFields !== FieldNVZMapper.SomeFieldsInNVZ) {
           const fieldUpdateData = {};
           if (
-            updatedFarmData.FieldsAbove300SeaLevel !==
-            FieldAbove300SeaLevelMapper.SomeFieldsAbove300m
+            updatedFarmData.FieldsAbove300SeaLevel !== FieldAbove300SeaLevelMapper.SomeFieldsAbove300m
           ) {
             fieldUpdateData.IsAbove300SeaLevel =
               updatedFarmData.FieldsAbove300SeaLevel ===
               FieldAbove300SeaLevelMapper.AllFieldsAbove300m;
           }
           if (updatedFarmData.NVZFields !== FieldNVZMapper.SomeFieldsInNVZ) {
-            fieldUpdateData.IsWithinNVZ =
-              updatedFarmData.NVZFields === FieldNVZMapper.AllFieldsInNVZ;
+            fieldUpdateData.IsWithinNVZ =updatedFarmData.NVZFields === FieldNVZMapper.AllFieldsInNVZ;
           }
           await transactionalManager.update(
-            FieldEntity,
-            { FarmID: farmId },
+            FieldEntity,{ FarmID: farmId },
             fieldUpdateData
           );
         }
