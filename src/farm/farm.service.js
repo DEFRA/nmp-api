@@ -93,7 +93,7 @@ class FarmService extends BaseService {
       if (!record.entities.length) return null;
 
       // attach RB209CountryID into farm record
-      record.entities[0].RB209CountryID = record.raw[0]?.RB209CountryID ?? null;
+      record.entities[0].Rb209CountryID = record.raw[0]?.RB209CountryID ?? null;
 
       return record.entities[0];
     } catch (error) {
