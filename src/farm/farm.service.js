@@ -9,6 +9,7 @@ const {FieldAbove300SeaLevelMapper}=require("../constants/field-above-300-sea-le
 const { CountryMapper } = require("../constants/country-mapper");
 const { ExcessRainfallService } = require("../excess-rainfall/excess-rainfall.service");
 const { ProcessFieldsService } = require("../shared/process-fields-for-recommendations.service");
+const { CountryEntity } = require("../db/entity/country.entity");
 
 class FarmService extends BaseService {
   constructor() {
@@ -80,6 +81,27 @@ class FarmService extends BaseService {
     return farm;
   }
 
+  async getFarmById(farmID) {
+    try {
+      const record = await this.repository
+        .createQueryBuilder("farm")
+        .leftJoin(CountryEntity, "country", "country.ID = farm.CountryID")
+        .addSelect("country.RB209CountryID", "RB209CountryID")
+        .where("farm.ID = :farmID", { farmID })
+        .getRawAndEntities();
+
+      if (!record.entities.length) return null;
+
+      // attach RB209CountryID into farm record
+      record.entities[0].RB209CountryID = record.raw[0]?.RB209CountryID ?? null;
+
+      return record.entities[0];
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
   async updateFarm(updatedFarmData, userId, farmId, request) {
     const result = await AppDataSource.transaction(
       async (transactionalManager) => {
@@ -107,9 +129,15 @@ class FarmService extends BaseService {
           }
         );
 
-        const isCountryUpdated =updatedFarmData.CountryID && updatedFarmData.CountryID !== existingFarm.CountryID;
-         if ( isCountryUpdated && updatedFarmData.CountryID === CountryMapper.WELSH) {
-          await transactionalManager.update( FieldEntity,
+        const isCountryUpdated =
+          updatedFarmData.CountryID &&
+          updatedFarmData.CountryID !== existingFarm.CountryID;
+        if (
+          isCountryUpdated &&
+          updatedFarmData.CountryID === CountryMapper.WELSH
+        ) {
+          await transactionalManager.update(
+            FieldEntity,
             { FarmID: farmId },
             { IsWithinNVZ: true }
           );
@@ -124,7 +152,8 @@ class FarmService extends BaseService {
         ) {
           const fieldUpdateData = {};
           if (
-            updatedFarmData.FieldsAbove300SeaLevel !== FieldAbove300SeaLevelMapper.SomeFieldsAbove300m
+            updatedFarmData.FieldsAbove300SeaLevel !==
+            FieldAbove300SeaLevelMapper.SomeFieldsAbove300m
           ) {
             fieldUpdateData.IsAbove300SeaLevel =
               updatedFarmData.FieldsAbove300SeaLevel ===
