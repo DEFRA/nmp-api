@@ -966,13 +966,13 @@ class UpdateRecommendation {
     }
 
     // 1. Extract ManagementPeriodID from the first OrganicManure (all same)
-    const managementPeriodId = organicManures?.[0]?.ManagementPeriodID;
+    // const managementPeriodId = organicManures?.[0]?.ManagementPeriodID;
 
-    await this.processManureWarningsByManagementPeriod(
-      managementPeriodId,
-      transactionalManager,
-      userId
-    );
+    // await this.processManureWarningsByManagementPeriod(
+    //   managementPeriodId,
+    //   transactionalManager,
+    //   userId
+    // );
   }
 
   async saveRecommendationWithoutManure(
@@ -1315,17 +1315,17 @@ class UpdateRecommendation {
         }
       }
 
-      const managementPeriods = await transactionalManager.find(
-        ManagementPeriodEntity,
-        { where: { CropID: crop.ID } }
-      );
-      for (const managementPeriod of managementPeriods) {
-        await this.processManureWarningsByManagementPeriod(
-          managementPeriod.ID,
-          transactionalManager,
-          userId
-        );
-      }
+      // const managementPeriods = await transactionalManager.find(
+      //   ManagementPeriodEntity,
+      //   { where: { CropID: crop.ID } }
+      // );
+      // for (const managementPeriod of managementPeriods) {
+      //   await this.processManureWarningsByManagementPeriod(
+      //     managementPeriod.ID,
+      //     transactionalManager,
+      //     userId
+      //   );
+      // }
     }
   }
 
