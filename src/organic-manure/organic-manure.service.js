@@ -66,6 +66,7 @@ const { CalculatePreviousCropService } = require("../shared/previous-year-crop-s
 const { FieldAboveOrBelowSeaLevelMapper } = require("../constants/field-is-above-sea-level");
 const { StaticStrings } = require("../shared/static.string");
 const { ManureTypeMapper } = require("../constants/manure-type-mapper");
+const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
 class OrganicManureService extends BaseService {
   constructor() {
     super(OrganicManureEntity);
@@ -121,6 +122,8 @@ class OrganicManureService extends BaseService {
     this.CreateOrUpdateWarningMessage = new CreateOrUpdateWarningMessage();
     this.CreateOrUpdateWarningMessage = new CreateOrUpdateWarningMessage();
     this.CalculatePreviousCropService = new CalculatePreviousCropService();
+    this.ProcessFutureManuresForWarnings = new ProcessFutureManuresForWarnings();
+
   }
 
   async getTotalNitrogenByManagementPeriod(
@@ -2354,6 +2357,18 @@ class OrganicManureService extends BaseService {
               }
             }
           }
+
+           const isCurrentOrganicManure = true,
+             isCurrentFertiliser = false;
+           await this.ProcessFutureManuresForWarnings.ProcessFutureManuresFor(
+             fieldData.ID,
+             savedOrganicManure.ApplicationDate,
+             isCurrentOrganicManure,
+             isCurrentFertiliser,
+             savedOrganicManure.ID,
+             transactionalManager,
+             userId
+           );
         }
 
         if (organicManureData.SaveDefaultForFarm) {
@@ -2373,6 +2388,8 @@ class OrganicManureService extends BaseService {
             MgO: OrganicManure.MgO,
           };
         }
+
+         
       }
       if (farmManureTypeData) {
         const existingFarmManureType =
@@ -2409,6 +2426,8 @@ class OrganicManureService extends BaseService {
             })
           );
         }
+
+       
       }
 
       return {
@@ -2886,7 +2905,19 @@ class OrganicManureService extends BaseService {
               );
             });
         }
+         const isCurrentOrganicManure=true, isCurrentFertiliser=false;
+         await this.ProcessFutureManuresForWarnings.ProcessFutureManuresFor(
+           fieldData.ID,
+           OrganicManure.ApplicationDate,
+           isCurrentOrganicManure,
+           isCurrentFertiliser,
+           ID,
+           transactionalManager,
+           userId
+         );
       }
+
+    
 
       return {
         OrganicManure: updatedOrganicManures,
