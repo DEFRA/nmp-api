@@ -221,13 +221,12 @@ class FertiliserManuresService extends BaseService {
 
 
                const isCurrentOrganicManure=false, isCurrentFertiliser=true;
-                await this.ProcessFutureManuresForWarnings.ProcessFutureManuresFor(
+                this.ProcessFutureManuresForWarnings.ProcessFutureManures(
                    cropAndField.FieldID,
                    savedFertiliser.ApplicationDate,
                    isCurrentOrganicManure,
                    isCurrentFertiliser,
                    savedFertiliser.ID,
-                   transactionalManager,
                    userId
                  );
       }
@@ -605,13 +604,12 @@ class FertiliserManuresService extends BaseService {
 
           const isCurrentOrganicManure = false,
             isCurrentFertiliser = true;
-          await this.ProcessFutureManuresForWarnings.ProcessFutureManuresFor(
+          this.ProcessFutureManuresForWarnings.ProcessFutureManures(
             crop.FieldID,
             fertiliserManure.ApplicationDate,
             isCurrentOrganicManure,
             isCurrentFertiliser,
             fertiliserManure.ID,
-            transactionalManager,
             userId
           );
 

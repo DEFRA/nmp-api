@@ -2360,13 +2360,12 @@ class OrganicManureService extends BaseService {
 
            const isCurrentOrganicManure = true,
              isCurrentFertiliser = false;
-           await this.ProcessFutureManuresForWarnings.ProcessFutureManuresFor(
+           this.ProcessFutureManuresForWarnings.ProcessFutureManures(
              fieldData.ID,
              savedOrganicManure.ApplicationDate,
              isCurrentOrganicManure,
              isCurrentFertiliser,
              savedOrganicManure.ID,
-             transactionalManager,
              userId
            );
         }
@@ -2906,13 +2905,12 @@ class OrganicManureService extends BaseService {
             });
         }
          const isCurrentOrganicManure=true, isCurrentFertiliser=false;
-         await this.ProcessFutureManuresForWarnings.ProcessFutureManuresFor(
+         this.ProcessFutureManuresForWarnings.ProcessFutureManures(
            fieldData.ID,
            OrganicManure.ApplicationDate,
            isCurrentOrganicManure,
            isCurrentFertiliser,
            ID,
-           transactionalManager,
            userId
          );
       }
