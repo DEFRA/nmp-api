@@ -28,6 +28,7 @@ const { WarningMessagesEntity } = require("../db/entity/warning-message.entity")
 const { CreateOrUpdateWarningMessage } = require("../shared/create-update-warning-messages.service");
 const { WarningCodesMapper } = require("../constants/warning-codes-mapper");
 const { ManureTypeMapper } = require("../constants/manure-type-mapper");
+const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
 
 class FertiliserManuresService extends BaseService {
   constructor() {
@@ -52,7 +53,8 @@ class FertiliserManuresService extends BaseService {
     this.HandleSoilAnalysisService = new HandleSoilAnalysisService();
     this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
     this.CreateOrUpdateWarningMessage = new CreateOrUpdateWarningMessage();
-
+    this.ProcessFutureManuresForWarnings = new ProcessFutureManuresForWarnings();
+    
       
   }
   async getFertiliserManureNitrogenSum(
@@ -209,6 +211,24 @@ class FertiliserManuresService extends BaseService {
           );
           
         }
+
+        const cropAndField = await transactionalManager
+          .createQueryBuilder(ManagementPeriodEntity, "mp")
+          .leftJoin(CropEntity, "crop", "crop.ID = mp.CropID")
+          .select(["mp.CropID AS CropID", "crop.FieldID AS FieldID"])
+          .where("mp.ID = :managementPeriodID", { managementPeriodID:savedFertiliser.ManagementPeriodID })
+          .getRawOne();
+
+
+               const isCurrentOrganicManure=false, isCurrentFertiliser=true;
+                this.ProcessFutureManuresForWarnings.ProcessFutureManures(
+                   cropAndField.FieldID,
+                   savedFertiliser.ApplicationDate,
+                   isCurrentOrganicManure,
+                   isCurrentFertiliser,
+                   savedFertiliser.ID,
+                   userId
+                 );
       }
 
       const soilAnalysisAllData = await this.soilAnalysisRepository.find();
@@ -581,6 +601,17 @@ class FertiliserManuresService extends BaseService {
             Year: "ASC", // Ensure we get the next immediate year
           },
         });
+
+          const isCurrentOrganicManure = false,
+            isCurrentFertiliser = true;
+          this.ProcessFutureManuresForWarnings.ProcessFutureManures(
+            crop.FieldID,
+            fertiliserManure.ApplicationDate,
+            isCurrentOrganicManure,
+            isCurrentFertiliser,
+            fertiliserManure.ID,
+            userId
+          );
 
         if (nextAvailableCrop) {
           this.UpdateRecommendation.updateRecommendationsForField(
