@@ -5,6 +5,7 @@ const {
 } = require("./dto/farm-manure-type.dto");
 const { FarmManureTypeController } = require("./farm-manure-type.controller");
 const getController = (request, h) => new FarmManureTypeController(request, h);
+const farmManureType="Farm Manure Type";
 
 // Define routes
 module.exports = [
@@ -12,7 +13,7 @@ module.exports = [
     method: "GET",
     path: "/farm-manure-type/{farmId}",
     options: {
-      tags: ["api", "Farm Manure Type"],
+      tags: ["api", `${farmManureType}`],
       description: "Get FarmManureType by FarmId",
       validate: {
         params: Joi.object({
@@ -41,7 +42,7 @@ module.exports = [
     method: "GET",
     path: "/farm-manure-type/check",
     options: {
-      tags: ["api", "Farm Manure Type"],
+      tags: ["api", `${farmManureType}`],
       description:
         "Check if FarmManureType exists by FarmID, ManureTypeID, and ManureTypeName",
       validate: {
@@ -73,7 +74,7 @@ module.exports = [
     method: "GET",
     path: "/farm-manure-type/farm-manure-type-by-id/{farmManureTypeId}",
     options: {
-      tags: ["api", "Farm Manure Type"],
+      tags: ["api",`${farmManureType}`],
       description: "Get Farm Manure Type by id",
       validate: {
         params: Joi.object({
@@ -89,7 +90,7 @@ module.exports = [
                 request,
               }),
             )
-            .code(400)
+            .code()
             .takeover();
         },
       },
