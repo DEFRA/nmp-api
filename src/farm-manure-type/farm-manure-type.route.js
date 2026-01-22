@@ -26,7 +26,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -58,7 +58,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -67,6 +67,35 @@ module.exports = [
       handler: async (request, h) => {
         return getController(request, h).checkFarmManureTypeExists();
       },
+    },
+  },
+  {
+    method: "GET",
+    path: "/farm-manure-type/farm-manure-type-by-id/{farmManureTypeId}",
+    options: {
+      tags: ["api", "Farm Manure Type"],
+      description: "Get Farm Manure Type by id",
+      validate: {
+        params: Joi.object({
+          farmManureTypeId: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              }),
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      return getController(request, h).getById();
     },
   },
 ];
