@@ -178,7 +178,7 @@ class CalculateGrassHistoryAndPreviousGrass {
     // -----------------------------
     // Step 4: NitrogenUse
     let nitrogenUse = null;
-    let grassCrop = null;
+    let grassCrop;
 
     if (isHighClover === 1) {
       nitrogenUse = null; // Skip calculation
@@ -191,6 +191,8 @@ class CalculateGrassHistoryAndPreviousGrass {
         (crop2 || prevGrass2)
       ) {
         grassCrop = crop2 ? crop1 : prevGrass2;
+      }else{
+        grassCrop = null;
       }
 
       if (grassCrop) {
