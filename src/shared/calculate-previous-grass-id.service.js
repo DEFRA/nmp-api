@@ -356,106 +356,60 @@ class CalculateGrassHistoryAndPreviousGrass {
       });
     };
 
-    // Step 1: Get field types for years: -1, -2, -3
-    for (let i = 1; i <= 3; i++) {
-      const year = harvestYear - i;
-
+    const resolveFieldTypeForYear = async (year) => {
       const crop = await this.getCropForYear(
         fieldId,
         year,
         transactionalManager,
       );
 
-      let fieldType = crop?.FieldType ?? null;
-
-      if (fieldType == null) {
-        const prevGrass = await transactionalManager.findOne(
-          PreviousCroppingEntity,
-          {
-            where: { FieldID: fieldId, HarvestYear: year },
-          },
-        );
-
-        if (prevGrass && prevGrass.CropTypeID === CropTypeMapper.GRASS) {
-          fieldType = FieldTypeMapper.GRASS;
-          pushMeta(year, fieldType, true);
-        } else {
-          fieldType = FieldTypeMapper.ARABLE;
-          pushMeta(year, fieldType, true);
-        }
-      } else {
-        pushMeta(year, fieldType, false);
+      if (crop?.FieldType != null) {
+        pushMeta(year, crop.FieldType, false);
+        return crop.FieldType;
       }
 
+      const prevGrass = await transactionalManager.findOne(
+        PreviousCroppingEntity,
+        { where: { FieldID: fieldId, HarvestYear: year } },
+      );
+
+      const isGrass = prevGrass?.CropTypeID === CropTypeMapper.GRASS;
+      const resolvedType = isGrass
+        ? FieldTypeMapper.GRASS
+        : FieldTypeMapper.ARABLE;
+
+      pushMeta(year, resolvedType, true);
+      return resolvedType;
+    };
+
+    const pushIfGrass = (fieldType) => {
+      if (fieldType === FieldTypeMapper.GRASS) {
+        fieldTypes.push(FieldTypeMapper.GRASS);
+      }
+    };
+
+    // Step 1: Last 3 years
+    for (let i = 1; i <= 3; i++) {
+      const year = harvestYear - i;
+      const fieldType = await resolveFieldTypeForYear(year);
       fieldTypes.push(fieldType);
     }
 
-    // Step 2: Handle additional years for Ley calculation
     const [first, second, third] = fieldTypes;
 
+    // Step 2a: Arable → Grass → Grass
     if (await this.isArableGrassGrass(first, second, third)) {
       const year = harvestYear - 4;
-
-      const crop4 = await this.getCropForYear(
-        fieldId,
-        year,
-        transactionalManager,
-      );
-
-      let fieldType4 = crop4?.FieldType ?? null;
-
-      if (fieldType4 == null) {
-        const prevGrass = await transactionalManager.findOne(
-          PreviousCroppingEntity,
-          {
-            where: { FieldID: fieldId, HarvestYear: year },
-          },
-        );
-
-        if (prevGrass && prevGrass.CropTypeID === CropTypeMapper.GRASS) {
-          fieldType4 = FieldTypeMapper.GRASS;
-          pushMeta(year, fieldType4, true);
-        }
-      } else {
-        pushMeta(year, fieldType4, false);
-      }
-
-      if (fieldType4 === FieldTypeMapper.GRASS) {
-        fieldTypes.push(FieldTypeMapper.GRASS);
-      }
+      const fieldType = await resolveFieldTypeForYear(year);
+      pushIfGrass(fieldType);
     }
 
+    // Step 2b: Arable → Arable → Grass
     if (await this.isArableArableGrass(first, second, third)) {
       for (let i = 4; i <= 5; i++) {
         const year = harvestYear - i;
-
-        const cropX = await this.getCropForYear(
-          fieldId,
-          year,
-          transactionalManager,
-        );
-
-        let fieldTypeX = cropX?.FieldType ?? null;
-
-        if (fieldTypeX == null) {
-          const prevGrass = await transactionalManager.findOne(
-            PreviousCroppingEntity,
-            {
-              where: { FieldID: fieldId, HarvestYear: year },
-            },
-          );
-
-          if (prevGrass?.CropTypeID === CropTypeMapper.GRASS) {
-            fieldTypeX = FieldTypeMapper.GRASS;
-            pushMeta(year, fieldTypeX, true);
-          }
-        } else {
-          pushMeta(year, fieldTypeX, false);
-        }
-
-        if (fieldTypeX === FieldTypeMapper.GRASS) {
-          fieldTypes.push(FieldTypeMapper.GRASS);
-        }
+        const fieldType = await resolveFieldTypeForYear(year);
+        pushIfGrass(fieldType);
       }
     }
 
@@ -464,6 +418,7 @@ class CalculateGrassHistoryAndPreviousGrass {
       fieldTypeMeta,
     };
   }
+
   async getGrassCropFromCropEntity(fieldId, year, transactionalManager) {
     const crop = await this.getCropForYear(fieldId, year, transactionalManager);
 
