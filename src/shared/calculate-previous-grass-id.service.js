@@ -191,7 +191,7 @@ class CalculateGrassHistoryAndPreviousGrass {
         (crop2 || prevGrass2)
       ) {
         grassCrop = crop2 ? crop1 : prevGrass2;
-      }else{
+      } else {
         grassCrop = null;
       }
 
@@ -393,11 +393,7 @@ class CalculateGrassHistoryAndPreviousGrass {
     // Step 2: Handle additional years for Ley calculation
     const [first, second, third] = fieldTypes;
 
-    if (
-      first === FieldTypeMapper.ARABLE &&
-      second === FieldTypeMapper.GRASS &&
-      third === FieldTypeMapper.GRASS
-    ) {
+    if (await this.isArableGrassGrass(first, second, third)) {
       const year = harvestYear - 4;
 
       const crop4 = await this.getCropForYear(
@@ -429,11 +425,7 @@ class CalculateGrassHistoryAndPreviousGrass {
       }
     }
 
-    if (
-      first === FieldTypeMapper.ARABLE &&
-      second === FieldTypeMapper.ARABLE &&
-      third === FieldTypeMapper.GRASS
-    ) {
+    if (await this.isArableArableGrass(first, second, third)) {
       for (let i = 4; i <= 5; i++) {
         const year = harvestYear - i;
 
@@ -714,8 +706,24 @@ class CalculateGrassHistoryAndPreviousGrass {
     };
   }
 
+  async isArableGrassGrass(first, second, third) {
+    return (
+      first === FieldTypeMapper.ARABLE &&
+      second === FieldTypeMapper.GRASS &&
+      third === FieldTypeMapper.GRASS
+    );
+  }
+
+  async isArableArableGrass(first, second, third) {
+    return (
+      first === FieldTypeMapper.ARABLE &&
+      second === FieldTypeMapper.ARABLE &&
+      third === FieldTypeMapper.GRASS
+    );
+  }
+
   async findLastGrassCropDetails(fieldId, fromYear, transactionalManager) {
-    const maxYear=5
+    const maxYear = 5;
     for (let year = fromYear - 1; year >= fromYear - maxYear; year--) {
       const cropResult = await this.getGrassCropFromCropEntity(
         fieldId,
