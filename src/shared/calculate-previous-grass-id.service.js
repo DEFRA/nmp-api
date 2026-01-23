@@ -586,8 +586,7 @@ class CalculateGrassHistoryAndPreviousGrass {
     for (let y = fromYear - 1; y >= fromYear - 5; y--) {
       // Check CropEntity
       const crop = await this.getCropForYear(fieldId, y, transactionalManager);
-      if (crop != null && !crop.IsBasePlan) {
-        if (crop?.FieldType === FieldTypeMapper.GRASS) {
+      if ((crop != null && !crop.IsBasePlan) && (crop?.FieldType === FieldTypeMapper.GRASS)) {
           const swardManagementId = crop.SwardManagementID;
           const swardTypeID = crop.SwardTypeID;
 
@@ -626,7 +625,6 @@ class CalculateGrassHistoryAndPreviousGrass {
             isHighClover,
             nitrogenUse,
           };
-        }
       }
 
       // Check PreviousGrassesEntity
