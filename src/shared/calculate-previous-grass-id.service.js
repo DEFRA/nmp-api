@@ -206,8 +206,8 @@ class CalculateGrassHistoryAndPreviousGrass {
     // Step 5: Soil and Crop Group Categories
     // -----------------------------
     if (
-      firstHYFieldType == FieldTypeMapper.ARABLE &&
-      secondHYFieldType == FieldTypeMapper.ARABLE
+      firstHYFieldType === FieldTypeMapper.ARABLE &&
+      secondHYFieldType === FieldTypeMapper.ARABLE
     ) {
       nitrogenUse = null;
       isHighClover = null;
@@ -472,8 +472,9 @@ class CalculateGrassHistoryAndPreviousGrass {
   }
 
   async calculateTotalNitrogenUseForCrop(crop, transactionalManager) {
-    if (!crop?.ID)
+    if (!crop?.ID){
       return { nitrogenTotal: 0, nitrogenUse: CloverMapper.LowClover };
+    }
 
     let organicAvailableN = 0;
     let organicNextDefoliationN = 0;
@@ -667,12 +668,18 @@ class CalculateGrassHistoryAndPreviousGrass {
         } else {
           const nitrogenId = prevGrass.SoilNitrogenSupplyId;
           if (nitrogenId === SoilNitrogenMapper.HIGHN)
+          {
             nitrogenUse = CloverMapper.HighClover;
-          else if (nitrogenId === SoilNitrogenMapper.MODERATEN)
+          } 
+          else if (nitrogenId === SoilNitrogenMapper.MODERATEN){
             nitrogenUse = CloverMapper.ModerateClover;
-          else if (nitrogenId === SoilNitrogenMapper.LOWN)
+          }
+          else if (nitrogenId === SoilNitrogenMapper.LOWN){
             nitrogenUse = CloverMapper.LowClover;
-          else nitrogenUse = CloverMapper.LowClover;
+          } 
+          else {
+            nitrogenUse = CloverMapper.LowClover;
+          }
         }
 
         return {
