@@ -185,7 +185,7 @@ class CalculateGrassHistoryAndPreviousGrass {
     } else if (isHighClover === 0) {
       grassCrop = null;
       if (firstHYFieldType === FieldTypeMapper.GRASS && (crop1 || prevGrass1)) {
-        grassCrop = crop1 ? crop1 : prevGrass1;
+        grassCrop = crop1 || prevGrass1;
       } else if (
         secondHYFieldType === FieldTypeMapper.GRASS &&
         (crop2 || prevGrass2)
@@ -470,9 +470,140 @@ class CalculateGrassHistoryAndPreviousGrass {
       fieldTypeMeta,
     };
   }
+  async getGrassCropFromCropEntity(fieldId, year, transactionalManager) {
+    const crop = await this.getCropForYear(fieldId, year, transactionalManager);
+
+    if (!(await this.isValidGrassCrop(crop))) {
+      return null;
+    }
+
+    const managementFlags = await this.getSwardManagementFlags(
+      crop.SwardManagementID,
+    );
+
+    const isHighClover = (await this.isHighCloverCrop(crop.SwardTypeID))
+      ? 1
+      : 0;
+
+    const { nitrogenUse } = await this.calculateTotalNitrogenUseForCrop(
+      crop,
+      transactionalManager,
+    );
+
+    return {
+      crop,
+      ...managementFlags,
+      isHighClover,
+      nitrogenUse,
+    };
+  }
+
+  async getGrassCropFromPreviousCropping(fieldId, year, transactionalManager) {
+    const prevGrass = await this.getPreviousGrass(
+      fieldId,
+      year,
+      transactionalManager,
+    );
+
+    if (!prevGrass || prevGrass.CropTypeID !== CropTypeMapper.GRASS) {
+      return null;
+    }
+
+    const managementFlags = await this.getPreviousGrassManagementFlags(
+      prevGrass.GrassManagementOptionID,
+    );
+
+    const isHighClover = prevGrass.HasGreaterThan30PercentClover ? 1 : 0;
+
+    const nitrogenUse =
+      await this.calculateNitrogenUseFromPreviousGrass(prevGrass);
+
+    return {
+      crop: prevGrass,
+      ...managementFlags,
+      isHighClover,
+      nitrogenUse,
+    };
+  }
+  async getPreviousGrass(fieldId, year, transactionalManager) {
+    return transactionalManager
+      .createQueryBuilder(PreviousCroppingEntity, "pc")
+      .leftJoin(
+        SoilNitrogenSupplyItemsEntity,
+        "sns",
+        "sns.ID = pc.SoilNitrogenSupplyItemID",
+      )
+      .select([
+        "pc.ID AS ID",
+        "pc.CropTypeID AS CropTypeID",
+        "pc.GrassManagementOptionID AS GrassManagementOptionID",
+        "pc.HasGreaterThan30PercentClover AS HasGreaterThan30PercentClover",
+        "pc.SoilNitrogenSupplyItemID AS SoilNitrogenSupplyItemID",
+        "sns.SoilNitrogenSupplyId AS SoilNitrogenSupplyId",
+      ])
+      .where("pc.FieldID = :fieldId", { fieldId })
+      .andWhere("pc.HarvestYear = :year", { year })
+      .getRawOne();
+  }
+
+  async isValidGrassCrop(crop) {
+    return crop && !crop.IsBasePlan && crop.FieldType === FieldTypeMapper.GRASS;
+  }
+
+  async getSwardManagementFlags(swardManagementId) {
+    return {
+      isGrazedOnly:
+        swardManagementId === SwardManagementMapper.GRAZEDONLY ? 1 : 0,
+      iscutOnly: [
+        SwardManagementMapper.CUTFORSILAGEONLY,
+        SwardManagementMapper.CUTFORHAYONLY,
+      ].includes(swardManagementId)
+        ? 1
+        : 0,
+      iscutAndGrazing: [
+        SwardManagementMapper.GRAZINGANDHAY,
+        SwardManagementMapper.GRAZINGANDSILAGE,
+      ].includes(swardManagementId)
+        ? 1
+        : 0,
+    };
+  }
+
+  async getPreviousGrassManagementFlags(mgmtId) {
+    return {
+      isGrazedOnly: mgmtId === GrassManagementOptionsMapper.GRAZEDONLY ? 1 : 0,
+      iscutOnly: mgmtId === GrassManagementOptionsMapper.CUTONLY ? 1 : 0,
+      iscutAndGrazing:
+        mgmtId === GrassManagementOptionsMapper.GRAZEDANDCUT ? 1 : 0,
+    };
+  }
+
+  async isHighCloverCrop(swardTypeID) {
+    return [
+      SwardTypeMapper.GRASSANDCLOVER,
+      SwardTypeMapper.REDCLOVER,
+      SwardTypeMapper.LUCERNE,
+    ].includes(swardTypeID);
+  }
+
+  async calculateNitrogenUseFromPreviousGrass(prevGrass) {
+    if (prevGrass.HasGreaterThan30PercentClover) {
+      return CloverMapper.HighClover;
+    }
+
+    switch (prevGrass.SoilNitrogenSupplyId) {
+      case SoilNitrogenMapper.HIGHN:
+        return CloverMapper.HighClover;
+      case SoilNitrogenMapper.MODERATEN:
+        return CloverMapper.ModerateClover;
+      case SoilNitrogenMapper.LOWN:
+      default:
+        return CloverMapper.LowClover;
+    }
+  }
 
   async calculateTotalNitrogenUseForCrop(crop, transactionalManager) {
-    if (!crop?.ID){
+    if (!crop?.ID) {
       return { nitrogenTotal: 0, nitrogenUse: CloverMapper.LowClover };
     }
 
@@ -582,112 +713,23 @@ class CalculateGrassHistoryAndPreviousGrass {
   }
 
   async findLastGrassCropDetails(fieldId, fromYear, transactionalManager) {
-    let nitrogenUse = CloverMapper.LowClover;
-    for (let y = fromYear - 1; y >= fromYear - 5; y--) {
-      // Check CropEntity
-      const crop = await this.getCropForYear(fieldId, y, transactionalManager);
-      if ((crop != null && !crop.IsBasePlan) && (crop?.FieldType === FieldTypeMapper.GRASS)) {
-          const swardManagementId = crop.SwardManagementID;
-          const swardTypeID = crop.SwardTypeID;
-
-          const isGrazedOnly =
-            swardManagementId === SwardManagementMapper.GRAZEDONLY ? 1 : 0;
-          const iscutOnly = [
-            SwardManagementMapper.CUTFORSILAGEONLY,
-            SwardManagementMapper.CUTFORHAYONLY,
-          ].includes(swardManagementId)
-            ? 1
-            : 0;
-          const iscutAndGrazing = [
-            SwardManagementMapper.GRAZINGANDHAY,
-            SwardManagementMapper.GRAZINGANDSILAGE,
-          ].includes(swardManagementId)
-            ? 1
-            : 0;
-
-          const isHighClover = [
-            SwardTypeMapper.GRASSANDCLOVER,
-            SwardTypeMapper.REDCLOVER,
-            SwardTypeMapper.LUCERNE,
-          ].includes(swardTypeID)
-            ? 1
-            : 0;
-          const { nitrogenUse } = await this.calculateTotalNitrogenUseForCrop(
-            crop,
-            transactionalManager,
-          );
-
-          return {
-            crop,
-            isGrazedOnly,
-            iscutOnly,
-            iscutAndGrazing,
-            isHighClover,
-            nitrogenUse,
-          };
+    for (let year = fromYear - 1; year >= fromYear - 5; year--) {
+      const cropResult = await this.getGrassCropFromCropEntity(
+        fieldId,
+        year,
+        transactionalManager,
+      );
+      if (cropResult) {
+        return cropResult;
       }
 
-      // Check PreviousGrassesEntity
-      const prevGrass = await transactionalManager
-        .createQueryBuilder(PreviousCroppingEntity, "pc")
-        .leftJoin(
-          SoilNitrogenSupplyItemsEntity,
-          "sns",
-          "sns.ID = pc.SoilNitrogenSupplyItemID",
-        )
-        .select([
-          "pc.ID AS ID",
-          "pc.CropTypeID AS CropTypeID",
-          "pc.GrassManagementOptionID AS GrassManagementOptionID",
-          "pc.HasGreaterThan30PercentClover AS HasGreaterThan30PercentClover",
-          "pc.SoilNitrogenSupplyItemID AS SoilNitrogenSupplyItemID",
-          "sns.SoilNitrogenSupplyId AS SoilNitrogenSupplyId",
-        ])
-        .where("pc.FieldID = :fieldId", { fieldId })
-        .andWhere("pc.HarvestYear = :year", { year: y })
-        .getRawOne();
-
-      if (prevGrass && prevGrass.CropTypeID == CropTypeMapper.GRASS) {
-        const mgmtId = prevGrass.GrassManagementOptionID;
-
-        const isGrazedOnly =
-          mgmtId === GrassManagementOptionsMapper.GRAZEDONLY ? 1 : 0;
-        const iscutOnly =
-          mgmtId === GrassManagementOptionsMapper.CUTONLY ? 1 : 0;
-        const iscutAndGrazing =
-          mgmtId === GrassManagementOptionsMapper.GRAZEDANDCUT ? 1 : 0;
-
-        const isHighClover = prevGrass.HasGreaterThan30PercentClover ? 1 : 0;
-
-        nitrogenUse = null;
-
-        if (prevGrass.HasGreaterThan30PercentClover) {
-          nitrogenUse = CloverMapper.HighClover;
-        } else {
-          const nitrogenId = prevGrass.SoilNitrogenSupplyId;
-          if (nitrogenId === SoilNitrogenMapper.HIGHN)
-          {
-            nitrogenUse = CloverMapper.HighClover;
-          } 
-          else if (nitrogenId === SoilNitrogenMapper.MODERATEN){
-            nitrogenUse = CloverMapper.ModerateClover;
-          }
-          else if (nitrogenId === SoilNitrogenMapper.LOWN){
-            nitrogenUse = CloverMapper.LowClover;
-          } 
-          else {
-            nitrogenUse = CloverMapper.LowClover;
-          }
-        }
-
-        return {
-          crop: prevGrass,
-          isGrazedOnly,
-          iscutOnly,
-          iscutAndGrazing,
-          isHighClover,
-          nitrogenUse,
-        };
+      const prevGrassResult = await this.getGrassCropFromPreviousCropping(
+        fieldId,
+        year,
+        transactionalManager,
+      );
+      if (prevGrassResult) {
+        return prevGrassResult;
       }
     }
 
