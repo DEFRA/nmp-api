@@ -715,7 +715,8 @@ class CalculateGrassHistoryAndPreviousGrass {
   }
 
   async findLastGrassCropDetails(fieldId, fromYear, transactionalManager) {
-    for (let year = fromYear - 1; year >= fromYear - 5; year--) {
+    const maxYear=5
+    for (let year = fromYear - 1; year >= fromYear - maxYear; year--) {
       const cropResult = await this.getGrassCropFromCropEntity(
         fieldId,
         year,
