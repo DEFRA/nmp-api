@@ -28,7 +28,7 @@ module.exports = [
                 request,
               }),
             )
-            .code()
+            .code(400)
             .takeover();
         },
       },
@@ -63,7 +63,7 @@ module.exports = [
                 request,
               }),
             )
-            .code()
+            .code(400)
             .takeover();
         },
       },
@@ -96,7 +96,7 @@ module.exports = [
                 request,
               }),
             )
-            .code()
+            .code(400)
             .takeover();
         },
       },
@@ -126,7 +126,7 @@ module.exports = [
                 request,
               }),
             )
-            .code()
+            .code(400)
             .takeover();
         },
       },
@@ -160,7 +160,7 @@ module.exports = [
                 request,
               }),
             )
-            .code()
+            .code(400)
             .takeover();
         },
       },
@@ -191,7 +191,7 @@ module.exports = [
                 request,
               }),
             )
-            .code()
+            .code(400)
             .takeover();
         },
       },
@@ -219,7 +219,7 @@ module.exports = [
                 request,
               }),
             )
-            .code()
+            .code(400)
             .takeover();
         },
       },
@@ -250,7 +250,7 @@ module.exports = [
                 request,
               }),
             )
-            .code()
+            .code(400)
             .takeover();
         },
       },
@@ -280,7 +280,7 @@ module.exports = [
                 request,
               }),
             )
-            .code()
+            .code(400)
             .takeover();
         },
       },
@@ -310,7 +310,7 @@ module.exports = [
                 request,
               }),
             )
-            .code()
+            .code(400)
             .takeover();
         },
       },
@@ -346,7 +346,7 @@ module.exports = [
                 request,
               }),
             )
-            .code()
+            .code(400)
             .takeover();
         },
       },
