@@ -387,7 +387,7 @@ class FieldService extends BaseService {
           where: { FieldID: fieldId },
         });
 
-        if (crops.lenght > 0) {
+        if (crops.length > 0) {
           const oldestCrop = crops.reduce((oldest, current) =>
             current.Year < oldest.Year ? current : oldest,
           );
@@ -599,7 +599,7 @@ class FieldService extends BaseService {
           where: { FieldID: ID },
         });
 
-        if (crops.lenght > 0) {
+        if (crops.length > 0) {
           const oldestCrop = crops.reduce((oldest, current) =>
             current.Year < oldest.Year ? current : oldest,
           );
