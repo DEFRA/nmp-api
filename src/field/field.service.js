@@ -1575,7 +1575,7 @@ class FieldService extends BaseService {
         defoliationSequenceList.data.list.length > 0
       ) {
         const matchingDefoliation = defoliationSequenceList.data.list.find(
-          (x) => x.defoliationSequenceId == DefoliationSequenceID,
+          (x) => x.defoliationSequenceId === DefoliationSequenceID,
         );
         if (matchingDefoliation != null) {
           defoliationSequenceDescription = matchingDefoliation
