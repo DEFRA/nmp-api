@@ -559,16 +559,16 @@ class FieldService extends BaseService {
 
       let isSensitiveChange = false;
       for (const field of sensitiveFields) {
-        if (payload[field] == 0) {
+        if (payload[field] === 0) {
           payload[field] = null;
         }
-        if (originalField[field] == 0) {
+        if (originalField[field] === 0) {
           originalField[field] = null;
         }
 
         if (
-          payload[field] != undefined &&
-          payload[field] != originalField[field]
+          payload[field] !== undefined &&
+          payload[field] !== originalField[field]
         ) {
           isSensitiveChange = true;
           break;
