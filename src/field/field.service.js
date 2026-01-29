@@ -639,7 +639,6 @@ class FieldService extends BaseService {
         }
       }
 
-  
       const updateResult = await transactionalManager.update(
         FieldEntity,
         ID,
@@ -649,10 +648,6 @@ class FieldService extends BaseService {
           ModifiedOn: new Date(),
         },
       );
-
-      if (updateResult.affected === 0) {
-        throw boom.notFound(`Field with ID ${ID} not found`);
-      }
 
       // 5. Fetch updated field inside same transaction
       const updatedField = await transactionalManager.findOne(FieldEntity, {
