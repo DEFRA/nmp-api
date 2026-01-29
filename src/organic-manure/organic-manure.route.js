@@ -34,7 +34,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code()
             .takeover();
@@ -42,6 +42,42 @@ module.exports = [
       },
       handler: async (request, h) => {
         return getController(request, h).getTotalNitrogenByManagementPeriod();
+      },
+    },
+  },
+  {
+    method: "GET",
+    path: "/organic-manures/total-nitrogen-by-crop-id/{cropID}",
+    options: {
+      tags: ["api", "Organic Manure"],
+      description:
+        "Get Total Nitrogen by managementPeriodID and Application Date Range",
+      validate: {
+        params: Joi.object({
+          cropID: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          fromDate: Joi.date().iso().required(),
+          toDate: Joi.date().iso().required(),
+          confirm: Joi.boolean().required(),
+          organicManureID: Joi.number().integer().allow(null).optional(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              }),
+            )
+            .code()
+            .takeover();
+        },
+      },
+      handler: async (request, h) => {
+        return getController(request, h).getTotalNitrogenByCropID();
       },
     },
   },
@@ -69,7 +105,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code()
             .takeover();
@@ -106,7 +142,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -139,7 +175,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -169,7 +205,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code()
             .takeover();
@@ -196,7 +232,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -231,7 +267,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -255,7 +291,7 @@ module.exports = [
             .min(1)
             .required()
             .description(
-              "Array of organicManure IDs to delete, e.g., [1, 2, 3]"
+              "Array of organicManure IDs to delete, e.g., [1, 2, 3]",
             ),
         }),
         failAction: (request, h, err) => {
@@ -266,7 +302,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -295,7 +331,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -328,7 +364,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -355,7 +391,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -372,7 +408,7 @@ module.exports = [
     handler: async (request, h) => {
       return getController(
         request,
-        h
+        h,
       ).getTotalAvailableNitrogenByManagementPeriodID();
     },
     options: {
@@ -391,7 +427,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
