@@ -551,8 +551,13 @@ class FieldService extends BaseService {
     ];
 
     return sensitiveFields.some((field) => {
-      if (payload[field] === 0) payload[field] = null;
-      if (originalField[field] === 0) originalField[field] = null;
+      if (payload[field] === 0) {
+        payload[field] = null;
+      }
+
+      if (originalField[field] === 0) {
+        originalField[field] = null;
+      }
 
       return (
         payload[field] !== undefined && payload[field] !== originalField[field]
@@ -570,7 +575,9 @@ class FieldService extends BaseService {
       where: { FieldID: fieldId },
     });
 
-    if (!crops.length) return;
+    if (!crops.length) {
+      return;
+    }
 
     const oldestCrop = crops.reduce((oldest, current) =>
       current.Year < oldest.Year ? current : oldest,
