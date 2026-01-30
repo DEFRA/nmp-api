@@ -2657,9 +2657,7 @@ class OrganicManureService extends BaseService {
           )
             .then((res) => {
               if (res === undefined) {
-                console.log(
-                  "updateRecommendationAndOrganicManure returned undefined",
-                );
+                console.log(res);
               } else {
                 console.log(
                   "updateRecommendationAndOrganicManure result:",
