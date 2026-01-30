@@ -13,7 +13,7 @@ class FertiliserManuresController {
 
   async getFertiliserManureNitrogenSum() {
     const { fieldId } = this.#request.params;
-    const { fromDate, toDate, confirm,fertiliserId, } = this.#request.query;
+    const { fromDate, toDate, confirm, fertiliserId } = this.#request.query;
 
     try {
       const totalN =
@@ -22,7 +22,7 @@ class FertiliserManuresController {
           fromDate,
           toDate,
           confirm,
-          fertiliserId
+          fertiliserId,
         );
       return this.#h.response({ TotalN: totalN });
     } catch (error) {
@@ -32,14 +32,30 @@ class FertiliserManuresController {
 
   async getTotalNitrogen() {
     const { managementPeriodID } = this.#request.params;
-    const { confirm,fertiliserID,organicManureID } = this.#request.query;
+    const { confirm, fertiliserID, organicManureID } = this.#request.query;
     try {
       const totalN = await this.#fertiliserManuresService.getTotalNitrogen(
         managementPeriodID,
         confirm,
         fertiliserID,
-        organicManureID
+        organicManureID,
       );
+      return this.#h.response({ TotalN: totalN });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+  async getTotalNitrogenByCropID() {
+    const { cropID } = this.#request.params;
+    const { confirm, fertiliserID, organicManureID } = this.#request.query;
+    try {
+      const totalN =
+        await this.#fertiliserManuresService.getTotalNitrogenByCropID(
+          cropID,
+          confirm,
+          fertiliserID,
+          organicManureID,
+        );
       return this.#h.response({ TotalN: totalN });
     } catch (error) {
       return this.#h.response({ error });
@@ -53,15 +69,13 @@ class FertiliserManuresController {
       const data = await this.#fertiliserManuresService.createFertiliserManures(
         fertiliserManureBody,
         userId,
-        this.#request
+        this.#request,
       );
       return this.#h.response({ FertiliserManure: data });
     } catch (error) {
       return this.#h.response({ error });
     }
   }
-
-  
 
   async updateFertiliser() {
     const { fertiliserId } = this.#request.params;
@@ -78,7 +92,7 @@ class FertiliserManuresController {
         updatedFertiliserManureData, // Pass the current manure object
         userId, // User ID
         // parseInt(fertiliserId), // Fertiliser ID
-        this.#request // Original request
+        this.#request, // Original request
       );
       // results.push(data); // Store result of each update
       // }
@@ -92,9 +106,8 @@ class FertiliserManuresController {
   async getFertiliserById() {
     try {
       const { fertiliserId } = this.#request.params;
-      const { records } = await this.#fertiliserManuresService.getById(
-        fertiliserId
-      );
+      const { records } =
+        await this.#fertiliserManuresService.getById(fertiliserId);
 
       return this.#h.response(records);
     } catch (error) {
@@ -112,7 +125,7 @@ class FertiliserManuresController {
         await this.#fertiliserManuresService.getFertiliserByFarmIdAndYear(
           fertiliserId,
           farmId,
-          harvestYear
+          harvestYear,
         );
 
       return this.#h.response(records);
@@ -133,12 +146,12 @@ class FertiliserManuresController {
           await this.#fertiliserManuresService.deleteFertiliserManure(
             fertliserManureId,
             userId,
-            this.#request
+            this.#request,
           );
 
         if (result?.affectedRows === 0) {
           console.log(
-            `Fertiliser manure with ID ${fertliserManureId} not found.`
+            `Fertiliser manure with ID ${fertliserManureId} not found.`,
           );
         }
       }
@@ -153,9 +166,10 @@ class FertiliserManuresController {
   async getTotalNitrogenByManagementPeriodID() {
     const { managementPeriodID } = this.#request.params;
     try {
-      const totalN = await this.#fertiliserManuresService.getTotalNitrogenByManagementPeriodID(
-        managementPeriodID
-      );
+      const totalN =
+        await this.#fertiliserManuresService.getTotalNitrogenByManagementPeriodID(
+          managementPeriodID,
+        );
       return this.#h.response({ TotalN: totalN });
     } catch (error) {
       return this.#h.response({ error });
