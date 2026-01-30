@@ -29,7 +29,7 @@ class FieldController {
       const records = await this.#fieldService.getFieldCropAndSoilDetails(
         fieldId,
         year,
-        confirm
+        confirm,
       );
       if (!records) {
         throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
@@ -70,10 +70,14 @@ class FieldController {
 
   async checkFarmFieldExists() {
     const { farmId } = this.#request.params;
-      const {name}=this.#request.query;
-      const {fieldId}=this.#request.query;
+    const { name } = this.#request.query;
+    const { fieldId } = this.#request.query;
     try {
-      const exists = await this.#fieldService.checkFieldExists(farmId, name,fieldId);
+      const exists = await this.#fieldService.checkFieldExists(
+        farmId,
+        name,
+        fieldId,
+      );
 
       return this.#h.response({ exists });
     } catch (error) {
@@ -90,7 +94,22 @@ class FieldController {
         payload,
         userId,
         fieldId,
-        this.#request
+        this.#request,
+      );
+      return this.#h.response({ Field: updatedField });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+
+  async updateOnlyField() {
+    const userId = this.#request.userId;
+    const payload = this.#request.payload;
+    try {
+      const updatedField = await this.#fieldService.updateOnlyField(
+        payload,
+        userId,
+        this.#request,
       );
       return this.#h.response({ Field: updatedField });
     } catch (error) {
@@ -105,7 +124,7 @@ class FieldController {
       const data = await this.#fieldService.createFieldWithSoilAnalysisAndCrops(
         farmId,
         body,
-        userId
+        userId,
       );
       return this.#h.response(data);
     } catch (error) {
@@ -115,9 +134,8 @@ class FieldController {
   async deleteFieldById() {
     const { fieldId } = this.#request.params;
     try {
-      const result = await this.#fieldService.deleteFieldAndRelatedEntities(
-        fieldId
-      );
+      const result =
+        await this.#fieldService.deleteFieldAndRelatedEntities(fieldId);
       if (result?.affectedRows === 0) {
         throw boom.notFound(`Field with ID ${fieldId} not found.`);
       }
@@ -131,7 +149,7 @@ class FieldController {
     try {
       const records =
         await this.#fieldService.getFieldSoilAnalysisAndSnsAnalysisDetails(
-          fieldId
+          fieldId,
         );
       if (!records) {
         throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
@@ -154,7 +172,7 @@ class FieldController {
       const fieldData = await this.#fieldService.getFieldRelatedData(
         fieldIds,
         year,
-        this.#request
+        this.#request,
       );
 
       // Return the Field objects with related data
@@ -163,7 +181,6 @@ class FieldController {
       return this.#h.response({ error: error.message }).code(400);
     }
   }
-
 }
 
 module.exports = { FieldController };

@@ -55,10 +55,10 @@ class FieldService extends BaseService {
     this.soilAnalysisRepository =
       AppDataSource.getRepository(SoilAnalysisEntity);
     this.soilTypeSoilTextureRepository = AppDataSource.getRepository(
-      SoilTypeSoilTextureEntity
+      SoilTypeSoilTextureEntity,
     );
     this.managementPeriodRepository = AppDataSource.getRepository(
-      ManagementPeriodEntity
+      ManagementPeriodEntity,
     );
     this.rB209SoilService = new RB209SoilService();
     this.snsAnalysisRepository = AppDataSource.getRepository(SnsAnalysesEntity);
@@ -66,18 +66,18 @@ class FieldService extends BaseService {
       AppDataSource.getRepository(RecommendationEntity);
     this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
     this.previousGrassesRepository = AppDataSource.getRepository(
-      PreviousGrassesEntity
+      PreviousGrassesEntity,
     );
     this.previousCroppingRepository = AppDataSource.getRepository(
-      PreviousCroppingEntity
+      PreviousCroppingEntity,
     );
     this.organicManureRepository =
       AppDataSource.getRepository(OrganicManureEntity);
     this.recommendationCommentsRepository = AppDataSource.getRepository(
-      RecommendationCommentEntity
+      RecommendationCommentEntity,
     );
     this.fertiliserManureRepository = AppDataSource.getRepository(
-      FertiliserManuresEntity
+      FertiliserManuresEntity,
     );
     this.farmRepository = AppDataSource.getRepository(FarmEntity);
     this.rB209ArableService = new RB209ArableService();
@@ -88,7 +88,7 @@ class FieldService extends BaseService {
     this.MannerIncorporationDelayService =
       new MannerIncorporationDelayService();
     this.grassManagementOptionsRepository = AppDataSource.getRepository(
-      GrassManagementOptionsEntity
+      GrassManagementOptionsEntity,
     );
     this.rB209GrassService = new RB209GrassService();
     this.rB209GrasslandService = new RB209GrasslandService();
@@ -106,7 +106,7 @@ class FieldService extends BaseService {
     const soilTypeId = (await this.repository.findOneBy({ ID: fieldId }))
       ?.SoilTypeID;
     const soil = await this.rB209SoilService.getData(
-      `/Soil/SoilType/${soilTypeId}`
+      `/Soil/SoilType/${soilTypeId}`,
     );
 
     return {
@@ -117,27 +117,25 @@ class FieldService extends BaseService {
     };
   }
 
-
-async checkFieldExists(farmId, name, id = null) {
+  async checkFieldExists(farmId, name, id = null) {
     return (await this.fieldCountByName(farmId, name, id)) > 0;
   }
 
   async fieldCountByName(farmId, name, id = null) {
-      if (!farmId || !name) {
-        throw boom.badRequest("Farm Id and Name are required");
-      }
-  
-      const query = this.repository
-        .createQueryBuilder("Fields")
-        .where("Fields.Name = :name", { name: name.trim() })
-        .andWhere("Fields.FarmID = :farmId", { farmId: farmId });
-        if (id !== null) {
-          query.andWhere("Fields.ID != :id", { id });
-        }
- 
-  
-      return  query.getCount();
+    if (!farmId || !name) {
+      throw boom.badRequest("Farm Id and Name are required");
     }
+
+    const query = this.repository
+      .createQueryBuilder("Fields")
+      .where("Fields.Name = :name", { name: name.trim() })
+      .andWhere("Fields.FarmID = :farmId", { farmId: farmId });
+    if (id !== null) {
+      query.andWhere("Fields.ID != :id", { id });
+    }
+
+    return query.getCount();
+  }
 
   async getSoilTextureBySoilTypeId(soilTypeId) {
     const soilTexture = await this.soilTypeSoilTextureRepository.findOneBy({
@@ -158,7 +156,7 @@ async checkFieldExists(farmId, name, id = null) {
   async saveRecommendationCrops(
     transactionalManager,
     managementPeriodID,
-    userId
+    userId,
   ) {
     // Initialize variables for recommendations for both Crop Orders
     let cropData = {
@@ -206,7 +204,7 @@ async checkFieldExists(farmId, name, id = null) {
         Comments: null,
         CreatedOn: new Date(),
         CreatedByID: userId,
-      })
+      }),
     );
   }
   async createFieldWithSoilAnalysisAndCrops(farmId, body, userId) {
@@ -214,10 +212,6 @@ async checkFieldExists(farmId, name, id = null) {
     if (exists) {
       throw boom.conflict("Field already exists with this Farm Id and Name");
     }
-
-    // const { TopSoilID, SubSoilID } = await this.getSoilTextureBySoilTypeId(
-    //   body.Field.SoilTypeID
-    // );
 
     return await AppDataSource.transaction(async (transactionalManager) => {
       const field = this.repository.create({
@@ -237,7 +231,7 @@ async checkFieldExists(farmId, name, id = null) {
             FieldID: Field.ID,
             CreatedByID: userId,
             CreatedOn: new Date(),
-          })
+          }),
         );
       }
       let PKBalance = null;
@@ -258,28 +252,16 @@ async checkFieldExists(farmId, name, id = null) {
                 FieldID: Field.ID,
                 CreatedByID: userId,
                 CreatedOn: new Date(),
-              })
+              }),
             );
           }
         }
       }
-      // let SnsAnalysis = null;
-      // if (body.SnsAnalysis) {
-      //   SnsAnalysis = await transactionalManager.save(
-      //     SnsAnalysesEntity,
-      //     this.snsAnalysisRepository.create({
-      //       ...body?.SnsAnalysis,
-      //       FieldID: Field.ID,
-      //       CreatedByID: userId,
-      //       CreatedOn: new Date(),
-      //     })
-      //   );
-      // }
-      // Save PreviousCrops
+
       let Previouscrops = [];
       if (body.PreviousCroppings && body.PreviousCroppings.length > 0) {
         for (const cropsData of body.PreviousCroppings) {
-          const {Action , ...createPrevCrops} = cropsData
+          const { Action, ...createPrevCrops } = cropsData;
           const savedCrops = await transactionalManager.save(
             PreviousCroppingEntity,
             this.previousCroppingRepository.create({
@@ -288,7 +270,7 @@ async checkFieldExists(farmId, name, id = null) {
               FieldID: Field.ID,
               CreatedByID: userId,
               CreatedOn: new Date(),
-            })
+            }),
           );
 
           Previouscrops.push(savedCrops);
@@ -304,7 +286,7 @@ async checkFieldExists(farmId, name, id = null) {
               FieldID: Field.ID,
               CreatedByID: userId,
               CreatedOn: new Date(),
-            })
+            }),
           );
           const ManagementPeriods = [];
           let savedManagementPeriod;
@@ -316,14 +298,14 @@ async checkFieldExists(farmId, name, id = null) {
                 CropID: savedCrop.ID,
                 CreatedByID: userId,
                 CreatedOn: new Date(),
-              })
+              }),
             );
             ManagementPeriods.push(savedManagementPeriod);
           }
           await this.saveRecommendationCrops(
             transactionalManager,
             savedManagementPeriod.ID,
-            userId
+            userId,
           );
 
           Crops.push({ Crop: savedCrop, ManagementPeriods });
@@ -344,9 +326,6 @@ async checkFieldExists(farmId, name, id = null) {
       const { Field: updatedFieldData, PreviousCroppings } = payload;
       const { ID, CreatedByID, CreatedOn, EncryptedFieldId, ...dataToUpdate } =
         updatedFieldData;
-
-        console.log("datatoupdate", payload);
-        console.log("updatedFieldData", updatedFieldData);
 
       // 1. Get original field inside transaction
       const originalField = await transactionalManager.findOne(FieldEntity, {
@@ -372,13 +351,13 @@ async checkFieldExists(farmId, name, id = null) {
 
       let isSensitiveChange = false;
       for (const field of sensitiveFields) {
-        if( updatedFieldData[field] == 0 ){
-          updatedFieldData[field] = null
+        if (updatedFieldData[field] == 0) {
+          updatedFieldData[field] = null;
         }
-        if ( originalField[field] == 0){
-          originalField[field] = null
+        if (originalField[field] == 0) {
+          originalField[field] = null;
         }
-      
+
         if (
           updatedFieldData[field] != undefined &&
           updatedFieldData[field] != originalField[field]
@@ -394,20 +373,19 @@ async checkFieldExists(farmId, name, id = null) {
           where: { FieldID: fieldId },
         });
 
-        if(crops.lenght > 0){
-          
+        if (crops.length > 0) {
           const oldestCrop = crops.reduce((oldest, current) =>
-            current.Year < oldest.Year ? current : oldest
+            current.Year < oldest.Year ? current : oldest,
           );
-  
+
           await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
             fieldId,
             oldestCrop.Year,
             request,
             userId,
-            transactionalManager
+            transactionalManager,
           );
-  
+
           const nextAvailableCrop = await transactionalManager.findOne(
             CropEntity,
             {
@@ -416,31 +394,26 @@ async checkFieldExists(farmId, name, id = null) {
                 Year: MoreThan(oldestCrop.Year),
               },
               order: { Year: "ASC" },
-            }
+            },
           );
-         
-  
+
           if (nextAvailableCrop) {
             this.UpdateRecommendation.updateRecommendationsForField(
               fieldId,
               nextAvailableCrop.Year,
               request,
-              userId
+              userId,
             ).catch((error) => {
-              console.error("Error updating next crop's recommendations:", error);
+              console.error(error);
             });
           }
         }
-
       }
-       
-      
 
       let updatedOrInsertedPrevCroppings = [];
 
       if (Array.isArray(PreviousCroppings) && PreviousCroppings.length > 0) {
         let hasPrevCropUpdated = false;
-
 
         for (const prevCrop of PreviousCroppings) {
           prevCrop.FieldID = fieldId;
@@ -459,7 +432,7 @@ async checkFieldExists(farmId, name, id = null) {
           if (ID) {
             existingPrevCrop = await transactionalManager.findOne(
               PreviousCroppingEntity,
-              { where: { ID } }
+              { where: { ID } },
             );
           }
 
@@ -483,7 +456,7 @@ async checkFieldExists(farmId, name, id = null) {
                   ...prevCropData,
                   ModifiedByID: userId,
                   ModifiedOn: new Date(),
-                }
+                },
               );
               hasPrevCropUpdated = true;
             }
@@ -492,7 +465,7 @@ async checkFieldExists(farmId, name, id = null) {
             if (existingPrevCrop) {
               await transactionalManager.delete(
                 PreviousCroppingEntity,
-                existingPrevCrop.ID
+                existingPrevCrop.ID,
               );
               hasPrevCropUpdated = true;
             }
@@ -507,19 +480,16 @@ async checkFieldExists(farmId, name, id = null) {
 
           if (crops.length > 0) {
             const oldestCrop = crops.reduce((oldest, current) =>
-              current.Year < oldest.Year ? current : oldest
+              current.Year < oldest.Year ? current : oldest,
             );
 
             this.UpdateRecommendation.updateRecommendationsForField(
               fieldId,
               oldestCrop.Year,
               request,
-              userId
+              userId,
             ).catch((error) => {
-              console.error(
-                "Error updating next crop's recommendations:",
-                error
-              );
+              console.error(error);
             });
           }
         }
@@ -527,7 +497,7 @@ async checkFieldExists(farmId, name, id = null) {
         // ✅ Return latest data
         updatedOrInsertedPrevCroppings = await transactionalManager.find(
           PreviousCroppingEntity,
-          { where: { FieldID: fieldId } }
+          { where: { FieldID: fieldId } },
         );
       }
 
@@ -538,7 +508,7 @@ async checkFieldExists(farmId, name, id = null) {
           ...dataToUpdate,
           ModifiedByID: userId,
           ModifiedOn: new Date(),
-        }
+        },
       );
 
       if (updateResult.affected === 0) {
@@ -552,7 +522,142 @@ async checkFieldExists(farmId, name, id = null) {
 
       return {
         Field: updatedField,
-        PreviousCroppings: updatedOrInsertedPrevCroppings
+        PreviousCroppings: updatedOrInsertedPrevCroppings,
+      };
+    });
+  }
+
+  async getOriginalField(transactionalManager, fieldId) {
+    const field = await transactionalManager.findOne(FieldEntity, {
+      where: { ID: fieldId },
+    });
+
+    if (!field) {
+      console.log(`Field with ID ${fieldId} not found`);
+    }
+
+    return field;
+  }
+
+  async hasSensitiveFieldChanged(payload, originalField) {
+    const sensitiveFields = [
+      "TotalArea",
+      "CroppedArea",
+      "ManureNonSpreadingArea",
+      "IsWithinNVZ",
+      "IsAbove300SeaLevel",
+      "SoilTypeID",
+      "SoilReleasingClay",
+      "SoilOverChalk",
+      "NVZProgrammeID",
+    ];
+
+    return sensitiveFields.some((field) => {
+      if (payload[field] === 0) {
+        payload[field] = null;
+      }
+
+      if (originalField[field] === 0) {
+        originalField[field] = null;
+      }
+
+      return (
+        payload[field] !== undefined && payload[field] !== originalField[field]
+      );
+    });
+  }
+
+  async handleSensitiveFieldChange(
+    transactionalManager,
+    fieldId,
+    request,
+    userId,
+  ) {
+    const crops = await transactionalManager.find(CropEntity, {
+      where: { FieldID: fieldId },
+    });
+
+    if (!crops.length) {
+      return;
+    }
+
+    const oldestCrop = crops.reduce((oldest, current) =>
+      current.Year < oldest.Year ? current : oldest,
+    );
+
+    await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+      fieldId,
+      oldestCrop.Year,
+      request,
+      userId,
+      transactionalManager,
+    );
+
+    const nextCrop = await transactionalManager.findOne(CropEntity, {
+      where: {
+        FieldID: fieldId,
+        Year: MoreThan(oldestCrop.Year),
+      },
+      order: { Year: "ASC" },
+    });
+
+    if (nextCrop) {
+      this.UpdateRecommendation.updateRecommendationsForField(
+        fieldId,
+        nextCrop.Year,
+        request,
+        userId,
+      ).catch(console.error);
+    }
+  }
+
+  async getUpdatedField(transactionalManager, fieldId) {
+    return transactionalManager.findOne(FieldEntity, {
+      where: { ID: fieldId },
+    });
+  }
+
+  async updateFieldEntity(transactionalManager, fieldId, dataToUpdate, userId) {
+    await transactionalManager.update(FieldEntity, fieldId, {
+      ...dataToUpdate,
+      ModifiedByID: userId,
+      ModifiedOn: new Date(),
+    });
+  }
+
+  async updateOnlyField(payload, userId, request) {
+    return AppDataSource.transaction(async (transactionalManager) => {
+      const { ID, CreatedByID, CreatedOn, EncryptedFieldId, ...dataToUpdate } =
+        payload;
+
+      const originalField = await this.getOriginalField(
+        transactionalManager,
+        ID,
+      );
+
+      const isSensitiveChange = await this.hasSensitiveFieldChanged(
+        payload,
+        originalField,
+      );
+
+      if (isSensitiveChange) {
+        await this.handleSensitiveFieldChange(
+          transactionalManager,
+          ID,
+          request,
+          userId,
+        );
+      }
+
+      await this.updateFieldEntity(
+        transactionalManager,
+        ID,
+        dataToUpdate,
+        userId,
+      );
+
+      return {
+        Field: await this.getUpdatedField(transactionalManager, ID),
       };
     });
   }
@@ -624,7 +729,7 @@ async checkFieldExists(farmId, name, id = null) {
   async getCropTypeName(cropTypeID, cropTypeAllData) {
     // Find the crop type in cropTypeAllData by matching cropTypeId
     const cropType = cropTypeAllData.find(
-      (item) => item.cropTypeId === cropTypeID
+      (item) => item.cropTypeId === cropTypeID,
     );
 
     // Check if the cropType is found
@@ -638,7 +743,7 @@ async checkFieldExists(farmId, name, id = null) {
   // Helper function to fetch crop type name
   async getCropInfo1Name(cropTypeID, cropInfo1Id) {
     const cropType = await this.rB209ArableService.getData(
-      `/Arable/CropInfo1/${cropTypeID}/${cropInfo1Id}`
+      `/Arable/CropInfo1/${cropTypeID}/${cropInfo1Id}`,
     );
     return cropType.cropInfo1Name;
   }
@@ -646,7 +751,7 @@ async checkFieldExists(farmId, name, id = null) {
   // Helper function to fetch crop type name
   async getCropInfo2Name(cropInfo2Id) {
     const cropType = await this.rB209ArableService.getData(
-      `/Arable/CropInfo2/${cropInfo2Id}`
+      `/Arable/CropInfo2/${cropInfo2Id}`,
     );
     return cropType.cropInfo2Name;
   }
@@ -655,7 +760,7 @@ async checkFieldExists(farmId, name, id = null) {
   async ManureTypeName(ManureTypeID, request) {
     const manureTypeData = await this.MannerManureTypesService.getData(
       `/manure-types/${ManureTypeID}`,
-      request
+      request,
     );
 
     return manureTypeData.data.name;
@@ -666,7 +771,7 @@ async checkFieldExists(farmId, name, id = null) {
     const applicationMethodData =
       await this.MannerApplicationMethodService.getData(
         `/application-methods/${ApplicationMethodID}`,
-        request
+        request,
       );
     return applicationMethodData.data.name;
   }
@@ -676,7 +781,7 @@ async checkFieldExists(farmId, name, id = null) {
     const incorporationMethodData =
       await this.MannerIncorporationMethodService.getData(
         `/incorporation-methods/${IncorporationMethodID}`,
-        request
+        request,
       );
     return incorporationMethodData.data.name;
   }
@@ -686,7 +791,7 @@ async checkFieldExists(farmId, name, id = null) {
     const incorporationDelayData =
       await this.MannerIncorporationDelayService.getData(
         `/incorporation-delays/${IncorporationDelayID}`,
-        request
+        request,
       );
     return incorporationDelayData.data.name;
   }
@@ -696,7 +801,7 @@ async checkFieldExists(farmId, name, id = null) {
     const previousCroppingData = await this.previousCroppingRepository.findOne({
       where: { FieldID: fieldID },
     });
-    if (previousCroppingData!=null&&previousCroppingData.CropTypeID == CropTypeMapper.GRASS) {
+    if (previousCroppingData?.CropTypeID === CropTypeMapper.GRASS) {
       previousGrasses = previousCroppingData;
     }
     return previousGrasses;
@@ -705,9 +810,8 @@ async checkFieldExists(farmId, name, id = null) {
   async getFieldRelatedData(fieldIds, year, request) {
     // Fetch all fields by the list of FieldIDs
     const fields = await this.repository.findByIds(fieldIds);
-    const cropTypeAllData = await this.rB209ArableService.getData(
-      `/Arable/CropTypes`
-    );
+    const cropTypeAllData =
+      await this.rB209ArableService.getData(`/Arable/CropTypes`);
 
     // Fetch the farm associated with the first field (assuming all fields belong to the same farm)
 const farm=await this.FarmService.getFarmById(fields[0].FarmID);
@@ -723,29 +827,30 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
         });
         let previousCropData = await this.cropRepository.findOne({
           where: { FieldID: field.ID, Year: year - 1 },
-      select: ["CropTypeID"],
-      order: {
-        CreatedOn: "DESC"  // Order by createdDate in descending order
-      },
-      });
-      // if no plan in previous year. Fetch from previous crop history
-      if(previousCropData==null)
-      {
+          select: ["CropTypeID"],
+          order: {
+            CreatedOn: "DESC", // Order by createdDate in descending order
+          },
+        });
+        // if no plan in previous year. Fetch from previous crop history
+        if (previousCropData == null) {
           previousCropData = await this.previousCroppingRepository.findOne({
-                where: { FieldID: field.ID, HarvestYear: year-1 },
-                select: ["CropTypeID"],
-              });
-      }
-      const previousCropTypeName = previousCropData 
-        ? await this.getCropTypeName(previousCropData.CropTypeID,cropTypeAllData)
-        : null;
-
+            where: { FieldID: field.ID, HarvestYear: year - 1 },
+            select: ["CropTypeID"],
+          });
+        }
+        const previousCropTypeName = previousCropData
+          ? await this.getCropTypeName(
+              previousCropData.CropTypeID,
+              cropTypeAllData,
+            )
+          : null;
 
         // const previousGrasses = await this.previousGrassesRepository.find({
         //   where: { FieldID: field.ID },
         // });
         const previousGrasses = await this.getPreviousCropDataByFieldID(
-          field.ID
+          field.ID,
         );
         let grassManagementOptionName = null;
         if (previousGrasses) {
@@ -821,7 +926,7 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
         // if (Errors.length > 0) {
         //   throw new Error(JSON.stringify(Errors));
         // }
-        let soilAnalysis=null;        
+        let soilAnalysis = null;
         if (crops != null) {
           for (const crop of crops) {
             if (crop.CropTypeID == 140) {
@@ -838,7 +943,7 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
                     crop.SwardManagementID,
                     crop.PotentialCut,
                     crop.DefoliationSequenceID,
-                    crop.Establishment
+                    crop.Establishment,
                   );
               }
               crop.DefoliationSequenceName =
@@ -851,7 +956,7 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
               crop.SwardTypeName = swardType != null ? swardType : null;
               if (crop.SwardManagementID != null) {
                 swardTypeManagment = await this.findSwardTypeManagment(
-                  crop.SwardManagementID
+                  crop.SwardManagementID,
                 );
               }
               crop.SwardManagementName =
@@ -866,7 +971,7 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
 
         const cropsWithManagement = [];
         for (const crop of crops) {
-          let isSoilAnalysisAdded=null;
+          let isSoilAnalysisAdded = null;
           try {
             // Fetch SNS analysis
             const snsAnalysis = await this.snsAnalysisRepository.findOne({
@@ -897,22 +1002,22 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
               for (const manure of organicManures) {
                 const manureTypeName = await this.ManureTypeName(
                   manure.ManureTypeID,
-                  request
+                  request,
                 );
                 const applicationMethodName =
                   await this.getApplicationMethodName(
                     manure.ApplicationMethodID,
-                    request
+                    request,
                   );
                 const incorporationMethodName =
                   await this.getIncorporationMethodName(
                     manure.IncorporationMethodID,
-                    request
+                    request,
                   );
                 const incorporationDelayName =
                   await this.getIncorporationDelayName(
                     manure.IncorporationDelayID,
-                    request
+                    request,
                   );
 
                 organicManuresWithNames.push({
@@ -930,33 +1035,33 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
                   where: { ManagementPeriodID: managementPeriod.ID },
                 });
 
-                if(isSoilAnalysisAdded==null)
-                {
-                  const fiveYearBack = 5;
-              const fiveYearsAgo = year - fiveYearBack;
+              if (isSoilAnalysisAdded == null) {
+                const fiveYearBack = 5;
+                const fiveYearsAgo = year - fiveYearBack;
                 const currentYear = year;
-                const soilAnalysisRecordsList = await this.soilAnalysisRepository.find({
-                where: {
-                  FieldID: field.ID,
-                  Year: Between(fiveYearsAgo, currentYear),
-                },
-                order: { Date: "DESC" }, // Most recent first
-                take: 1, // Only 1 record
-               });
+                const soilAnalysisRecordsList =
+                  await this.soilAnalysisRepository.find({
+                    where: {
+                      FieldID: field.ID,
+                      Year: Between(fiveYearsAgo, currentYear),
+                    },
+                    order: { Date: "DESC" }, // Most recent first
+                    take: 1, // Only 1 record
+                  });
 
-                const soilAnalysisRecords = soilAnalysisRecordsList[0] || null;       
+                const soilAnalysisRecords = soilAnalysisRecordsList[0] || null;
 
                 //fetch soil aalysis data
-                if (recommendation&&soilAnalysisRecords!=null) {
-                soilAnalysis = {
-            SulphurDeficient: soilAnalysisRecords.SulphurDeficient,
-            Date: soilAnalysisRecords.Date,
-            PH: recommendation.PH,
-            PhosphorusIndex: recommendation.PIndex,
-            PotassiumIndex: recommendation.KIndex,
-            MagnesiumIndex: recommendation.MgIndex,
-          };            
-                isSoilAnalysisAdded = true;
+                if (recommendation && soilAnalysisRecords != null) {
+                  soilAnalysis = {
+                    SulphurDeficient: soilAnalysisRecords.SulphurDeficient,
+                    Date: soilAnalysisRecords.Date,
+                    PH: recommendation.PH,
+                    PhosphorusIndex: recommendation.PIndex,
+                    PotassiumIndex: recommendation.KIndex,
+                    MagnesiumIndex: recommendation.MgIndex,
+                  };
+                  isSoilAnalysisAdded = true;
                 } else {
                   soilAnalysis = null;
                 }
@@ -972,7 +1077,7 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
               let mergedRecommendation = null;
               if (recommendations != null) {
                 const recBasedOnManId = recommendations.filter(
-                  (rec) => rec.ManagementPeriod_ID === managementPeriod.ID
+                  (rec) => rec.ManagementPeriod_ID === managementPeriod.ID,
                 );
                 if (recBasedOnManId != null) {
                   for (const r of recBasedOnManId) {
@@ -1041,7 +1146,7 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
             // Fetch crop type and other crop-related information
             const cropTypeName = await this.getCropTypeName(
               crop.CropTypeID,
-              cropTypeAllData
+              cropTypeAllData,
             );
             const cropInfo1Name = crop.CropInfo1
               ? await this.getCropInfo1Name(crop.CropTypeID, crop.CropInfo1)
@@ -1069,14 +1174,14 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
 
         // Fetch SoilTypeName by passing field.SoilTypeID
         const soil = await this.rB209SoilService.getData(
-          `/Soil/SoilType/${field.SoilTypeID}`
+          `/Soil/SoilType/${field.SoilTypeID}`,
         );
         const soilTypeName = soil?.soilType;
         // Get SulphurDeficient from soilAnalysis
         const sulphurDeficient = soilAnalysis?.SulphurDeficient ?? null;
         // Create soilDetails object
         const soilDetails = {
-          SoilTypeId:field.SoilTypeID,
+          SoilTypeId: field.SoilTypeID,
           SoilTypeName: soilTypeName,
           PotashReleasingClay: field.SoilReleasingClay,
           SulphurDeficient: sulphurDeficient,
@@ -1090,7 +1195,7 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
         const fieldData = {
           ...field,
           Management: grassManagementOptionName,
-          PreviousCropID: previousCropData?previousCropData.CropTypeID:null,
+          PreviousCropID: previousCropData ? previousCropData.CropTypeID : null,
           PreviousCrop: previousCropTypeName,
           Crops: cropsWithManagement,
           // PreviousGrasses: previousGrasses,
@@ -1100,7 +1205,7 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
 
         // Add the field data to the list of fields
         fieldsWithRelatedData.push(fieldData);
-      })
+      }),
     );
 
     // Add the fields to the farm object
@@ -1160,12 +1265,12 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
               fieldId,
               cropData.Year - 1,
               soilAnalysisWithPhYear,
-              1
+              1,
             );
 
           if (firstCropOrderDataList != null) {
             totalLime1 = await this.getApplyLimeInCaseOfMultipleCrops(
-              firstCropOrderDataList
+              firstCropOrderDataList,
             );
           }
 
@@ -1180,13 +1285,12 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
             await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
               fieldId,
               cropData.Year - 1,
-              soilAnalysisWithPhYear
+              soilAnalysisWithPhYear,
             );
 
           if (CropOrderDataList != null) {
-            totalLime1 = await this.getApplyLimeInCaseOfMultipleCrops(
-              CropOrderDataList
-            );
+            totalLime1 =
+              await this.getApplyLimeInCaseOfMultipleCrops(CropOrderDataList);
           }
           let cropOrder = 1;
           const firstCropOrderData =
@@ -1194,12 +1298,11 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
               fieldId,
               cropData.Year,
               null,
-              cropOrder
+              cropOrder,
             );
           if (firstCropOrderData != null) {
-            totalLime1 += await this.getApplyLimeInCaseOfMultipleCrops(
-              firstCropOrderData
-            );
+            totalLime1 +=
+              await this.getApplyLimeInCaseOfMultipleCrops(firstCropOrderData);
           }
         }
 
@@ -1249,7 +1352,7 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
     fieldID,
     year,
     soilAnalysisYear = null,
-    cropOrder = null
+    cropOrder = null,
   ) {
     // Ensure both fieldID and year are provided
     if (!fieldID || !year) {
@@ -1313,7 +1416,7 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
     // Check if any fertiliser manures data is found
     if (!fertiliserManures || fertiliserManures.length === 0) {
       console.log(
-        `No fertiliser manures data found for ManagementPeriodID ${managementPeriodID}`
+        `No fertiliser manures data found for ManagementPeriodID ${managementPeriodID}`,
       );
       return 0; // Exit if no fertiliser data is found
     }
@@ -1344,7 +1447,7 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
       // Fetch and sum the total lime for the current management period
       const limeForThisManagementPeriod =
         await this.findAndSumFertiliserManuresByManagementPeriodID(
-          previousManagementPeriodData.ID
+          previousManagementPeriodData.ID,
         );
 
       // Accumulate the lime value
@@ -1382,7 +1485,7 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
           Year: Between(fiveYearsAgo, year), // Fetch records within 5 years
         },
         order: { Date: "DESC" }, // Order by date, most recent first
-      }
+      },
     );
 
     // Define the fields we want the latest values for
@@ -1406,7 +1509,7 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
 
         // Find the first record in descending date order where the field has a value
         const latestRecordWithFieldValue = soilAnalysisRecordsFiveYears.find(
-          (record) => record[field] !== null && record[field] !== undefined
+          (record) => record[field] !== null && record[field] !== undefined,
         );
 
         // if (latestRecordWithFieldValue) {
@@ -1420,7 +1523,7 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
       });
     }
     const isEmpty = Object.values(latestSoilAnalysis).every(
-      (value) => value === null
+      (value) => value === null,
     );
     if (isEmpty) {
       return { latestSoilAnalysis: null, errors };
@@ -1433,12 +1536,12 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
     try {
       let swardManagementsName = null;
       let swardManagementsList = await this.rB209GrassService.getData(
-        `Grass/SwardManagements`
+        `Grass/SwardManagements`,
       );
 
       if (swardManagementsList.length > 0) {
         const matchingSward = swardManagementsList.find(
-          (x) => x.swardManagementId === SwardManagementID
+          (x) => x.swardManagementId === SwardManagementID,
         );
         if (matchingSward != null) {
           swardManagementsName = matchingSward
@@ -1458,13 +1561,13 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
     swardManagementId,
     PotentialCut,
     DefoliationSequenceID,
-    establishment
+    establishment,
   ) {
     try {
       let newSward = establishment == 0 || null ? false : true;
       let defoliationSequenceDescription = null;
       let defoliationSequenceList = await this.rB209GrassService.getData(
-        `Grass/DefoliationSequence/${swardManagementId}/${PotentialCut}/${newSward}`
+        `Grass/DefoliationSequence/${swardManagementId}/${PotentialCut}/${newSward}`,
       );
       if (
         defoliationSequenceList.data &&
@@ -1472,7 +1575,7 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
         defoliationSequenceList.data.list.length > 0
       ) {
         const matchingDefoliation = defoliationSequenceList.data.list.find(
-          (x) => x.defoliationSequenceId == DefoliationSequenceID
+          (x) => x.defoliationSequenceId === DefoliationSequenceID,
         );
         if (matchingDefoliation != null) {
           defoliationSequenceDescription = matchingDefoliation
@@ -1485,7 +1588,7 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
     } catch (error) {
       console.error(
         `Error fetching Defoliation Sequence for swardTypeId: & numberOfCuts=${PotentialCut}`,
-        error
+        error,
       );
       return "Unknown";
     }
@@ -1493,13 +1596,12 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
   async findSwardType(SwardTypeID) {
     try {
       let swardTypeName = null;
-      let swardTypeList = await this.rB209GrassService.getData(
-        `Grass/SwardTypes`
-      );
+      const swardTypeList =
+        await this.rB209GrassService.getData(`Grass/SwardTypes`);
 
       if (swardTypeList.length > 0) {
         const matchingSward = swardTypeList.find(
-          (x) => x.swardTypeId === SwardTypeID
+          (x) => x.swardTypeId === SwardTypeID,
         );
         if (matchingSward != null) {
           swardTypeName = matchingSward ? matchingSward.swardType : null;
@@ -1516,7 +1618,7 @@ const farm=await this.FarmService.getFarmById(fields[0].FarmID);
   async findGrassSeason(seasonID) {
     try {
       let season = await this.rB209GrasslandService.getData(
-        `Grassland/GrasslandSeason/${seasonID}`
+        `Grassland/GrasslandSeason/${seasonID}`,
       );
       return season.seasonName;
     } catch (error) {
