@@ -51,7 +51,7 @@ module.exports = [
     options: {
       tags: ["api", "Organic Manure"],
       description:
-        "Get Total Nitrogen by managementPeriodID and Application Date Range",
+        "Get Total Nitrogen by cropID and Application Date Range",
       validate: {
         params: Joi.object({
           cropID: Joi.number().integer().required(),
