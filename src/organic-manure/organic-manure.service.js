@@ -193,13 +193,36 @@ class OrganicManureService extends BaseService {
 
   async getTotalNitrogen(fieldId, fromDate, toDate, confirm, organicManureID) {
     // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
+    const START_OF_DAY = {
+      HOUR: 0,
+      MINUTE: 0,
+      SECOND: 0,
+      MILLISECOND: 0,
+    };
+
+    const END_OF_DAY = {
+      HOUR: 23,
+      MINUTE: 59,
+      SECOND: 59,
+      MILLISECOND: 999,
+    };
     const fromDateFormatted = new Date(fromDate);
-    fromDateFormatted.setHours(0, 0, 0, 0); // Set time to start of the day
+    fromDateFormatted.setHours(
+      START_OF_DAY.HOUR,
+      START_OF_DAY.MINUTE,
+      START_OF_DAY.SECOND,
+      START_OF_DAY.MILLISECOND,
+    );
 
     const toDateFormatted = new Date(toDate);
-    toDateFormatted.setHours(23, 59, 59, 999); // Set time to end of the day
+      toDateFormatted.setHours(
+        END_OF_DAY.HOUR,
+        END_OF_DAY.MINUTE,
+        END_OF_DAY.SECOND,
+        END_OF_DAY.MILLISECOND,
+      );
 
-    const query = await this.repository
+    const query = this.repository
       .createQueryBuilder("O") // O = OrganicManures
       .select("SUM(O.N * O.ApplicationRate)", "totalN")
       .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
