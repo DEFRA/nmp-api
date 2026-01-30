@@ -66,6 +66,7 @@ const { CalculatePreviousCropService } = require("../shared/previous-year-crop-s
 const { FieldAboveOrBelowSeaLevelMapper } = require("../constants/field-is-above-sea-level");
 const { StaticStrings } = require("../shared/static.string");
 const { ManureTypeMapper } = require("../constants/manure-type-mapper");
+const { normalizeDateWithTime } = require("../shared/dataValidate");
 class OrganicManureService extends BaseService {
   constructor() {
     super(OrganicManureEntity);
@@ -165,13 +166,22 @@ class OrganicManureService extends BaseService {
     confirm,
     organicManureID,
   ) {
-    // Normalize dates
-    const fromDateFormatted = new Date(fromDate);
-    fromDateFormatted.setHours(0, 0, 0, 0);
+    
+    const START_OF_DAY = {
+      HOUR: 0,
+      MINUTE: 0,
+      SECOND: 0,
+      MILLISECOND: 0,
+    };
 
-    const toDateFormatted = new Date(toDate);
-    toDateFormatted.setHours(23, 59, 59, 999);
-
+    const END_OF_DAY = {
+      HOUR: 23,
+      MINUTE: 59,
+      SECOND: 59,
+      MILLISECOND: 999,
+    };
+    const fromDateFormatted = normalizeDateWithTime(fromDate, START_OF_DAY);
+    const toDateFormatted = normalizeDateWithTime(toDate, END_OF_DAY);
     const query = this.repository
       .createQueryBuilder("O") // O = OrganicManures
       .select("SUM(O.N * O.ApplicationRate)", "totalN")

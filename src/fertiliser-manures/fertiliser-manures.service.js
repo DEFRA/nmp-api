@@ -123,19 +123,6 @@ class FertiliserManuresService extends BaseService {
       })
       .andWhere("fertiliserManures.Confirm = :confirm", { confirm });
 
-    // const fertiliserManuresResult = await this.repository
-    //   .createQueryBuilder("F") // O = OrganicManures
-    //   .select("SUM(F.N * F.ApplicationRate)", "totalN")
-    //   .innerJoin("ManagementPeriods", "M", "F.ManagementPeriodID = M.ID")
-    //   .innerJoin("Crops", "C", "M.CropID = C.ID")
-    //   .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
-    //   .andWhere("F.Confirm = :confirm", { confirm });
-    // if (fertiliserID !== null && fertiliserID !== undefined) {
-    //   fertiliserManuresResult.andWhere("F.ID != :fertiliserID", {
-    //     fertiliserID,
-    //   });
-    // }
-
     const fertiliserResult = await fertiliserManuresResult.getRawOne();
     console.log("fertiliserResult", fertiliserResult);
     // return result.totalN;
@@ -517,12 +504,6 @@ class FertiliserManuresService extends BaseService {
   async getTotalP205AndK20(fertiliserData, managementPeriodId) {
     let sumOfP205 = 0;
     let sumOfK20 = 0;
-
-    // const  fertiliserFilteredData= fertiliserData.filter((fertData) => {
-    //     return (
-    //       fertData.ManagementPeriodID === managementPeriodId
-    //     );
-    //   });
 
     if (fertiliserData && fertiliserData.length > 0) {
       for (const fertiliser of fertiliserData) {

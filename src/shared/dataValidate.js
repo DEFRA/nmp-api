@@ -8,4 +8,11 @@ function validateISODateFormat(dateString) {
   return date;
 }
 
-module.exports = { validateISODateFormat };
+function normalizeDateWithTime(date, time) {
+  const d = new Date(date);
+  d.setHours(time.HOUR, time.MINUTE, time.SECOND, time.MILLISECOND);
+  return d;
+}
+
+
+module.exports = { validateISODateFormat, normalizeDateWithTime };
