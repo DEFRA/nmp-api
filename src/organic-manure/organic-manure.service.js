@@ -180,12 +180,17 @@ class OrganicManureService extends BaseService {
       SECOND: 59,
       MILLISECOND: 999,
     };
+    const ORGANIC_MANURE_TO_MANAGEMENT_PERIOD_JOIN ="O.ManagementPeriodID = M.ID";
     const fromDateFormatted = normalizeDateWithTime(fromDate, START_OF_DAY);
     const toDateFormatted = normalizeDateWithTime(toDate, END_OF_DAY);
     const query = this.repository
       .createQueryBuilder("O") // O = OrganicManures
       .select("SUM(O.N * O.ApplicationRate)", "totalN")
-      .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
+      .innerJoin(
+        "ManagementPeriods",
+        "M",
+        ORGANIC_MANURE_TO_MANAGEMENT_PERIOD_JOIN,
+      )
       .where("M.CropID = :cropID", { cropID })
       .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
         fromDate: fromDateFormatted,
