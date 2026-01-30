@@ -7,6 +7,8 @@ const {
   CreateFieldWithSoilAnalysisAndCropsDto,
 } = require("./dto/field.dto");
 
+const BAD_REQUEST=400;
+
 module.exports = [
   {
     method: "GET",
@@ -26,9 +28,9 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
-            .code(400)
+            .code(BAD_REQUEST)
             .takeover();
         },
       },
@@ -61,9 +63,9 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
-            .code(400)
+            .code(BAD_REQUEST)
             .takeover();
         },
       },
@@ -94,9 +96,9 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
-            .code(400)
+            .code(BAD_REQUEST)
             .takeover();
         },
       },
@@ -124,9 +126,9 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
-            .code(400)
+            .code(BAD_REQUEST)
             .takeover();
         },
       },
@@ -158,9 +160,9 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
-            .code(400)
+            .code(BAD_REQUEST)
             .takeover();
         },
       },
@@ -189,9 +191,9 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
-            .code(400)
+            .code(BAD_REQUEST)
             .takeover();
         },
       },
@@ -199,6 +201,34 @@ module.exports = [
     handler: async (request, h) => {
       const controller = new FieldController(request, h);
       return controller.updateField();
+    },
+  },
+  {
+    method: "PUT",
+    path: "/fields-update",
+    options: {
+      tags: ["api", "Field"],
+      description: "Update Only Field by FieldId",
+      validate: {
+        payload: FieldEntitySchema, // Validate payload with UpdateFieldDtoSchema
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              }),
+            )
+            .code(BAD_REQUEST)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new FieldController(request, h);
+      return controller.updateOnlyField();
     },
   },
   {
@@ -220,9 +250,9 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
-            .code(400)
+            .code(BAD_REQUEST)
             .takeover();
         },
       },
@@ -250,9 +280,9 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
-            .code(400)
+            .code(BAD_REQUEST)
             .takeover();
         },
       },
@@ -280,9 +310,9 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
-            .code(400)
+            .code(BAD_REQUEST)
             .takeover();
         },
       },
@@ -316,9 +346,9 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
-            .code(400)
+            .code(BAD_REQUEST)
             .takeover();
         },
       },
@@ -327,5 +357,5 @@ module.exports = [
       const controller = new FieldController(request, h);
       return controller.getFieldRelatedData();
     },
-  }
+  },
 ];
