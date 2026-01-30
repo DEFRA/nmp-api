@@ -67,6 +67,7 @@ const { FieldAboveOrBelowSeaLevelMapper } = require("../constants/field-is-above
 const { StaticStrings } = require("../shared/static.string");
 const { ManureTypeMapper } = require("../constants/manure-type-mapper");
 const { normalizeDateWithTime } = require("../shared/dataValidate");
+const { JOINS } = require("../constants/joins-mapper");
 class OrganicManureService extends BaseService {
   constructor() {
     super(OrganicManureEntity);
@@ -180,7 +181,7 @@ class OrganicManureService extends BaseService {
       SECOND: 59,
       MILLISECOND: 999,
     };
-    const ORGANIC_MANURE_TO_MANAGEMENT_PERIOD_JOIN ="O.ManagementPeriodID = M.ID";
+ 
     const fromDateFormatted = normalizeDateWithTime(fromDate, START_OF_DAY);
     const toDateFormatted = normalizeDateWithTime(toDate, END_OF_DAY);
     const query = this.repository
@@ -189,7 +190,7 @@ class OrganicManureService extends BaseService {
       .innerJoin(
         "ManagementPeriods",
         "M",
-        ORGANIC_MANURE_TO_MANAGEMENT_PERIOD_JOIN,
+        JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD
       )
       .where("M.CropID = :cropID", { cropID })
       .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
@@ -240,7 +241,11 @@ class OrganicManureService extends BaseService {
     const query = this.repository
       .createQueryBuilder("O") // O = OrganicManures
       .select("SUM(O.N * O.ApplicationRate)", "totalN")
-      .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
+      .innerJoin(
+        "ManagementPeriods",
+        "M",
+        JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD,
+      )
       .innerJoin("Crops", "C", "M.CropID = C.ID")
       .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
       .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
@@ -274,10 +279,14 @@ class OrganicManureService extends BaseService {
     toDateFormatted.setHours(23, 59, 59, 999); // Set time to end of the day
 
     // Add additional filtering for ManureTypeID when isGreenFoodCompost is true
-    const query = await this.repository
+    const query = this.repository
       .createQueryBuilder("O") // O = OrganicManures
       .select("SUM(O.N * O.ApplicationRate)", "totalN")
-      .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
+      .innerJoin(
+        "ManagementPeriods",
+        "M",
+        JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD
+      )
       .innerJoin("Crops", "C", "M.CropID = C.ID")
       .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
       .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
