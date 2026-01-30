@@ -109,7 +109,7 @@ class FertiliserManuresService extends BaseService {
   async getTotalNitrogen(
     managementPeriodID,
     confirm,
-    fertiliserID,
+    _fertiliserID,
     organicManureID,
   ) {
     const fertiliserManuresResult = this.repository
@@ -582,7 +582,7 @@ class FertiliserManuresService extends BaseService {
           },
         );
 
-        let updatedWarningMessages =
+     
           await this.CreateOrUpdateWarningMessage.syncWarningMessages(
             inorganicManure.ManagementPeriodID,
             inorganicManure,

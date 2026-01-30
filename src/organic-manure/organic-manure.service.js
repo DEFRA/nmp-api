@@ -539,14 +539,14 @@ class OrganicManureService extends BaseService {
     if (crops.length === 2) {
       const cropTypeIDs = crops.map((c) => c.CropTypeID);
       const isBothGrass = cropTypeIDs.every(
-        (id) => id === CropTypeMapper.GRASS,
+        (id) => id === CropTypeMapper.GRASS
       );
       const isOneGrass = cropTypeIDs.includes(CropTypeMapper.GRASS);
       const isOtherValid = cropTypeIDs.some(
-        (id) => id !== CropTypeMapper.GRASS && id !== CropTypeMapper.GRASS,
+        (id) => id !== CropTypeMapper.GRASS
       );
       const isBothArable = cropTypeIDs.every(
-        (id) => id !== CropTypeMapper.GRASS,
+        (id) => id !== CropTypeMapper.GRASS
       );
 
       if (isBothGrass) return 2; // Both crops are grass
@@ -581,7 +581,7 @@ class OrganicManureService extends BaseService {
         request,
       );
     const cropType = cropTypesList.find(
-      (cropType) => cropType.cropTypeId === crop.CropTypeID,
+      (cropTp) => cropTp.cropTypeId === crop.CropTypeID,
     );
     const crops = Array.isArray(dataMultipleCrops)
       ? dataMultipleCrops
@@ -777,7 +777,7 @@ class OrganicManureService extends BaseService {
 
     if (previousCrop) {
       const cropType = cropTypesList.find(
-        (cropType) => cropType?.cropTypeId === previousCrop?.CropTypeID,
+        (cropTp) => cropTp?.cropTypeId === previousCrop?.CropTypeID,
       );
       nutrientRecommendationnReqBody.field.previousCropping = {
         previousGrassId: grassHistoryID ? null : previousGrassId,
