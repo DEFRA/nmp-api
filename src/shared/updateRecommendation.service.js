@@ -964,7 +964,6 @@ class UpdateRecommendation {
         );
       }
     }
-
   }
 
   async saveRecommendationWithoutManure(
@@ -1306,7 +1305,6 @@ class UpdateRecommendation {
           );
         }
       }
-
     }
   }
 
@@ -1609,13 +1607,15 @@ class UpdateRecommendation {
             case 1:
               pBalance =
                 (fertiliserData == null ? 0 : fertiliserData.p205) -
-                recommendation.cropNeed -
-                cropPOfftake;
+                recommendation.recommendation -
+                cropPOfftake +
+                recommendation.manures + recommendation.pkBalance;
               break;
             case 2:
               kBalance =
                 (fertiliserData == null ? 0 : fertiliserData.k20) -
-                recommendation.cropNeed;
+                recommendation.recommendation +
+                recommendation.manures + recommendation.pkBalance;
               break;
           }
         }
