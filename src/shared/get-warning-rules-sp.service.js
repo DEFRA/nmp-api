@@ -1,7 +1,11 @@
 const { WarningCodesMapper } = require("../constants/warning-codes-mapper");
 const { WarningKeyMapper } = require("../constants/warning-key-mapper");
+const RB209ArableService = require("../vendors/rb209/arable/arable.service");
 
 class GetWarningRulesAndSpService {
+  constructor(){
+    this.rB209ArableService = new RB209ArableService();
+  }
   async getEndFebruaryRules(manure, predicates) {
     return [
       {
@@ -55,6 +59,7 @@ class GetWarningRulesAndSpService {
   }
 
   async getNMaxRules(_manure, predicates) {
+    
     return [
       {
         sql: "EXEC spWarning_ComputeNMaxRateCombined @ManureID=@0",
@@ -62,7 +67,18 @@ class GetWarningRulesAndSpService {
         key: WarningKeyMapper.NMAXLIMIT,
         code: WarningCodesMapper.NMAXLIMIT,
         join: "FIELD",
-        values: (sp) => [sp.ComputedNMaxRate],
+        values: async (sp) => {
+           let cropTypeName = "";
+
+        if (sp.CropTypeID) {
+          const cropType = await this.rB209ArableService.getData(
+            `/Arable/CropType/${sp.CropTypeID}`
+          );
+          cropTypeName = cropType?.cropTypeName ?? "";
+          console.log("cropTypeName", cropTypeName);
+        }
+         return [cropTypeName,sp.BaseNMaxRate, sp.ComputedNMaxRate];
+        }
       },
     ];
   }

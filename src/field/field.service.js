@@ -45,6 +45,7 @@ const { UpdateRecommendation } = require("../shared/updateRecommendation.service
 const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
 const { PreviousCroppingMapper } = require("../constants/action-mapper");
+const {FarmService}= require("../farm/farm.service");
 
 class FieldService extends BaseService {
   constructor() {
@@ -93,6 +94,7 @@ class FieldService extends BaseService {
     this.rB209GrasslandService = new RB209GrasslandService();
     this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
     this.UpdateRecommendation = new UpdateRecommendation();
+    this.FarmService = new FarmService();
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -812,9 +814,7 @@ class FieldService extends BaseService {
       await this.rB209ArableService.getData(`/Arable/CropTypes`);
 
     // Fetch the farm associated with the first field (assuming all fields belong to the same farm)
-    const farm = await this.farmRepository.findOne({
-      where: { ID: fields[0].FarmID },
-    });
+const farm=await this.FarmService.getFarmById(fields[0].FarmID);
 
     // Initialize an array to store fields with related data
     const fieldsWithRelatedData = [];
