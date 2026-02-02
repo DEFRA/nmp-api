@@ -542,13 +542,6 @@ class FertiliserManuresService extends BaseService {
       for (const manure of updatedFertiliserManureData) {
         const inorganicManure = manure.FertiliserManure;
         const warningMessages = manure.WarningMessages;
-        // const {
-        //   ID,
-        //   CreatedByID,
-        //   CreatedOn,
-        //   ManagementPeriodID,
-        //   ...updatedData
-        // } = manure;
         const { ID, CreatedByID, CreatedOn, ...updatedData } = inorganicManure;
         // Update fertiliseremanure
         const result = await transactionalManager.update(
@@ -590,13 +583,13 @@ class FertiliserManuresService extends BaseService {
           where: { ID: managementPeriod.CropID },
         });
 
-        // await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
-        //   crop.FieldID,
-        //   crop.Year,
-        //   request,
-        //   userId,
-        //   transactionalManager
-        // );
+        await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+          crop.FieldID,
+          crop.Year,
+          request,
+          userId,
+          transactionalManager
+        );
 
         // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
         const nextAvailableCrop = await this.cropRepository.findOne({
