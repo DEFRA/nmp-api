@@ -142,6 +142,7 @@ const CreateFieldWithSoilAnalysisAndCropsDto = Joi.object({
 });
 
 module.exports = {
+  FieldEntitySchema,
   UpdateFieldDtoSchema,
   CreateFieldWithSoilAnalysisAndCropsDto,
 };

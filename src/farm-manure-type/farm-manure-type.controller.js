@@ -26,6 +26,18 @@ class FarmManureTypeController {
       return this.#h.response({ error });
     }
   }
+
+  async getById() {
+    try {
+      const { farmManureTypeId } = this.#request.params;
+      const records = await this.#farmManureTypeService.getById(farmManureTypeId);
+      return this.#h.response( records );
+    } catch (error) {
+      console.error(error);
+      return this.#h.response({ error });
+    }
+  }
+
   async checkFarmManureTypeExists() {
     const { farmId, manureTypeId, manureTypeName } = this.#request.query;
     try {
@@ -33,7 +45,7 @@ class FarmManureTypeController {
         await this.#farmManureTypeService.checkFarmManureTypeExists(
           farmId,
           manureTypeId,
-          manureTypeName
+          manureTypeName,
         );
       return this.#h.response({ exists }).code(200);
     } catch (error) {

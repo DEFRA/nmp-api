@@ -40,7 +40,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -76,7 +76,42 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+  },
+  {
+    method: "GET",
+    path: "/fertiliser-manures/organic-manures-by-cropId/total-nitrogen/{cropID}",
+    handler: async (request, h) => {
+      return getController(request, h).getTotalNitrogenByCropID();
+    },
+    options: {
+      tags: ["api", "Fertiliser Manures"],
+      description:
+        "Get total nitrogen from both Fertiliser and Organic Manures by crop ID",
+      validate: {
+        params: Joi.object({
+          cropID: Joi.number().required(),
+        }),
+        query: Joi.object({
+          confirm: Joi.boolean().required(),
+          fertiliserID: Joi.number().integer().allow(null).optional(),
+          organicManureID: Joi.number().integer().allow(null).optional(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              }),
             )
             .code(400)
             .takeover();
@@ -104,7 +139,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -131,7 +166,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -164,7 +199,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -196,7 +231,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -217,7 +252,7 @@ module.exports = [
             .min(1)
             .required()
             .description(
-              "Array of fertiliserManure IDs to delete, e.g., [1, 2, 3]"
+              "Array of fertiliserManure IDs to delete, e.g., [1, 2, 3]",
             ),
         }),
         failAction: (request, h, err) => {
@@ -228,7 +263,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -260,7 +295,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
