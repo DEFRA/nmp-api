@@ -964,15 +964,6 @@ class UpdateRecommendation {
         );
       }
     }
-
-    // 1. Extract ManagementPeriodID from the first OrganicManure (all same)
-    // const managementPeriodId = organicManures?.[0]?.ManagementPeriodID;
-
-    // await this.processManureWarningsByManagementPeriod(
-    //   managementPeriodId,
-    //   transactionalManager,
-    //   userId
-    // );
   }
 
   async saveRecommendationWithoutManure(
@@ -1314,18 +1305,6 @@ class UpdateRecommendation {
           );
         }
       }
-
-      // const managementPeriods = await transactionalManager.find(
-      //   ManagementPeriodEntity,
-      //   { where: { CropID: crop.ID } }
-      // );
-      // for (const managementPeriod of managementPeriods) {
-      //   await this.processManureWarningsByManagementPeriod(
-      //     managementPeriod.ID,
-      //     transactionalManager,
-      //     userId
-      //   );
-      // }
     }
   }
 
@@ -1677,13 +1656,15 @@ class UpdateRecommendation {
             case 1:
               pBalance =
                 (fertiliserData == null ? 0 : fertiliserData.p205) -
-                recommendation.cropNeed -
-                cropPOfftake;
+                recommendation.recommendation -
+                cropPOfftake +
+                recommendation.manures + recommendation.pkBalance;
               break;
             case 2:
               kBalance =
                 (fertiliserData == null ? 0 : fertiliserData.k20) -
-                recommendation.cropNeed;
+                recommendation.recommendation +
+                recommendation.manures + recommendation.pkBalance;
               break;
           }
         }
