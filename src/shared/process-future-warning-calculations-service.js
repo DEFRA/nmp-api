@@ -11,9 +11,10 @@ class ProcessFutureManuresForWarnings {
   }
 
   async processCombinedManures(combinedManures, transactionalManager, userId) {
-    if (!Array.isArray(combinedManures) || !combinedManures.length) return;
-
-    for (const manure of combinedManures) {
+    if (!Array.isArray(combinedManures) || !combinedManures.length){ 
+      return
+    }
+   for (const manure of combinedManures) {
       let warnings = [];
       const finalWarnings = [];
 
