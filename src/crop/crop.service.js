@@ -62,6 +62,7 @@ const {
 } = require("../db/entity/crop-type-linking.entity");
 const PlanService = require("../plan/plan.service");
 const { FieldAboveOrBelowSeaLevelMapper } = require("../constants/field-is-above-sea-level");
+const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
 class CropService extends BaseService {
   constructor() {
     super(CropEntity);
@@ -93,6 +94,7 @@ class CropService extends BaseService {
     );
     this.CalculateCropsSnsAnalysis = new CalculateCropsSnsAnalysisService();
     this.planService = new PlanService();
+    this.ProcessFutureManuresForWarnings = new ProcessFutureManuresForWarnings();
   }
 
   async createCropWithManagementPeriods(
@@ -937,7 +939,7 @@ class CropService extends BaseService {
           }
         );
         console.log("nextAvailableCrop", nextAvailableCrop);
-        // console.log("nextAvailableCrop[0].Year", nextAvailableCrop[0].Year.lengh);
+
         if (nextAvailableCrop) {
           this.UpdateRecommendation.updateRecommendationsForField(
             updatedCrop.FieldID,
@@ -948,6 +950,8 @@ class CropService extends BaseService {
             console.error("Error updating next crop's recommendations:", error);
           });
         }
+    this.ProcessFutureManuresForWarnings.processWarningsByCrop(updatedCrop.ID,userId);
+
 
         // Final result: pair crop with its periods
         if (updatedCrop) {
