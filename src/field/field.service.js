@@ -46,6 +46,7 @@ const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entit
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
 const { PreviousCroppingMapper } = require("../constants/action-mapper");
 const {FarmService}= require("../farm/farm.service");
+const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
 
 class FieldService extends BaseService {
   constructor() {
@@ -95,6 +96,8 @@ class FieldService extends BaseService {
     this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
     this.UpdateRecommendation = new UpdateRecommendation();
     this.FarmService = new FarmService();
+    this.ProcessFutureManuresForWarnings = new ProcessFutureManuresForWarnings();
+
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -407,6 +410,11 @@ class FieldService extends BaseService {
               console.error(error);
             });
           }
+    this.ProcessFutureManuresForWarnings.processWarningsByField(
+      fieldId,
+      userId,
+    );
+
         }
       }
 
