@@ -9,12 +9,14 @@ const {FieldAbove300SeaLevelMapper}=require("../constants/field-above-300-sea-le
 const { CountryMapper } = require("../constants/country-mapper");
 const { ExcessRainfallService } = require("../excess-rainfall/excess-rainfall.service");
 const { ProcessFieldsService } = require("../shared/process-fields-for-recommendations.service");
+const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
 
 class FarmService extends BaseService {
   constructor() {
     super(FarmEntity);
     this.repository = getRepository(FarmEntity);
     this.ProcessFieldsService = new ProcessFieldsService();
+    this.ProcessFutureManuresForWarnings = new ProcessFutureManuresForWarnings();
   }
   async farmExistsByNameAndPostcode(farmName, postcode, id = null) {
     return (await this.farmCountByNameAndPostcode(farmName, postcode, id)) > 0;
@@ -145,6 +147,8 @@ class FarmService extends BaseService {
           request,
           userId
         );
+        this.ProcessFutureManuresForWarnings.processWarningsByFarm(farmId,userId);
+
         const updatedFarm = await transactionalManager.findOne(FarmEntity, {
           where: { ID: farmId },
         });
