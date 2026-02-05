@@ -5,7 +5,7 @@ const FarmDto = Joi.object({
   FullAddress: Joi.string().allow(null, ""),
   OrganisationID: Joi.string().required(),
   Name: Joi.string().required(),
-  Address1: Joi.string().required(),
+  Address1: Joi.string().required().allow(null),
   Address2: Joi.string().optional().allow(null),
   Address3: Joi.string().optional().allow(null),
   Address4: Joi.string().optional().allow(null),
