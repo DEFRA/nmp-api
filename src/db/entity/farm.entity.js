@@ -18,27 +18,27 @@ const FarmEntity = new EntitySchema({
     },
     Address1: {
       type: "nvarchar",
-      length: 50,
+      length: 100,
       nullable: true,
     },
     Address2: {
       type: "nvarchar",
-      length: 50,
+      length: 100,
       nullable: true,
     },
     Address3: {
       type: "nvarchar",
-      length: 50,
+      length: 100,
       nullable: true,
     },
     Address4: {
       type: "nvarchar",
-      length: 50,
+      length: 100,
       nullable: true,
     },
     Postcode: {
       type: "nvarchar",
-      length: 8,
+      length: 50,
     },
     CPH: {
       type: "nvarchar",
@@ -131,7 +131,7 @@ const FarmEntity = new EntitySchema({
     },
     STD: {
       type: "nvarchar",
-      length: 255,
+      length: 6,
       nullable: true,
     },
     CountryID: {
@@ -140,7 +140,7 @@ const FarmEntity = new EntitySchema({
     },
     ClimateDataPostCode: {
       type: "nvarchar",
-      length: 8,
+      length: 50,
     },
   },
   relations: {
