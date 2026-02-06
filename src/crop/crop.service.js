@@ -655,7 +655,7 @@ class CropService extends BaseService {
         .then((res) => {
           if (res === undefined) {
             console.log(
-              "updateRecommendationAndOrganicManure returned undefined",
+             res
             );
           } else {
             console.log("updateRecommendationAndOrganicManure result:", res);
