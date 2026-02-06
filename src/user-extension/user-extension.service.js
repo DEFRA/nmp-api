@@ -24,7 +24,7 @@ class UserExtensionService extends BaseService {
           {
             ...updatedIsTermsOfUseAccepted,
             DoNotShowAboutThisService: DoNotShowAboutThisService,
-          }
+          },
         );
       } else {
         // Create a new record if it doesn't exist
@@ -44,7 +44,7 @@ class UserExtensionService extends BaseService {
   }
   async updateDoNotShowAboutThisService(
     updateDoNotShowAboutThisService,
-    userId
+    userId,
   ) {
     return await AppDataSource.transaction(async (transactionalManager) => {
       // Check if record exists within the transaction
@@ -60,13 +60,46 @@ class UserExtensionService extends BaseService {
           {
             ...updateDoNotShowAboutThisService,
             IsTermsOfUseAccepted: IsTermsOfUseAccepted,
-          }
+          },
         );
       } else {
         // Create a new record if it doesn't exist
         const newRecord = this.repository.create({
           ...updateDoNotShowAboutThisService,
           IsTermsOfUseAccepted: false,
+          UserID: userId,
+        });
+        await transactionalManager.save(UserExtensionsEntity, newRecord);
+      }
+
+      // Return the updated or newly created record
+      return await transactionalManager.findOne(UserExtensionsEntity, {
+        where: { UserID: userId },
+      });
+    });
+  }
+  async doNotShowAboutManner(doNotShowAboutManner, userId) {
+    return await AppDataSource.transaction(async (transactionalManager) => {
+      // Check if record exists within the transaction
+      const existingRecord = await this.repository.findOne({
+        where: { UserID: userId },
+      });
+      if (existingRecord) {
+        const { DoNotShowAboutManner } = existingRecord;
+        // Update the existing record
+        await transactionalManager.update(
+          UserExtensionsEntity,
+          { UserID: userId }, // Where clause
+          {
+            ...doNotShowAboutManner,
+            DoNotShowAboutManner: DoNotShowAboutManner,
+          },
+        );
+      } else {
+        // Create a new record if it doesn't exist
+        const newRecord = this.repository.create({
+          ...doNotShowAboutManner,
+          DoNotShowAboutManner: false,
           UserID: userId,
         });
         await transactionalManager.save(UserExtensionsEntity, newRecord);
