@@ -13,7 +13,7 @@ class UserExtensionService extends BaseService {
     return await AppDataSource.transaction(async (transactionalManager) => {
       // Check if record exists within the transaction
       const existingRecord = await this.repository.findOne({
-        where: { UserID: userId },
+        where: { UserID: userId }
       });
       if (existingRecord) {
         // Update the existing record
@@ -23,33 +23,33 @@ class UserExtensionService extends BaseService {
           { UserID: userId }, // Where clause
           {
             ...updatedIsTermsOfUseAccepted,
-            DoNotShowAboutThisService: DoNotShowAboutThisService,
-          },
+            DoNotShowAboutThisService: DoNotShowAboutThisService
+          }
         );
       } else {
         // Create a new record if it doesn't exist
         const newRecord = this.repository.create({
           ...updatedIsTermsOfUseAccepted,
           UserID: userId,
-          DoNotShowAboutThisService: false,
+          DoNotShowAboutThisService: false
         });
         await transactionalManager.save(UserExtensionsEntity, newRecord);
       }
 
       // Return the updated or newly created record
       return await transactionalManager.findOne(UserExtensionsEntity, {
-        where: { UserID: userId },
+        where: { UserID: userId }
       });
     });
   }
   async updateDoNotShowAboutThisService(
     updateDoNotShowAboutThisService,
-    userId,
+    userId
   ) {
     return await AppDataSource.transaction(async (transactionalManager) => {
       // Check if record exists within the transaction
       const existingRecord = await this.repository.findOne({
-        where: { UserID: userId },
+        where: { UserID: userId }
       });
       if (existingRecord) {
         const { IsTermsOfUseAccepted } = existingRecord;
@@ -59,22 +59,22 @@ class UserExtensionService extends BaseService {
           { UserID: userId }, // Where clause
           {
             ...updateDoNotShowAboutThisService,
-            IsTermsOfUseAccepted: IsTermsOfUseAccepted,
-          },
+            IsTermsOfUseAccepted: IsTermsOfUseAccepted
+          }
         );
       } else {
         // Create a new record if it doesn't exist
         const newRecord = this.repository.create({
           ...updateDoNotShowAboutThisService,
           IsTermsOfUseAccepted: false,
-          UserID: userId,
+          UserID: userId
         });
         await transactionalManager.save(UserExtensionsEntity, newRecord);
       }
 
       // Return the updated or newly created record
       return await transactionalManager.findOne(UserExtensionsEntity, {
-        where: { UserID: userId },
+        where: { UserID: userId }
       });
     });
   }
@@ -82,7 +82,7 @@ class UserExtensionService extends BaseService {
     return await AppDataSource.transaction(async (transactionalManager) => {
       // Check if record exists within the transaction
       const existingRecord = await this.repository.findOne({
-        where: { UserID: userId },
+        where: { UserID: userId }
       });
       if (existingRecord) {
         const { DoNotShowAboutManner } = existingRecord;
@@ -92,31 +92,31 @@ class UserExtensionService extends BaseService {
           { UserID: userId }, // Where clause
           {
             ...doNotShowAboutManner,
-            DoNotShowAboutManner: DoNotShowAboutManner,
-          },
+            DoNotShowAboutManner: DoNotShowAboutManner
+          }
         );
       } else {
         // Create a new record if it doesn't exist
         const newRecord = this.repository.create({
           ...doNotShowAboutManner,
           DoNotShowAboutManner: false,
-          UserID: userId,
+          UserID: userId
         });
         await transactionalManager.save(UserExtensionsEntity, newRecord);
       }
 
       // Return the updated or newly created record
       return await transactionalManager.findOne(UserExtensionsEntity, {
-        where: { UserID: userId },
+        where: { UserID: userId }
       });
     });
   }
   async getUserExtensionByUserId(userId) {
     const userExtension = await this.repository.findOneBy({
-      UserID: userId,
+      UserID: userId
     });
     return {
-      UserExtension: userExtension,
+      UserExtension: userExtension
     };
   }
 }

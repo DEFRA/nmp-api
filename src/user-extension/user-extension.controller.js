@@ -21,7 +21,7 @@ class UserExtensionController {
       const updatedIsTermsOfUseAccepted =
         await this.#userExtensionService.updateIsTermsOfUseAccepted(
           body,
-          userId,
+          userId
         );
       return this.#h.response({ UserExtension: updatedIsTermsOfUseAccepted });
     } catch (error) {
@@ -36,7 +36,7 @@ class UserExtensionController {
       const updatedDoNotShowAboutThisService =
         await this.#userExtensionService.updateDoNotShowAboutThisService(
           body,
-          userId,
+          userId
         );
       return this.#h.response({
         UserExtension: updatedDoNotShowAboutThisService,
@@ -53,7 +53,7 @@ class UserExtensionController {
       const updatedDoNotShowAboutThisService =
         await this.#userExtensionService.UpdateDoNotShowAboutManner(
           body,
-          userId,
+          userId
         );
       return this.#h.response({
         UserExtension: updatedDoNotShowAboutThisService,

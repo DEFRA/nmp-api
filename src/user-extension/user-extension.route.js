@@ -48,18 +48,18 @@ module.exports = [
                 source: {
                   error: err,
                 },
-                request,
-              }),
+                request
+              })
             )
             .code(400)
             .takeover();
-        },
-      },
+        }
+      }
     },
     handler: async (request, h) => {
       const controller = new UserExtensionController(request, h);
       return controller.updateDoNotShowAboutThisService();
-    },
+    }
   },
   {
     method: "PUT",
