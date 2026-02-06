@@ -45,13 +45,13 @@ class UserExtensionController {
       return this.#h.response({ error });
     }
   }
-  async doNotShowAboutManner() {
+  async UpdateDoNotShowAboutManner() {
     const userId = this.#request.userId;
     const body = this.#request.payload;
 
     try {
       const updatedDoNotShowAboutThisService =
-        await this.#userExtensionService.updateDoNotShowAboutThisService(
+        await this.#userExtensionService.UpdateDoNotShowAboutManner(
           body,
           userId,
         );

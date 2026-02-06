@@ -78,7 +78,7 @@ class UserExtensionService extends BaseService {
       });
     });
   }
-  async doNotShowAboutManner(doNotShowAboutManner, userId) {
+  async UpdateDoNotShowAboutManner(doNotShowAboutManner, userId) {
     return await AppDataSource.transaction(async (transactionalManager) => {
       // Check if record exists within the transaction
       const existingRecord = await this.repository.findOne({
