@@ -2,6 +2,7 @@ const Joi = require("joi");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { UserExtensionController } = require("./user-extension.controller");
 const { updateIsTermsOfUseAcceptedDto, updateDoNotShowAboutThisServiceDto, doNotShowAboutMannerDto } = require("./dto/user-extension.dto");
+const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 
 module.exports = [
   {
@@ -78,7 +79,7 @@ module.exports = [
                 request,
               }),
             )
-            .code(400)
+            .code(StatusCodeMapper.BAD_REQUEST)
             .takeover();
         },
       },
