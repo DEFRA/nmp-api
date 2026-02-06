@@ -94,8 +94,8 @@ class FieldService extends BaseService {
     this.rB209GrasslandService = new RB209GrasslandService();
     this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
     this.UpdateRecommendation = new UpdateRecommendation();
-    this.ProcessFutureManuresForWarnings = new ProcessFutureManuresForWarnings();
-
+    this.ProcessFutureManuresForWarnings =
+      new ProcessFutureManuresForWarnings();
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -408,11 +408,10 @@ class FieldService extends BaseService {
               console.error(error);
             });
           }
-    this.ProcessFutureManuresForWarnings.processWarningsByField(
-      fieldId,
-      userId,
-    );
-
+          this.ProcessFutureManuresForWarnings.processWarningsByField(
+            fieldId,
+            userId,
+          );
         }
       }
 
@@ -763,43 +762,88 @@ class FieldService extends BaseService {
   }
 
   // Helper function to fetch crop type name
-  async ManureTypeName(ManureTypeID, request) {
-    const manureTypeData = await this.MannerManureTypesService.getData(
-      `/manure-types/${ManureTypeID}`,
-      request,
+  async ManureTypeName(ManureTypeID, manureTypesResponse) {
+    const manureTypeData = manureTypesResponse.find(
+      (mt) => mt.id === ManureTypeID,
     );
 
-    return manureTypeData.data.name;
+    return manureTypeData.name;
   }
-
-  // Helper function to fetch crop type name
-  async getApplicationMethodName(ApplicationMethodID, request) {
-    const applicationMethodData =
+  async fetchAllApplicationReferenceData(request) {
+    const allManureData = await this.MannerManureTypesService.getData(
+      "/manure-types",
+      request,
+    );
+    const allApplicationMethodsData =
       await this.MannerApplicationMethodService.getData(
-        `/application-methods/${ApplicationMethodID}`,
+        "/application-methods",
         request,
       );
-    return applicationMethodData.data.name;
-  }
 
-  // Helper function to fetch crop type name
-  async getIncorporationMethodName(IncorporationMethodID, request) {
-    const incorporationMethodData =
+    const allIncorporationMethodsData =
       await this.MannerIncorporationMethodService.getData(
-        `/incorporation-methods/${IncorporationMethodID}`,
+        "/incorporation-methods",
         request,
       );
-    return incorporationMethodData.data.name;
+
+    const allIncorporationDelaysData =
+      await this.MannerIncorporationDelayService.getData(
+        "/incorporation-delays",
+        request,
+      );
+
+    return {
+      allManureData: allManureData.data,
+      allApplicationMethodsData: allApplicationMethodsData.data,
+      allIncorporationMethodsData: allIncorporationMethodsData.data,
+      allIncorporationDelaysData: allIncorporationDelaysData.data,
+    };
+  }
+
+  async getManureTypeById(manureTypesResponse, manureTypeID) {
+    const manureType = manureTypesResponse.data.find(
+      (mt) => mt.id === manureTypeID,
+    );
+
+    if (!manureType) {
+      console.log(`ManureType not found for ID ${manureTypeID}`);
+    }
+
+    //  Match API response structure
+    return;
   }
 
   // Helper function to fetch crop type name
-  async getIncorporationDelayName(IncorporationDelayID, request) {
-    const incorporationDelayData =
-      await this.MannerIncorporationDelayService.getData(
-        `/incorporation-delays/${IncorporationDelayID}`,
-        request,
-      );
-    return incorporationDelayData.data.name;
+  async getApplicationMethodName(
+    ApplicationMethodID,
+    allApplicationMethodsData,
+  ) {
+    const applicationMethodData = allApplicationMethodsData.find(
+      (mt) => mt.id === ApplicationMethodID,
+    );
+    return applicationMethodData.name;
+  }
+
+  // Helper function to fetch crop type name
+  async getIncorporationMethodName(
+    IncorporationMethodID,
+    allIncorporationMethodsData,
+  ) {
+    const incorporationMethodData = allIncorporationMethodsData.find(
+      (mt) => mt.id === IncorporationMethodID,
+    );
+    return incorporationMethodData.name;
+  }
+
+  // Helper function to fetch crop type name
+  async getIncorporationDelayName(
+    IncorporationDelayID,
+    allIncorporationDelaysData,
+  ) {
+       const incorporationDelayData = allIncorporationDelaysData.find(
+         (mt) => mt.id === IncorporationDelayID
+       );
+    return incorporationDelayData.name;
   }
 
   async getPreviousCropDataByFieldID(fieldID) {
@@ -826,6 +870,13 @@ class FieldService extends BaseService {
 
     // Initialize an array to store fields with related data
     const fieldsWithRelatedData = [];
+
+    const {
+      allManureData,
+      allApplicationMethodsData,
+      allIncorporationMethodsData,
+      allIncorporationDelaysData,
+    } = await this.fetchAllApplicationReferenceData(request);
 
     await Promise.all(
       fields.map(async (field) => {
@@ -1010,22 +1061,22 @@ class FieldService extends BaseService {
               for (const manure of organicManures) {
                 const manureTypeName = await this.ManureTypeName(
                   manure.ManureTypeID,
-                  request,
+                  allManureData,
                 );
                 const applicationMethodName =
                   await this.getApplicationMethodName(
                     manure.ApplicationMethodID,
-                    request,
+                    allApplicationMethodsData,
                   );
                 const incorporationMethodName =
                   await this.getIncorporationMethodName(
                     manure.IncorporationMethodID,
-                    request,
+                    allIncorporationMethodsData,
                   );
                 const incorporationDelayName =
                   await this.getIncorporationDelayName(
                     manure.IncorporationDelayID,
-                    request,
+                    allIncorporationDelaysData,
                   );
 
                 organicManuresWithNames.push({
