@@ -63,6 +63,7 @@ const {
 const PlanService = require("../plan/plan.service");
 const { FieldAboveOrBelowSeaLevelMapper } = require("../constants/field-is-above-sea-level");
 const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
+const { ARABLE } = require("../constants/rb209-endpoints-mapper");
 class CropService extends BaseService {
   constructor() {
     super(CropEntity);
@@ -151,8 +152,7 @@ class CropService extends BaseService {
     if (cropTypeId == null || cropTypeId == undefined) {
       throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
     }
-    const cropTypesList =
-      await this.rB209ArableService.getData("/Arable/CropTypes");
+    const cropTypesList = await this.rB209ArableService.getData(ARABLE.ALL_ARABLE_CROP_TYPES_ENDPOINT);
 
     const cropType = cropTypesList.find(
       (cropType) => cropType.cropTypeId === cropTypeId,
@@ -284,8 +284,9 @@ class CropService extends BaseService {
   async mapCropTypeIdWithTheirNames(plans) {
     try {
       const unorderedMap = {};
-      const cropTypesList =
-        await this.rB209ArableService.getData("/Arable/CropTypes");
+      const cropTypesList = await this.rB209ArableService.getData(
+        ARABLE.ALL_ARABLE_CROP_TYPES_ENDPOINT,
+      );
 
       for (const cropType of cropTypesList) {
         unorderedMap[cropType.cropTypeId] = cropType.cropType;
@@ -324,8 +325,9 @@ class CropService extends BaseService {
       farmId,
       harvestYear,
     ]);
-    const cropTypesList =
-      await this.rB209ArableService.getData("/Arable/CropTypes");
+    const cropTypesList = await this.rB209ArableService.getData(
+      ARABLE.ALL_ARABLE_CROP_TYPES_ENDPOINT,
+    );
     const findCropGroupId = (cropTypeId) => {
       const cropType = cropTypesList.find(
         (crop) => crop.cropTypeId === cropTypeId,
@@ -1528,7 +1530,7 @@ class CropService extends BaseService {
         request,
       );
     const cropType = cropTypesList.find(
-      (cropType) => cropType.cropTypeId === crop.CropTypeID,
+      (cT) => cT.cropTypeId === crop.CropTypeID,
     );
 
     if (!cropType || cropType.cropGroupId === null) {
@@ -1738,7 +1740,7 @@ class CropService extends BaseService {
 
     if (previousCrop) {
       const cropType = cropTypesList.find(
-        (cropType) => cropType?.cropTypeId === previousCrop?.CropTypeID,
+        (cT) => cT?.cropTypeId === previousCrop?.CropTypeID,
       );
       nutrientRecommendationnReqBody.field.previousCropping = {
         previousGrassId: grassHistoryID ? null : previousGrassId,
@@ -2839,7 +2841,7 @@ class CropService extends BaseService {
     ) // Adding condition for IsDeleted and ID not null
       .map((crop) => crop.Crop.ID);
     return await AppDataSource.transaction(async (transactionalManager) => {
-      let createdPlan;
+      
       if (cropIds.length > 0) {
         for (const cropId of cropIds) {
           await this.deleteCrop(cropId, userId, request, transactionalManager);
@@ -2852,7 +2854,7 @@ class CropService extends BaseService {
         transactionalManager,
       );
 
-      createdPlan =
+      const createdPlan =
         await this.planService.createNutrientsRecommendationForField(
           cropsWithoutID,
           userId,
