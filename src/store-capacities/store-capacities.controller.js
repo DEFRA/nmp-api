@@ -47,7 +47,7 @@ class StoreCapacitiesController {
   }
 
   async checkExistByFarmIdStoreName() {
-    const { FarmId, Year, StoreName } = this.#request.params;
+    const { FarmId, StoreName } = this.#request.params;
  
     const { ID } = this.#request.query;
 
