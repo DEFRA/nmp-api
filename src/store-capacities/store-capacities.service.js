@@ -22,11 +22,10 @@ class StoreCapacitiesService extends BaseService {
     );
   }
 
-  async getByFarmAndYear(farmId, year) {
+  async getByFarmId(farmId) {
     const records = await this.repository.find({
       where: {
         FarmID: farmId,
-        Year: year,
       },
     });
 
@@ -55,10 +54,9 @@ class StoreCapacitiesService extends BaseService {
     return enrichedRecords;
   }
 
-  async checkExist(FarmId, Year, StoreName, ID) {
+  async checkExist(FarmId, StoreName, ID) {
     const whereCondition = {
       FarmID: FarmId,
-      Year: Year,
       StoreName: StoreName,
     };
     if (ID) {
@@ -81,7 +79,6 @@ class StoreCapacitiesService extends BaseService {
     return await AppDataSource.transaction(async (transactionalManager) => {
       const {
         FarmID,
-        Year,
         StoreName,
         CreatedByID,
         CreatedOn,
@@ -89,19 +86,18 @@ class StoreCapacitiesService extends BaseService {
       } = payload;
       const existingRecord = await transactionalManager.findOne(
         StoreCapacitiesEntity,
-        { where: { FarmID: FarmID, Year: Year, StoreName: StoreName } }
+        { where: { FarmID: FarmID, StoreName: StoreName } }
       );
 
       if (existingRecord) {
         throw boom.conflict(
-          `Record with FarmID ${FarmID}, Year ${Year}, and StoreName ${StoreName} already exists`
+          `Record with FarmID ${FarmID}, and StoreName ${StoreName} already exists`
         );
       }
 
       const newRecord = transactionalManager.create(StoreCapacitiesEntity, {
         ...cleanPayload,
         FarmID: FarmID,
-        Year: Year,
         StoreName: StoreName,
         CreatedOn: new Date(),
         CreatedByID: userId,
@@ -114,7 +110,7 @@ class StoreCapacitiesService extends BaseService {
 
       const savedRecord = await transactionalManager.findOne(
         StoreCapacitiesEntity,
-        { where: { FarmID: FarmID, Year: Year } }
+        { where: { FarmID: FarmID } }
       );
 
       return savedRecord;
@@ -152,7 +148,6 @@ class StoreCapacitiesService extends BaseService {
       const {
         ID,
         FarmID,
-        Year,
         StoreName,
         CreatedByID,
         CreatedOn,
@@ -165,7 +160,6 @@ class StoreCapacitiesService extends BaseService {
         {
           where: {
             FarmID,
-            Year,
             StoreName,
             ID: Not(ID),
           },
@@ -174,7 +168,7 @@ class StoreCapacitiesService extends BaseService {
 
       if (existingRecord) {
         throw boom.conflict(
-          `Store capacity with FarmID ${FarmID}, Year ${Year}, and StoreName ${StoreName} already exists.`
+          `Store capacity with FarmID ${FarmID}, and StoreName ${StoreName} already exists.`
         );
       }
 
