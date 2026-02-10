@@ -21,13 +21,10 @@ module.exports = [
     path: "/store-capacities/{farmId}",
     options: {
       tags: ["api", "Store Capacities"],
-      description: "Get store capacity by farmId and year",
+      description: "Get store capacity by farmId",
       validate: {
         params: Joi.object({
           farmId: Joi.number().required(),
-        }),
-        query: Joi.object({
-          year: Joi.number().integer().optional().allow(null),
         }),
         failAction: (request, h, err) => {
           return h
@@ -44,20 +41,19 @@ module.exports = [
     },
     handler: async (request, h) => {
       const controller = new StoreCapacitiesController(request, h);
-      return controller.getByFarmIdAndYear();
+      return controller.getByFarmId();
     },
   },
   {
     method: "GET",
-    path: "/store-capacities/{FarmId}/{Year}/{StoreName}",
+    path: "/store-capacities/{FarmId}/{StoreName}",
     options: {
       tags: ["api", "Store Capacities"],
       description:
-        "Check if store capacity exists by farmId, year, and storeName",
+        "Check if store capacity exists by farmId, and storeName",
       validate: {
         params: Joi.object({
           FarmId: Joi.number().required(),
-          Year: Joi.number().required(),
           StoreName: Joi.string().required(),
         }),
         query: Joi.object({
@@ -78,7 +74,7 @@ module.exports = [
     },
     handler: async (request, h) => {
       const controller = new StoreCapacitiesController(request, h);
-      return controller.checkExistByFarmIdYearAndStoreName();
+      return controller.checkExistByFarmIdStoreName();
     },
   },
   {
