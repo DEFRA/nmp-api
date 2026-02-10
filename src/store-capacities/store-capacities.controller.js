@@ -22,14 +22,12 @@ class StoreCapacitiesController {
     }
   }
 
-  async getByFarmIdAndYear() {
+  async getByFarmId() {
     const { farmId } = this.#request.params;
-    const { year } = this.#request.query;
 
     try {
-      const record = await this.#storeCapacitiesService.getByFarmAndYear(
-        farmId,
-        year
+      const record = await this.#storeCapacitiesService.getByFarmId(
+        farmId
       );
       return this.#h.response(record);
     } catch (error) {
@@ -48,15 +46,14 @@ class StoreCapacitiesController {
     }
   }
 
-  async checkExistByFarmIdYearAndStoreName() {
-    const { FarmId, Year, StoreName } = this.#request.params;
+  async checkExistByFarmIdStoreName() {
+    const { FarmId, StoreName } = this.#request.params;
  
     const { ID } = this.#request.query;
 
     try {
       const exists = await this.#storeCapacitiesService.checkExist(
         FarmId,
-        Year,
         StoreName,
         ID
       );
