@@ -198,12 +198,6 @@ const FarmEntity = new EntitySchema({
       joinColumn: { name: "ID" },
       inverseSide: "Farms"
     }
-    // InprogressCalculations: {
-    //   type: "one-to-many",
-    //   target: "InprogressCalculations",
-    //   joinColumn: { name: "ID" },
-    //   inverseSide: "Farm",
-    // },
   }
 });
 
