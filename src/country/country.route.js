@@ -3,7 +3,7 @@ const Joi = require("joi");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { CountryController } = require("./country.controller");
 const getController = (request, h) => new CountryController(request, h);
-
+const BAD_REQUEST=400;
 module.exports = [
   {
     method: "GET",
@@ -36,7 +36,7 @@ module.exports = [
                 request,
               })
             )
-            .code(400)
+            .code(BAD_REQUEST)
             .takeover();
         },
       },
