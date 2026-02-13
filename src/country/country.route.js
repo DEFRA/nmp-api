@@ -16,4 +16,34 @@ module.exports = [
       return getController(request, h).getAll();
     },
   },
+   {
+   method: "GET",
+    path: "/countries/By-Id/{id}",
+    options: {
+      tags: ["api", "Country"],
+      description: "Get country data by Id",
+      validate: {
+        params: Joi.object({
+          id: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new CountryController(request, h);
+      return controller.getCountryById();
+    },
+  },
 ];
