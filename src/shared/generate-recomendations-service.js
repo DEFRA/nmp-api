@@ -651,9 +651,9 @@ class GenerateRecommendations {
         (id) => id !== CropTypeMapper.GRASS,
       );
 
-      if (isBothGrass) return 2; // Both crops are grass
-      if (isOneGrass && isOtherValid) return 3; // Mixed
-      if (isBothArable) return 1; // Both are arable/horticulture
+      if (isBothGrass) {return FieldTypeMapper.GRASS}; 
+      if (isOneGrass && isOtherValid) {return FieldTypeMapper.BOTH}; // Mixed
+      if (isBothArable) {return FieldTypeMapper.ARABLE}; // Both are arable/horticulture
     }
 
     return FieldTypeMapper.ARABLE; // Default fallback

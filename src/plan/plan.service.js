@@ -804,14 +804,6 @@ class PlanService extends BaseService {
     request,
     transactionalManager
   ) {
-    const fieldIDs = crops.map((cropData) => cropData.Crop.FieldID); //22 //23
-    const {
-      allCropData,
-      allManagementPeriods,
-      allRecommendations,
-      allPKBalanceData,
-    } = await this.fetchAllDataByFieldIDs(fieldIDs, transactionalManager);
-
     let Recommendations = [];
     const Errors = [];
     for (const cropData of crops) {
