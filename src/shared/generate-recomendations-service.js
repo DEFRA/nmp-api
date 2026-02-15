@@ -683,7 +683,7 @@ class GenerateRecommendations {
   }
 
   async addSoilAnalysesToRequest(soilAnalysis, nutrientRecommendationReqBody) {
-    if (!soilAnalysis || !Array.isArray(soilAnalysis)) return;
+    if (!soilAnalysis || !Array.isArray(soilAnalysis)) {return};
 
     soilAnalysis.forEach((analysis) => {
       const soilAnalysisData = {
