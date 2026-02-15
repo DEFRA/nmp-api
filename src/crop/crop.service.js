@@ -1081,8 +1081,8 @@ class CropService extends BaseService {
 
   async copyPlan(body, userId, request) {
     const { farmID, harvestYear, copyYear, isOrganic, isFertiliser } = body;
-    let savedCrop,Recommendations = [];
-    const managementPeriodsOfNewCrop = [],organicManures = [],fertiliserManures = [];
+    let savedCrop;
+    const managementPeriodsOfNewCrop = [],organicManures = [],fertiliserManures = [],Recommendations = [];
     return await AppDataSource.transaction(async (transactionalManager) => {
       // Step 1: Get all fields for the farmID
       const fields = await transactionalManager.find(FieldEntity, {
