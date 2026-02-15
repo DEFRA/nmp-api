@@ -27,6 +27,7 @@ const { CropOrderMapper } = require("../constants/crop-order-mapper");
 const { SavingRecommendationService } = require("./saving-recommendation-service");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { RecommendationCommentEntity } = require("../db/entity/recommendation-comment.entity");
+const { CalculateCropsSnsAnalysisService } = require("./calculate-crops-sns-analysis-service");
 
 class GenerateRecommendations {
   constructor() {
@@ -43,21 +44,8 @@ class GenerateRecommendations {
     this.grassGrowthClass = new GrassGrowthService();
     this.calculateGrassId = new CalculateGrassHistoryAndPreviousGrass();
     this.savingRecommendationService = new SavingRecommendationService();
+    this.CalculateCropsSnsAnalysisService = new CalculateCropsSnsAnalysisService();
   }
-
-  async getSnsAnalysesData(transactionalManager, crop) {
-    const data = await transactionalManager.findOne(SnsAnalysesEntity, {
-      where: { CropID: crop.ID },
-    });
-
-    if (data) {
-      return {
-        ...data,
-        SNSCropOrder: crop.CropOrder,
-      };
-    }
-  }
-
   async getManagementPeriods(transactionalManager, cropId) {
     const data = await transactionalManager.find(ManagementPeriodEntity, {
       where: {
@@ -67,7 +55,6 @@ class GenerateRecommendations {
 
     return data;
   }
-
   async getP205AndK20fromfertiliser(transactionalManager, managementPeriodIds) {
     // Normalize to array
     const ids = Array.isArray(managementPeriodIds)
@@ -93,7 +80,6 @@ class GenerateRecommendations {
         },
       },
     );
-
     for (const fertiliser of fertiliserData) {
       sumOfP205 += fertiliser.P2O5 ?? 0;
       sumOfK20 += fertiliser.K2O ?? 0;
@@ -101,35 +87,14 @@ class GenerateRecommendations {
 
     return { p205: sumOfP205, k20: sumOfK20 };
   }
-
-  async fetchSnsAnalysesForCrops(transactionalManager, crops) {
-    const snsAnalysesData = [];
-
-    for (const crop of crops) {
-      const analysisData = await this.getSnsAnalysesData(
-        transactionalManager,
-        crop,
-      );
-
-      if (analysisData) {
-        snsAnalysesData.push(analysisData);
-      }
-    }
-
-    return snsAnalysesData;
-  }
-
   async getFieldAndCountryData(fieldId, transactionalManager) {
     return (
       transactionalManager
         .createQueryBuilder(FieldEntity, "f")
-
         /* ---------- Farm ---------- */
         .leftJoin(FarmEntity, "farm", "farm.ID = f.FarmID")
-
         /* ---------- Country ---------- */
         .leftJoin(CountryEntity, "country", "country.ID = farm.CountryID")
-
         /* ---------- Select minimal required fields ---------- */
         .select([
           "f.ID AS ID",
@@ -144,9 +109,7 @@ class GenerateRecommendations {
           "country.ID AS CountryID",
           "country.RB209CountryID AS RB209CountryID",
         ])
-
         .where("f.ID = :fieldId", { fieldId })
-
         .getRawOne()
     );
   }
@@ -187,9 +150,7 @@ class GenerateRecommendations {
   defoliationItems,
   cropPOfftake,
 ) {
-  let pBalance = 0;
-  let kBalance = 0;
-
+  let pBalance = 0,kBalance = 0;
   for (const recommendation of defoliationItems) {
     const rec = recommendation.recommendation ?? 0;
     const man = recommendation.manures ?? 0;
@@ -206,7 +167,6 @@ class GenerateRecommendations {
 
   return { pBalance, kBalance };
 }
-
 
   async calculatePKBalanceFromSequences(
     calculations,
@@ -227,17 +187,14 @@ class GenerateRecommendations {
         const defoliationItems = sequenceItems.filter(
           (c) => c.defoliationId === defoliationId
         );
-
         const balances = this.processDefoliationRecommendations(
           defoliationItems,
           cropPOfftake
         );
-
         pBalance += balances.pBalance;
         kBalance += balances.kBalance;
       }
     }
-
     // Add fertiliser at the end
     pBalance += fertiliserP;
     kBalance += fertiliserK;
@@ -354,8 +311,7 @@ async calculatePKBalance(
   }
 
   // CASE 3: Has previous crop → use sequence calculation
-  const pkBalCalcuationsFromNutrients =
-    await this.calculatePKBalanceFromSequences(
+  const pkBalCalcuationsFromNutrients =await this.calculatePKBalanceFromSequences(
       nutrientRecommendationsData.calculations,
       soilAndCropOffTakeContext.cropPOfftake,
       fertiliserData
@@ -366,7 +322,6 @@ async calculatePKBalance(
     kBalance: pkBalCalcuationsFromNutrients.kBalance,
   };
 }
-
 
   async createOrUpdatePKBalance(
     crop,
@@ -969,10 +924,11 @@ async calculatePKBalance(
         transactionalManager,
         managementPeriodIds,
       );
-      const snsAnalysesData = await this.fetchSnsAnalysesForCrops(
-        transactionalManager,
-        crops,
-      );
+      const snsAnalysesData =await this.CalculateCropsSnsAnalysisService.getCropsSnsAnalyses(
+          transactionalManager,
+          fieldID,
+          crop.Year
+        );
       const { latestSoilAnalysis, soilAnalysisRecords } =await this.HandleSoilAnalysisService.handleSoilAnalysisValidation(
           fieldID,
           fieldRelatedData.Name,

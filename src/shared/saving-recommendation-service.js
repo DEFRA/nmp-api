@@ -99,11 +99,9 @@ class SavingRecommendationService {
       filteredData.calculations,
       defoliationId,
     );
-
     if (!defoliationData?.length) {
       return null;
     }
-
     const cropRecData = this.initializeRecommendationData(latestSoilAnalysis);
 
     const managementPeriod = await this.getManagementPeriod(
@@ -414,11 +412,6 @@ class SavingRecommendationService {
       context.userId,
       mannerOutputs,
     );
-
-    if (!savedRecommendations?.length) {
-      return;
-    }
-
     const recommendationsToSave = this.resolveRecommendationsToSave(
       cropData,
       savedRecommendations,
