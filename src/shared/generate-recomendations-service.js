@@ -28,6 +28,7 @@ const { SavingRecommendationService } = require("./saving-recommendation-service
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { RecommendationCommentEntity } = require("../db/entity/recommendation-comment.entity");
 const { CalculateCropsSnsAnalysisService } = require("./calculate-crops-sns-analysis-service");
+const { CalculatePKBalance } = require("./calculate-pk-balance-service");
 
 class GenerateRecommendations {
   constructor() {
@@ -45,6 +46,7 @@ class GenerateRecommendations {
     this.calculateGrassId = new CalculateGrassHistoryAndPreviousGrass();
     this.savingRecommendationService = new SavingRecommendationService();
     this.CalculateCropsSnsAnalysisService = new CalculateCropsSnsAnalysisService();
+    this.CalculatePKBalance = new CalculatePKBalance();
   }
   async getManagementPeriods(transactionalManager, cropId) {
     const data = await transactionalManager.find(ManagementPeriodEntity, {
@@ -167,215 +169,6 @@ class GenerateRecommendations {
 
   return { pBalance, kBalance };
 }
-
-  async calculatePKBalanceFromSequences(
-    calculations,
-    cropPOfftake,
-    fertiliserData
-  ) {
-    let pBalance = 0,kBalance = 0;
-    const fertiliserP = fertiliserData?.p205,fertiliserK = fertiliserData?.k20; 
-    const sequenceIds = [...new Set(calculations.map((c) => c.sequenceId))];
-    for (const sequenceId of sequenceIds) {
-      const sequenceItems = calculations.filter(
-        (c) => c.sequenceId === sequenceId,
-      );
-      const defoliationIds = [
-        ...new Set(sequenceItems.map((c) => c.defoliationId))
-      ];
-      for (const defoliationId of defoliationIds) {
-        const defoliationItems = sequenceItems.filter(
-          (c) => c.defoliationId === defoliationId
-        );
-        const balances = this.processDefoliationRecommendations(
-          defoliationItems,
-          cropPOfftake
-        );
-        pBalance += balances.pBalance;
-        kBalance += balances.kBalance;
-      }
-    }
-    // Add fertiliser at the end
-    pBalance += fertiliserP;
-    kBalance += fertiliserK;
-
-    return { pBalance, kBalance };
-  }
-
- 
-async adjustBalanceBasedOnSoilAnalysis(
-  soilAndCropOffTakeContext,
-  pBalance,
-  kBalance
-) {
-  const latestSoilAnalysis =
-    soilAndCropOffTakeContext?.latestSoilAnalysis || {};
-
-  // If no soil analysis exists
-  if (Object.keys(latestSoilAnalysis).length === 0) {
-    return {
-      pBalance: 0,
-      kBalance: 0,
-    };
-  }
-
-  // If soil analysis exists but specific index is null
-  return {
-    pBalance:
-      latestSoilAnalysis.PhosphorusIndex == null ? 0 : pBalance,
-    kBalance:
-      latestSoilAnalysis.PotassiumIndex == null ? 0 : kBalance,
-  };
-}
-  
-
-async buildPKBalancePayload(
-  pkBalance,
-  crop,
-  pBalance,
-  kBalance,
-  userId
-) {
-  const baseData = {
-    Year: crop.Year,
-    FieldID: crop.FieldID,
-    PBalance: pBalance,
-    KBalance: kBalance
-  };
-
-  const now = new Date();
-
-  // UPDATE
-  if (pkBalance) {
-    return {
-      ...pkBalance,
-      ...baseData,
-      ModifiedOn: now,
-      ModifiedByID: userId
-    };
-  }
-
-  // CREATE
-  return {
-    ...baseData,
-    CreatedOn: now,
-    CreatedByID: userId
-  };
-}
-
-async calculatePKBalance(
-  crop,
-  previousCrop,
-  previousYearPKBalance,
-  fertiliserData,
-  nutrientRecommendationsData,
-  soilAndCropOffTakeContext,
-  transactionalManager
-) {
-
-  const fertiliserP = fertiliserData?.p205 ?? 0;
-  const fertiliserK = fertiliserData?.k20 ?? 0;
-
-  // CASE 1: OTHER crop
-  if (crop.CropTypeID === CropTypeMapper.OTHER) {
-    const otherPKBalance =
-      await this.CalculatePKBalanceOther.calculatePKBalanceOther(
-        crop,
-        soilAndCropOffTakeContext.latestSoilAnalysis,
-        transactionalManager
-      );
-
-    return {
-      pBalance: otherPKBalance.pBalance,
-      kBalance: otherPKBalance.kBalance,
-    };
-  }
-
-  // CASE 2: No previous crop
-  if (!previousCrop) {
-    if (previousYearPKBalance) {
-      return {
-        pBalance:
-          fertiliserP -
-          (0 - (previousYearPKBalance?.PBalance ?? 0)),
-        kBalance:
-          fertiliserK -
-          (0 - (previousYearPKBalance?.KBalance ?? 0)),
-      };
-    }
-
-    return {
-      pBalance: fertiliserP,
-      kBalance: fertiliserK,
-    };
-  }
-
-  // CASE 3: Has previous crop → use sequence calculation
-  const pkBalCalcuationsFromNutrients =await this.calculatePKBalanceFromSequences(
-      nutrientRecommendationsData.calculations,
-      soilAndCropOffTakeContext.cropPOfftake,
-      fertiliserData
-    );
-
-  return {
-    pBalance: pkBalCalcuationsFromNutrients.pBalance,
-    kBalance: pkBalCalcuationsFromNutrients.kBalance,
-  };
-}
-
-  async createOrUpdatePKBalance(
-    crop,
-    nutrientRecommendationsData,
-    userId,
-    fertiliserData,
-    transactionalManager,
-    soilAndCropOffTakeContext,
-    previousCrop
-  ) {
-    try {
-      const previousYearPKBalance = await this.getPKBalanceData(
-        crop.FieldID,
-        crop.Year - 1,
-        transactionalManager,
-      );
-
-      // Calculate initial balances
-      let { pBalance, kBalance } = await this.calculatePKBalance(
-        crop,
-        previousCrop,
-        previousYearPKBalance,
-        fertiliserData,
-        nutrientRecommendationsData,
-        soilAndCropOffTakeContext,
-        transactionalManager
-      );
-      //geting current pKBalance
-      const pkBalance = await this.getPKBalanceData(
-        crop.FieldID,
-        crop.Year,
-        transactionalManager,
-      );
-      const adjustedBalances = await this.adjustBalanceBasedOnSoilAnalysis(
-        soilAndCropOffTakeContext,
-        pBalance,
-        kBalance
-      );
-      pBalance = adjustedBalances.pBalance;
-      kBalance = adjustedBalances.kBalance;
-      const saveAndUpdatePKBalance = await this.buildPKBalancePayload(
-        pkBalance,
-        crop,
-        pBalance,
-        kBalance,
-        userId
-      );
-
-      return { saveAndUpdatePKBalance };
-    } catch (error) {
-      console.error("Error while saving pkBalance data", error);
-      throw error;
-    }
-  }
 
   async buildCropOrderData(OrganicManure, mannerOutputs, latestSoilAnalysis) {
     return {
@@ -525,7 +318,7 @@ async calculatePKBalance(
       {
         where: {
           FarmID: farmId,
-          Year: year,
+          Year: year
         },
       },
     );
@@ -902,7 +695,7 @@ async calculatePKBalance(
     newOrganicManure,
     transactionalManager,
     request,
-    userId,
+    userId
   ) {
     const cropTypesList =await this.rB209ArableService.getData("/Arable/CropTypes");
     const fieldRelatedData = await this.getFieldAndCountryData(
@@ -969,18 +762,18 @@ async calculatePKBalance(
           latestSoilAnalysis,
           crop // Latest soil analysis data
         );
-        const saveAndUpdateOtherPKBalance = await this.createOrUpdatePKBalance(
-          crop,
-          nutrientRecommendationsData,
-          userId,
-          fertiliserData,
-          transactionalManager,
-          {
-          cropPOfftake,
-          latestSoilAnalysis
-          },
-          previousCrop
-        );
+        const saveAndUpdateOtherPKBalance = await this.CalculatePKBalance.createOrUpdatePKBalance(
+            crop,
+            nutrientRecommendationsData,
+            userId,
+            fertiliserData,
+            transactionalManager,
+            {
+              cropPOfftake,
+              latestSoilAnalysis,
+            },
+            previousCrop
+          );
 
         if (saveAndUpdateOtherPKBalance) {
           await transactionalManager.save(
@@ -1026,18 +819,18 @@ async calculatePKBalance(
           mannerOutputs,
         );
 
-      const saveAndUpdatePKBalance = await this.createOrUpdatePKBalance(
-        crop,
-        nutrientRecommendationsData,
-        userId,
-        fertiliserData,
-        transactionalManager,
-        {
-          cropPOfftake,
-          latestSoilAnalysis,
-        },
-        previousCrop,
-      );
+      const saveAndUpdatePKBalance = await this.CalculatePKBalance.createOrUpdatePKBalance(
+          crop,
+          nutrientRecommendationsData,
+          userId,
+          fertiliserData,
+          transactionalManager,
+          {
+            cropPOfftake,
+            latestSoilAnalysis,
+          },
+          previousCrop,
+        );
 
       if (saveAndUpdatePKBalance) {
         await transactionalManager.save(
