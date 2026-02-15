@@ -1,0 +1,49 @@
+const { CalculateCropsSnsAnalysisService } = require("./calculate-crops-sns-analysis-service");
+const { CalculateMannerOutputService } = require("./calculate-manner-output-service");
+const { HandleSoilAnalysisService } = require("./handle-soil-analysis");
+
+class HanldeMannerAndAnalysis {
+  constructor() {
+  this.HandleSoilAnalysisService = new HandleSoilAnalysisService();
+  this.CalculateMannerOutput = new CalculateMannerOutputService();
+  this.CalculateCropsSnsAnalysisService =new CalculateCropsSnsAnalysisService();
+  }
+
+  async getCropPreCalculationData(
+    crop,
+    fieldID,
+    fieldRelatedData,
+    newOrganicManure,
+    transactionalManager,
+    request
+  ) {
+    const snsAnalysesData =await this.CalculateCropsSnsAnalysisService.getCropsSnsAnalyses(
+        transactionalManager,
+        fieldID,
+        crop.Year
+      );
+    const { latestSoilAnalysis, soilAnalysisRecords } = await this.HandleSoilAnalysisService.handleSoilAnalysisValidation(
+        fieldID,
+        fieldRelatedData.Name,
+        crop.Year,
+        fieldRelatedData.RB209CountryID
+      );
+
+    const mannerOutputs =
+      await this.CalculateMannerOutput.calculateMannerOutputForOrganicManure(
+        crop,
+        newOrganicManure,
+        fieldRelatedData,
+        fieldRelatedData,
+        transactionalManager,
+        request,
+      );
+    return {
+      snsAnalysesData,
+      latestSoilAnalysis,
+      soilAnalysisRecords,
+      mannerOutputs
+    };
+  }
+}
+module.exports = { HanldeMannerAndAnalysis };

@@ -24,13 +24,12 @@ const { CalculatePKBalance } = require("./calculate-pk-balance-service");
 const { TotalFertiliserByField } = require("./calculate-total-fertiliser-field-service");
 const { SavingOtherCropRecommendations } = require("./saving-recommendations-other-crop-service");
 const { FieldRelated } = require("./fetch-field-related-data-service");
+const { HanldeMannerAndAnalysis } = require("./handle-manner-and-analysis-service");
 
 class GenerateRecommendations {
   constructor() {
     this.rB209ArableService = new RB209ArableService();
     this.rB209RecommendationService = new RB209RecommendationService();
-    this.HandleSoilAnalysisService = new HandleSoilAnalysisService();
-    this.CalculateMannerOutput = new CalculateMannerOutputService();
     this.CalculatePreviousCropService = new CalculatePreviousCropService();
     this.organicManureRepository = AppDataSource.getRepository(OrganicManureEntity);
     this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
@@ -38,11 +37,11 @@ class GenerateRecommendations {
     this.grassGrowthClass = new GrassGrowthService();
     this.calculateGrassId = new CalculateGrassHistoryAndPreviousGrass();
     this.savingRecommendationService = new SavingRecommendationService();
-    this.CalculateCropsSnsAnalysisService = new CalculateCropsSnsAnalysisService();
     this.CalculatePKBalance = new CalculatePKBalance();
     this.totalFertiliserByField = new TotalFertiliserByField();
     this.savingOtherCropRecommendations = new SavingOtherCropRecommendations();
     this.fieldRelated = new FieldRelated();
+    this.HanldeMannerAndAnalysis = new HanldeMannerAndAnalysis();
   }
   async calculateCropPOfftake(latestSoilAnalysis, cropTypeId, cropYield) {
     const potatoYield = 50;
@@ -374,6 +373,9 @@ class GenerateRecommendations {
     nutrientRecommendationnReqBody.referenceValue = `${field.ID}-${crop.ID}-${crop.Year}`;
     return nutrientRecommendationnReqBody;
   }
+
+
+
   async generateRecommendations(
     fieldID,
     Year,
@@ -395,26 +397,14 @@ class GenerateRecommendations {
     let recommendation;
     const results = [];
     for (const crop of crops) { 
-      const snsAnalysesData =await this.CalculateCropsSnsAnalysisService.getCropsSnsAnalyses(
-          transactionalManager,
-          fieldID,
-          crop.Year
-        );
-      const { latestSoilAnalysis, soilAnalysisRecords } =await this.HandleSoilAnalysisService.handleSoilAnalysisValidation(
-          fieldID,
-          fieldRelatedData.Name,
-          crop.Year,
-          fieldRelatedData.RB209CountryID
-        );
-      let mannerOutputs = null;
-      mannerOutputs =await this.CalculateMannerOutput.calculateMannerOutputForOrganicManure(
-          crop,
-          newOrganicManure,
-          fieldRelatedData,
-          fieldRelatedData,
-          transactionalManager,
-          request
-        );
+      const {snsAnalysesData,latestSoilAnalysis,soilAnalysisRecords,mannerOutputs} = await this.HanldeMannerAndAnalysis.getCropPreCalculationData(
+        crop,
+        fieldID,
+        fieldRelatedData,
+        newOrganicManure,
+        transactionalManager,
+        request
+      );
       const cropPOfftake = await this.calculateCropPOfftake(latestSoilAnalysis,crop.CropTypeID,crop.Yield);
       const previousCrop =await this.CalculatePreviousCropService.findPreviousCrop(
           fieldID,
