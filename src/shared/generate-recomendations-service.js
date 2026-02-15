@@ -690,9 +690,10 @@ async calculatePKBalance(
         cropTypeID !== CropTypeMapper.OTHER
       ) {
         return FieldTypeMapper.ARABLE;
+      } else {
+        return FieldTypeMapper.ARABLE; 
       }
     }
-
     if (crops.length === 2) {
       const cropTypeIDs = crops.map((c) => c.CropTypeID);
       const isBothGrass = cropTypeIDs.every(
