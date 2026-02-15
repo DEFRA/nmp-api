@@ -1081,9 +1081,8 @@ class CropService extends BaseService {
 
   async copyPlan(body, userId, request) {
     const { farmID, harvestYear, copyYear, isOrganic, isFertiliser } = body;
-    let savedCrop;
-    let Recommendations = [];
-  
+    let savedCrop,Recommendations = [];
+    const managementPeriodsOfNewCrop = [],organicManures = [],fertiliserManures = [];
     return await AppDataSource.transaction(async (transactionalManager) => {
       // Step 1: Get all fields for the farmID
       const fields = await transactionalManager.find(FieldEntity, {
@@ -1239,9 +1238,7 @@ class CropService extends BaseService {
         }
      
         
-        const managementPeriodsOfNewCrop = [];
-        const organicManures = [];
-        const fertiliserManures = [];
+      
         const oldToNewManagementPeriodMap = {};
         let originalSowingDate = new Date(crop.SowingDate);
         originalSowingDate = crop.SowingDate ? originalSowingDate : null;
@@ -1411,7 +1408,12 @@ class CropService extends BaseService {
       }
 
       // You can return crops or any processed result
-      return { Recommendations };
+      return {
+        Recommendations: Recommendations,
+        ManagementPeriods: managementPeriodsOfNewCrop,
+        OrganicManures: organicManures,
+        Fertilisers: fertiliserManures
+      };
     });
   }
 
