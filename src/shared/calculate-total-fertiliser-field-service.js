@@ -4,8 +4,6 @@ const { CropEntity } = require("../db/entity/crop.entity");
 const { FertiliserManuresEntity } = require("../db/entity/fertiliser-manures.entity");
 
 class TotalFertiliserByField {
-  constructor() {}
-
   async getP205AndK20fromfertiliser(transactionalManager, managementPeriodIds) {
     // Normalize to array
     const ids = Array.isArray(managementPeriodIds)

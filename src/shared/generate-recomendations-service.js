@@ -30,6 +30,7 @@ const { RecommendationCommentEntity } = require("../db/entity/recommendation-com
 const { CalculateCropsSnsAnalysisService } = require("./calculate-crops-sns-analysis-service");
 const { CalculatePKBalance } = require("./calculate-pk-balance-service");
 const { TotalFertiliserByField } = require("./calculate-total-fertiliser-field-service");
+const { SavingOtherCropRecommendations } = require("./saving-recommendations-other-crop-service");
 
 class GenerateRecommendations {
   constructor() {
@@ -49,6 +50,7 @@ class GenerateRecommendations {
     this.CalculateCropsSnsAnalysisService = new CalculateCropsSnsAnalysisService();
     this.CalculatePKBalance = new CalculatePKBalance();
     this.totalFertiliserByField = new TotalFertiliserByField();
+    this.savingOtherCropRecommendations = new SavingOtherCropRecommendations();
   }
   async getFieldAndCountryData(fieldId, transactionalManager) {
     return (
@@ -106,133 +108,6 @@ class GenerateRecommendations {
       throw error; // Re-throw the error or handle it as needed
     }
   }
-
-  async buildCropOrderData(OrganicManure, mannerOutputs, latestSoilAnalysis) {
-    return {
-      CropN: null,
-      NBalance: null,
-      ManureN: mannerOutputs ? mannerOutputs[0].availableN : OrganicManure.AvailableN,
-      FertilizerN: null,
-      CropP2O5: null,
-      PBalance: null,
-      ManureP2O5: mannerOutputs ? mannerOutputs[0].availableP : OrganicManure.AvailableP2O5,
-      FertilizerP2O5: null,
-      CropK2O: null,
-      KBalance: null,
-      ManureK2O: mannerOutputs ? mannerOutputs[0].availableK : OrganicManure.AvailableK2O,
-      FertilizerK2O: null,
-      CropMgO: null,
-      MgBalance: null,
-      ManureMgO: null,
-      FertilizerMgO: null,
-      CropSO3: null,
-      SBalance: null,
-      ManureSO3: mannerOutputs? mannerOutputs[0].availableS: OrganicManure.AvailableSO3,
-      FertilizerSO3: null,
-      CropNa2O: null,
-      NaBalance: null,
-      ManureNa2O: null,
-      FertilizerNa2O: null,
-      CropLime: null,
-      LimeBalance: null,
-      ManureLime: null,
-      FertilizerLime: null,
-      PH: latestSoilAnalysis?.PH?.toString() || null,
-      SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
-      PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
-      KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
-      MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-      SIndex: null,
-      NIndex: null,
-    };
-  }
-
-  async saveRecommendationForOtherCrops(
-    transactionalManager,
-    OrganicManure,
-    mannerOutputs,
-    userId,
-    latestSoilAnalysis,
-    crop
-  ) {
-    // Prepare cropOrderData with the values from latestSoilAnalysis, snsAnalysesData, and mannerOutputReq
-    // ⬇️ Now simply call the new function
-    const cropOrderData = await this.buildCropOrderData(
-      OrganicManure,
-      mannerOutputs,
-      latestSoilAnalysis,
-    );
-
-    let managementPeriods = [];
-    if (OrganicManure) {
-      managementPeriods = [
-        await transactionalManager.findOne(ManagementPeriodEntity, {
-          where: { ID: OrganicManure.ManagementPeriodID },
-        }),
-      ];
-    } else {
-      managementPeriods = await transactionalManager.find(
-        ManagementPeriodEntity,
-        {
-          where: { CropID: crop.ID },
-        },
-      );
-    }
-    const updatedRecommendations = [];
-
-    for (const period of managementPeriods) {
-      let recommendation = await transactionalManager.findOne(
-        RecommendationEntity,
-        {
-          where: {
-            ManagementPeriodID: period.ID,
-          },
-        },
-      );
-
-      if (recommendation) {
-        // If a recommendation exists, update it
-        recommendation = {
-          ...recommendation,
-          ...cropOrderData,
-          ModifiedOn: new Date(),
-          ModifiedByID: userId,
-        };
-        await transactionalManager.save(RecommendationEntity, recommendation);
-
-        // Find and delete related recommendation comments
-        const existingComments = await transactionalManager.find(
-          RecommendationCommentEntity,
-          {
-            where: { RecommendationID: recommendation.ID },
-          },
-        );
-
-        if (existingComments && existingComments.length > 0) {
-          await transactionalManager.remove(
-            RecommendationCommentEntity,
-            existingComments,
-          );
-        }
-        updatedRecommendations.push(recommendation);
-      } else {
-        // If no recommendation exists, create a new one
-        recommendation = this.RecommendationRepository.create({
-          ...cropOrderData,
-          ManagementPeriodID: period.ID,
-          Comments: "New recommendation created",
-          CreatedOn: new Date(),
-          CreatedByID: userId,
-        });
-        await transactionalManager.save(RecommendationEntity, recommendation);
-        updatedRecommendations.push(recommendation);
-      }
-    }
-    // Check if there's an existing recommendation for the current OrganicManure.ManagementPeriodID
-
-    return updatedRecommendations;
-  }
-
   async getWinterExcessRainfall(farmId, year, transactionalManager) {
     const excessRainfall = await transactionalManager.findOne(
       ExcessRainfallsEntity,
@@ -673,14 +548,14 @@ class GenerateRecommendations {
         crop?.IsBasePlan ||
         !previousCrop
       ) {
-        recommendation = await this.saveRecommendationForOtherCrops(
-          transactionalManager, // Transaction manager for transactional save
-          newOrganicManure, // OrganicManure data
-          mannerOutputs, // Manner output request
-          userId, // User ID
-          latestSoilAnalysis,
-          crop // Latest soil analysis data
-        );
+        recommendation = await this.savingOtherCropRecommendations.saveRecommendationForOtherCrops(
+            transactionalManager, // Transaction manager for transactional save
+            newOrganicManure, // OrganicManure data
+            mannerOutputs, // Manner output request
+            userId, // User ID
+            latestSoilAnalysis,
+            crop // Latest soil analysis data
+          );
         const saveAndUpdateOtherPKBalance = await this.CalculatePKBalance.createOrUpdatePKBalance(
             crop,
             nutrientRecommendationsData,
