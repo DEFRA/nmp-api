@@ -188,14 +188,9 @@ class GenerateRecommendations {
     cropPOfftake,
     fertiliserData,
   ) {
-    let pBalance = 0;
-    let kBalance = 0;
-
-    const fertiliserP = fertiliserData?.p205 ?? 0;
-    const fertiliserK = fertiliserData?.k20 ?? 0;
-
+    let pBalance = 0,kBalance = 0;
+    const fertiliserP = fertiliserData?.p205,fertiliserK = fertiliserData?.k20; 
     const sequenceIds = [...new Set(calculations.map((c) => c.sequenceId))];
-
     for (const sequenceId of sequenceIds) {
       const sequenceItems = calculations.filter(
         (c) => c.sequenceId === sequenceId,
