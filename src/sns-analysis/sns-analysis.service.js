@@ -62,21 +62,6 @@ class SnsAnalysisService extends BaseService {
              request,
              userId
            )
-           .then((res) => {
-             if (res === undefined) {
-               console.log(
-                 "updateRecommendationAndOrganicManure returned undefined",
-               );
-             } else {
-               console.log("updateRecommendationAndOrganicManure result:", res);
-             }
-           })
-           .catch((error) => {
-             console.error(
-               "Error updating recommendation and organic manure:",
-               error,
-             );
-           });
        }
       return { snsAnalysis };
     });

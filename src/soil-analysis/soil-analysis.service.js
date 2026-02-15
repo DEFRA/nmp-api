@@ -36,8 +36,6 @@ class SoilAnalysesService extends BaseService {
         },
       });
      
-      let newPKBalanceData = null;
-
       if (
         soilAnalysis.Potassium != null ||
         soilAnalysis.Phosphorus != null ||
@@ -121,28 +119,12 @@ class SoilAnalysesService extends BaseService {
           }
         );
         if (nextAvailableCrop) {
-          this.updatingFutureRecommendations
-            .updateRecommendationsForField(
+          this.updatingFutureRecommendations.updateRecommendationsForField(
               soilAnalysis.FieldID,
               nextAvailableCrop.Year,
               request,
               userId
             )
-            .then((res) => {
-              if (res === undefined) {
-                console.log(
-                  "updateRecommendationAndOrganicManure returned undefined",
-                );
-              } else {
-                console.log("result:", res);
-              }
-            })
-            .catch((error) => {
-              console.error(
-                "Error updating recommendation and organic manure:",
-                error,
-              );
-            });
         }
 
       return { soilAnalysis, PKBalance };
@@ -252,7 +234,7 @@ class SoilAnalysesService extends BaseService {
           }
         
       }
-      let newOrganicManure= null;
+      const newOrganicManure= null;
       await this.generateRecommendations.generateRecommendations(
         updatedSoilAnalysisData.FieldID,
         updatedSoilAnalysisData.Year,

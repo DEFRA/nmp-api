@@ -243,7 +243,9 @@ class SavingRecommendationService {
 
     for (const calc of calculations) {
       const handler = nutrientHandlers[calc.nutrientId];
-      if (handler) handler(calc);
+      if (handler) {
+        handler(calc);
+      }
     }
   }
 
@@ -295,7 +297,7 @@ class SavingRecommendationService {
     cropSaveData,
     transactionalManager,
     nutrientRecommendationsData,
-    userId,
+    userId
   ) {
     const cropNotes = await this.getCropNotes(
       savedCrop,
@@ -330,14 +332,14 @@ class SavingRecommendationService {
         (note) => note.sequenceId === savedCrop.CropOrder,
       );
     }
-
     const managementPeriod = await transactionalManager.findOne(
       ManagementPeriodEntity,
       { where: { ID: savedCrop.ManagementPeriodID } },
     );
 
-    if (!managementPeriod) return [];
-
+    if (!managementPeriod){ 
+      return [];
+    }
     return adviceNotes.filter(
       (note) =>
         note.defoliationId === managementPeriod.Defoliation &&
