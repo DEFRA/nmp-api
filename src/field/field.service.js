@@ -47,6 +47,8 @@ const { CropTypeMapper } = require("../constants/crop-type-mapper");
 const { PreviousCroppingMapper } = require("../constants/action-mapper");
 const {FarmService}= require("../farm/farm.service");
 const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
+const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
+const { GenerateRecommendations } = require("../shared/generate-recomendations-service");
 
 class FieldService extends BaseService {
   constructor() {
@@ -93,8 +95,8 @@ class FieldService extends BaseService {
     );
     this.rB209GrassService = new RB209GrassService();
     this.rB209GrasslandService = new RB209GrasslandService();
-    this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
-    this.UpdateRecommendation = new UpdateRecommendation();
+    this.generateRecommendations = new GenerateRecommendations();
+    this.updatingFutureRecommendations = new UpdatingFutureRecommendations();  
     this.FarmService = new FarmService();
     this.ProcessFutureManuresForWarnings = new ProcessFutureManuresForWarnings();
 
@@ -380,13 +382,15 @@ class FieldService extends BaseService {
           const oldestCrop = crops.reduce((oldest, current) =>
             current.Year < oldest.Year ? current : oldest,
           );
-
-          await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+          
+          const newOrganicManure = null;
+          await this.generateRecommendations.generateRecommendations(
             fieldId,
             oldestCrop.Year,
-            request,
-            userId,
+            newOrganicManure,
             transactionalManager,
+            request,
+            userId
           );
 
           const nextAvailableCrop = await transactionalManager.findOne(
@@ -401,14 +405,15 @@ class FieldService extends BaseService {
           );
 
           if (nextAvailableCrop) {
-            this.UpdateRecommendation.updateRecommendationsForField(
-              fieldId,
-              nextAvailableCrop.Year,
-              request,
-              userId,
-            ).catch((error) => {
-              console.error(error);
-            });
+            this.updatingFutureRecommendations.updateRecommendationsForField(
+                fieldId,
+                nextAvailableCrop.Year,
+                request,
+                userId,
+              )
+              .catch((error) => {
+                console.error(error);
+              });
           }
           this.ProcessFutureManuresForWarnings.processWarningsByField(
             fieldId,
@@ -490,14 +495,15 @@ class FieldService extends BaseService {
               current.Year < oldest.Year ? current : oldest,
             );
 
-            this.UpdateRecommendation.updateRecommendationsForField(
-              fieldId,
-              oldestCrop.Year,
-              request,
-              userId,
-            ).catch((error) => {
-              console.error(error);
-            });
+            this.updatingFutureRecommendations.updateRecommendationsForField(
+                fieldId,
+                oldestCrop.Year,
+                request,
+                userId,
+              )
+              .catch((error) => {
+                console.error(error);
+              });
           }
         }
 
@@ -591,13 +597,15 @@ class FieldService extends BaseService {
     const oldestCrop = crops.reduce((oldest, current) =>
       current.Year < oldest.Year ? current : oldest,
     );
-
-    await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+    
+    const newOrganicManure= null;
+    await this.generateRecommendations.generateRecommendations(
       fieldId,
       oldestCrop.Year,
-      request,
-      userId,
+      newOrganicManure,
       transactionalManager,
+      request,
+      userId
     );
 
     const nextCrop = await transactionalManager.findOne(CropEntity, {
@@ -609,12 +617,8 @@ class FieldService extends BaseService {
     });
 
     if (nextCrop) {
-      this.UpdateRecommendation.updateRecommendationsForField(
-        fieldId,
-        nextCrop.Year,
-        request,
-        userId,
-      ).catch(console.error);
+      this.updatingFutureRecommendations.updateRecommendationsForField(fieldId, nextCrop.Year, request, userId)
+        .catch(console.error);
     }
   }
 

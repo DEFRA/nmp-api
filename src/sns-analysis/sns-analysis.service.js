@@ -8,6 +8,8 @@ const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { MoreThan } = require("typeorm");
 const { UpdateRecommendationChanges } = require("../shared/updateRecommendationsChanges");
+const { GenerateRecommendations } = require("../shared/generate-recomendations-service");
+const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
 
 class SnsAnalysisService extends BaseService {
   constructor() {
@@ -16,7 +18,8 @@ class SnsAnalysisService extends BaseService {
     this.cropRepository = AppDataSource.getRepository(CropEntity);
     this.UpdateRecommendation = new UpdateRecommendation();
     this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
-
+    this.generateRecommendations = new GenerateRecommendations();
+    this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
   }
 
   async createSnsAnalysis(snsAnalysisBody, userId, request) {
@@ -31,12 +34,14 @@ class SnsAnalysisService extends BaseService {
       const crop = await this.cropRepository.findOne({
         where: { ID: snsAnalysisRequest.CropID },
       });
-       await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+      const newOrganicManure = null;
+       await this.generateRecommendations.generateRecommendations(
          crop.FieldID,
          crop.Year,
+         newOrganicManure,
+         transactionalManager,
          request,
-         userId,
-         transactionalManager
+         userId
        );
 
        // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
@@ -51,16 +56,16 @@ class SnsAnalysisService extends BaseService {
        });
 
        if (nextAvailableCrop) {
-         this.UpdateRecommendation.updateRecommendationsForField(
-           crop.FieldID,
-           nextAvailableCrop.Year,
-           request,
-           userId
-         )
+         this.updatingFutureRecommendations.updateRecommendationsForField(
+             crop.FieldID,
+             nextAvailableCrop.Year,
+             request,
+             userId
+           )
            .then((res) => {
              if (res === undefined) {
                console.log(
-                 "updateRecommendationAndOrganicManure returned undefined"
+                 "updateRecommendationAndOrganicManure returned undefined",
                );
              } else {
                console.log("updateRecommendationAndOrganicManure result:", res);
@@ -69,7 +74,7 @@ class SnsAnalysisService extends BaseService {
            .catch((error) => {
              console.error(
                "Error updating recommendation and organic manure:",
-               error
+               error,
              );
            });
        }
@@ -98,13 +103,14 @@ class SnsAnalysisService extends BaseService {
         // Call the stored procedure to delete the snsAnalysisId and related entities
         const storedProcedure = "EXEC spSnsAnalyses_DeleteSnsAnalyses @id = @0";
         await AppDataSource.query(storedProcedure, [snsAnalysisId]);
-
-          await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+         const newOrganicManure = null;
+          await this.generateRecommendations.generateRecommendations(
             crop.FieldID,
             crop.Year,
+            newOrganicManure,
+            transactionalManager,
             request,
-            userId,
-            transactionalManager
+            userId
           );
 
         // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
@@ -119,28 +125,28 @@ class SnsAnalysisService extends BaseService {
         });
 
         if (nextAvailableCrop) {
-          this.UpdateRecommendation.updateRecommendationsForField(
-            crop.FieldID,
-            nextAvailableCrop.Year,
-            request,
-            userId
-          )
+          this.updatingFutureRecommendations.updateRecommendationsForField(
+              crop.FieldID,
+              nextAvailableCrop.Year,
+              request,
+              userId,
+            )
             .then((res) => {
               if (res === undefined) {
                 console.log(
-                  "updateRecommendationAndOrganicManure returned undefined"
+                  "updateRecommendationAndOrganicManure returned undefined",
                 );
               } else {
                 console.log(
                   "updateRecommendationAndOrganicManure result:",
-                  res
+                  res,
                 );
               }
             })
             .catch((error) => {
               console.error(
                 "Error updating recommendation and organic manure:",
-                error
+                error,
               );
             });
         }
@@ -186,13 +192,14 @@ class SnsAnalysisService extends BaseService {
       const crop = await this.cropRepository.findOne({
         where: { ID: SnsAnalysis.CropID },
       });
-
-      await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+     const newOrganicManure = null
+      await this.generateRecommendations.generateRecommendations(
         crop.FieldID,
         crop.Year,
+        newOrganicManure,
+        transactionalManager,
         request,
-        userId,
-        transactionalManager
+        userId
       );
 
       // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
@@ -207,16 +214,16 @@ class SnsAnalysisService extends BaseService {
       });
 
       if (nextAvailableCrop) {
-        this.UpdateRecommendation.updateRecommendationsForField(
-          crop.FieldID,
-          nextAvailableCrop.Year,
-          request,
-          userId
-        )
+        this.updatingFutureRecommendations.updateRecommendationsForField(
+            crop.FieldID,
+            nextAvailableCrop.Year,
+            request,
+            userId,
+          )
           .then((res) => {
             if (res === undefined) {
               console.log(
-                "updateRecommendationAndOrganicManure returned undefined"
+                "updateRecommendationAndOrganicManure returned undefined",
               );
             } else {
               console.log("updateRecommendationAndOrganicManure result:", res);
@@ -225,7 +232,7 @@ class SnsAnalysisService extends BaseService {
           .catch((error) => {
             console.error(
               "Error updating recommendation and organic manure:",
-              error
+              error,
             );
           });
       }

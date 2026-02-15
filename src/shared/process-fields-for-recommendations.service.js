@@ -2,15 +2,15 @@ const { AppDataSource } = require("../db/data-source");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { FieldEntity } = require("../db/entity/field.entity");
 const { UpdateRecommendation } = require("./updateRecommendation.service");
+const { UpdatingFutureRecommendations } = require("./updating-future-recommendations-service");
 
 
 
 class ProcessFieldsService {
   constructor() {
-    this.UpdateRecommendation = new UpdateRecommendation();
     this.fieldRespository = AppDataSource.getRepository(FieldEntity);
     this.cropRespository = AppDataSource.getRepository(CropEntity);
-    
+    this.updatingFutureRecommendations = new UpdatingFutureRecommendations();  
   }
 
   async processFieldsForRecommendation(
@@ -51,7 +51,7 @@ class ProcessFieldsService {
           const fieldId = field.ID;
           const oldestYear = oldestYearByFieldId[fieldId] ?? null;
           if (oldestYear){
-            this.UpdateRecommendation.updateRecommendationsForField(
+            this.updatingFutureRecommendations.updateRecommendationsForField(
               fieldId,
               oldestYear,
               request,

@@ -8,15 +8,16 @@ const {
 const { MoreThan } = require("typeorm");
 const { UpdateRecommendationChanges } = require("../shared/updateRecommendationsChanges");
 const { CropEntity } = require("../db/entity/crop.entity");
+const { GenerateRecommendations } = require("../shared/generate-recomendations-service");
+const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
 
 class SoilAnalysesService extends BaseService {
   constructor() {
     super(SoilAnalysisEntity);
     this.repository = AppDataSource.getRepository(SoilAnalysisEntity);
     this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
-    this.UpdateRecommendation = new UpdateRecommendation();
-    this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
-
+    this.generateRecommendations = new GenerateRecommendations();
+    this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
   }
 
   async createSoilAnalysis(soilAnalysisBody, userId, pKBalanceData, request) {
@@ -46,7 +47,7 @@ class SoilAnalysesService extends BaseService {
         if (pkBalanceEntry.length === 0 && pKBalanceData) {
           let { CreatedByID, CreatedOn, ...updatedPKBalanceData } =
             pKBalanceData;
-          newPKBalanceData = await transactionalManager.save(PKBalanceEntity, {
+           await transactionalManager.save(PKBalanceEntity, {
             ...updatedPKBalanceData,
             CreatedByID: userId,
             CreatedOn: new Date()
@@ -97,13 +98,16 @@ class SoilAnalysesService extends BaseService {
             );
           }
         }
-      }
-        await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+      } 
+
+      const newOrganicManure = null;
+        await this.generateRecommendations.generateRecommendations(
           soilAnalysis.FieldID,
           soilAnalysis.Year,
+          newOrganicManure,
+          transactionalManager,
           request,
-          userId,
-          transactionalManager
+          userId
         );
 
         const nextAvailableCrop = await transactionalManager.findOne(
@@ -117,28 +121,26 @@ class SoilAnalysesService extends BaseService {
           }
         );
         if (nextAvailableCrop) {
-          this.UpdateRecommendation.updateRecommendationsForField(
-            soilAnalysis.FieldID,
-            nextAvailableCrop.Year,
-            request,
-            userId
-          )
+          this.updatingFutureRecommendations
+            .updateRecommendationsForField(
+              soilAnalysis.FieldID,
+              nextAvailableCrop.Year,
+              request,
+              userId
+            )
             .then((res) => {
               if (res === undefined) {
                 console.log(
-                  "updateRecommendationAndOrganicManure returned undefined"
+                  "updateRecommendationAndOrganicManure returned undefined",
                 );
               } else {
-                console.log(
-                  "result:",
-                  res
-                );
+                console.log("result:", res);
               }
             })
             .catch((error) => {
               console.error(
                 "Error updating recommendation and organic manure:",
-                error
+                error,
               );
             });
         }
@@ -250,13 +252,14 @@ class SoilAnalysesService extends BaseService {
           }
         
       }
-
-      await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+      let newOrganicManure= null;
+      await this.generateRecommendations.generateRecommendations(
         updatedSoilAnalysisData.FieldID,
         updatedSoilAnalysisData.Year,
+        newOrganicManure,
+        transactionalManager,
         request,
-        userId,
-        transactionalManager
+        userId
       );
 
       const nextAvailableCrop = await transactionalManager.findOne(CropEntity, {
@@ -268,16 +271,16 @@ class SoilAnalysesService extends BaseService {
       });
 
       if (nextAvailableCrop) {
-        this.UpdateRecommendation.updateRecommendationsForField(
-          updatedSoilAnalysisData.FieldID,
-          nextAvailableCrop.Year,
-          request,
-          userId
-        )
+        this.updatingFutureRecommendations.updateRecommendationsForField(
+            updatedSoilAnalysisData.FieldID,
+            nextAvailableCrop.Year,
+            request,
+            userId
+          )
           .then((res) => {
             if (res === undefined) {
               console.log(
-                "updateRecommendationAndOrganicManure returned undefined"
+                "updateRecommendationAndOrganicManure returned undefined",
               );
             } else {
               console.log("updateRecommendationAndOrganicManure result:", res);
@@ -286,7 +289,7 @@ class SoilAnalysesService extends BaseService {
           .catch((error) => {
             console.error(
               "Error updating recommendation and organic manure:",
-              error
+              error,
             );
           });
       }
@@ -316,16 +319,16 @@ class SoilAnalysesService extends BaseService {
           "EXEC spSoilAnalyses_DeleteSoilAnalyses @SoilAnalysesID = @0";
         await AppDataSource.query(storedProcedure, [soilAnalysisId]);
 
-        this.UpdateRecommendation.updateRecommendationsForField(
-          soilAnalysisToDelete.FieldID,
-          soilAnalysisToDelete.Year,
-          request,
-          userId
-        )
+        this.updatingFutureRecommendations.updateRecommendationsForField(
+            soilAnalysisToDelete.FieldID,
+            soilAnalysisToDelete.Year,
+            request,
+            userId,
+          )
           .then((res) => {
             if (res === undefined) {
               console.log(
-                "updateRecommendationAndOrganicManure returned undefined"
+                "updateRecommendationAndOrganicManure returned undefined",
               );
             } else {
               console.log("updateRecommendationAndOrganicManure result:", res);
@@ -334,7 +337,7 @@ class SoilAnalysesService extends BaseService {
           .catch((error) => {
             console.error(
               "Error updating recommendation and organic manure:",
-              error
+              error,
             );
           });
       } catch (error) {
