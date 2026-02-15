@@ -433,9 +433,9 @@ class SavingRecommendationService {
       savedRecommendations,
       context.hasDefoliationNotes,
     );
-
+   const recomendationsAndComments = []
     for (const recommendation of recommendationsToSave) {
-      await this.saveMultipleRecommendation(
+      const recommendationsNotes= await this.saveMultipleRecommendation(
         Recommendations,
         cropData,
         recommendation,
@@ -443,7 +443,10 @@ class SavingRecommendationService {
         context.nutrientRecommendationsData,
         context.userId,
       );
+
+      recomendationsAndComments.push(recommendationsNotes);
     }
+    return recomendationsAndComments;
   }
 
   isGrassCrop(cropData) {
@@ -464,10 +467,10 @@ class SavingRecommendationService {
     userId,
     mannerOutputs,
   ) {
-    const Recommendations = [];
+    const recommendations = [],finalRecommendations=[];
 
     if (!dataMultipleCrops?.length) {
-      return Recommendations;
+      return recommendations;
     }
 
     const hasDefoliationNotes = this.hasDefoliationAdviceNotes(
@@ -475,7 +478,7 @@ class SavingRecommendationService {
     );
 
     for (const cropData of dataMultipleCrops) {
-      await this.processSingleCrop(
+      const recommendationsAndNotes = await this.processSingleCrop(
         cropData,
         {
           latestSoilAnalysis,
@@ -484,12 +487,13 @@ class SavingRecommendationService {
           userId,
           hasDefoliationNotes,
         },
-        Recommendations,
+        recommendations,
         mannerOutputs,
       );
+      finalRecommendations.push(recommendationsAndNotes);
     }
 
-    return Recommendations;
+    return finalRecommendations;
   }
 
   resolveRecommendationsToSave(

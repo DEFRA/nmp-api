@@ -1493,109 +1493,7 @@ class OrganicManureService extends BaseService {
     return Recommendations;
   }
 
-  async createOrUpdatePKBalance(
-    fieldId,
-    crop,
-    nutrientRecommendationsData,
-    pkBalanceData,
-    userId,
-    fertiliserData,
-    year,
-    transactionalManager,
-    cropPOfftake,
-    latestSoilAnalysis,
-    previousCrop,
-  ) {
-    try {
-      let pBalance = 0;
-      let kBalance = 0;
-      let saveAndUpdatePKBalance;
-
-      if (crop.CropTypeID == CropTypeMapper.OTHER) {
-        const otherPKBalance =
-          await this.CalculatePKBalanceOther.calculatePKBalanceOther(
-            crop,
-            latestSoilAnalysis,
-            transactionalManager,
-          );
-
-        pBalance = otherPKBalance.pBalance;
-        kBalance = otherPKBalance.kBalance;
-      } else if (crop.IsBasePlan || !previousCrop) {
-        if (pkBalanceData) {
-          pBalance =
-            (fertiliserData == null ? 0 : fertiliserData.p205) -
-            (0 - pkBalanceData == null ? 0 : pkBalanceData.PBalance);
-          kBalance =
-            (fertiliserData == null ? 0 : fertiliserData.k20) -
-            (0 - pkBalanceData == null ? 0 : pkBalanceData.KBalance);
-        } else {
-          pBalance = fertiliserData == null ? 0 : fertiliserData.p205;
-          kBalance = fertiliserData == null ? 0 : fertiliserData.k20;
-        }
-      } else {
-        for (const recommendation of nutrientRecommendationsData.calculations) {
-          switch (recommendation.nutrientId) {
-            case 1:
-              pBalance = (fertiliserData == null ? 0 : fertiliserData.p205) - recommendation.recommendation - cropPOfftake + recommendation.manures + recommendation.pkBalance;
-              break;
-            case 2:
-              kBalance =
-                (fertiliserData == null ? 0 : fertiliserData.k20) - recommendation.recommendation + recommendation.manures + recommendation.pkBalance;
-              break;
-          }
-        }
-      }
-      //geting current pKBalance
-      const pkBalance = await transactionalManager.findOne(PKBalanceEntity, {
-        where: {
-          FieldID: fieldId,
-          Year: crop.Year,
-        },
-      });
-
-      if (Object.keys(latestSoilAnalysis).length > 0) {
-        if (latestSoilAnalysis.PotassiumIndex == null) {
-          kBalance = 0;
-        }
-
-        if (latestSoilAnalysis.PhosphorusIndex == null) {
-          pBalance = 0;
-        }
-      } else {
-        pBalance = 0;
-        kBalance = 0;
-      }
-      if (pkBalance) {
-        const updateData = {
-          Year: year,
-          FieldID: fieldId,
-          PBalance: pBalance,
-          KBalance: kBalance,
-        };
-        saveAndUpdatePKBalance = {
-          ...pkBalance,
-          ...updateData,
-          ModifiedOn: new Date(),
-          ModifiedByID: userId,
-        };
-      } else {
-        saveAndUpdatePKBalance = {
-          Year: year,
-          FieldID: fieldId,
-          PBalance: pBalance,
-          KBalance: kBalance,
-          CreatedOn: new Date(),
-          CreatedByID: userId,
-        };
-      }
-
-      return { saveAndUpdatePKBalance };
-    } catch (error) {
-      console.error("Error while saving pkBalance data", error);
-      throw error;
-    }
-  }
+  
 
   async createOrganicManuresWithFarmManureType(request, body, userId) {
     return await AppDataSource.transaction(async (transactionalManager) => {
@@ -1671,10 +1569,7 @@ class OrganicManureService extends BaseService {
             ? true
             : false;
         }
-        let firstCrop,
-          firstCropMannerOutput = null,
-          mannerOutputs = null;
-        let cropPOfftake = 0;
+        let mannerOutputs = null;
         const dataMultipleCrops = await this.cropRepository.find({
           where: {
             FieldID: fieldData.ID,
@@ -1693,52 +1588,6 @@ class OrganicManureService extends BaseService {
           );
 
         // Call the new helper function to create mannerOutputReq
-        const Errors = [];
-        const {
-          latestSoilAnalysis,
-          errors: soilAnalysisErrors,
-          soilAnalysisRecords,
-        } = await this.handleSoilAnalysisValidation(
-          fieldData.ID,
-          fieldData.Name,
-          cropData?.Year,
-          rb209CountryData.RB209CountryID,
-        );
-        Errors.push(...soilAnalysisErrors);
-        if (Errors.length > 0) {
-          throw new boom.HttpException(
-            JSON.stringify(Errors),
-            StaticStrings.HTTP_STATUS_BAD_REQUEST,
-          );
-        }
-
-        let snsAnalysesData = null;
-
-        // Check if more than one crop exists in dataMultipleCrops
-        if (dataMultipleCrops.length > 1) {
-          // Initialize snsAnalysesData as an array if multiple crops are found
-          snsAnalysesData = [];
-
-          // Loop through each crop in dataMultipleCrops
-          for (const singleCrop of dataMultipleCrops) {
-            // Retrieve snsAnalysesData for each crop by crop.ID
-            const analysisData = await this.getSnsAnalysesData(singleCrop);
-
-            // Check if snsAnalysesData exists (not null or empty)
-            if (analysisData) {
-              // Push to snsAnalysesData array if snsAnalysesData is found
-              snsAnalysesData.push(analysisData);
-            }
-          }
-        } else if (dataMultipleCrops.length === 1) {
-          // If there is only one crop, get snsAnalysesData for that crop
-          const analysisData = await this.getSnsAnalysesData(cropData);
-
-          // Check if snsAnalysesData exists and assign directly as an object
-          if (analysisData) {
-            snsAnalysesData = analysisData; // Assign snsAnalysesData directly as an object
-          }
-        }
 
         let isNextYearPlanExist = false;
         let isNextYearOrganicManureExist = false;
@@ -1750,7 +1599,6 @@ class OrganicManureService extends BaseService {
             );
           });
 
-          console.log("cropPlanForNextYear", cropPlanForNextYear);
 
           if (cropPlanForNextYear.length > 0) {
             isNextYearPlanExist = true;

@@ -43,7 +43,6 @@ class GenerateRecommendations {
     this.grassGrowthClass = new GrassGrowthService();
     this.calculateGrassId = new CalculateGrassHistoryAndPreviousGrass();
     this.savingRecommendationService = new SavingRecommendationService();
-    
   }
 
   async getSnsAnalysesData(transactionalManager, crop) {
@@ -191,7 +190,11 @@ class GenerateRecommendations {
     }
   }
 
-  async calculatePKBalanceFromSequences(calculations, cropPOfftake, fertiliserData) {
+  async calculatePKBalanceFromSequences(
+    calculations,
+    cropPOfftake,
+    fertiliserData,
+  ) {
     let pBalance = 0;
     let kBalance = 0;
 
@@ -247,7 +250,7 @@ class GenerateRecommendations {
     transactionalManager,
     cropPOfftake,
     latestSoilAnalysis,
-    previousCrop
+    previousCrop,
   ) {
     try {
       let pBalance = 0;
@@ -288,11 +291,12 @@ class GenerateRecommendations {
           kBalance = fertiliserData == null ? 0 : fertiliserData.k20;
         }
       } else {
-        const pkBalCalcuationsFromNutrients = await this.calculatePKBalanceFromSequences(
-          nutrientRecommendationsData.calculations,
-          cropPOfftake,
-          fertiliserData,
-        );
+        const pkBalCalcuationsFromNutrients =
+          await this.calculatePKBalanceFromSequences(
+            nutrientRecommendationsData.calculations,
+            cropPOfftake,
+            fertiliserData,
+          );
         pBalance = pkBalCalcuationsFromNutrients.pBalance;
         kBalance = pkBalCalcuationsFromNutrients.kBalance;
       }
@@ -408,6 +412,7 @@ class GenerateRecommendations {
     mannerOutputs,
     userId,
     latestSoilAnalysis,
+    crop
   ) {
     // Prepare cropOrderData with the values from latestSoilAnalysis, snsAnalysesData, and mannerOutputReq
     // ⬇️ Now simply call the new function
@@ -417,74 +422,71 @@ class GenerateRecommendations {
       latestSoilAnalysis,
     );
 
-     let managementPeriods = [];
-     if (OrganicManure) {
-       managementPeriods = [
-         await transactionalManager.findOne(ManagementPeriodEntity, {
-           where: { ID: OrganicManure.ManagementPeriodID },
-         }),
-       ];
-     } else {
-       managementPeriods = await transactionalManager.find(
-         ManagementPeriodEntity,
-         {
-           where: { CropID: crop.ID },
-         },
-       );
-     }
+    let managementPeriods = [];
+    if (OrganicManure) {
+      managementPeriods = [
+        await transactionalManager.findOne(ManagementPeriodEntity, {
+          where: { ID: OrganicManure.ManagementPeriodID },
+        }),
+      ];
+    } else {
+      managementPeriods = await transactionalManager.find(
+        ManagementPeriodEntity,
+        {
+          where: { CropID: crop.ID },
+        },
+      );
+    }
     let updatedRecommendations = [];
 
-     for (const period of managementPeriods) {
+    for (const period of managementPeriods) {
+      let recommendation = await transactionalManager.findOne(
+        RecommendationEntity,
+        {
+          where: {
+            ManagementPeriodID: period.ID,
+          },
+        },
+      );
 
-       let recommendation = await transactionalManager.findOne(
-         RecommendationEntity,
-         {
-           where: {
-             ManagementPeriodID: period.ID,
-           },
-         },
-       );
-   
-       if (recommendation) {
-         // If a recommendation exists, update it
-         recommendation = {
-           ...recommendation,
-           ...cropOrderData,
-           ModifiedOn: new Date(),
-           ModifiedByID: userId,
-         };
-         await transactionalManager.save(RecommendationEntity, recommendation);
+      if (recommendation) {
+        // If a recommendation exists, update it
+        recommendation = {
+          ...recommendation,
+          ...cropOrderData,
+          ModifiedOn: new Date(),
+          ModifiedByID: userId,
+        };
+        await transactionalManager.save(RecommendationEntity, recommendation);
 
-         // Find and delete related recommendation comments
-                 const existingComments = await transactionalManager.find(
-                   RecommendationCommentEntity,
-                   {
-                     where: { RecommendationID: recommendation.ID },
-                   }
-                 );
-         
-                 if (existingComments && existingComments.length > 0) {
-                   await transactionalManager.remove(
-                     RecommendationCommentEntity,
-                     existingComments
-                   );
-                 }
-           updatedRecommendations.push(recommendation);
+        // Find and delete related recommendation comments
+        const existingComments = await transactionalManager.find(
+          RecommendationCommentEntity,
+          {
+            where: { RecommendationID: recommendation.ID },
+          },
+        );
 
-       } else {
-         // If no recommendation exists, create a new one
-         recommendation = this.RecommendationRepository.create({
-           ...cropOrderData,
-           ManagementPeriodID: period.ID,
-           Comments: "New recommendation created",
-           CreatedOn: new Date(),
-           CreatedByID: userId
-         });
-         await transactionalManager.save(RecommendationEntity, recommendation);
-         updatedRecommendations.push(recommendation);
-
-       }
-     }
+        if (existingComments && existingComments.length > 0) {
+          await transactionalManager.remove(
+            RecommendationCommentEntity,
+            existingComments,
+          );
+        }
+        updatedRecommendations.push(recommendation);
+      } else {
+        // If no recommendation exists, create a new one
+        recommendation = this.RecommendationRepository.create({
+          ...cropOrderData,
+          ManagementPeriodID: period.ID,
+          Comments: "New recommendation created",
+          CreatedOn: new Date(),
+          CreatedByID: userId,
+        });
+        await transactionalManager.save(RecommendationEntity, recommendation);
+        updatedRecommendations.push(recommendation);
+      }
+    }
     // Check if there's an existing recommendation for the current OrganicManure.ManagementPeriodID
 
     return updatedRecommendations;
@@ -928,7 +930,7 @@ class GenerateRecommendations {
     newOrganicManure,
     transactionalManager,
     request,
-    userId
+    userId,
   ) {
     const cropTypesList =
       await this.rB209ArableService.getData("/Arable/CropTypes");
@@ -966,7 +968,7 @@ class GenerateRecommendations {
           fieldID,
           fieldRelatedData.Name,
           crop.Year,
-          fieldRelatedData.RB209CountryID
+          fieldRelatedData.RB209CountryID,
         );
 
       let mannerOutputs = null;
@@ -978,7 +980,7 @@ class GenerateRecommendations {
           fieldRelatedData,
           fieldRelatedData,
           transactionalManager,
-          request
+          request,
         );
 
       const cropPOfftake = await this.calculateCropPOfftake(
@@ -991,7 +993,7 @@ class GenerateRecommendations {
         await this.CalculatePreviousCropService.findPreviousCrop(
           fieldID,
           crop.Year,
-          transactionalManager
+          transactionalManager,
         );
 
       if (
@@ -1004,7 +1006,8 @@ class GenerateRecommendations {
           newOrganicManure, // OrganicManure data
           mannerOutputs, // Manner output request
           userId, // User ID
-          latestSoilAnalysis // Latest soil analysis data
+          latestSoilAnalysis,
+          crop, // Latest soil analysis data
         );
 
         const saveAndUpdatePKBalance = await this.createOrUpdatePKBalance(
@@ -1015,7 +1018,7 @@ class GenerateRecommendations {
           transactionalManager,
           cropPOfftake,
           latestSoilAnalysis,
-          previousCrop
+          previousCrop,
         );
 
         if (saveAndUpdatePKBalance) {
@@ -1024,13 +1027,13 @@ class GenerateRecommendations {
             saveAndUpdatePKBalance.saveAndUpdatePKBalance,
           );
         }
-          results.push({
-            cropId: crop.ID,
-            recommendations: recommendation,
-            pkBalance: saveAndUpdatePKBalance ?? null
-          });
+        results.push({
+          cropId: crop.ID,
+          recommendations: recommendation,
+          pkBalance: saveAndUpdatePKBalance ?? null,
+        });
 
-          continue;
+        continue;
       }
 
       const analysis = { soilAnalysisRecords, snsAnalysesData };
@@ -1060,7 +1063,7 @@ class GenerateRecommendations {
           nutrientRecommendationsData,
           transactionalManager,
           userId,
-          mannerOutputs
+          mannerOutputs,
         );
 
       const saveAndUpdatePKBalance = await this.createOrUpdatePKBalance(
@@ -1071,7 +1074,7 @@ class GenerateRecommendations {
         transactionalManager,
         cropPOfftake,
         latestSoilAnalysis,
-        previousCrop
+        previousCrop,
       );
 
       if (saveAndUpdatePKBalance) {
