@@ -277,7 +277,7 @@ async calculatePKBalance(
   const fertiliserK = fertiliserData?.k20 ?? 0;
 
   // CASE 1: OTHER crop
-  if (crop.CropTypeID == CropTypeMapper.OTHER) {
+  if (crop.CropTypeID === CropTypeMapper.OTHER) {
     const otherPKBalance =
       await this.CalculatePKBalanceOther.calculatePKBalanceOther(
         crop,
@@ -845,9 +845,9 @@ async calculatePKBalance(
       field: {
         fieldType: fieldType,
         multipleCrops: dataMultipleCrops.length > 1,
-        arable: fieldType == FieldTypeMapper.GRASS ? [] : arableBody,
+        arable: fieldType === FieldTypeMapper.GRASS ? [] : arableBody,
         grassland: {},
-        grass:fieldType == FieldTypeMapper.BOTH || fieldType == FieldTypeMapper.GRASS ? grassObject: {},
+        grass:fieldType === FieldTypeMapper.BOTH || fieldType === FieldTypeMapper.GRASS ? grassObject: {},
         soil: {
          soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
