@@ -177,14 +177,8 @@ class SavingRecommendationService {
     defoliationId
   ) {
     let availableNForNextDefoliation = null,nextCropAvailableN = null;
-    // Only calculate if mannerOutputs is empty
     if (!mannerOutputs || mannerOutputs.length === 0) {
-      availableNForNextDefoliation = await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
-          transactionalManager,
-          managementPeriod,
-          cropData,
-        );
-
+      availableNForNextDefoliation = await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(transactionalManager,managementPeriod,cropData);
       if (defoliationId === 1) {
         nextCropAvailableN = await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
             cropData.FieldID,
@@ -240,12 +234,9 @@ class SavingRecommendationService {
         cropRecData.FertilizerLime = c.cropNeed;
       },
     };
-
     for (const calc of calculations) {
       const handler = nutrientHandlers[calc.nutrientId];
-      if (handler) {
-        handler(calc);
-      }
+      if (handler) { handler(calc)}
     }
   }
 
