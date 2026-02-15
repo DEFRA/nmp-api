@@ -80,6 +80,7 @@ const { FieldAboveOrBelowSeaLevelMapper } = require("../constants/field-is-above
 const { StaticStrings } = require("../shared/static.string");
 const { GenerateRecommendations } = require("../shared/generate-recomendations-service");
 const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
+const { CurrentAndFuture } = require("../shared/generate-current-and-future-recommendations-service");
 
 class PlanService extends BaseService {
   constructor() {
@@ -123,6 +124,8 @@ class PlanService extends BaseService {
     this.CalculatePreviousCropService = new CalculatePreviousCropService();
     this.generateRecommendations = new GenerateRecommendations();
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
+    this.currentAndFuture = new CurrentAndFuture();
+
   }
 
   async getManagementPeriods(id) {
@@ -308,31 +311,12 @@ class PlanService extends BaseService {
        const organicManure = null;
       if (crop.CropTypeID === CropTypeMapper.OTHER || !previousCrop) {
         await this.savedDefault(cropData, userId, transactionalManager);
-        await this.generateRecommendations.generateRecommendations(
-          field.ID,
-          crop.Year,
-          organicManure,
+        await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
+          crop,
           transactionalManager,
           request,
           userId
         );
-
-        const nextAvailableCrop = await this.cropRepository.findOne({
-          where: {
-            FieldID: crop.FieldID,
-            Year: MoreThan(crop.Year),
-          },
-          order: { Year: "ASC" },
-        });
-
-        if (nextAvailableCrop) {
-          this.updatingFutureRecommendations.updateRecommendationsForField(
-            crop.FieldID,
-            nextAvailableCrop.Year,
-            request,
-            userId,
-          );
-        }
         Recommendations.push({
           message: "Default crop saved",
           crop: crop.FieldID,
