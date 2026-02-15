@@ -185,6 +185,7 @@ class SavingRecommendationService {
           );
       }
     }
+    const normalizeManure = (value) => (value === 0 ? null : value);
     const nutrientHandlers = {
       0: (c) => {
         cropRecData.CropN = c.recommendation;
@@ -200,13 +201,13 @@ class SavingRecommendationService {
       },
       1: (c) => {
         cropRecData.CropP2O5 = c.recommendation;
-        cropRecData.ManureP2O5 = c.manures;
+        cropRecData.ManureP2O5 = normalizeManure(c.manures);
         cropRecData.PBalance = c.pkBalance;
         cropRecData.FertilizerP2O5 = c.cropNeed;
       },
       2: (c) => {
         cropRecData.CropK2O = c.recommendation;
-        cropRecData.ManureK2O = c.manures;
+        cropRecData.ManureK2O = normalizeManure(c.manures);
         cropRecData.KBalance = c.pkBalance;
         cropRecData.FertilizerK2O = c.cropNeed;
       },
@@ -222,7 +223,7 @@ class SavingRecommendationService {
       },
       5: (c) => {
         cropRecData.CropSO3 = c.recommendation;
-        cropRecData.ManureSO3 = c.manures;
+        cropRecData.ManureSO3 = normalizeManure(c.manures);
         cropRecData.SBalance = c.pkBalance;
         cropRecData.FertilizerSO3 = c.cropNeed;
       },
