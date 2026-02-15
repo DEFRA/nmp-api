@@ -97,26 +97,20 @@ class GenerateRecommendations {
     dataMultipleCrops, // Accept either a single crop or multiple crops
     field,
     transactionalManager,
-    cropTypesList,
+    cropTypesList
   ) {
     const arableBody = [];
-
     // Ensure dataMultipleCrops is always treated as an array
     const crops = Array.isArray(dataMultipleCrops)
       ? dataMultipleCrops
       : [dataMultipleCrops];
-
     // Iterate over crops (single or multiple)
     for (const crop of crops) {
       const currentCropType = cropTypesList.find(
-        (cropType) => cropType.cropTypeId === crop.CropTypeID,
+        (cT) => cT.cropTypeId === crop.CropTypeID,
       );
-
       if (currentCropType?.cropGroupId == null) {
-        throw new Boom.HttpException(
-          `Invalid CropTypeId for crop having field name ${field.FieldName}`,
-          StaticStrings.HTTP_STATUS_BAD_REQUEST,
-        );
+        console.log(`Invalid CropTypeId for crop having field name ${field.FieldName}`,StaticStrings.HTTP_STATUS_BAD_REQUEST);
       }
       let expectedYield = crop.Yield,
         cropTypeLinkingData;
@@ -125,13 +119,13 @@ class GenerateRecommendations {
           CropTypeLinkingEntity,
           {
             where: {
-              CropTypeID: crop.CropTypeID,
-            },
-          },
+              CropTypeID: crop.CropTypeID
+            }
+          }
         );
         expectedYield = cropTypeLinkingData.DefaultYield;
       }
-      // Add crop to arableBody based on its CropOrder
+    
       if (crop.CropTypeID !== CropTypeMapper.GRASS) {
         arableBody.push({
           cropOrder: crop.CropOrder,
@@ -140,18 +134,15 @@ class GenerateRecommendations {
           cropInfo1Id: crop.CropInfo1,
           cropInfo2Id: crop.CropInfo2,
           sowingDate: crop.SowingDate,
-          expectedYield: expectedYield,
+          expectedYield: expectedYield
         });
       }
     }
-
-    // Return the list of crops sorted by CropOrder (if necessary)
     return arableBody.sort((a, b) => a.cropOrder - b.cropOrder);
   }
 
   async buildGrassObject(crop, grassGrowthClass, transactionalManager) {
     let grassCrop = null;
-
     if (crop.CropTypeID === CropTypeMapper.GRASS) {
       grassCrop = crop;
     } else {
@@ -160,15 +151,11 @@ class GenerateRecommendations {
           FieldID: crop.FieldID,
           Year: crop.Year,
           CropTypeID: CropTypeMapper.GRASS,
-          ID: Not(crop.ID), // exclude the current crop
+          ID: Not(crop.ID) // exclude the current crop
         },
       });
     }
-
-    if (!grassCrop) {
-      return {};
-    }
-
+    if (!grassCrop) {return {}}
     if (grassCrop.CropOrder === CropOrderMapper.FIRSTCROP) {
       return {
         cropOrder: grassCrop.CropOrder,
@@ -180,7 +167,6 @@ class GenerateRecommendations {
         seasonId: grassCrop.Establishment,
       };
     }
-
     if (grassCrop.CropOrder === CropOrderMapper.SECONDCROP) {
       return {
         cropOrder: grassCrop.CropOrder,
@@ -192,7 +178,6 @@ class GenerateRecommendations {
         seasonId: grassCrop.Establishment,
       };
     }
-
     return {};
   }
  
@@ -208,7 +193,6 @@ class GenerateRecommendations {
   }
   return crops;
 }
-
   async determineFieldType(crop, transactionalManager) {
     const crops = await this.resolveCrops(crop, transactionalManager);
      if (crops.length === 1) {
@@ -236,13 +220,11 @@ class GenerateRecommendations {
       const isBothArable = cropTypeIDs.every(
         (id) => id !== CropTypeMapper.GRASS,
       );
-
       if (isBothGrass) {return FieldTypeMapper.GRASS}; 
       if (isOneGrass && isOtherValid) {return FieldTypeMapper.BOTH}; // Mixed
       if (isBothArable) {return FieldTypeMapper.ARABLE}; // Both are arable/horticulture
     }
-
-    return FieldTypeMapper.ARABLE; // Default fallback
+    return FieldTypeMapper.ARABLE; 
   }
 
   async resolveGrassHistoryAndPreviousGrass(crop, field, transactionalManager) {
@@ -252,12 +234,11 @@ class GenerateRecommendations {
           field,
           crop,
           transactionalManager,
-          crop.Year,
+          crop.Year
         ),
         previousGrassId: null,
       };
     }
-
     return {
       grassHistoryID: null,
       previousGrassId: await this.calculateGrassId.getPreviousGrassID(
@@ -267,52 +248,42 @@ class GenerateRecommendations {
       ),
     };
   }
-
   async addSoilAnalysesToRequest(soilAnalysis, nutrientRecommendationReqBody) {
     if (!soilAnalysis || !Array.isArray(soilAnalysis)) {return};
-
     soilAnalysis.forEach((analysis) => {
       const soilAnalysisData = {
         ...(analysis.Date != null && {
-          soilAnalysisDate: analysis.Date,
+          soilAnalysisDate: analysis.Date
         }),
         ...(analysis.PH != null && {
-          soilpH: analysis.PH,
+          soilpH: analysis.PH
         }),
         ...(analysis.SulphurDeficient != null && {
-          sulphurDeficient: analysis.SulphurDeficient,
+          sulphurDeficient: analysis.SulphurDeficient
         }),
         ...(analysis.PhosphorusIndex != null && {
           pIndexId: analysis.PhosphorusIndex,
-          pMethodologyId: analysis.PhosphorusMethodologyID,
+          pMethodologyId: analysis.PhosphorusMethodologyID
         }),
         ...(analysis.PotassiumIndex != null && {
           kIndexId: analysis.PotassiumIndex,
-          kMethodologyId: 4,
+          kMethodologyId: 4
         }),
         ...(analysis.MagnesiumIndex != null && {
           mgIndexId: analysis.MagnesiumIndex,
-          mgMethodologyId: 4,
+          mgMethodologyId: 4
         }),
       };
-
-      // Push only when something meaningful exists
       if (Object.keys(soilAnalysisData).length > 0) {
-        nutrientRecommendationReqBody.field.soil.soilAnalyses.push(
-          soilAnalysisData,
-        );
+        nutrientRecommendationReqBody.field.soil.soilAnalyses.push(soilAnalysisData);
       }
     });
   }
-
   async addSnsAnalysesToRequest(
     snsAnalysesData,
-    nutrientRecommendationReqBody,
+    nutrientRecommendationReqBody
   ) {
-    if (!snsAnalysesData) {
-      return;
-    }
-
+    if (!snsAnalysesData) {return}
     const addSingleSnsAnalysis = (analysis) => {
       const snsAnalysisData = {
         ...(analysis.SampleDate != null && {
@@ -328,9 +299,7 @@ class GenerateRecommendations {
       };
 
       if (Object.keys(snsAnalysisData).length > 0) {
-        nutrientRecommendationReqBody.field.soil.soilAnalyses.push(
-          snsAnalysisData,
-        );
+        nutrientRecommendationReqBody.field.soil.soilAnalyses.push(snsAnalysisData);
       }
     };
 
@@ -345,16 +314,11 @@ class GenerateRecommendations {
     previousCrop,
     cropTypesList,
     grassHistoryID,
-    previousGrassId,
+    previousGrassId
   }) {
-    // Case: previous crop exists
     if (previousCrop) {
-      const cropType = cropTypesList.find(
-        (cropTp) => cropTp?.cropTypeId === previousCrop?.CropTypeID,
-      );
-
+      const cropType = cropTypesList.find((cropTp) => cropTp?.cropTypeId === previousCrop?.CropTypeID);
       const isGrass = previousCrop?.CropTypeID === CropTypeMapper.GRASS;
-
       return {
         previousGrassId: grassHistoryID ? null : previousGrassId,
         previousCropGroupId: isGrass ? null : (cropType?.cropGroupId ?? null),
@@ -365,8 +329,6 @@ class GenerateRecommendations {
         measuredSmn: null,
       };
     }
-
-    // Case: no previous crop
     return {
       previousCropGroupId: null,
       previousCropTypeId: null,
@@ -441,11 +403,8 @@ class GenerateRecommendations {
       totals: true,
       referenceValue: `${field.ID}-${crop.ID}-${crop.Year}`,
     };
-
     nutrientRecommendationnReqBody.field.mannerOutputs = mannerOutputs;
-
     await this.addSoilAnalysesToRequest(soilAnalysis,nutrientRecommendationnReqBody);
-
     await this.addSnsAnalysesToRequest(snsAnalysesData,nutrientRecommendationnReqBody);
     nutrientRecommendationnReqBody.field.previousCropping =await this.buildPreviousCroppingData({
         previousCrop,
