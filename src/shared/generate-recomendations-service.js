@@ -75,7 +75,7 @@ class GenerateRecommendations {
           }
         },
       );
-      return pkBalanceData || null; // Return the found data or null if not found
+      return pkBalanceData
     } catch (error) {
       console.error("Error fetching PK Balance data:", error);
     }
