@@ -1534,15 +1534,11 @@ class OrganicManureService extends BaseService {
         for (const recommendation of nutrientRecommendationsData.calculations) {
           switch (recommendation.nutrientId) {
             case 1:
-              pBalance =
-                (fertiliserData == null ? 0 : fertiliserData.p205) -
-                recommendation.cropNeed -
-                cropPOfftake;
+              pBalance = (fertiliserData == null ? 0 : fertiliserData.p205) - recommendation.recommendation - cropPOfftake + recommendation.manures + recommendation.pkBalance;
               break;
             case 2:
               kBalance =
-                (fertiliserData == null ? 0 : fertiliserData.k20) -
-                recommendation.cropNeed;
+                (fertiliserData == null ? 0 : fertiliserData.k20) - recommendation.recommendation + recommendation.manures + recommendation.pkBalance;
               break;
           }
         }
