@@ -936,10 +936,6 @@ class OrganicManureService extends BaseService {
         await this.managementPeriodRepository.find();
       const soilAnalysisAllData = await this.soilAnalysisRepository.find();
       const fertiliserAllData = await this.fertiliserRepository.find();
-      const allRecommendations = await this.RecommendationRepository.find();
-      const allPKBalanceData = await this.pkBalanceRepository.find();
-      const cropTypesList =
-        await this.rB209ArableService.getData("/Arable/CropTypes");
 
       for (const organicManureData of body.OrganicManures) {
         const { OrganicManure } = organicManureData;
@@ -975,15 +971,7 @@ class OrganicManureService extends BaseService {
         const farmData = await this.farmRepository.findOneBy({
           ID: organicManureData.FarmID
         });
-        const rb209CountryData = await transactionalManager.findOne(
-          CountryEntity,
-          {
-            where: {
-              ID: farmData.CountryID
-            }
-          }
-        );
-    
+        
         const soilAnalsisData = soilAnalysisAllData?.filter((soilAnalyses) => {
           return soilAnalyses.FieldID === cropData.FieldID;
         });
@@ -998,14 +986,6 @@ class OrganicManureService extends BaseService {
             : false;
         }
         let mannerOutputs = null;
-        const dataMultipleCrops = await this.cropRepository.find({
-          where: {
-            FieldID: fieldData.ID,
-            Year: cropData.Year,
-            Confirm: false,
-          },
-        });
-
         mannerOutputs = await this.CalculateMannerOutput.calculateMannerOutputForOrganicManure(
             cropData,
             OrganicManure,
@@ -1159,14 +1139,17 @@ class OrganicManureService extends BaseService {
            userId
          );
 
-          if (isSoilAnalysisHavePAndK) {
+        
             if (
-              isNextYearPlanExist == true ||
-              isNextYearOrganicManureExist == true ||
-              isNextYearFertiliserExist == true
+              isSoilAnalysisHavePAndK && (
+                isNextYearPlanExist  ||
+                  isNextYearOrganicManureExist  ||
+                  isNextYearFertiliserExist 
+              )
             ) {
               // UpdateRecommendation
-              this.updatingFutureRecommendations.updateRecommendationsForField(
+              this.updatingFutureRecommendations
+                .updateRecommendationsForField(
                   cropData?.FieldID,
                   cropData?.Year,
                   request,
@@ -1191,8 +1174,7 @@ class OrganicManureService extends BaseService {
                   );
                 });
             } 
-          }
-
+          
           const isCurrentOrganicManure = true,
             isCurrentFertiliser = false;
           this.ProcessFutureManuresForWarnings.ProcessFutureManures(
