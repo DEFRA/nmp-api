@@ -465,10 +465,7 @@ class GenerateRecommendations {
     userId
   ) {
     const cropTypesList =await this.rB209ArableService.getData("/Arable/CropTypes");
-    const fieldRelatedData = await this.fieldRelated.getFieldAndCountryData(
-      fieldID,
-      transactionalManager
-    );
+    const fieldRelatedData = await this.fieldRelated.getFieldAndCountryData(fieldID,transactionalManager);
     const crops = await transactionalManager.find(CropEntity, {
       where: { FieldID: fieldID, Year: Year }
     });
@@ -500,23 +497,14 @@ class GenerateRecommendations {
           transactionalManager,
           request
         );
-      const cropPOfftake = await this.calculateCropPOfftake(
-        latestSoilAnalysis,
-        crop.CropTypeID,
-        crop.Yield
-      );
-
+      const cropPOfftake = await this.calculateCropPOfftake(latestSoilAnalysis,crop.CropTypeID,crop.Yield);
       const previousCrop =await this.CalculatePreviousCropService.findPreviousCrop(
           fieldID,
           crop.Year,
           transactionalManager
         );
 
-      if (
-        crop.CropTypeID === CropTypeMapper.OTHER ||
-        crop?.IsBasePlan ||
-        !previousCrop
-      ) {
+      if ( crop.CropTypeID === CropTypeMapper.OTHER || crop?.IsBasePlan || !previousCrop ) {
         recommendation = await this.savingOtherCropRecommendations.saveRecommendationForOtherCrops(
             transactionalManager, // Transaction manager for transactional save
             newOrganicManure, // OrganicManure data
@@ -551,10 +539,8 @@ class GenerateRecommendations {
         });
         continue;
       }
-
       const analysis = { soilAnalysisRecords, snsAnalysesData };
       const singleAndMultipleCrops = { crops, crop };
-
       const nutrientRecommendationnReqBody =await this.buildNutrientRecommendationReqBody(
           fieldRelatedData,
           analysis,
