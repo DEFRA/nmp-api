@@ -1148,31 +1148,12 @@ class OrganicManureService extends BaseService {
               )
             ) {
               // UpdateRecommendation
-              this.updatingFutureRecommendations
-                .updateRecommendationsForField(
+              this.updatingFutureRecommendations.updateRecommendationsForField(
                   cropData?.FieldID,
                   cropData?.Year,
                   request,
                   userId,
                 )
-                .then((res) => {
-                  if (res === undefined) {
-                    console.log(
-                      "updateRecommendationAndOrganicManure returned undefined",
-                    );
-                  } else {
-                    console.log(
-                      "updateRecommendationAndOrganicManure result:",
-                      res,
-                    );
-                  }
-                })
-                .catch((error) => {
-                  console.error(
-                    "Error updating recommendation and organic manure:",
-                    error,
-                  );
-                });
             } 
           
           const isCurrentOrganicManure = true,
