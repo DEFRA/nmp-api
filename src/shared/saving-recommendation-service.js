@@ -350,7 +350,9 @@ class SavingRecommendationService {
   groupNotesByNutrientId(notes) {
     return notes.reduce((acc, note) => {
       const nutrientId = note.nutrientId;
-      if (!acc[nutrientId]) acc[nutrientId] = [];
+      if (!acc[nutrientId]) {
+        acc[nutrientId] = [];
+      }
       acc[nutrientId].push(note.note);
       return acc;
     }, {});
