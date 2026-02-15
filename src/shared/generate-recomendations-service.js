@@ -437,7 +437,7 @@ class GenerateRecommendations {
         },
       );
     }
-    let updatedRecommendations = [];
+    const updatedRecommendations = [];
 
     for (const period of managementPeriods) {
       let recommendation = await transactionalManager.findOne(
