@@ -969,7 +969,7 @@ async calculatePKBalance(
           latestSoilAnalysis,
           crop // Latest soil analysis data
         );
-        const saveAndUpdatePKBalance = await this.createOrUpdatePKBalance(
+        const saveAndUpdateOtherPKBalance = await this.createOrUpdatePKBalance(
           crop,
           nutrientRecommendationsData,
           userId,
@@ -982,16 +982,16 @@ async calculatePKBalance(
           previousCrop
         );
 
-        if (saveAndUpdatePKBalance) {
+        if (saveAndUpdateOtherPKBalance) {
           await transactionalManager.save(
             PKBalanceEntity,
-            saveAndUpdatePKBalance.saveAndUpdatePKBalance,
+            saveAndUpdateOtherPKBalance.saveAndUpdatePKBalance,
           );
         }
         results.push({
           cropId: crop.ID,
           recommendations: recommendation,
-          pkBalance: saveAndUpdatePKBalance ?? null,
+          pkBalance: saveAndUpdateOtherPKBalance ?? null,
         });
 
         continue;
