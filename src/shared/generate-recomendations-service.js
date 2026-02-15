@@ -375,13 +375,7 @@ class GenerateRecommendations {
   otherCropContext,
   sharedContext
 ) {
-  const {
-    crop,
-    previousCrop,
-    mannerOutputs,
-    latestSoilAnalysis,
-    nutrientRecommendationsData,
-    cropPOfftake,
+  const {crop,previousCrop,mannerOutputs,latestSoilAnalysis,nutrientRecommendationsData,cropPOfftake,
   } = otherCropContext;
 
   const {
@@ -458,7 +452,6 @@ class GenerateRecommendations {
     results.push(result);
     continue;
      }
-
       const analysis = { soilAnalysisRecords, snsAnalysesData };
       const singleAndMultipleCrops = { crops, crop };
       const nutrientRecommendationnReqBody =await this.buildNutrientRecommendationReqBody(
@@ -472,36 +465,22 @@ class GenerateRecommendations {
         );
       const nutrientRecommendationsData =await this.rB209RecommendationService.postData("Recommendation/Recommendations",nutrientRecommendationnReqBody);
       recommendation = await this.savingRecommendationService.processAndSaveRecommendations(
-          crops,
-          latestSoilAnalysis,
+          crops, latestSoilAnalysis,
           nutrientRecommendationsData,
-          transactionalManager,
-          userId,
+          transactionalManager,userId,
           mannerOutputs
         );
       const saveAndUpdatePKBalance = await this.CalculatePKBalance.createOrUpdatePKBalance(
-          crop,
-          nutrientRecommendationsData,
-          userId,
-          fertiliserData,
+          crop,nutrientRecommendationsData,
+          userId,fertiliserData,
           transactionalManager,
-          {
-            cropPOfftake,
-            latestSoilAnalysis
-          },
+          {cropPOfftake,latestSoilAnalysis},
           previousCrop
         );
       if (saveAndUpdatePKBalance) {
-        await transactionalManager.save(
-          PKBalanceEntity,
-          saveAndUpdatePKBalance.saveAndUpdatePKBalance
-        );
+        await transactionalManager.save(PKBalanceEntity,saveAndUpdatePKBalance.saveAndUpdatePKBalance);
       }
-      results.push({
-        cropId: crop.ID,
-        recommendations: recommendation,
-        pkBalance: saveAndUpdatePKBalance ?? null
-      });
+      results.push({cropId: crop.ID,recommendations: recommendation,pkBalance: saveAndUpdatePKBalance ?? null});
     }
     return results;
   }
