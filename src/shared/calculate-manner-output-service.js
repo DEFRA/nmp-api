@@ -106,7 +106,6 @@ class CalculateMannerOutputService {
     managementPeriodID,
     organicManureData,
     allManureData,
-    request,
     transactionalManager
   ) {
     // Filter the organicManureAllData for the given managementPeriodID
@@ -339,8 +338,7 @@ class CalculateMannerOutputService {
           managementPeriodID,
           organicManure,
           allManureData,
-          request,
-          transactionalManager,
+          transactionalManager
         );
         let mannerOutputReq = null;
         // 4.2: Build mannerOutputReq

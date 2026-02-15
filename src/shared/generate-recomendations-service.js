@@ -152,22 +152,15 @@ class GenerateRecommendations {
   }
 
   async calculateCropPOfftake(latestSoilAnalysis, cropTypeId, cropYield) {
-    if (!latestSoilAnalysis?.PhosphorusIndex) {
-      return 0;
-    }
-
+    const potatoYield = 50;
+    if (!latestSoilAnalysis?.PhosphorusIndex) {return 0;}
     const isLowPIndex = latestSoilAnalysis.PhosphorusIndex < 4;
-    const isPotatoCrop =
-      cropTypeId === CropTypeMapper.POTATOVARIETYGROUP1 ||
-      cropTypeId === CropTypeMapper.POTATOVARIETYGROUP2 ||
+    const isPotatoCrop =cropTypeId === CropTypeMapper.POTATOVARIETYGROUP1 || cropTypeId === CropTypeMapper.POTATOVARIETYGROUP2 ||
       cropTypeId === CropTypeMapper.POTATOVARIETYGROUP3 ||
       cropTypeId === CropTypeMapper.POTATOVARIETYGROUP4;
 
-    if (!isLowPIndex || !isPotatoCrop) {
-      return 0;
-    }
-
-    return cropYield ?? 50;
+    if (!isLowPIndex || !isPotatoCrop) {return 0}
+    return cropYield ?? potatoYield;
   }
 
   async getPKBalanceData(field, year, transactionalManager) {
@@ -803,57 +796,17 @@ class GenerateRecommendations {
   ) {
     const { soilAnalysisRecords: soilAnalysis, snsAnalysesData } = analysis;
     const { crops: dataMultipleCrops, crop } = singleAndMultipleCrops;
-    const grassGrowthClass =
-      await this.grassGrowthClass.calculateGrassGrowthClassByFieldId(
-        field.ID,
-        request,
-      );
-    const cropType = cropTypesList.find(
-      (cropTp) => cropTp.cropTypeId === crop.CropTypeID,
-    );
+    const grassGrowthClass =await this.grassGrowthClass.calculateGrassGrowthClassByFieldId(field.ID,request);
+    const cropType = cropTypesList.find((cropTp) => cropTp.cropTypeId === crop.CropTypeID);
 
-    if (!cropType || cropType.cropGroupId === null) {
-      console.log(
-        `Invalid CropTypeId for crop having field name ${field.Name}`,
-      );
-    }
+    if (!cropType || cropType.cropGroupId === null) {console.log(`Invalid CropTypeId for crop having field name ${field.Name}`) }
+    const previousCrop =await this.CalculatePreviousCropService.findPreviousCrop(field.ID,crop.Year, transactionalManager);
+    const pkBalanceData = await this.getPKBalanceData(field.ID,crop.Year - 1,transactionalManager);
+    const excessRainfall = await this.getWinterExcessRainfall(field.FarmID,crop.Year,transactionalManager);
+    const { grassHistoryID, previousGrassId } =await this.resolveGrassHistoryAndPreviousGrass(crop,field,transactionalManager);
 
-    const previousCrop =
-      await this.CalculatePreviousCropService.findPreviousCrop(
-        field.ID,
-        crop.Year,
-        transactionalManager,
-      );
-
-    const pkBalanceData = await this.getPKBalanceData(
-      field.ID,
-      crop.Year - 1,
-      transactionalManager,
-    );
-    const excessRainfall = await this.getWinterExcessRainfall(
-      field.FarmID,
-      crop.Year,
-      transactionalManager,
-    );
-    const { grassHistoryID, previousGrassId } =
-      await this.resolveGrassHistoryAndPreviousGrass(
-        crop,
-        field,
-        transactionalManager,
-      );
-
-    const arableBody = await this.buildArableBody(
-      dataMultipleCrops,
-      field,
-      transactionalManager,
-      cropTypesList,
-    );
-    const grassObject = await this.buildGrassObject(
-      crop,
-      grassGrowthClass,
-      transactionalManager,
-    );
-
+    const arableBody = await this.buildArableBody(dataMultipleCrops,field,transactionalManager,cropTypesList);
+    const grassObject = await this.buildGrassObject(crop,grassGrowthClass,transactionalManager);
     const fieldType = await this.determineFieldType(crop, transactionalManager);
     const nutrientRecommendationnReqBody = {
       field: {
@@ -861,19 +814,12 @@ class GenerateRecommendations {
         multipleCrops: dataMultipleCrops.length > 1,
         arable: fieldType == FieldTypeMapper.GRASS ? [] : arableBody,
         grassland: {},
-        grass:
-          fieldType == FieldTypeMapper.BOTH ||
-          fieldType == FieldTypeMapper.GRASS
-            ? grassObject
-            : {},
+        grass:fieldType == FieldTypeMapper.BOTH || fieldType == FieldTypeMapper.GRASS ? grassObject: {},
         soil: {
-          soilTypeId: field.SoilTypeID,
+         soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
           nvzActionProgrammeId: field.NVZProgrammeID,
-          psc:
-            excessRainfall?.WinterRainfall == null
-              ? 0
-              : excessRainfall.WinterRainfall, //need to find it
+          psc:excessRainfall?.WinterRainfall == null ? 0: excessRainfall.WinterRainfall, //need to find it
           pkBalance: {
             phosphate: pkBalanceData == null ? 0 : pkBalanceData.PBalance,
             potash: pkBalanceData == null ? 0 : pkBalanceData.KBalance,
@@ -887,7 +833,7 @@ class GenerateRecommendations {
         organicMaterials: [],
         mannerOutputs: [],
         previousCropping: {},
-        countryId: field.RB209CountryID,
+        countryId: field.RB209CountryID
       },
       nutrients: {
         nitrogen: true,
@@ -904,17 +850,10 @@ class GenerateRecommendations {
 
     nutrientRecommendationnReqBody.field.mannerOutputs = mannerOutputs;
 
-    await this.addSoilAnalysesToRequest(
-      soilAnalysis,
-      nutrientRecommendationnReqBody,
-    );
+    await this.addSoilAnalysesToRequest(soilAnalysis,nutrientRecommendationnReqBody);
 
-    await this.addSnsAnalysesToRequest(
-      snsAnalysesData,
-      nutrientRecommendationnReqBody,
-    );
-    nutrientRecommendationnReqBody.field.previousCropping =
-      await this.buildPreviousCroppingData({
+    await this.addSnsAnalysesToRequest(snsAnalysesData,nutrientRecommendationnReqBody);
+    nutrientRecommendationnReqBody.field.previousCropping =await this.buildPreviousCroppingData({
         previousCrop,
         cropTypesList,
         grassHistoryID,
@@ -932,14 +871,11 @@ class GenerateRecommendations {
     request,
     userId,
   ) {
-    const cropTypesList =
-      await this.rB209ArableService.getData("/Arable/CropTypes");
-
+    const cropTypesList =await this.rB209ArableService.getData("/Arable/CropTypes");
     const fieldRelatedData = await this.getFieldAndCountryData(
       fieldID,
       transactionalManager,
     );
-
     const crops = await transactionalManager.find(CropEntity, {
       where: { FieldID: fieldID, Year: Year },
     });
@@ -950,47 +886,37 @@ class GenerateRecommendations {
         transactionalManager,
         crop.ID,
       );
-
       const managementPeriodIds = managementPeriods.map((mp) => mp.ID);
-
       const fertiliserData = await this.getP205AndK20fromfertiliser(
         transactionalManager,
         managementPeriodIds,
       );
-
       const snsAnalysesData = await this.fetchSnsAnalysesForCrops(
         transactionalManager,
         crops,
       );
-
-      const { latestSoilAnalysis, soilAnalysisRecords } =
-        await this.HandleSoilAnalysisService.handleSoilAnalysisValidation(
+      const { latestSoilAnalysis, soilAnalysisRecords } =await this.HandleSoilAnalysisService.handleSoilAnalysisValidation(
           fieldID,
           fieldRelatedData.Name,
           crop.Year,
-          fieldRelatedData.RB209CountryID,
+          fieldRelatedData.RB209CountryID
         );
-
       let mannerOutputs = null;
-
-      mannerOutputs =
-        await this.CalculateMannerOutput.calculateMannerOutputForOrganicManure(
+      mannerOutputs =await this.CalculateMannerOutput.calculateMannerOutputForOrganicManure(
           crop,
           newOrganicManure,
           fieldRelatedData,
           fieldRelatedData,
           transactionalManager,
-          request,
+          request
         );
-
       const cropPOfftake = await this.calculateCropPOfftake(
         latestSoilAnalysis,
         crop.CropTypeID,
-        crop.Yield,
+        crop.Yield
       );
 
-      const previousCrop =
-        await this.CalculatePreviousCropService.findPreviousCrop(
+      const previousCrop =await this.CalculatePreviousCropService.findPreviousCrop(
           fieldID,
           crop.Year,
           transactionalManager,
@@ -1007,9 +933,8 @@ class GenerateRecommendations {
           mannerOutputs, // Manner output request
           userId, // User ID
           latestSoilAnalysis,
-          crop, // Latest soil analysis data
+          crop // Latest soil analysis data
         );
-
         const saveAndUpdatePKBalance = await this.createOrUpdatePKBalance(
           crop,
           nutrientRecommendationsData,
@@ -1039,15 +964,14 @@ class GenerateRecommendations {
       const analysis = { soilAnalysisRecords, snsAnalysesData };
       const singleAndMultipleCrops = { crops, crop };
 
-      const nutrientRecommendationnReqBody =
-        await this.buildNutrientRecommendationReqBody(
+      const nutrientRecommendationnReqBody =await this.buildNutrientRecommendationReqBody(
           fieldRelatedData,
           analysis,
           singleAndMultipleCrops,
           mannerOutputs,
           request,
           transactionalManager,
-          cropTypesList,
+          cropTypesList
         );
 
       const nutrientRecommendationsData =
