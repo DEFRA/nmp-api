@@ -588,9 +588,9 @@ class CropService extends BaseService {
       );
     }
 
-    // ✅ Otherwise, start a new local transaction.
+    //  Otherwise, start a new local transaction.
     return await AppDataSource.transaction(async (localManager) => {
-      return await this.deleteCropById(cropId, userId, request, localManager);
+      return this.deleteCropById(cropId, userId, request, localManager);
     });
   }
   async deleteCropById(CropsID, userId, request, transactionalManager) {
@@ -1544,8 +1544,7 @@ class CropService extends BaseService {
           request,
           transactionalManager,
         );
-      console.log("createdPlan", createdPlan);
-      return createdPlan != null ? true : false;
+      return createdPlan != null
     });
   }
 
