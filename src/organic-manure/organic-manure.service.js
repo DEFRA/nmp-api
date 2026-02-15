@@ -872,61 +872,6 @@ class OrganicManureService extends BaseService {
     return nutrientRecommendationnReqBody;
   }
 
-  async handleSoilAnalysisValidation(fieldId, fieldName, year, rb209CountryId) {
-    const errors = [];
-    const fiveYearsAgo = year - 4;
-
-    // Fetch all soil analyses for the last 5 years
-    const soilAnalysisRecordsFiveYears = await this.soilAnalysisRepository.find(
-      {
-        where: {
-          FieldID: fieldId,
-          Year: Between(fiveYearsAgo, year), // Fetch records within 5 years
-        },
-        order: { Date: "DESC" }, // Order by date, most recent first
-      },
-    );
-
-    // Define the fields we want the latest values for
-    const fieldsToTrack = [
-      "SulphurDeficient",
-      "PH",
-      "SoilNitrogenSupplyIndex",
-      "PhosphorusIndex",
-      "PotassiumIndex",
-      "MagnesiumIndex",
-    ];
-
-    // Initialize the latest values object
-    const latestSoilAnalysis = {};
-    if (soilAnalysisRecordsFiveYears.length > 0) {
-      fieldsToTrack.forEach((field) => {
-        // Find the first record in descending date order where the field has a value
-        const latestRecordWithFieldValue = soilAnalysisRecordsFiveYears.find(
-          (record) => record[field] !== null && record[field] !== undefined,
-        );
-
-        // if (latestRecordWithFieldValue) {
-        if (latestRecordWithFieldValue) {
-          latestSoilAnalysis[field] = latestRecordWithFieldValue[field];
-        } else {
-          // Explicitly set the field to null if no value was found
-          latestSoilAnalysis[field] = null;
-        }
-      });
-    }
-    // Iterate over the fields and find the latest value for each field
-
-    const soilAnalysisRecords = await this.assignIndexIdToSoilRecords(
-      soilAnalysisRecordsFiveYears,
-      rb209CountryId,
-    );
-
-    return { latestSoilAnalysis, errors, soilAnalysisRecords };
-  }
-
- 
-
  
   async checkIfManagementPeriodExistsInOrganicManure(
     ManagementPeriodID,
@@ -1658,18 +1603,9 @@ class OrganicManureService extends BaseService {
             mannerOutputs,
             transactionalManager,
             userId,
-            organicManures,
+            organicManures
           );
 
-            await this.saveRecommendationForOtherCrops(
-              transactionalManager, // Transaction manager for transactional save
-              OrganicManure, // OrganicManure data
-              mannerOutputs, // Manner output request
-              userId, // User ID
-              latestSoilAnalysis, // Latest soil analysis data
-              allRecommendations // All recommendations (or relevant recommendation data)
-            );
-        
              await this.generateRecommendations.generateRecommendations(
                fieldData.ID,
                cropData.Year,
