@@ -368,7 +368,7 @@ async calculatePKBalance(
     previousCrop
   ) {
     try {
-        saveAndUpdatePKBalance;
+      let saveAndUpdatePKBalance;
       const previousYearPKBalance = await this.getPKBalanceData(
         crop.FieldID,
         crop.Year - 1,
