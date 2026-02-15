@@ -188,7 +188,7 @@ class SavingRecommendationService {
           cropData,
         );
 
-      if (defoliationId == 1) {
+      if (defoliationId === 1) {
         nextCropAvailableN =
           await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
             cropData.FieldID,
