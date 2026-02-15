@@ -109,7 +109,7 @@ class GenerateRecommendations {
           "farm.ClimateDataPostCode AS ClimateDataPostCode",
           "farm.Rainfall AS Rainfall",
           "country.ID AS CountryID",
-          "country.RB209CountryID AS RB209CountryID",
+          "country.RB209CountryID AS RB209CountryID"
         ])
         .where("f.ID = :fieldId", { fieldId })
         .getRawOne()
@@ -140,7 +140,6 @@ class GenerateRecommendations {
           },
         },
       );
-
       return pkBalanceData || null; // Return the found data or null if not found
     } catch (error) {
       console.error("Error fetching PK Balance data:", error);
@@ -150,7 +149,7 @@ class GenerateRecommendations {
 
   async processDefoliationRecommendations(
   defoliationItems,
-  cropPOfftake,
+  cropPOfftake
 ) {
   let pBalance = 0,kBalance = 0;
   for (const recommendation of defoliationItems) {
@@ -174,53 +173,37 @@ class GenerateRecommendations {
     return {
       CropN: null,
       NBalance: null,
-      ManureN: mannerOutputs
-        ? mannerOutputs[0].availableN
-        : OrganicManure.AvailableN,
+      ManureN: mannerOutputs ? mannerOutputs[0].availableN : OrganicManure.AvailableN,
       FertilizerN: null,
-
       CropP2O5: null,
       PBalance: null,
-      ManureP2O5: mannerOutputs
-        ? mannerOutputs[0].availableP
-        : OrganicManure.AvailableP2O5,
+      ManureP2O5: mannerOutputs ? mannerOutputs[0].availableP : OrganicManure.AvailableP2O5,
       FertilizerP2O5: null,
-
       CropK2O: null,
       KBalance: null,
-      ManureK2O: mannerOutputs
-        ? mannerOutputs[0].availableK
-        : OrganicManure.AvailableK2O,
+      ManureK2O: mannerOutputs ? mannerOutputs[0].availableK : OrganicManure.AvailableK2O,
       FertilizerK2O: null,
-
       CropMgO: null,
       MgBalance: null,
       ManureMgO: null,
       FertilizerMgO: null,
-
       CropSO3: null,
       SBalance: null,
-      ManureSO3: mannerOutputs
-        ? mannerOutputs[0].availableS
-        : OrganicManure.AvailableSO3,
+      ManureSO3: mannerOutputs? mannerOutputs[0].availableS: OrganicManure.AvailableSO3,
       FertilizerSO3: null,
-
       CropNa2O: null,
       NaBalance: null,
       ManureNa2O: null,
       FertilizerNa2O: null,
-
       CropLime: null,
       LimeBalance: null,
       ManureLime: null,
       FertilizerLime: null,
-
       PH: latestSoilAnalysis?.PH?.toString() || null,
       SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
       MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
-
       SIndex: null,
       NIndex: null,
     };
@@ -808,14 +791,13 @@ class GenerateRecommendations {
           nutrientRecommendationnReqBody,
         );
 
-      recommendation =
-        await this.savingRecommendationService.processAndSaveRecommendations(
+      recommendation = await this.savingRecommendationService.processAndSaveRecommendations(
           crops,
           latestSoilAnalysis,
           nutrientRecommendationsData,
           transactionalManager,
           userId,
-          mannerOutputs,
+          mannerOutputs
         );
 
       const saveAndUpdatePKBalance = await this.CalculatePKBalance.createOrUpdatePKBalance(
@@ -828,13 +810,13 @@ class GenerateRecommendations {
             cropPOfftake,
             latestSoilAnalysis,
           },
-          previousCrop,
+          previousCrop
         );
 
       if (saveAndUpdatePKBalance) {
         await transactionalManager.save(
           PKBalanceEntity,
-          saveAndUpdatePKBalance.saveAndUpdatePKBalance,
+          saveAndUpdatePKBalance.saveAndUpdatePKBalance
         );
       }
       results.push({
