@@ -31,6 +31,7 @@ const { CalculateCropsSnsAnalysisService } = require("./calculate-crops-sns-anal
 const { CalculatePKBalance } = require("./calculate-pk-balance-service");
 const { TotalFertiliserByField } = require("./calculate-total-fertiliser-field-service");
 const { SavingOtherCropRecommendations } = require("./saving-recommendations-other-crop-service");
+const { FieldRelated } = require("./fetch-field-related-data-service");
 
 class GenerateRecommendations {
   constructor() {
@@ -39,11 +40,9 @@ class GenerateRecommendations {
     this.HandleSoilAnalysisService = new HandleSoilAnalysisService();
     this.CalculateMannerOutput = new CalculateMannerOutputService();
     this.CalculatePreviousCropService = new CalculatePreviousCropService();
-    this.organicManureRepository =
-      AppDataSource.getRepository(OrganicManureEntity);
+    this.organicManureRepository = AppDataSource.getRepository(OrganicManureEntity);
     this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
-    this.RecommendationRepository =
-      AppDataSource.getRepository(RecommendationEntity);
+    this.RecommendationRepository = AppDataSource.getRepository(RecommendationEntity);
     this.grassGrowthClass = new GrassGrowthService();
     this.calculateGrassId = new CalculateGrassHistoryAndPreviousGrass();
     this.savingRecommendationService = new SavingRecommendationService();
@@ -51,32 +50,7 @@ class GenerateRecommendations {
     this.CalculatePKBalance = new CalculatePKBalance();
     this.totalFertiliserByField = new TotalFertiliserByField();
     this.savingOtherCropRecommendations = new SavingOtherCropRecommendations();
-  }
-  async getFieldAndCountryData(fieldId, transactionalManager) {
-    return (
-      transactionalManager
-        .createQueryBuilder(FieldEntity, "f")
-        /* ---------- Farm ---------- */
-        .leftJoin(FarmEntity, "farm", "farm.ID = f.FarmID")
-        /* ---------- Country ---------- */
-        .leftJoin(CountryEntity, "country", "country.ID = farm.CountryID")
-        /* ---------- Select minimal required fields ---------- */
-        .select([
-          "f.ID AS ID",
-          "f.Name AS FieldName",
-          "f.SoilTypeID AS SoilTypeID",
-          "f.IsWithinNVZ AS IsWithinNVZ",
-          "f.SoilReleasingClay AS SoilReleasingClay",
-          "f.NVZProgrammeID AS NVZProgrammeID",
-          "farm.ID AS FarmID",
-          "farm.ClimateDataPostCode AS ClimateDataPostCode",
-          "farm.Rainfall AS Rainfall",
-          "country.ID AS CountryID",
-          "country.RB209CountryID AS RB209CountryID"
-        ])
-        .where("f.ID = :fieldId", { fieldId })
-        .getRawOne()
-    );
+    this.fieldRelated = new FieldRelated();
   }
   async calculateCropPOfftake(latestSoilAnalysis, cropTypeId, cropYield) {
     const potatoYield = 50;
@@ -92,20 +66,18 @@ class GenerateRecommendations {
 
   async getPKBalanceData(field, year, transactionalManager) {
     try {
-      // Find the data by filtering allPKBalanceData
       const pkBalanceData = await transactionalManager.findOne(
         PKBalanceEntity,
         {
           where: {
             Year: year,
-            FieldID: field.ID,
-          },
+            FieldID: field.ID
+          }
         },
       );
       return pkBalanceData || null; // Return the found data or null if not found
     } catch (error) {
       console.error("Error fetching PK Balance data:", error);
-      throw error; // Re-throw the error or handle it as needed
     }
   }
   async getWinterExcessRainfall(farmId, year, transactionalManager) {
@@ -118,7 +90,6 @@ class GenerateRecommendations {
         },
       },
     );
-
     return excessRainfall ?? null;
   }
 
@@ -483,7 +454,6 @@ class GenerateRecommendations {
         previousGrassId,
       });
     nutrientRecommendationnReqBody.referenceValue = `${field.ID}-${crop.ID}-${crop.Year}`;
-
     return nutrientRecommendationnReqBody;
   }
   async generateRecommendations(
@@ -495,14 +465,13 @@ class GenerateRecommendations {
     userId
   ) {
     const cropTypesList =await this.rB209ArableService.getData("/Arable/CropTypes");
-    const fieldRelatedData = await this.getFieldAndCountryData(
+    const fieldRelatedData = await this.fieldRelated.getFieldAndCountryData(
       fieldID,
-      transactionalManager,
+      transactionalManager
     );
     const crops = await transactionalManager.find(CropEntity, {
-      where: { FieldID: fieldID, Year: Year },
+      where: { FieldID: fieldID, Year: Year }
     });
-
     const fertiliserData = await this.totalFertiliserByField.getTotalFertiliserByFieldAndYear(
         transactionalManager,
         fieldID,
@@ -540,7 +509,7 @@ class GenerateRecommendations {
       const previousCrop =await this.CalculatePreviousCropService.findPreviousCrop(
           fieldID,
           crop.Year,
-          transactionalManager,
+          transactionalManager
         );
 
       if (
@@ -564,7 +533,7 @@ class GenerateRecommendations {
             transactionalManager,
             {
               cropPOfftake,
-              latestSoilAnalysis,
+              latestSoilAnalysis
             },
             previousCrop
           );
@@ -572,13 +541,13 @@ class GenerateRecommendations {
         if (saveAndUpdateOtherPKBalance) {
           await transactionalManager.save(
             PKBalanceEntity,
-            saveAndUpdateOtherPKBalance.saveAndUpdatePKBalance,
+            saveAndUpdateOtherPKBalance.saveAndUpdatePKBalance
           );
         }
         results.push({
           cropId: crop.ID,
           recommendations: recommendation,
-          pkBalance: saveAndUpdateOtherPKBalance ?? null,
+          pkBalance: saveAndUpdateOtherPKBalance ?? null
         });
         continue;
       }
@@ -595,13 +564,7 @@ class GenerateRecommendations {
           transactionalManager,
           cropTypesList
         );
-
-      const nutrientRecommendationsData =
-        await this.rB209RecommendationService.postData(
-          "Recommendation/Recommendations",
-          nutrientRecommendationnReqBody,
-        );
-
+      const nutrientRecommendationsData =await this.rB209RecommendationService.postData("Recommendation/Recommendations",nutrientRecommendationnReqBody);
       recommendation = await this.savingRecommendationService.processAndSaveRecommendations(
           crops,
           latestSoilAnalysis,
@@ -610,7 +573,6 @@ class GenerateRecommendations {
           userId,
           mannerOutputs
         );
-
       const saveAndUpdatePKBalance = await this.CalculatePKBalance.createOrUpdatePKBalance(
           crop,
           nutrientRecommendationsData,
@@ -619,11 +581,10 @@ class GenerateRecommendations {
           transactionalManager,
           {
             cropPOfftake,
-            latestSoilAnalysis,
+            latestSoilAnalysis
           },
           previousCrop
         );
-
       if (saveAndUpdatePKBalance) {
         await transactionalManager.save(
           PKBalanceEntity,
