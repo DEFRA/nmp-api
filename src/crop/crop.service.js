@@ -156,7 +156,7 @@ class CropService extends BaseService {
     const cropTypesList = await this.rB209ArableService.getData(ARABLE.ALL_ARABLE_CROP_TYPES_ENDPOINT);
 
     const cropType = cropTypesList.find(
-      (cropType) => cropType.cropTypeId === cropTypeId,
+      (cT) => cT.cropTypeId === cropTypeId,
     );
 
     return {
@@ -857,12 +857,12 @@ class CropService extends BaseService {
   async updateCropData(body, userId, request, transactionalManager) {
     // If a global transaction manager is provided, use it.
     if (transactionalManager) {
-      return await this.updateCrop(body, userId, request, transactionalManager);
+      return this.updateCrop(body, userId, request, transactionalManager);
     }
 
-    // ✅ Otherwise, start a new local transaction.
+    //  Otherwise, start a new local transaction.
     return await AppDataSource.transaction(async (localManager) => {
-      return await this.updateCrop(body, userId, request, localManager);
+      return this.updateCrop(body, userId, request, localManager);
     });
   }
 
@@ -1106,9 +1106,6 @@ class CropService extends BaseService {
 
       // Step 3: Loop through each crop
       for (const crop of crops) {
-        if (crop.IsBasePlan) {
-          continue;
-        }
         // Check if any soil analysis record has P or K index
         const soilAnalysis = await transactionalManager.find(
           SoilAnalysisEntity,
