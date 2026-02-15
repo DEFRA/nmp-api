@@ -71,8 +71,8 @@ class GenerateRecommendations {
         {where: {Year: year,FieldID: field.ID}}
       );
       return pkBalanceData
-    } catch (error) {
-      console.error("Error fetching PK Balance data:", error);
+    } catch (error) {console.error("Error fetching PK Balance data:", error);
+      return null
     }
   }
   async getWinterExcessRainfall(farmId, year, transactionalManager) {
