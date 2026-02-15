@@ -183,10 +183,35 @@ class GenerateRecommendations {
     }
   }
 
+  async processDefoliationRecommendations(
+  defoliationItems,
+  cropPOfftake,
+) {
+  let pBalance = 0;
+  let kBalance = 0;
+
+  for (const recommendation of defoliationItems) {
+    const rec = recommendation.recommendation ?? 0;
+    const man = recommendation.manures ?? 0;
+    const pk = recommendation.pkBalance ?? 0;
+
+    if (recommendation.nutrientId === 1) {
+      pBalance += pk - rec - cropPOfftake + man;
+    }
+
+    if (recommendation.nutrientId === 2) {
+      kBalance += pk - rec + man;
+    }
+  }
+
+  return { pBalance, kBalance };
+}
+
+
   async calculatePKBalanceFromSequences(
     calculations,
     cropPOfftake,
-    fertiliserData,
+    fertiliserData
   ) {
     let pBalance = 0,kBalance = 0;
     const fertiliserP = fertiliserData?.p205,fertiliserK = fertiliserData?.k20; 
@@ -195,31 +220,21 @@ class GenerateRecommendations {
       const sequenceItems = calculations.filter(
         (c) => c.sequenceId === sequenceId,
       );
-
       const defoliationIds = [
-        ...new Set(sequenceItems.map((c) => c.defoliationId)),
+        ...new Set(sequenceItems.map((c) => c.defoliationId))
       ];
-
       for (const defoliationId of defoliationIds) {
         const defoliationItems = sequenceItems.filter(
-          (c) => c.defoliationId === defoliationId,
+          (c) => c.defoliationId === defoliationId
         );
 
-        for (const recommendation of defoliationItems) {
-          const rec = recommendation.recommendation ?? 0;
-          const man = recommendation.manures ?? 0;
-          const pk = recommendation.pkBalance ?? 0;
+        const balances = this.processDefoliationRecommendations(
+          defoliationItems,
+          cropPOfftake
+        );
 
-          // Phosphorus (P)
-          if (recommendation.nutrientId === 1) {
-            pBalance += pk - rec - cropPOfftake + man;
-          }
-
-          // Potassium (K)
-          if (recommendation.nutrientId === 2) {
-            kBalance += pk - rec + man;
-          }
-        }
+        pBalance += balances.pBalance;
+        kBalance += balances.kBalance;
       }
     }
 
