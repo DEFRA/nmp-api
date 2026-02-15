@@ -786,7 +786,6 @@ class GenerateRecommendations {
           recommendations: recommendation,
           pkBalance: saveAndUpdateOtherPKBalance ?? null,
         });
-
         continue;
       }
 
@@ -838,19 +837,13 @@ class GenerateRecommendations {
           saveAndUpdatePKBalance.saveAndUpdatePKBalance,
         );
       }
-
-      // Push structured result per crop
       results.push({
         cropId: crop.ID,
         recommendations: recommendation,
         pkBalance: saveAndUpdatePKBalance ?? null,
       });
     }
-
     return results;
   }
 }
-
-module.exports = {
-  GenerateRecommendations
-};
+module.exports = {GenerateRecommendations};
