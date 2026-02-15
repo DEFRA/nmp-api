@@ -68,12 +68,7 @@ class GenerateRecommendations {
     try {
       const pkBalanceData = await transactionalManager.findOne(
         PKBalanceEntity,
-        {
-          where: {
-            Year: year,
-            FieldID: field.ID
-          }
-        },
+        {where: {Year: year,FieldID: field.ID}}
       );
       return pkBalanceData
     } catch (error) {
@@ -83,12 +78,7 @@ class GenerateRecommendations {
   async getWinterExcessRainfall(farmId, year, transactionalManager) {
     const excessRainfall = await transactionalManager.findOne(
       ExcessRainfallsEntity,
-      {
-        where: {
-          FarmID: farmId,
-          Year: year
-        },
-      },
+      {where: {FarmID: farmId,Year: year}}
     );
     return excessRainfall ?? null;
   }
@@ -101,27 +91,17 @@ class GenerateRecommendations {
   ) {
     const arableBody = [];
     // Ensure dataMultipleCrops is always treated as an array
-    const crops = Array.isArray(dataMultipleCrops)
-      ? dataMultipleCrops
-      : [dataMultipleCrops];
-    // Iterate over crops (single or multiple)
+    const crops = Array.isArray(dataMultipleCrops) ? dataMultipleCrops : [dataMultipleCrops];
     for (const crop of crops) {
-      const currentCropType = cropTypesList.find(
-        (cT) => cT.cropTypeId === crop.CropTypeID,
-      );
+      const currentCropType = cropTypesList.find((cT) => cT.cropTypeId === crop.CropTypeID);
       if (currentCropType?.cropGroupId == null) {
         console.log(`Invalid CropTypeId for crop having field name ${field.FieldName}`,StaticStrings.HTTP_STATUS_BAD_REQUEST);
       }
-      let expectedYield = crop.Yield,
-        cropTypeLinkingData;
+      let expectedYield = crop.Yield,cropTypeLinkingData;
       if (expectedYield == null) {
         cropTypeLinkingData = await transactionalManager.findOne(
           CropTypeLinkingEntity,
-          {
-            where: {
-              CropTypeID: crop.CropTypeID
-            }
-          }
+          {where: {CropTypeID: crop.CropTypeID}}
         );
         expectedYield = cropTypeLinkingData.DefaultYield;
       }
@@ -140,7 +120,6 @@ class GenerateRecommendations {
     }
     return arableBody.sort((a, b) => a.cropOrder - b.cropOrder);
   }
-
   async buildGrassObject(crop, grassGrowthClass, transactionalManager) {
     let grassCrop = null;
     if (crop.CropTypeID === CropTypeMapper.GRASS) {
@@ -151,7 +130,7 @@ class GenerateRecommendations {
           FieldID: crop.FieldID,
           Year: crop.Year,
           CropTypeID: CropTypeMapper.GRASS,
-          ID: Not(crop.ID) // exclude the current crop
+          ID: Not(crop.ID) 
         },
       });
     }
@@ -164,7 +143,7 @@ class GenerateRecommendations {
         defoliationSequenceId: grassCrop.DefoliationSequenceID,
         grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
         yield: grassCrop.Yield,
-        seasonId: grassCrop.Establishment,
+        seasonId: grassCrop.Establishment
       };
     }
     if (grassCrop.CropOrder === CropOrderMapper.SECONDCROP) {
@@ -175,22 +154,18 @@ class GenerateRecommendations {
         defoliationSequenceId: grassCrop.DefoliationSequenceID,
         grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
         yield: grassCrop.Yield,
-        seasonId: grassCrop.Establishment,
+        seasonId: grassCrop.Establishment
       };
     }
     return {};
   }
  
   async resolveCrops(crop, transactionalManager) {
-  if (Array.isArray(crop)) {
-    return crop;
-  }
+  if (Array.isArray(crop)) {return crop}
   const crops = await transactionalManager.find(CropEntity, {
-    where: { FieldID: crop.FieldID, Year: crop.Year },
+    where: { FieldID: crop.FieldID, Year: crop.Year }
   });
-  if (!crops.length && crop?.CropTypeID) {
-    return [crop];
-  }
+  if (!crops.length && crop?.CropTypeID) {return [crop]}
   return crops;
 }
   async determineFieldType(crop, transactionalManager) {
@@ -204,22 +179,14 @@ class GenerateRecommendations {
         cropTypeID !== CropTypeMapper.OTHER
       ) {
         return FieldTypeMapper.ARABLE;
-      } else {
-        return FieldTypeMapper.ARABLE; 
-      }
+      } else {return FieldTypeMapper.ARABLE}
     }
     if (crops.length === 2) {
       const cropTypeIDs = crops.map((c) => c.CropTypeID);
-      const isBothGrass = cropTypeIDs.every(
-        (id) => id === CropTypeMapper.GRASS,
-      );
+      const isBothGrass = cropTypeIDs.every((id) => id === CropTypeMapper.GRASS);
       const isOneGrass = cropTypeIDs.includes(CropTypeMapper.GRASS);
-      const isOtherValid = cropTypeIDs.some(
-        (id) => id !== CropTypeMapper.GRASS,
-      );
-      const isBothArable = cropTypeIDs.every(
-        (id) => id !== CropTypeMapper.GRASS,
-      );
+      const isOtherValid = cropTypeIDs.some((id) => id !== CropTypeMapper.GRASS);
+      const isBothArable = cropTypeIDs.every((id) => id !== CropTypeMapper.GRASS);
       if (isBothGrass) {return FieldTypeMapper.GRASS}; 
       if (isOneGrass && isOtherValid) {return FieldTypeMapper.BOTH}; // Mixed
       if (isBothArable) {return FieldTypeMapper.ARABLE}; // Both are arable/horticulture
@@ -244,7 +211,7 @@ class GenerateRecommendations {
       previousGrassId: await this.calculateGrassId.getPreviousGrassID(
         crop,
         transactionalManager,
-        crop.Year,
+        crop.Year
       ),
     };
   }
