@@ -1,12 +1,14 @@
 const { CalculateCropsSnsAnalysisService } = require("./calculate-crops-sns-analysis-service");
 const { CalculateMannerOutputService } = require("./calculate-manner-output-service");
 const { HandleSoilAnalysisService } = require("./handle-soil-analysis");
+const { CalculatePreviousCropService } = require("./previous-year-crop-service");
 
 class HanldeMannerAndAnalysis {
   constructor() {
   this.HandleSoilAnalysisService = new HandleSoilAnalysisService();
   this.CalculateMannerOutput = new CalculateMannerOutputService();
   this.CalculateCropsSnsAnalysisService =new CalculateCropsSnsAnalysisService();
+  this.CalculatePreviousCropService = new CalculatePreviousCropService();
   }
 
   async getCropPreCalculationData(
