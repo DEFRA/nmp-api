@@ -176,21 +176,17 @@ class SavingRecommendationService {
     transactionalManager,
     defoliationId
   ) {
-    let availableNForNextDefoliation = null;
-    let nextCropAvailableN = null;
-
+    let availableNForNextDefoliation = null,nextCropAvailableN = null;
     // Only calculate if mannerOutputs is empty
     if (!mannerOutputs || mannerOutputs.length === 0) {
-      availableNForNextDefoliation =
-        await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
+      availableNForNextDefoliation = await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
           transactionalManager,
           managementPeriod,
           cropData,
         );
 
       if (defoliationId === 1) {
-        nextCropAvailableN =
-          await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
+        nextCropAvailableN = await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
             cropData.FieldID,
             cropData.Year,
             transactionalManager
