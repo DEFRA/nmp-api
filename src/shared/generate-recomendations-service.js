@@ -1,8 +1,6 @@
 const { Not } = require("typeorm");
 const { CropEntity } = require("../db/entity/crop.entity");
 const RB209ArableService = require("../vendors/rb209/arable/arable.service");
-const { HandleSoilAnalysisService } = require("./handle-soil-analysis");
-const { CalculateMannerOutputService } = require("./calculate-manner-output-service");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
 const { CalculatePreviousCropService } = require("./previous-year-crop-service");
 const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
@@ -19,7 +17,6 @@ const { FieldTypeMapper } = require("../constants/field-type-mapper");
 const { AppDataSource } = require("../db/data-source");
 const { CropOrderMapper } = require("../constants/crop-order-mapper");
 const { SavingRecommendationService } = require("./saving-recommendation-service");
-const { CalculateCropsSnsAnalysisService } = require("./calculate-crops-sns-analysis-service");
 const { CalculatePKBalance } = require("./calculate-pk-balance-service");
 const { TotalFertiliserByField } = require("./calculate-total-fertiliser-field-service");
 const { SavingOtherCropRecommendations } = require("./saving-recommendations-other-crop-service");
@@ -389,15 +386,11 @@ class GenerateRecommendations {
     const crops = await transactionalManager.find(CropEntity, {
       where: { FieldID: fieldID, Year: Year }
     });
-    const fertiliserData = await this.totalFertiliserByField.getTotalFertiliserByFieldAndYear(
-        transactionalManager,
-        fieldID,
-        Year
-      );
+    const fertiliserData = await this.totalFertiliserByField.getTotalFertiliserByFieldAndYear(transactionalManager,fieldID,Year);
     let recommendation;
     const results = [];
     for (const crop of crops) { 
-      const {snsAnalysesData,latestSoilAnalysis,soilAnalysisRecords,mannerOutputs} = await this.HanldeMannerAndAnalysis.getCropPreCalculationData(
+      const {snsAnalysesData,latestSoilAnalysis,soilAnalysisRecords,mannerOutputs,previousCrop} = await this.HanldeMannerAndAnalysis.getCropPreCalculationData(
         crop,
         fieldID,
         fieldRelatedData,
@@ -406,12 +399,6 @@ class GenerateRecommendations {
         request
       );
       const cropPOfftake = await this.calculateCropPOfftake(latestSoilAnalysis,crop.CropTypeID,crop.Yield);
-      const previousCrop =await this.CalculatePreviousCropService.findPreviousCrop(
-          fieldID,
-          crop.Year,
-          transactionalManager
-        );
-
       if ( crop.CropTypeID === CropTypeMapper.OTHER || crop?.IsBasePlan || !previousCrop ) {
         recommendation = await this.savingOtherCropRecommendations.saveRecommendationForOtherCrops(
             transactionalManager, // Transaction manager for transactional save
@@ -435,10 +422,7 @@ class GenerateRecommendations {
           );
 
         if (saveAndUpdateOtherPKBalance) {
-          await transactionalManager.save(
-            PKBalanceEntity,
-            saveAndUpdateOtherPKBalance.saveAndUpdatePKBalance
-          );
+          await transactionalManager.save( PKBalanceEntity,saveAndUpdateOtherPKBalance.saveAndUpdatePKBalance);
         }
         results.push({
           cropId: crop.ID,
@@ -488,7 +472,7 @@ class GenerateRecommendations {
       results.push({
         cropId: crop.ID,
         recommendations: recommendation,
-        pkBalance: saveAndUpdatePKBalance ?? null,
+        pkBalance: saveAndUpdatePKBalance ?? null
       });
     }
     return results;

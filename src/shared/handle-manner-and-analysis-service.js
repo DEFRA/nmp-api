@@ -38,11 +38,18 @@ class HanldeMannerAndAnalysis {
         transactionalManager,
         request,
       );
+
+     const previousCrop =await this.CalculatePreviousCropService.findPreviousCrop(
+         fieldID,
+         crop.Year,
+         transactionalManager,
+       );  
     return {
       snsAnalysesData,
       latestSoilAnalysis,
       soilAnalysisRecords,
-      mannerOutputs
+      mannerOutputs,
+      previousCrop
     };
   }
 }
