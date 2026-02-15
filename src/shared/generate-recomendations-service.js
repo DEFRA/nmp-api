@@ -665,25 +665,23 @@ async calculatePKBalance(
 
     return {};
   }
+ 
+  async resolveCrops(crop, transactionalManager) {
+  if (Array.isArray(crop)) {
+    return crop;
+  }
+  const crops = await transactionalManager.find(CropEntity, {
+    where: { FieldID: crop.FieldID, Year: crop.Year },
+  });
+  if (!crops.length && crop?.CropTypeID) {
+    return [crop];
+  }
+  return crops;
+}
 
   async determineFieldType(crop, transactionalManager) {
-    let crops;
-    // Check if it's a single crop or already an array of crops
-    if (Array.isArray(crop)) {
-      crops = crop;
-    } else {
-      // Fetch all crops for the same FieldID and Year
-      crops = await transactionalManager.find(CropEntity, {
-        where: { FieldID: crop.FieldID, Year: crop.Year },
-      });
-
-      // If only one crop found in DB, use it
-      if (crops.length === 0 && crop?.CropTypeID) {
-        crops = [crop]; // fallback to single crop passed
-      }
-    }
-
-    if (crops.length === 1) {
+    const crops = await this.resolveCrops(crop, transactionalManager);
+     if (crops.length === 1) {
       const cropTypeID = crops[0].CropTypeID;
       if (cropTypeID === CropTypeMapper.GRASS) {
         return FieldTypeMapper.GRASS; // Grass
