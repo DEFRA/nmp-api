@@ -29,6 +29,7 @@ const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { RecommendationCommentEntity } = require("../db/entity/recommendation-comment.entity");
 const { CalculateCropsSnsAnalysisService } = require("./calculate-crops-sns-analysis-service");
 const { CalculatePKBalance } = require("./calculate-pk-balance-service");
+const { TotalFertiliserByField } = require("./calculate-total-fertiliser-field-service");
 
 class GenerateRecommendations {
   constructor() {
@@ -47,47 +48,7 @@ class GenerateRecommendations {
     this.savingRecommendationService = new SavingRecommendationService();
     this.CalculateCropsSnsAnalysisService = new CalculateCropsSnsAnalysisService();
     this.CalculatePKBalance = new CalculatePKBalance();
-  }
-  async getManagementPeriods(transactionalManager, cropId) {
-    const data = await transactionalManager.find(ManagementPeriodEntity, {
-      where: {
-        CropID: cropId,
-      },
-    });
-
-    return data;
-  }
-  async getP205AndK20fromfertiliser(transactionalManager, managementPeriodIds) {
-    // Normalize to array
-    const ids = Array.isArray(managementPeriodIds)
-      ? managementPeriodIds
-      : [managementPeriodIds];
-
-    let sumOfP205 = 0;
-    let sumOfK20 = 0;
-
-    if (ids.length === 0) {
-      return { p205: 0, k20: 0 };
-    }
-
-    const fertiliserData = await transactionalManager.find(
-      FertiliserManuresEntity,
-      {
-        where: {
-          ManagementPeriodID: In(ids),
-        },
-        select: {
-          P2O5: true,
-          K2O: true,
-        },
-      },
-    );
-    for (const fertiliser of fertiliserData) {
-      sumOfP205 += fertiliser.P2O5 ?? 0;
-      sumOfK20 += fertiliser.K2O ?? 0;
-    }
-
-    return { p205: sumOfP205, k20: sumOfK20 };
+    this.totalFertiliserByField = new TotalFertiliserByField();
   }
   async getFieldAndCountryData(fieldId, transactionalManager) {
     return (
@@ -115,7 +76,6 @@ class GenerateRecommendations {
         .getRawOne()
     );
   }
-
   async calculateCropPOfftake(latestSoilAnalysis, cropTypeId, cropYield) {
     const potatoYield = 50;
     if (!latestSoilAnalysis?.PhosphorusIndex) {return 0;}
@@ -146,28 +106,6 @@ class GenerateRecommendations {
       throw error; // Re-throw the error or handle it as needed
     }
   }
-
-  async processDefoliationRecommendations(
-  defoliationItems,
-  cropPOfftake
-) {
-  let pBalance = 0,kBalance = 0;
-  for (const recommendation of defoliationItems) {
-    const rec = recommendation.recommendation ?? 0;
-    const man = recommendation.manures ?? 0;
-    const pk = recommendation.pkBalance ?? 0;
-
-    if (recommendation.nutrientId === 1) {
-      pBalance += pk - rec - cropPOfftake + man;
-    }
-
-    if (recommendation.nutrientId === 2) {
-      kBalance += pk - rec + man;
-    }
-  }
-
-  return { pBalance, kBalance };
-}
 
   async buildCropOrderData(OrganicManure, mannerOutputs, latestSoilAnalysis) {
     return {
@@ -601,7 +539,7 @@ class GenerateRecommendations {
     mannerOutputs,
     request,
     transactionalManager,
-    cropTypesList,
+    cropTypesList
   ) {
     const { soilAnalysisRecords: soilAnalysis, snsAnalysesData } = analysis;
     const { crops: dataMultipleCrops, crop } = singleAndMultipleCrops;
@@ -617,6 +555,7 @@ class GenerateRecommendations {
     const arableBody = await this.buildArableBody(dataMultipleCrops,field,transactionalManager,cropTypesList);
     const grassObject = await this.buildGrassObject(crop,grassGrowthClass,transactionalManager);
     const fieldType = await this.determineFieldType(crop, transactionalManager);
+
     const nutrientRecommendationnReqBody = {
       field: {
         fieldType: fieldType,
@@ -688,18 +627,15 @@ class GenerateRecommendations {
     const crops = await transactionalManager.find(CropEntity, {
       where: { FieldID: fieldID, Year: Year },
     });
+
+    const fertiliserData = await this.totalFertiliserByField.getTotalFertiliserByFieldAndYear(
+        transactionalManager,
+        fieldID,
+        Year
+      );
     let recommendation;
     const results = [];
-    for (const crop of crops) {
-      const managementPeriods = await this.getManagementPeriods(
-        transactionalManager,
-        crop.ID,
-      );
-      const managementPeriodIds = managementPeriods.map((mp) => mp.ID);
-      const fertiliserData = await this.getP205AndK20fromfertiliser(
-        transactionalManager,
-        managementPeriodIds,
-      );
+    for (const crop of crops) { 
       const snsAnalysesData =await this.CalculateCropsSnsAnalysisService.getCropsSnsAnalyses(
           transactionalManager,
           fieldID,
