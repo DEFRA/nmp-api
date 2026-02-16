@@ -445,6 +445,7 @@ class GenerateRecommendations {
         request
       );
       const cropPOfftake = await this.calculateCropPOfftake(latestSoilAnalysis,crop.CropTypeID,crop.Yield);
+       let nutrientRecommendationsData = null;
       if (crop.CropTypeID === CropTypeMapper.OTHER ||crop?.IsBasePlan ||!previousCrop) {
     const otherCropContext = {crop,previousCrop,mannerOutputs,latestSoilAnalysis,nutrientRecommendationsData,cropPOfftake};
     const sharedContext = {transactionalManager,newOrganicManure,userId,fertiliserData};
@@ -463,7 +464,7 @@ class GenerateRecommendations {
           transactionalManager,
           cropTypesList
         );
-      const nutrientRecommendationsData =await this.rB209RecommendationService.postData("Recommendation/Recommendations",nutrientRecommendationnReqBody);
+      nutrientRecommendationsData =await this.rB209RecommendationService.postData("Recommendation/Recommendations",nutrientRecommendationnReqBody);
       recommendation = await this.savingRecommendationService.processAndSaveRecommendations(
           crops, latestSoilAnalysis,
           nutrientRecommendationsData,

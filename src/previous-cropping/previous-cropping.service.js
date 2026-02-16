@@ -4,21 +4,19 @@ const {
 const { BaseService } = require("../base/base.service");
 const { AppDataSource } = require("../db/data-source");
 const { MoreThan, Between } = require("typeorm");
-const { UpdateRecommendationChanges } = require("../shared/updateRecommendationsChanges");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { FieldEntity } = require("../db/entity/field.entity");
-const {
-  UpdateRecommendation,
-} = require("../shared/updateRecommendation.service");
+const { GenerateRecommendations } = require("../shared/generate-recomendations-service");
+const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
 
 class PreviousCroppingService extends BaseService {
   constructor() {
     super(PreviousCroppingEntity);
     this.repository = AppDataSource.getRepository(PreviousCroppingEntity);
-    this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
+    this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
     this.cropRepository = AppDataSource.getRepository(CropEntity);
-    this.UpdateRecommendation = new UpdateRecommendation();
     this.fieldRepository=AppDataSource.getRepository(FieldEntity);
+    this.generateRecommendations = new GenerateRecommendations();
   }
 
   async mergePreviousCropping(previousCroppingBody, userId, request) {
@@ -79,13 +77,16 @@ class PreviousCroppingService extends BaseService {
         },
       });
       if (cropExist != null) {
-        await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
-          greatestYearField,
-          MaxYear + 1,
-          request,
-          userId,
-          transactionalManager
-        );
+       
+        const organicManure = null
+          await this.generateRecommendations.generateRecommendations(
+             greatestYearField,
+             MaxYear + 1,
+             organicManure,
+             transactionalManager,
+             request,
+             userId
+           );
       }
 
       // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
@@ -99,16 +100,16 @@ class PreviousCroppingService extends BaseService {
         },
       });
       if (nextAvailableCrop) {
-        this.UpdateRecommendation.updateRecommendationsForField(
-          greatestYearField,
-          nextAvailableCrop.Year,
-          request,
-          userId
-        )
+        this.updatingFutureRecommendations.updateRecommendationsForField(
+            greatestYearField,
+            nextAvailableCrop.Year,
+            request,
+            userId,
+          )
           .then((res) => {
             if (res === undefined) {
               console.log(
-                "updateRecommendationAndOrganicManure returned undefined"
+                "updateRecommendationAndOrganicManure returned undefined",
               );
             } else {
               console.log("updateRecommendationAndOrganicManure result:", res);

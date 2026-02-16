@@ -176,19 +176,23 @@ class CalculatePKBalance {
         kBalance: fertiliserK,
       };
     }
+    
+    if(nutrientRecommendationsData){
 
-    // CASE 3: Has previous crop → use sequence calculation
-    const pkBalCalcuationsFromNutrients =
-      await this.calculatePKBalanceFromSequences(
-        nutrientRecommendationsData.calculations,
-        soilAndCropOffTakeContext.cropPOfftake,
-        fertiliserData
-      );
+      // CASE 3: Has previous crop → use sequence calculation
+      const pkBalCalcuationsFromNutrients =
+        await this.calculatePKBalanceFromSequences(
+          nutrientRecommendationsData.calculations,
+          soilAndCropOffTakeContext.cropPOfftake,
+          fertiliserData
+        );
+    
 
     return {
       pBalance: pkBalCalcuationsFromNutrients.pBalance,
       kBalance: pkBalCalcuationsFromNutrients.kBalance,
     };
+  }
   }
 
   async createOrUpdatePKBalance(

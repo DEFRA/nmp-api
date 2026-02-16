@@ -107,8 +107,6 @@ class PlanService extends BaseService {
       FertiliserManuresEntity
     );
     this.countryRepository = AppDataSource.getRepository(CountryEntity);
-    this.UpdateRecommendation = new UpdateRecommendation();
-    this.UpdateRecommendationsChanges = new UpdateRecommendationChanges();
     this.excessRainfallRepository = AppDataSource.getRepository(
       ExcessRainfallsEntity
     );
@@ -125,7 +123,6 @@ class PlanService extends BaseService {
     this.generateRecommendations = new GenerateRecommendations();
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
     this.currentAndFuture = new CurrentAndFuture();
-
   }
 
   async getManagementPeriods(id) {

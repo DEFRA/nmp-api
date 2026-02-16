@@ -10,19 +10,19 @@ class SavingOtherCropRecommendations {
       CropN: null,
       NBalance: null,
       ManureN: mannerOutputs
-        ? mannerOutputs[0].availableN
+        ? mannerOutputs[0]?.availableN
         : OrganicManure.AvailableN,
       FertilizerN: null,
       CropP2O5: null,
       PBalance: null,
       ManureP2O5: mannerOutputs
-        ? mannerOutputs[0].availableP
+        ? mannerOutputs[0]?.availableP
         : OrganicManure.AvailableP2O5,
       FertilizerP2O5: null,
       CropK2O: null,
       KBalance: null,
       ManureK2O: mannerOutputs
-        ? mannerOutputs[0].availableK
+        ? mannerOutputs[0]?.availableK
         : OrganicManure.AvailableK2O,
       FertilizerK2O: null,
       CropMgO: null,
@@ -32,7 +32,7 @@ class SavingOtherCropRecommendations {
       CropSO3: null,
       SBalance: null,
       ManureSO3: mannerOutputs
-        ? mannerOutputs[0].availableS
+        ? mannerOutputs[0]?.availableS
         : OrganicManure.AvailableSO3,
       FertilizerSO3: null,
       CropNa2O: null,
@@ -118,12 +118,12 @@ class SavingOtherCropRecommendations {
         updatedRecommendations.push(recommendation);
       } else {
         // If no recommendation exists, create a new one
-        recommendation = this.RecommendationRepository.create({
+        recommendation = transactionalManager.create(RecommendationEntity,{
           ...cropOrderData,
           ManagementPeriodID: period.ID,
           Comments: "New recommendation created",
           CreatedOn: new Date(),
-          CreatedByID: userId,
+          CreatedByID: userId
         });
         await transactionalManager.save(RecommendationEntity, recommendation);
         updatedRecommendations.push(recommendation);
