@@ -9,6 +9,7 @@ const {FieldAbove300SeaLevelMapper}=require("../constants/field-above-300-sea-le
 const { CountryMapper } = require("../constants/country-mapper");
 const { ExcessRainfallService } = require("../excess-rainfall/excess-rainfall.service");
 const { ProcessFieldsService } = require("../shared/process-fields-for-recommendations.service");
+const { CountryEntity } = require("../db/entity/country.entity");
 const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
 
 class FarmService extends BaseService {

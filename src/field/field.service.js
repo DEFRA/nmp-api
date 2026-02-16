@@ -45,7 +45,10 @@ const { UpdateRecommendation } = require("../shared/updateRecommendation.service
 const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
 const { PreviousCroppingMapper } = require("../constants/action-mapper");
+const {FarmService}= require("../farm/farm.service");
 const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
+const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
+const { GenerateRecommendations } = require("../shared/generate-recomendations-service");
 
 class FieldService extends BaseService {
   constructor() {
@@ -92,10 +95,11 @@ class FieldService extends BaseService {
     );
     this.rB209GrassService = new RB209GrassService();
     this.rB209GrasslandService = new RB209GrasslandService();
-    this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
-    this.UpdateRecommendation = new UpdateRecommendation();
-    this.ProcessFutureManuresForWarnings =
-      new ProcessFutureManuresForWarnings();
+    this.generateRecommendations = new GenerateRecommendations();
+    this.updatingFutureRecommendations = new UpdatingFutureRecommendations();  
+    this.FarmService = new FarmService();
+    this.ProcessFutureManuresForWarnings = new ProcessFutureManuresForWarnings();
+
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -378,13 +382,15 @@ class FieldService extends BaseService {
           const oldestCrop = crops.reduce((oldest, current) =>
             current.Year < oldest.Year ? current : oldest,
           );
-
-          await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+          
+          const newOrganicManure = null;
+          await this.generateRecommendations.generateRecommendations(
             fieldId,
             oldestCrop.Year,
-            request,
-            userId,
+            newOrganicManure,
             transactionalManager,
+            request,
+            userId
           );
 
           const nextAvailableCrop = await transactionalManager.findOne(
@@ -399,14 +405,15 @@ class FieldService extends BaseService {
           );
 
           if (nextAvailableCrop) {
-            this.UpdateRecommendation.updateRecommendationsForField(
-              fieldId,
-              nextAvailableCrop.Year,
-              request,
-              userId,
-            ).catch((error) => {
-              console.error(error);
-            });
+            this.updatingFutureRecommendations.updateRecommendationsForField(
+                fieldId,
+                nextAvailableCrop.Year,
+                request,
+                userId,
+              )
+              .catch((error) => {
+                console.error(error);
+              });
           }
           this.ProcessFutureManuresForWarnings.processWarningsByField(
             fieldId,
@@ -488,14 +495,15 @@ class FieldService extends BaseService {
               current.Year < oldest.Year ? current : oldest,
             );
 
-            this.UpdateRecommendation.updateRecommendationsForField(
-              fieldId,
-              oldestCrop.Year,
-              request,
-              userId,
-            ).catch((error) => {
-              console.error(error);
-            });
+            this.updatingFutureRecommendations.updateRecommendationsForField(
+                fieldId,
+                oldestCrop.Year,
+                request,
+                userId,
+              )
+              .catch((error) => {
+                console.error(error);
+              });
           }
         }
 
@@ -589,13 +597,15 @@ class FieldService extends BaseService {
     const oldestCrop = crops.reduce((oldest, current) =>
       current.Year < oldest.Year ? current : oldest,
     );
-
-    await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+    
+    const newOrganicManure= null;
+    await this.generateRecommendations.generateRecommendations(
       fieldId,
       oldestCrop.Year,
-      request,
-      userId,
+      newOrganicManure,
       transactionalManager,
+      request,
+      userId
     );
 
     const nextCrop = await transactionalManager.findOne(CropEntity, {
@@ -607,12 +617,8 @@ class FieldService extends BaseService {
     });
 
     if (nextCrop) {
-      this.UpdateRecommendation.updateRecommendationsForField(
-        fieldId,
-        nextCrop.Year,
-        request,
-        userId,
-      ).catch(console.error);
+      this.updatingFutureRecommendations.updateRecommendationsForField(fieldId, nextCrop.Year, request, userId)
+        .catch(console.error);
     }
   }
 
@@ -698,14 +704,7 @@ class FieldService extends BaseService {
 
       order: { Year: "DESC", Date: "DESC" },
     });
-    // const latestSoilAnalysis = await this.soilAnalysisRepository.findOne({
-    //   where: { FieldID: field.ID},
-    //   order: { ModifiedOn: "DESC" }, // Sort by ModifiedOn descending
-    //   take: 1, // Retrieve only the latest entry
-    // });
-    // const snsAnalysisData = await this.snsAnalysisRepository.findOneBy({
-    //   FieldID: fieldId,
-    // });
+   
     const cropData = await this.cropRepository.findOne({
       where: {
         FieldID: fieldId,
@@ -905,18 +904,15 @@ class FieldService extends BaseService {
             )
           : null;
 
-        // const previousGrasses = await this.previousGrassesRepository.find({
-        //   where: { FieldID: field.ID },
-        // });
         const previousGrasses = await this.getPreviousCropDataByFieldID(
           field.ID,
         );
         let grassManagementOptionName = null;
         if (previousGrasses) {
           const grassManagementOptionID =
-            previousGrasses.GrassManagementOptionID != null
-              ? previousGrasses.GrassManagementOptionID
-              : null;
+            previousGrasses.GrassManagementOptionID == null
+              ? null
+              : previousGrasses.GrassManagementOptionID;
 
           if (grassManagementOptionID) {
             const grassManagementOption =

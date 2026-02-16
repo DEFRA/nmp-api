@@ -19,6 +19,11 @@ const UserExtensionsEntity = new EntitySchema({
       nullable: false,
       name: "DoNotShowAboutThisService",
     },
+    DoNotShowAboutManner: {
+      type: "bit",
+      nullable: false,
+      name: "DoNotShowAboutManner",
+    },
   },
   relations: {
     User: {

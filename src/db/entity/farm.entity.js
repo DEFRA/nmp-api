@@ -198,7 +198,6 @@ const FarmEntity = new EntitySchema({
       joinColumn: { name: "ID" },
       inverseSide: "Farms"
     }
-  
   }
 });
 
