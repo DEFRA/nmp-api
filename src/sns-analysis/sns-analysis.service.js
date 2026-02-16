@@ -1,13 +1,8 @@
 const { AppDataSource } = require("../db/data-source");
 const { BaseService } = require("../base/base.service");
-
-const {
-  UpdateRecommendation,
-} = require("../shared/updateRecommendation.service");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { MoreThan } = require("typeorm");
-const { UpdateRecommendationChanges } = require("../shared/updateRecommendationsChanges");
 const { GenerateRecommendations } = require("../shared/generate-recomendations-service");
 const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
 const { CurrentAndFuture } = require("../shared/generate-current-and-future-recommendations-service");
@@ -17,8 +12,6 @@ class SnsAnalysisService extends BaseService {
     super(SnsAnalysesEntity);
     this.repository = AppDataSource.getRepository(SnsAnalysesEntity);
     this.cropRepository = AppDataSource.getRepository(CropEntity);
-    this.UpdateRecommendation = new UpdateRecommendation();
-    this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
     this.generateRecommendations = new GenerateRecommendations();
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
     this.currentAndFuture = new CurrentAndFuture();
