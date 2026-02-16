@@ -11,14 +11,7 @@ const {
   ManagementPeriodEntity,
 } = require("../db/entity/management-period.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
-const {
-  UpdateRecommendation,
-} = require("../shared/updateRecommendation.service");
 const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
-const { MoreThan } = require("typeorm");
-const {
-  UpdateRecommendationChanges,
-} = require("../shared/updateRecommendationsChanges");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
 const { CountryEntity } = require("../db/entity/country.entity");
 const { FarmEntity } = require("../db/entity/farm.entity");
@@ -29,6 +22,8 @@ const { CreateOrUpdateWarningMessage } = require("../shared/create-update-warnin
 const { WarningCodesMapper } = require("../constants/warning-codes-mapper");
 const { ManureTypeMapper } = require("../constants/manure-type-mapper");
 const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
+const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
+const { CurrentAndFuture } = require("../shared/generate-current-and-future-recommendations-service");
 
 class FertiliserManuresService extends BaseService {
   constructor() {
@@ -47,17 +42,14 @@ class FertiliserManuresService extends BaseService {
       ManagementPeriodEntity,
     );
     this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
-    this.UpdateRecommendation = new UpdateRecommendation();
-    this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
-    this.soilAnalysisRepository =
-      AppDataSource.getRepository(SoilAnalysisEntity);
+    this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
+    this.soilAnalysisRepository = AppDataSource.getRepository(SoilAnalysisEntity);
     this.farmRepository = AppDataSource.getRepository(FarmEntity);
     this.HandleSoilAnalysisService = new HandleSoilAnalysisService();
     this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
     this.CreateOrUpdateWarningMessage = new CreateOrUpdateWarningMessage();
     this.ProcessFutureManuresForWarnings = new ProcessFutureManuresForWarnings();
-    
-      
+    this.currentAndFuture = new CurrentAndFuture();     
   }
   async getFertiliserManureNitrogenSum(
     fieldId,
@@ -353,15 +345,15 @@ class FertiliserManuresService extends BaseService {
             isNextYearFertiliserExist == true
           ) {
             //call shreyash's function
-            this.UpdateRecommendation.updateRecommendationsForField(
-              fieldData[0]?.ID,
-              cropData[0]?.Year,
-              request,
-              userId,
-            )
+            this.updatingFutureRecommendations.updateRecommendationsForField(
+                fieldData[0]?.ID,
+                cropData[0]?.Year,
+                request,
+                userId
+              )
               .then((res) => {
                 if (res === undefined) {
-                  console.log(res)
+                  console.log(res);
                 } else {
                   console.log(
                     "updateRecommendationAndOrganicManure result:",
@@ -467,55 +459,21 @@ class FertiliserManuresService extends BaseService {
                 );
               }
 
-              await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
-                cropData[0].FieldID,
-                cropData[0].Year,
-                request,
-                userId,
-                transactionalManager,
-              );
-              const nextAvailableCrop = await this.cropRepository.findOne({
-                where: {
-                  FieldID: cropData[0].FieldID,
-                  Year: MoreThan(cropData[0].Year),
-                },
-                order: { Year: "ASC" },
-              });
-
-              if (nextAvailableCrop) {
-                this.UpdateRecommendation.updateRecommendationsForField(
-                  cropData[0].FieldID,
-                  nextAvailableCrop.Year,
-                  request,
-                  userId,
-                );
-              }
+               await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
+                 cropData[0],
+                 transactionalManager,
+                 request,
+                 userId
+               );
             }
           }
         }
-        await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
-          cropData[0].FieldID,
-          cropData[0].Year,
-          request,
-          userId,
-          transactionalManager,
-        );
-        const nextAvailableCrop = await this.cropRepository.findOne({
-          where: {
-            FieldID: cropData[0].FieldID,
-            Year: MoreThan(cropData[0].Year),
-          },
-          order: { Year: "ASC" },
-        });
-
-        if (nextAvailableCrop) {
-          this.UpdateRecommendation.updateRecommendationsForField(
-            cropData[0].FieldID,
-            nextAvailableCrop.Year,
+          await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
+            cropData[0],
+            transactionalManager,
             request,
-            userId,
+            userId
           );
-        }
       }
       return fertiliserManures;
     });
@@ -605,24 +563,12 @@ class FertiliserManuresService extends BaseService {
           where: { ID: managementPeriod.CropID },
         });
 
-        await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
-          crop.FieldID,
-          crop.Year,
-          request,
-          userId,
-          transactionalManager
-        );
-
-        // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
-        const nextAvailableCrop = await this.cropRepository.findOne({
-          where: {
-            FieldID: crop.FieldID,
-            Year: MoreThan(crop.Year), // Find the next available year greater than the current crop.Year
-          },
-          order: {
-            Year: "ASC", // Ensure we get the next immediate year
-          },
-        });
+          await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
+            crop,
+            transactionalManager,
+            request,
+            userId
+          );
 
           const isCurrentOrganicManure = false,
             isCurrentFertiliser = true;
@@ -635,32 +581,6 @@ class FertiliserManuresService extends BaseService {
             userId
           );
 
-        if (nextAvailableCrop) {
-          this.UpdateRecommendation.updateRecommendationsForField(
-            crop.FieldID,
-            nextAvailableCrop.Year,
-            request,
-            userId,
-          )
-            .then((res) => {
-              if (res === undefined) {
-                console.log(
-                  "updateRecommendationAndOrganicManure returned undefined",
-                );
-              } else {
-                console.log(
-                  "updateRecommendationAndOrganicManure result:",
-                  res,
-                );
-              }
-            })
-            .catch((error) => {
-              console.error(
-                "Error updating recommendation and organic manure:",
-                error,
-              );
-            });
-        }
       }
       return { FertiliserManure: updatedFertilisers };
     });
@@ -739,51 +659,12 @@ class FertiliserManuresService extends BaseService {
         const storedProcedure =
           "EXEC [spFertiliserManures_DeleteFertiliserManures] @ID = @0";
         await transactionalManager.query(storedProcedure, [fertliserManureId]);
-
-        await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
-          crop.FieldID,
-          crop.Year,
-          request,
-          userId,
-          transactionalManager,
-        );
-        // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
-        const nextAvailableCrop = await this.cropRepository.findOne({
-          where: {
-            FieldID: crop.FieldID,
-            Year: MoreThan(crop.Year), // Find the next available year greater than the current crop.Year
-          },
-          order: {
-            Year: "ASC", // Ensure we get the next immediate year
-          },
-        });
-
-        if (nextAvailableCrop) {
-          this.UpdateRecommendation.updateRecommendationsForField(
-            crop.FieldID,
-            nextAvailableCrop.Year,
+        await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
+            crop,
+            transactionalManager,
             request,
-            userId,
-          )
-            .then((res) => {
-              if (res === undefined) {
-                console.log(
-                  "updateRecommendationAndOrganicManure returned undefined",
-                );
-              } else {
-                console.log(
-                  "updateRecommendationAndOrganicManure result:",
-                  res,
-                );
-              }
-            })
-            .catch((error) => {
-              console.error(
-                "Error updating recommendation and organic manure:",
-                error,
-              );
-            });
-        }
+            userId
+          );
         return { affectedRows: 1 }; // Success response
       } catch (error) {
         // Log the error and throw an internal server error
