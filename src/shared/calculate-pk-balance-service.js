@@ -28,7 +28,7 @@ class CalculatePKBalance {
     }
   }
 
-  async processDefoliationRecommendations(defoliationItems, cropPOfftake) {
+   processDefoliationRecommendations(defoliationItems, cropPOfftake) {
     let pBalance = 0,
       kBalance = 0;
     for (const recommendation of defoliationItems) {
