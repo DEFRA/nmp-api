@@ -7,7 +7,6 @@ class CalculatePKBalance {
     this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
   }
 
- 
   async getPKBalanceData(field, year, transactionalManager) {
     try {
       // Find the data by filtering allPKBalanceData
@@ -28,7 +27,7 @@ class CalculatePKBalance {
     }
   }
 
-   processDefoliationRecommendations(defoliationItems, cropPOfftake) {
+  processDefoliationRecommendations(defoliationItems, cropPOfftake) {
     let pBalance = 0,
       kBalance = 0;
     for (const recommendation of defoliationItems) {
@@ -51,7 +50,7 @@ class CalculatePKBalance {
   async calculatePKBalanceFromSequences(
     calculations,
     cropPOfftake,
-    fertiliserData
+    fertiliserData,
   ) {
     let pBalance = 0,
       kBalance = 0;
@@ -71,7 +70,7 @@ class CalculatePKBalance {
         );
         const balances = this.processDefoliationRecommendations(
           defoliationItems,
-          cropPOfftake
+          cropPOfftake,
         );
         pBalance += balances.pBalance;
         kBalance += balances.kBalance;
@@ -142,7 +141,7 @@ class CalculatePKBalance {
     fertiliserData,
     nutrientRecommendationsData,
     soilAndCropOffTakeContext,
-    transactionalManager
+    transactionalManager,
   ) {
     const fertiliserP = fertiliserData?.p205 ?? 0;
     const fertiliserK = fertiliserData?.k20 ?? 0;
@@ -153,7 +152,7 @@ class CalculatePKBalance {
         await this.CalculatePKBalanceOther.calculatePKBalanceOther(
           crop,
           soilAndCropOffTakeContext.latestSoilAnalysis,
-          transactionalManager
+          transactionalManager,
         );
 
       return {
@@ -176,23 +175,26 @@ class CalculatePKBalance {
         kBalance: fertiliserK,
       };
     }
-    
-    if(nutrientRecommendationsData){
 
-      // CASE 3: Has previous crop → use sequence calculation
+    // CASE 3: Has previous crop + nutrient data
+    if (nutrientRecommendationsData) {
       const pkBalCalcuationsFromNutrients =
         await this.calculatePKBalanceFromSequences(
           nutrientRecommendationsData.calculations,
           soilAndCropOffTakeContext.cropPOfftake,
-          fertiliserData
+          fertiliserData,
         );
-    
+
+      return {
+        pBalance: pkBalCalcuationsFromNutrients.pBalance,
+        kBalance: pkBalCalcuationsFromNutrients.kBalance,
+      };
+    }
 
     return {
-      pBalance: pkBalCalcuationsFromNutrients.pBalance,
-      kBalance: pkBalCalcuationsFromNutrients.kBalance,
+      pBalance: fertiliserP,
+      kBalance: fertiliserK,
     };
-  }
   }
 
   async createOrUpdatePKBalance(
@@ -202,7 +204,7 @@ class CalculatePKBalance {
     fertiliserData,
     transactionalManager,
     soilAndCropOffTakeContext,
-    previousCrop
+    previousCrop,
   ) {
     try {
       const previousYearPKBalance = await this.getPKBalanceData(
@@ -219,7 +221,7 @@ class CalculatePKBalance {
         fertiliserData,
         nutrientRecommendationsData,
         soilAndCropOffTakeContext,
-        transactionalManager
+        transactionalManager,
       );
       //geting current pKBalance
       const pkBalance = await this.getPKBalanceData(
