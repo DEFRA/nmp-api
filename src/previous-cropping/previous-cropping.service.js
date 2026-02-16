@@ -104,7 +104,7 @@ class PreviousCroppingService extends BaseService {
             greatestYearField,
             nextAvailableCrop.Year,
             request,
-            userId,
+            userId
           )
           .then((res) => {
             if (res === undefined) {

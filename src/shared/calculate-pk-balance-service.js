@@ -15,7 +15,7 @@ class CalculatePKBalance {
         {
           where: {
             Year: year,
-            FieldID: field.ID,
+            FieldID: field.ID
           },
         },
       );
@@ -50,7 +50,7 @@ class CalculatePKBalance {
   async calculatePKBalanceFromSequences(
     calculations,
     cropPOfftake,
-    fertiliserData,
+    fertiliserData
   ) {
     let pBalance = 0,
       kBalance = 0;
@@ -59,18 +59,18 @@ class CalculatePKBalance {
     const sequenceIds = [...new Set(calculations.map((c) => c.sequenceId))];
     for (const sequenceId of sequenceIds) {
       const sequenceItems = calculations.filter(
-        (c) => c.sequenceId === sequenceId,
+        (c) => c.sequenceId === sequenceId
       );
       const defoliationIds = [
-        ...new Set(sequenceItems.map((c) => c.defoliationId)),
+        ...new Set(sequenceItems.map((c) => c.defoliationId))
       ];
       for (const defoliationId of defoliationIds) {
         const defoliationItems = sequenceItems.filter(
-          (c) => c.defoliationId === defoliationId,
+          (c) => c.defoliationId === defoliationId
         );
         const balances = this.processDefoliationRecommendations(
           defoliationItems,
-          cropPOfftake,
+          cropPOfftake
         );
         pBalance += balances.pBalance;
         kBalance += balances.kBalance;
@@ -86,7 +86,7 @@ class CalculatePKBalance {
   async adjustBalanceBasedOnSoilAnalysis(
     soilAndCropOffTakeContext,
     pBalance,
-    kBalance,
+    kBalance
   ) {
     const latestSoilAnalysis =
       soilAndCropOffTakeContext?.latestSoilAnalysis || {};
@@ -95,14 +95,14 @@ class CalculatePKBalance {
     if (Object.keys(latestSoilAnalysis).length === 0) {
       return {
         pBalance: 0,
-        kBalance: 0,
+        kBalance: 0
       };
     }
 
     // If soil analysis exists but specific index is null
     return {
       pBalance: latestSoilAnalysis.PhosphorusIndex == null ? 0 : pBalance,
-      kBalance: latestSoilAnalysis.PotassiumIndex == null ? 0 : kBalance,
+      kBalance: latestSoilAnalysis.PotassiumIndex == null ? 0 : kBalance
     };
   }
 
@@ -111,7 +111,7 @@ class CalculatePKBalance {
       Year: crop.Year,
       FieldID: crop.FieldID,
       PBalance: pBalance,
-      KBalance: kBalance,
+      KBalance: kBalance
     };
 
     const now = new Date();
@@ -122,7 +122,7 @@ class CalculatePKBalance {
         ...pkBalance,
         ...baseData,
         ModifiedOn: now,
-        ModifiedByID: userId,
+        ModifiedByID: userId
       };
     }
 
@@ -130,7 +130,7 @@ class CalculatePKBalance {
     return {
       ...baseData,
       CreatedOn: now,
-      CreatedByID: userId,
+      CreatedByID: userId
     };
   }
 
@@ -141,7 +141,7 @@ class CalculatePKBalance {
     fertiliserData,
     nutrientRecommendationsData,
     soilAndCropOffTakeContext,
-    transactionalManager,
+    transactionalManager
   ) {
     const fertiliserP = fertiliserData?.p205 ?? 0;
     const fertiliserK = fertiliserData?.k20 ?? 0;
@@ -152,12 +152,12 @@ class CalculatePKBalance {
         await this.CalculatePKBalanceOther.calculatePKBalanceOther(
           crop,
           soilAndCropOffTakeContext.latestSoilAnalysis,
-          transactionalManager,
+          transactionalManager
         );
 
       return {
         pBalance: otherPKBalance.pBalance,
-        kBalance: otherPKBalance.kBalance,
+        kBalance: otherPKBalance.kBalance
       };
     }
 
