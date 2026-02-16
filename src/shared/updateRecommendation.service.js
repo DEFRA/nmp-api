@@ -1308,7 +1308,56 @@ class UpdateRecommendation {
     }
   }
 
- 
+  async processManureWarningsByManagementPeriod(
+    managementPeriodId,
+    transactionalManager,
+    userId
+  ) {
+    // 1. Call stored procedure – already sorted + flags added by SP
+    const combinedManures = await transactionalManager.query(
+      `EXEC spWarning_GetAllManuresByManagementPeriod @ManagementPeriodID = @0`,
+      [managementPeriodId]
+    );
+
+    // 2. Loop through each manure item
+    for (const manure of combinedManures) {
+      let warnings = [];
+      const finalWarnings = [];
+
+      // 3. Fertiliser warnings
+      if (manure.isFertiliserManure === true && manure.N > 0) {
+        warnings =
+          await this.CalculateFutureWarningMessageService.calculateFertiliserWarningMessage(
+            transactionalManager,
+            manure
+          );
+      }
+
+      // 4. Organic manure warnings
+      if (manure.isOrganicManure === true) {
+        warnings =
+          await this.CalculateFutureWarningMessageService.calculateOrganicManureWarningMessage(
+            transactionalManager,
+            manure
+          );
+      }
+
+      // 5. Push results safely (in case function returns array or null)
+      if (Array.isArray(warnings) && warnings.length > 0) {
+        finalWarnings.push(...warnings);
+      }
+
+      // 6. Sync warnings one-by-one for this manure
+
+      await this.CreateOrUpdateWarningMessage.syncWarningMessages(
+        manure.ManagementPeriodID,
+        manure,
+        finalWarnings,
+        transactionalManager,
+        userId
+      );
+    }
+  }
 
   async buildCropRecommendationData(
     cropData,

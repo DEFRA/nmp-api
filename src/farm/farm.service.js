@@ -83,30 +83,6 @@ class FarmService extends BaseService {
     return farm;
   }
 
-  async getFarmById(farmID) {
-    try {
-      const record = await this.repository
-        .createQueryBuilder("farm")
-        .leftJoin(CountryEntity, "country", "country.ID = farm.CountryID")
-        .addSelect("country.RB209CountryID", "RB209CountryID")
-        .where("farm.ID = :farmID", { farmID })
-        .getRawAndEntities();
-
-      if (!record.entities.length) 
-        {
-        return null;
-        }
-
-      // attach RB209CountryID into farm record
-      record.entities[0].Rb209CountryID = record.raw[0]?.RB209CountryID ?? null;
-
-      return record.entities[0];
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  }
-
   async updateFarm(updatedFarmData, userId, farmId, request) {
     const result = await AppDataSource.transaction(
       async (transactionalManager) => {
@@ -133,15 +109,10 @@ class FarmService extends BaseService {
             ModifiedOn: new Date(),
           }
         );
-        const isCountryUpdated =
-          updatedFarmData.CountryID &&
-          updatedFarmData.CountryID !== existingFarm.CountryID;
-        if (
-          isCountryUpdated &&
-          updatedFarmData.CountryID === CountryMapper.WELSH
-        ) {
-          await transactionalManager.update(
-            FieldEntity,
+
+        const isCountryUpdated =updatedFarmData.CountryID && updatedFarmData.CountryID !== existingFarm.CountryID;
+         if ( isCountryUpdated && updatedFarmData.CountryID === CountryMapper.WELSH) {
+          await transactionalManager.update( FieldEntity,
             { FarmID: farmId },
             { IsWithinNVZ: true }
           );
@@ -149,7 +120,11 @@ class FarmService extends BaseService {
         if (updateResult.affected === 0) {
           console.log(`Farm with ID ${farmId} not found`);
         }
-        if (updatedFarmData.FieldsAbove300SeaLevel !== FieldAbove300SeaLevelMapper.SomeFieldsAbove300m || updatedFarmData.NVZFields !== FieldNVZMapper.SomeFieldsInNVZ) {
+        if (
+          updatedFarmData.FieldsAbove300SeaLevel !==
+            FieldAbove300SeaLevelMapper.SomeFieldsAbove300m ||
+          updatedFarmData.NVZFields !== FieldNVZMapper.SomeFieldsInNVZ
+        ) {
           const fieldUpdateData = {};
           if (
             updatedFarmData.FieldsAbove300SeaLevel !== FieldAbove300SeaLevelMapper.SomeFieldsAbove300m
@@ -159,10 +134,12 @@ class FarmService extends BaseService {
               FieldAbove300SeaLevelMapper.AllFieldsAbove300m;
           }
           if (updatedFarmData.NVZFields !== FieldNVZMapper.SomeFieldsInNVZ) {
-            fieldUpdateData.IsWithinNVZ =updatedFarmData.NVZFields === FieldNVZMapper.AllFieldsInNVZ;
+            fieldUpdateData.IsWithinNVZ =
+              updatedFarmData.NVZFields === FieldNVZMapper.AllFieldsInNVZ;
           }
           await transactionalManager.update(
-            FieldEntity,{ FarmID: farmId },
+            FieldEntity,
+            { FarmID: farmId },
             fieldUpdateData
           );
         }

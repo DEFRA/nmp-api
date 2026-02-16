@@ -1005,7 +1005,7 @@ class CropService extends BaseService {
 
       const savedPeriod = await transactionalManager.save(
         ManagementPeriodEntity,
-        newPeriod
+        newPeriod,
       );
 
       OldToNewManagementPeriodMap[oldPeriod.ID] = savedPeriod.ID;
@@ -1033,7 +1033,7 @@ class CropService extends BaseService {
 
           const savedManure = await transactionalManager.save(
             OrganicManureEntity,
-            newManure
+            newManure,
           );
 
           OrganicManures.push(savedManure);
@@ -1170,7 +1170,7 @@ class CropService extends BaseService {
             managementPeriods,
             harvestYear,
             isOrganic,
-            isFertiliser
+            isFertiliser,
           );
          
           const otherRecommendations= await this.generateRecommendations.generateRecommendations(

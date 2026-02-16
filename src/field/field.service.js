@@ -863,7 +863,9 @@ class FieldService extends BaseService {
       await this.rB209ArableService.getData(`/Arable/CropTypes`);
 
     // Fetch the farm associated with the first field (assuming all fields belong to the same farm)
-const farm=await this.FarmService.getFarmById(fields[0].FarmID);
+    const farm = await this.farmRepository.findOne({
+      where: { ID: fields[0].FarmID },
+    });
 
     // Initialize an array to store fields with related data
     const fieldsWithRelatedData = [];

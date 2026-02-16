@@ -18,12 +18,6 @@ const CropTypeLinkingEntity = new EntitySchema({
       scale: 1,
       nullable: true,
     },
-    DefaultYieldScotland: {
-      type: "decimal",
-      precision: 18,
-      scale: 1,
-      nullable: true,
-    },
     IsPerennial: {
       type: "bit",
       nullable: false,
@@ -33,10 +27,6 @@ const CropTypeLinkingEntity = new EntitySchema({
       nullable: true,
     },
     NMaxLimitWales: {
-      type: "int",
-      nullable: true,
-    },
-    NMaxLimitScotland: {
       type: "int",
       nullable: true,
     },
