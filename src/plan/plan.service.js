@@ -2260,10 +2260,9 @@ class PlanService extends BaseService {
         for (const recommendation of calculations) {
           switch (recommendation.nutrientId) {
             case 1:
-              pBalance = pBalance - recommendation.cropNeed - cropPOfftake;
+              pBalance = pBalance - recommendation.recommendation - cropPOfftake + recommendation.manures+ recommendation.pkBalance;
               break;
-            case 2:
-              kBalance = kBalance - recommendation.cropNeed;
+            case 2: kBalance = kBalance - recommendation.recommendation + recommendation.manures + recommendation.pkBalance;
               break;
           }
         }

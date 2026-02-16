@@ -124,8 +124,8 @@ class OrganicManureService extends BaseService {
     this.CreateOrUpdateWarningMessage = new CreateOrUpdateWarningMessage();
     this.CreateOrUpdateWarningMessage = new CreateOrUpdateWarningMessage();
     this.CalculatePreviousCropService = new CalculatePreviousCropService();
-    this.ProcessFutureManuresForWarnings = new ProcessFutureManuresForWarnings();
-
+    this.ProcessFutureManuresForWarnings =
+      new ProcessFutureManuresForWarnings();
   }
 
   async getTotalNitrogenByManagementPeriod(
@@ -170,7 +170,6 @@ class OrganicManureService extends BaseService {
     confirm,
     organicManureID,
   ) {
-    
     const START_OF_DAY = {
       HOUR: 0,
       MINUTE: 0,
@@ -184,7 +183,7 @@ class OrganicManureService extends BaseService {
       SECOND: 59,
       MILLISECOND: 999,
     };
- 
+
     const fromDateFormatted = normalizeDateWithTime(fromDate, START_OF_DAY);
     const toDateFormatted = normalizeDateWithTime(toDate, END_OF_DAY);
     const query = this.repository
@@ -193,7 +192,7 @@ class OrganicManureService extends BaseService {
       .innerJoin(
         "ManagementPeriods",
         "M",
-        JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD
+        JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD,
       )
       .where("M.CropID = :cropID", { cropID })
       .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
@@ -234,12 +233,12 @@ class OrganicManureService extends BaseService {
     );
 
     const toDateFormatted = new Date(toDate);
-      toDateFormatted.setHours(
-        END_OF_DAY.HOUR,
-        END_OF_DAY.MINUTE,
-        END_OF_DAY.SECOND,
-        END_OF_DAY.MILLISECOND,
-      );
+    toDateFormatted.setHours(
+      END_OF_DAY.HOUR,
+      END_OF_DAY.MINUTE,
+      END_OF_DAY.SECOND,
+      END_OF_DAY.MILLISECOND,
+    );
 
     const query = this.repository
       .createQueryBuilder("O") // O = OrganicManures
@@ -288,7 +287,7 @@ class OrganicManureService extends BaseService {
       .innerJoin(
         "ManagementPeriods",
         "M",
-        JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD
+        JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD,
       )
       .innerJoin("Crops", "C", "M.CropID = C.ID")
       .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
@@ -589,14 +588,14 @@ class OrganicManureService extends BaseService {
     if (crops.length === 2) {
       const cropTypeIDs = crops.map((c) => c.CropTypeID);
       const isBothGrass = cropTypeIDs.every(
-        (id) => id === CropTypeMapper.GRASS
+        (id) => id === CropTypeMapper.GRASS,
       );
       const isOneGrass = cropTypeIDs.includes(CropTypeMapper.GRASS);
       const isOtherValid = cropTypeIDs.some(
-        (id) => id !== CropTypeMapper.GRASS
+        (id) => id !== CropTypeMapper.GRASS,
       );
       const isBothArable = cropTypeIDs.every(
-        (id) => id !== CropTypeMapper.GRASS
+        (id) => id !== CropTypeMapper.GRASS,
       );
 
       if (isBothGrass) return 2; // Both crops are grass
@@ -925,6 +924,7 @@ class OrganicManureService extends BaseService {
     managementPeriodID,
     organicManureData,
     organicManureAllData,
+    allManureData,
     request,
   ) {
     // Filter the organicManureAllData for the given managementPeriodID
@@ -939,8 +939,8 @@ class OrganicManureService extends BaseService {
     for (const manure of mulOrganicManuresData) {
       // Fetch manure type data for each manure by its ManureTypeID
       const manureTypeData = await this.getManureTypeData(
-        manure.ManureTypeID,
-        request,
+        allManureData,
+        manure.ManureTypeID
       );
 
       // Push each manure application details into the array
@@ -988,8 +988,8 @@ class OrganicManureService extends BaseService {
         // Handle the single organicManureData object and push its values into the array
         // Fetch manure type data for the single organicManureData object
         const manureTypeData = await this.getManureTypeData(
-          organicManureData.ManureTypeID,
-          request,
+          allManureData,
+          organicManureData.ManureTypeID
         );
 
         manureApplications.push({
@@ -1304,17 +1304,19 @@ class OrganicManureService extends BaseService {
     }
     return soilAnalysisRecords;
   }
-  async getManureTypeData(ManureTypeID, request) {
-    try {
-      const manureTypeData = await this.MannerManureTypesService.getData(
-        `/manure-types/${ManureTypeID}`,
-        request,
-      );
-      return manureTypeData;
-    } catch (error) {
-      console.error("Error fetching manure type data:", error);
-      throw new Error("Failed to get manure type data");
+  async getManureTypeData(manureTypesResponse, manureTypeID) {
+    const manureType = manureTypesResponse.data.find(
+      (mt) => mt.id === manureTypeID,
+    );
+
+    if (!manureType) {
+      console.log(`ManureType not found for ID ${manureTypeID}`);
     }
+
+    //  Match API response structure
+    return {
+      data: manureType,
+    };
   }
 
   async buildMannerOutputs(
@@ -1408,6 +1410,11 @@ class OrganicManureService extends BaseService {
       },
     });
 
+     const allManureData = await this.MannerManureTypesService.getData(
+       "/manure-types",
+       request,
+     );
+
     // Step 2: Process cropData first, then rest
     const cropsToProcess = [
       cropData,
@@ -1434,6 +1441,8 @@ class OrganicManureService extends BaseService {
         ? [matchingPeriod, ...otherPeriods]
         : otherPeriods;
 
+                 
+
       // Step 4: Process each management period
       for (const period of orderedPeriods) {
         const managementPeriodID = period.ID;
@@ -1443,6 +1452,7 @@ class OrganicManureService extends BaseService {
           managementPeriodID,
           organicManure,
           organicManureAllData,
+          allManureData,
           request,
         );
         let mannerOutputReq = null;
@@ -1840,15 +1850,11 @@ class OrganicManureService extends BaseService {
         for (const recommendation of nutrientRecommendationsData.calculations) {
           switch (recommendation.nutrientId) {
             case 1:
-              pBalance =
-                (fertiliserData == null ? 0 : fertiliserData.p205) -
-                recommendation.cropNeed -
-                cropPOfftake;
+              pBalance = (fertiliserData == null ? 0 : fertiliserData.p205) - recommendation.recommendation - cropPOfftake + recommendation.manures + recommendation.pkBalance;
               break;
             case 2:
               kBalance =
-                (fertiliserData == null ? 0 : fertiliserData.k20) -
-                recommendation.cropNeed;
+                (fertiliserData == null ? 0 : fertiliserData.k20) - recommendation.recommendation + recommendation.manures + recommendation.pkBalance;
               break;
           }
         }
@@ -1947,12 +1953,7 @@ class OrganicManureService extends BaseService {
         const endOfDrainageDate = endOfDrainageDateObj
           .toISOString()
           .split("T")[0];
-
-        const mannerManureTypeData =
-          await this.MannerManureTypesService.getData(
-            `/manure-types/${OrganicManure.ManureTypeID}`,
-            request,
-          );
+     
         const managementPeriodData =
           await this.managementPeriodRepository.findOneBy({
             ID: OrganicManure.ManagementPeriodID,
@@ -2437,16 +2438,16 @@ class OrganicManureService extends BaseService {
             }
           }
 
-           const isCurrentOrganicManure = true,
-             isCurrentFertiliser = false;
-           this.ProcessFutureManuresForWarnings.ProcessFutureManures(
-             fieldData.ID,
-             savedOrganicManure.ApplicationDate,
-             isCurrentOrganicManure,
-             isCurrentFertiliser,
-             savedOrganicManure.ID,
-             userId
-           );
+          const isCurrentOrganicManure = true,
+            isCurrentFertiliser = false;
+          this.ProcessFutureManuresForWarnings.ProcessFutureManures(
+            fieldData.ID,
+            savedOrganicManure.ApplicationDate,
+            isCurrentOrganicManure,
+            isCurrentFertiliser,
+            savedOrganicManure.ID,
+            userId,
+          );
         }
 
         if (organicManureData.SaveDefaultForFarm) {
@@ -2466,8 +2467,6 @@ class OrganicManureService extends BaseService {
             MgO: OrganicManure.MgO,
           };
         }
-
-         
       }
       if (farmManureTypeData) {
         const existingFarmManureType =
@@ -2504,8 +2503,6 @@ class OrganicManureService extends BaseService {
             }),
           );
         }
-
-       
       }
 
       return {
@@ -2981,18 +2978,17 @@ class OrganicManureService extends BaseService {
               );
             });
         }
-         const isCurrentOrganicManure=true, isCurrentFertiliser=false;
-         this.ProcessFutureManuresForWarnings.ProcessFutureManures(
-           fieldData.ID,
-           OrganicManure.ApplicationDate,
-           isCurrentOrganicManure,
-           isCurrentFertiliser,
-           ID,
-           userId
-         );
+        const isCurrentOrganicManure = true,
+          isCurrentFertiliser = false;
+        this.ProcessFutureManuresForWarnings.ProcessFutureManures(
+          fieldData.ID,
+          OrganicManure.ApplicationDate,
+          isCurrentOrganicManure,
+          isCurrentFertiliser,
+          ID,
+          userId,
+        );
       }
-
-    
 
       return {
         OrganicManure: updatedOrganicManures,
