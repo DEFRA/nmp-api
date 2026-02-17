@@ -1048,7 +1048,7 @@ class CropService extends BaseService {
           FertiliserManuresEntity,
           {
             where: { ManagementPeriodID: oldPeriod.ID },
-          },
+          }
         );
 
         for (const fert of fertilisers) {
@@ -1062,7 +1062,7 @@ class CropService extends BaseService {
 
           const savedFert = await transactionalManager.save(
             FertiliserManuresEntity,
-            newFert,
+            newFert
           );
 
           FertiliserManures.push(savedFert);
@@ -1075,7 +1075,7 @@ class CropService extends BaseService {
       Crop: savedCrop,
       ManagementPeriods,
       OrganicManures,
-      FertiliserManures,
+      FertiliserManures
     };
   }
 
@@ -1086,7 +1086,7 @@ class CropService extends BaseService {
     return await AppDataSource.transaction(async (transactionalManager) => {
       // Step 1: Get all fields for the farmID
       const fields = await transactionalManager.find(FieldEntity, {
-        where: { FarmID: farmID },
+        where: { FarmID: farmID }
       });
 
       const fieldIDs = fields.map((field) => field.ID);
@@ -1099,7 +1099,7 @@ class CropService extends BaseService {
       const crops = await transactionalManager.find(CropEntity, {
         where: {
           FieldID: In(fieldIDs),
-          Year: copyYear,
+          Year: copyYear
         },
       });
 
@@ -1109,7 +1109,7 @@ class CropService extends BaseService {
         const soilAnalysis = await transactionalManager.find(
           SoilAnalysisEntity,
           {
-            where: { FieldID: crop.FieldID },
+            where: { FieldID: crop.FieldID }
           },
         );
 
@@ -1122,7 +1122,7 @@ class CropService extends BaseService {
           {
             where: {
               FieldID: crop.FieldID,
-              Year: copyYear,
+              Year: copyYear
             },
           },
         );
@@ -1133,7 +1133,7 @@ class CropService extends BaseService {
             ID: null, // Ensure it's treated as a new insert
             Year: harvestYear,
             CreatedByID: userId,
-            CreatedOn: new Date(),
+            CreatedOn: new Date()
           };
 
           await transactionalManager.save(PKBalanceEntity, newPkBalance);
@@ -1145,7 +1145,7 @@ class CropService extends BaseService {
           {
             where: {
               FieldID: crop.FieldID,
-              Year: MoreThan(harvestYear),
+              Year: MoreThan(harvestYear)
             },
           },
         );
@@ -1157,7 +1157,7 @@ class CropService extends BaseService {
         const managementPeriods = await transactionalManager.find(
           ManagementPeriodEntity,
           {
-            where: { CropID: crop.ID },
+            where: { CropID: crop.ID }
           },
         );
 
@@ -1195,12 +1195,12 @@ class CropService extends BaseService {
 
                await transactionalManager.save(
                   PKBalanceEntity,
-                  newPKBalance,
+                  newPKBalance
                 );
               } catch (error) {
                 console.error(
                   `Error while saving PKBalance Data FieldId: ${crop.FieldID} And Year:${harvestYear}:`,
-                  error,
+                  error
                 );
               }
             } else {
@@ -1282,7 +1282,7 @@ class CropService extends BaseService {
             const manures = await transactionalManager.find(
               OrganicManureEntity,
               {
-                where: { ManagementPeriodID: oldPeriod.ID },
+                where: { ManagementPeriodID: oldPeriod.ID }
               },
             );
 
@@ -1312,7 +1312,7 @@ class CropService extends BaseService {
 
               const savedManure = await transactionalManager.save(
                 OrganicManureEntity,
-                newManure,
+                newManure
               );
               organicManures.push(savedManure);
             }
@@ -1323,7 +1323,7 @@ class CropService extends BaseService {
            await transactionalManager.find(
             RecommendationEntity,
             {
-              where: { ManagementPeriodID: oldPeriod.ID },
+              where: { ManagementPeriodID: oldPeriod.ID }
             },
           );
 
@@ -1335,7 +1335,7 @@ class CropService extends BaseService {
             const fertilisers = await transactionalManager.find(
               FertiliserManuresEntity,
               {
-                where: { ManagementPeriodID: oldPeriod.ID },
+                where: { ManagementPeriodID: oldPeriod.ID }
               },
             );
 
@@ -1357,7 +1357,7 @@ class CropService extends BaseService {
 
               const savedFert = await transactionalManager.save(
                 FertiliserManuresEntity,
-                newFert,
+                newFert
               );
               fertiliserManures.push(savedFert);
             }
@@ -1401,7 +1401,7 @@ class CropService extends BaseService {
             .catch((error) => {
               console.error(
                 "Error updating recommendation and organic manure:",
-                error,
+                error
               );
             });
         }
@@ -1422,7 +1422,7 @@ class CropService extends BaseService {
       // 1. Crop latest
       const crop = await transactionalManager.findOne(CropEntity, {
         where: { ID: cropId },
-        select: ["CreatedOn", "ModifiedOn"],
+        select: ["CreatedOn", "ModifiedOn"]
       });
 
       let cropLatest = null;
@@ -1433,7 +1433,7 @@ class CropService extends BaseService {
       // 2. Get ManagementPeriod IDs
       const periods = await transactionalManager.find(ManagementPeriodEntity, {
         where: { CropID: cropId },
-        select: ["ID"],
+        select: ["ID"]
       });
       const periodIds = periods.map((p) => p.ID);
 
@@ -1442,7 +1442,7 @@ class CropService extends BaseService {
       if (periodIds.length) {
         const organics = await transactionalManager.find(OrganicManureEntity, {
           where: { ManagementPeriodID: In(periodIds) },
-          select: ["CreatedOn", "ModifiedOn"],
+          select: ["CreatedOn", "ModifiedOn"]
         });
 
         for (const o of organics) {
@@ -1458,7 +1458,7 @@ class CropService extends BaseService {
           FertiliserManuresEntity,
           {
             where: { ManagementPeriodID: In(periodIds) },
-            select: ["CreatedOn", "ModifiedOn"],
+            select: ["CreatedOn", "ModifiedOn"]
           },
         );
 
@@ -1475,7 +1475,7 @@ class CropService extends BaseService {
           RecommendationEntity,
           {
             where: { ManagementPeriodID: In(periodIds) },
-            select: ["CreatedOn", "ModifiedOn"],
+            select: ["CreatedOn", "ModifiedOn"]
           },
         );
 
@@ -1483,7 +1483,7 @@ class CropService extends BaseService {
           const latest = await this.maxDate(r.CreatedOn, r.ModifiedOn);
           recommendationLatest = await this.maxDate(
             recommendationLatest,
-            latest,
+            latest
           );
         }
       }
@@ -1493,8 +1493,8 @@ class CropService extends BaseService {
         cropLatest,
         await this.maxDate(
           organicLatest,
-          await this.maxDate(fertiliserLatest, recommendationLatest),
-        ),
+          await this.maxDate(fertiliserLatest, recommendationLatest)
+        )
       );
 
       return finalLatest;
@@ -1512,10 +1512,10 @@ class CropService extends BaseService {
     // year,
     // confirm,
     Crops,
-    request,
+    request
   ) {
     const cropsWithID = {
-      Crops: Crops.Crops.filter((crop) => crop.Crop.ID !== null),
+      Crops: Crops.Crops.filter((crop) => crop.Crop.ID !== null)
     };
     const cropsWithoutID = Crops.Crops.filter((crop) => crop.Crop.ID === null);
 
@@ -1534,7 +1534,7 @@ class CropService extends BaseService {
         cropsWithID,
         userId,
         request,
-        transactionalManager,
+        transactionalManager
       );
 
       const createdPlan =
@@ -1542,7 +1542,7 @@ class CropService extends BaseService {
           cropsWithoutID,
           userId,
           request,
-          transactionalManager,
+          transactionalManager
         );
       return createdPlan != null
     });
@@ -1552,7 +1552,7 @@ class CropService extends BaseService {
     const cropData = await this.repository.find({
       where: {
         FieldID: fieldId,
-        Year: year,
+        Year: year
       },
     });
 
