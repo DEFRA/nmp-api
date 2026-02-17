@@ -40,15 +40,27 @@ const {
 
 const RB209GrassService = require("../vendors/rb209/grass/grass.service");
 const RB209GrasslandService = require("../vendors/rb209/grassland/grassland.service");
-const { UpdateRecommendationChanges } = require("../shared/updateRecommendationsChanges");
-const { UpdateRecommendation } = require("../shared/updateRecommendation.service");
-const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
+const {
+  UpdateRecommendationChanges,
+} = require("../shared/updateRecommendationsChanges");
+const {
+  UpdateRecommendation,
+} = require("../shared/updateRecommendation.service");
+const {
+  PreviousCroppingEntity,
+} = require("../db/entity/previous-cropping.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
 const { PreviousCroppingMapper } = require("../constants/action-mapper");
-const {FarmService}= require("../farm/farm.service");
-const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
-const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
-const { GenerateRecommendations } = require("../shared/generate-recomendations-service");
+const { FarmService } = require("../farm/farm.service");
+const {
+  ProcessFutureManuresForWarnings,
+} = require("../shared/process-future-warning-calculations-service");
+const {
+  UpdatingFutureRecommendations,
+} = require("../shared/updating-future-recommendations-service");
+const {
+  GenerateRecommendations,
+} = require("../shared/generate-recomendations-service");
 
 class FieldService extends BaseService {
   constructor() {
@@ -96,10 +108,10 @@ class FieldService extends BaseService {
     this.rB209GrassService = new RB209GrassService();
     this.rB209GrasslandService = new RB209GrasslandService();
     this.generateRecommendations = new GenerateRecommendations();
-    this.updatingFutureRecommendations = new UpdatingFutureRecommendations();  
+    this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
     this.FarmService = new FarmService();
-    this.ProcessFutureManuresForWarnings = new ProcessFutureManuresForWarnings();
-
+    this.ProcessFutureManuresForWarnings =
+      new ProcessFutureManuresForWarnings();
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -382,7 +394,7 @@ class FieldService extends BaseService {
           const oldestCrop = crops.reduce((oldest, current) =>
             current.Year < oldest.Year ? current : oldest,
           );
-          
+
           const newOrganicManure = null;
           await this.generateRecommendations.generateRecommendations(
             fieldId,
@@ -390,7 +402,7 @@ class FieldService extends BaseService {
             newOrganicManure,
             transactionalManager,
             request,
-            userId
+            userId,
           );
 
           const nextAvailableCrop = await transactionalManager.findOne(
@@ -405,7 +417,8 @@ class FieldService extends BaseService {
           );
 
           if (nextAvailableCrop) {
-            this.updatingFutureRecommendations.updateRecommendationsForField(
+            this.updatingFutureRecommendations
+              .updateRecommendationsForField(
                 fieldId,
                 nextAvailableCrop.Year,
                 request,
@@ -495,7 +508,8 @@ class FieldService extends BaseService {
               current.Year < oldest.Year ? current : oldest,
             );
 
-            this.updatingFutureRecommendations.updateRecommendationsForField(
+            this.updatingFutureRecommendations
+              .updateRecommendationsForField(
                 fieldId,
                 oldestCrop.Year,
                 request,
@@ -597,15 +611,15 @@ class FieldService extends BaseService {
     const oldestCrop = crops.reduce((oldest, current) =>
       current.Year < oldest.Year ? current : oldest,
     );
-    
-    const newOrganicManure= null;
+
+    const newOrganicManure = null;
     await this.generateRecommendations.generateRecommendations(
       fieldId,
       oldestCrop.Year,
       newOrganicManure,
       transactionalManager,
       request,
-      userId
+      userId,
     );
 
     const nextCrop = await transactionalManager.findOne(CropEntity, {
@@ -617,7 +631,8 @@ class FieldService extends BaseService {
     });
 
     if (nextCrop) {
-      this.updatingFutureRecommendations.updateRecommendationsForField(fieldId, nextCrop.Year, request, userId)
+      this.updatingFutureRecommendations
+        .updateRecommendationsForField(fieldId, nextCrop.Year, request, userId)
         .catch(console.error);
     }
   }
@@ -704,7 +719,7 @@ class FieldService extends BaseService {
 
       order: { Year: "DESC", Date: "DESC" },
     });
-   
+
     const cropData = await this.cropRepository.findOne({
       where: {
         FieldID: fieldId,
@@ -839,9 +854,9 @@ class FieldService extends BaseService {
     IncorporationDelayID,
     allIncorporationDelaysData,
   ) {
-       const incorporationDelayData = allIncorporationDelaysData.find(
-         (mt) => mt.id === IncorporationDelayID
-       );
+    const incorporationDelayData = allIncorporationDelaysData.find(
+      (mt) => mt.id === IncorporationDelayID,
+    );
     return incorporationDelayData.name;
   }
 
@@ -863,9 +878,7 @@ class FieldService extends BaseService {
       await this.rB209ArableService.getData(`/Arable/CropTypes`);
 
     // Fetch the farm associated with the first field (assuming all fields belong to the same farm)
-    const farm = await this.farmRepository.findOne({
-      where: { ID: fields[0].FarmID },
-    });
+    const farm = await this.FarmService.getFarmById(fields[0].FarmID);
 
     // Initialize an array to store fields with related data
     const fieldsWithRelatedData = [];

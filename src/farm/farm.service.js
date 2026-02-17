@@ -4,20 +4,29 @@ const { BaseService } = require("../base/base.service");
 const { AppDataSource } = require("../db/data-source");
 const { FieldEntity } = require("../db/entity/field.entity");
 const { getRepository } = require("typeorm");
-const {FieldNVZMapper}=require("../constants/field-nvz-mapper");
-const {FieldAbove300SeaLevelMapper}=require("../constants/field-above-300-sea-level-mapper");
+const { FieldNVZMapper } = require("../constants/field-nvz-mapper");
+const {
+  FieldAbove300SeaLevelMapper,
+} = require("../constants/field-above-300-sea-level-mapper");
 const { CountryMapper } = require("../constants/country-mapper");
-const { ExcessRainfallService } = require("../excess-rainfall/excess-rainfall.service");
-const { ProcessFieldsService } = require("../shared/process-fields-for-recommendations.service");
+const {
+  ExcessRainfallService,
+} = require("../excess-rainfall/excess-rainfall.service");
+const {
+  ProcessFieldsService,
+} = require("../shared/process-fields-for-recommendations.service");
 const { CountryEntity } = require("../db/entity/country.entity");
-const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
+const {
+  ProcessFutureManuresForWarnings,
+} = require("../shared/process-future-warning-calculations-service");
 
 class FarmService extends BaseService {
   constructor() {
     super(FarmEntity);
     this.repository = getRepository(FarmEntity);
     this.ProcessFieldsService = new ProcessFieldsService();
-    this.ProcessFutureManuresForWarnings = new ProcessFutureManuresForWarnings();
+    this.ProcessFutureManuresForWarnings =
+      new ProcessFutureManuresForWarnings();
   }
   async farmExistsByNameAndPostcode(farmName, postcode, id = null) {
     return (await this.farmCountByNameAndPostcode(farmName, postcode, id)) > 0;
@@ -58,7 +67,7 @@ class FarmService extends BaseService {
     const farmBody = farm.Farm;
     const farmExists = await this.farmExistsByNameAndPostcode(
       farmBody.Name.trim(),
-      farmBody.Postcode.trim()
+      farmBody.Postcode.trim(),
     );
     if (farmExists) {
       throw boom.badRequest("Farm already exists with this Name and Postcode");
@@ -81,6 +90,29 @@ class FarmService extends BaseService {
       },
     });
     return farm;
+  }
+
+  async getFarmById(farmID) {
+    try {
+      const record = await this.repository
+        .createQueryBuilder("farm")
+        .leftJoin(CountryEntity, "country", "country.ID = farm.CountryID")
+        .addSelect("country.RB209CountryID", "RB209CountryID")
+        .where("farm.ID = :farmID", { farmID })
+        .getRawAndEntities();
+
+      if (!record.entities.length) {
+        return null;
+      }
+
+      // attach RB209CountryID into farm record
+      record.entities[0].Rb209CountryID = record.raw[0]?.RB209CountryID ?? null;
+
+      return record.entities[0];
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   }
 
   async updateFarm(updatedFarmData, userId, farmId, request) {
@@ -107,14 +139,19 @@ class FarmService extends BaseService {
             ...updateData,
             ModifiedByID: userId,
             ModifiedOn: new Date(),
-          }
+          },
         );
-
-        const isCountryUpdated =updatedFarmData.CountryID && updatedFarmData.CountryID !== existingFarm.CountryID;
-         if ( isCountryUpdated && updatedFarmData.CountryID === CountryMapper.WELSH) {
-          await transactionalManager.update( FieldEntity,
+        const isCountryUpdated =
+          updatedFarmData.CountryID &&
+          updatedFarmData.CountryID !== existingFarm.CountryID;
+        if (
+          isCountryUpdated &&
+          updatedFarmData.CountryID === CountryMapper.WELSH
+        ) {
+          await transactionalManager.update(
+            FieldEntity,
             { FarmID: farmId },
-            { IsWithinNVZ: true }
+            { IsWithinNVZ: true },
           );
         }
         if (updateResult.affected === 0) {
@@ -127,7 +164,8 @@ class FarmService extends BaseService {
         ) {
           const fieldUpdateData = {};
           if (
-            updatedFarmData.FieldsAbove300SeaLevel !== FieldAbove300SeaLevelMapper.SomeFieldsAbove300m
+            updatedFarmData.FieldsAbove300SeaLevel !==
+            FieldAbove300SeaLevelMapper.SomeFieldsAbove300m
           ) {
             fieldUpdateData.IsAbove300SeaLevel =
               updatedFarmData.FieldsAbove300SeaLevel ===
@@ -140,21 +178,24 @@ class FarmService extends BaseService {
           await transactionalManager.update(
             FieldEntity,
             { FarmID: farmId },
-            fieldUpdateData
+            fieldUpdateData,
           );
         }
         this.ProcessFieldsService.processFieldsForRecommendation(
           farmId,
           request,
-          userId
+          userId,
         );
-        this.ProcessFutureManuresForWarnings.processWarningsByFarm(farmId,userId);
+        this.ProcessFutureManuresForWarnings.processWarningsByFarm(
+          farmId,
+          userId,
+        );
 
         const updatedFarm = await transactionalManager.findOne(FarmEntity, {
           where: { ID: farmId },
         });
         return updatedFarm;
-      }
+      },
     );
     return result;
   }
