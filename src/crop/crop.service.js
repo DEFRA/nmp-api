@@ -14,22 +14,15 @@ const {
   FertiliserManuresEntity,
 } = require("../db/entity/fertiliser-manures.entity");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
-const {
-  UpdateRecommendation,
-} = require("../shared/updateRecommendation.service");
+
 const { FieldEntity } = require("../db/entity/field.entity");
-const { MoreThan, Between, Not } = require("typeorm");
+const { MoreThan } = require("typeorm");
 const { In } = require("typeorm");
-const {
-  UpdateRecommendationChanges,
-} = require("../shared/updateRecommendationsChanges");
 const {
   SecondCropLinkingEntity,
 } = require("../db/entity/second-crop-linking.entity");
-const { CountryEntity } = require("../db/entity/country.entity");
 const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const RB209SoilService = require("../vendors/rb209/soil/soil.service");
-const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
 const {
@@ -37,12 +30,8 @@ const {
 } = require("../grass-growth-plan/grass-growth-plan.service");
 const { CropOrderMapper } = require("../constants/crop-order-mapper");
 const {
-  ExcessRainfallsEntity,
-} = require("../db/entity/excess-rainfalls.entity");
-const {
   CalculateGrassHistoryAndPreviousGrass,
 } = require("../shared/calculate-previous-grass-id.service");
-const { FieldTypeMapper } = require("../constants/field-type-mapper");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
 const {
   CalculateMannerOutputService,
@@ -50,18 +39,13 @@ const {
 const {
   RecommendationCommentEntity,
 } = require("../db/entity/recommendation-comment.entity");
-const { NutrientMapperNames } = require("../constants/nutrient-mapper-names");
 const {
   RB209RecommendationService,
 } = require("../vendors/rb209/recommendation/recommendation.service");
 const {
   CalculateCropsSnsAnalysisService,
 } = require("../shared/calculate-crops-sns-analysis-service");
-const {
-  CropTypeLinkingEntity,
-} = require("../db/entity/crop-type-linking.entity");
 const PlanService = require("../plan/plan.service");
-const { FieldAboveOrBelowSeaLevelMapper } = require("../constants/field-is-above-sea-level");
 const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
 const { ARABLE } = require("../constants/rb209-endpoints-mapper");
 const { GenerateRecommendations } = require("../shared/generate-recomendations-service");

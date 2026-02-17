@@ -2,11 +2,7 @@ const { AppDataSource } = require("../db/data-source");
 const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const { BaseService } = require("../base/base.service");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
-const {
-  UpdateRecommendation,
-} = require("../shared/updateRecommendation.service");
 const { MoreThan } = require("typeorm");
-const { UpdateRecommendationChanges } = require("../shared/updateRecommendationsChanges");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { GenerateRecommendations } = require("../shared/generate-recomendations-service");
 const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");

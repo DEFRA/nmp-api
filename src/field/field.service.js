@@ -29,23 +29,13 @@ const { Between, MoreThan } = require("typeorm");
 const RB209ArableService = require("../vendors/rb209/arable/arable.service");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
 const MannerApplicationMethodService = require("../vendors/manner/application-method/application-method.service");
-const {
-  IncorporationMethodService,
-} = require("../incorporation-method/incorporation-method.service");
 const MannerIncorporationMethodService = require("../vendors/manner/incorporation-method/incorporation-method.service");
 const MannerIncorporationDelayService = require("../vendors/manner/incorporation-delay/incorporation-delay.service");
 const {
   GrassManagementOptionsEntity,
 } = require("../db/entity/grassManagementOptionsEntity");
-
 const RB209GrassService = require("../vendors/rb209/grass/grass.service");
 const RB209GrasslandService = require("../vendors/rb209/grassland/grassland.service");
-const {
-  UpdateRecommendationChanges,
-} = require("../shared/updateRecommendationsChanges");
-const {
-  UpdateRecommendation,
-} = require("../shared/updateRecommendation.service");
 const {
   PreviousCroppingEntity,
 } = require("../db/entity/previous-cropping.entity");

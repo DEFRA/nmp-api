@@ -38,33 +38,21 @@ const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const {
   FertiliserManuresEntity,
 } = require("../db/entity/fertiliser-manures.entity");
-const {
-  UpdateRecommendation,
-} = require("../shared/updateRecommendation.service");
 const { SoilTypeSoilTextureEntity } = require("../db/entity/soil-type-soil-texture.entity");
 const { CountryEntity } = require("../db/entity/country.entity");
 const RB209SoilService = require("../vendors/rb209/soil/soil.service");
-const { NutrientMapperNames } = require("../constants/nutrient-mapper-names");
-const { UpdateRecommendationChanges } = require("../shared/updateRecommendationsChanges");
 const { GrassGrowthService } = require("../grass-growth-plan/grass-growth-plan.service");
 const { ExcessRainfallsEntity } = require("../db/entity/excess-rainfalls.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
 const { CalculateMannerOutputService } = require("../shared/calculate-manner-output-service");
-const { FieldTypeMapper } = require("../constants/field-type-mapper");
 const { CalculateGrassHistoryAndPreviousGrass } = require("../shared/calculate-previous-grass-id.service");
 const { CalculateTotalAvailableNForNextYear } = require("../shared/calculate-next-year-available-n");
-const { CropOrderMapper } = require("../constants/crop-order-mapper");
 const { CalculateNextDefoliationService } = require("../shared/calculate-next-defoliation-totalN");
 const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-other");
 const { WarningMessagesEntity } = require("../db/entity/warning-message.entity");
 const { CreateOrUpdateWarningMessage } = require("../shared/create-update-warning-messages.service");
 const { WarningCodesMapper } = require("../constants/warning-codes-mapper");
-const { RunTypeMapper } = require("../constants/run-type-mapper");
-const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
-
 const { CalculatePreviousCropService } = require("../shared/previous-year-crop-service");
-const { FieldAboveOrBelowSeaLevelMapper } = require("../constants/field-is-above-sea-level");
-const { StaticStrings } = require("../shared/static.string");
 const { ManureTypeMapper } = require("../constants/manure-type-mapper");
 const { normalizeDateWithTime } = require("../shared/dataValidate");
 const { JOINS } = require("../constants/joins-mapper");
