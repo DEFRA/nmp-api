@@ -81,7 +81,7 @@ class ExcessRainfallService extends BaseService {
       {
         ...dataToUpdate,
         ModifiedByID: userId,
-        ModifiedOn: new Date(),
+        ModifiedOn: new Date()
       }
     );
 
@@ -92,11 +92,11 @@ class ExcessRainfallService extends BaseService {
     }
 
     const updatedExcessRainfall = await this.repository.findOne({
-      where: { FarmID: farmId, Year: year }, // Find by FarmID and Year
+      where: { FarmID: farmId, Year: year }// Find by FarmID and Year
     });
 
         const fields = await this.fieldRepository.find({
-          where: { FarmID: farmId },
+          where: { FarmID: farmId }
         });
 
         // Extract the list of fieldIds from the result
