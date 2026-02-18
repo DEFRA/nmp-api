@@ -327,7 +327,7 @@ class CalculateGrassHistoryAndPreviousGrass {
     const hasConsecutiveLey = fieldTypesArray
       .sort((a, b) => b.processingYear - a.processingYear) // latest → oldest
       .some((item, index, arr) => {
-        if (index === arr.length - 1) return false;
+        if (index === arr.length - 1) {return false};
 
         return (
           item.fieldType === 2 &&
