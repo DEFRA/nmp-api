@@ -323,7 +323,7 @@ class CalculateGrassHistoryAndPreviousGrass {
   async calculateLeyDuration(fieldTypesArray, transactionalManager) {
     const leyCount = await this.calculateLeyFromCropData(fieldTypesArray);
 
-    // ✅ Check if fieldType 2 is consecutive
+    // Check if fieldType 2 is consecutive
     const hasConsecutiveLey = fieldTypesArray
       .sort((a, b) => b.processingYear - a.processingYear) // latest → oldest
       .some((item, index, arr) => {
@@ -336,12 +336,12 @@ class CalculateGrassHistoryAndPreviousGrass {
         );
       });
 
-    // ❌ If not consecutive, stop here
+    // If not consecutive, stop here
     if (!hasConsecutiveLey && leyCount > 0) {
-      return leyCount;
+      return {leyCount};
     }
 
-    // ✅ Only proceed to history if consecutive
+    // Only proceed to history if consecutive
     if (leyCount < 2) {
       const historyLey = await this.calculateLeyFromHistory(
         fieldTypesArray,
@@ -349,13 +349,13 @@ class CalculateGrassHistoryAndPreviousGrass {
       );
 
       if (historyLey != null) {
-        return historyLey;
+        return {historyLey};
       }
     }
 
-    if (leyCount > 2) return 2;
-    if (leyCount > 0) return 1;
-
+    if (leyCount > 2) {return 2};
+    if (leyCount > 0) {return 1};
+     return 1
   }
 
   async getExtendedFieldTypesForLeyCheck(
