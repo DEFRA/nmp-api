@@ -1,7 +1,6 @@
 const { AppDataSource } = require("../db/data-source");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { FieldEntity } = require("../db/entity/field.entity");
-const { UpdateRecommendation } = require("./updateRecommendation.service");
 const { UpdatingFutureRecommendations } = require("./updating-future-recommendations-service");
 
 

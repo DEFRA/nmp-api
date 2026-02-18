@@ -10,9 +10,6 @@ const {
 } = require("../constants/field-above-300-sea-level-mapper");
 const { CountryMapper } = require("../constants/country-mapper");
 const {
-  ExcessRainfallService,
-} = require("../excess-rainfall/excess-rainfall.service");
-const {
   ProcessFieldsService,
 } = require("../shared/process-fields-for-recommendations.service");
 const { CountryEntity } = require("../db/entity/country.entity");
