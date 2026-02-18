@@ -26,9 +26,9 @@ class HanldeMannerAndAnalysis {
       );
     const { latestSoilAnalysis, soilAnalysisRecords } = await this.HandleSoilAnalysisService.handleSoilAnalysisValidation(
         fieldID,
-        fieldRelatedData.Name,
         crop.Year,
-        fieldRelatedData.RB209CountryID
+        fieldRelatedData.RB209CountryID,
+        transactionalManager
       );
 
     const mannerOutputs =
