@@ -21,7 +21,7 @@ const FarmsNVZEntity = new EntitySchema({
     NVZProgrammeName: {
       type: "nvarchar",
       length: 128,
-    },    
+    },
     CreatedOn: {
       type: "datetime2",
       nullable: true,
@@ -44,8 +44,8 @@ const FarmsNVZEntity = new EntitySchema({
     },
   },
   relations: {
-    Farm: {
-      type: "one-to-many",
+    Farms: {
+      type: "many-to-one",
       target: "Farm",
       joinColumn: { name: "FarmID" },
       inverseSide: "FarmsNVZ",

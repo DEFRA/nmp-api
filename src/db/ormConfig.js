@@ -89,6 +89,7 @@ const { WarningMessagesEntity } = require("./entity/warning-message.entity.js");
 const { PreviousCroppingEntity } = require("./entity/previous-cropping.entity.js");
 const { WarningCodeEntity } = require("./entity/warning-code.entity.js");
 const { WarningsEntity } = require("./entity/warning.entity.js");
+const { FarmsNVZEntity } = require("./entity/farms-nvz.entity.js");
 
 
 
@@ -164,7 +165,8 @@ const baseConfig = {
     WarningMessagesEntity,
     PreviousCroppingEntity,
     WarningCodeEntity,
-    WarningsEntity
+    WarningsEntity,
+    FarmsNVZEntity
   ],
 };
 
