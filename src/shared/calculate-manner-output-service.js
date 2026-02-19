@@ -229,7 +229,7 @@ class CalculateMannerOutputService {
     mannerCropTypeID,
     manureApplications,
     soilTypeTextureData,
-    transactionalManager
+    transactionalManager,
   ) {
     const rb209CountryData = await transactionalManager.findOne(CountryEntity, {
       where: {
@@ -248,44 +248,61 @@ class CalculateMannerOutputService {
         MannerCropTypeID: mannerCropTypeID,
         topsoilID: soilTypeTextureData.TopSoilID,
         subsoilID: soilTypeTextureData.SubSoilID,
-        isInNVZ: fieldData.IsWithinNVZ
+        isInNVZ: fieldData.IsWithinNVZ,
       },
-      manureApplications
+      manureApplications,
     };
   }
 
   async getMannerCropTypeId(crop, transactionalManager) {
-    if (!crop?.CropTypeID) {
-      console.log("Invalid crop data");
-    }
+    const SEPTEMBER_MONTH_INDEX = 8; 
+    const JULY_MONTH_INDEX = 6;
+    const LATE_SOWN_START_DAY = 15;
+    const LATE_SOWN_END_DAY = 31;
+    if (!crop?.CropTypeID) {console.log("Invalid crop data: CropTypeID is required");}
+
     const cropTypeLinkingData = await transactionalManager.findOne(
       CropTypeLinkingEntity,
       {
         where: {
-          CropTypeID: crop.CropTypeID
+          CropTypeID: crop.CropTypeID,
         },
       },
     );
+
     if (!cropTypeLinkingData) {
       console.log(`CropTypeLinking not found for CropTypeID ${crop.CropTypeID}`);
     }
-    // Default MannerCropTypeID
-    let mannerCropTypeId = cropTypeLinkingData.MannerCropTypeID;
+
+    // Default value
+    const defaultMannerCropTypeId = cropTypeLinkingData?.MannerCropTypeID;
 
     if (!crop.SowingDate) {
-      return mannerCropTypeId;
+      return defaultMannerCropTypeId;
     }
-    const sowingDate = new Date(crop.SowingDate);
-    const fifteenthSeptember = new Date(crop.Year, 8, 15); // 15 Sept (Month 8)
-    const thirtyFirstJulyNextYear = new Date(crop.Year + 1, 6, 31); // 31 July next year
 
-    const isLateSown = sowingDate > fifteenthSeptember && sowingDate <= thirtyFirstJulyNextYear;
+    const sowingDate = new Date(crop.SowingDate);
+
+    const lateSownStartDate = new Date(
+      crop.Year,
+      SEPTEMBER_MONTH_INDEX,
+      LATE_SOWN_START_DAY,
+    );
+
+    const lateSownEndDate = new Date(
+      crop.Year + 1,
+      JULY_MONTH_INDEX,
+      LATE_SOWN_END_DAY
+    );
+
+    const isLateSown =
+      sowingDate > lateSownStartDate && sowingDate <= lateSownEndDate;
 
     if (isLateSown && cropTypeLinkingData.LateSownMannerCropTypeID) {
-      mannerCropTypeId = cropTypeLinkingData.LateSownMannerCropTypeID;
+      return cropTypeLinkingData.LateSownMannerCropTypeID;
     }
 
-    return mannerCropTypeId;
+    return defaultMannerCropTypeId;
   }
 
   async calculateMannerOutputForOrganicManure(
@@ -326,13 +343,13 @@ class CalculateMannerOutputService {
       );
       const mannerCropTypeID = await this.getMannerCropTypeId(
         crop,
-        transactionalManager
+        transactionalManager,
       );
       const soilTypeTextureData = await transactionalManager.findOne(
         SoilTypeSoilTextureEntity,
         {
           where: {
-            SoilTypeID: fieldData.SoilTypeID
+            SoilTypeID: fieldData.SoilTypeID,
           },
         },
       );
@@ -376,7 +393,7 @@ class CalculateMannerOutputService {
             mannerCropTypeID,
             manureApplications,
             soilTypeTextureData,
-            transactionalManager
+            transactionalManager,
           );
         } else {
           console.log("there is no manure for the crop");
@@ -387,7 +404,7 @@ class CalculateMannerOutputService {
           mannerOutput = await this.MannerCalculateNutrientsService.postData(
             "/calculate-nutrients",
             mannerOutputReq,
-            request
+            request,
           );
         }
         let output = [];
