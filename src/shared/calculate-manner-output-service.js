@@ -106,7 +106,7 @@ class CalculateMannerOutputService {
     managementPeriodID,
     organicManureData,
     allManureData,
-    transactionalManager
+    transactionalManager,
   ) {
     // Filter the organicManureAllData for the given managementPeriodID
     const mulOrganicManuresData = await transactionalManager.find(
@@ -124,7 +124,7 @@ class CalculateMannerOutputService {
       // Fetch manure type data for each manure by its ManureTypeID
       const manureTypeData = await this.getManureTypeData(
         allManureData,
-        manure.ManureTypeID
+        manure.ManureTypeID,
       );
 
       // Push each manure application details into the array
@@ -175,7 +175,7 @@ class CalculateMannerOutputService {
           // Fetch manure type data for the single organicManureData object
           const manureTypeData = await this.getManureTypeData(
             allManureData,
-            organicManureData.ManureTypeID
+            organicManureData.ManureTypeID,
           );
 
           manureApplications.push({
@@ -226,8 +226,7 @@ class CalculateMannerOutputService {
   async buildMannerOutputReq(
     farmData,
     fieldData,
-    cropTypeLinkingData,
-    organicManureData,
+    mannerCropTypeID,
     manureApplications,
     soilTypeTextureData,
     transactionalManager,
@@ -246,7 +245,7 @@ class CalculateMannerOutputService {
       field: {
         fieldID: fieldData.ID,
         fieldName: fieldData.Name,
-        MannerCropTypeID: cropTypeLinkingData.MannerCropTypeID,
+        MannerCropTypeID: mannerCropTypeID,
         topsoilID: soilTypeTextureData.TopSoilID,
         subsoilID: soilTypeTextureData.SubSoilID,
         isInNVZ: fieldData.IsWithinNVZ,
@@ -254,6 +253,58 @@ class CalculateMannerOutputService {
       manureApplications,
     };
   }
+
+  async getMannerCropTypeId(crop, transactionalManager) {
+    const SEPTEMBER_MONTH_INDEX = 8; 
+    const JULY_MONTH_INDEX = 6;
+    const LATE_SOWN_START_DAY = 15;
+    const LATE_SOWN_END_DAY = 31;
+    if (!crop?.CropTypeID) {console.log("Invalid crop data: CropTypeID is required");}
+
+    const cropTypeLinkingData = await transactionalManager.findOne(
+      CropTypeLinkingEntity,
+      {
+        where: {
+          CropTypeID: crop.CropTypeID,
+        },
+      },
+    );
+
+    if (!cropTypeLinkingData) {
+      console.log(`CropTypeLinking not found for CropTypeID ${crop.CropTypeID}`);
+    }
+
+    // Default value
+    const defaultMannerCropTypeId = cropTypeLinkingData?.MannerCropTypeID;
+
+    if (!crop.SowingDate) {
+      return defaultMannerCropTypeId;
+    }
+
+    const sowingDate = new Date(crop.SowingDate);
+
+    const lateSownStartDate = new Date(
+      crop.Year,
+      SEPTEMBER_MONTH_INDEX,
+      LATE_SOWN_START_DAY,
+    );
+
+    const lateSownEndDate = new Date(
+      crop.Year + 1,
+      JULY_MONTH_INDEX,
+      LATE_SOWN_END_DAY
+    );
+
+    const isLateSown =
+      sowingDate > lateSownStartDate && sowingDate <= lateSownEndDate;
+
+    if (isLateSown && cropTypeLinkingData.LateSownMannerCropTypeID) {
+      return cropTypeLinkingData.LateSownMannerCropTypeID;
+    }
+
+    return defaultMannerCropTypeId;
+  }
+
   async calculateMannerOutputForOrganicManure(
     cropData,
     organicManure,
@@ -272,10 +323,10 @@ class CalculateMannerOutputService {
       },
     });
 
-     const allManureData = await this.MannerManureTypesService.getData(
-       "/manure-types",
-       request,
-     );
+    const allManureData = await this.MannerManureTypesService.getData(
+      "/manure-types",
+      request,
+    );
 
     // Step 2: Process cropData first, then rest
     const cropsToProcess = [
@@ -290,16 +341,10 @@ class CalculateMannerOutputService {
         ManagementPeriodEntity,
         { where: { CropID: crop.ID } },
       );
-
-      const cropTypeLinkingData = await transactionalManager.findOne(
-        CropTypeLinkingEntity,
-        {
-          where: {
-            CropTypeID: crop.CropTypeID,
-          },
-        },
+      const mannerCropTypeID = await this.getMannerCropTypeId(
+        crop,
+        transactionalManager,
       );
-
       const soilTypeTextureData = await transactionalManager.findOne(
         SoilTypeSoilTextureEntity,
         {
@@ -314,7 +359,6 @@ class CalculateMannerOutputService {
         orderedPeriods = null;
 
       if (organicManure != null) {
-        // Separate periods: one matching organicManure.ManagementPeriodID, then others
         matchingPeriod = managementPeriods.find(
           (p) => p.ID === organicManure.ManagementPeriodID,
         );
@@ -338,7 +382,7 @@ class CalculateMannerOutputService {
           managementPeriodID,
           organicManure,
           allManureData,
-          transactionalManager
+          transactionalManager,
         );
         let mannerOutputReq = null;
         // 4.2: Build mannerOutputReq
@@ -346,8 +390,7 @@ class CalculateMannerOutputService {
           mannerOutputReq = await this.buildMannerOutputReq(
             farmData,
             fieldData,
-            cropTypeLinkingData,
-            organicManure,
+            mannerCropTypeID,
             manureApplications,
             soilTypeTextureData,
             transactionalManager,
