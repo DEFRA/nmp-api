@@ -412,6 +412,7 @@ class FertiliserManuresService extends BaseService {
                   fieldData[0].Name,
                   cropData[0]?.Year,
                   rb209CountryData.RB209CountryID,
+                  transactionalManager
                 );
 
                 if (cropData[0].CropTypeID == CropTypeMapper.OTHER) {
