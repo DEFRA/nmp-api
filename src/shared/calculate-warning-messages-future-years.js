@@ -379,8 +379,8 @@ class CalculateFutureWarningMessageService {
     const common =
       sp.IsGrassCropType &&
       sp.IsInsideClosedPeriodToOctober &&
-      sp.IsCurrentNAbove40 &&
-      sp.IsTotalClosedPeriodNAbove80;
+      (sp.IsCurrentNAbove40 ||
+      sp.IsTotalClosedPeriodNAbove80);
 
     const england = sp.IsFieldInEngland && sp.IsWithinNVZ;
     const wales = sp.IsFieldInWales;
