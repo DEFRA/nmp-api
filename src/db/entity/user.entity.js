@@ -211,6 +211,18 @@ const UserEntity = new EntitySchema({
       inverseSide: "ModifiedByUser",
       joinColumn: { name: "ID" },
     },
+    CreatedFarmsNvz: {
+      type: "one-to-many",
+      target: "FarmsNVZ",
+      inverseSide: "CreatedByUserFarmNvz",
+      joinColumn: { name: "ID" },
+    },
+    ModifiedFarmsNvz: {
+      type: "one-to-many",
+      target: "FarmsNVZ",
+      inverseSide: "ModifiedByUserFarmNvz",
+      joinColumn: { name: "ID" },
+    },
   },
 });
 

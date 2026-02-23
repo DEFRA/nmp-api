@@ -16,6 +16,7 @@ const { CountryEntity } = require("../db/entity/country.entity");
 const {
   ProcessFutureManuresForWarnings,
 } = require("../shared/process-future-warning-calculations-service");
+const { FarmsNVZEntity } = require("../db/entity/farms-nvz.entity");
 
 class FarmService extends BaseService {
   constructor() {
@@ -62,6 +63,7 @@ class FarmService extends BaseService {
 
   async createFarm(farm, userId) {
     const farmBody = farm.Farm;
+    const farmNvzList = farm.FarmNvz;
     const farmExists = await this.farmExistsByNameAndPostcode(
       farmBody.Name.trim(),
       farmBody.Postcode.trim(),
@@ -75,9 +77,25 @@ class FarmService extends BaseService {
       Name: farmBody.Name.trim(),
       Postcode: farmBody.Postcode.trim(),
       CreatedByID: userId,
-      CreatedOn: new Date(),
+      CreatedOn: new Date()
     });
-    return newFarm;
+
+     let savedNVZ = [];
+     if (Array.isArray(farmNvzList) && farmNvzList.length > 0) {
+       const nvzEntities = farmNvzList.map((nvz) => ({
+         ...nvz,
+         FarmID: newFarm.ID,
+         CreatedByID: userId,
+         CreatedOn: new Date()
+       }));
+
+       savedNVZ = await manager.save(FarmsNVZEntity, nvzEntities);
+     }
+
+    return {
+      Farm: newFarm,
+      FarmNVZ: savedNVZ
+    };
   }
   async getFarm(name, postcode) {
     const farm = await this.repository.findOne({

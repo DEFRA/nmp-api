@@ -50,7 +50,19 @@ const FarmsNVZEntity = new EntitySchema({
       joinColumn: { name: "FarmID" },
       inverseSide: "FarmsNVZ",
     },
-  },
+    CreatedByUserFarmNvz: {
+      type: "many-to-one",
+      target: "User",
+      joinColumn: { name: "CreatedByID" },
+      inverseSide: "CreatedFarmsNVZ"
+    },
+    ModifiedByUserFarmNvz: {
+      type: "many-to-one",
+      target: "User",
+      joinColumn: { name: "ModifiedByID" },
+      inverseSide: "ModifiedFarmsNVZ"
+    }
+  }
 });
 
 module.exports = { FarmsNVZEntity };
