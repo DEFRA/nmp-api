@@ -68,12 +68,10 @@ class FarmService extends BaseService {
         const farmNvzList = farm.FarmNvz;
         const farmExists = await this.farmExistsByNameAndPostcode(
           farmBody.Name.trim(),
-          farmBody.Postcode.trim(),
+          farmBody.Postcode.trim()
         );
         if (farmExists) {
-          throw boom.badRequest(
-            "Farm already exists with this Name and Postcode",
-          );
+          throw boom.badRequest("Farm already exists with this Name and Postcode");
         }
         const newFarm = await transactionalManager.save(FarmEntity, {
           ...farmBody,
