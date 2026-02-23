@@ -766,7 +766,7 @@ class FieldService extends BaseService {
   }
 
   // Helper function to fetch crop type name
-  async ManureTypeName(ManureTypeID, manureTypesResponse) {
+  async getManureTypeName(ManureTypeID, manureTypesResponse) {
     const manureTypeData = manureTypesResponse.find(
       (mt) => mt.id === ManureTypeID,
     );
@@ -802,19 +802,6 @@ class FieldService extends BaseService {
       allIncorporationMethodsData: allIncorporationMethodsData.data,
       allIncorporationDelaysData: allIncorporationDelaysData.data,
     };
-  }
-
-  async getManureTypeById(manureTypesResponse, manureTypeID) {
-    const manureType = manureTypesResponse.data.find(
-      (mt) => mt.id === manureTypeID,
-    );
-
-    if (!manureType) {
-      console.log(`ManureType not found for ID ${manureTypeID}`);
-    }
-
-    //  Match API response structure
-    return;
   }
 
   // Helper function to fetch crop type name
@@ -1058,7 +1045,7 @@ class FieldService extends BaseService {
               // Add manure-related names to each OrganicManure object
               const organicManuresWithNames = [];
               for (const manure of organicManures) {
-                const manureTypeName = await this.ManureTypeName(
+                const manureTypeName = await this.getManureTypeName(
                   manure.ManureTypeID,
                   allManureData,
                 );

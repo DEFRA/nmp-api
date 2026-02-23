@@ -30,7 +30,7 @@ class EnvironmentService {
 
   static DATABASE_PORT() {
     get: {
-      return parseInt(this.getEnv("DATABASE_PORT"));
+      return Number.parseInt(this.getEnv("DATABASE_PORT"));
     }
   }
 

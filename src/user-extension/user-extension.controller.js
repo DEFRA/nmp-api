@@ -45,23 +45,7 @@ class UserExtensionController {
       return this.#h.response({ error });
     }
   }
-  async UpdateDoNotShowAboutManner() {
-    const userId = this.#request.userId;
-    const body = this.#request.payload;
 
-    try {
-      const updatedDoNotShowAboutThisService =
-        await this.#userExtensionService.UpdateDoNotShowAboutManner(
-          body,
-          userId
-        );
-      return this.#h.response({
-        UserExtension: updatedDoNotShowAboutThisService,
-      });
-    } catch (error) {
-      return this.#h.response({ error });
-    }
-  }
   async getUserExtensionByUserId() {
     const userId = this.#request.userId;
     try {
