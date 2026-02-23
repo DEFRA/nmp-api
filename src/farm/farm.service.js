@@ -62,40 +62,47 @@ class FarmService extends BaseService {
   }
 
   async createFarm(farm, userId) {
-    return await this.dataSource.transaction(async (transactionalManager) => {
-      const farmBody = farm.Farm;
-      const farmNvzList = farm.FarmNvz;
-      const farmExists = await this.farmExistsByNameAndPostcode(
-        farmBody.Name.trim(),
-        farmBody.Postcode.trim()
-      );
-      if (farmExists) {
-        throw boom.badRequest("Farm already exists with this Name and Postcode");
-      }
-      const newFarm = await transactionalManager.save(FarmEntity, {
-        ...farmBody,
-        ...(farmBody.ID === 0 ? { ID: null } : {}),
-        Name: farmBody.Name.trim(),
-        Postcode: farmBody.Postcode.trim(),
-        CreatedByID: userId,
-        CreatedOn: new Date()
-      });
-      let savedNVZ = [];
-      if (Array.isArray(farmNvzList) && farmNvzList.length > 0) {
-        const nvzEntities = farmNvzList.map((nvz) => ({
-          ...nvz,
-          FarmID: newFarm.ID,
+    return await AppDataSource.transaction(
+      async (transactionalManager) => {
+        const farmBody = farm.Farm;
+        const farmNvzList = farm.FarmNvz;
+        const farmExists = await this.farmExistsByNameAndPostcode(
+          farmBody.Name.trim(),
+          farmBody.Postcode.trim(),
+        );
+        if (farmExists) {
+          throw boom.badRequest(
+            "Farm already exists with this Name and Postcode",
+          );
+        }
+        const newFarm = await transactionalManager.save(FarmEntity, {
+          ...farmBody,
+          ...(farmBody.ID === 0 ? { ID: null } : {}),
+          Name: farmBody.Name.trim(),
+          Postcode: farmBody.Postcode.trim(),
           CreatedByID: userId,
-          CreatedOn: new Date()
-        }));
+          CreatedOn: new Date(),
+        });
+        let savedNVZ = [];
+        if (Array.isArray(farmNvzList) && farmNvzList.length > 0) {
+          const nvzEntities = farmNvzList.map((nvz) => ({
+            ...nvz,
+            FarmID: newFarm.ID,
+            CreatedByID: userId,
+            CreatedOn: new Date(),
+          }));
 
-        savedNVZ = await transactionalManager.save(FarmsNVZEntity, nvzEntities);
-      }
-      return {
-        Farm: newFarm,
-        FarmNVZ: savedNVZ
-      };
-    });
+          savedNVZ = await transactionalManager.save(
+            FarmsNVZEntity,
+            nvzEntities,
+          );
+        }
+        return {
+          Farm: newFarm,
+          FarmNVZ: savedNVZ,
+        };
+      },
+    );
   }
   async getFarm(name, postcode) {
     const farm = await this.repository.findOne({
