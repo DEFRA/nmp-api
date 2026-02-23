@@ -81,7 +81,7 @@ class FarmService extends BaseService {
           Name: farmBody.Name.trim(),
           Postcode: farmBody.Postcode.trim(),
           CreatedByID: userId,
-          CreatedOn: new Date(),
+          CreatedOn: new Date()
         });
         let savedNVZ = [];
         if (Array.isArray(farmNvzList) && farmNvzList.length > 0) {
@@ -89,12 +89,12 @@ class FarmService extends BaseService {
             ...nvz,
             FarmID: newFarm.ID,
             CreatedByID: userId,
-            CreatedOn: new Date(),
+            CreatedOn: new Date()
           }));
 
           savedNVZ = await transactionalManager.save(
             FarmsNVZEntity,
-            nvzEntities,
+            nvzEntities
           );
         }
         return {
