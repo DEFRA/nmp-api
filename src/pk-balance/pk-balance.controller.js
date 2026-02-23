@@ -32,11 +32,10 @@ async createPKBalance() {
     const userId = this.#request.userId;
 
     try {
-      const updatedPKBalance=
         await this.#PKBalanceService.updatePKBalance(
           updatedPKBalanceData,
           userId,
-          parseInt(pKBalanceId)
+          Number.parseInt(pKBalanceId)
         );
 
       return this.#h.response({ PKBalance: updatedPKBalanceData });

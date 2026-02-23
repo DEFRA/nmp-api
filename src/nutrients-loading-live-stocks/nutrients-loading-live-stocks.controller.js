@@ -72,7 +72,7 @@ class NutrientsLoadingLiveStocksController {
             nutrientsLoadingLivestockId
           );
           if (result?.affectedRows === 0) {
-            console.log(`NutrientsLoadingLivestock with ID ${nutrientsLoadingLivestockId} not found.`);
+            console.log(`NutrientsLoadingLivestock with ID  not found.`);
           }
           return this.#h.response({ message: "NutrientsLoadingLivestock deleted successfully." });
         } catch (error) {

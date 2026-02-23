@@ -68,7 +68,7 @@ const pKBalanceData=this.#request.payload.PKBalance;
       const data = await this.#soilAnalysisService.updateSoilAnalysis(
         updatedSoilAnalysisData,
         userId,
-        parseInt(soilAnalysisId),
+        Number.parseInt(soilAnalysisId),
         pKBalanceData,
         this.#request
       );

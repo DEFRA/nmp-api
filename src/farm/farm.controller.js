@@ -37,24 +37,6 @@ class FarmController {
     }
   }
 
-  async checkFarmExists() {
-    const {
-      Name: farmName,
-      Postcode: postcode,
-      Id: id = 0,
-    } = this.#request.query;
-    try {
-      const exists = await this.#farmService.farmExistsByNameAndPostcode(
-        farmName,
-        postcode,
-        id,
-      );
-      return this.#h.response({ exists });
-    } catch (error) {
-      return this.#h.response({ error });
-    }
-  }
-
   async getById() {
     try {
       const { farmId } = this.#request.params;

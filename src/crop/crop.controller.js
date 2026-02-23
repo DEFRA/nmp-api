@@ -318,7 +318,10 @@ class CropController {
       const { variety } = this.#request.query;
       const { year } = this.#request.query;
       const userId = this.#request.userId;
-      const cropIdsArray = cropIds.split(",").map((id) => parseInt(id));
+      const DECIMAL_RADIX = 10;
+      const cropIdsArray = cropIds
+        .split(",")
+        .map((id) => Number.parseInt(id, DECIMAL_RADIX));
       const updateCropGroupName = await this.#cropService.updateCropGroupName(
         cropIdsArray,
         cropGroupName,
