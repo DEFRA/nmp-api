@@ -17,6 +17,7 @@ module.exports = [
           Name: Joi.string().required(),
           Postcode: Joi.string().required(),
           Id: Joi.number().optional(),
+          OrganisationID: Joi.string().guid().required()
         }),
         failAction: (request, h, err) => {
           return h
@@ -26,7 +27,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -66,7 +67,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -95,7 +96,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -125,7 +126,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -153,7 +154,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -185,7 +186,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();

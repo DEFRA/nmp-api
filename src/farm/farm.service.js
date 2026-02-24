@@ -25,11 +25,28 @@ class FarmService extends BaseService {
     this.ProcessFutureManuresForWarnings =
       new ProcessFutureManuresForWarnings();
   }
-  async farmExistsByNameAndPostcode(farmName, postcode, id = null) {
-    return (await this.farmCountByNameAndPostcode(farmName, postcode, id)) > 0;
+  async farmExistsByNameAndPostcode(
+    farmName,
+    postcode,
+    OrganisationID,
+    id = null,
+  ) {
+    return (
+      (await this.farmCountByNameAndPostcode(
+        farmName,
+        postcode,
+        id,
+        OrganisationID,
+      )) > 0
+    );
   }
 
-  async farmCountByNameAndPostcode(farmName, postcode, id = null) {
+  async farmCountByNameAndPostcode(
+    farmName,
+    postcode,
+    id = null,
+    OrganisationID,
+  ) {
     if (!farmName || !postcode) {
       throw boom.badRequest("Farm Name and Postcode are required");
     }
@@ -40,7 +57,8 @@ class FarmService extends BaseService {
       .andWhere("REPLACE(Farms.Postcode, ' ', '') = :postcode", {
         postcode: postcode.replaceAll(/\s+/g, ""),
       })
-      .andWhere(id !== null ? "Farms.ID != :id" : "1 = 1", { id });
+      .andWhere(id !== null ? "Farms.ID != :id" : "1 = 1", { id })
+      .andWhere("Farms.OrganisationID = :OrganisationID", { OrganisationID });
 
     return await query.getCount();
   }
@@ -65,6 +83,7 @@ class FarmService extends BaseService {
     const farmExists = await this.farmExistsByNameAndPostcode(
       farmBody.Name.trim(),
       farmBody.Postcode.trim(),
+      farmBody.OrganisationID.trim(),
     );
     if (farmExists) {
       throw boom.badRequest("Farm already exists with this Name and Postcode");

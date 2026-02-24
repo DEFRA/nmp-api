@@ -15,11 +15,12 @@ class FarmController {
 
   async checkFarmExists() {
     try {
-      const { Name, Postcode, Id } = this.#request.query;
+      const { Name, Postcode, Id, OrganisationID } = this.#request.query;
       const exists = await this.#farmService.farmExistsByNameAndPostcode(
         Name,
         Postcode,
-        Id,
+        OrganisationID,
+        Id
       );
       return this.#h.response({ exists });
     } catch (error) {
