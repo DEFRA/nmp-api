@@ -2,6 +2,7 @@ const Joi = require("joi");
 const { FarmController } = require("./farm.controller");
 const { FarmPayloadDto, FarmUpdatePayloadDto } = require("./dto/farm.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
+const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 
 const getController = (request, h) => new FarmController(request, h);
 
@@ -69,7 +70,7 @@ module.exports = [
                 request,
               }),
             )
-            .code(400)
+            .code(StatusCodeMapper.BAD_REQUEST)
             .takeover();
         },
       },
