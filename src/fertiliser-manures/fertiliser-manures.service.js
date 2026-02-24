@@ -409,7 +409,6 @@ class FertiliserManuresService extends BaseService {
                   soilAnalysisRecords,
                 } = await this.HandleSoilAnalysisService.handleSoilAnalysisValidation(
                   fieldData[0].ID,
-                  fieldData[0].Name,
                   cropData[0]?.Year,
                   rb209CountryData.RB209CountryID,
                   transactionalManager
@@ -666,6 +665,10 @@ class FertiliserManuresService extends BaseService {
             request,
             userId
           );
+         this.ProcessFutureManuresForWarnings.processWarningsByCrop(
+           crop.ID,
+           userId
+         );  
         return { affectedRows: 1 }; // Success response
       } catch (error) {
         // Log the error and throw an internal server error

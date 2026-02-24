@@ -885,6 +885,10 @@ class OrganicManureService extends BaseService {
               userId
             )
         }
+          this.ProcessFutureManuresForWarnings.processWarningsByCrop(
+            crop.ID,
+            userId
+          );
 
         return { affectedRows: 1 }; // Success response
       } catch (error) {

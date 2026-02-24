@@ -259,7 +259,7 @@ class CalculateMannerOutputService {
     const JULY_MONTH_INDEX = 6;
     const LATE_SOWN_START_DAY = 15;
     const LATE_SOWN_END_DAY = 31;
-    if (!crop?.CropTypeID) {console.log("Invalid crop data: CropTypeID is required");}
+    if (crop?.CropTypeID === null) {console.log("Invalid crop data: CropTypeID is required");}
 
     const cropTypeLinkingData = await transactionalManager.findOne(
       CropTypeLinkingEntity,

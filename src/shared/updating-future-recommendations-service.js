@@ -90,7 +90,7 @@ class UpdatingFutureRecommendations {
   }
 
   async updateRecommendationAndOrganicManure(fieldID, year, request, userId) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const newOrganicManure = null;
       await this.generateRecommendations.generateRecommendations(
         fieldID,
@@ -98,12 +98,12 @@ class UpdatingFutureRecommendations {
         newOrganicManure,
         transactionalManager,
         request,
-        userId,
+        userId
       );
 
       await transactionalManager.delete(InprogressCalculationsEntity, {
         FieldID: fieldID,
-        Year: year,
+        Year: year
       });
       console.log(`Deleted entry for FieldID: ${fieldID}, Year: ${year}`);
     });

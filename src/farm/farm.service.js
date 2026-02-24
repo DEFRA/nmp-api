@@ -38,7 +38,7 @@ class FarmService extends BaseService {
       .createQueryBuilder("Farms")
       .where("Farms.Name = :name", { name: farmName.trim() })
       .andWhere("REPLACE(Farms.Postcode, ' ', '') = :postcode", {
-        postcode: postcode.replace(/\s+/g, ""),
+        postcode: postcode.replaceAll(/\s+/g, ""),
       })
       .andWhere(id !== null ? "Farms.ID != :id" : "1 = 1", { id });
 

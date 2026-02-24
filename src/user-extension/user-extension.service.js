@@ -78,39 +78,6 @@ class UserExtensionService extends BaseService {
       });
     });
   }
-  async UpdateDoNotShowAboutManner(doNotShowAboutManner, userId) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
-      // Check if record exists within the transaction
-      const existingRecord = await this.repository.findOne({
-        where: { UserID: userId }
-      });
-      if (existingRecord) {
-        const { DoNotShowAboutManner } = existingRecord;
-        // Update the existing record
-        await transactionalManager.update(
-          UserExtensionsEntity,
-          { UserID: userId }, // Where clause
-          {
-            ...doNotShowAboutManner,
-            DoNotShowAboutManner: DoNotShowAboutManner
-          }
-        );
-      } else {
-        // Create a new record if it doesn't exist
-        const newRecord = this.repository.create({
-          ...doNotShowAboutManner,
-          DoNotShowAboutManner: false,
-          UserID: userId
-        });
-        await transactionalManager.save(UserExtensionsEntity, newRecord);
-      }
-
-      // Return the updated or newly created record
-      return await transactionalManager.findOne(UserExtensionsEntity, {
-        where: { UserID: userId }
-      });
-    });
-  }
   async getUserExtensionByUserId(userId) {
     const userExtension = await this.repository.findOneBy({
       UserID: userId
