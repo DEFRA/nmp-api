@@ -57,7 +57,7 @@ class FarmService extends BaseService {
       .andWhere("REPLACE(Farms.Postcode, ' ', '') = :postcode", {
         postcode: postcode.replaceAll(/\s+/g, ""),
       })
-      .andWhere(id !== null ? "Farms.ID != :id" : "1 = 1", { id })
+      .andWhere(id === null ? "1 = 1" : "Farms.ID != :id", { id })
       .andWhere("Farms.OrganisationID = :OrganisationID", { OrganisationID });
 
     return await query.getCount();
