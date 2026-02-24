@@ -35,8 +35,8 @@ class FarmService extends BaseService {
       (await this.farmCountByNameAndPostcode(
         farmName,
         postcode,
-        id,
         OrganisationID,
+        id
       )) > 0
     );
   }
@@ -44,8 +44,8 @@ class FarmService extends BaseService {
   async farmCountByNameAndPostcode(
     farmName,
     postcode,
-    id = null,
     OrganisationID,
+    id = null
   ) {
     if (!farmName || !postcode) {
       throw boom.badRequest("Farm Name and Postcode are required");

@@ -67,6 +67,7 @@ class FarmController {
       const exists = await this.#farmService.farmExistsByNameAndPostcode(
         Farm.Name,
         Farm.Postcode,
+        Farm.OrganisationID
       );
       if (exists) {
         throw boom.conflict("Farm already exists with this Name and Postcode");
