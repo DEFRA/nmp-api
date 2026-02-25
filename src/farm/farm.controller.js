@@ -15,11 +15,12 @@ class FarmController {
 
   async checkFarmExists() {
     try {
-      const { Name, Postcode, Id } = this.#request.query;
+      const { Name, Postcode, Id, OrganisationID } = this.#request.query;
       const exists = await this.#farmService.farmExistsByNameAndPostcode(
         Name,
         Postcode,
-        Id,
+        OrganisationID,
+        Id
       );
       return this.#h.response({ exists });
     } catch (error) {
@@ -66,6 +67,7 @@ class FarmController {
       const exists = await this.#farmService.farmExistsByNameAndPostcode(
         Farm.Name,
         Farm.Postcode,
+        Farm.OrganisationID
       );
       if (exists) {
         throw boom.conflict("Farm already exists with this Name and Postcode");
