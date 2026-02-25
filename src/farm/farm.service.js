@@ -50,17 +50,21 @@ class FarmService extends BaseService {
     if (!farmName || !postcode) {
       throw boom.badRequest("Farm Name and Postcode are required");
     }
-
     const query = this.repository
       .createQueryBuilder("Farms")
       .where("Farms.Name = :name", { name: farmName.trim() })
       .andWhere("REPLACE(Farms.Postcode, ' ', '') = :postcode", {
         postcode: postcode.replaceAll(/\s+/g, ""),
       })
-      .andWhere(id === null ? "1 = 1" : "Farms.ID != :id", { id })
-      .andWhere("Farms.OrganisationID = :OrganisationID", { OrganisationID });
+      .andWhere("Farms.OrganisationID = :OrganisationID", {
+        OrganisationID,
+      });
 
-    return await query.getCount();
+    if (id !== null) {
+      query.andWhere("Farms.ID != :id", { id });
+    }
+
+    return query.getCount();
   }
   async deleteFarmAndRelatedEntities(farmId) {
     const farmToDelete = await this.repository.findOne({
@@ -131,82 +135,72 @@ class FarmService extends BaseService {
     }
   }
 
+hasFarmWarningTriggerChanges(existingFarm, updatedFarmData) {
+  const warningTriggerFields = [
+    "NVZFields",
+    "RegisteredOrganicProducer"
+  ];
+
+  return warningTriggerFields.some(
+    (field) =>
+      updatedFarmData[field] !== undefined &&
+      updatedFarmData[field] !== existingFarm[field]
+  );
+}
+
+hasFieldRecommendationTriggerChanges(
+  existingFarm,
+  updatedFarmData
+) {
+  const triggerFields = [
+    "Rainfall",
+    "NVZFields",
+    "FieldsAbove300SeaLevel"
+  ];
+
+  return triggerFields.some(
+    (field) =>
+      updatedFarmData[field] !== undefined &&
+      updatedFarmData[field] !== existingFarm[field]
+  );
+}
+
   async updateFarm(updatedFarmData, userId, farmId, request) {
     const result = await AppDataSource.transaction(
       async (transactionalManager) => {
         const existingFarm = await transactionalManager.findOne(FarmEntity, {
           where: { ID: farmId },
         });
-        if (!existingFarm) {
-          throw boom.notFound(`Farm with ID ${farmId} not found`);
-        }
-        const {
-          ID,
-          FullAddress,
-          EncryptedFarmId,
-          CreatedByID,
-          CreatedOn,
-          ...updateData
-        } = updatedFarmData;
+
+        if (!existingFarm) {throw boom.notFound(`Farm with ID ${farmId} not found`)}
+        
+        const {ID,FullAddress,EncryptedFarmId,CreatedByID,CreatedOn,...updateData} = updatedFarmData;
+
+        const farmCount = await this.farmCountByNameAndPostcode(
+          updateData.Name,
+          updateData.Postcode,
+          existingFarm.OrganisationID,
+          farmId
+        );
+          if (farmCount > 0) {throw boom.badRequest("Farm already exists with this Name and Postcode")}
         const updateResult = await transactionalManager.update(
           FarmEntity,
           farmId,
           {
             ...updateData,
             ModifiedByID: userId,
-            ModifiedOn: new Date(),
-          },
-        );
-        const isCountryUpdated =
-          updatedFarmData.CountryID &&
-          updatedFarmData.CountryID !== existingFarm.CountryID;
-        if (
-          isCountryUpdated &&
-          updatedFarmData.CountryID === CountryMapper.WELSH
-        ) {
-          await transactionalManager.update(
-            FieldEntity,
-            { FarmID: farmId },
-            { IsWithinNVZ: true },
-          );
-        }
-        if (updateResult.affected === 0) {
-          console.log(`Farm with ID ${farmId} not found`);
-        }
-        if (
-          updatedFarmData.FieldsAbove300SeaLevel !==
-            FieldAbove300SeaLevelMapper.SomeFieldsAbove300m ||
-          updatedFarmData.NVZFields !== FieldNVZMapper.SomeFieldsInNVZ
-        ) {
-          const fieldUpdateData = {};
-          if (
-            updatedFarmData.FieldsAbove300SeaLevel !==
-            FieldAbove300SeaLevelMapper.SomeFieldsAbove300m
-          ) {
-            fieldUpdateData.IsAbove300SeaLevel =
-              updatedFarmData.FieldsAbove300SeaLevel ===
-              FieldAbove300SeaLevelMapper.AllFieldsAbove300m;
+            ModifiedOn: new Date()
           }
-          if (updatedFarmData.NVZFields !== FieldNVZMapper.SomeFieldsInNVZ) {
-            fieldUpdateData.IsWithinNVZ =
-              updatedFarmData.NVZFields === FieldNVZMapper.AllFieldsInNVZ;
-          }
-          await transactionalManager.update(
-            FieldEntity,
-            { FarmID: farmId },
-            fieldUpdateData,
-          );
-        }
-        this.ProcessFieldsService.processFieldsForRecommendation(
-          farmId,
-          request,
-          userId,
-        );
-        this.ProcessFutureManuresForWarnings.processWarningsByFarm(
-          farmId,
-          userId,
-        );
+        );    
+        if (updateResult.affected === 0) {console.log(`Farm with ID ${farmId} not found`)}
+        
+         if (this.hasFieldRecommendationTriggerChanges(existingFarm,updatedFarmData)) {
+           this.ProcessFieldsService.processFieldsForRecommendation(farmId,request,userId);
+         }
 
+       if (this.hasFarmWarningTriggerChanges(existingFarm, updatedFarmData)) {
+         this.ProcessFutureManuresForWarnings.processWarningsByFarm(farmId,userId);
+       }
         const updatedFarm = await transactionalManager.findOne(FarmEntity, {
           where: { ID: farmId },
         });
