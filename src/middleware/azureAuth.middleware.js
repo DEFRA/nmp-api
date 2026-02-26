@@ -92,11 +92,8 @@ class AzureAuthMiddleware {
     // Check if the current path is in the excluded paths
 
     try {
-      const { issuerUrl, jwksUri } = await this.#azureAuthService.getData(
-        `${this.#azureIdentityDomain}/${
-          this.#policyName
-        }/v2.0/.well-known/openid-configuration`
-      );
+      const { issuerUrl, jwksUri } = await this.#azureAuthService.getData();   
+      
       const jwtUserData = await this.#validateToken(token, issuerUrl, jwksUri);
 
       // Token is valid, proceed with the request

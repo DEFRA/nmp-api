@@ -177,6 +177,13 @@ class EnvironmentService {
     }
   }
 
+  static AZURE_IDENTITY_METADATA_URL() {
+    get: {
+      return this.getEnv("AZURE_IDENTITY_METADATA_URL");
+    }
+  }
+  
+
   static AZURE_IDENTITY_DOMAIN() {
     get: {
       return this.getEnv("AZURE_IDENTITY_DOMAIN");
