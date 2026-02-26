@@ -10,18 +10,18 @@ class AzureAuthService {
 
   constructor() {
     this.#request = axios.create({
-      baseURL: EnvironmentService.AZURE_IDENTITY_INSTANCE(),
+      baseURL: EnvironmentService.azureIdentityMetadataUrl(),
     });
   }
 
-  async getData(url) {
+  async getData() {
     try {
       if (this.#issuerUrl && this.#jwksUri)
         return {
           issuerUrl: this.#issuerUrl,
           jwksUri: this.#jwksUri,
         };
-      const response = await this.#request.get(url);
+      const response = await this.#request.get();
       this.#issuerUrl = response?.data?.issuer;
       this.#jwksUri = response?.data?.jwks_uri;
       return {
