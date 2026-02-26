@@ -14,9 +14,6 @@ class BaseService {
 
   async getById(id) {
     const records = await this.#entity.findOne({ where: { ID: id } });
-    // if (!records) {
-    //   throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
-    // }
     return { records };
   }
 
@@ -33,9 +30,6 @@ class BaseService {
       where: { [column]: value },
       select: selectOptions,
     });
-    // if (records.length == 0 || !records) {
-    //   throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
-    // }
     return { records };
   }
 
