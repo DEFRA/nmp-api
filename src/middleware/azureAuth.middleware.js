@@ -13,9 +13,7 @@ class AzureAuthMiddleware {
   #optionalUserPresentPath;
   #otherExcludedPaths;
   #jwksClient;
-  #policyName;
   #clientId;
-  #azureIdentityDomain;
   #azureAuthService;
   #userRepository;
 
@@ -27,9 +25,7 @@ class AzureAuthMiddleware {
     ];
     this.#otherExcludedPaths="/";
     this.#optionalUserPresentPath = ["/users"];
-    this.#policyName = EnvironmentService.AZURE_AD_B2C_POLICY_NAME();
     this.#clientId = EnvironmentService.AZURE_AD_B2C_CLIENT_ID();
-    this.#azureIdentityDomain = EnvironmentService.AZURE_IDENTITY_DOMAIN();
     this.#azureAuthService = new AzureAuthService();
     this.#userRepository = getRepository(UserEntity);
   }

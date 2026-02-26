@@ -10,7 +10,7 @@ class AzureAuthService {
 
   constructor() {
     this.#request = axios.create({
-      baseURL: EnvironmentService.AZURE_IDENTITY_METADATA_URL(),
+      baseURL: EnvironmentService.azureIdentityMetadataUrl(),
     });
   }
 
