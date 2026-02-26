@@ -90,17 +90,11 @@ class FarmController {
     try {
       const { Farm } = this.#request.payload;
       const userId = this.#request.userId;
-      const farm = await this.#farmService.getFarm(Farm.Name, Farm.Postcode);
-      if (farm && farm.ID !== Farm.ID) {
-        throw boom.conflict(
-          "Other farms also exist with this Name and Postcode",
-        );
-      }
       const updatedFarm = await this.#farmService.updateFarm(
         Farm,
         userId,
         Farm.ID,
-        this.#request,
+        this.#request
       );
       return this.#h.response({ Farm: updatedFarm });
     } catch (error) {
