@@ -71,7 +71,7 @@ class TotalFertiliserByField {
     const managementPeriodIds = managementPeriods.map((mp) => mp.ID);
 
     // Reuse your existing function
-    return await this.getP205AndK20fromfertiliser(
+    return this.getP205AndK20fromfertiliser(
       transactionalManager,
       managementPeriodIds,
     );
