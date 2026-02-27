@@ -1,8 +1,6 @@
 const { AppDataSource } = require("../db/data-source");
 const { MoreThan } = require("typeorm");
 const { CropEntity } = require("../db/entity/crop.entity");
-const boom = require("@hapi/boom");
-
 const {
   FarmManureTypeEntity,
 } = require("../db/entity/farm-manure-type.entity");
@@ -12,9 +10,6 @@ const {
 const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
 const { BaseService } = require("../base/base.service");
 const { ManureTypeEntity } = require("../db/entity/manure-type.entity");
-const {
-  CalculateNutrientOfftakeDto,
-} = require("../vendors/rb209/recommendation/dto/recommendation.dto");
 const MannerCalculateNutrientsService = require("../vendors/manner/calculate-nutrients/calculate-nutrients.service");
 const RB209ArableService = require("../vendors/rb209/arable/arable.service");
 const {
@@ -32,7 +27,6 @@ const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
 const RB209FieldService = require("../vendors/rb209/field/field.service");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
-const { LessThanOrEqual, Between, Not, In } = require("typeorm");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const {
@@ -110,13 +104,11 @@ class OrganicManureService extends BaseService {
     );
     this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
     this.CreateOrUpdateWarningMessage = new CreateOrUpdateWarningMessage();
-    this.CreateOrUpdateWarningMessage = new CreateOrUpdateWarningMessage();
     this.CalculatePreviousCropService = new CalculatePreviousCropService();
     this.ProcessFutureManuresForWarnings =
       new ProcessFutureManuresForWarnings();
     this.generateRecommendations = new GenerateRecommendations();
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
-      
   }
 
   async getTotalNitrogenByManagementPeriod(
