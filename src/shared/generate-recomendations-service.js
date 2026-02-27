@@ -324,11 +324,7 @@ class GenerateRecommendations {
         multipleCrops: dataMultipleCrops.length > 1,
         arable: fieldType === FieldTypeMapper.GRASS ? [] : arableBody,
         grassland: {},
-        grass:
-          fieldType === FieldTypeMapper.BOTH ||
-          fieldType === FieldTypeMapper.GRASS
-            ? grassObject
-            : {},
+        grass:fieldType === FieldTypeMapper.BOTH || fieldType === FieldTypeMapper.GRASS ? grassObject : {},
         soil: {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
