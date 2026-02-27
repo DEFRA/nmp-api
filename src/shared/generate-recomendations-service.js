@@ -314,7 +314,6 @@ class GenerateRecommendations {
     const pkBalanceData = await this.getPKBalanceData(field.ID,crop.Year - 1,transactionalManager);
     const excessRainfall = await this.getWinterExcessRainfall(field.FarmID,crop.Year,transactionalManager);
     const { grassHistoryID, previousGrassId } =await this.resolveGrassHistoryAndPreviousGrass(crop,field,transactionalManager);
-
     const arableBody = await this.buildArableBody(dataMultipleCrops,field,transactionalManager,cropTypesList);
     const grassObject = await this.buildGrassObject(crop,grassGrowthClass,transactionalManager);
     const fieldType = await this.determineFieldType(crop, transactionalManager);
@@ -330,7 +329,7 @@ class GenerateRecommendations {
          soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
           nvzActionProgrammeId: field.NVZProgrammeID,
-          psc:excessRainfall?.WinterRainfall == null ? 0: excessRainfall.WinterRainfall, //need to find it
+          psc:field.RB209CountryID === 2 ? 1: 0,
           pkBalance: {
             phosphate: pkBalanceData == null ? 0 : pkBalanceData.PBalance,
             potash: pkBalanceData == null ? 0 : pkBalanceData.KBalance,
@@ -339,7 +338,7 @@ class GenerateRecommendations {
         },
         harvestYear: crop.Year,
         rainfallAverage: field.Rainfall,
-        excessWinterRainfall: 0, //need to find it
+        excessWinterRainfall: excessRainfall === null ? 0 : excessRainfall,
         mannerManures: mannerOutputs.length > 0,
         organicMaterials: [],
         mannerOutputs: [],
