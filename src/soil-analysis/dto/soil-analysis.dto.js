@@ -24,6 +24,7 @@ const SoilAnalysisDto = Joi.object({
   MagnesiumAnalysis: Joi.string().required().allow(null),
   MagnesiumStatus: Joi.string().required().allow(null),
   NitrogenResidueGroup: Joi.string().required().allow(null),
+  OrganicMatterPercentage: Joi.number().integer().optional().allow(null),
   Comments: Joi.string().optional().allow(null),
   PreviousID: Joi.number().integer().optional().allow(null),
   CreatedOn: Joi.date().iso().allow(null).optional(),
