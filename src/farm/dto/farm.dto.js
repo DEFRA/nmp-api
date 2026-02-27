@@ -37,10 +37,8 @@ const FarmDto = Joi.object({
 
 const FarmNvzDto = Joi.object({
   ID: Joi.number().integer().allow(null).default(null),
-  NVZStartDate: Joi.date().required(),
-  NVZEndDate: Joi.date().optional().allow(null),
-  Description: Joi.string().optional().allow(null, ""),
-  IsActive: Joi.boolean().required(),
+  NVZProgrammeID: Joi.number().required(),
+  NVZProgrammeName: Joi.string().required(),
   CreatedOn: Joi.date().allow(null),
   CreatedByID: Joi.number().allow(null),
   ModifiedOn: Joi.date().allow(null),
