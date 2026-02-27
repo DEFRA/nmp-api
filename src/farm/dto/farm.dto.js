@@ -36,7 +36,7 @@ const FarmDto = Joi.object({
 });
 
 const FarmNvzDto = Joi.object({
-  ID: Joi.number().integer().allow(null).optional(),
+  ID: Joi.number().integer().allow(null).default(null),
   NVZStartDate: Joi.date().required(),
   NVZEndDate: Joi.date().optional().allow(null),
   Description: Joi.string().optional().allow(null, ""),
