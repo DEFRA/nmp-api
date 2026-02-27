@@ -37,12 +37,13 @@ const FarmDto = Joi.object({
 
 const FarmNvzDto = Joi.object({
   ID: Joi.number().integer().allow(null).default(null),
+  FarmID: Joi.number().integer().allow(null).optional(),
   NVZProgrammeID: Joi.number().required(),
   NVZProgrammeName: Joi.string().required(),
   CreatedOn: Joi.date().allow(null),
   CreatedByID: Joi.number().allow(null),
   ModifiedOn: Joi.date().allow(null),
-  ModifiedByID: Joi.number().allow(null),
+  ModifiedByID: Joi.number().allow(null)
 });
 const FarmUpdateDto = FarmDto.keys({
     ID: Joi.number().required()  
