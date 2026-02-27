@@ -20,6 +20,7 @@ class FieldRelated {
           "f.IsWithinNVZ AS IsWithinNVZ",
           "f.SoilReleasingClay AS SoilReleasingClay",
           "f.NVZProgrammeID AS NVZProgrammeID",
+          "f.PSCIndex AS PSC",
           "farm.ID AS FarmID",
           "farm.ClimateDataPostCode AS ClimateDataPostCode",
           "farm.Rainfall AS Rainfall",
