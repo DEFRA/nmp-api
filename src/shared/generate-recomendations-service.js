@@ -324,12 +324,16 @@ class GenerateRecommendations {
         multipleCrops: dataMultipleCrops.length > 1,
         arable: fieldType === FieldTypeMapper.GRASS ? [] : arableBody,
         grassland: {},
-        grass:fieldType === FieldTypeMapper.BOTH || fieldType === FieldTypeMapper.GRASS ? grassObject: {},
+        grass:
+          fieldType === FieldTypeMapper.BOTH ||
+          fieldType === FieldTypeMapper.GRASS
+            ? grassObject
+            : {},
         soil: {
-         soilTypeId: field.SoilTypeID,
+          soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
           nvzActionProgrammeId: field.NVZProgrammeID,
-          psc:field.RB209CountryID === 2 ? 1: 0,
+          psc: field.RB209CountryID === 2 ? 1 : 0,
           pkBalance: {
             phosphate: pkBalanceData == null ? 0 : pkBalanceData.PBalance,
             potash: pkBalanceData == null ? 0 : pkBalanceData.KBalance,
@@ -338,12 +342,12 @@ class GenerateRecommendations {
         },
         harvestYear: crop.Year,
         rainfallAverage: field.Rainfall,
-        excessWinterRainfall: excessRainfall === null ? 0 : excessRainfall,
+        excessWinterRainfall: excessRainfall === null ? 0 : excessRainfall?.WinterRainfall,
         mannerManures: mannerOutputs.length > 0,
         organicMaterials: [],
         mannerOutputs: [],
         previousCropping: {},
-        countryId: field.RB209CountryID
+        countryId: field.RB209CountryID,
       },
       nutrients: {
         nitrogen: true,
