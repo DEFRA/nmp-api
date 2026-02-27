@@ -7,7 +7,6 @@ module.exports = [
   ...require("./farm/farm.route"),
   ...require("./field/field.route"),
   ...require("./moisture-type/moisture-type.route"),
-  ...require("./climate/climate.route"),
   ...require("./rain-types/rain-types.route"),
   ...require("./incorporation-delay/incorporation-delay.route"),
   ...require("./manure-type/manure-type.route"),

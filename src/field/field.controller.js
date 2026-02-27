@@ -166,13 +166,12 @@ class FieldController {
 
     try {
       // Handle multiple FieldIDs, split by comma if needed (if multiple IDs are passed)
-      const fieldIds = fieldId.split(",").map((id) => parseInt(id));
-
+      const fieldIds = fieldId.split(",").map((id) => Number.parseInt(id));
       // Fetch related data for the fields
       const fieldData = await this.#fieldService.getFieldRelatedData(
         fieldIds,
         year,
-        this.#request,
+        this.#request
       );
 
       // Return the Field objects with related data

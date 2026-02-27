@@ -804,19 +804,6 @@ class FieldService extends BaseService {
     };
   }
 
-  async getManureTypeById(manureTypesResponse, manureTypeID) {
-    const manureType = manureTypesResponse.data.find(
-      (mt) => mt.id === manureTypeID,
-    );
-
-    if (!manureType) {
-      console.log(`ManureType not found for ID ${manureTypeID}`);
-    }
-
-    //  Match API response structure
-    return;
-  }
-
   // Helper function to fetch crop type name
   async getApplicationMethodName(
     ApplicationMethodID,

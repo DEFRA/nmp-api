@@ -5,7 +5,6 @@ const { FieldEntity } = require("./entity/field.entity.js");
 const { UserEntity } = require("./entity/user.entity.js");
 const { OrganisationEntity } = require("./entity/organisation.entity.js");
 const { MoistureTypeEntity } = require("./entity/moisture-type.entity.js");
-const { ClimateDatabaseEntity } = require("./entity/climate.entity.js");
 const { ManureTypeEntity } = require("./entity/manure-type.entity.js");
 const { CropEntity } = require("./entity/crop.entity.js");
 const {
@@ -109,7 +108,6 @@ const baseConfig = {
     UserEntity,
     OrganisationEntity,
     MoistureTypeEntity,
-    ClimateDatabaseEntity,
     ManureTypeEntity,
     CropEntity,
     ManagementPeriodEntity,

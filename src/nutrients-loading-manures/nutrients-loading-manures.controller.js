@@ -76,7 +76,7 @@ class NutrientsLoadingManuresController {
           nutrientsLoadingManureId
         );
         if (result?.affectedRows === 0) {
-          throw boom.notFound(`NutrientsLoadingManure with ID ${nutrientsLoadingManureById} not found.`);
+          throw boom.notFound(`NutrientsLoadingManure with ID ${nutrientsLoadingManureId} not found.`);
         }
         return this.#h.response({ message: "NutrientsLoadingManure deleted successfully." });
       } catch (error) {
