@@ -56,7 +56,8 @@ const FarmPayloadDto = Joi.object({
 });
 
 const FarmUpdatePayloadDto = Joi.object({
-    Farm: FarmUpdateDto.required()
+  Farm: FarmUpdateDto.required(),
+  FarmNvz: Joi.array().items(FarmNvzDto).optional()
 });
 
 module.exports = {
