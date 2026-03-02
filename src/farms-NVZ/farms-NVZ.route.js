@@ -1,58 +1,58 @@
 const Joi = require("joi");
+const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { FarmsNVZController } = require("./farms-NVZ.controller");
-const {
-  FarmsNVZEntitySchema,
-} = require("./dto/farms-NVZ.dto");
+const getController = (request, h) => new FarmsNVZController(request, h);
 
-const BAD_REQUEST=400;
+const baseOptions = {
+  tags: ["api", "FarmsNVZ"],
+};
+
+const farmIdParamSchema = Joi.object({
+  farmId: Joi.number().integer().required(),
+})
+
+ const commonFailAction = (request, h, err) => {
+   return h
+     .response(
+       formatErrorResponse({
+         source: {
+           error: err,
+         },
+         request,
+       }),
+     )
+     .code(StatusCodeMapper.BAD_REQUEST)
+     .takeover();
+ };       
 
 module.exports = [
   {
     method: "GET",
     path: "/farmsNVZ/{farmId}",
     options: {
-      tags: ["api", "FarmsNVZ"],
+      ...baseOptions,
       description: "Get FarmsNVZ by Farm Id",
       validate: {
-        params: Joi.object({
-          farmId: Joi.number().integer().required(),
-        }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(BAD_REQUEST)
-            .takeover();
-        },
+        params: farmIdParamSchema,
+        failAction: commonFailAction
       },
     },
-    handler: async (request, h) => {
-      const controller = new FarmsNVZController(request, h);
-      return controller.getByFarmId();
-    },
+    handler: (request, h) => getController(request, h).getByFarmId(),
   },
+
   {
     method: "GET",
     path: "/farms-nvz-data/{farmId}",
     options: {
-      tags: ["api", "FarmsNVZ"],
-      description: "Get Farm And Nvz Farms Detais by id",
+      ...baseOptions,
+      description: "Get Farm And NVZ details by Farm Id",
       validate: {
-        params: Joi.object({
-          farmId: Joi.number().integer().required(),
-        }),
+        params: farmIdParamSchema,
+        failAction: commonFailAction
       },
     },
-    handler: async (request, h) => {
-      const controller = new FarmsNVZController(request, h);
-      return controller.getFarmAndNvzDetailsByFarmId();
-    },
+    handler: (request, h) =>
+      getController(request, h).getFarmAndNvzDetailsByFarmId(),
   },
 ];
