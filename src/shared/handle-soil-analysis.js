@@ -3,6 +3,7 @@ const RB209SoilService = require("../vendors/rb209/soil/soil.service");
 const { AppDataSource } = require("../db/data-source");
 const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const { NutrientMapperNames } = require("../constants/nutrient-mapper-names");
+const { CountryMapper } = require("../constants/country-mapper");
 
 class HandleSoilAnalysisService {
   constructor() {
@@ -58,8 +59,9 @@ class HandleSoilAnalysisService {
         const getNutrientData = await this.RB209SoilService.getData(
           `Soil/Methodologies/${nutrientId}/${countryId}`
         );
-
-        const methodologyId = getNutrientData[0]?.methodologyId;
+       
+     const methodologyIndex = rb209CountryId === CountryMapper.SCOTLAND && nutrientId === 1 ? 1 : 0;
+        const methodologyId = getNutrientData[methodologyIndex]?.methodologyId;
 
         if (methodologyId != null) {
           // Use dynamic countryId for the NutrientIndices API call
