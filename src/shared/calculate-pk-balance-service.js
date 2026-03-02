@@ -7,7 +7,7 @@ class CalculatePKBalance {
     this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
   }
 
-  async getPKBalanceData(field, year, transactionalManager) {
+  async getPKBalanceData(fieldID, year, transactionalManager) {
     try {
       // Find the data by filtering allPKBalanceData
       const pkBalanceData = await transactionalManager.findOne(
@@ -15,7 +15,7 @@ class CalculatePKBalance {
         {
           where: {
             Year: year,
-            FieldID: field.ID
+            FieldID: fieldID
           },
         },
       );
