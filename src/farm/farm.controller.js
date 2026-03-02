@@ -38,17 +38,6 @@ class FarmController {
     }
   }
 
-  async getFarmDetailsById() {
-    try {
-      const { farmId } = this.#request.params;
-      const records = await this.#farmService.getFarmDetailsById(farmId);
-      return this.#h.response(records);
-    } catch (error) {
-      console.error(error);
-      return this.#h.response({ error });
-    }
-  }
-
   async getById() {
     try {
       const { farmId } = this.#request.params;

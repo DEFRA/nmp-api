@@ -38,4 +38,21 @@ module.exports = [
       return controller.getByFarmId();
     },
   },
-]
+  {
+    method: "GET",
+    path: "/farms-nvz-data/{farmId}",
+    options: {
+      tags: ["api", "FarmsNVZ"],
+      description: "Get Farm And Nvz Farms Detais by id",
+      validate: {
+        params: Joi.object({
+          farmId: Joi.number().integer().required(),
+        }),
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new FarmsNVZController(request, h);
+      return controller.getFarmAndNvzDetailsByFarmId();
+    },
+  },
+];

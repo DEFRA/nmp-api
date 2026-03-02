@@ -127,41 +127,6 @@ class FarmService extends BaseService {
     return farm;
   }
 
-  async getFarmDetailsById(farmID) {
-    try {
-      const result = await this.repository
-        .createQueryBuilder("farm")
-        .leftJoin(CountryEntity, "country", "country.ID = farm.CountryID")
-        .leftJoinAndMapMany(
-          "farm.FarmsNvz",
-          FarmsNVZEntity,
-          "farmsNvz",
-          "farmsNvz.FarmID = farm.ID",
-        )
-        .addSelect("country.RB209CountryID", "RB209CountryID")
-        .where("farm.ID = :farmID", { farmID })
-        .getRawAndEntities();
-
-      if (!result.entities.length) {
-        return null;
-      }
-      const farm = result.entities[0];
-      // attach RB209CountryID
-      farm.RB209CountryID = result.raw[0]?.RB209CountryID ?? null;
-      // extract NVZ list
-      const farmsNvzList = farm.FarmsNvz || [];
-      // remove nested duplication
-      delete farm.FarmsNvz;
-      return {
-        Farm: farm,
-        FarmsNvz: farmsNvzList
-      };
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  }
-
   async getFarmById(farmID) {
     try {
       const record = await this.repository

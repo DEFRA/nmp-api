@@ -79,35 +79,7 @@ module.exports = [
       return getController(request, h).getById();
     },
   },
-  {
-    method: "GET",
-    path: "/farms-nvz-data/{farmId}",
-    options: {
-      tags: ["api", "Farm"],
-      description: "Get Farm And Nvz Farms Detais by id",
-      validate: {
-        params: Joi.object({
-          farmId: Joi.number().integer().required(),
-        }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(StatusCodeMapper.BAD_REQUEST)
-            .takeover();
-        },
-      },
-    },
-    handler: async (request, h) => {
-      return getController(request, h).getFarmDetailsById();
-    },
-  },
+  
   {
     method: "DELETE",
     path: "/farms/{farmId}",
