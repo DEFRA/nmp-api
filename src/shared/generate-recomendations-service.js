@@ -52,11 +52,11 @@ class GenerateRecommendations {
     return cropYield ?? potatoYield;
   }
 
-  async getPKBalanceData(field, year, transactionalManager) {
+  async getPKBalanceData(fieldID, year, transactionalManager) {
     try {
       const pkBalanceData = await transactionalManager.findOne(
         PKBalanceEntity,
-        {where: {Year: year,FieldID: field.ID}}
+        { where: { Year: year, FieldID: fieldID } },
       );
       return pkBalanceData
     } catch (error) {console.error("Error fetching PK Balance data:", error);
@@ -311,7 +311,7 @@ class GenerateRecommendations {
 
     if (!cropType || cropType.cropGroupId === null) {console.log(`Invalid CropTypeId for crop having field name ${field.Name}`) }
     const previousCrop =await this.CalculatePreviousCropService.findPreviousCrop(field.ID,crop.Year, transactionalManager);
-    const pkBalanceData = await this.getPKBalanceData(field,crop.Year - 1,transactionalManager);
+    const pkBalanceData = await this.getPKBalanceData(field.ID,crop.Year - 1,transactionalManager);
     const excessRainfall = await this.getWinterExcessRainfall(field.FarmID,crop.Year,transactionalManager);
     const { grassHistoryID, previousGrassId } =await this.resolveGrassHistoryAndPreviousGrass(crop,field,transactionalManager);
     const arableBody = await this.buildArableBody(dataMultipleCrops,field,transactionalManager,cropTypesList);
