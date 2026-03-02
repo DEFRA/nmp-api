@@ -1,5 +1,30 @@
 const { EntitySchema } = require("typeorm");
 
+const auditColumns = {
+  CreatedOn: {
+    type: "datetime2",
+    precision: 7,
+    default: () => "GETDATE()"
+  },
+
+  CreatedByID: {
+    type: "int",
+    nullable: true
+  },
+
+  ModifiedOn: {
+    type: "datetime2",
+    precision: 7,
+    default: () => "GETDATE()"
+  },
+
+  ModifiedByID: {
+    type: "int",
+    nullable: true
+  },
+};
+
+
 const FarmsNVZEntity = new EntitySchema({
   name: "FarmsNVZ",
   tableName: "FarmsNVZ",
@@ -22,26 +47,7 @@ const FarmsNVZEntity = new EntitySchema({
       type: "nvarchar",
       length: 128,
     },
-    CreatedOn: {
-      type: "datetime2",
-      nullable: true,
-      precision: 7,
-      default: "GETDATE()",
-    },
-    CreatedByID: {
-      type: "int",
-      nullable: true,
-    },
-    ModifiedOn: {
-      type: "datetime2",
-      nullable: true,
-      precision: 7,
-      default: "GETDATE()",
-    },
-    ModifiedByID: {
-      type: "int",
-      nullable: true,
-    },
+    ...auditColumns
   },
   relations: {
     Farms: {
@@ -54,15 +60,15 @@ const FarmsNVZEntity = new EntitySchema({
       type: "many-to-one",
       target: "User",
       joinColumn: { name: "CreatedByID" },
-      inverseSide: "CreatedFarmsNVZ"
+      inverseSide: "CreatedFarmsNVZ",
     },
     ModifiedByUserFarmNvz: {
       type: "many-to-one",
       target: "User",
       joinColumn: { name: "ModifiedByID" },
-      inverseSide: "ModifiedFarmsNVZ"
-    }
-  }
+      inverseSide: "ModifiedFarmsNVZ",
+    },
+  },
 });
 
 module.exports = { FarmsNVZEntity };
