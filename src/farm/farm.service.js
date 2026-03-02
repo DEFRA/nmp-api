@@ -228,11 +228,9 @@ class FarmService extends BaseService {
     const result = await AppDataSource.transaction(
       async (transactionalManager) => {
         const existingFarm = await transactionalManager.findOne(FarmEntity, {
-          where: { ID: farmId },
+          where: { ID: farmId }
         });
-        if (!existingFarm) {
-          throw boom.notFound(`Farm with ID ${farmId} not found`);
-        }
+        if (!existingFarm) {throw boom.notFound(`Farm with ID ${farmId} not found`)}
         const updatedFarmData = updatedFarmAndNvzData.Farm;
         const farmNvzList = updatedFarmAndNvzData.FarmsNvz;
         const {
@@ -249,11 +247,7 @@ class FarmService extends BaseService {
           existingFarm.OrganisationID,
           farmId,
         );
-        if (farmCount > 0) {
-          throw boom.badRequest(
-            "Farm already exists with this Name and Postcode",
-          );
-        }
+        if (farmCount > 0) {throw boom.badRequest("Farm already exists with this Name and Postcode")}
         const updatedNvz = await this.syncFarmNvz(
           transactionalManager,
           farmId,
