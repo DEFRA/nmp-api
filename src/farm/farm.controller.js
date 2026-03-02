@@ -43,7 +43,7 @@ class FarmController {
       const { farmId } = this.#request.params;
       const records = await this.#farmService.getFarmById(farmId);
       console.log("farmrecord", records);
-      return this.#h.response({ Farm: records });
+      return this.#h.response(records);
     } catch (error) {
       console.error(error);
       return this.#h.response({ error });

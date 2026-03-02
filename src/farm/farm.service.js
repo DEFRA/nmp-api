@@ -103,7 +103,7 @@ class FarmService extends BaseService {
         Name: farmBody.Name.trim(),
         Postcode: farmBody.Postcode.trim(),
         CreatedByID: userId,
-        CreatedOn: new Date()
+        CreatedOn: new Date(),
       });
       const savedNVZ = await this.syncFarmNvz(
         transactionalManager,
@@ -113,7 +113,7 @@ class FarmService extends BaseService {
       );
       return {
         Farm: newFarm,
-        FarmsNVZ: savedNVZ
+        FarmsNVZ: savedNVZ,
       };
     });
   }
@@ -129,21 +129,38 @@ class FarmService extends BaseService {
 
   async getFarmById(farmID) {
     try {
-      const record = await this.repository
+      const result = await this.repository
         .createQueryBuilder("farm")
         .leftJoin(CountryEntity, "country", "country.ID = farm.CountryID")
+        .leftJoinAndMapMany(
+          "farm.FarmsNvz",
+          FarmsNVZEntity,
+          "farmsNvz",
+          "farmsNvz.FarmID = farm.ID",
+        )
         .addSelect("country.RB209CountryID", "RB209CountryID")
         .where("farm.ID = :farmID", { farmID })
         .getRawAndEntities();
 
-      if (!record.entities.length) {
+      if (!result.entities.length) {
         return null;
       }
 
-      // attach RB209CountryID into farm record
-      record.entities[0].Rb209CountryID = record.raw[0]?.RB209CountryID ?? null;
+      const farm = result.entities[0];
 
-      return record.entities[0];
+      // attach RB209CountryID
+      farm.RB209CountryID = result.raw[0]?.RB209CountryID ?? null;
+
+      // extract NVZ list
+      const farmsNvzList = farm.FarmsNvz || [];
+
+      // remove nested duplication
+      delete farm.FarmsNvz;
+
+      return {
+        Farm: farm,
+        FarmsNvz: farmsNvzList,
+      };
     } catch (error) {
       console.error(error);
       throw error;
@@ -174,7 +191,7 @@ class FarmService extends BaseService {
     const nvzList = farmNvzList || [];
     // Get existing NVZ records for farm
     const existingNvzRecords = await transactionalManager.find(FarmsNVZEntity, {
-      where: { FarmID: farmId }
+      where: { FarmID: farmId },
     });
     const existingIds = existingNvzRecords.map((n) => n.ID);
     // Extract incoming IDs (only those that exist)
@@ -187,7 +204,7 @@ class FarmService extends BaseService {
           NVZProgrammeID: nvz.NVZProgrammeID,
           NVZProgrammeName: nvz.NVZProgrammeName,
           ModifiedByID: userId,
-          ModifiedOn: new Date()
+          ModifiedOn: new Date(),
         });
       } else {
         // Insert new
@@ -196,7 +213,7 @@ class FarmService extends BaseService {
           NVZProgrammeName: nvz.NVZProgrammeName,
           FarmID: farmId,
           CreatedByID: userId,
-          CreatedOn: new Date()
+          CreatedOn: new Date(),
         });
       }
     }
@@ -224,8 +241,8 @@ class FarmService extends BaseService {
         if (!existingFarm) {
           throw boom.notFound(`Farm with ID ${farmId} not found`);
         }
-         const updatedFarmData = updatedFarmAndNvzData.Farm;
-         const farmNvzList = updatedFarmAndNvzData.FarmsNvz;
+        const updatedFarmData = updatedFarmAndNvzData.Farm;
+        const farmNvzList = updatedFarmAndNvzData.FarmsNvz;
         const {
           ID,
           FullAddress,
@@ -245,21 +262,21 @@ class FarmService extends BaseService {
             "Farm already exists with this Name and Postcode",
           );
         }
-      
-         const updatedNvz = await this.syncFarmNvz(
-           transactionalManager,
-           farmId,
-           farmNvzList,
-           userId
-         );
-        
+
+        const updatedNvz = await this.syncFarmNvz(
+          transactionalManager,
+          farmId,
+          farmNvzList,
+          userId,
+        );
+
         const updateResult = await transactionalManager.update(
           FarmEntity,
           farmId,
           {
             ...updateData,
             ModifiedByID: userId,
-            ModifiedOn: new Date()
+            ModifiedOn: new Date(),
           },
         );
         if (updateResult.affected === 0) {
@@ -275,7 +292,7 @@ class FarmService extends BaseService {
           this.ProcessFieldsService.processFieldsForRecommendation(
             farmId,
             request,
-            userId
+            userId,
           );
         }
 
@@ -290,7 +307,7 @@ class FarmService extends BaseService {
         });
         return {
           updatedFarm: updatedFarm,
-          farmNvz: updatedNvz
+          farmNvz: updatedNvz,
         };
       },
     );
