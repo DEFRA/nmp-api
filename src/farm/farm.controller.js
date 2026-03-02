@@ -80,7 +80,7 @@ class FarmController {
         },
         userId,
       );
-      return this.#h.response({ Farm: newFarm });
+      return this.#h.response(newFarm );
     } catch (error) {
       console.error(error);
       return this.#h.response({ error });

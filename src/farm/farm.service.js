@@ -90,7 +90,7 @@ class FarmService extends BaseService {
       const farmExists = await this.farmExistsByNameAndPostcode(
         farmBody.Name.trim(),
         farmBody.Postcode.trim(),
-        farmBody.OrganisationID.trim(),
+        farmBody.OrganisationID.trim()
       );
       if (farmExists) {
         throw boom.badRequest(
@@ -103,17 +103,17 @@ class FarmService extends BaseService {
         Name: farmBody.Name.trim(),
         Postcode: farmBody.Postcode.trim(),
         CreatedByID: userId,
-        CreatedOn: new Date(),
+        CreatedOn: new Date()
       });
       const savedNVZ = await this.syncFarmNvz(
         transactionalManager,
         newFarm.ID,
         farmNvzList,
-        userId,
+        userId
       );
       return {
         Farm: newFarm,
-        FarmsNVZ: savedNVZ,
+        FarmsNVZ: savedNVZ
       };
     });
   }
@@ -145,21 +145,16 @@ class FarmService extends BaseService {
       if (!result.entities.length) {
         return null;
       }
-
       const farm = result.entities[0];
-
       // attach RB209CountryID
       farm.RB209CountryID = result.raw[0]?.RB209CountryID ?? null;
-
       // extract NVZ list
       const farmsNvzList = farm.FarmsNvz || [];
-
       // remove nested duplication
       delete farm.FarmsNvz;
-
       return {
         Farm: farm,
-        FarmsNvz: farmsNvzList,
+        FarmsNvz: farmsNvzList
       };
     } catch (error) {
       console.error(error);
