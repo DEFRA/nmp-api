@@ -123,6 +123,7 @@ class FarmService extends BaseService {
         };
       });
     } catch (error) {
+      console.log(error)
       throw error; // rethrow so controller handles it
     }
   }
