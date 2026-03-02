@@ -84,38 +84,47 @@ class FarmService extends BaseService {
   }
 
   async createFarm(farm, userId) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
-      const farmBody = farm.Farm;
-      const farmNvzList = farm.FarmsNvz;
-      const farmExists = await this.farmExistsByNameAndPostcode(
-        farmBody.Name.trim(),
-        farmBody.Postcode.trim(),
-        farmBody.OrganisationID.trim(),
-      );
-      if (farmExists) {
-        throw boom.badRequest(
-          "Farm already exists with this Name and Postcode",
+    try {
+      return await AppDataSource.transaction(async (transactionalManager) => {
+        const farmBody = farm.Farm;
+        const farmNvzList = farm.FarmsNvz;
+
+        const farmExists = await this.farmExistsByNameAndPostcode(
+          farmBody.Name.trim(),
+          farmBody.Postcode.trim(),
+          farmBody.OrganisationID.trim(),
         );
-      }
-      const newFarm = await transactionalManager.save(FarmEntity, {
-        ...farmBody,
-        ...(farmBody.ID === 0 ? { ID: null } : {}),
-        Name: farmBody.Name.trim(),
-        Postcode: farmBody.Postcode.trim(),
-        CreatedByID: userId,
-        CreatedOn: new Date(),
+
+        if (farmExists) {
+          throw boom.badRequest(
+            "Farm already exists with this Name and Postcode",
+          );
+        }
+
+        const newFarm = await transactionalManager.save(FarmEntity, {
+          ...farmBody,
+          ...(farmBody.ID === 0 ? { ID: null } : {}),
+          Name: farmBody.Name.trim(),
+          Postcode: farmBody.Postcode.trim(),
+          CreatedByID: userId,
+          CreatedOn: new Date(),
+        });
+
+        const savedNVZ = await this.syncFarmNvz(
+          transactionalManager,
+          newFarm.ID,
+          farmNvzList,
+          userId,
+        );
+
+        return {
+          Farm: newFarm,
+          FarmsNVZ: savedNVZ,
+        };
       });
-      const savedNVZ = await this.syncFarmNvz(
-        transactionalManager,
-        newFarm.ID,
-        farmNvzList,
-        userId,
-      );
-      return {
-        Farm: newFarm,
-        FarmsNVZ: savedNVZ,
-      };
-    });
+    } catch (error) {
+      throw error; // rethrow so controller handles it
+    }
   }
   async getFarm(name, postcode) {
     const farm = await this.repository.findOne({
@@ -210,7 +219,7 @@ class FarmService extends BaseService {
     }
 
     // Return updated NVZ list
-    return await transactionalManager.find(FarmsNVZEntity, {
+    return transactionalManager.find(FarmsNVZEntity, {
       where: { FarmID: farmId },
     });
   }
@@ -221,7 +230,9 @@ class FarmService extends BaseService {
         const existingFarm = await transactionalManager.findOne(FarmEntity, {
           where: { ID: farmId },
         });
-        if (!existingFarm) {throw boom.notFound(`Farm with ID ${farmId} not found`)}
+        if (!existingFarm) {
+          throw boom.notFound(`Farm with ID ${farmId} not found`);
+        }
         const updatedFarmData = updatedFarmAndNvzData.Farm;
         const farmNvzList = updatedFarmAndNvzData.FarmsNvz;
         const {
@@ -236,9 +247,13 @@ class FarmService extends BaseService {
           updateData.Name,
           updateData.Postcode,
           existingFarm.OrganisationID,
-          farmId
+          farmId,
         );
-        if (farmCount > 0) {throw boom.badRequest("Farm already exists with this Name and Postcode")}
+        if (farmCount > 0) {
+          throw boom.badRequest(
+            "Farm already exists with this Name and Postcode",
+          );
+        }
         const updatedNvz = await this.syncFarmNvz(
           transactionalManager,
           farmId,
