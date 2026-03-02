@@ -48,4 +48,5 @@ module.exports = [
   ...require("./previous-cropping/previous-cropping.route"),
   ...require("./warning-message/warning-message.route"),
   ...require("./warning/warning-route"),
+  ...require("./farms-NVZ/farms-NVZ.route"),
 ];

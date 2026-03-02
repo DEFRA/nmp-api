@@ -1047,22 +1047,22 @@ class FieldService extends BaseService {
               for (const manure of organicManures) {
                 const manureTypeName = await this.getManureTypeName(
                   manure.ManureTypeID,
-                  allManureData,
+                  allManureData
                 );
                 const applicationMethodName =
                   await this.getApplicationMethodName(
                     manure.ApplicationMethodID,
-                    allApplicationMethodsData,
+                    allApplicationMethodsData
                   );
                 const incorporationMethodName =
                   await this.getIncorporationMethodName(
                     manure.IncorporationMethodID,
-                    allIncorporationMethodsData,
+                    allIncorporationMethodsData
                   );
                 const incorporationDelayName =
                   await this.getIncorporationDelayName(
                     manure.IncorporationDelayID,
-                    allIncorporationDelaysData,
+                    allIncorporationDelaysData
                   );
 
                 organicManuresWithNames.push({

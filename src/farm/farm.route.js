@@ -18,7 +18,7 @@ module.exports = [
           Name: Joi.string().required(),
           Postcode: Joi.string().required(),
           Id: Joi.number().optional(),
-          OrganisationID: Joi.string().guid().required()
+          OrganisationID: Joi.string().guid().required(),
         }),
         failAction: (request, h, err) => {
           return h
@@ -79,6 +79,7 @@ module.exports = [
       return getController(request, h).getById();
     },
   },
+  
   {
     method: "DELETE",
     path: "/farms/{farmId}",
