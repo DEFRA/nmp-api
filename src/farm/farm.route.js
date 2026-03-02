@@ -18,7 +18,7 @@ module.exports = [
           Name: Joi.string().required(),
           Postcode: Joi.string().required(),
           Id: Joi.number().optional(),
-          OrganisationID: Joi.string().guid().required()
+          OrganisationID: Joi.string().guid().required(),
         }),
         failAction: (request, h, err) => {
           return h
@@ -77,6 +77,35 @@ module.exports = [
     },
     handler: async (request, h) => {
       return getController(request, h).getById();
+    },
+  },
+  {
+    method: "GET",
+    path: "/farms-nvz-data/{farmId}",
+    options: {
+      tags: ["api", "Farm"],
+      description: "Get Farm And Nvz Farms Detais by id",
+      validate: {
+        params: Joi.object({
+          farmId: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              }),
+            )
+            .code(StatusCodeMapper.BAD_REQUEST)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      return getController(request, h).getFarmDetailsById();
     },
   },
   {

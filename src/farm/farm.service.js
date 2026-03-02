@@ -90,7 +90,7 @@ class FarmService extends BaseService {
       const farmExists = await this.farmExistsByNameAndPostcode(
         farmBody.Name.trim(),
         farmBody.Postcode.trim(),
-        farmBody.OrganisationID.trim()
+        farmBody.OrganisationID.trim(),
       );
       if (farmExists) {
         throw boom.badRequest(
@@ -103,17 +103,17 @@ class FarmService extends BaseService {
         Name: farmBody.Name.trim(),
         Postcode: farmBody.Postcode.trim(),
         CreatedByID: userId,
-        CreatedOn: new Date()
+        CreatedOn: new Date(),
       });
       const savedNVZ = await this.syncFarmNvz(
         transactionalManager,
         newFarm.ID,
         farmNvzList,
-        userId
+        userId,
       );
       return {
         Farm: newFarm,
-        FarmsNVZ: savedNVZ
+        FarmsNVZ: savedNVZ,
       };
     });
   }
@@ -127,7 +127,7 @@ class FarmService extends BaseService {
     return farm;
   }
 
-  async getFarmById(farmID) {
+  async getFarmDetailsById(farmID) {
     try {
       const result = await this.repository
         .createQueryBuilder("farm")
@@ -156,6 +156,29 @@ class FarmService extends BaseService {
         Farm: farm,
         FarmsNvz: farmsNvzList
       };
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  async getFarmById(farmID) {
+    try {
+      const record = await this.repository
+        .createQueryBuilder("farm")
+        .leftJoin(CountryEntity, "country", "country.ID = farm.CountryID")
+        .addSelect("country.RB209CountryID", "RB209CountryID")
+        .where("farm.ID = :farmID", { farmID })
+        .getRawAndEntities();
+
+      if (!record.entities.length) {
+        return null;
+      }
+
+      // attach RB209CountryID into farm record
+      record.entities[0].Rb209CountryID = record.raw[0]?.RB209CountryID ?? null;
+
+      return record.entities[0];
     } catch (error) {
       console.error(error);
       throw error;

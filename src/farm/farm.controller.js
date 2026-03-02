@@ -20,7 +20,7 @@ class FarmController {
         Name,
         Postcode,
         OrganisationID,
-        Id
+        Id,
       );
       return this.#h.response({ exists });
     } catch (error) {
@@ -38,12 +38,23 @@ class FarmController {
     }
   }
 
+  async getFarmDetailsById() {
+    try {
+      const { farmId } = this.#request.params;
+      const records = await this.#farmService.getFarmDetailsById(farmId);
+      return this.#h.response(records);
+    } catch (error) {
+      console.error(error);
+      return this.#h.response({ error });
+    }
+  }
+
   async getById() {
     try {
       const { farmId } = this.#request.params;
       const records = await this.#farmService.getFarmById(farmId);
       console.log("farmrecord", records);
-      return this.#h.response(records);
+      return this.#h.response({ Farm: records });
     } catch (error) {
       console.error(error);
       return this.#h.response({ error });
@@ -67,7 +78,7 @@ class FarmController {
       const exists = await this.#farmService.farmExistsByNameAndPostcode(
         Farm.Name,
         Farm.Postcode,
-        Farm.OrganisationID
+        Farm.OrganisationID,
       );
       if (exists) {
         throw boom.conflict("Farm already exists with this Name and Postcode");
@@ -76,11 +87,11 @@ class FarmController {
       const newFarm = await this.#farmService.createFarm(
         {
           Farm,
-          FarmsNvz
+          FarmsNvz,
         },
         userId,
       );
-      return this.#h.response(newFarm );
+      return this.#h.response(newFarm);
     } catch (error) {
       console.error(error);
       return this.#h.response({ error });
@@ -89,16 +100,16 @@ class FarmController {
 
   async updateFarm() {
     try {
-      const { Farm,FarmsNvz } = this.#request.payload;
+      const { Farm, FarmsNvz } = this.#request.payload;
       const userId = this.#request.userId;
       const updatedFarm = await this.#farmService.updateFarm(
         {
           Farm,
-          FarmsNvz
+          FarmsNvz,
         },
         userId,
         Farm.ID,
-        this.#request
+        this.#request,
       );
       return this.#h.response({ Farm: updatedFarm });
     } catch (error) {
