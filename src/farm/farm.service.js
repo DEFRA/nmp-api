@@ -252,7 +252,6 @@ class FarmService extends BaseService {
            farmNvzList,
            userId
          );
-
         
         const updateResult = await transactionalManager.update(
           FarmEntity,
@@ -260,7 +259,7 @@ class FarmService extends BaseService {
           {
             ...updateData,
             ModifiedByID: userId,
-            ModifiedOn: new Date(),
+            ModifiedOn: new Date()
           },
         );
         if (updateResult.affected === 0) {
@@ -276,7 +275,7 @@ class FarmService extends BaseService {
           this.ProcessFieldsService.processFieldsForRecommendation(
             farmId,
             request,
-            userId,
+            userId
           );
         }
 
