@@ -20,7 +20,7 @@ class FarmController {
         Name,
         Postcode,
         OrganisationID,
-        Id
+        Id,
       );
       return this.#h.response({ exists });
     } catch (error) {
@@ -63,11 +63,11 @@ class FarmController {
 
   async createFarm() {
     try {
-      const { Farm } = this.#request.payload;
+      const { Farm, FarmsNvz } = this.#request.payload;
       const exists = await this.#farmService.farmExistsByNameAndPostcode(
         Farm.Name,
         Farm.Postcode,
-        Farm.OrganisationID
+        Farm.OrganisationID,
       );
       if (exists) {
         throw boom.conflict("Farm already exists with this Name and Postcode");
@@ -76,10 +76,11 @@ class FarmController {
       const newFarm = await this.#farmService.createFarm(
         {
           Farm,
+          FarmsNvz,
         },
         userId,
       );
-      return this.#h.response({ Farm: newFarm });
+      return this.#h.response(newFarm);
     } catch (error) {
       console.error(error);
       return this.#h.response({ error });
@@ -88,13 +89,16 @@ class FarmController {
 
   async updateFarm() {
     try {
-      const { Farm } = this.#request.payload;
+      const { Farm, FarmsNvz } = this.#request.payload;
       const userId = this.#request.userId;
       const updatedFarm = await this.#farmService.updateFarm(
-        Farm,
+        {
+          Farm,
+          FarmsNvz,
+        },
         userId,
         Farm.ID,
-        this.#request
+        this.#request,
       );
       return this.#h.response({ Farm: updatedFarm });
     } catch (error) {

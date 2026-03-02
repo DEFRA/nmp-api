@@ -16,6 +16,7 @@ const { CountryEntity } = require("../db/entity/country.entity");
 const {
   ProcessFutureManuresForWarnings,
 } = require("../shared/process-future-warning-calculations-service");
+const { FarmsNVZEntity } = require("../db/entity/farms-nvz.entity");
 
 class FarmService extends BaseService {
   constructor() {
@@ -36,7 +37,7 @@ class FarmService extends BaseService {
         farmName,
         postcode,
         OrganisationID,
-        id
+        id,
       )) > 0
     );
   }
@@ -45,7 +46,7 @@ class FarmService extends BaseService {
     farmName,
     postcode,
     OrganisationID,
-    id = null
+    id = null,
   ) {
     if (!farmName || !postcode) {
       throw boom.badRequest("Farm Name and Postcode are required");
@@ -83,24 +84,48 @@ class FarmService extends BaseService {
   }
 
   async createFarm(farm, userId) {
-    const farmBody = farm.Farm;
-    const farmExists = await this.farmExistsByNameAndPostcode(
-      farmBody.Name.trim(),
-      farmBody.Postcode.trim(),
-      farmBody.OrganisationID.trim(),
-    );
-    if (farmExists) {
-      throw boom.badRequest("Farm already exists with this Name and Postcode");
+    try {
+      return await AppDataSource.transaction(async (transactionalManager) => {
+        const farmBody = farm.Farm;
+        const farmNvzList = farm.FarmsNvz;
+
+        const farmExists = await this.farmExistsByNameAndPostcode(
+          farmBody.Name.trim(),
+          farmBody.Postcode.trim(),
+          farmBody.OrganisationID.trim(),
+        );
+
+        if (farmExists) {
+          throw boom.badRequest(
+            "Farm already exists with this Name and Postcode",
+          );
+        }
+
+        const newFarm = await transactionalManager.save(FarmEntity, {
+          ...farmBody,
+          ...(farmBody.ID === 0 ? { ID: null } : {}),
+          Name: farmBody.Name.trim(),
+          Postcode: farmBody.Postcode.trim(),
+          CreatedByID: userId,
+          CreatedOn: new Date(),
+        });
+
+        const savedNVZ = await this.syncFarmNvz(
+          transactionalManager,
+          newFarm.ID,
+          farmNvzList,
+          userId,
+        );
+
+        return {
+          Farm: newFarm,
+          FarmsNVZ: savedNVZ,
+        };
+      });
+    } catch (error) {
+      console.log(error)
+      throw error; // rethrow so controller handles it
     }
-    const newFarm = await this.repository.save({
-      ...farmBody,
-      ...(farmBody.ID === 0 ? { ID: null } : {}),
-      Name: farmBody.Name.trim(),
-      Postcode: farmBody.Postcode.trim(),
-      CreatedByID: userId,
-      CreatedOn: new Date(),
-    });
-    return newFarm;
   }
   async getFarm(name, postcode) {
     const farm = await this.repository.findOne({
@@ -135,76 +160,140 @@ class FarmService extends BaseService {
     }
   }
 
-hasFarmWarningTriggerChanges(existingFarm, updatedFarmData) {
-  const warningTriggerFields = [
-    "NVZFields",
-    "RegisteredOrganicProducer"
-  ];
+  hasFarmWarningTriggerChanges(existingFarm, updatedFarmData) {
+    const warningTriggerFields = ["NVZFields", "RegisteredOrganicProducer"];
 
-  return warningTriggerFields.some(
-    (field) =>
-      updatedFarmData[field] !== undefined &&
-      updatedFarmData[field] !== existingFarm[field]
-  );
-}
+    return warningTriggerFields.some(
+      (field) =>
+        updatedFarmData[field] !== undefined &&
+        updatedFarmData[field] !== existingFarm[field],
+    );
+  }
 
-hasFieldRecommendationTriggerChanges(
-  existingFarm,
-  updatedFarmData
-) {
-  const triggerFields = [
-    "Rainfall",
-    "NVZFields",
-    "FieldsAbove300SeaLevel"
-  ];
+  hasFieldRecommendationTriggerChanges(existingFarm, updatedFarmData) {
+    const triggerFields = ["Rainfall", "NVZFields", "FieldsAbove300SeaLevel"];
 
-  return triggerFields.some(
-    (field) =>
-      updatedFarmData[field] !== undefined &&
-      updatedFarmData[field] !== existingFarm[field]
-  );
-}
+    return triggerFields.some(
+      (field) =>
+        updatedFarmData[field] !== undefined &&
+        updatedFarmData[field] !== existingFarm[field],
+    );
+  }
 
-  async updateFarm(updatedFarmData, userId, farmId, request) {
+  async syncFarmNvz(transactionalManager, farmId, farmNvzList, userId) {
+    const nvzList = farmNvzList || [];
+    // Get existing NVZ records for farm
+    const existingNvzRecords = await transactionalManager.find(FarmsNVZEntity, {
+      where: { FarmID: farmId },
+    });
+    const existingIds = existingNvzRecords.map((n) => n.ID);
+    // Extract incoming IDs (only those that exist)
+    const incomingIds = new Set(nvzList.filter((n) => n.ID).map((n) => n.ID));
+
+    for (const nvz of nvzList) {
+      if (nvz.ID) {
+        // Update existing
+        await transactionalManager.update(FarmsNVZEntity, nvz.ID, {
+          NVZProgrammeID: nvz.NVZProgrammeID,
+          NVZProgrammeName: nvz.NVZProgrammeName,
+          ModifiedByID: userId,
+          ModifiedOn: new Date(),
+        });
+      } else {
+        // Insert new
+        await transactionalManager.save(FarmsNVZEntity, {
+          NVZProgrammeID: nvz.NVZProgrammeID,
+          NVZProgrammeName: nvz.NVZProgrammeName,
+          FarmID: farmId,
+          CreatedByID: userId,
+          CreatedOn: new Date(),
+        });
+      }
+    }
+
+    /* ---------- DELETE MISSING ---------- */
+
+    const idsToDelete = existingIds.filter((id) => !incomingIds.has(id));
+
+    if (idsToDelete.length > 0) {
+      await transactionalManager.delete(FarmsNVZEntity, idsToDelete);
+    }
+
+    // Return updated NVZ list
+    return transactionalManager.find(FarmsNVZEntity, {
+      where: { FarmID: farmId },
+    });
+  }
+
+  async updateFarm(updatedFarmAndNvzData, userId, farmId, request) {
     const result = await AppDataSource.transaction(
       async (transactionalManager) => {
         const existingFarm = await transactionalManager.findOne(FarmEntity, {
-          where: { ID: farmId },
+          where: { ID: farmId }
         });
-
         if (!existingFarm) {throw boom.notFound(`Farm with ID ${farmId} not found`)}
-        
-        const {ID,FullAddress,EncryptedFarmId,CreatedByID,CreatedOn,...updateData} = updatedFarmData;
-
+        const updatedFarmData = updatedFarmAndNvzData.Farm;
+        const farmNvzList = updatedFarmAndNvzData.FarmsNvz;
+        const {
+          ID,
+          FullAddress,
+          EncryptedFarmId,
+          CreatedByID,
+          CreatedOn,
+          ...updateData
+        } = updatedFarmData;
         const farmCount = await this.farmCountByNameAndPostcode(
           updateData.Name,
           updateData.Postcode,
           existingFarm.OrganisationID,
-          farmId
+          farmId,
         );
-          if (farmCount > 0) {throw boom.badRequest("Farm already exists with this Name and Postcode")}
+        if (farmCount > 0) {throw boom.badRequest("Farm already exists with this Name and Postcode")}
+        const updatedNvz = await this.syncFarmNvz(
+          transactionalManager,
+          farmId,
+          farmNvzList,
+          userId,
+        );
         const updateResult = await transactionalManager.update(
           FarmEntity,
           farmId,
           {
             ...updateData,
             ModifiedByID: userId,
-            ModifiedOn: new Date()
-          }
-        );    
-        if (updateResult.affected === 0) {console.log(`Farm with ID ${farmId} not found`)}
-        
-         if (this.hasFieldRecommendationTriggerChanges(existingFarm,updatedFarmData)) {
-           this.ProcessFieldsService.processFieldsForRecommendation(farmId,request,userId);
-         }
+            ModifiedOn: new Date(),
+          },
+        );
+        if (updateResult.affected === 0) {
+          console.log(`Farm with ID ${farmId} not found`);
+        }
 
-       if (this.hasFarmWarningTriggerChanges(existingFarm, updatedFarmData)) {
-         this.ProcessFutureManuresForWarnings.processWarningsByFarm(farmId,userId);
-       }
+        if (
+          this.hasFieldRecommendationTriggerChanges(
+            existingFarm,
+            updatedFarmData,
+          )
+        ) {
+          this.ProcessFieldsService.processFieldsForRecommendation(
+            farmId,
+            request,
+            userId,
+          );
+        }
+
+        if (this.hasFarmWarningTriggerChanges(existingFarm, updatedFarmData)) {
+          this.ProcessFutureManuresForWarnings.processWarningsByFarm(
+            farmId,
+            userId,
+          );
+        }
         const updatedFarm = await transactionalManager.findOne(FarmEntity, {
           where: { ID: farmId },
         });
-        return updatedFarm;
+        return {
+          updatedFarm: updatedFarm,
+          farmNvz: updatedNvz,
+        };
       },
     );
     return result;
