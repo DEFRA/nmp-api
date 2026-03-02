@@ -1,4 +1,5 @@
 const { EntitySchema } = require("typeorm");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const auditColumns = {
   CreatedOn: {
@@ -47,23 +48,23 @@ const FarmsNVZEntity = new EntitySchema({
       type: "nvarchar",
       length: 128,
     },
-    ...auditColumns
+    ...auditColumns,
   },
   relations: {
     Farms: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "Farm",
       joinColumn: { name: "FarmID" },
       inverseSide: "FarmsNVZ",
     },
     CreatedByUserFarmNvz: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "CreatedByID" },
       inverseSide: "CreatedFarmsNVZ",
     },
     ModifiedByUserFarmNvz: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "ModifiedByID" },
       inverseSide: "ModifiedFarmsNVZ",
