@@ -50,14 +50,14 @@ const FarmUpdateDto = FarmDto.keys({
 });
 const FarmPayloadDto = Joi.object({
   Farm: FarmDto.required(),
-  FarmNvz: Joi.array().items(FarmNvzDto).optional(),
+  FarmsNvz: Joi.array().items(FarmNvzDto).optional(),
   UserID: Joi.number().optional().allow(null),
   RoleID: Joi.number().optional().allow(null)
 });
 
 const FarmUpdatePayloadDto = Joi.object({
   Farm: FarmUpdateDto.required(),
-  FarmNvz: Joi.array().items(FarmNvzDto).optional()
+  FarmsNvz: Joi.array().items(FarmNvzDto).optional()
 });
 
 module.exports = {

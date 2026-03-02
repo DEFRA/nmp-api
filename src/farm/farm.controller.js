@@ -63,7 +63,7 @@ class FarmController {
 
   async createFarm() {
     try {
-      const { Farm } = this.#request.payload;
+      const { Farm, FarmsNvz } = this.#request.payload;
       const exists = await this.#farmService.farmExistsByNameAndPostcode(
         Farm.Name,
         Farm.Postcode,
@@ -76,6 +76,7 @@ class FarmController {
       const newFarm = await this.#farmService.createFarm(
         {
           Farm,
+          FarmsNvz
         },
         userId,
       );
@@ -88,10 +89,13 @@ class FarmController {
 
   async updateFarm() {
     try {
-      const { Farm } = this.#request.payload;
+      const { Farm,FarmsNvz } = this.#request.payload;
       const userId = this.#request.userId;
       const updatedFarm = await this.#farmService.updateFarm(
-        Farm,
+        {
+          Farm,
+          FarmsNvz
+        },
         userId,
         Farm.ID,
         this.#request
