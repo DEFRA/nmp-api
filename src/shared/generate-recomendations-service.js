@@ -311,7 +311,7 @@ class GenerateRecommendations {
 
     if (!cropType || cropType.cropGroupId === null) {console.log(`Invalid CropTypeId for crop having field name ${field.Name}`) }
     const previousCrop =await this.CalculatePreviousCropService.findPreviousCrop(field.ID,crop.Year, transactionalManager);
-    const pkBalanceData = await this.getPKBalanceData(field.ID,crop.Year - 1,transactionalManager);
+    const pkBalanceData = await this.getPKBalanceData(field,crop.Year - 1,transactionalManager);
     const excessRainfall = await this.getWinterExcessRainfall(field.FarmID,crop.Year,transactionalManager);
     const { grassHistoryID, previousGrassId } =await this.resolveGrassHistoryAndPreviousGrass(crop,field,transactionalManager);
     const arableBody = await this.buildArableBody(dataMultipleCrops,field,transactionalManager,cropTypesList);
