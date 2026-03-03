@@ -21,6 +21,11 @@ const FieldEntity = new EntitySchema({
       default: 1,
       nullable: true,
     },
+    PscIndexID: {
+      type: "int",
+      default: 1,
+      nullable: true,
+    },
     Name: {
       type: "nvarchar",
       length: 50,

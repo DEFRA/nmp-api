@@ -7,6 +7,7 @@ const FieldEntitySchema = Joi.object({
   ID: Joi.number().integer().allow(null),
   SoilTypeID: Joi.number().integer().optional(),
   NVZProgrammeID: Joi.number().integer().optional(),
+  PscIndexID: Joi.number().integer().optional(),
   Name: Joi.string().required(),
   LPIDNumber: Joi.string().optional().allow(null),
   NationalGridReference: Joi.string().optional().allow(null),
