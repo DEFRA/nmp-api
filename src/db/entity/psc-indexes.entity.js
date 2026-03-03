@@ -1,6 +1,6 @@
 const { EntitySchema } = require("typeorm");
 
-const PscIndexesEntity = new EntitySchema({
+const PscIndexEntity = new EntitySchema({
   name: "PscIndexes",
   tableName: "PscIndexes",
   columns: {
@@ -17,4 +17,4 @@ const PscIndexesEntity = new EntitySchema({
   },
 });
 
-module.exports = { PscIndexesEntity };
+module.exports = { PscIndexEntity };
