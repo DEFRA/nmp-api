@@ -1,18 +1,18 @@
-const { PscIndexesService } = require("./psc-indexes.service");
-class PscIndexesController {
+const { PscIndexService } = require("./psc-index.service");
+class PscIndexController {
   #request;
   #h;
-  #pscIndexesService;
+  #pscIndexService;
 
   constructor(request, h) {
     this.#request = request;
     this.#h = h;
-    this.#pscIndexesService = new PscIndexesService();
+    this.#pscIndexService = new PscIndexService();
   }
 
   async getAll() {
     try {
-      const records = await this.#pscIndexesService.getAll();
+      const records = await this.#pscIndexService.getAll();
       return this.#h.response(records);
     } catch (error) {
       console.error("Error in getAll:", error);
@@ -23,7 +23,7 @@ class PscIndexesController {
   async getById() {
     const { id } = this.#request.params;
     try {
-      const record = await this.#pscIndexesService.getById(id);
+      const record = await this.#pscIndexService.getById(id);
       return this.#h.response(record);
     } catch (error) {
       console.error("Error in getById:", error);
@@ -32,4 +32,4 @@ class PscIndexesController {
   }
 }
 
-module.exports = { PscIndexesController };
+module.exports = { PscIndexController };

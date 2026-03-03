@@ -2,7 +2,7 @@
 const Joi = require("joi");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
-const { PscIndexesController } = require("./psc-indexes.controller");
+const {  PscIndexController } = require("./psc-index.controller");
 
 
 
@@ -15,7 +15,7 @@ module.exports = [
       description: "Get all Psc Indexes",
     },
     handler: async (request, h) => {
-      const controller = new PscIndexesController(request, h);
+      const controller = new PscIndexController(request, h);
       return controller.getAll();
     },
   },
@@ -43,7 +43,7 @@ module.exports = [
       },
     },
     handler: async (request, h) => {
-      const controller = new PscIndexesController(request, h);
+      const controller = new PscIndexController(request, h);
       return controller.getById();
     },
   },

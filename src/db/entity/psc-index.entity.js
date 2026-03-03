@@ -1,7 +1,7 @@
 const { EntitySchema } = require("typeorm");
 
 const PscIndexEntity = new EntitySchema({
-  name: "PscIndexes",
+  name: "PscIndex",
   tableName: "PscIndexes",
   columns: {
     ID: {
