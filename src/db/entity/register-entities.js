@@ -97,6 +97,7 @@ const { ExcessWinterRainfallOptionsEntity } = require("./excess-winter-rainfall-
 const { InprogressCalculationsEntity } = require("./inprogress-calculations-entity");
 const { SNSCategoriesEntity } = require("./snsCategories.entity");
 const { UserExtensionsEntity } = require("./user-extension.entity");
+const { PscIndexesEntity } = require("./psc-indexes.entity");
 
 // Export as a single array
 
@@ -162,7 +163,8 @@ const entities = [
   PreviousCroppingEntity,
   WarningCodeEntity,
   WarningsEntity,
-  FarmsNVZEntity
+  FarmsNVZEntity,
+  PscIndexesEntity
 ];
 
 module.exports = { entities };
