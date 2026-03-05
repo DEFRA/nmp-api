@@ -117,6 +117,7 @@ const {
 const { SNSCategoriesEntity } = require("./snsCategories.entity");
 const { UserExtensionsEntity } = require("./user-extension.entity");
 const { PscIndexEntity } = require("./psc-index.entity");
+const { SoilAnalysesMethodsEntity } = require("./soil-analyses-methods.entity");
 
 // Export as a single array
 
@@ -183,7 +184,8 @@ const entities = [
   WarningCodeEntity,
   WarningsEntity,
   FarmsNVZEntity,
-  PscIndexEntity
+  PscIndexEntity,
+  SoilAnalysesMethodsEntity
 ];
 
 module.exports = { entities };
