@@ -65,7 +65,7 @@ const SoilAnalysisSchema = Joi.object({
   MagnesiumAnalysis: Joi.string().max(20).allow(null),
   MagnesiumStatus: Joi.string().max(20).allow(null),
   NitrogenResidueGroup: Joi.string().max(20).allow(null),
-  SoilAnalysisMethod: Joi.number().integer().optional().allow(null),
+  SoilAnalysisMethodID: Joi.number().integer().optional().allow(null),
   OrganicMatterPercentage: Joi.number().integer().optional().allow(null),
   Comments: Joi.string().max(255).allow(null),
   PreviousID: Joi.number().integer().allow(null),
