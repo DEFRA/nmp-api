@@ -11,7 +11,7 @@ class SoilAnalysesMethodController {
     this.#service = new SoilAnalysesMethodService();
   }
 
-  async getAll() {
+  async getAllSoilAnalysesMethods() {
     try {
       const records = await this.#service.getAll();
       return this.#h.response(records);
@@ -21,7 +21,7 @@ class SoilAnalysesMethodController {
     }
   }
 
-  async getById() {
+  async getSoilAnalysesMethodById() {
     const { id } = this.#request.params;
     try {
       const record = await this.#service.getById(id);
