@@ -62,7 +62,6 @@ const {
   CropGroupCategoriesEntity,
 } = require("../entity/crop-group-categories.entity");
 
-
 const { StoreCapacitiesEntity } = require("../entity/store-capacities.entity");
 const { MaterialStatesEntity } = require("../entity/material-states.entity");
 const {
@@ -74,13 +73,21 @@ const {
 const { WarningCodeEntity } = require("../entity/warning-code.entity");
 
 const { FarmsNVZEntity } = require("../entity/farms-nvz.entity");
-const { PreviousGrassIdMappingEntity } = require("./previous-grass-Id-mapping.entity");
+const {
+  PreviousGrassIdMappingEntity,
+} = require("./previous-grass-Id-mapping.entity");
 const { StorageTypesEntity } = require("./storage-types.Entity");
 const { WindspeedEntity } = require("./wind-speed.entity");
-const { ApplicationMethodsIncorpMethodEntity } = require("./application-method-incorp-method.entity");
-const { IncorpMethodsIncorpDelayEntity } = require("./incorp-method-incorp-delay.entity");
+const {
+  ApplicationMethodsIncorpMethodEntity,
+} = require("./application-method-incorp-method.entity");
+const {
+  IncorpMethodsIncorpDelayEntity,
+} = require("./incorp-method-incorp-delay.entity");
 const { SnsAnalysesEntity } = require("./sns-analysis.entity");
-const { GrassManagementOptionsEntity } = require("./grassManagementOptionsEntity");
+const {
+  GrassManagementOptionsEntity,
+} = require("./grassManagementOptionsEntity");
 const { GrassTypicalCutsEntity } = require("./grassTypicalCutsEntity");
 const { PreviousGrassesEntity } = require("./previous-grasses-entity");
 const { WarningsEntity } = require("./warning.entity");
@@ -88,15 +95,28 @@ const { WarningMessagesEntity } = require("./warning-message.entity");
 const { SoilGroupCategoriesEntity } = require("./soil-group-categories-entity");
 const { LivestockGroupEntity } = require("./livestock-group-entity");
 const { LivestockTypeEntity } = require("./livestock-type-entity");
-const { NutrientsLoadingFarmDetailsEntity } = require("./nutrients-loading-farm-details-entity");
-const { NutrientsLoadingLiveStocksEntity } = require("./nutrients-loading-live-stocks-entity");
-const { NutrientsLoadingManuresEntity } = require("./nutrients-loading-manures-entity");
+const {
+  NutrientsLoadingFarmDetailsEntity,
+} = require("./nutrients-loading-farm-details-entity");
+const {
+  NutrientsLoadingLiveStocksEntity,
+} = require("./nutrients-loading-live-stocks-entity");
+const {
+  NutrientsLoadingManuresEntity,
+} = require("./nutrients-loading-manures-entity");
 const { BankSlopeAnglesEntity } = require("./bank-slope-angles-entity");
-const { GrassHistoryIdMappingEntity } = require("./grass-history-id-mapping-entity");
-const { ExcessWinterRainfallOptionsEntity } = require("./excess-winter-rainfall-options");
-const { InprogressCalculationsEntity } = require("./inprogress-calculations-entity");
+const {
+  GrassHistoryIdMappingEntity,
+} = require("./grass-history-id-mapping-entity");
+const {
+  ExcessWinterRainfallOptionsEntity,
+} = require("./excess-winter-rainfall-options");
+const {
+  InprogressCalculationsEntity,
+} = require("./inprogress-calculations-entity");
 const { SNSCategoriesEntity } = require("./snsCategories.entity");
 const { UserExtensionsEntity } = require("./user-extension.entity");
+const { PscIndexEntity } = require("./psc-index.entity");
 
 // Export as a single array
 
@@ -162,7 +182,8 @@ const entities = [
   PreviousCroppingEntity,
   WarningCodeEntity,
   WarningsEntity,
-  FarmsNVZEntity
+  FarmsNVZEntity,
+  PscIndexEntity
 ];
 
 module.exports = { entities };

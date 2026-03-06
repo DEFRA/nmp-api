@@ -154,7 +154,7 @@ class CropController {
   async createNutrientsRecommendationForFieldByFieldId() {
     const body = this.#request.payload;
     const userId = this.#request.userId;
-    let transaction=null
+    const transaction=null
     try {
       const data =
         await this.#planService.createNutrientsRecommendationForField(
@@ -269,11 +269,11 @@ class CropController {
   async deleteCropsByIds() {
     const { cropIds } = this.#request.payload;
     const userId = this.#request.userId;
-      let transaction = null;
+      const transaction = null;
 
     try {
       // Loop through each cropId and call the service method to delete it
-      for (let cropId of cropIds) {
+      for (const cropId of cropIds) {
         const result = await this.#cropService.deleteCrop(
           cropId,
           userId,

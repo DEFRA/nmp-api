@@ -616,14 +616,14 @@ class OrganicManureService extends BaseService {
           }
 
           organicManures.push(savedOrganicManure);
-
+          const newOrganicManure = null;
          await this.generateRecommendations.generateRecommendations(
            fieldData.ID,
            cropData.Year,
-           OrganicManure,
+           newOrganicManure,
            transactionalManager,
            request,
-           userId
+           userId,
          );
 
         
