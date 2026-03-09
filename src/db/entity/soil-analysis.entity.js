@@ -112,7 +112,7 @@ const SoilAnalysisEntity = new EntitySchema({
       length: 20,
       nullable: true,
     },
-    SoilAnalysisMethod: {
+    SoilAnalysesMethodID: {
       type: "int",
       nullable: true,
     },
