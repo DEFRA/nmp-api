@@ -19,15 +19,14 @@ class CropTypeLinkingsService extends BaseService {
   async getCropInfoQuestionsByCropTypeID(cropTypeID,countryID) {
     const cropType = await this.repository.findOneBy({
       CropTypeID: cropTypeID,
-    });
-   
-    let questionId = null;
-
-  if (countryID === 1) {
-    questionId = cropType.CropInfoOneQuestionID;
-  } else if (countryID === 2) {
-    questionId = cropType.CropInfoOneScotlandQuestionID;
-  }
+    });  
+    
+  let questionId =
+  countryID === 1
+    ? cropType.CropInfoOneQuestionID
+    : countryID === 2
+    ? cropType.CropInfoOneScotlandQuestionID
+    : null;
 
   if (questionId != null) {
     const cropTypeQuestions = await this.cropInfoQuestionsRepository.findOneBy({
