@@ -29,7 +29,7 @@ if (countryID === 1) {
   questionId = cropType.CropInfoOneScotlandQuestionID;
 }
 else {
-  questionId = null;
+    // no matching country
 }
 
   if (questionId != null) {
