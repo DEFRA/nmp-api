@@ -48,6 +48,10 @@ const CropTypeLinkingEntity = new EntitySchema({
       type: "int",
       nullable: true
     },
+     CropInfoOneScotlandQuestionID: {
+      type: "int",
+      nullable: true
+    },
     LateSownMannerCropTypeID: {
       type: "int",
       nullable: true
@@ -72,6 +76,12 @@ const CropTypeLinkingEntity = new EntitySchema({
       type: "many-to-one",
       target: "CropInfoQuestions",
       joinColumn: { name: "CropInfoOneQuestionID" },
+      inverseSide: "CropTypeLinking",
+    },
+     CropInfoOneScotlandQuestion: {
+      type: "many-to-one",
+      target: "CropInfoQuestions",
+      joinColumn: { name: "CropInfoOneScotlandQuestionID" },
       inverseSide: "CropTypeLinking",
     },
   },

@@ -49,6 +49,9 @@ module.exports = [
         params: Joi.object({
           cropTypeID: Joi.number().integer().required(),
         }),
+         query: Joi.object({
+                  countryID: Joi.number().required(),
+                }),
         failAction: (request, h, err) => {
           return h
             .response(

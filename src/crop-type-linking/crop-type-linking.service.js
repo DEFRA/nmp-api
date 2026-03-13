@@ -16,20 +16,27 @@ class CropTypeLinkingsService extends BaseService {
     });
     return cropType;
   }
-  async getCropInfoQuestionsByCropTypeID(cropTypeID) {
+  async getCropInfoQuestionsByCropTypeID(cropTypeID,countryID) {
     const cropType = await this.repository.findOneBy({
       CropTypeID: cropTypeID,
     });
    
-    if(cropType.CropInfoOneQuestionID !=null){
+    let questionId = null;
 
-        const cropTypeQuestions = await this.cropInfoQuestionsRepository.findOneBy({
-          ID: cropType.CropInfoOneQuestionID
-        });
-        return cropTypeQuestions.CropInfoQuestion;
-    }else{
-        return null
-    }
+  if (countryID === 1) {
+    questionId = cropType.CropInfoOneQuestionID;
+  } else if (countryID === 2) {
+    questionId = cropType.CropInfoOneScotlandQuestionID;
+  }
+
+  if (questionId != null) {
+    const cropTypeQuestions = await this.cropInfoQuestionsRepository.findOneBy({
+      ID: questionId
+    });
+
+    return cropTypeQuestions?.CropInfoQuestion;
+  }
+  return null;
 
   }
 }

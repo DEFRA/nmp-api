@@ -30,10 +30,11 @@ class CropTypeLinkingsController {
   }
   async getCropInfoQuestionsByCropTypeID() {
     const { cropTypeID } = this.#request.params;
+    const { countryID } = this.#request.query;
     try {
       const record =
         await this.#cropTypeLinkingsService.getCropInfoQuestionsByCropTypeID(
-          cropTypeID
+          cropTypeID,countryID
         );
     
       return this.#h.response({ CropTypeQuestion: record });
