@@ -28,6 +28,9 @@ if (countryID === 1) {
 } else if (countryID === 2) {
   questionId = cropType.CropInfoOneScotlandQuestionID;
 }
+else {
+  questionId = null;
+}
 
   if (questionId != null) {
     const cropTypeQuestions = await this.cropInfoQuestionsRepository.findOneBy({
