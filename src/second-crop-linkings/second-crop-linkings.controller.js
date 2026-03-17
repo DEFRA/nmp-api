@@ -13,10 +13,12 @@ class SecondCropLinkingsController {
 
   async getSecondCropTypeLinkingByFirstCropId() {
     const { firstCropID } = this.#request.params;
+      const { rB209CountryID } = this.#request.query;
     try {
       const records =
         await this.#secondCropLinkingsService.getSecondCropTypeLinkingByFirstCropId(
-          firstCropID
+          firstCropID,
+          rB209CountryID
         );
       return this.#h.response({ SecondCropID: records });
     } catch (error) {
