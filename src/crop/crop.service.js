@@ -85,6 +85,7 @@ class CropService extends BaseService {
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();  
     this.countryRepository = AppDataSource.getRepository(CountryEntity); 
    this.fieldRepository = AppDataSource.getRepository(FieldEntity);
+      this.COUNTRY_BOTH = 3;
   }
 
   async createCropWithManagementPeriods(
@@ -190,7 +191,7 @@ class CropService extends BaseService {
           where: {
             FirstCropID: firstCropTypeID,
             SecondCropID: secondCropTypeID,
-            RB209CountryID: In([3, rB209CountryID])
+            RB209CountryID: In([this.COUNTRY_BOTH, rB209CountryID])
           },
         },
       );
@@ -257,7 +258,7 @@ class CropService extends BaseService {
         });
 
       // Get the rb209CountryID of the farm
-        const rb209CountryID = fetchRb209CountryId(fieldId)
+        const rb209CountryID = this.fetchRb209CountryId(fieldId)
        
         await this.validateAndHandleSecondCrop(
           transactionalManager,
@@ -274,34 +275,32 @@ class CropService extends BaseService {
     return result;
   }
 
-  async fetchRb209CountryId(fieldId)
-  {
-    let rb209CountryID = 3; // default mandatory value
-     const field = await this.fieldRepository.findOne({
-          where: { ID: fieldId },
-          select: ["FarmID"],
-        });
-        if(field!=null)
-        {
-        // Get the CountryID of the farm
-        const farm = await this.farmRepository.findOne({
-          where: { ID: field.FarmID },
-          select: ["CountryID"],
-        });
+  async fetchRb209CountryId(fieldId) {
+  let rb209CountryID = this.COUNTRY_BOTH; // default value
 
-        if (farm != null) {
-          const country = await this.countryRepository.findOne({
-            where: { ID: farm.CountryID },
-            select: ["RB209CountryID"],
-          });
+  const field = await this.fieldRepository.findOne({
+    where: { ID: fieldId },
+    select: ["FarmID"],
+  });
 
-          if (country != null && country.RB209CountryID != null) {
-            rb209CountryID = country.RB209CountryID;
-          }
-        }
-      }
-      return rb209CountryID;
-  }
+  const farm = field
+    ? await this.farmRepository.findOne({
+        where: { ID: field.FarmID },
+        select: ["CountryID"],
+      })
+    : null;
+
+  const country = farm
+    ? await this.countryRepository.findOne({
+        where: { ID: farm.CountryID },
+        select: ["RB209CountryID"],
+      })
+    : null;
+
+  rb209CountryID = country?.RB209CountryID ?? this.COUNTRY_BOTH;
+
+  return rb209CountryID;
+}
 
   // Other methods...
   async mapCropTypeIdWithTheirNames(plans) {
@@ -928,7 +927,7 @@ class CropService extends BaseService {
 
        
         // Get the rb209CountryID of the farm
-        const rb209CountryID = fetchRb209CountryId(crop.FieldID)
+        const rb209CountryID = this.fetchRb209CountryId(crop.FieldID)
 
       await this.validateAndHandleSecondCrop(
         transactionalManager,
