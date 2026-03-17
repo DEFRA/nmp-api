@@ -65,9 +65,9 @@ class SavingRecommendationService {
         defoliationId,
         filteredData,
         latestSoilAnalysis,
-        transactionalManager,
-        userId,
+        {transactionalManager,userId},
         mannerOutputs,
+        defoliationIds
       );
 
       if (recommendation) {
@@ -91,24 +91,15 @@ class SavingRecommendationService {
     defoliationId,
     filteredData,
     latestSoilAnalysis,
-    transactionalManager,
-    userId,
+    userIdTransactionManager,
     mannerOutputs,
+    defoliationIds
   ) {
-    const defoliationData = await this.extractNutrientData(
-      filteredData.calculations,
-      defoliationId,
-    );
-    if (!defoliationData?.length) {
-      return null;
-    }
+     const { transactionalManager, userId } = userIdTransactionManager;
+    const defoliationData = await this.extractNutrientData(filteredData.calculations,defoliationId);
+    if (!defoliationData?.length) {return null}
     const cropRecData = this.initializeRecommendationData(latestSoilAnalysis);
-
-    const managementPeriod = await this.getManagementPeriod(
-      transactionalManager,
-      cropData.ID,
-      defoliationId,
-    );
+    const managementPeriod = await this.getManagementPeriod(transactionalManager,cropData.ID,defoliationId);
     await this.applyNutrientCalculations(
       cropRecData,
       defoliationData,
@@ -116,19 +107,15 @@ class SavingRecommendationService {
       managementPeriod,
       cropData,
       transactionalManager,
-      defoliationId,
+      { defoliationId, defoliationIds },
     );
-
-    if (!managementPeriod) {
-      return null;
-    }
-
+    if (!managementPeriod) {return null}
     return this.saveOrUpdateRecommendation(
       transactionalManager,
       managementPeriod,
       cropRecData,
       filteredData,
-      userId,
+      userId
     );
   }
 
@@ -168,17 +155,21 @@ class SavingRecommendationService {
   async applyNutrientCalculations(
     cropRecData,
     calculations,
-    mannerOutputs,
+    allMannerOutputs,
     managementPeriod,
     cropData,
     transactionalManager,
-    defoliationId
+    defoliations
   ) {
+    const { defoliationId, defoliationIds } = defoliations;
+    const mannerOutputs = allMannerOutputs.filter((item) => item.defoliationId === defoliationId);
     let availableNForNextDefoliation = null,nextCropAvailableN = null;
     if (!mannerOutputs || mannerOutputs.length === 0) {
-      availableNForNextDefoliation = await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(transactionalManager,managementPeriod,cropData);
+      if (defoliationIds.length > 1) {
+        availableNForNextDefoliation = await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(transactionalManager,managementPeriod,cropData);
+      }
       if (defoliationId === 1) {
-        nextCropAvailableN = await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
+        nextCropAvailableN =await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
             cropData.FieldID,
             cropData.Year,
             transactionalManager
@@ -235,7 +226,7 @@ class SavingRecommendationService {
     };
     for (const calc of calculations) {
       const handler = nutrientHandlers[calc.nutrientId];
-      if (handler) { handler(calc)}
+      if (handler) {handler(calc)}
     }
   }
 
@@ -287,7 +278,7 @@ class SavingRecommendationService {
     cropSaveData,
     transactionalManager,
     nutrientRecommendationsData,
-    userId
+    userId,
   ) {
     const cropNotes = await this.getCropNotes(
       savedCrop,
@@ -327,7 +318,7 @@ class SavingRecommendationService {
       { where: { ID: savedCrop.ManagementPeriodID } },
     );
 
-    if (!managementPeriod){ 
+    if (!managementPeriod) {
       return [];
     }
     return adviceNotes.filter(
@@ -418,9 +409,9 @@ class SavingRecommendationService {
       savedRecommendations,
       context.hasDefoliationNotes,
     );
-   const recomendationsAndComments = []
+    const recomendationsAndComments = [];
     for (const recommendation of recommendationsToSave) {
-      const recommendationsNotes= await this.saveMultipleRecommendation(
+      const recommendationsNotes = await this.saveMultipleRecommendation(
         Recommendations,
         cropData,
         recommendation,
@@ -452,7 +443,8 @@ class SavingRecommendationService {
     userId,
     mannerOutputs,
   ) {
-    const recommendations = [],finalRecommendations=[];
+    const recommendations = [],
+      finalRecommendations = [];
 
     if (!dataMultipleCrops?.length) {
       return recommendations;
