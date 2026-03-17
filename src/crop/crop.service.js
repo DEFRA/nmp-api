@@ -176,7 +176,6 @@ class CropService extends BaseService {
     rB209CountryID
   ) {
     if (updatedCrop?.CropOrder !== 1) return;
-
     const secondCrop = await transactionalManager.findOne(CropEntity, {
       where: { FieldID: fieldId, Year: year, CropOrder: 2 },
     });
@@ -258,7 +257,7 @@ class CropService extends BaseService {
         });
 
       // Get the rb209CountryID of the farm
-        const rb209CountryID = this.fetchRb209CountryId(fieldId)
+        const rb209CountryID = await this.fetchRb209CountryId(fieldId)
        
         await this.validateAndHandleSecondCrop(
           transactionalManager,
@@ -927,7 +926,7 @@ class CropService extends BaseService {
 
        
         // Get the rb209CountryID of the farm
-        const rb209CountryID = this.fetchRb209CountryId(crop.FieldID)
+        const rb209CountryID =await this.fetchRb209CountryId(crop.FieldID)
 
       await this.validateAndHandleSecondCrop(
         transactionalManager,
