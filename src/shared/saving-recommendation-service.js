@@ -68,6 +68,7 @@ class SavingRecommendationService {
         transactionalManager,
         userId,
         mannerOutputs,
+        defoliationIds,
       );
 
       if (recommendation) {
@@ -94,6 +95,7 @@ class SavingRecommendationService {
     transactionalManager,
     userId,
     mannerOutputs,
+    defoliationIds
   ) {
     const defoliationData = await this.extractNutrientData(
       filteredData.calculations,
@@ -107,7 +109,7 @@ class SavingRecommendationService {
     const managementPeriod = await this.getManagementPeriod(
       transactionalManager,
       cropData.ID,
-      defoliationId,
+      defoliationId
     );
     await this.applyNutrientCalculations(
       cropRecData,
@@ -116,7 +118,8 @@ class SavingRecommendationService {
       managementPeriod,
       cropData,
       transactionalManager,
-      defoliationId,
+      {defoliationId,
+      defoliationIds}
     );
 
     if (!managementPeriod) {
@@ -168,17 +171,30 @@ class SavingRecommendationService {
   async applyNutrientCalculations(
     cropRecData,
     calculations,
-    mannerOutputs,
+    allMannerOutputs,
     managementPeriod,
     cropData,
     transactionalManager,
-    defoliationId
+    defoliations
   ) {
-    let availableNForNextDefoliation = null,nextCropAvailableN = null;
+    const { defoliationId, defoliationIds } = defoliations ;
+    const mannerOutputs = allMannerOutputs.filter(
+      (item) => item.defoliationId === defoliationId
+    );
+    let availableNForNextDefoliation = null,
+      nextCropAvailableN = null;
     if (!mannerOutputs || mannerOutputs.length === 0) {
-      availableNForNextDefoliation = await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(transactionalManager,managementPeriod,cropData);
+      if(defoliationIds.length > 1){
+        availableNForNextDefoliation =
+          await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
+            transactionalManager,
+            managementPeriod,
+            cropData
+          );
+         }
       if (defoliationId === 1) {
-        nextCropAvailableN = await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
+        nextCropAvailableN =
+          await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
             cropData.FieldID,
             cropData.Year,
             transactionalManager
@@ -235,13 +251,15 @@ class SavingRecommendationService {
     };
     for (const calc of calculations) {
       const handler = nutrientHandlers[calc.nutrientId];
-      if (handler) { handler(calc)}
+      if (handler) {
+        handler(calc);
+      }
     }
   }
 
   async getManagementPeriod(transactionalManager, cropID, defoliationId) {
     const record = await transactionalManager.findOne(ManagementPeriodEntity, {
-      where: { CropID: cropID, Defoliation: defoliationId },
+      where: { CropID: cropID, Defoliation: defoliationId }
     });
     return record ?? null;
   }
@@ -287,7 +305,7 @@ class SavingRecommendationService {
     cropSaveData,
     transactionalManager,
     nutrientRecommendationsData,
-    userId
+    userId,
   ) {
     const cropNotes = await this.getCropNotes(
       savedCrop,
@@ -327,7 +345,7 @@ class SavingRecommendationService {
       { where: { ID: savedCrop.ManagementPeriodID } },
     );
 
-    if (!managementPeriod){ 
+    if (!managementPeriod) {
       return [];
     }
     return adviceNotes.filter(
@@ -418,9 +436,9 @@ class SavingRecommendationService {
       savedRecommendations,
       context.hasDefoliationNotes,
     );
-   const recomendationsAndComments = []
+    const recomendationsAndComments = [];
     for (const recommendation of recommendationsToSave) {
-      const recommendationsNotes= await this.saveMultipleRecommendation(
+      const recommendationsNotes = await this.saveMultipleRecommendation(
         Recommendations,
         cropData,
         recommendation,
@@ -452,7 +470,8 @@ class SavingRecommendationService {
     userId,
     mannerOutputs,
   ) {
-    const recommendations = [],finalRecommendations=[];
+    const recommendations = [],
+      finalRecommendations = [];
 
     if (!dataMultipleCrops?.length) {
       return recommendations;
