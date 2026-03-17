@@ -65,8 +65,7 @@ class SavingRecommendationService {
         defoliationId,
         filteredData,
         latestSoilAnalysis,
-        transactionalManager,
-        userId,
+        {transactionalManager,userId},
         mannerOutputs,
         defoliationIds,
       );
@@ -92,25 +91,15 @@ class SavingRecommendationService {
     defoliationId,
     filteredData,
     latestSoilAnalysis,
-    transactionalManager,
-    userId,
+    userIdTransactionManager,
     mannerOutputs,
     defoliationIds
   ) {
-    const defoliationData = await this.extractNutrientData(
-      filteredData.calculations,
-      defoliationId,
-    );
-    if (!defoliationData?.length) {
-      return null;
-    }
+    const { transactionalManager, userId } = userIdTransactionManager;
+    const defoliationData = await this.extractNutrientData(filteredData.calculations,defoliationId);
+    if (!defoliationData?.length) {return null}
     const cropRecData = this.initializeRecommendationData(latestSoilAnalysis);
-
-    const managementPeriod = await this.getManagementPeriod(
-      transactionalManager,
-      cropData.ID,
-      defoliationId
-    );
+    const managementPeriod = await this.getManagementPeriod(transactionalManager,cropData.ID,defoliationId);
     await this.applyNutrientCalculations(
       cropRecData,
       defoliationData,
@@ -121,11 +110,7 @@ class SavingRecommendationService {
       {defoliationId,
       defoliationIds}
     );
-
-    if (!managementPeriod) {
-      return null;
-    }
-
+    if (!managementPeriod) {return null}
     return this.saveOrUpdateRecommendation(
       transactionalManager,
       managementPeriod,
@@ -178,27 +163,14 @@ class SavingRecommendationService {
     defoliations
   ) {
     const { defoliationId, defoliationIds } = defoliations ;
-    const mannerOutputs = allMannerOutputs.filter(
-      (item) => item.defoliationId === defoliationId
-    );
-    let availableNForNextDefoliation = null,
-      nextCropAvailableN = null;
+    const mannerOutputs = allMannerOutputs.filter((item) => item.defoliationId === defoliationId);
+    let availableNForNextDefoliation = null,nextCropAvailableN = null;
     if (!mannerOutputs || mannerOutputs.length === 0) {
       if(defoliationIds.length > 1){
-        availableNForNextDefoliation =
-          await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
-            transactionalManager,
-            managementPeriod,
-            cropData
-          );
+        availableNForNextDefoliation =await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(transactionalManager,managementPeriod,cropData);
          }
       if (defoliationId === 1) {
-        nextCropAvailableN =
-          await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
-            cropData.FieldID,
-            cropData.Year,
-            transactionalManager
-          );
+        nextCropAvailableN = await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(cropData.FieldID,cropData.Year,transactionalManager);
       }
     }
     const normalizeManure = (value) => (value === 0 ? null : value);
@@ -207,10 +179,8 @@ class SavingRecommendationService {
         cropRecData.CropN = c.recommendation;
         cropRecData.FertilizerN = c.cropNeed;
         cropRecData.ManureN = c.manures;
-        // If no manner outputs, add extra N
         if (!mannerOutputs || mannerOutputs.length === 0) {
-          cropRecData.ManureN =
-            (availableNForNextDefoliation || 0) + (nextCropAvailableN || 0);
+          cropRecData.ManureN =(availableNForNextDefoliation || 0) + (nextCropAvailableN || 0);
         }
         cropRecData.NBalance = c.pkBalance;
         cropRecData.NIndex = c.indexpH;
@@ -251,9 +221,7 @@ class SavingRecommendationService {
     };
     for (const calc of calculations) {
       const handler = nutrientHandlers[calc.nutrientId];
-      if (handler) {
-        handler(calc);
-      }
+      if (handler) {handler(calc)}
     }
   }
 
