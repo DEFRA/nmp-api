@@ -50,6 +50,7 @@ const { ProcessFutureManuresForWarnings } = require("../shared/process-future-wa
 const { ARABLE } = require("../constants/rb209-endpoints-mapper");
 const { GenerateRecommendations } = require("../shared/generate-recomendations-service");
 const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
+const { CountryEntity } = require("../db/entity/country.entity");
 class CropService extends BaseService {
   constructor() {
     super(CropEntity);
@@ -82,6 +83,8 @@ class CropService extends BaseService {
     this.ProcessFutureManuresForWarnings = new ProcessFutureManuresForWarnings();
      this.generateRecommendations = new GenerateRecommendations();
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();  
+    this.countryRepository = AppDataSource.getRepository(CountryEntity); 
+   this.fieldRepository = AppDataSource.getRepository(FieldEntity);
   }
 
   async createCropWithManagementPeriods(
@@ -169,6 +172,7 @@ class CropService extends BaseService {
     updatedCrop,
     fieldId,
     year,
+    rB209CountryID
   ) {
     if (updatedCrop?.CropOrder !== 1) return;
 
@@ -186,6 +190,7 @@ class CropService extends BaseService {
           where: {
             FirstCropID: firstCropTypeID,
             SecondCropID: secondCropTypeID,
+            RB209CountryID: In([3, rB209CountryID])
           },
         },
       );
@@ -251,11 +256,37 @@ class CropService extends BaseService {
           where: { FieldID: fieldId, Year: year, Confirm: confirmValue },
         });
 
+ // Get the CountryID of the farm
+        let rb209CountryID = 3; // default mandatory value
+        const field = await this.fieldRepository.findOne({
+          where: { ID: fieldId },
+          select: ["FarmID"],
+        });
+        if(field!=null)
+        {
+        // Get the CountryID of the farm
+        const farm = await this.farmRepository.findOne({
+          where: { ID: field.FarmID },
+          select: ["CountryID"],
+        });
+
+        if (farm != null) {
+          const country = await this.countryRepository.findOne({
+            where: { ID: farm.CountryID },
+            select: ["RB209CountryID"],
+          });
+
+          if (country != null && country.RB209CountryID != null) {
+            rb209CountryID = country.RB209CountryID;
+          }
+        }
+      }
         await this.validateAndHandleSecondCrop(
           transactionalManager,
           updatedCrop,
           fieldId,
           year,
+          rb209CountryID
         );
 
         return updatedCrop;
@@ -888,11 +919,38 @@ class CropService extends BaseService {
         where: { ID: ID },
       });
 
+        // Get the CountryID of the farm
+        let rb209CountryID = 3; // default mandatory value
+        const field = await this.fieldRepository.findOne({
+          where: { ID: crop.FieldID },
+          select: ["FarmID"],
+        });
+        if(field!=null)
+        {
+        // Get the CountryID of the farm
+        const farm = await this.farmRepository.findOne({
+          where: { ID: field.FarmID },
+          select: ["CountryID"],
+        });
+        
+        if (farm != null) {
+          const country = await this.countryRepository.findOne({
+            where: { ID: farm.CountryID },
+            select: ["RB209CountryID"],
+          });
+
+          if (country != null && country.RB209CountryID != null) {
+            rb209CountryID = country.RB209CountryID;
+          }
+        }
+      }
+
       await this.validateAndHandleSecondCrop(
         transactionalManager,
         updatedCrop,
         updatedCrop.FieldID,
         updatedCrop.Year,
+        rb209CountryID
       );
 
       const updatedManagementPeriods =
