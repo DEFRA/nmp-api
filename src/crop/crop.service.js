@@ -256,9 +256,28 @@ class CropService extends BaseService {
           where: { FieldID: fieldId, Year: year, Confirm: confirmValue },
         });
 
- // Get the CountryID of the farm
-        let rb209CountryID = 3; // default mandatory value
-        const field = await this.fieldRepository.findOne({
+      // Get the rb209CountryID of the farm
+        const rb209CountryID = fetchRb209CountryId(fieldId)
+       
+        await this.validateAndHandleSecondCrop(
+          transactionalManager,
+          updatedCrop,
+          fieldId,
+          year,
+          rb209CountryID
+        );
+
+        return updatedCrop;
+      },
+    );
+
+    return result;
+  }
+
+  async fetchRb209CountryId(fieldId)
+  {
+    let rb209CountryID = 3; // default mandatory value
+     const field = await this.fieldRepository.findOne({
           where: { ID: fieldId },
           select: ["FarmID"],
         });
@@ -281,19 +300,7 @@ class CropService extends BaseService {
           }
         }
       }
-        await this.validateAndHandleSecondCrop(
-          transactionalManager,
-          updatedCrop,
-          fieldId,
-          year,
-          rb209CountryID
-        );
-
-        return updatedCrop;
-      },
-    );
-
-    return result;
+      return rb209CountryID;
   }
 
   // Other methods...
@@ -919,31 +926,9 @@ class CropService extends BaseService {
         where: { ID: ID },
       });
 
-        // Get the CountryID of the farm
-        let rb209CountryID = 3; // default mandatory value
-        const field = await this.fieldRepository.findOne({
-          where: { ID: crop.FieldID },
-          select: ["FarmID"],
-        });
-        if(field!=null)
-        {
-        // Get the CountryID of the farm
-        const farm = await this.farmRepository.findOne({
-          where: { ID: field.FarmID },
-          select: ["CountryID"],
-        });
-        
-        if (farm != null) {
-          const country = await this.countryRepository.findOne({
-            where: { ID: farm.CountryID },
-            select: ["RB209CountryID"],
-          });
-
-          if (country != null && country.RB209CountryID != null) {
-            rb209CountryID = country.RB209CountryID;
-          }
-        }
-      }
+       
+        // Get the rb209CountryID of the farm
+        const rb209CountryID = fetchRb209CountryId(crop.FieldID)
 
       await this.validateAndHandleSecondCrop(
         transactionalManager,
