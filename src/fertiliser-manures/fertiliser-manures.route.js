@@ -303,4 +303,38 @@ module.exports = [
       },
     },
   },
+
+  {
+    method: "GET",
+    path: "/fertiliser-manures/get-closed-period/{CountryId}",
+    handler: async (request, h) => {
+      return getController(request, h).getClosedPeriodByID();
+    },
+    options: {
+      tags: ["api", "Fertiliser Manures"],
+      description: "Get Closed Period by ID",
+      validate: {
+        params: Joi.object({
+          CountryId: Joi.number().required(),
+        }),
+        query: Joi.object({
+          CropTypeId: Joi.number().integer().required(),
+          NvzId: Joi.number().integer().allow(null).optional(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              }),
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+  },
 ];

@@ -175,6 +175,21 @@ class FertiliserManuresController {
       return this.#h.response({ error });
     }
   }
+
+  async getClosedPeriodByID() {
+    const { CountryId } = this.#request.params;
+    const { CropTypeId, NvzId } = this.#request.query;
+    try {
+      const closedPeriod = await this.#fertiliserManuresService.getClosedPeriodByID(
+        CountryId,
+        CropTypeId,
+        NvzId
+      );
+      return this.#h.response({ closedPeriod: closedPeriod });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
 }
 
 module.exports = { FertiliserManuresController };
