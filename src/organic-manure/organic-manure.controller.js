@@ -257,6 +257,19 @@ class OrganicManureController {
       return this.#h.response({ error });
     }
   }
+
+  async getClosedPeriodByID() {
+    const { soilTypeId } = this.#request.params;
+    try {
+      const closedPeriod = await this.#organicManureService.getClosedPeriodByID(
+        soilTypeId,
+        this.#request.query
+      );
+      return this.#h.response({ closedPeriod: closedPeriod });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
 }
 
 module.exports = { OrganicManureController };

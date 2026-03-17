@@ -50,8 +50,7 @@ module.exports = [
     path: "/organic-manures/total-nitrogen-by-crop-id/{cropID}",
     options: {
       tags: ["api", "Organic Manure"],
-      description:
-        "Get Total Nitrogen by cropID and Application Date Range",
+      description: "Get Total Nitrogen by cropID and Application Date Range",
       validate: {
         params: Joi.object({
           cropID: Joi.number().integer().required(),
@@ -418,6 +417,45 @@ module.exports = [
       validate: {
         params: Joi.object({
           managementPeriodID: Joi.number().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              }),
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+  },
+
+  {
+    method: "GET",
+    path: "/organic-manure/get-closed-period/{soilTypeId}",
+    handler: async (request, h) => {
+      return getController(request, h).getClosedPeriodByID();
+    },
+    options: {
+      tags: ["api", "Organic Manure"],
+      description: "Get Closed Period by ID",
+      validate: {
+        params: Joi.object({
+          soilTypeId: Joi.number().required(),
+        }),
+        query: Joi.object({
+          fieldType: Joi.number().integer().required(),
+          harvestYear: Joi.number().integer().required(),
+          sowingDate: Joi.date().iso().allow(null).optional(),
+          countryId: Joi.number().integer().required(),
+          cropGroupId: Joi.number().integer().optional(),
+          cropTypeId: Joi.number().integer().optional(),
+          isPerennial: Joi.boolean().required(),
         }),
         failAction: (request, h, err) => {
           return h
