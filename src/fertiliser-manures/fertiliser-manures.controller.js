@@ -185,7 +185,7 @@ class FertiliserManuresController {
         CropTypeId,
         NvzId
       );
-      return this.#h.response({ closedPeriod: closedPeriod });
+      return this.#h.response(closedPeriod );
     } catch (error) {
       return this.#h.response({ error });
     }

@@ -265,7 +265,7 @@ class OrganicManureController {
         soilTypeId,
         this.#request.query
       );
-      return this.#h.response({ closedPeriod: closedPeriod });
+      return this.#h.response(closedPeriod );
     } catch (error) {
       return this.#h.response({ error });
     }
