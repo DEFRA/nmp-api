@@ -8,6 +8,7 @@ const {
   UpdateFertiliserManuresDto,
 } = require("./dto/fertiliser-manures.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
+const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 
 const getController = (request, h) =>
   new FertiliserManuresController(request, h);
@@ -331,7 +332,7 @@ module.exports = [
                 request,
               }),
             )
-            .code(400)
+            .code(StatusCodeMapper.BAD_REQUEST)
             .takeover();
         },
       },

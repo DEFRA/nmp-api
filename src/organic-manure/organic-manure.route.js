@@ -5,6 +5,7 @@ const {
   UpdateOrganicManuresWithFarmManureTypeDtoSchema,
 } = require("./dto/organic-manure.dto");
 const { OrganicManureController } = require("./organic-manure.controller");
+const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 const getController = (request, h) => new OrganicManureController(request, h);
 
 // Define routes
@@ -467,7 +468,7 @@ module.exports = [
                 request,
               }),
             )
-            .code(400)
+            .code(StatusCodeMapper.BAD_REQUEST)
             .takeover();
         },
       },
