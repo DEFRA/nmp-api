@@ -9,6 +9,7 @@ const {
 } = require("./dto/fertiliser-manures.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 const getController = (request, h) =>
   new FertiliserManuresController(request, h);
@@ -322,20 +323,8 @@ module.exports = [
           CropTypeId: Joi.number().integer().required(),
           NvzId: Joi.number().integer().allow(null).optional(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(StatusCodeMapper.BAD_REQUEST)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
-  }
+  },
 ];
