@@ -50,6 +50,7 @@ const { ProcessFutureManuresForWarnings } = require("../shared/process-future-wa
 const { ARABLE } = require("../constants/rb209-endpoints-mapper");
 const { GenerateRecommendations } = require("../shared/generate-recomendations-service");
 const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
+const { CountryEntity } = require("../db/entity/country.entity");
 class CropService extends BaseService {
   constructor() {
     super(CropEntity);
@@ -82,6 +83,9 @@ class CropService extends BaseService {
     this.ProcessFutureManuresForWarnings = new ProcessFutureManuresForWarnings();
      this.generateRecommendations = new GenerateRecommendations();
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();  
+    this.countryRepository = AppDataSource.getRepository(CountryEntity); 
+   this.fieldRepository = AppDataSource.getRepository(FieldEntity);
+      this.COUNTRY_BOTH = 3;
   }
 
   async createCropWithManagementPeriods(
@@ -169,9 +173,9 @@ class CropService extends BaseService {
     updatedCrop,
     fieldId,
     year,
+    rB209CountryID
   ) {
     if (updatedCrop?.CropOrder !== 1) return;
-
     const secondCrop = await transactionalManager.findOne(CropEntity, {
       where: { FieldID: fieldId, Year: year, CropOrder: 2 },
     });
@@ -186,6 +190,7 @@ class CropService extends BaseService {
           where: {
             FirstCropID: firstCropTypeID,
             SecondCropID: secondCropTypeID,
+            RB209CountryID: In([this.COUNTRY_BOTH, rB209CountryID])
           },
         },
       );
@@ -251,11 +256,15 @@ class CropService extends BaseService {
           where: { FieldID: fieldId, Year: year, Confirm: confirmValue },
         });
 
+      // Get the rb209CountryID of the farm
+        const rb209CountryID = await this.fetchRb209CountryId(fieldId)
+       
         await this.validateAndHandleSecondCrop(
           transactionalManager,
           updatedCrop,
           fieldId,
           year,
+          rb209CountryID
         );
 
         return updatedCrop;
@@ -264,6 +273,33 @@ class CropService extends BaseService {
 
     return result;
   }
+
+  async fetchRb209CountryId(fieldId) {
+  let rb209CountryID = this.COUNTRY_BOTH; // default value
+
+  const field = await this.fieldRepository.findOne({
+    where: { ID: fieldId },
+    select: ["FarmID"],
+  });
+
+  const farm = field
+    ? await this.farmRepository.findOne({
+        where: { ID: field.FarmID },
+        select: ["CountryID"],
+      })
+    : null;
+
+  const country = farm
+    ? await this.countryRepository.findOne({
+        where: { ID: farm.CountryID },
+        select: ["RB209CountryID"],
+      })
+    : null;
+
+  rb209CountryID = country?.RB209CountryID ?? this.COUNTRY_BOTH;
+
+  return rb209CountryID;
+}
 
   // Other methods...
   async mapCropTypeIdWithTheirNames(plans) {
@@ -888,11 +924,16 @@ class CropService extends BaseService {
         where: { ID: ID },
       });
 
+       
+        // Get the rb209CountryID of the farm
+        const rb209CountryID =await this.fetchRb209CountryId(crop.FieldID)
+
       await this.validateAndHandleSecondCrop(
         transactionalManager,
         updatedCrop,
         updatedCrop.FieldID,
         updatedCrop.Year,
+        rb209CountryID
       );
 
       const updatedManagementPeriods =

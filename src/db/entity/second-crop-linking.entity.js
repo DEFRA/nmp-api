@@ -14,6 +14,10 @@ const SecondCropLinkingEntity = new EntitySchema({
       primary: true,
 
     },
+     RB209CountryID: {
+      type: "int",
+      nullable: false,
+    },
   },
 
 });

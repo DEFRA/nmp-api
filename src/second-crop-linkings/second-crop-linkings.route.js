@@ -27,6 +27,9 @@ module.exports = [
               "any.required": "FirstCropID is required",
             }),
         }),
+        query: Joi.object({
+                 rB209CountryID: Joi.number().required(),
+               }),
         failAction: (request, h, err) => {
           return h
             .response(
