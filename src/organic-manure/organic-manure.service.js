@@ -1173,10 +1173,10 @@ class OrganicManureService extends BaseService {
           countryId,
           cropGroupId,
           cropTypeId,
-          isPerennial,
+          isPerennial
         ]);
 
-        return result;
+        return result[0];
       } catch (error) {
         console.error("Error fetching organic manure closed period:", error);
         throw error;

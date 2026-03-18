@@ -708,7 +708,7 @@ class FertiliserManuresService extends BaseService {
           cropTypeId,
           nvzId
         ]);
-        return result
+        return result[0]
       } catch (error) {
         console.error( error);
       }
