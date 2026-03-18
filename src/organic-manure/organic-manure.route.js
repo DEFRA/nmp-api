@@ -6,6 +6,7 @@ const {
 } = require("./dto/organic-manure.dto");
 const { OrganicManureController } = require("./organic-manure.controller");
 const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 const getController = (request, h) => new OrganicManureController(request, h);
 
 // Define routes
@@ -458,19 +459,7 @@ module.exports = [
           cropTypeId: Joi.number().integer().optional(),
           isPerennial: Joi.boolean().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(StatusCodeMapper.BAD_REQUEST)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
