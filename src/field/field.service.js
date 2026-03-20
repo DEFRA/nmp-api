@@ -40,6 +40,7 @@ const {
   PreviousCroppingEntity,
 } = require("../db/entity/previous-cropping.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
+const { CountryMapper } = require("../constants/country-mapper");
 const { PreviousCroppingMapper } = require("../constants/action-mapper");
 const { FarmService } = require("../farm/farm.service");
 const {
@@ -1232,9 +1233,14 @@ class FieldService extends BaseService {
         const soilTypeName = soil?.soilType;
         // Get SulphurDeficient from soilAnalysis
        const sulphurDeficient = soilAnalysis?.SulphurDeficient ?? null;
-        const pscIndex=await  this.pscIndexRepository.findOne({
+       let pscIndex=null;
+       if(farm.CountryID==CountryMapper.SCOTLAND)
+       {
+         pscIndex=await  this.pscIndexRepository.findOne({
           where: { ID: field.PscIndexID},
         });
+      }
+        
         // Create soilDetails object
         const soilDetails = {
           PscIndexName :pscIndex?.Name ?? null,
