@@ -1235,7 +1235,6 @@ class FieldService extends BaseService {
         const pscIndex=await  this.pscIndexRepository.findOne({
           where: { ID: field.PscIndexID},
         });
-        console.log('pscIndex',pscIndex)
         // Create soilDetails object
         const soilDetails = {
           PscIndexName:pscIndex!=null?pscIndex.Name:null,
