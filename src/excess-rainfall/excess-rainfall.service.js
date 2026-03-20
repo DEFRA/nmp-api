@@ -3,14 +3,14 @@ const { AppDataSource } = require("../db/data-source");
 const { ExcessRainfallsEntity } = require("../db/entity/excess-rainfalls.entity");
 const boom = require("@hapi/boom");
 const { FieldEntity } = require("../db/entity/field.entity");
-const { UpdateRecommendation } = require("../shared/updateRecommendation.service");
+const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
 
 class ExcessRainfallService extends BaseService {
   constructor() {
     super(ExcessRainfallsEntity);
     this.repository = AppDataSource.getRepository(ExcessRainfallsEntity);
     this.fieldRepository = AppDataSource.getRepository(FieldEntity);
-    this.UpdateRecommendation = new UpdateRecommendation();
+    this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
   }
   async getExcessRainfallByFarmIdAndYear(fieldId, year) {
     const excessRainfall = await this.repository.findOneBy({
@@ -67,36 +67,8 @@ class ExcessRainfallService extends BaseService {
 
   // Function to update recommendations for each fieldId sequentially
   async updateRecommendationsForFields(fieldIds, year, request, userId) {
-    
     for (const fieldId of fieldIds) {
-        console.log("fieldcheck", fieldId);
-        console.log("yearoffield",year)
-        // Process one fieldId at a time
-        this.UpdateRecommendation.updateRecommendationsForField(
-          fieldId,
-          year,
-          request,
-          userId
-        )
-          .then((result) => {
-            if (result === undefined) {
-              console.log(
-                `updateRecommendationsForField returned undefined for FieldID: ${fieldId}`
-              );
-            } else {
-              console.log(
-                `updateRecommendationsForField result for FieldID: ${fieldId}`,
-                result
-              );
-            }
-          })
-          .catch((error) => {
-            console.error(
-              `Error updating recommendation for FieldID: ${fieldId}`,
-              error
-            );
-          });
-    
+        this.updatingFutureRecommendations.updateRecommendationsForField(fieldId, year, request, userId)  
     }
   }
 
@@ -109,7 +81,7 @@ class ExcessRainfallService extends BaseService {
       {
         ...dataToUpdate,
         ModifiedByID: userId,
-        ModifiedOn: new Date(),
+        ModifiedOn: new Date()
       }
     );
 
@@ -120,11 +92,11 @@ class ExcessRainfallService extends BaseService {
     }
 
     const updatedExcessRainfall = await this.repository.findOne({
-      where: { FarmID: farmId, Year: year }, // Find by FarmID and Year
+      where: { FarmID: farmId, Year: year }// Find by FarmID and Year
     });
 
         const fields = await this.fieldRepository.find({
-          where: { FarmID: farmId },
+          where: { FarmID: farmId }
         });
 
         // Extract the list of fieldIds from the result

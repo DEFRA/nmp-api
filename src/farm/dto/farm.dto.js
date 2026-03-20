@@ -34,17 +34,30 @@ const FarmDto = Joi.object({
   ModifiedOn: Joi.date().allow(null),
   ModifiedByID: Joi.date().allow(null),
 });
+
+const FarmNvzDto = Joi.object({
+  ID: Joi.number().integer().allow(null).default(null),
+  FarmID: Joi.number().integer().allow(null).optional(),
+  NVZProgrammeID: Joi.number().required(),
+  NVZProgrammeName: Joi.string().required(),
+  CreatedOn: Joi.date().allow(null),
+  CreatedByID: Joi.number().allow(null),
+  ModifiedOn: Joi.date().allow(null),
+  ModifiedByID: Joi.number().allow(null)
+});
 const FarmUpdateDto = FarmDto.keys({
     ID: Joi.number().required()  
 });
 const FarmPayloadDto = Joi.object({
-    Farm: FarmDto.required(),
-    UserID: Joi.number().optional().allow(null), 
-    RoleID: Joi.number().optional().allow(null) 
+  Farm: FarmDto.required(),
+  FarmsNvz: Joi.array().items(FarmNvzDto).optional(),
+  UserID: Joi.number().optional().allow(null),
+  RoleID: Joi.number().optional().allow(null)
 });
 
 const FarmUpdatePayloadDto = Joi.object({
-    Farm: FarmUpdateDto.required()
+  Farm: FarmUpdateDto.required(),
+  FarmsNvz: Joi.array().items(FarmNvzDto).optional()
 });
 
 module.exports = {

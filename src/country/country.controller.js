@@ -21,6 +21,17 @@ class CountryController {
       return this.#h.response({ error });
     }
   }
+
+  async getCountryById() {
+    try {
+      const { id } = this.#request.params;
+      const { records } = await this.#countryService.getById(id);
+      return this.#h.response({ records });
+    } catch (error) {
+      console.error(error);
+      return this.#h.response({ error });
+    }
+  }
 }
 
 module.exports = { CountryController };

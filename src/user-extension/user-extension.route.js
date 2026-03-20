@@ -1,7 +1,8 @@
 const Joi = require("joi");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { UserExtensionController } = require("./user-extension.controller");
-const { updateIsTermsOfUseAcceptedDto, updateDoNotShowAboutThisServiceDto } = require("./dto/user-extension.dto");
+const { updateIsTermsOfUseAcceptedDto, updateDoNotShowAboutThisServiceDto, doNotShowAboutMannerDto } = require("./dto/user-extension.dto");
+const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 
 module.exports = [
   {
@@ -20,7 +21,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -47,10 +48,38 @@ module.exports = [
                 source: {
                   error: err,
                 },
-                request,
+                request
               })
             )
             .code(400)
+            .takeover();
+        }
+      }
+    },
+    handler: async (request, h) => {
+      const controller = new UserExtensionController(request, h);
+      return controller.updateDoNotShowAboutThisService();
+    }
+  },
+  {
+    method: "PUT",
+    path: "/user-extension/do-not-show-about-manner",
+    options: {
+      tags: ["api", "UserExtension"],
+      description: "Update DoNotShowAboutManner in UserExtension",
+      validate: {
+        payload: doNotShowAboutMannerDto,
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              }),
+            )
+            .code(StatusCodeMapper.BAD_REQUEST)
             .takeover();
         },
       },
@@ -75,7 +104,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();

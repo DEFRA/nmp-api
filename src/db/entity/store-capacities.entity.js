@@ -15,11 +15,6 @@ const StoreCapacitiesEntity = new EntitySchema({
       nullable: false,
       name: "FarmID",
     },
-    Year: {
-      type: "int",
-      nullable: false,
-      name: "Year",
-    },
     StoreName: {
       type: "nvarchar",
       length: 128,
