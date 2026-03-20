@@ -8,7 +8,7 @@ const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { CropEntity } = require("../db/entity/crop.entity");
 
 class CalculateCropsSnsAnalysisService {
-  constructor() {}
+  
   async getCropsSnsAnalyses(transactionalManager, fieldId, year) {
     // Step 1: find crops by field and year
     const crops = await transactionalManager.find(CropEntity, {

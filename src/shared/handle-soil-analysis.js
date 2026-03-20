@@ -1,13 +1,9 @@
-const { In, Between } = require("typeorm");
-const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
-const {
-  ManagementPeriodEntity,
-} = require("../db/entity/management-period.entity");
-const { CropOrderMapper } = require("../constants/crop-order-mapper");
+const {  Between } = require("typeorm");
 const RB209SoilService = require("../vendors/rb209/soil/soil.service");
 const { AppDataSource } = require("../db/data-source");
 const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const { NutrientMapperNames } = require("../constants/nutrient-mapper-names");
+const { CountryMapper } = require("../constants/country-mapper");
 
 class HandleSoilAnalysisService {
   constructor() {
@@ -33,7 +29,6 @@ class HandleSoilAnalysisService {
           }
         }
       }
-
       // Check if indexValue is -2 and match with "2-"
       if (indexValue === -2) {
         for (const data of nutrientData) {
@@ -43,7 +38,6 @@ class HandleSoilAnalysisService {
         }
       }
     }
-
     for (const data of nutrientData) {
       if (data.index.trim() === indexValue.toString()) {
         return data.indexId;
@@ -65,8 +59,9 @@ class HandleSoilAnalysisService {
         const getNutrientData = await this.RB209SoilService.getData(
           `Soil/Methodologies/${nutrientId}/${countryId}`
         );
-
-        const methodologyId = getNutrientData[0]?.methodologyId;
+       
+     const methodologyIndex = rb209CountryId === CountryMapper.SCOTLAND && nutrientId === 1 ? 1 : 0;
+        const methodologyId = getNutrientData[methodologyIndex]?.methodologyId;
 
         if (methodologyId != null) {
           // Use dynamic countryId for the NutrientIndices API call
@@ -94,18 +89,18 @@ class HandleSoilAnalysisService {
     return soilAnalysisRecords;
   }
 
-  async handleSoilAnalysisValidation(fieldId, fieldName, year, rb209CountryId) {
+  async handleSoilAnalysisValidation(fieldId, year, rb209CountryId,transactionalManager) {
     const errors = [];
     const fiveYearsAgo = year - 4;
 
     // Fetch all soil analyses for the last 5 years
-    const soilAnalysisRecordsFiveYears = await this.soilAnalysisRepository.find(
+    const soilAnalysisRecordsFiveYears = await transactionalManager.find(SoilAnalysisEntity,
       {
         where: {
           FieldID: fieldId,
           Year: Between(fiveYearsAgo, year), // Fetch records within 5 years
         },
-        order: { Date: "DESC" }, // Order by date, most recent first
+        order: { Date: "DESC" } // Order by date, most recent first
       }
     );
 
@@ -115,7 +110,7 @@ class HandleSoilAnalysisService {
       "SoilNitrogenSupplyIndex",
       "PhosphorusIndex",
       "PotassiumIndex",
-      "MagnesiumIndex",
+      "MagnesiumIndex"
     ];
 
     // Initialize the latest values object
@@ -128,9 +123,6 @@ class HandleSoilAnalysisService {
         const latestRecordWithFieldValue = soilAnalysisRecordsFiveYears.find(
           (record) => record[field] !== null && record[field] !== undefined
         );
-
-        // if (latestRecordWithFieldValue) {
-
         if (latestRecordWithFieldValue) {
           latestSoilAnalysis[field] = latestRecordWithFieldValue[field];
         } else {

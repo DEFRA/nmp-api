@@ -322,11 +322,28 @@ class CalculateGrassHistoryAndPreviousGrass {
 
   async calculateLeyDuration(fieldTypesArray, transactionalManager) {
     const leyCount = await this.calculateLeyFromCropData(fieldTypesArray);
+    // Check if fieldType 2 is consecutive
+    const hasConsecutiveLey = fieldTypesArray
+      .sort((a, b) => b.processingYear - a.processingYear) // latest → oldest
+      .some((item, index, arr) => {
+        if (index === arr.length - 1) {return false};
+        return (
+          item.fieldType === 2 &&
+          arr[index + 1].fieldType === 2 &&
+          item.processingYear - arr[index + 1].processingYear === 1
+        );
+      });
 
+    // If not consecutive, stop here
+    if (!hasConsecutiveLey && leyCount > 0) {
+      return leyCount;
+    }
+
+    // Only proceed to history if consecutive
     if (leyCount < 2) {
       const historyLey = await this.calculateLeyFromHistory(
         fieldTypesArray,
-        transactionalManager,
+        transactionalManager
       );
 
       if (historyLey != null) {
@@ -334,9 +351,9 @@ class CalculateGrassHistoryAndPreviousGrass {
       }
     }
 
-    if (leyCount > 2) return 2;
-    if (leyCount > 0) return 1;
-    return 0;
+    if (leyCount > 2) {return 2};
+    if (leyCount > 0) {return 1};
+     return 1
   }
 
   async getExtendedFieldTypesForLeyCheck(
@@ -715,7 +732,7 @@ class CalculateGrassHistoryAndPreviousGrass {
       await this.getExtendedFieldTypesForLeyCheck(
         crop.FieldID,
         harvestYear,
-        transactionalManager,
+        transactionalManager
       );
 
     const [firstHyFieldType, secondHyFieldType, thirdHyFieldType] = fieldTypes;
@@ -728,12 +745,12 @@ class CalculateGrassHistoryAndPreviousGrass {
     }
     const leyDuration = await this.calculateLeyDuration(
       fieldTypeMeta,
-      transactionalManager,
+      transactionalManager
     );
     const lastGrass = await this.findLastGrassCropDetails(
       crop.FieldID,
       harvestYear,
-      transactionalManager,
+      transactionalManager
     );
     let {
       isGrazedOnly,
@@ -748,8 +765,6 @@ class CalculateGrassHistoryAndPreviousGrass {
     if (isHighClover) {
       nitrogenUse = CloverMapper.HighClover;
     }
-    // Step 6: NitrogenUse
-
     // Step 7: Lookup in PreviousGrassIdMapping
     const mapping = await transactionalManager.findOne(
       PreviousGrassIdMappingEntity,
@@ -763,7 +778,7 @@ class CalculateGrassHistoryAndPreviousGrass {
           IsCutOnly: iscutOnly,
           IsGrazedNCut: iscutAndGrazing,
           IsHighClover: isHighClover,
-          NitrogenUse: nitrogenUse,
+          NitrogenUse: nitrogenUse
         },
       },
     );

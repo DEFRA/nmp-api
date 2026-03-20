@@ -7,7 +7,6 @@ module.exports = [
   ...require("./farm/farm.route"),
   ...require("./field/field.route"),
   ...require("./moisture-type/moisture-type.route"),
-  ...require("./climate/climate.route"),
   ...require("./rain-types/rain-types.route"),
   ...require("./incorporation-delay/incorporation-delay.route"),
   ...require("./manure-type/manure-type.route"),
@@ -49,4 +48,6 @@ module.exports = [
   ...require("./previous-cropping/previous-cropping.route"),
   ...require("./warning-message/warning-message.route"),
   ...require("./warning/warning-route"),
+  ...require("./farms-NVZ/farms-NVZ.route"),
+  ...require("./psc-index/psc-index.route")
 ];

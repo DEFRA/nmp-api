@@ -4,7 +4,6 @@ const { FieldEntity } = require("./entity/field.entity.js");
 const { UserEntity } = require("./entity/user.entity.js");
 const { OrganisationEntity } = require("./entity/organisation.entity.js");
 const { MoistureTypeEntity } = require("./entity/moisture-type.entity.js");
-const { ClimateDatabaseEntity } = require("./entity/climate.entity.js");
 const { ManureTypeEntity } = require("./entity/manure-type.entity.js");
 const { CropEntity } = require("./entity/crop.entity.js");
 const {
@@ -89,6 +88,8 @@ const { WarningMessagesEntity } = require("./entity/warning-message.entity.js");
 const { PreviousCroppingEntity } = require("./entity/previous-cropping.entity.js");
 const { WarningCodeEntity } = require("./entity/warning-code.entity.js");
 const { WarningsEntity } = require("./entity/warning.entity.js");
+const { FarmsNVZEntity } = require("./entity/farms-nvz.entity.js");
+const { entities } = require("./entity/register-entities.js");
 
 
 
@@ -101,71 +102,7 @@ const baseConfig = {
   host: EnvironmentService.DATABASE_HOST(),
   port: EnvironmentService.DATABASE_PORT(),
   database: EnvironmentService.DATABASE_NAME(),
-  entities: [
-    FarmEntity,
-    FieldEntity,
-    UserEntity,
-    OrganisationEntity,
-    MoistureTypeEntity,
-    ClimateDatabaseEntity,
-    ManureTypeEntity,
-    CropEntity,
-    ManagementPeriodEntity,
-    RainTypeEntity,
-    IncorporationMethodEntity,
-    ManureGroupEntity,
-    IncorporationDelayEntity,
-    WindspeedEntity,
-    SoilAnalysisEntity,
-    MannerCropTypeEntity,
-    CropTypeLinkingEntity,
-    ApplicationMethodEntity,
-    ApplicationMethodsIncorpMethodEntity,
-    IncorpMethodsIncorpDelayEntity,
-    SoilTypeSoilTextureEntity,
-    SubSoilEntity,
-    TopSoilEntity,
-    RecommendationEntity,
-    RecommendationCommentEntity,
-    OrganicManureEntity,
-    FarmManureTypeEntity,
-    FertiliserManuresEntity,
-    InOrganicManureDurationEntity,
-    CountryEntity,
-    ManureTypeCategoryEntity,
-    SnsAnalysesEntity,
-    SecondCropLinkingEntity,
-    PKBalanceEntity,
-    FarmManureTypeEntity,
-    GrassManagementOptionsEntity,
-    GrassTypicalCutsEntity,
-    SoilNitrogenSupplyItemsEntity,
-    PreviousGrassesEntity,
-    SNSCategoriesEntity,
-    InprogressCalculationsEntity,
-    CropInfoQuestionsEntity,
-    ExcessRainfallsEntity,
-    ExcessWinterRainfallOptionsEntity,
-    UserExtensionsEntity,
-    PreviousGrassIdMappingEntity,
-    GrassHistoryIdMappingEntity,
-    CropGroupCategoriesEntity,
-    SoilGroupCategoriesEntity,
-    LivestockGroupEntity,
-    LivestockTypeEntity,
-    NutrientsLoadingFarmDetailsEntity,
-    NutrientsLoadingLiveStocksEntity,
-    NutrientsLoadingManuresEntity,
-    StorageTypesEntity,
-    StoreCapacitiesEntity,
-    MaterialStatesEntity,
-    SolidManureTypesEntity,
-    BankSlopeAnglesEntity,
-    WarningMessagesEntity,
-    PreviousCroppingEntity,
-    WarningCodeEntity,
-    WarningsEntity
-  ],
+  entities: entities
 };
 
 let ormConfig;

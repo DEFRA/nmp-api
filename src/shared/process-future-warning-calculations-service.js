@@ -14,7 +14,8 @@ class ProcessFutureManuresForWarnings {
     if (!Array.isArray(combinedManures) || !combinedManures.length){ 
       return
     }
-   for (const manure of combinedManures) {
+
+    for (const manure of combinedManures) {
       let warnings = [];
       const finalWarnings = [];
 

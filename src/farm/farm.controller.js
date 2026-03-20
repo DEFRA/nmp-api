@@ -15,15 +15,16 @@ class FarmController {
 
   async checkFarmExists() {
     try {
-      const { Name, Postcode, Id } = this.#request.query;
+      const { Name, Postcode, Id, OrganisationID } = this.#request.query;
       const exists = await this.#farmService.farmExistsByNameAndPostcode(
         Name,
         Postcode,
-        Id
+        OrganisationID,
+        Id,
       );
       return this.#h.response({ exists });
     } catch (error) {
-      return this.#h.response({ error});
+      return this.#h.response({ error });
     }
   }
 
@@ -37,28 +38,11 @@ class FarmController {
     }
   }
 
-  async checkFarmExists() {
-    const {
-      Name: farmName,
-      Postcode: postcode,
-      Id: id = 0,
-    } = this.#request.query;
-    try {
-      const exists = await this.#farmService.farmExistsByNameAndPostcode(
-        farmName,
-        postcode,
-        id
-      );
-      return this.#h.response({ exists });
-    } catch (error) {
-      return this.#h.response({ error});
-    }
-  }
-
   async getById() {
     try {
       const { farmId } = this.#request.params;
-      const { records } = await this.#farmService.getById(farmId);
+      const records = await this.#farmService.getFarmById(farmId);
+      console.log("farmrecord", records);
       return this.#h.response({ Farm: records });
     } catch (error) {
       console.error(error);
@@ -73,16 +57,17 @@ class FarmController {
       return this.#h.response({ message: "Farm deleted successfully" });
     } catch (error) {
       console.error(error);
-      return this.#h.response({ error});
+      return this.#h.response({ error });
     }
   }
 
   async createFarm() {
     try {
-      const { Farm } = this.#request.payload;
+      const { Farm, FarmsNvz } = this.#request.payload;
       const exists = await this.#farmService.farmExistsByNameAndPostcode(
         Farm.Name,
-        Farm.Postcode
+        Farm.Postcode,
+        Farm.OrganisationID,
       );
       if (exists) {
         throw boom.conflict("Farm already exists with this Name and Postcode");
@@ -91,10 +76,11 @@ class FarmController {
       const newFarm = await this.#farmService.createFarm(
         {
           Farm,
+          FarmsNvz,
         },
-        userId
+        userId,
       );
-      return this.#h.response({ Farm: newFarm });
+      return this.#h.response(newFarm);
     } catch (error) {
       console.error(error);
       return this.#h.response({ error });
@@ -103,20 +89,16 @@ class FarmController {
 
   async updateFarm() {
     try {
-      const { Farm } = this.#request.payload;
+      const { Farm, FarmsNvz } = this.#request.payload;
       const userId = this.#request.userId;
-      const farm = await this.#farmService.getFarm(Farm.Name, Farm.Postcode);
-      if (farm && farm.ID !== Farm.ID) {
-        throw boom.conflict(
-          "Other farms also exist with this Name and Postcode"
-        );
-      }
       const updatedFarm = await this.#farmService.updateFarm(
-        Farm,
+        {
+          Farm,
+          FarmsNvz,
+        },
         userId,
         Farm.ID,
-        this.#request
-
+        this.#request,
       );
       return this.#h.response({ Farm: updatedFarm });
     } catch (error) {
@@ -138,7 +120,7 @@ class FarmController {
       const farms = await this.#farmService.getBy(
         "OrganisationID",
         organisationId,
-        selectOptions
+        selectOptions,
       );
       // if (!farms) {
       //   throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);

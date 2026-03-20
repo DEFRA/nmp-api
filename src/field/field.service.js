@@ -29,23 +29,28 @@ const { Between, MoreThan } = require("typeorm");
 const RB209ArableService = require("../vendors/rb209/arable/arable.service");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
 const MannerApplicationMethodService = require("../vendors/manner/application-method/application-method.service");
-const {
-  IncorporationMethodService,
-} = require("../incorporation-method/incorporation-method.service");
 const MannerIncorporationMethodService = require("../vendors/manner/incorporation-method/incorporation-method.service");
 const MannerIncorporationDelayService = require("../vendors/manner/incorporation-delay/incorporation-delay.service");
 const {
   GrassManagementOptionsEntity,
 } = require("../db/entity/grassManagementOptionsEntity");
-
 const RB209GrassService = require("../vendors/rb209/grass/grass.service");
 const RB209GrasslandService = require("../vendors/rb209/grassland/grassland.service");
-const { UpdateRecommendationChanges } = require("../shared/updateRecommendationsChanges");
-const { UpdateRecommendation } = require("../shared/updateRecommendation.service");
-const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
+const {
+  PreviousCroppingEntity,
+} = require("../db/entity/previous-cropping.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
 const { PreviousCroppingMapper } = require("../constants/action-mapper");
-const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
+const { FarmService } = require("../farm/farm.service");
+const {
+  ProcessFutureManuresForWarnings,
+} = require("../shared/process-future-warning-calculations-service");
+const {
+  UpdatingFutureRecommendations,
+} = require("../shared/updating-future-recommendations-service");
+const {
+  GenerateRecommendations,
+} = require("../shared/generate-recomendations-service");
 
 class FieldService extends BaseService {
   constructor() {
@@ -92,8 +97,9 @@ class FieldService extends BaseService {
     );
     this.rB209GrassService = new RB209GrassService();
     this.rB209GrasslandService = new RB209GrasslandService();
-    this.UpdateRecommendationChanges = new UpdateRecommendationChanges();
-    this.UpdateRecommendation = new UpdateRecommendation();
+    this.generateRecommendations = new GenerateRecommendations();
+    this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
+    this.FarmService = new FarmService();
     this.ProcessFutureManuresForWarnings =
       new ProcessFutureManuresForWarnings();
   }
@@ -379,12 +385,14 @@ class FieldService extends BaseService {
             current.Year < oldest.Year ? current : oldest,
           );
 
-          await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+          const newOrganicManure = null;
+          await this.generateRecommendations.generateRecommendations(
             fieldId,
             oldestCrop.Year,
+            newOrganicManure,
+            transactionalManager,
             request,
             userId,
-            transactionalManager,
           );
 
           const nextAvailableCrop = await transactionalManager.findOne(
@@ -399,14 +407,16 @@ class FieldService extends BaseService {
           );
 
           if (nextAvailableCrop) {
-            this.UpdateRecommendation.updateRecommendationsForField(
-              fieldId,
-              nextAvailableCrop.Year,
-              request,
-              userId,
-            ).catch((error) => {
-              console.error(error);
-            });
+            this.updatingFutureRecommendations
+              .updateRecommendationsForField(
+                fieldId,
+                nextAvailableCrop.Year,
+                request,
+                userId,
+              )
+              .catch((error) => {
+                console.error(error);
+              });
           }
           this.ProcessFutureManuresForWarnings.processWarningsByField(
             fieldId,
@@ -488,14 +498,16 @@ class FieldService extends BaseService {
               current.Year < oldest.Year ? current : oldest,
             );
 
-            this.UpdateRecommendation.updateRecommendationsForField(
-              fieldId,
-              oldestCrop.Year,
-              request,
-              userId,
-            ).catch((error) => {
-              console.error(error);
-            });
+            this.updatingFutureRecommendations
+              .updateRecommendationsForField(
+                fieldId,
+                oldestCrop.Year,
+                request,
+                userId,
+              )
+              .catch((error) => {
+                console.error(error);
+              });
           }
         }
 
@@ -590,12 +602,14 @@ class FieldService extends BaseService {
       current.Year < oldest.Year ? current : oldest,
     );
 
-    await this.UpdateRecommendationChanges.updateRecommendationAndOrganicManure(
+    const newOrganicManure = null;
+    await this.generateRecommendations.generateRecommendations(
       fieldId,
       oldestCrop.Year,
+      newOrganicManure,
+      transactionalManager,
       request,
       userId,
-      transactionalManager,
     );
 
     const nextCrop = await transactionalManager.findOne(CropEntity, {
@@ -607,12 +621,9 @@ class FieldService extends BaseService {
     });
 
     if (nextCrop) {
-      this.UpdateRecommendation.updateRecommendationsForField(
-        fieldId,
-        nextCrop.Year,
-        request,
-        userId,
-      ).catch(console.error);
+      this.updatingFutureRecommendations
+        .updateRecommendationsForField(fieldId, nextCrop.Year, request, userId)
+        .catch(console.error);
     }
   }
 
@@ -698,14 +709,7 @@ class FieldService extends BaseService {
 
       order: { Year: "DESC", Date: "DESC" },
     });
-    // const latestSoilAnalysis = await this.soilAnalysisRepository.findOne({
-    //   where: { FieldID: field.ID},
-    //   order: { ModifiedOn: "DESC" }, // Sort by ModifiedOn descending
-    //   take: 1, // Retrieve only the latest entry
-    // });
-    // const snsAnalysisData = await this.snsAnalysisRepository.findOneBy({
-    //   FieldID: fieldId,
-    // });
+
     const cropData = await this.cropRepository.findOne({
       where: {
         FieldID: fieldId,
@@ -762,7 +766,7 @@ class FieldService extends BaseService {
   }
 
   // Helper function to fetch crop type name
-  async ManureTypeName(ManureTypeID, manureTypesResponse) {
+  async getManureTypeName(ManureTypeID, manureTypesResponse) {
     const manureTypeData = manureTypesResponse.find(
       (mt) => mt.id === ManureTypeID,
     );
@@ -800,19 +804,6 @@ class FieldService extends BaseService {
     };
   }
 
-  async getManureTypeById(manureTypesResponse, manureTypeID) {
-    const manureType = manureTypesResponse.data.find(
-      (mt) => mt.id === manureTypeID,
-    );
-
-    if (!manureType) {
-      console.log(`ManureType not found for ID ${manureTypeID}`);
-    }
-
-    //  Match API response structure
-    return;
-  }
-
   // Helper function to fetch crop type name
   async getApplicationMethodName(
     ApplicationMethodID,
@@ -840,9 +831,9 @@ class FieldService extends BaseService {
     IncorporationDelayID,
     allIncorporationDelaysData,
   ) {
-       const incorporationDelayData = allIncorporationDelaysData.find(
-         (mt) => mt.id === IncorporationDelayID
-       );
+    const incorporationDelayData = allIncorporationDelaysData.find(
+      (mt) => mt.id === IncorporationDelayID,
+    );
     return incorporationDelayData.name;
   }
 
@@ -864,9 +855,7 @@ class FieldService extends BaseService {
       await this.rB209ArableService.getData(`/Arable/CropTypes`);
 
     // Fetch the farm associated with the first field (assuming all fields belong to the same farm)
-    const farm = await this.farmRepository.findOne({
-      where: { ID: fields[0].FarmID },
-    });
+    const farm = await this.FarmService.getFarmById(fields[0].FarmID);
 
     // Initialize an array to store fields with related data
     const fieldsWithRelatedData = [];
@@ -905,18 +894,15 @@ class FieldService extends BaseService {
             )
           : null;
 
-        // const previousGrasses = await this.previousGrassesRepository.find({
-        //   where: { FieldID: field.ID },
-        // });
         const previousGrasses = await this.getPreviousCropDataByFieldID(
           field.ID,
         );
         let grassManagementOptionName = null;
         if (previousGrasses) {
           const grassManagementOptionID =
-            previousGrasses.GrassManagementOptionID != null
-              ? previousGrasses.GrassManagementOptionID
-              : null;
+            previousGrasses.GrassManagementOptionID == null
+              ? null
+              : previousGrasses.GrassManagementOptionID;
 
           if (grassManagementOptionID) {
             const grassManagementOption =
@@ -1059,24 +1045,24 @@ class FieldService extends BaseService {
               // Add manure-related names to each OrganicManure object
               const organicManuresWithNames = [];
               for (const manure of organicManures) {
-                const manureTypeName = await this.ManureTypeName(
+                const manureTypeName = await this.getManureTypeName(
                   manure.ManureTypeID,
-                  allManureData,
+                  allManureData
                 );
                 const applicationMethodName =
                   await this.getApplicationMethodName(
                     manure.ApplicationMethodID,
-                    allApplicationMethodsData,
+                    allApplicationMethodsData
                   );
                 const incorporationMethodName =
                   await this.getIncorporationMethodName(
                     manure.IncorporationMethodID,
-                    allIncorporationMethodsData,
+                    allIncorporationMethodsData
                   );
                 const incorporationDelayName =
                   await this.getIncorporationDelayName(
                     manure.IncorporationDelayID,
-                    allIncorporationDelaysData,
+                    allIncorporationDelaysData
                   );
 
                 organicManuresWithNames.push({

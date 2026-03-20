@@ -4,7 +4,6 @@ const Joi = require("joi");
 const StoreCapacitiesCreateDto = Joi.object({
   ID: Joi.number().integer().optional().allow(null).default(null),
   FarmID: Joi.number().integer().required().default(null),
-  Year: Joi.number().integer().required(),
   StoreName: Joi.string().max(128).required(),
   MaterialStateID: Joi.number().integer().required(),
   StorageTypeID: Joi.number().integer().optional().allow(null).default(null),
@@ -32,7 +31,7 @@ const StoreCapacitiesCreateDto = Joi.object({
 
 const CopyStoreCapacitiesDto = Joi.object({
   FarmID: Joi.number().integer().allow(null).optional(),
-  Year: Joi.number().integer().required(),
+
   CopyYear: Joi.number().integer().required(),
 }).required();
 
