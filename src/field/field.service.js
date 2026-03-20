@@ -40,6 +40,7 @@ const {
   PreviousCroppingEntity,
 } = require("../db/entity/previous-cropping.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
+const { CountryMapper } = require("../constants/country-mapper");
 const { PreviousCroppingMapper } = require("../constants/action-mapper");
 const { FarmService } = require("../farm/farm.service");
 const {
@@ -51,6 +52,11 @@ const {
 const {
   GenerateRecommendations,
 } = require("../shared/generate-recomendations-service");
+
+const {
+  PscIndexEntity,
+} = require("../db/entity/psc-index.entity");
+
 
 class FieldService extends BaseService {
   constructor() {
@@ -102,6 +108,9 @@ class FieldService extends BaseService {
     this.FarmService = new FarmService();
     this.ProcessFutureManuresForWarnings =
       new ProcessFutureManuresForWarnings();
+       this.pscIndexRepository=AppDataSource.getRepository(
+      PscIndexEntity,
+    );
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -1223,9 +1232,18 @@ class FieldService extends BaseService {
         );
         const soilTypeName = soil?.soilType;
         // Get SulphurDeficient from soilAnalysis
-        const sulphurDeficient = soilAnalysis?.SulphurDeficient ?? null;
+       const sulphurDeficient = soilAnalysis?.SulphurDeficient ?? null;
+       let pscIndex=null;
+        if(farm.CountryID === CountryMapper.SCOTLAND)
+        {
+          pscIndex=await this.pscIndexRepository.findOne({
+          where: { ID: field.PscIndexID},
+        });
+      }
+        
         // Create soilDetails object
         const soilDetails = {
+          PscIndexName :pscIndex?.Name ?? null,
           SoilTypeId: field.SoilTypeID,
           SoilTypeName: soilTypeName,
           PotashReleasingClay: field.SoilReleasingClay,
