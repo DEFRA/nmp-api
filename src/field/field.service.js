@@ -1237,7 +1237,7 @@ class FieldService extends BaseService {
         });
         // Create soilDetails object
         const soilDetails = {
-          PscIndexName:pscIndex!=null?pscIndex.Name:null,
+          PscIndexName :pscIndex?.Name ?? null,
           SoilTypeId: field.SoilTypeID,
           SoilTypeName: soilTypeName,
           PotashReleasingClay: field.SoilReleasingClay,
