@@ -1234,9 +1234,9 @@ class FieldService extends BaseService {
         // Get SulphurDeficient from soilAnalysis
        const sulphurDeficient = soilAnalysis?.SulphurDeficient ?? null;
        let pscIndex=null;
-       if(farm.CountryID==CountryMapper.SCOTLAND)
-       {
-         pscIndex=await  this.pscIndexRepository.findOne({
+        if(farm.CountryID === CountryMapper.SCOTLAND)
+        {
+          pscIndex=await this.pscIndexRepository.findOne({
           where: { ID: field.PscIndexID},
         });
       }
