@@ -52,6 +52,11 @@ const {
   GenerateRecommendations,
 } = require("../shared/generate-recomendations-service");
 
+const {
+  PscIndexEntity,
+} = require("../db/entity/psc-index.entity");
+
+
 class FieldService extends BaseService {
   constructor() {
     super(FieldEntity);
@@ -102,6 +107,9 @@ class FieldService extends BaseService {
     this.FarmService = new FarmService();
     this.ProcessFutureManuresForWarnings =
       new ProcessFutureManuresForWarnings();
+       this.pscIndexRepository=AppDataSource.getRepository(
+      PscIndexEntity,
+    );
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -1223,9 +1231,14 @@ class FieldService extends BaseService {
         );
         const soilTypeName = soil?.soilType;
         // Get SulphurDeficient from soilAnalysis
-        const sulphurDeficient = soilAnalysis?.SulphurDeficient ?? null;
+       const sulphurDeficient = soilAnalysis?.SulphurDeficient ?? null;
+        const pscIndex=await  this.pscIndexRepository.findOne({
+          where: { ID: field.PscIndexID},
+        });
+        console.log('pscIndex',pscIndex)
         // Create soilDetails object
         const soilDetails = {
+          PscIndexName:pscIndex!=null?pscIndex.Name:null,
           SoilTypeId: field.SoilTypeID,
           SoilTypeName: soilTypeName,
           PotashReleasingClay: field.SoilReleasingClay,
