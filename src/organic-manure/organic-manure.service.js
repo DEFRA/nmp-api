@@ -1184,8 +1184,7 @@ class OrganicManureService extends BaseService {
     });
   }
 
-  async getTotalApplicationRate(cropId, fromDate, toDate,organicManureID) {
-    // Normalize dates (same as your existing logic)
+  async getTotalApplicationRate(cropId, fromDate, toDate, organicManureID) {
     const START_OF_DAY = {
       HOUR: 0,
       MINUTE: 0,
@@ -1218,25 +1217,27 @@ class OrganicManureService extends BaseService {
 
     const query = this.repository
       .createQueryBuilder("O")
-      .select("SUM(ISNULL(O.ApplicationRate, 0))", "totalApplicationRate")
-      .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
+      .select("SUM(COALESCE(O.ApplicationRate, 0))", "totalApplicationRate")
+      .innerJoin(
+        "ManagementPeriods",
+        "M",
+        "O.ManagementPeriodID = M.ID",
+        // OR use:
+        // JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD
+      )
       .where("M.CropID = :cropId", { cropId })
       .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
         fromDate: fromDateFormatted,
-        toDate: toDateFormatted
+        toDate: toDateFormatted,
       });
 
-        if (organicManureID != null) {
-      query.andWhere("O.ID != :organicManureID", {
-        organicManureID,
-      });
+    if (organicManureID != null) {
+      query.andWhere("O.ID != :organicManureID", { organicManureID });
     }
-
-      
 
     const result = await query.getRawOne();
 
-    return result?.totalApplicationRate || 0;
+    return Number(result?.totalApplicationRate) || 0;
   }
 }
 
