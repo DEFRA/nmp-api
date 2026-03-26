@@ -273,7 +273,7 @@ class OrganicManureController {
 
   async getTotalApplicationRate() {
     try {
-      const { cropId} = this.#request.payload;
+      const { cropId} = this.#request.params;
       const { startDate, endDate, organicManureID } = this.#request.query;
 
       const total = await this.#organicManureService.getTotalApplicationRate(
@@ -283,7 +283,7 @@ class OrganicManureController {
         organicManureID
       );
 
-      return h.response( total);
+      return this.#h.response( total);
     } catch (error) {
       console.error(error);
     }
