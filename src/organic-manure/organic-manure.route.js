@@ -490,16 +490,16 @@ module.exports = [
 
   {
     method: "GET",
-    path: "/organic-manure/check-green-compost/{cropId}",
+    path: "/organic-manure/check-green-compost/{fieldId}",
     handler: async (request, h) => {
       return getController(request, h).checkGreenCompostExists();
     },
     options: {
       tags: ["api", "Organic Manure"],
-      description: "Check if Green Compost exists for a crop between dates",
+      description: "Check if Green Compost exists for a field in 2 years",
       validate: {
         params: Joi.object({
-          cropId: Joi.number().required(),
+          fieldId: Joi.number().required(),
         }),
         query: Joi.object({
           startDate: Joi.date().iso().required(),

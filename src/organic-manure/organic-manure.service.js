@@ -1264,7 +1264,7 @@ class OrganicManureService extends BaseService {
     return Number.parseInt(result?.totalApplicationRate) || 0;
   }
 
-  async checkGreenCompostExists(cropId, fromDate, toDate, organicManureID) {
+  async checkGreenCompostExists(fieldId, fromDate, toDate, organicManureID) {
     const START_OF_DAY = {
       HOUR: 0,
       MINUTE: 0,
@@ -1299,7 +1299,8 @@ class OrganicManureService extends BaseService {
       .createQueryBuilder("O")
       .select("1") // lightweight existence check
       .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
-      .where("M.CropID = :cropId", { cropId })
+      .innerJoin("Crops", "C", "M.CropID = C.ID")
+      .where("C.FieldID = :fieldId", { fieldId })
       .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
         fromDate: fromDateFormatted,
         toDate: toDateFormatted

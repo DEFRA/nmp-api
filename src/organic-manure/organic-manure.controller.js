@@ -293,12 +293,12 @@ class OrganicManureController {
   }
 
   async checkGreenCompostExists() {
-    const { cropId } = this.#request.params;
+    const { fieldId } = this.#request.params;
     const { startDate, endDate, organicManureID } = this.#request.query;
 
     try {
       const exists = await this.#organicManureService.checkGreenCompostExists(
-        cropId,
+        fieldId,
         startDate,
         endDate,
         organicManureID,
