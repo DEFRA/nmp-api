@@ -162,6 +162,27 @@ class OrganicManureController {
       return this.#h.response({ error });
     }
   }
+  async checkLivestockManureExists() {
+    const {
+      cropId,
+      dateFrom,
+      dateTo,
+      organicManureID,
+    } = this.#request.query;
+
+    try {
+      const manureExists = await this.#organicManureService.checkLivestockManureExists(
+        cropId,
+        dateFrom,
+        dateTo,
+        organicManureID,
+        this.#request,
+      );
+      return this.#h.response({ exists: manureExists });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
 
   async deleteOrganicManureByIds() {
     const { organicManureIds } = this.#request.payload; // assuming an array of IDs is passed in the payload
