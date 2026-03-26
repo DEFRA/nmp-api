@@ -273,8 +273,9 @@ class OrganicManureController {
 
   async getTotalApplicationRate() {
     try {
-      const { cropId} = this.#request.params;
-      const { startDate, endDate, organicManureID, isPoultry } = this.#request.query;
+      const { cropId } = this.#request.params;
+      const { startDate, endDate, organicManureID, isPoultry } =
+        this.#request.query;
 
       const total = await this.#organicManureService.getTotalApplicationRate(
         cropId,
@@ -282,12 +283,32 @@ class OrganicManureController {
         endDate,
         organicManureID,
         isPoultry,
-        this.#request
+        this.#request,
       );
 
-      return this.#h.response( total);
+      return this.#h.response(total);
     } catch (error) {
       console.error(error);
+    }
+  }
+
+  async checkGreenCompostExists() {
+    const { cropId } = this.#request.params;
+    const { startDate, endDate, organicManureID } = this.#request.query;
+
+    try {
+      const exists = await this.#organicManureService.checkGreenCompostExists(
+        cropId,
+        startDate,
+        endDate,
+        organicManureID,
+      );
+
+      return this.#h.response({
+        exists,
+      });
+    } catch (error) {
+      return this.#h.response({ error });
     }
   }
 }

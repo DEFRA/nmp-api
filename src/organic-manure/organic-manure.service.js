@@ -1190,7 +1190,7 @@ class OrganicManureService extends BaseService {
     toDate,
     organicManureID,
     isPoultry,
-    request
+    request,
   ) {
     const START_OF_DAY = {
       HOUR: 0,
@@ -1223,21 +1223,23 @@ class OrganicManureService extends BaseService {
     );
 
     // Fetch all manure types from the API
-      const allManureTypes = await this.MannerManureTypesService.getData(
-        "/manure-types",
-        request
-      );
+    const allManureTypes = await this.MannerManureTypesService.getData(
+      "/manure-types",
+      request,
+    );
     const highRanManureTypes = allManureTypes.data.filter(
       (manure) => manure.highReadilyAvailableNitrogen === true,
     );
 
     let manureTypeIds = highRanManureTypes.map((manure) => manure.id);
 
-    // ✅ Apply poultry logic
+    // Apply poultry logic
     if (isPoultry) {
-      manureTypeIds = [8]; // Only poultry
+      manureTypeIds = [ManureTypeMapper.PoultryManure]; 
     } else {
-      manureTypeIds = manureTypeIds.filter((id) => id !== 8); // Exclude poultry
+      manureTypeIds = manureTypeIds.filter(
+        (id) => id !== ManureTypeMapper.PoultryManure
+      ); // Exclude poultry
     }
 
     const query = this.repository
@@ -1260,6 +1262,62 @@ class OrganicManureService extends BaseService {
     const result = await query.getRawOne();
 
     return Number.parseInt(result?.totalApplicationRate) || 0;
+  }
+
+  async checkGreenCompostExists(cropId, fromDate, toDate, organicManureID) {
+    const START_OF_DAY = {
+      HOUR: 0,
+      MINUTE: 0,
+      SECOND: 0,
+      MILLISECOND: 0,
+    };
+
+    const END_OF_DAY = {
+      HOUR: 23,
+      MINUTE: 59,
+      SECOND: 59,
+      MILLISECOND: 999,
+    };
+
+    const fromDateFormatted = new Date(fromDate);
+    fromDateFormatted.setHours(
+      START_OF_DAY.HOUR,
+      START_OF_DAY.MINUTE,
+      START_OF_DAY.SECOND,
+      START_OF_DAY.MILLISECOND,
+    );
+
+    const toDateFormatted = new Date(toDate);
+    toDateFormatted.setHours(
+      END_OF_DAY.HOUR,
+      END_OF_DAY.MINUTE,
+      END_OF_DAY.SECOND,
+      END_OF_DAY.MILLISECOND,
+    );
+
+    const query = this.repository
+      .createQueryBuilder("O")
+      .select("1") // lightweight existence check
+      .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
+      .where("M.CropID = :cropId", { cropId })
+      .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
+        fromDate: fromDateFormatted,
+        toDate: toDateFormatted
+      })
+      .andWhere("O.ManureTypeID IN (:...manureTypeIds)", {
+        manureTypeIds: [ManureTypeMapper.GreenCompost, ManureTypeMapper.GreenFoodCompost], 
+      })
+      .limit(1); 
+
+    if (organicManureID != null) {
+      query.andWhere("O.ID != :organicManureID", {
+        organicManureID,
+      });
+    }
+
+    const result = await query.getRawOne();
+
+    return !!result; // true if exists, false otherwise
   }
 }
 module.exports = { OrganicManureService }

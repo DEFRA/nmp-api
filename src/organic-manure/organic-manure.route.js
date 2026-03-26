@@ -481,7 +481,30 @@ module.exports = [
           startDate: Joi.date().iso().required(),
           endDate: Joi.date().iso().required(),
           organicManureID: Joi.number().integer().allow(null).optional(),
-          isPoultry: Joi.boolean().required()
+          isPoultry: Joi.boolean().required(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+  },
+
+  {
+    method: "GET",
+    path: "/organic-manure/check-green-compost/{cropId}",
+    handler: async (request, h) => {
+      return getController(request, h).checkGreenCompostExists();
+    },
+    options: {
+      tags: ["api", "Organic Manure"],
+      description: "Check if Green Compost exists for a crop between dates",
+      validate: {
+        params: Joi.object({
+          cropId: Joi.number().required(),
+        }),
+        query: Joi.object({
+          startDate: Joi.date().iso().required(),
+          endDate: Joi.date().iso().required(),
+          organicManureID: Joi.number().optional(),
         }),
         failAction: validationFailAction,
       },
