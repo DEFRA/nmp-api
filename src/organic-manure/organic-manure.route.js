@@ -459,6 +459,29 @@ module.exports = [
           cropTypeId: Joi.number().integer().optional(),
           isPerennial: Joi.boolean().required(),
         }),
+        failAction: validationFailAction,
+      },
+    },
+  },
+
+  {
+    method: "GET",
+    path: "/organic-manure/total-application-rate/{cropId}",
+    handler: async (request, h) => {
+      return getController(request, h).getTotalApplicationRate();
+    },
+    options: {
+      tags: ["api", "Organic Manure"],
+      description: "Get total application rate between dates for a crop",
+      validate: {
+        params: Joi.object({
+          cropId: Joi.number().required(),
+        }),
+        query: Joi.object({
+          startDate: Joi.date().iso().required(),
+          endDate: Joi.date().iso().required(),
+          organicManureID: Joi.integer().number().optional()
+        }),
         failAction: validationFailAction
       },
     },

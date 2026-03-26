@@ -263,11 +263,29 @@ class OrganicManureController {
     try {
       const closedPeriod = await this.#organicManureService.getClosedPeriodByID(
         soilTypeId,
-        this.#request.query
+        this.#request.query,
       );
-      return this.#h.response(closedPeriod );
+      return this.#h.response(closedPeriod);
     } catch (error) {
       return this.#h.response({ error });
+    }
+  }
+
+  async getTotalApplicationRate() {
+    try {
+      const { cropId} = this.#request.payload;
+      const { startDate, endDate, organicManureID } = this.#request.query;
+
+      const total = await this.#organicManureService.getTotalApplicationRate(
+        cropId,
+        startDate,
+        endDate,
+        organicManureID=null
+      );
+
+      return h.response( total);
+    } catch (error) {
+      console.error(error);
     }
   }
 }

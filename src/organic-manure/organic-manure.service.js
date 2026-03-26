@@ -1173,7 +1173,7 @@ class OrganicManureService extends BaseService {
           countryId,
           cropGroupId,
           cropTypeId,
-          isPerennial
+          isPerennial,
         ]);
 
         return result[0];
@@ -1183,5 +1183,54 @@ class OrganicManureService extends BaseService {
       }
     });
   }
+
+  async getTotalApplicationRate(cropId, fromDate, toDate,organicManureID) {
+    // Normalize dates (same as your existing logic)
+    const START_OF_DAY = {
+      HOUR: 0,
+      MINUTE: 0,
+      SECOND: 0,
+      MILLISECOND: 0,
+    };
+
+    const END_OF_DAY = {
+      HOUR: 23,
+      MINUTE: 59,
+      SECOND: 59,
+      MILLISECOND: 999,
+    };
+
+    const fromDateFormatted = new Date(fromDate);
+    fromDateFormatted.setHours(
+      START_OF_DAY.HOUR,
+      START_OF_DAY.MINUTE,
+      START_OF_DAY.SECOND,
+      START_OF_DAY.MILLISECOND,
+    );
+
+    const toDateFormatted = new Date(toDate);
+    toDateFormatted.setHours(
+      END_OF_DAY.HOUR,
+      END_OF_DAY.MINUTE,
+      END_OF_DAY.SECOND,
+      END_OF_DAY.MILLISECOND,
+    );
+
+    const query = this.repository
+      .createQueryBuilder("O")
+      .select("SUM(ISNULL(O.ApplicationRate, 0))", "totalApplicationRate")
+      .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
+      .where("M.CropID = :cropId", { cropId })
+      .andwhere("O.ID != :organicManureID", { organicManureID })
+      .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
+        fromDate: fromDateFormatted,
+        toDate: toDateFormatted
+      });
+
+    const result = await query.getRawOne();
+
+    return result?.totalApplicationRate || 0;
+  }
 }
+
 module.exports = { OrganicManureService }
