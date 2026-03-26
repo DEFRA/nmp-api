@@ -1259,7 +1259,7 @@ class OrganicManureService extends BaseService {
 
     const result = await query.getRawOne();
 
-    return Number(result?.totalApplicationRate) || 0;
+    return Number.parseInt(result?.totalApplicationRate) || 0;
   }
 }
 module.exports = { OrganicManureService }
