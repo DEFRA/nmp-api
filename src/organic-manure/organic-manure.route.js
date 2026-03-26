@@ -480,9 +480,9 @@ module.exports = [
         query: Joi.object({
           startDate: Joi.date().iso().required(),
           endDate: Joi.date().iso().required(),
-          organicManureID: Joi.integer().number().optional()
+          organicManureID: Joi.number().integer().allow(null).optional()
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },

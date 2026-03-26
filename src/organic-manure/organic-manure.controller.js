@@ -280,7 +280,7 @@ class OrganicManureController {
         cropId,
         startDate,
         endDate,
-        organicManureID=null
+        organicManureID
       );
 
       return h.response( total);

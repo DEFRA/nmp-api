@@ -1221,11 +1221,18 @@ class OrganicManureService extends BaseService {
       .select("SUM(ISNULL(O.ApplicationRate, 0))", "totalApplicationRate")
       .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
       .where("M.CropID = :cropId", { cropId })
-      .andwhere("O.ID != :organicManureID", { organicManureID })
       .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
         fromDate: fromDateFormatted,
         toDate: toDateFormatted
       });
+
+        if (organicManureID != null) {
+      query.andWhere("O.ID != :organicManureID", {
+        organicManureID,
+      });
+    }
+
+      
 
     const result = await query.getRawOne();
 
