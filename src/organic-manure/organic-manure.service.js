@@ -1184,7 +1184,14 @@ class OrganicManureService extends BaseService {
     });
   }
 
-  async getTotalApplicationRate(cropId, fromDate, toDate, organicManureID) {
+  async getTotalApplicationRate(
+    cropId,
+    fromDate,
+    toDate,
+    organicManureID,
+    isPoultry,
+    request
+  ) {
     const START_OF_DAY = {
       HOUR: 0,
       MINUTE: 0,
@@ -1215,20 +1222,35 @@ class OrganicManureService extends BaseService {
       END_OF_DAY.MILLISECOND,
     );
 
+    // Fetch all manure types from the API
+      const allManureTypes = await this.MannerManureTypesService.getData(
+        "/manure-types",
+        request
+      );
+    const highRanManureTypes = allManureTypes.data.filter(
+      (manure) => manure.highReadilyAvailableNitrogen === true,
+    );
+
+    let manureTypeIds = highRanManureTypes.map((manure) => manure.id);
+
+    // ✅ Apply poultry logic
+    if (isPoultry) {
+      manureTypeIds = [8]; // Only poultry
+    } else {
+      manureTypeIds = manureTypeIds.filter((id) => id !== 8); // Exclude poultry
+    }
+
     const query = this.repository
       .createQueryBuilder("O")
       .select("SUM(COALESCE(O.ApplicationRate, 0))", "totalApplicationRate")
-      .innerJoin(
-        "ManagementPeriods",
-        "M",
-        "O.ManagementPeriodID = M.ID",
-        // OR use:
-        // JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD
-      )
+      .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
       .where("M.CropID = :cropId", { cropId })
       .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
         fromDate: fromDateFormatted,
         toDate: toDateFormatted,
+      })
+      .andWhere("O.ManureTypeID IN (:...manureTypeIds)", {
+        manureTypeIds,
       });
 
     if (organicManureID != null) {
@@ -1240,5 +1262,4 @@ class OrganicManureService extends BaseService {
     return Number(result?.totalApplicationRate) || 0;
   }
 }
-
 module.exports = { OrganicManureService }
