@@ -156,28 +156,37 @@ class CalculateFutureWarningMessageService {
     return false;
   }
 
-  async twoYearCompost(sp) {
-    const baseCondition =
+  isBaseCondition(sp) {
+    return (
       sp.IsGreenCompost &&
       sp.IsRestrictedCropNotPresent &&
-      sp.IsTotalNitrogenAboveLimit;
+      sp.IsTotalNitrogenAboveLimit
+    );
+  }
 
-    if (sp.IsFieldEngland && sp.IsFieldWithinNvz && baseCondition) {
-      return true;
-    }
+  isEngland(sp) {
+    return sp.IsFieldEngland && sp.IsFieldWithinNvz;
+  }
 
-    if (sp.IsFieldWelsh && baseCondition) {
-      return true;
-    }
+  isWelsh(sp) {
+    return sp.IsFieldWelsh;
+  }
 
-    if (
+  isScotland(sp) {
+    return (
       sp.IsFieldScotland &&
       sp.IsAnyGreenCompostLast2Years &&
       sp.IsFieldWithinNvz &&
       sp.TotalOrganicManureNitrogen
-    ) {
-      return true;
-    }
+    );
+  }
+
+  async twoYearCompost(sp) {
+    if (this.isEngland(sp) && this.isBaseCondition(sp)) return true;
+
+    if (this.isWelsh(sp) && this.isBaseCondition(sp)) return true;
+
+    if (this.isScotland(sp)) return true;
 
     return false;
   }
