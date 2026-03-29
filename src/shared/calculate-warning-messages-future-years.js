@@ -182,13 +182,13 @@ class CalculateFutureWarningMessageService {
   }
 
   async twoYearCompost(sp) {
-    if (this.isEngland(sp) && this.isBaseCondition(sp)) return true;
+    if (this.isEngland(sp) && this.isBaseCondition(sp)){ return true};
 
-    if (this.isWelsh(sp) && this.isBaseCondition(sp)) return true;
+    if (this.isWelsh(sp) && this.isBaseCondition(sp)){ return true};
 
-    if (this.isScotland(sp)) return true;
+    if (this.isScotland(sp)) {return true};
 
-    return false;
+    return false
   }
 
   async nFieldLimitGreenCompostOnly(sp) {
