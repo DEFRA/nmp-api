@@ -162,18 +162,24 @@ class CalculateFutureWarningMessageService {
       sp.IsRestrictedCropNotPresent &&
       sp.IsTotalNitrogenAboveLimit;
 
-    const englandCondition =
-      sp.IsFieldEngland && sp.IsFieldWithinNvz && baseCondition;
+    if (sp.IsFieldEngland && sp.IsFieldWithinNvz && baseCondition) {
+      return true;
+    }
 
-    const welshCondition = sp.IsFieldWelsh && baseCondition;
+    if (sp.IsFieldWelsh && baseCondition) {
+      return true;
+    }
 
-    const scotlandCondition =
+    if (
       sp.IsFieldScotland &&
       sp.IsAnyGreenCompostLast2Years &&
       sp.IsFieldWithinNvz &&
-      sp.TotalOrganicManureNitrogen;
+      sp.TotalOrganicManureNitrogen
+    ) {
+      return true;
+    }
 
-    return englandCondition || welshCondition || scotlandCondition;
+    return false;
   }
 
   async nFieldLimitGreenCompostOnly(sp) {

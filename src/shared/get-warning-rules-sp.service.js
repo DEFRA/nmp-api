@@ -223,11 +223,7 @@ class GetWarningRulesAndSpService {
         key: WarningKeyMapper.INORGNMAXRATE,
         code: WarningCodesMapper.MAXAPPLICATIONRATEINORGFERTCROPCLOSEDSPREADINGPERIOD,
         join: fertiliser,
-        values: async (sp) => [
-          await formatToDayMonth(sp.ClosedPeriodStartDate),
-          await formatToDayMonth(sp.ClosedPeriodEndDate),
-          sp.MaxNitrogenRate,
-        ],
+        values: async (sp) => [await formatToDayMonth(sp.ClosedPeriodStartDate),await formatToDayMonth(sp.ClosedPeriodEndDate),sp.MaxNitrogenRate]
       },
       {
         sql: "EXEC spWarning_CheckFertiliserClosedPeriodTwentyEightDayLimit @FertiliserID=@0",
@@ -235,10 +231,7 @@ class GetWarningRulesAndSpService {
         key: WarningKeyMapper.INORGNMAXRATEBRASSICA,
         code: WarningCodesMapper.MAXAPPLICATIONRATEINORGFERTCROPCLOSEDSPREADINGPERIOD,
         join: fertiliser,
-        values: async (sp) => [
-          await formatToDayMonth(sp.ClosedPeriodStart),
-          await formatToDayMonth(sp.ClosedPeriodEnd),
-        ],
+        values: async (sp) => [await formatToDayMonth(sp.ClosedPeriodStart),await formatToDayMonth(sp.ClosedPeriodEnd)]
       },
       {
         sql: "EXEC spWarning_CheckFertiliserClosedPeriodToOctoberLimit @FertiliserID=@0",
