@@ -32,27 +32,55 @@ const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const {
   FertiliserManuresEntity,
 } = require("../db/entity/fertiliser-manures.entity");
-const { SoilTypeSoilTextureEntity } = require("../db/entity/soil-type-soil-texture.entity");
+const {
+  SoilTypeSoilTextureEntity,
+} = require("../db/entity/soil-type-soil-texture.entity");
 const { CountryEntity } = require("../db/entity/country.entity");
 const RB209SoilService = require("../vendors/rb209/soil/soil.service");
-const { GrassGrowthService } = require("../grass-growth-plan/grass-growth-plan.service");
-const { ExcessRainfallsEntity } = require("../db/entity/excess-rainfalls.entity");
+const {
+  GrassGrowthService,
+} = require("../grass-growth-plan/grass-growth-plan.service");
+const {
+  ExcessRainfallsEntity,
+} = require("../db/entity/excess-rainfalls.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
-const { CalculateMannerOutputService } = require("../shared/calculate-manner-output-service");
-const { CalculateGrassHistoryAndPreviousGrass } = require("../shared/calculate-previous-grass-id.service");
-const { CalculateTotalAvailableNForNextYear } = require("../shared/calculate-next-year-available-n");
-const { CalculateNextDefoliationService } = require("../shared/calculate-next-defoliation-totalN");
-const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-other");
-const { WarningMessagesEntity } = require("../db/entity/warning-message.entity");
-const { CreateOrUpdateWarningMessage } = require("../shared/create-update-warning-messages.service");
+const {
+  CalculateMannerOutputService,
+} = require("../shared/calculate-manner-output-service");
+const {
+  CalculateGrassHistoryAndPreviousGrass,
+} = require("../shared/calculate-previous-grass-id.service");
+const {
+  CalculateTotalAvailableNForNextYear,
+} = require("../shared/calculate-next-year-available-n");
+const {
+  CalculateNextDefoliationService,
+} = require("../shared/calculate-next-defoliation-totalN");
+const {
+  CalculatePKBalanceOther,
+} = require("../shared/calculate-pk-balance-other");
+const {
+  WarningMessagesEntity,
+} = require("../db/entity/warning-message.entity");
+const {
+  CreateOrUpdateWarningMessage,
+} = require("../shared/create-update-warning-messages.service");
 const { WarningCodesMapper } = require("../constants/warning-codes-mapper");
-const { CalculatePreviousCropService } = require("../shared/previous-year-crop-service");
+const {
+  CalculatePreviousCropService,
+} = require("../shared/previous-year-crop-service");
 const { ManureTypeMapper } = require("../constants/manure-type-mapper");
 const { normalizeDateWithTime } = require("../shared/dataValidate");
 const { JOINS } = require("../constants/joins-mapper");
-const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
-const { GenerateRecommendations } = require("../shared/generate-recomendations-service");
-const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
+const {
+  ProcessFutureManuresForWarnings,
+} = require("../shared/process-future-warning-calculations-service");
+const {
+  GenerateRecommendations,
+} = require("../shared/generate-recomendations-service");
+const {
+  UpdatingFutureRecommendations,
+} = require("../shared/updating-future-recommendations-service");
 class OrganicManureService extends BaseService {
   constructor() {
     super(OrganicManureEntity);
@@ -785,6 +813,55 @@ class OrganicManureService extends BaseService {
     }
   }
 
+  async checkLivestockManureExists(
+    cropId,
+    dateFrom,
+    dateTo,
+    organicManureID,
+    request,
+  ) {
+    try {
+      const allManureTypes = await this.MannerManureTypesService.getData("/manure-types", request,);
+      if (!allManureTypes?.data || allManureTypes.data.length === 0) {
+        console.error("No manure types returned from the Manner API");
+      }
+      const livestockManureTypes = allManureTypes.data.filter((manure) => manure.manureGroupId === 1);
+      const manureTypeIds = livestockManureTypes.map((manure) => manure.id);
+      if (!manureTypeIds || manureTypeIds.length === 0) {
+        return false; // No valid manure types found
+      }
+
+      const query = this.repository
+        .createQueryBuilder("organicManure")
+        .where("organicManure.ManureTypeID IN (:...manureTypeIds)", {
+          manureTypeIds,
+        })
+        .innerJoin("ManagementPeriods","M",
+        JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD,
+      )
+      .where("M.CropID = :cropID", { cropId })
+        .andWhere(
+          "organicManure.ApplicationDate BETWEEN :dateFrom AND :dateTo",
+          {
+            dateFrom,
+            dateTo,
+          },
+        )
+      if (organicManureID != null) {
+        query.andWhere("organicManure.ID != :organicManureID", {
+          organicManureID,
+        });
+      }
+      const manureTypeExists = await query.getCount();
+      return manureTypeExists > 0;
+    } catch (error) {
+      console.error("Error checking for manure existence:", error.message);
+      throw new Error(
+        "Failed to check manure existence due to an internal error",
+      );
+    }
+  }
+
   async getP205AndK20fromfertiliser(managementPeriodId) {
     let sumOfP205 = 0;
     let sumOfK20 = 0;
@@ -1321,4 +1398,4 @@ class OrganicManureService extends BaseService {
     return !!result; // true if exists, false otherwise
   }
 }
-module.exports = { OrganicManureService }
+module.exports = { OrganicManureService };

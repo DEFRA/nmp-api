@@ -280,6 +280,38 @@ module.exports = [
     },
   },
   {
+    method: "GET",
+    path: "/organic-manures/check-livestock-existence",
+    options: {
+      tags: ["api", "Organic Manure"],
+      description: "Check if livestock manure exists within the date range",
+      validate: {
+        query: Joi.object({
+          cropId: Joi.number().integer().required(),
+          dateFrom: Joi.date().iso().required(),
+          dateTo: Joi.date().iso().required(),
+          organicManureID: Joi.number().integer().allow(null).optional(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              }),
+            )
+            .code(StatusCodeMapper.BAD_REQUEST)
+            .takeover();
+        },
+      },
+      handler: async (request, h) => {
+        return getController(request, h).checkLivestockManureExists();
+      },
+    },
+  },
+  {
     method: "DELETE",
     path: "/organic-manures/",
     options: {

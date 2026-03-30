@@ -9,13 +9,13 @@ const NutrientMapperNames = [
     nutrientId: 2,
     nutrient: "Potassium",
     formulae: "K2O",
-    countryId: 3,
+    countryId: 1,
   },
   {
     nutrientId: 3,
     nutrient: "Magnesium",
     formulae: "MgO",
-    countryId: 3,
+    countryId: 1,
   }
 ];
 
