@@ -302,7 +302,7 @@ module.exports = [
                 request,
               }),
             )
-            .code(400)
+            .code(StatusCodeMapper.BAD_REQUEST)
             .takeover();
         },
       },
