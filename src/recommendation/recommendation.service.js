@@ -598,6 +598,14 @@ console.log('swardManagementsList',swardManagementsList);
       return "Unknown";
     }
   };
+  async getByManagementPeriodId(managementPeriodID) {
+    const record = await this.repository.find({
+      where: {
+        ManagementPeriodID: managementPeriodID,
+      },
+    });
+    return record;
+}
 }
 
 module.exports = { RecommendationService };

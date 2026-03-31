@@ -34,4 +34,34 @@ module.exports = [
       },
     },
   },
+   {
+      method: "GET",
+      path: "/recommendations/ManagementPeriodId",
+      options: {
+         tags: ["api", "Recommendations"],
+        description: "Get Recommendations by managementPeriodId",
+        validate: {
+          params: Joi.object({
+            managementPeriodId: Joi.number().integer().required(),
+          }),
+          failAction: (request, h, err) => {
+            return h
+              .response(
+                formatErrorResponse({
+                  source: {
+                    error: err,
+                  },
+                  request,
+                })
+              )
+              .code(400)
+              .takeover();
+          },
+        },
+      },
+      handler: async (request, h) => {
+        const controller = new RecommendationController(request, h);
+        return controller.getByManagementPeriodId();
+      },
+    },
 ];
