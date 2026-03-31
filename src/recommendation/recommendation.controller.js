@@ -36,9 +36,9 @@ class RecommendationController {
     }
   }
   async getByManagementPeriodId() {
-      const { managementPeriodID } = this.#request.params;
+      const { managementPeriodId } = this.#request.params;
       try {
-        const record = await this.#recommendationService.getByManagementPeriodId(managementPeriodID);
+        const record = await this.#recommendationService.getByManagementPeriodId(managementPeriodId);
         if (!record) {
           throw boom.notFound("No recommendation found.");
         }

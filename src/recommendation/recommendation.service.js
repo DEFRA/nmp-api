@@ -599,7 +599,7 @@ console.log('swardManagementsList',swardManagementsList);
     }
   };
   async getByManagementPeriodId(managementPeriodID) {
-    const record = await this.repository.find({
+    const record = await this.repository.findOne({
       where: {
         ManagementPeriodID: managementPeriodID,
       },
