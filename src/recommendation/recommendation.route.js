@@ -36,7 +36,7 @@ module.exports = [
   },
    {
       method: "GET",
-      path: "/recommendations/ManagementPeriodId",
+      path: "/recommendations/{managementPeriodId}",
       options: {
          tags: ["api", "Recommendations"],
         description: "Get Recommendations by managementPeriodId",
