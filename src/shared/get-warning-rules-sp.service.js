@@ -3,7 +3,7 @@ const { WarningKeyMapper } = require("../constants/warning-key-mapper");
 const RB209ArableService = require("../vendors/rb209/arable/arable.service");
 
 class GetWarningRulesAndSpService {
-  constructor(){
+  constructor() {
     this.rB209ArableService = new RB209ArableService();
   }
   async getEndFebruaryRules(manure, predicates) {
@@ -53,7 +53,7 @@ class GetWarningRulesAndSpService {
         predicate: predicates.nFieldLimitGreenCompostOnly,
         key: WarningKeyMapper.ORGANICMANURENFIELDLIMITCOMPOSTPAS,
         code: WarningCodesMapper.FIELDNLIMIT,
-        join: manure
+        join: manure,
       },
       {
         sql: "EXEC spWarning_OrganicManureNFieldLimitCompostsCropTypeSpecific @OrganicManureID=@0",
@@ -66,7 +66,6 @@ class GetWarningRulesAndSpService {
   }
 
   async getNMaxRules(_manure, predicates) {
-    
     return [
       {
         sql: "EXEC spWarning_ComputeNMaxRateCombined @ManureID=@0",
@@ -75,17 +74,17 @@ class GetWarningRulesAndSpService {
         code: WarningCodesMapper.NMAXLIMIT,
         join: "FIELD",
         values: async (sp) => {
-           let cropTypeName = "";
+          let cropTypeName = "";
 
-        if (sp.CropTypeID) {
-          const cropType = await this.rB209ArableService.getData(
-            `/Arable/CropType/${sp.CropTypeID}`
-          );
-          cropTypeName = cropType?.cropTypeName ?? "";
-          console.log("cropTypeName", cropTypeName);
-        }
-         return [cropTypeName,sp.BaseNMaxRate, sp.ComputedNMaxRate];
-        }
+          if (sp.CropTypeID) {
+            const cropType = await this.rB209ArableService.getData(
+              `/Arable/CropType/${sp.CropTypeID}`,
+            );
+            cropTypeName = cropType?.cropTypeName ?? "";
+            console.log("cropTypeName", cropTypeName);
+          }
+          return [cropTypeName, sp.BaseNMaxRate, sp.ComputedNMaxRate];
+        },
       },
     ];
   }
@@ -165,6 +164,19 @@ class GetWarningRulesAndSpService {
     ];
   }
 
+  async getNResidueGroupRules(manure, predicates) {
+    return [
+      {
+        sql: "EXEC spWarning_CheckScotlandFertiliserNResidueGroup @FertiliserID=@0",
+        predicate: predicates.scotlandFertiliserNResidueGroup,
+        key: WarningKeyMapper.INORGNMAXRATERESIDUEGROUP,
+        code: WarningCodesMapper.CLOSEDPERIODORGANICMANURE,
+        join: manure,
+        values: (sp) => [sp.NIndex, sp.ThresholdUsed],
+      },
+    ];
+  }
+
   async getCropSpecificClosedPeriodRules(manure, predicates) {
     return [
       {
@@ -193,7 +205,7 @@ class GetWarningRulesAndSpService {
         predicate: predicates.scotLandAugSepHighRan,
         key: WarningKeyMapper.INORGFERTDATEONLY,
         code: WarningCodesMapper.CLOSEDPERIODORGANICMANURE,
-        join: manure 
+        join: manure
       },
     ];
   }
@@ -215,7 +227,7 @@ class GetWarningRulesAndSpService {
         predicate: predicates.fertClosedPeriodCrop,
         key: WarningKeyMapper.NITROFERTCLOSEDPERIOD,
         code: WarningCodesMapper.CLOSEDPERIODFERTILISER,
-        join: fertiliser,
+        join: fertiliser
       },
       {
         sql: "EXEC spWarning_CheckFertiliserClosedPeriodNitrogenLimit @FertiliserID=@0",
@@ -278,6 +290,7 @@ class GetWarningRulesAndSpService {
         code: WarningCodesMapper.CLOSEDPERIODORGANICMANURE,
         join: fertiliser,
       },
+      ...(await this.getNResidueGroupRules(fertiliser, predicates)),
     ];
   }
 }
