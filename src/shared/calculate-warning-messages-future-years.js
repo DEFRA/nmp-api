@@ -182,13 +182,19 @@ class CalculateFutureWarningMessageService {
   }
 
   async twoYearCompost(sp) {
-    if (this.isEngland(sp) && this.isBaseCondition(sp)){ return true};
+    if (this.isEngland(sp) && this.isBaseCondition(sp)) {
+      return true;
+    }
 
-    if (this.isWelsh(sp) && this.isBaseCondition(sp)){ return true};
+    if (this.isWelsh(sp) && this.isBaseCondition(sp)) {
+      return true;
+    }
 
-    if (this.isScotland(sp)) {return true};
+    if (this.isScotland(sp)) {
+      return true;
+    }
 
-    return false
+    return false;
   }
 
   async nFieldLimitGreenCompostOnly(sp) {
@@ -496,6 +502,12 @@ class CalculateFutureWarningMessageService {
 
     return insidePeriod && isRelevantCrop && (isEngland || isWales);
   }
+
+  async scotlandFertiliserNResidueGroup(sp) {
+    return sp.IsTriggered;
+  }
+
+ 
 
   async calculateFertiliserWarningMessage(manager, fertiliser) {
     return this.commonWarningMessageCalculator(
