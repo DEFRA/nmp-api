@@ -36,10 +36,6 @@ const CropTypeLinkingEntity = new EntitySchema({
       type: "int",
       nullable: true
     },
-    NMaxLimitScotland: {
-      type: "int",
-      nullable: true
-    },
     SNSCategoryID: {
       type: "int",
       nullable: true
