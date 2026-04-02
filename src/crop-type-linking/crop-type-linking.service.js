@@ -42,6 +42,47 @@ else {
   return null;
 
   }
+
+  async getScotlandNmaxByCropTypeID(cropTypeID, soilTypeId, residueGroup) {
+  try {
+    const query = `
+      SELECT 
+        ResidueGroup1,
+        ResidueGroup2,
+        ResidueGroup3,
+        ResidueGroup4,
+        ResidueGroup5,
+        ResidueGroup6
+      FROM ScotlandNMaxValues
+      WHERE CropTypeID = @0
+        AND SoilTypeID = @1
+    `;
+
+    const result = await AppDataSource.query(query, [
+      cropTypeID,   // @0
+      soilTypeId    // @1
+    ]);
+
+    const row = result?.[0];
+    if (!row) return null;
+
+    const residueMap = {
+      1: row.ResidueGroup1,
+      2: row.ResidueGroup2,
+      3: row.ResidueGroup3,
+      4: row.ResidueGroup4,
+      5: row.ResidueGroup5,
+      6: row.ResidueGroup6
+    };
+
+    return residueMap[residueGroup] ?? null;
+
+  } catch (error) {
+    console.error("Error fetching Scotland Nmax:", error);
+    return null;
+  }
+}
+
 }
 
 module.exports = { CropTypeLinkingsService };

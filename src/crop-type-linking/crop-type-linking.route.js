@@ -94,4 +94,37 @@ module.exports = [
       },
     },
   },
+  {
+    method: "GET",
+    path: "/scotland-nmax-values/{cropTypeId}",
+    handler: async (request, h) => {
+      return getController(request, h).getScotlandNmaxByCropTypeID();
+    },
+    options: {
+      tags: ["api", "Scotland nmax values"],
+      description: "Get Scotland nmax values by CropTypeID, SoilTypeId and ResidueGroup",
+      validate: {
+        params: Joi.object({
+          cropTypeId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          soilTypeId: Joi.number().integer().required(),
+          residueGroup: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+  },
 ];
