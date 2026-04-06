@@ -50,5 +50,6 @@ module.exports = [
   ...require("./warning/warning-route"),
   ...require("./farms-NVZ/farms-NVZ.route"),
   ...require("./psc-index/psc-index.route"),
-  ...require("./soil-analyses-method/soil-analyses-method.route")
+  ...require("./soil-analyses-method/soil-analyses-method.route"),
+  ...require("./scotland-nmax-values/scotland-nmax-values.route")
 ];

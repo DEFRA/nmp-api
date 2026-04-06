@@ -64,4 +64,37 @@ module.exports = [
         return controller.getByManagementPeriodId();
       },
     },
+    {
+    method: "GET",
+    path:  "/recommendations/ByFieldId{fieldId}",
+    handler: async (request, h) => {
+      const controller = new RecommendationController(request, h);
+      return controller.getNutrientsRecommendationsByFieldAndYear();
+    },
+    options: {
+      tags: ["api", "Recommendations"],
+      description: "Get all Recommendations by Field Id and Harvest Year",
+      validate: {
+        params: Joi.object({
+            fieldId: Joi.number().integer().required(),
+          }),
+        query: Joi.object({          
+          harvestYear: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(BAD_REQUEST)
+            .takeover();
+        },
+      },
+    },
+  },
 ];
