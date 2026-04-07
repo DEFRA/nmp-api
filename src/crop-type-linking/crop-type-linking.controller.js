@@ -57,6 +57,20 @@ class CropTypeLinkingsController {
       return this.#h.response({ error });
     }
   }
+  async getScotlandNmaxByCropTypeID() {
+    const { cropTypeId } = this.#request.params;
+    const { soilTypeId,residueGroup } = this.#request.query;
+    try {
+      const record =
+        await this.#cropTypeLinkingsService.getScotlandNmaxByCropTypeID(
+          cropTypeId,soilTypeId,residueGroup
+        );
+    
+      return this.#h.response({ ScotlandNMax: record });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
 }
 
 module.exports = { CropTypeLinkingsController };
