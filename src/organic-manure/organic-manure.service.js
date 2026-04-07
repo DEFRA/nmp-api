@@ -81,6 +81,11 @@ const {
 const {
   UpdatingFutureRecommendations,
 } = require("../shared/updating-future-recommendations-service");
+const MANAGEMENT_PERIOD_TO_CROP_JOIN = "M.CropID = C.ID";
+const MANAGEMENT_PERIOD_TO_FIELD_JOIN = "M.FieldID = F.ID";
+const API_ENDPOINTS = {
+  MANURE_TYPES: "/manure-types",
+};
 class OrganicManureService extends BaseService {
   constructor() {
     super(OrganicManureEntity);
@@ -138,6 +143,8 @@ class OrganicManureService extends BaseService {
     this.generateRecommendations = new GenerateRecommendations();
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
   }
+
+
 
   async getTotalNitrogenByManagementPeriod(
     managementPeriodID,
@@ -235,21 +242,9 @@ class OrganicManureService extends BaseService {
       SECOND: 59,
       MILLISECOND: 999,
     };
-    const fromDateFormatted = new Date(fromDate);
-    fromDateFormatted.setHours(
-      START_OF_DAY.HOUR,
-      START_OF_DAY.MINUTE,
-      START_OF_DAY.SECOND,
-      START_OF_DAY.MILLISECOND,
-    );
-
-    const toDateFormatted = new Date(toDate);
-    toDateFormatted.setHours(
-      END_OF_DAY.HOUR,
-      END_OF_DAY.MINUTE,
-      END_OF_DAY.SECOND,
-      END_OF_DAY.MILLISECOND,
-    );
+    
+       const fromDateFormatted = normalizeDateWithTime(fromDate, START_OF_DAY);
+       const toDateFormatted = normalizeDateWithTime(toDate, END_OF_DAY);
 
     const query = this.repository
       .createQueryBuilder("O") // O = OrganicManures
@@ -259,8 +254,8 @@ class OrganicManureService extends BaseService {
         "M",
         JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD,
       )
-      .innerJoin("Crops", "C", "M.CropID = C.ID")
-      .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
+      .innerJoin("Crops", "C", MANAGEMENT_PERIOD_TO_CROP_JOIN)
+      .where(MANAGEMENT_PERIOD_TO_FIELD_JOIN, { fieldId }) // note lowercase 'fieldId'
       .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
         fromDate: fromDateFormatted,
         toDate: toDateFormatted,
@@ -300,8 +295,8 @@ class OrganicManureService extends BaseService {
         "M",
         JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD,
       )
-      .innerJoin("Crops", "C", "M.CropID = C.ID")
-      .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
+      .innerJoin("Crops", "C", MANAGEMENT_PERIOD_TO_CROP_JOIN)
+      .where(MANAGEMENT_PERIOD_TO_FIELD_JOIN, { fieldId }) // note lowercase 'fieldId'
       .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
         fromDate: fromDateFormatted,
         toDate: toDateFormatted,
@@ -749,7 +744,7 @@ class OrganicManureService extends BaseService {
     try {
       // Fetch all manure types from the API
       const allManureTypes = await this.MannerManureTypesService.getData(
-        "/manure-types",
+        API_ENDPOINTS.MANURE_TYPES,
         request,
       );
 
@@ -1259,6 +1254,134 @@ class OrganicManureService extends BaseService {
         throw error;
       }
     });
+  }
+
+  async getTotalApplicationRate(
+    cropId,
+    fromDate,
+    toDate,
+    organicManureID,
+    isPoultry,
+    request,
+  ) {
+    const START_OF_DAY = {
+      HOUR: 0,
+      MINUTE: 0,
+      SECOND: 0,
+      MILLISECOND: 0,
+    };
+
+    const END_OF_DAY = {
+      HOUR: 23,
+      MINUTE: 59,
+      SECOND: 59,
+      MILLISECOND: 999,
+    };
+
+  
+       const fromDateFormatted = normalizeDateWithTime(fromDate, START_OF_DAY);
+       const toDateFormatted = normalizeDateWithTime(toDate, END_OF_DAY);
+
+    // Fetch all manure types from the API
+    const allManureTypes = await this.MannerManureTypesService.getData(
+      API_ENDPOINTS.MANURE_TYPES,
+      request,
+    );
+    const highRanManureTypes = allManureTypes.data.filter(
+      (manure) => manure.highReadilyAvailableNitrogen === true,
+    );
+
+    let manureTypeIds = highRanManureTypes.map((manure) => manure.id);
+
+    // Apply poultry logic
+    if (isPoultry) {
+      manureTypeIds = [ManureTypeMapper.PoultryManure]; 
+    } else {
+      manureTypeIds = manureTypeIds.filter(
+        (id) => id !== ManureTypeMapper.PoultryManure
+      ); // Exclude poultry
+    }
+
+    const query = this.repository
+      .createQueryBuilder("O")
+      .select("SUM(COALESCE(O.ApplicationRate, 0))", "totalApplicationRate")
+      .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
+      .where("M.CropID = :cropId", { cropId })
+      .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
+        fromDate: fromDateFormatted,
+        toDate: toDateFormatted,
+      })
+      .andWhere("O.ManureTypeID IN (:...manureTypeIds)", {
+        manureTypeIds,
+      });
+
+    if (organicManureID != null) {
+      query.andWhere("O.ID != :organicManureID", { organicManureID });
+    }
+
+    const result = await query.getRawOne();
+
+    return Number.parseInt(result?.totalApplicationRate) || 0;
+  }
+
+  async checkGreenCompostExists(fieldId, fromDate, toDate, organicManureID) {
+    const START_OF_DAY = {
+      HOUR: 0,
+      MINUTE: 0,
+      SECOND: 0,
+      MILLISECOND: 0,
+    };
+
+    const END_OF_DAY = {
+      HOUR: 23,
+      MINUTE: 59,
+      SECOND: 59,
+      MILLISECOND: 999,
+    };
+
+    const fromDateFormatted = new Date(fromDate);
+    fromDateFormatted.setHours(
+      START_OF_DAY.HOUR,
+      START_OF_DAY.MINUTE,
+      START_OF_DAY.SECOND,
+      START_OF_DAY.MILLISECOND,
+    );
+
+    const toDateFormatted = new Date(toDate);
+    toDateFormatted.setHours(
+      END_OF_DAY.HOUR,
+      END_OF_DAY.MINUTE,
+      END_OF_DAY.SECOND,
+      END_OF_DAY.MILLISECOND,
+    );
+
+    const query = this.repository
+      .createQueryBuilder("O")
+      .select("1") // lightweight existence check
+      .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
+      .innerJoin("Crops", "C", MANAGEMENT_PERIOD_TO_CROP_JOIN)
+      .where(MANAGEMENT_PERIOD_TO_FIELD_JOIN, { fieldId })
+      .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
+        fromDate: fromDateFormatted,
+        toDate: toDateFormatted,
+      })
+      .andWhere("O.ManureTypeID IN (:...manureTypeIds)", {
+        manureTypeIds: [
+          ManureTypeMapper.GreenCompost,
+          ManureTypeMapper.GreenFoodCompost,
+        ],
+      })
+      .limit(1); 
+
+    if (organicManureID != null) {
+      query.andWhere("O.ID != :organicManureID", {
+        organicManureID,
+      });
+    }
+
+    const result = await query.getRawOne();
+
+    return !!result; // true if exists, false otherwise
   }
 }
 module.exports = { OrganicManureService };

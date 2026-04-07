@@ -284,9 +284,51 @@ class OrganicManureController {
     try {
       const closedPeriod = await this.#organicManureService.getClosedPeriodByID(
         soilTypeId,
-        this.#request.query
+        this.#request.query,
       );
-      return this.#h.response(closedPeriod );
+      return this.#h.response(closedPeriod);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+
+  async getTotalApplicationRate() {
+    try {
+      const { cropId } = this.#request.params;
+      const { startDate, endDate, organicManureID, isPoultry } =
+        this.#request.query;
+
+      const total = await this.#organicManureService.getTotalApplicationRate(
+        cropId,
+        startDate,
+        endDate,
+        organicManureID,
+        isPoultry,
+        this.#request,
+      );
+
+      return this.#h.response(total);
+    } catch (error) {
+      console.error(error);
+      return this.#h.response(error)
+    }
+  }
+
+  async checkGreenCompostExists() {
+    const { fieldId } = this.#request.params;
+    const { startDate, endDate, organicManureID } = this.#request.query;
+
+    try {
+      const exists = await this.#organicManureService.checkGreenCompostExists(
+        fieldId,
+        startDate,
+        endDate,
+        organicManureID,
+      );
+
+      return this.#h.response({
+        exists,
+      });
     } catch (error) {
       return this.#h.response({ error });
     }

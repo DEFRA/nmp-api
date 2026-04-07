@@ -292,19 +292,7 @@ module.exports = [
           dateTo: Joi.date().iso().required(),
           organicManureID: Joi.number().integer().allow(null).optional(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(StatusCodeMapper.BAD_REQUEST)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
       handler: async (request, h) => {
         return getController(request, h).checkLivestockManureExists();
@@ -327,19 +315,7 @@ module.exports = [
               "Array of organicManure IDs to delete, e.g., [1, 2, 3]",
             ),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -356,19 +332,7 @@ module.exports = [
         params: Joi.object({
           organicManureID: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
       handler: async (request, h) => {
         return getController(request, h).getOrganicManureDataById();
@@ -389,19 +353,7 @@ module.exports = [
           farmId: Joi.number().integer().required(),
           harvestYear: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -416,19 +368,7 @@ module.exports = [
       description: "Update Organic Manures",
       validate: {
         payload: UpdateOrganicManuresWithFarmManureTypeDtoSchema,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
       handler: async (request, h) => {
         return getController(request, h).updateOrganicManures();
@@ -452,19 +392,7 @@ module.exports = [
         params: Joi.object({
           managementPeriodID: Joi.number().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -490,6 +418,53 @@ module.exports = [
           cropGroupId: Joi.number().integer().optional(),
           cropTypeId: Joi.number().integer().optional(),
           isPerennial: Joi.boolean().required(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+  },
+
+  {
+    method: "GET",
+    path: "/organic-manure/total-application-rate/{cropId}",
+    handler: async (request, h) => {
+      return getController(request, h).getTotalApplicationRate();
+    },
+    options: {
+      tags: ["api", "Organic Manure"],
+      description: "Get total application rate between dates for a crop",
+      validate: {
+        params: Joi.object({
+          cropId: Joi.number().required(),
+        }),
+        query: Joi.object({
+          startDate: Joi.date().iso().required(),
+          endDate: Joi.date().iso().required(),
+          organicManureID: Joi.number().integer().allow(null).optional(),
+          isPoultry: Joi.boolean().required(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+  },
+
+  {
+    method: "GET",
+    path: "/organic-manure/check-green-compost/{fieldId}",
+    handler: async (request, h) => {
+      return getController(request, h).checkGreenCompostExists();
+    },
+    options: {
+      tags: ["api", "Organic Manure"],
+      description: "Check if Green Compost exists for a field in 2 years",
+      validate: {
+        params: Joi.object({
+          fieldId: Joi.number().required(),
+        }),
+        query: Joi.object({
+          startDate: Joi.date().iso().required(),
+          endDate: Joi.date().iso().required(),
+          organicManureID: Joi.number().optional(),
         }),
         failAction: validationFailAction,
       },
