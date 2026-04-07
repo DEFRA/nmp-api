@@ -235,21 +235,9 @@ class OrganicManureService extends BaseService {
       SECOND: 59,
       MILLISECOND: 999,
     };
-    const fromDateFormatted = new Date(fromDate);
-    fromDateFormatted.setHours(
-      START_OF_DAY.HOUR,
-      START_OF_DAY.MINUTE,
-      START_OF_DAY.SECOND,
-      START_OF_DAY.MILLISECOND,
-    );
-
-    const toDateFormatted = new Date(toDate);
-    toDateFormatted.setHours(
-      END_OF_DAY.HOUR,
-      END_OF_DAY.MINUTE,
-      END_OF_DAY.SECOND,
-      END_OF_DAY.MILLISECOND,
-    );
+    
+       const fromDateFormatted = normalizeDateWithTime(fromDate, START_OF_DAY);
+       const toDateFormatted = normalizeDateWithTime(toDate, END_OF_DAY);
 
     const query = this.repository
       .createQueryBuilder("O") // O = OrganicManures
