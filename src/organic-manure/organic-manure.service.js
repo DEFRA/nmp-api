@@ -81,6 +81,7 @@ const {
 const {
   UpdatingFutureRecommendations,
 } = require("../shared/updating-future-recommendations-service");
+const MANAGEMENT_PERIOD_TO_CROP_JOIN = "M.CropID = C.ID";
 class OrganicManureService extends BaseService {
   constructor() {
     super(OrganicManureEntity);
@@ -138,6 +139,8 @@ class OrganicManureService extends BaseService {
     this.generateRecommendations = new GenerateRecommendations();
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
   }
+
+
 
   async getTotalNitrogenByManagementPeriod(
     managementPeriodID,
@@ -247,7 +250,7 @@ class OrganicManureService extends BaseService {
         "M",
         JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD,
       )
-      .innerJoin("Crops", "C", "M.CropID = C.ID")
+      .innerJoin("Crops", "C", MANAGEMENT_PERIOD_TO_CROP_JOIN)
       .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
       .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
         fromDate: fromDateFormatted,
@@ -288,7 +291,7 @@ class OrganicManureService extends BaseService {
         "M",
         JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD,
       )
-      .innerJoin("Crops", "C", "M.CropID = C.ID")
+      .innerJoin("Crops", "C", MANAGEMENT_PERIOD_TO_CROP_JOIN)
       .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
       .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
         fromDate: fromDateFormatted,
@@ -1352,14 +1355,17 @@ class OrganicManureService extends BaseService {
       .createQueryBuilder("O")
       .select("1") // lightweight existence check
       .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
-      .innerJoin("Crops", "C", "M.CropID = C.ID")
+      .innerJoin("Crops", "C", MANAGEMENT_PERIOD_TO_CROP_JOIN)
       .where("C.FieldID = :fieldId", { fieldId })
       .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
         fromDate: fromDateFormatted,
-        toDate: toDateFormatted
+        toDate: toDateFormatted,
       })
       .andWhere("O.ManureTypeID IN (:...manureTypeIds)", {
-        manureTypeIds: [ManureTypeMapper.GreenCompost, ManureTypeMapper.GreenFoodCompost], 
+        manureTypeIds: [
+          ManureTypeMapper.GreenCompost,
+          ManureTypeMapper.GreenFoodCompost,
+        ],
       })
       .limit(1); 
 
