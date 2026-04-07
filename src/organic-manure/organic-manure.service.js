@@ -83,6 +83,9 @@ const {
 } = require("../shared/updating-future-recommendations-service");
 const MANAGEMENT_PERIOD_TO_CROP_JOIN = "M.CropID = C.ID";
 const MANAGEMENT_PERIOD_TO_FIELD_JOIN = "M.FieldID = F.ID";
+const API_ENDPOINTS = {
+  MANURE_TYPES: "/manure-types",
+};
 class OrganicManureService extends BaseService {
   constructor() {
     super(OrganicManureEntity);
@@ -741,7 +744,7 @@ class OrganicManureService extends BaseService {
     try {
       // Fetch all manure types from the API
       const allManureTypes = await this.MannerManureTypesService.getData(
-        "/manure-types",
+        API_ENDPOINTS.MANURE_TYPES,
         request,
       );
 
@@ -1281,7 +1284,7 @@ class OrganicManureService extends BaseService {
 
     // Fetch all manure types from the API
     const allManureTypes = await this.MannerManureTypesService.getData(
-      "/manure-types",
+      API_ENDPOINTS.MANURE_TYPES,
       request,
     );
     const highRanManureTypes = allManureTypes.data.filter(
