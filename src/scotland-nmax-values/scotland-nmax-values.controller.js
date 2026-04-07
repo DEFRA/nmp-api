@@ -5,20 +5,20 @@ const boom = require("@hapi/boom");
 class ScotlandNMaxValueController {
   #request;
   #h;
-  #scotlandNMaxValueService;
+  #scotlandNMaxValuesService;
 
   constructor(request, h) {
     this.#request = request;
     this.#h = h;
-    this.#scotlandNMaxValueService = new ScotlandNmaxValueService();
+    this.#scotlandNMaxValuesService = new ScotlandNmaxValueService();
   }
     async getAll() {        
         try {
-          const record = await this.#scotlandNMaxValueService.getAll();
+          const record = await this.#scotlandNMaxValuesService.getAll();
           if (!record) {
             throw boom.notFound("No data found.");
           }
-          return this.#h.response({  record });
+          return this.#h.response(  record );
         } catch (error) {
           return this.#h.response({ error });
         }

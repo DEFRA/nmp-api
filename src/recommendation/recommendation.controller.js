@@ -48,19 +48,6 @@ class RecommendationController {
       }
     }
 
-     async getNutrientsRecommendationsByFieldAndYear() {
-      const { fieldId } = this.#request.params;
-      const {  harvestYear } = this.#request.query;
-      try {
-        const record = await this.#recommendationService.getNutrientsRecommendationsByFieldAndYear(fieldId,harvestYear);
-        if (!record) {
-          throw boom.notFound("No recommendation found.");
-        }
-        return this.#h.response({  record });
-      } catch (error) {
-        return this.#h.response({ error });
-      }
-    }
 }
 
 module.exports = { RecommendationController };

@@ -607,15 +607,6 @@ console.log('swardManagementsList',swardManagementsList);
     return record;
 }
 
-async getNutrientsRecommendationsByFieldAndYear(fieldId, harvestYear) {
-  return await this.repository
-    .createQueryBuilder("Recommendation")
-    .leftJoin("ManagementPeriod", "MP", "MP.ID = Recommendation.ManagementPeriodId")
-    .leftJoin("Crop", "C", "C.ID = MP.CropId")
-    .where("C.fieldId = :fieldId", { fieldId })
-    .andWhere("C.[year] = :harvestYear", { harvestYear })
-    .getMany();
-}
 }
 
 module.exports = { RecommendationService };

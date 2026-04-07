@@ -6,10 +6,12 @@ const ScotlandNMaxValuesEntity = new EntitySchema({
   columns: {
     CropTypeID: {
       type: "int", nullable: false,
+      primary:true
     },
     SoilTypeID: {
       type: "int",
       nullable: false,
+      primary:true
     },
     ResidueGroup1: { type: "int", nullable: false },
     ResidueGroup2: { type: "int", nullable: false },
