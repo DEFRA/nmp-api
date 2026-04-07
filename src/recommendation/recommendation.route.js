@@ -63,5 +63,5 @@ module.exports = [
         const controller = new RecommendationController(request, h);
         return controller.getByManagementPeriodId();
       },
-    },
+    },    
 ];

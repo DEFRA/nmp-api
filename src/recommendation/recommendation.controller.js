@@ -47,6 +47,7 @@ class RecommendationController {
         return this.#h.response({ error });
       }
     }
+
 }
 
 module.exports = { RecommendationController };

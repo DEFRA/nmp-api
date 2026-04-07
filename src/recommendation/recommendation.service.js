@@ -606,6 +606,7 @@ console.log('swardManagementsList',swardManagementsList);
     });
     return record;
 }
+
 }
 
 module.exports = { RecommendationService };

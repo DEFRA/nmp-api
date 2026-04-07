@@ -6,6 +6,7 @@ const { formatErrorResponse } = require("../interceptor/responseFormatter");
 
 const getController = (request, h) =>
   new CropTypeLinkingsController(request, h);
+const BAD_REQUEST=400;
 module.exports = [
   {
     method: "GET",
@@ -30,7 +31,7 @@ module.exports = [
                 request,
               })
             )
-            .code(400)
+            .code(BAD_REQUEST)
             .takeover();
         },
       },
@@ -62,7 +63,7 @@ module.exports = [
                 request,
               })
             )
-            .code(400)
+            .code(BAD_REQUEST)
             .takeover();
         },
       },
@@ -88,7 +89,40 @@ module.exports = [
                 request,
               })
             )
-            .code(400)
+            .code(BAD_REQUEST)
+            .takeover();
+        },
+      },
+    },
+  },
+  {
+    method: "GET",
+    path: "/scotland-nmax-values/{cropTypeId}",
+    handler: async (request, h) => {
+      return getController(request, h).getScotlandNmaxByCropTypeID();
+    },
+    options: {
+      tags: ["api", "Scotland nmax values"],
+      description: "Get Scotland nmax values by CropTypeID, SoilTypeId and ResidueGroup",
+      validate: {
+        params: Joi.object({
+          cropTypeId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          soilTypeId: Joi.number().integer().required(),
+          residueGroup: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(BAD_REQUEST)
             .takeover();
         },
       },
