@@ -6,7 +6,7 @@ class ScotlandNMaxValueController {
   #h;
   #scotlandNMaxValuesService;
 
-  constructor(request, h) {
+  constructor(_request, h) {
     this.#h = h;
     this.#scotlandNMaxValuesService = new ScotlandNmaxValueService();
   }
