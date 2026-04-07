@@ -310,6 +310,7 @@ class OrganicManureController {
       return this.#h.response(total);
     } catch (error) {
       console.error(error);
+      return this.#h.response(error)
     }
   }
 
