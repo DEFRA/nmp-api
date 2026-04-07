@@ -64,7 +64,9 @@ else {
     ]);
 
     const row = result?.[0];
-    if (!row) return null;
+    if (!row) {
+    return null;
+}
 
     const residueMap = {
       1: row.ResidueGroup1,

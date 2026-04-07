@@ -6,6 +6,7 @@ const { formatErrorResponse } = require("../interceptor/responseFormatter");
 
 const getController = (request, h) =>
   new CropTypeLinkingsController(request, h);
+const BAD_REQUEST=400;
 module.exports = [
   {
     method: "GET",
@@ -30,7 +31,7 @@ module.exports = [
                 request,
               })
             )
-            .code(400)
+            .code(BAD_REQUEST)
             .takeover();
         },
       },
@@ -62,7 +63,7 @@ module.exports = [
                 request,
               })
             )
-            .code(400)
+            .code(BAD_REQUEST)
             .takeover();
         },
       },
@@ -88,7 +89,7 @@ module.exports = [
                 request,
               })
             )
-            .code(400)
+            .code(BAD_REQUEST)
             .takeover();
         },
       },
@@ -121,7 +122,7 @@ module.exports = [
                 request,
               })
             )
-            .code(400)
+            .code(BAD_REQUEST)
             .takeover();
         },
       },

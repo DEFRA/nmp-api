@@ -3,12 +3,10 @@ const { ScotlandNmaxValueService } = require("./scotland-nmax-values.service");
 const boom = require("@hapi/boom");
 
 class ScotlandNMaxValueController {
-  #request;
   #h;
   #scotlandNMaxValuesService;
 
   constructor(request, h) {
-    this.#request = request;
     this.#h = h;
     this.#scotlandNMaxValuesService = new ScotlandNmaxValueService();
   }
