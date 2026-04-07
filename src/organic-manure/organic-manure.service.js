@@ -82,6 +82,7 @@ const {
   UpdatingFutureRecommendations,
 } = require("../shared/updating-future-recommendations-service");
 const MANAGEMENT_PERIOD_TO_CROP_JOIN = "M.CropID = C.ID";
+const MANAGEMENT_PERIOD_TO_FIELD_JOIN = "M.FieldID = F.ID";
 class OrganicManureService extends BaseService {
   constructor() {
     super(OrganicManureEntity);
@@ -251,7 +252,7 @@ class OrganicManureService extends BaseService {
         JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD,
       )
       .innerJoin("Crops", "C", MANAGEMENT_PERIOD_TO_CROP_JOIN)
-      .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
+      .where(MANAGEMENT_PERIOD_TO_FIELD_JOIN, { fieldId }) // note lowercase 'fieldId'
       .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
         fromDate: fromDateFormatted,
         toDate: toDateFormatted,
@@ -292,7 +293,7 @@ class OrganicManureService extends BaseService {
         JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD,
       )
       .innerJoin("Crops", "C", MANAGEMENT_PERIOD_TO_CROP_JOIN)
-      .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
+      .where(MANAGEMENT_PERIOD_TO_FIELD_JOIN, { fieldId }) // note lowercase 'fieldId'
       .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
         fromDate: fromDateFormatted,
         toDate: toDateFormatted,
@@ -1356,7 +1357,7 @@ class OrganicManureService extends BaseService {
       .select("1") // lightweight existence check
       .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
       .innerJoin("Crops", "C", MANAGEMENT_PERIOD_TO_CROP_JOIN)
-      .where("C.FieldID = :fieldId", { fieldId })
+      .where(MANAGEMENT_PERIOD_TO_FIELD_JOIN, { fieldId })
       .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
         fromDate: fromDateFormatted,
         toDate: toDateFormatted,
