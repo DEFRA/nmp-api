@@ -507,6 +507,10 @@ class CalculateFutureWarningMessageService {
     return sp.IsTriggered;
   }
 
+  async manureNMaxScotland(sp) {
+    return sp.IsFieldWithinScotland && sp.IsNExceeding && sp.IsWithinNVZ;
+  }
+
  
 
   async calculateFertiliserWarningMessage(manager, fertiliser) {
