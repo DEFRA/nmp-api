@@ -76,7 +76,26 @@ class GetWarningRulesAndSpService {
         values: async (sp) => {
           let cropTypeName = "";
 
-          if (sp.CropTypeID) {
+          if (sp.CropTypeID !== null) {
+            const cropType = await this.rB209ArableService.getData(
+              `/Arable/CropType/${sp.CropTypeID}`,
+            );
+            cropTypeName = cropType?.cropTypeName ?? "";
+            console.log("cropTypeName", cropTypeName);
+          }
+          return [cropTypeName, sp.BaseNMaxRate, sp.ComputedNMaxRate];
+        },
+      },
+      {
+        sql: "EXEC spWarning_ComputeScotlandNMaxRate @ManureID=@0",
+        predicate: predicates.manureNMaxScotland,
+        key: WarningKeyMapper.NMAXLIMIT,
+        code: WarningCodesMapper.NMAXLIMIT,
+        join: "FIELD",
+        values: async (sp) => {
+          let cropTypeName = "";
+
+          if (sp.CropTypeID !== null) {
             const cropType = await this.rB209ArableService.getData(
               `/Arable/CropType/${sp.CropTypeID}`,
             );
@@ -227,7 +246,7 @@ class GetWarningRulesAndSpService {
         predicate: predicates.fertClosedPeriodCrop,
         key: WarningKeyMapper.NITROFERTCLOSEDPERIOD,
         code: WarningCodesMapper.CLOSEDPERIODFERTILISER,
-        join: fertiliser
+        join: fertiliser,
       },
       {
         sql: "EXEC spWarning_CheckFertiliserClosedPeriodNitrogenLimit @FertiliserID=@0",
@@ -235,7 +254,11 @@ class GetWarningRulesAndSpService {
         key: WarningKeyMapper.INORGNMAXRATE,
         code: WarningCodesMapper.MAXAPPLICATIONRATEINORGFERTCROPCLOSEDSPREADINGPERIOD,
         join: fertiliser,
-        values: async (sp) => [await formatToDayMonth(sp.ClosedPeriodStartDate),await formatToDayMonth(sp.ClosedPeriodEndDate),sp.MaxNitrogenRate]
+        values: async (sp) => [
+          await formatToDayMonth(sp.ClosedPeriodStartDate),
+          await formatToDayMonth(sp.ClosedPeriodEndDate),
+          sp.MaxNitrogenRate,
+        ],
       },
       {
         sql: "EXEC spWarning_CheckFertiliserClosedPeriodTwentyEightDayLimit @FertiliserID=@0",
@@ -243,7 +266,10 @@ class GetWarningRulesAndSpService {
         key: WarningKeyMapper.INORGNMAXRATEBRASSICA,
         code: WarningCodesMapper.MAXAPPLICATIONRATEINORGFERTCROPCLOSEDSPREADINGPERIOD,
         join: fertiliser,
-        values: async (sp) => [await formatToDayMonth(sp.ClosedPeriodStart),await formatToDayMonth(sp.ClosedPeriodEnd)]
+        values: async (sp) => [
+          await formatToDayMonth(sp.ClosedPeriodStart),
+          await formatToDayMonth(sp.ClosedPeriodEnd),
+        ],
       },
       {
         sql: "EXEC spWarning_CheckFertiliserClosedPeriodToOctoberLimit @FertiliserID=@0",
@@ -268,14 +294,7 @@ class GetWarningRulesAndSpService {
         code: WarningCodesMapper.CLOSEDPERIODFERTILISER,
         join: fertiliser,
       },
-      {
-        sql: "EXEC spWarning_ComputeNMaxRateCombined @ManureID=@0",
-        predicate: predicates.manureNMax,
-        key: WarningKeyMapper.NMAXLIMIT,
-        code: WarningCodesMapper.NMAXLIMIT,
-        join: "FIELD",
-        values: (sp) => [sp.ComputedNMaxRate],
-      },
+    
       {
         sql: "EXEC spWarning_CheckScotlandNFertiliserClosedPeriod @FertiliserID=@0",
         predicate: predicates.closedPeriodForFertiliserApartFromBrassica,
@@ -291,6 +310,7 @@ class GetWarningRulesAndSpService {
         join: fertiliser,
       },
       ...(await this.getNResidueGroupRules(fertiliser, predicates)),
+      ...(await this.getNMaxRules(manure, predicates)),
     ];
   }
 }
