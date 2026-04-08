@@ -294,7 +294,7 @@ class GetWarningRulesAndSpService {
         code: WarningCodesMapper.CLOSEDPERIODFERTILISER,
         join: fertiliser,
       },
-    
+
       {
         sql: "EXEC spWarning_CheckScotlandNFertiliserClosedPeriod @FertiliserID=@0",
         predicate: predicates.closedPeriodForFertiliserApartFromBrassica,
@@ -310,7 +310,7 @@ class GetWarningRulesAndSpService {
         join: fertiliser,
       },
       ...(await this.getNResidueGroupRules(fertiliser, predicates)),
-      ...(await this.getNMaxRules(manure, predicates)),
+      ...(await this.getNMaxRules(fertiliser, predicates)),
     ];
   }
 }
