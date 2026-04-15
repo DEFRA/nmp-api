@@ -176,9 +176,9 @@ class GetWarningRulesAndSpService {
       {
         sql: "EXEC spWarning_CheckScotlandHighRANJulyRestriction @OrganicManureID=@0",
         predicate: predicates.scotlandHighRanInJulyMonth,
-        key: WarningKeyMapper.INORGNMAXRATEGRASS,
+        key: WarningKeyMapper.RANMANUREJULYTOSEP,
         code: WarningCodesMapper.CLOSEDPERIODORGANICMANURE,
-        join: manure,
+        join: manure
       },
     ];
   }
@@ -222,13 +222,12 @@ class GetWarningRulesAndSpService {
       {
         sql: "EXEC spWarning_CheckScotlandHighRANAugSepRestriction @OrganicManureID=@0",
         predicate: predicates.scotLandAugSepHighRan,
-        key: WarningKeyMapper.INORGFERTDATEONLY,
+        key: WarningKeyMapper.RANMANUREJULYTOSEP,
         code: WarningCodesMapper.CLOSEDPERIODORGANICMANURE,
         join: manure
       },
     ];
   }
-
   async getOrganicManureRules(manure, predicates) {
     return [
       ...(await this.getFieldLimitRules(manure, predicates)),
@@ -254,11 +253,7 @@ class GetWarningRulesAndSpService {
         key: WarningKeyMapper.INORGNMAXRATE,
         code: WarningCodesMapper.MAXAPPLICATIONRATEINORGFERTCROPCLOSEDSPREADINGPERIOD,
         join: fertiliser,
-        values: async (sp) => [
-          await formatToDayMonth(sp.ClosedPeriodStartDate),
-          await formatToDayMonth(sp.ClosedPeriodEndDate),
-          sp.MaxNitrogenRate,
-        ],
+        values: async (sp) => [await formatToDayMonth(sp.ClosedPeriodStartDate),await formatToDayMonth(sp.ClosedPeriodEndDate),sp.MaxNitrogenRate]
       },
       {
         sql: "EXEC spWarning_CheckFertiliserClosedPeriodTwentyEightDayLimit @FertiliserID=@0",
@@ -266,10 +261,7 @@ class GetWarningRulesAndSpService {
         key: WarningKeyMapper.INORGNMAXRATEBRASSICA,
         code: WarningCodesMapper.MAXAPPLICATIONRATEINORGFERTCROPCLOSEDSPREADINGPERIOD,
         join: fertiliser,
-        values: async (sp) => [
-          await formatToDayMonth(sp.ClosedPeriodStart),
-          await formatToDayMonth(sp.ClosedPeriodEnd),
-        ],
+        values: async (sp) => [await formatToDayMonth(sp.ClosedPeriodStart),await formatToDayMonth(sp.ClosedPeriodEnd)]
       },
       {
         sql: "EXEC spWarning_CheckFertiliserClosedPeriodToOctoberLimit @FertiliserID=@0",
@@ -306,11 +298,18 @@ class GetWarningRulesAndSpService {
         sql: "EXEC spWarning_CheckScotlandNFertiliserHighNClosedPeriod @FertiliserID=@0",
         predicate: predicates.closedPeriodForFertiliserForBrassica,
         key: WarningKeyMapper.INORGNMAXRATEBRASSICA,
-        code: WarningCodesMapper.CLOSEDPERIODORGANICMANURE,
+        code: WarningCodesMapper.CLOSEDPERIODFERTILISER,
         join: fertiliser,
       },
       ...(await this.getNResidueGroupRules(fertiliser, predicates)),
       ...(await this.getNMaxRules(fertiliser, predicates)),
+      {
+        sql: "EXEC spWarning_CheckScotlandFertiliserNResidueGroupSpecific @FertiliserID=@0",
+        predicate: predicates.scotlandFertiliserNResidueGroupSpecific,
+        key: WarningKeyMapper.INORGNMAXRATERESIDUEGROUP4TO6,
+        code: WarningCodesMapper.CLOSEDPERIODFERTILISER,
+        join: fertiliser
+      },
     ];
   }
 }
