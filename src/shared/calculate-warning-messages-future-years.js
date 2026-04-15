@@ -511,7 +511,9 @@ class CalculateFutureWarningMessageService {
     return sp.IsFieldWithinScotland && sp.IsNExceeding && sp.IsWithinNVZ;
   }
 
- 
+  async scotlandFertiliserNResidueGroupSpecific(sp) {
+    return sp.IsTriggered;
+  }
 
   async calculateFertiliserWarningMessage(manager, fertiliser) {
     return this.commonWarningMessageCalculator(
