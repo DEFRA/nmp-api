@@ -12,7 +12,7 @@ module.exports = [
     },
     handler: async (request, h) => {
       const controller = new BankSlopeAnglesController(request, h);
-      return controller.getAll();
+      return controller.getAllBankSlopeAngles();
     },
   },
   {
@@ -40,7 +40,7 @@ module.exports = [
     },
     handler: async (request, h) => {
       const controller = new BankSlopeAnglesController(request, h);
-      return controller.getById();
+      return controller.getBankSlopeAngleById();
     },
   },
 ];

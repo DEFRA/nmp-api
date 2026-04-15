@@ -36,8 +36,7 @@ const {
 const {
   SoilTypeSoilTextureEntity,
 } = require("./entity/soil-type-soil-texture.entity.js");
-const { SubSoilEntity } = require("./entity/sub-soil.entity.js");
-const { TopSoilEntity } = require("./entity/top-soil.entity.js");
+
 const { RecommendationEntity } = require("./entity/recommendation.entity.js");
 const {
   RecommendationCommentEntity,
