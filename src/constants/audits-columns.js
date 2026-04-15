@@ -1,4 +1,4 @@
-export const auditColumns = {
+ const auditColumns = {
   CreatedOn: {
     type: "datetime2",
     precision: 7,
@@ -21,3 +21,5 @@ export const auditColumns = {
     nullable: true,
   },
 };
+
+module.exports = { auditColumns };
