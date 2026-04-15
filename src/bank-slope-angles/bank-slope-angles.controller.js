@@ -11,7 +11,7 @@ class BankSlopeAnglesController {
     this.#service = new BankSlopeAnglesService();
   }
 
-  async getAll() {
+  async getAllBankSlopeAngles() {
     try {
       const records = await this.#service.getAll();
       return this.#h.response(records);
@@ -21,7 +21,7 @@ class BankSlopeAnglesController {
     }
   }
 
-  async getById() {
+  async getBankSlopeAngleById() {
     const { id } = this.#request.params;
     try {
       const record = await this.#service.getById(id);
