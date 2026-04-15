@@ -43,7 +43,7 @@ const manureNutrientColumns = {
     type: "decimal",
     precision: 18,
     scale: 2,
-  },
+  }
 };
 
 module.exports = { manureNutrientColumns };
