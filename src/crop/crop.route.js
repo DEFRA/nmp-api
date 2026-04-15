@@ -7,7 +7,6 @@ const {
   CropDto,
   CopyPlanDto,
 } = require("./dto/crops.dto");
-const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 module.exports = [
