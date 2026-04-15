@@ -28,8 +28,6 @@ const {
 const {
   SoilTypeSoilTextureEntity,
 } = require("../entity/soil-type-soil-texture.entity");
-const { SubSoilEntity } = require("../entity/sub-soil.entity");
-const { TopSoilEntity } = require("../entity/top-soil.entity");
 const { RecommendationEntity } = require("../entity/recommendation.entity");
 const {
   RecommendationCommentEntity,
@@ -143,8 +141,6 @@ const entities = [
   ApplicationMethodsIncorpMethodEntity,
   IncorpMethodsIncorpDelayEntity,
   SoilTypeSoilTextureEntity,
-  SubSoilEntity,
-  TopSoilEntity,
   RecommendationEntity,
   RecommendationCommentEntity,
   OrganicManureEntity,

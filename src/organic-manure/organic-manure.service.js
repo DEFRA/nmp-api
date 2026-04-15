@@ -127,9 +127,6 @@ class OrganicManureService extends BaseService {
     this.fertiliserRepository = AppDataSource.getRepository(
       FertiliserManuresEntity,
     );
-    this.soilTypeTextureRepository = AppDataSource.getRepository(
-      SoilTypeSoilTextureEntity,
-    );
     this.countryRepository = AppDataSource.getRepository(CountryEntity);
     this.grassGrowthClass = new GrassGrowthService();
     this.excessRainfallRepository = AppDataSource.getRepository(
