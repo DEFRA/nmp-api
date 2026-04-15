@@ -3,6 +3,7 @@ const { RB209SoilController } = require("./soil.controller");
 const {
   formatErrorResponse,
 } = require("../../../interceptor/responseFormatter");
+const { validationFailAction } = require("../../../shared/validateFailSafeAction");
 
 module.exports = [
   {
@@ -31,19 +32,7 @@ module.exports = [
         params: Joi.object({
           soilTypeId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -64,19 +53,7 @@ module.exports = [
           nutrientId: Joi.string().required(),
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -97,19 +74,7 @@ module.exports = [
           nutrientId: Joi.string().required(),
           methodologyId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -130,19 +95,7 @@ module.exports = [
           nutrientId: Joi.number().integer().required(), // Ensure nutrientId is an integer
           indexId: Joi.number().integer().required(), // Ensure indexId is an integer
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -167,19 +120,7 @@ module.exports = [
           nutrientValue: Joi.string().required(),
           methodologyId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -205,19 +146,7 @@ module.exports = [
           methodologyId: Joi.string().required(),
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -242,19 +171,7 @@ module.exports = [
           methodologyId: Joi.string().required(),
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -278,19 +195,7 @@ module.exports = [
           nutrientId: Joi.string().required(),
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -309,19 +214,7 @@ module.exports = [
         params: Joi.object({
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -344,19 +237,7 @@ module.exports = [
           soilTypeId: Joi.string().required(),
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -376,19 +257,7 @@ module.exports = [
           cropGroupId: Joi.string().required(),
           pIndexId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
