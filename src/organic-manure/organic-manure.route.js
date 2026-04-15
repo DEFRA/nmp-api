@@ -28,19 +28,7 @@ module.exports = [
           confirm: Joi.boolean().required(),
           organicManureID: Joi.number().integer().allow(null).optional(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code()
-            .takeover();
-        },
+        failAction: validationFailAction
       },
       handler: async (request, h) => {
         return getController(request, h).getTotalNitrogenByManagementPeriod();
@@ -63,19 +51,7 @@ module.exports = [
           confirm: Joi.boolean().required(),
           organicManureID: Joi.number().integer().allow(null).optional(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code()
-            .takeover();
-        },
+        failAction: validationFailAction
       },
       handler: async (request, h) => {
         return getController(request, h).getTotalNitrogenByCropID();
@@ -98,19 +74,7 @@ module.exports = [
           confirm: Joi.boolean().required(),
           organicManureID: Joi.number().integer().allow(null).optional(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code()
-            .takeover();
-        },
+        failAction: validationFailAction
       },
       handler: async (request, h) => {
         return getController(request, h).getTotalNitrogen();
@@ -135,19 +99,7 @@ module.exports = [
           isGreenFoodCompost: Joi.boolean().required(),
           organicManureID: Joi.number().integer().allow(null).optional(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
       handler: async (request, h) => {
         return getController(request, h).getTotalNitrogenIfIsGreenFoodCompost();
@@ -168,19 +120,7 @@ module.exports = [
           year: Joi.number().integer().required(),
           confirm: Joi.boolean().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
       handler: async (request, h) => {
         return getController(request, h).getManureTypeIdsByFieldAndYear();
@@ -198,19 +138,7 @@ module.exports = [
         params: Joi.object({
           managementPeriodID: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code()
-            .takeover();
-        },
+        failAction: validationFailAction
       },
       handler: async (request, h) => {
         return getController(request, h).getManureTypeIdsByManagementPeriod();
@@ -225,19 +153,7 @@ module.exports = [
       description: "Create Organic Manures along with Farm Manure Type",
       validate: {
         payload: CreateOrganicManuresWithFarmManureTypeDtoSchema,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
       handler: async (request, h) => {
         return getController(request, h).createOrganicManures();
@@ -260,19 +176,7 @@ module.exports = [
           organicManureID: Joi.number().integer().allow(null).optional(),
           isSlurryOnly: Joi.boolean(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction:validationFailAction
       },
       handler: async (request, h) => {
         return getController(request, h).checkManureExists();
