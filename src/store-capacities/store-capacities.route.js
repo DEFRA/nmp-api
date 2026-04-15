@@ -2,6 +2,7 @@ const Joi = require("joi");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { StoreCapacitiesController } = require("./store-capacities.controller");
 const { StoreCapacitiesCreateDto, CopyStoreCapacitiesDto } = require("./dto/store-capacities.dto");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 module.exports = [
   {
@@ -26,17 +27,7 @@ module.exports = [
         params: Joi.object({
           farmId: Joi.number().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: { error: err },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -49,8 +40,7 @@ module.exports = [
     path: "/store-capacities/{FarmId}/{StoreName}",
     options: {
       tags: ["api", "Store Capacities"],
-      description:
-        "Check if store capacity exists by farmId, and storeName",
+      description: "Check if store capacity exists by farmId, and storeName",
       validate: {
         params: Joi.object({
           FarmId: Joi.number().required(),
@@ -59,17 +49,7 @@ module.exports = [
         query: Joi.object({
           ID: Joi.number().integer().optional().allow(null),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: { error: err },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -87,17 +67,7 @@ module.exports = [
         params: Joi.object({
           id: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: { error: err },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -117,19 +87,7 @@ module.exports = [
       description: "copy Store Capacities",
       validate: {
         payload: CopyStoreCapacitiesDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -141,17 +99,7 @@ module.exports = [
       description: "Create a new store capacity",
       validate: {
         payload: StoreCapacitiesCreateDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: { error: err },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -167,11 +115,7 @@ module.exports = [
       description: "Update Store Capacities",
       validate: {
         payload: StoreCapacitiesCreateDto,
-        failAction: (request, h, err) =>
-          h
-            .response(formatErrorResponse({ source: { error: err }, request }))
-            .code(400)
-            .takeover(),
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -189,19 +133,7 @@ module.exports = [
         params: Joi.object({
           storeCapacitiesId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {
