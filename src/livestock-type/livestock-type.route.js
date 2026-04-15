@@ -1,6 +1,7 @@
 const Joi = require("joi");
 const { LivestockTypeController } = require("./livestock-type.controller");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 module.exports = [
   {
@@ -13,8 +14,9 @@ module.exports = [
     handler: async (request, h) => {
       const controller = new LivestockTypeController(request, h);
       return controller.getAllLivestockTypes();
-    },
+    }
   },
+
   {
     method: "GET",
     path: "/livestock-types/{livestockGroupId}",
@@ -25,24 +27,12 @@ module.exports = [
         params: Joi.object({
           livestockGroupId: Joi.number().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {
       const controller = new LivestockTypeController(request, h);
       return controller.getLivestockTypesBylivestockGroupId();
-    },
+    }
   },
 ];
