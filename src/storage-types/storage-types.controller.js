@@ -11,28 +11,26 @@ class StorageTypesController {
     this.#storageTypesService = new StorageTypesService();
   }
 
-  async getAll() {
+  async getAllStorageTypes() {
     try {
       const records = await this.#storageTypesService.getAll();
-      return this.#h.response( records );
+      return this.#h.response(records);
     } catch (error) {
       console.error("Error in getAll:", error);
-      return this.#h.response( error );
+      return this.#h.response(error);
     }
   }
 
-  async getById() {
+  async getStorageTypesById() {
     const { id } = this.#request.params;
     try {
       const record = await this.#storageTypesService.getById(id);
-      return this.#h.response( record );
+      return this.#h.response(record);
     } catch (error) {
       console.error("Error in getById:", error);
-      return this.#h.response( error );
+      return this.#h.response(error);
     }
   }
-
-  
 }
 
 module.exports = { StorageTypesController };

@@ -82,7 +82,7 @@ const {
   UpdatingFutureRecommendations,
 } = require("../shared/updating-future-recommendations-service");
 const MANAGEMENT_PERIOD_TO_CROP_JOIN = "M.CropID = C.ID";
-const CROP_TO_FIELD_CONDITION = "C.FieldID = fieldId";
+const CROP_TO_FIELD_CONDITION = "C.FieldID = :fieldId";
 const API_ENDPOINTS = {
   MANURE_TYPES: "/manure-types",
 };
