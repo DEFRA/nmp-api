@@ -63,19 +63,7 @@ module.exports = [
           year: Joi.number().integer().required(), // Add validation for the year query parameter
         }),
         payload: ExcessRainfallDto, // Validate payload with UpdateFieldDtoSchema
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {
