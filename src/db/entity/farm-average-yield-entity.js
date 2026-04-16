@@ -1,0 +1,51 @@
+const { EntitySchema } = require("typeorm");
+const { auditColumns } = require("../../constants/audits-columns");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
+
+const FarmAverageYieldsEntity = new EntitySchema({
+  name: "FarmAverageYields",
+  tableName: "FarmAverageYields",
+  columns: {
+    FarmID: {
+      type: "int",
+      primary: true,
+    },
+    HarvestYear: {
+      type: "int",
+      primary: true,
+    },
+    CropTypeID: {
+      type: "int",
+      primary: true,
+    },
+    AverageYield: {
+      type: "decimal",
+      precision: 18,
+      scale: 3,
+      nullable: false,
+    },
+    ...auditColumns,
+  },
+  relations: {
+    Farm: {
+      type: RELATION_TYPES.MANY_TO_ONE,
+      target: "Farms",
+      joinColumn: { name: "FarmID" },
+      inverseSide: "FarmAverageYields",
+    },
+    CreatedByUser: {
+      type: RELATION_TYPES.MANY_TO_ONE,
+      target: "User",
+      joinColumn: { name: "CreatedByID" },
+      inverseSide: "CreatedFarmAverageYields",
+    },
+    ModifiedByUser: {
+      type: RELATION_TYPES.MANY_TO_ONE,
+      target: "User",
+      joinColumn: { name: "ModifiedByID" },
+      inverseSide: "ModifiedFarmAverageYields",
+    },
+  },
+});
+
+module.exports = { FarmAverageYieldsEntity };
