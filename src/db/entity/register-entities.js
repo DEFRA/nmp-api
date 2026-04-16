@@ -117,6 +117,7 @@ const { UserExtensionsEntity } = require("./user-extension.entity");
 const { PscIndexEntity } = require("./psc-index.entity");
 const { SoilAnalysesMethodsEntity } = require("./soil-analyses-methods.entity");
 const { ScotlandNMaxValuesEntity } = require("./scotland-nmax-values.entity");
+const { FarmAverageYieldsEntity } = require("./farm-average-yield-entity");
 
 // Export as a single array
 
@@ -183,7 +184,8 @@ const entities = [
   FarmsNVZEntity,
   PscIndexEntity,
   SoilAnalysesMethodsEntity,
-  ScotlandNMaxValuesEntity
+  ScotlandNMaxValuesEntity,
+  FarmAverageYieldsEntity,
 ];
 
 module.exports = { entities };
