@@ -10,7 +10,7 @@ class FarmAverageYieldsService extends BaseService {
   }
 
   async getByFarmIdAndHarvestYear(farmID, harvestYear) {
-    return await this.repository.find({
+    return this.repository.find({
       where: {
         FarmID: farmID,
         HarvestYear: harvestYear
@@ -21,7 +21,7 @@ class FarmAverageYieldsService extends BaseService {
  
 
   async mergeFarmAverageYields(payload, userId) {
-    return await AppDataSource.transaction(async (manager) => {
+    return AppDataSource.transaction(async (manager) => {
       const results = [];
 
       for (const item of payload) {
@@ -50,14 +50,14 @@ class FarmAverageYieldsService extends BaseService {
   async findExisting(manager, item) {
     const { FarmID, HarvestYear , CropTypeID } = item;
 
-    return await manager.findOne(FarmAverageYieldsEntity, {
+    return  manager.findOne(FarmAverageYieldsEntity, {
       where: { FarmID, HarvestYear, CropTypeID },
     });
   }
 
   // DELETE
   async deleteRecord(manager, existing, item, results) {
-    if (!existing) return;
+    if (!existing) {return};
 
     await manager.remove(FarmAverageYieldsEntity,existing);
 

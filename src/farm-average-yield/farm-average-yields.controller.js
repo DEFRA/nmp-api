@@ -47,10 +47,9 @@ class FarmAverageYieldsController {
         .response({
           FarmAverageYield: result
         })
-        .code(201);
     } catch (error) {
       console.error("Error creating FarmAverageYield:", error);
-      return this.#h.response({ error }).code(500);
+      return this.#h.response({ error })
     }
   }
 }
