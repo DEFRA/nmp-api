@@ -28,7 +28,7 @@ class FarmAverageYieldsController {
       });
     } catch (error) {
       console.error("Error fetching FarmAverageYields:", error);
-      return this.#h.response({ error }).code(500);
+      return this.#h.response({ error })
     }
   }
 

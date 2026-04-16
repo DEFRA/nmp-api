@@ -1,5 +1,6 @@
 const { EntitySchema } = require("typeorm");
 const { auditColumns } = require("../../constants/audits-columns");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const FarmAverageYieldsEntity = new EntitySchema({
   name: "FarmAverageYields",
@@ -27,19 +28,19 @@ const FarmAverageYieldsEntity = new EntitySchema({
   },
   relations: {
     Farm: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "Farms",
       joinColumn: { name: "FarmID" },
       inverseSide: "FarmAverageYields",
     },
     CreatedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "CreatedByID" },
       inverseSide: "CreatedFarmAverageYields",
     },
     ModifiedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "ModifiedByID" },
       inverseSide: "ModifiedFarmAverageYields",
