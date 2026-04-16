@@ -48,10 +48,10 @@ class FarmAverageYieldsService extends BaseService {
 
   //  Find existing by composite PK
   async findExisting(manager, item) {
-    const { FarmID, HarvestYear } = item;
+    const { FarmID, HarvestYear , CropTypeID } = item;
 
     return await manager.findOne(FarmAverageYieldsEntity, {
-      where: { FarmID, HarvestYear },
+      where: { FarmID, HarvestYear, CropTypeID },
     });
   }
 
