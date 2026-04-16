@@ -1,17 +1,20 @@
 const Joi = require("joi");
 
-const CreateFarmAverageYieldDto = Joi.object({
+const MergeFarmAverageYieldItemDto = Joi.object({
   FarmID: Joi.number().integer().required(),
   HarvestYear: Joi.number().integer().required(),
   CropTypeID: Joi.number().integer().required(),
-
-  AverageYield: Joi.number().precision(3).required(),
-
-  // 🔹 Audit fields
-  CreatedOn: Joi.date().iso().allow(null).default(null),
-  CreatedByID: Joi.number().integer().allow(null).default(null),
-  ModifiedOn: Joi.date().iso().allow(null).default(null),
-  ModifiedByID: Joi.number().integer().allow(null).default(null),
+  AverageYield: Joi.number().precision(3).allow(null),
+  isDelete: Joi.boolean().required(),
+  CreatedOn: Joi.date().allow(null),
+  CreatedByID: Joi.number().allow(null),
+  ModifiedOn: Joi.date().allow(null),
+  ModifiedByID: Joi.date().allow(null)
 });
 
-module.exports = { CreateFarmAverageYieldDto };
+const MergeFarmAverageYieldDto = Joi.array()
+  .items(MergeFarmAverageYieldItemDto)
+  .min(1)
+  .required();
+
+module.exports = { MergeFarmAverageYieldDto };

@@ -32,20 +32,20 @@ class FarmAverageYieldsController {
     }
   }
 
-  async createFarmAverageYield() {
+  async mergeFarmAverageYields() {
     try {
       const payload = this.#request.payload;
       const userId = this.#request.userId;
 
       const result =
-        await this.#farmAverageYieldsService.createFarmAverageYield(
+        await this.#farmAverageYieldsService.mergeFarmAverageYields(
           payload,
           userId
         );
 
       return this.#h
         .response({
-          FarmAverageYield: result,
+          FarmAverageYield: result
         })
         .code(201);
     } catch (error) {

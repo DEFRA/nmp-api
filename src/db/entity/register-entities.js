@@ -185,7 +185,7 @@ const entities = [
   PscIndexEntity,
   SoilAnalysesMethodsEntity,
   ScotlandNMaxValuesEntity,
-  FarmAverageYieldsEntity,
+  FarmAverageYieldsEntity
 ];
 
 module.exports = { entities };

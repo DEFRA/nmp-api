@@ -23,7 +23,7 @@ const FarmAverageYieldsEntity = new EntitySchema({
       scale: 3,
       nullable: false,
     },
-    ...auditColumns
+    ...auditColumns,
   },
   relations: {
     Farm: {
