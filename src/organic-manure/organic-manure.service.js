@@ -817,34 +817,33 @@ class OrganicManureService extends BaseService {
       if (!allManureTypes?.data || allManureTypes.data.length === 0) {
         console.error("No manure types returned from the Manner API");
       }
-      const livestockManureTypes = allManureTypes.data.filter((manure) => manure.manureGroupId === 1);
+      const livestockManureTypes = allManureTypes.data.filter((manure) => manure.manureGroupID === 1);
       const manureTypeIds = livestockManureTypes.map((manure) => manure.id);
       if (!manureTypeIds || manureTypeIds.length === 0) {
         return false; // No valid manure types found
       }
 
       const query = this.repository
-        .createQueryBuilder("organicManure")
-        .where("organicManure.ManureTypeID IN (:...manureTypeIds)", {
-          manureTypeIds,
-        })
-        .innerJoin("ManagementPeriods","M",
-        JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD,
-      )
-      .where("M.CropID = :cropID", { cropId })
-        .andWhere(
-          "organicManure.ApplicationDate BETWEEN :dateFrom AND :dateTo",
-          {
-            dateFrom,
-            dateTo,
-          },
-        )
-      if (organicManureID != null) {
-        query.andWhere("organicManure.ID != :organicManureID", {
-          organicManureID,
-        });
-      }
-      const manureTypeExists = await query.getCount();
+  .createQueryBuilder("organicManure")
+  .where("organicManure.ManureTypeID IN (:...manureTypeIds)", {
+    manureTypeIds,
+  })
+  .innerJoin("ManagementPeriods", "M", "M.ID = organicManure.ManagementPeriodID")
+  .andWhere("M.CropID = :cropId", { cropId })
+  .andWhere(
+    "organicManure.ApplicationDate BETWEEN :dateFrom AND :dateTo",
+    {
+      dateFrom: new Date(dateFrom),
+      dateTo: new Date(dateTo),
+    }
+  );
+
+if (organicManureID != null) {
+  query.andWhere("organicManure.ID != :organicManureID", {
+    organicManureID,
+  });
+}
+const manureTypeExists = await query.getCount();
       return manureTypeExists > 0;
     } catch (error) {
       console.error("Error checking for manure existence:", error.message);
