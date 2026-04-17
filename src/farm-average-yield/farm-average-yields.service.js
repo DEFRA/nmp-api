@@ -35,22 +35,20 @@ class FarmAverageYieldsService extends BaseService {
 async processSingleRecord(manager, item, userId, results) {
   const existing = await this.findExisting(manager, item);
   let result;
-  if (item?.AverageYield == null && existing) {
-    result = await this.deleteRecord(manager, existing, item, results);
+
+if (item?.AverageYield != null) {
+  if (existing) {
+    result = await this.updateRecord(manager, existing, item, userId, results);
+  } else {
+    result = await this.insertRecord(manager, item, userId, results);
   }
-  else if (item?.AverageYield != null) {
-    if (existing) {
-      result = await this.updateRecord(manager, existing, item, userId, results);
-    } else {
-      result = await this.insertRecord(manager, item, userId, results);
-    }
-  }
-else {
-  // No existing record and AverageYield is null
-  // Nothing to delete or process
+} else if (existing) {
+  result = await this.deleteRecord(manager, existing, item, results);
+} else {
   result = null;
 }
-  return result;
+
+return result;
 }
 
   //  Find existing by composite PK
