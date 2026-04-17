@@ -35,23 +35,26 @@ class FarmAverageYieldsService extends BaseService {
   async processSingleRecord(manager, item, userId, results) {
     const existing = await this.findExisting(manager, item);
 
-    if (item?.isDelete) {
+    if (item?.AverageYield==null&&existing!=null) {
       return this.deleteRecord(manager, existing, item, results);
     }
+if (item?.AverageYield == null) {
+  return;
+}
 
-    if (existing) {
-      return this.updateRecord(manager, existing, item, userId, results);
-    }
+if (existing) {
+  return this.updateRecord(manager, existing, item, userId, results);
+}
 
-    return this.insertRecord(manager, item, userId, results);
+return this.insertRecord(manager, item, userId, results);
   }
 
   //  Find existing by composite PK
   async findExisting(manager, item) {
-    const { FarmID, HarvestYear , CropTypeID } = item;
+    const { FarmID, HarvestYear,CropTypeID } = item;
 
-    return  manager.findOne(FarmAverageYieldsEntity, {
-      where: { FarmID, HarvestYear, CropTypeID },
+    return await manager.findOne(FarmAverageYieldsEntity, {
+      where: { FarmID, HarvestYear,CropTypeID },
     });
   }
 
@@ -61,8 +64,7 @@ class FarmAverageYieldsService extends BaseService {
 
     await manager.remove(FarmAverageYieldsEntity,existing);
 
-    results.push({
-      action: "DELETED",
+    results.push({      
       FarmID: item.FarmID,
       HarvestYear: item.HarvestYear,
       CropTypeID: item.CropTypeID,
@@ -77,9 +79,10 @@ class FarmAverageYieldsService extends BaseService {
 
     const updated = await manager.save(FarmAverageYieldsEntity,existing);
 
-    results.push({
-      action: "UPDATED",
-      data: updated
+    results.push({  FarmID: updated.FarmID,
+  HarvestYear: updated.HarvestYear,
+  CropTypeID: updated.CropTypeID,
+  AverageYield: updated.AverageYield
     });
   }
 
@@ -96,9 +99,10 @@ class FarmAverageYieldsService extends BaseService {
 
     const inserted = await manager.save(FarmAverageYieldsEntity,entity);
 
-    results.push({
-      action: "INSERTED",
-      data: inserted
+    results.push({  FarmID: inserted.FarmID,
+  HarvestYear: inserted.HarvestYear,
+  CropTypeID: inserted.CropTypeID,
+  AverageYield: inserted.AverageYield
     });
   }
 }
