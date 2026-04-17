@@ -32,20 +32,23 @@ class FarmAverageYieldsService extends BaseService {
   }
 
   //  Main handler per record
-  async processSingleRecord(manager, item, userId, results) {
+async processSingleRecord(manager, item, userId, results) {
   const existing = await this.findExisting(manager, item);
 
+  let result;
+
   if (item?.AverageYield == null && existing) {
-    return this.deleteRecord(manager, existing, item, results);
+    result = await this.deleteRecord(manager, existing, item, results);
+  }
+  else if (item?.AverageYield != null) {
+    if (existing) {
+      result = await this.updateRecord(manager, existing, item, userId, results);
+    } else {
+      result = await this.insertRecord(manager, item, userId, results);
+    }
   }
 
-  if (item?.AverageYield != null) {
-  return existing
-    ? this.updateRecord(manager, existing, item, userId, results)
-    : this.insertRecord(manager, item, userId, results);
-  }
-
-  
+  return result;
 }
 
   //  Find existing by composite PK
