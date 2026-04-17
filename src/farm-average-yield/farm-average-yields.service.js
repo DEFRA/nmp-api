@@ -34,9 +34,7 @@ class FarmAverageYieldsService extends BaseService {
   //  Main handler per record
 async processSingleRecord(manager, item, userId, results) {
   const existing = await this.findExisting(manager, item);
-
   let result;
-
   if (item?.AverageYield == null && existing) {
     result = await this.deleteRecord(manager, existing, item, results);
   }
