@@ -45,7 +45,6 @@ async processSingleRecord(manager, item, userId, results) {
       result = await this.insertRecord(manager, item, userId, results);
     }
   }
-
   return result;
 }
 
