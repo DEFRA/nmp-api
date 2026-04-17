@@ -39,13 +39,13 @@ class FarmAverageYieldsService extends BaseService {
     return this.deleteRecord(manager, existing, item, results);
   }
 
-  if (item?.AverageYield == null) {
-    return;
-  }
-
+  if (item?.AverageYield != null) {
   return existing
     ? this.updateRecord(manager, existing, item, userId, results)
     : this.insertRecord(manager, item, userId, results);
+  }
+
+  
 }
 
   //  Find existing by composite PK
