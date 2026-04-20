@@ -303,7 +303,7 @@ module.exports = [
     },
     handler: async (request, h) => {
       const controller = new CropController(request, h);
-      return controller.CropGroupNameExists();
+      return controller.cropGroupNameExists();
     },
   },
   {

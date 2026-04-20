@@ -291,7 +291,7 @@ class CropController {
       return this.#h.response({ error: error.message });
     }
   }
-  async CropGroupNameExists() {
+  async cropGroupNameExists() {
     const { cropIds } = this.#request.params;
     const { newGroupName } = this.#request.query;
     const { year } = this.#request.query;
@@ -300,7 +300,7 @@ class CropController {
     try {
       const cropIdsArray = cropIds.split(",").map((id) => Number.parseInt(id));
       const cropGroupNameAlreadyExist =
-        await this.#cropService.CropGroupNameExists(
+        await this.#cropService.cropGroupNameExists(
           cropIdsArray,
           newGroupName,
           year,

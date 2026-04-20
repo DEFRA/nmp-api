@@ -19,11 +19,11 @@ class ApplicationMethodService extends BaseService {
     }
     let whereCondition = {};
 
-    if (fieldType == 1) {
+    if (fieldType === 1) {
       whereCondition = {
         ApplicableForArableAndHorticulture: In([applicableFor, "B"]),
       };
-    } else if (fieldType == 2) {
+    } else if (fieldType === 2) {
       whereCondition = {
         ApplicableForGrass: In([applicableFor, "B"]),
       };
