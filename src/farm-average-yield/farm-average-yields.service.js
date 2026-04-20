@@ -33,7 +33,7 @@ class FarmAverageYieldsService extends BaseService {
   }
 
   async processWarningForCrop(cropID, userId) {
-    return await this.ProcessFutureManuresForWarnings.processNMaxWarningsByCrop(
+    return this.ProcessFutureManuresForWarnings.processNMaxWarningsByCrop(
       cropID,
       userId
     );
