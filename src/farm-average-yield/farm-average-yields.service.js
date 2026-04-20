@@ -22,24 +22,30 @@ class FarmAverageYieldsService extends BaseService {
   }
 
   async mergeFarmAverageYields(payload, userId) {
-    return AppDataSource.transaction(async (manager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const results = [];
 
       for (const item of payload) {
-        await this.processSingleRecord(manager, item, userId, results);
+        await this.processSingleRecord(
+          transactionalManager,
+          item,
+          userId,
+          results,
+        );
       }
       return results;
     });
   }
 
-  async processWarningForCrop(cropID, userId) {
-    return this.ProcessFutureManuresForWarnings.processNMaxWarningsByCrop(
+  async processWarningForCrop(cropID, userId, transactionalManager) {
+    return await this.ProcessFutureManuresForWarnings.processNMaxWarningsByCrop(
       cropID,
-      userId
+      userId,
+      transactionalManager
     );
   }
 
-  async procssingNMaxWarningMessages(farmID, harvestYear, userId) {
+  async procssingNMaxWarningMessages(farmID, harvestYear, userId, transactionalManager) {
     // Single optimized query (JOIN instead of multiple calls)
     const query = `
     SELECT c.ID as CropID
@@ -53,7 +59,11 @@ class FarmAverageYieldsService extends BaseService {
 
     // Loop through crops
     for (const record of cropRecords) {
-      await this.processWarningForCrop(record.CropID, userId);
+      await this.processWarningForCrop(
+        record.CropID,
+        userId,
+        transactionalManager
+      );
     }
 
     return {
@@ -62,26 +72,41 @@ class FarmAverageYieldsService extends BaseService {
     };
   }
   //  Main handler per record
-  async processSingleRecord(manager, item, userId, results) {
-    const existing = await this.findExisting(manager, item);
+  async processSingleRecord(transactionalManager, item, userId, results) {
+    const existing = await this.findExisting(transactionalManager, item);
     let result;
 
     if (item?.AverageYield != null) {
       if (existing) {
         result = await this.updateRecord(
-          manager,
+          transactionalManager,
           existing,
           item,
           userId,
           results,
         );
       } else {
-        result = await this.insertRecord(manager, item, userId, results);
+        result = await this.insertRecord(
+          transactionalManager,
+          item,
+          userId,
+          results,
+        );
       }
 
-      await this.procssingNMaxWarningMessages(item.FarmID, item.HarvestYear, userId);
+      await this.procssingNMaxWarningMessages(
+        item.FarmID,
+        item.HarvestYear,
+        userId,
+        transactionalManager
+      );
     } else if (existing) {
-      result = await this.deleteRecord(manager, existing, item, results);
+      result = await this.deleteRecord(
+        transactionalManager,
+        existing,
+        item,
+        results,
+      );
     } else {
       result = null;
     }
@@ -90,21 +115,21 @@ class FarmAverageYieldsService extends BaseService {
   }
 
   //  Find existing by composite PK
-  async findExisting(manager, item) {
+  async findExisting(transactionalManager, item) {
     const { FarmID, HarvestYear, CropTypeID } = item;
 
-    return manager.findOne(FarmAverageYieldsEntity, {
+    return transactionalManager.findOne(FarmAverageYieldsEntity, {
       where: { FarmID, HarvestYear, CropTypeID },
     });
   }
 
   // DELETE
-  async deleteRecord(manager, existing, item, results) {
+  async deleteRecord(transactionalManager, existing, item, results) {
     if (!existing) {
       return;
     }
 
-    await manager.remove(FarmAverageYieldsEntity, existing);
+    await transactionalManager.remove(FarmAverageYieldsEntity, existing);
 
     results.push({
       FarmID: item.FarmID,
@@ -114,12 +139,12 @@ class FarmAverageYieldsService extends BaseService {
   }
 
   //  UPDATE
-  async updateRecord(manager, existing, item, userId, results) {
+  async updateRecord(transactionalManager, existing, item, userId, results) {
     existing.AverageYield = item.AverageYield;
     existing.ModifiedByID = userId;
     existing.ModifiedOn = new Date();
 
-    const updated = await manager.save(FarmAverageYieldsEntity, existing);
+    const updated = await transactionalManager.save(FarmAverageYieldsEntity, existing);
 
     results.push({
       FarmID: updated.FarmID,
@@ -130,7 +155,7 @@ class FarmAverageYieldsService extends BaseService {
   }
 
   //  INSERT
-  async insertRecord(manager, item, userId, results) {
+  async insertRecord(transactionalManager, item, userId, results) {
     const entity = this.repository.create({
       FarmID: item.FarmID,
       HarvestYear: item.HarvestYear,
@@ -140,7 +165,10 @@ class FarmAverageYieldsService extends BaseService {
       CreatedOn: new Date(),
     });
 
-    const inserted = await manager.save(FarmAverageYieldsEntity, entity);
+    const inserted = await transactionalManager.save(
+      FarmAverageYieldsEntity,
+      entity
+    );
 
     results.push({
       FarmID: inserted.FarmID,
