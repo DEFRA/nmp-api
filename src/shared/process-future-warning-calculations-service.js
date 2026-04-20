@@ -49,7 +49,11 @@ class ProcessFutureManuresForWarnings {
     }
   }
 
-  async processCombinedManuresForNMax(combinedManures, transactionalManager, userId) {
+  async processCombinedManuresForNMax(
+    combinedManures,
+    transactionalManager,
+    userId,
+  ) {
     if (!Array.isArray(combinedManures) || !combinedManures.length) {
       return;
     }
@@ -57,11 +61,11 @@ class ProcessFutureManuresForWarnings {
     for (const manure of combinedManures) {
       let warnings = [];
       const finalWarnings = [];
-        warnings =
-          await this.CalculateFutureWarningMessageService.calculateOnlyNMaxMessage(
-            transactionalManager,
-            manure
-          );
+      warnings =
+        await this.CalculateFutureWarningMessageService.calculateOnlyNMaxMessage(
+          transactionalManager,
+          manure
+        );
 
       if (Array.isArray(warnings)) {
         finalWarnings.push(...warnings);
@@ -167,13 +171,13 @@ class ProcessFutureManuresForWarnings {
     );
   }
 
-  async processNMaxWarningsByCrop(cropId, userId) {
-  return runWithDeadlockRetry(() =>
-    AppDataSource.transaction(async (transactionalManager) => {
+  async processNMaxWarningsByCrop(cropId, userId, transactionalManager) {
+    return runWithDeadlockRetry(async () => {
       const combinedManures = await transactionalManager.query(
         `EXEC spWarning_GetAllManuresByCrop @CropID = @0`,
         [cropId],
       );
+
       console.log("combinedManuresbycrops", combinedManures);
 
       await this.processCombinedManuresForNMax(
@@ -181,8 +185,7 @@ class ProcessFutureManuresForWarnings {
         transactionalManager,
         userId
       );
-    }),
-  );
+    });
   }
 }
 
