@@ -692,7 +692,7 @@ class CropService extends BaseService {
     // });
   }
 
-  async CropGroupNameExists(cropIds, newGroupName, year, farmId) {
+  async cropGroupNameExists(cropIds, newGroupName, year, farmId) {
     return (
       (await this.existingGroupNameCount(cropIds, newGroupName, year, farmId)) >
       0

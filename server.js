@@ -66,15 +66,9 @@ const init = async () => {
   server.route(routes);
 
   server.events.on("response", function (request) {
-    console.log(
-      request.info.remoteAddress +
-        ": " +
-        request.method.toUpperCase() +
-        " " +
-        request.path +
-        " --> " +
-        request.response.statusCode
-    );
+     console.log(
+       `${request.info.remoteAddress}: ${request.method.toUpperCase()} ${request.path} --> ${request.response.statusCode}`
+     );
   });
 
   await server.start();
