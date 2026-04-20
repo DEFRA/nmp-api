@@ -11,8 +11,8 @@ class ProcessFutureManuresForWarnings {
   }
 
   async processCombinedManures(combinedManures, transactionalManager, userId) {
-    if (!Array.isArray(combinedManures) || !combinedManures.length){ 
-      return
+    if (!Array.isArray(combinedManures) || !combinedManures.length) {
+      return;
     }
 
     for (const manure of combinedManures) {
@@ -49,6 +49,34 @@ class ProcessFutureManuresForWarnings {
     }
   }
 
+  async processCombinedManuresForNMax(combinedManures, transactionalManager, userId) {
+    if (!Array.isArray(combinedManures) || !combinedManures.length) {
+      return;
+    }
+
+    for (const manure of combinedManures) {
+      let warnings = [];
+      const finalWarnings = [];
+        warnings =
+          await this.CalculateFutureWarningMessageService.calculateOnlyNMaxMessage(
+            transactionalManager,
+            manure
+          );
+
+      if (Array.isArray(warnings)) {
+        finalWarnings.push(...warnings);
+      }
+
+      await this.CreateOrUpdateWarningMessage.syncWarningMessages(
+        manure.ManagementPeriodID,
+        manure,
+        finalWarnings,
+        transactionalManager,
+        userId,
+      );
+    }
+  }
+
   async ProcessFutureManures(
     fieldId,
     applicationDate,
@@ -60,7 +88,7 @@ class ProcessFutureManuresForWarnings {
     return runWithDeadlockRetry(() =>
       AppDataSource.transaction(async (transactionalManager) => {
         const combinedManures = await transactionalManager.query(
-         `EXEC spWarning_GetAllManuresByField
+          `EXEC spWarning_GetAllManuresByField
          @FieldID = @0,
          @ApplicationDate = @1,
          @IsCurrentOrganicManure = @2,
@@ -137,6 +165,24 @@ class ProcessFutureManuresForWarnings {
         );
       }),
     );
+  }
+
+  async processNMaxWarningsByCrop(cropId, userId) {
+  return runWithDeadlockRetry(() =>
+    AppDataSource.transaction(async (transactionalManager) => {
+      const combinedManures = await transactionalManager.query(
+        `EXEC spWarning_GetAllManuresByCrop @CropID = @0`,
+        [cropId],
+      );
+      console.log("combinedManuresbycrops", combinedManures);
+
+      await this.processCombinedManuresForNMax(
+        combinedManures,
+        transactionalManager,
+        userId
+      );
+    }),
+  );
   }
 }
 

@@ -1,24 +1,25 @@
 const { AppDataSource } = require("../db/data-source");
 const { BaseService } = require("../base/base.service");
 const { FarmAverageYieldsEntity } = require("../db/entity/farm-average-yield-entity");
+const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
 
 
 class FarmAverageYieldsService extends BaseService {
   constructor() {
     super(FarmAverageYieldsEntity);
     this.repository = AppDataSource.getRepository(FarmAverageYieldsEntity);
+    this.ProcessFutureManuresForWarnings =
+      new ProcessFutureManuresForWarnings();
   }
 
   async getByFarmIdAndHarvestYear(farmID, harvestYear) {
     return this.repository.find({
       where: {
         FarmID: farmID,
-        HarvestYear: harvestYear
+        HarvestYear: harvestYear,
       },
     });
   }
-
- 
 
   async mergeFarmAverageYields(payload, userId) {
     return AppDataSource.transaction(async (manager) => {
@@ -31,42 +32,81 @@ class FarmAverageYieldsService extends BaseService {
     });
   }
 
-  //  Main handler per record
-async processSingleRecord(manager, item, userId, results) {
-  const existing = await this.findExisting(manager, item);
-  let result;
-
-if (item?.AverageYield != null) {
-  if (existing) {
-    result = await this.updateRecord(manager, existing, item, userId, results);
-  } else {
-    result = await this.insertRecord(manager, item, userId, results);
+  async processWarningForCrop(cropID, userId) {
+    return await this.ProcessFutureManuresForWarnings.processNMaxWarningsByCrop(
+      cropID,
+      userI
+    );
   }
-} else if (existing) {
-  result = await this.deleteRecord(manager, existing, item, results);
-} else {
-  result = null;
-}
 
-return result;
-}
+  async procssingNMaxWarningMessages(farmID, harvestYear, userId) {
+    // Single optimized query (JOIN instead of multiple calls)
+    const query = `
+    SELECT c.ID as CropID
+    FROM Fields f
+    INNER JOIN Crops c ON c.FieldID = f.ID
+    WHERE f.FarmID = @0
+      AND c.Year = @1
+  `;
+
+    const cropRecords = await AppDataSource.query(query, [farmID, harvestYear]);
+
+    // Loop through crops
+    for (const record of cropRecords) {
+      await this.processWarningForCrop(record.CropID, userId);
+    }
+
+    return {
+      message: "Warnings processed successfully",
+      totalProcessed: cropRecords.length,
+    };
+  }
+  //  Main handler per record
+  async processSingleRecord(manager, item, userId, results) {
+    const existing = await this.findExisting(manager, item);
+    let result;
+
+    if (item?.AverageYield != null) {
+      if (existing) {
+        result = await this.updateRecord(
+          manager,
+          existing,
+          item,
+          userId,
+          results,
+        );
+      } else {
+        result = await this.insertRecord(manager, item, userId, results);
+      }
+
+      await this.procssingNMaxWarningMessages(item.FarmID, item.HarvestYear, userId);
+    } else if (existing) {
+      result = await this.deleteRecord(manager, existing, item, results);
+    } else {
+      result = null;
+    }
+
+    return result;
+  }
 
   //  Find existing by composite PK
   async findExisting(manager, item) {
-    const { FarmID, HarvestYear,CropTypeID } = item;
+    const { FarmID, HarvestYear, CropTypeID } = item;
 
-    return  manager.findOne(FarmAverageYieldsEntity, {
-      where: { FarmID, HarvestYear,CropTypeID },
+    return manager.findOne(FarmAverageYieldsEntity, {
+      where: { FarmID, HarvestYear, CropTypeID },
     });
   }
 
   // DELETE
   async deleteRecord(manager, existing, item, results) {
-    if (!existing) {return};
+    if (!existing) {
+      return;
+    }
 
-    await manager.remove(FarmAverageYieldsEntity,existing);
+    await manager.remove(FarmAverageYieldsEntity, existing);
 
-    results.push({      
+    results.push({
       FarmID: item.FarmID,
       HarvestYear: item.HarvestYear,
       CropTypeID: item.CropTypeID,
@@ -79,12 +119,13 @@ return result;
     existing.ModifiedByID = userId;
     existing.ModifiedOn = new Date();
 
-    const updated = await manager.save(FarmAverageYieldsEntity,existing);
+    const updated = await manager.save(FarmAverageYieldsEntity, existing);
 
-    results.push({  FarmID: updated.FarmID,
-  HarvestYear: updated.HarvestYear,
-  CropTypeID: updated.CropTypeID,
-  AverageYield: updated.AverageYield
+    results.push({
+      FarmID: updated.FarmID,
+      HarvestYear: updated.HarvestYear,
+      CropTypeID: updated.CropTypeID,
+      AverageYield: updated.AverageYield,
     });
   }
 
@@ -96,15 +137,16 @@ return result;
       CropTypeID: item.CropTypeID,
       AverageYield: item.AverageYield,
       CreatedByID: userId,
-      CreatedOn: new Date()
+      CreatedOn: new Date(),
     });
 
-    const inserted = await manager.save(FarmAverageYieldsEntity,entity);
+    const inserted = await manager.save(FarmAverageYieldsEntity, entity);
 
-    results.push({  FarmID: inserted.FarmID,
-  HarvestYear: inserted.HarvestYear,
-  CropTypeID: inserted.CropTypeID,
-  AverageYield: inserted.AverageYield
+    results.push({
+      FarmID: inserted.FarmID,
+      HarvestYear: inserted.HarvestYear,
+      CropTypeID: inserted.CropTypeID,
+      AverageYield: inserted.AverageYield,
     });
   }
 }
