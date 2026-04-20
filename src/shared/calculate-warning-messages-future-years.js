@@ -534,6 +534,16 @@ class CalculateFutureWarningMessageService {
       ),
     );
   }
+
+  async calculateOnlyNMaxMessage(manager, manure) {
+    return this.commonWarningMessageCalculator(
+      manager,
+      manure,
+      this.GetWarningRulesAndSpService.getNMaxRules.bind(
+        this.GetWarningRulesAndSpService,
+      ),
+    );
+  }
 }
 
 module.exports = { CalculateFutureWarningMessageService };
