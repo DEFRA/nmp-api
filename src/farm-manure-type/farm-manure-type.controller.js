@@ -47,9 +47,9 @@ class FarmManureTypeController {
           manureTypeId,
           manureTypeName,
         );
-      return this.#h.response({ exists }).code(200);
+      return this.#h.response({ exists });
     } catch (error) {
-      return this.#h.response({ error }).code(500);
+      return this.#h.response({ error });
     }
   }
 }

@@ -4,6 +4,7 @@ const {
   CreateOrganicManuresWithFarmManureTypeDtoSchema,
 } = require("./dto/farm-manure-type.dto");
 const { FarmManureTypeController } = require("./farm-manure-type.controller");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 const getController = (request, h) => new FarmManureTypeController(request, h);
 const farmManureType="Farm Manure Type";
 
@@ -19,19 +20,7 @@ module.exports = [
         params: Joi.object({
           farmId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
       handler: async (request, h) => {
         return getController(request, h).getFarmManureTypeByFarmId();
@@ -51,19 +40,7 @@ module.exports = [
           manureTypeId: Joi.number().integer().required(),
           manureTypeName: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
       handler: async (request, h) => {
         return getController(request, h).checkFarmManureTypeExists();
@@ -74,25 +51,13 @@ module.exports = [
     method: "GET",
     path: "/farm-manure-type/farm-manure-type-by-id/{farmManureTypeId}",
     options: {
-      tags: ["api",`${farmManureType}`],
+      tags: ["api", `${farmManureType}`],
       description: "Get Farm Manure Type by id",
       validate: {
         params: Joi.object({
           farmManureTypeId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code()
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {
