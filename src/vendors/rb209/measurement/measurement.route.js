@@ -4,6 +4,7 @@ const { CalculateSnsIndexRequest } = require("./dto/measurement.dto");
 const {
   formatErrorResponse,
 } = require("../../../interceptor/responseFormatter");
+const { validationFailAction } = require("../../../shared/validateFailSafeAction");
 
 const getController = (request, h) =>
   new RB209MeasurementController(request, h);
@@ -61,7 +62,7 @@ module.exports = [
     handler: async (request, h) => {
       return getController(
         request,
-        h
+        h,
       ).getSmnConversionMethodBySmnValueAndSoilLayer();
     },
     options: {
@@ -72,19 +73,7 @@ module.exports = [
           smnValue: Joi.string().required().description("smn value in N/kg"),
           soilLayer: Joi.string().required().description("layer of soil in cm"),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -101,19 +90,7 @@ module.exports = [
         "The connection to calculate SNS Index using the Measurement Method",
       validate: {
         payload: CalculateSnsIndexRequest,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
