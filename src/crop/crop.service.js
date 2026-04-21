@@ -1504,7 +1504,7 @@ class CropService extends BaseService {
   async maxDate(d1, d2) {
     if (!d1) {return d2 || null};
     if (!d2) {return d1 || null};
-    return Math.max(d1, d2);
+     return new Date(Math.max(d1.getTime(), d2.getTime()));
   }
 
   async MergeCrop(
