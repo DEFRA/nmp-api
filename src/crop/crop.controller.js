@@ -340,7 +340,7 @@ class CropController {
     try {
       const body = this.#request.payload;
       const userId = this.#request.userId;
-      let transaction = null;
+      const transaction = null;
 
       const updatedResults = await this.#cropService.updateCropData(
         body,
@@ -355,7 +355,7 @@ class CropController {
     } catch (error) {
       console.error("Error updating crops:", error);
       return this.#h.response({
-        message: "Internal Server Error",
+        message: StaticStrings.ERR_INTERNAL_SERVER_ERROR,
         error: error.message,
       });
     }
@@ -376,8 +376,8 @@ class CropController {
     } catch (error) {
       console.error("Error copying crop:", error);
       return this.#h.response({
-        message: "Internal Server Error",
-        error: error.message,
+        message: StaticStrings.ERR_INTERNAL_SERVER_ERROR,
+        error: error.message
       });
     }
   }

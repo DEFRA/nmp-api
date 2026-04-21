@@ -138,7 +138,7 @@ class CropService extends BaseService {
     });
     const cropTypeId = cropData?.CropTypeID;
 
-    if (cropTypeId == null || cropTypeId == undefined) {
+    if (cropTypeId === null || cropTypeId === undefined) {
       throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
     }
     const cropTypesList = await this.rB209ArableService.getData(ARABLE.ALL_ARABLE_CROP_TYPES_ENDPOINT);
@@ -175,7 +175,7 @@ class CropService extends BaseService {
     year,
     rB209CountryID
   ) {
-    if (updatedCrop?.CropOrder !== 1) return;
+    if (updatedCrop?.CropOrder !== 1) {return}
     const secondCrop = await transactionalManager.findOne(CropEntity, {
       where: { FieldID: fieldId, Year: year, CropOrder: 2 },
     });
@@ -488,7 +488,7 @@ class CropService extends BaseService {
         defoliationSequenceDescription =
           await findDefoliationSequenceDescription(plan.DefoliationSequenceID);
       }
-      let lastModifiedDate = await this.getLatestModifiedDate(plan.CropID);
+      const lastModifiedDate = await this.getLatestModifiedDate(plan.CropID);
 
       cropDetails.push({
         CropId: plan.CropID,
@@ -774,20 +774,15 @@ class CropService extends BaseService {
       ManagementPeriodEntity,
       {
         where: { CropID: cropID },
-        order: { CreatedOn: "ASC" }, // or ID: 'ASC' if you prefer
-      },
+        order: { CreatedOn: "ASC" }
+      }
     );
-
     const updatedManagementPeriods = [];
     const existingCount = existingPeriods.length;
     const incomingCount = incomingPeriods.length;
     const minCount = Math.min(existingCount, incomingCount);
-
-    // 1. Update existing by order (exclude ID from incoming)
     for (let i = 0; i < minCount; i++) {
-      const incoming = incomingPeriods[i];
-      const existing = existingPeriods[i];
-
+      const incoming = incomingPeriods[i],existing = existingPeriods[i];
       const {
         ID, // intentionally excluded
         CreatedByID, // also exclude to avoid accidental overwrite
@@ -795,26 +790,22 @@ class CropService extends BaseService {
         CropID,
         ...dataToUpdate
       } = incoming;
-
       await transactionalManager.update(ManagementPeriodEntity, existing.ID, {
         ...dataToUpdate,
         ModifiedByID: userId,
-        ModifiedOn: new Date(),
+        ModifiedOn: new Date()
       });
 
       const updated = await transactionalManager.findOne(
         ManagementPeriodEntity,
         {
-          where: { ID: existing.ID },
+          where: { ID: existing.ID }
         },
       );
-
       if (updated) {
         updatedManagementPeriods.push(updated);
       }
     }
-
-    // 2. Insert new ones if incoming > existing
     for (let i = existingCount; i < incomingCount; i++) {
       const newPeriod = await transactionalManager.save(
         ManagementPeriodEntity,
@@ -827,50 +818,34 @@ class CropService extends BaseService {
           ModifiedOn: new Date(),
         },
       );
-
-      if (newPeriod) {
-        updatedManagementPeriods.push(newPeriod);
-      }
+      if (newPeriod) {updatedManagementPeriods.push(newPeriod)}
     }
-
-    // 3. Delete excess existing periods if existing > incoming
     for (let i = incomingCount; i < existingCount; i++) {
       const periodToDelete = existingPeriods[i];
-
-      // Delete related OrganicManure
       await transactionalManager.delete(OrganicManureEntity, {
-        ManagementPeriodID: periodToDelete.ID,
+        ManagementPeriodID: periodToDelete.ID
       });
-
-      // Delete related FertiliserManure
       await transactionalManager.delete(FertiliserManuresEntity, {
         ManagementPeriodID: periodToDelete.ID,
       });
-
-      // Delete related Recommendations & Comments
       const recommendations = await transactionalManager.find(
         RecommendationEntity,
         {
           where: { ManagementPeriodID: periodToDelete.ID },
         },
       );
-
       for (const recommendation of recommendations) {
         await transactionalManager.delete(RecommendationCommentEntity, {
           RecommendationID: recommendation.ID,
         });
-
         await transactionalManager.delete(RecommendationEntity, {
           ID: recommendation.ID,
         });
       }
-
-      // Finally delete the ManagementPeriod
       await transactionalManager.delete(ManagementPeriodEntity, {
         ID: periodToDelete.ID,
       });
     }
-
     return updatedManagementPeriods;
   }
 
