@@ -95,17 +95,7 @@ const SoilAnalysisEntity = new EntitySchema({
       length: 20,
       nullable: true,
     },
-    PotassiumAnalysis: {
-      type: "nvarchar",
-      length: 50,
-      nullable: true,
-    },
     PotassiumStatus: {
-      type: "nvarchar",
-      length: 20,
-      nullable: true,
-    },
-    MagnesiumAnalysis: {
       type: "nvarchar",
       length: 20,
       nullable: true,
