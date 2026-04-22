@@ -23,7 +23,7 @@ module.exports = [
         query: Joi.object({
           farmId: Joi.number().required(),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -399,6 +399,24 @@ module.exports = [
     handler: async (request, h) => {
       const controller = new CropController(request, h);
       return controller.getPlanByFieldIdAndYear();
+    },
+  },
+  {
+    method: "GET",
+    path: "/crops/organic-inorganic/{cropId}",
+    options: {
+      tags: ["api", "Crop"],
+      description: "Get Organic Inorganic manures by cropId",
+      validate: {
+        params: Joi.object({
+          cropId: Joi.number().integer().required(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new CropController(request, h);
+      return controller.getOrganicInorganicManuresByCropId();
     },
   },
 ];

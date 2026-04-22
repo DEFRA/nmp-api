@@ -1558,6 +1558,47 @@ class CropService extends BaseService {
 
     return cropData;
   }
+
+  async getOrganicInorganicManuresByCropId(cropId) {
+  return AppDataSource.transaction(async (manager) => {
+
+    // 1. Fetch Management Periods for the crop
+    const managementPeriods = await manager.find(ManagementPeriodEntity, {
+      where: { CropID: cropId },
+      select: ['ID']
+    });
+
+    if (!managementPeriods.length) {
+      return {
+        fertiliserManures: [],
+        organicManures: []
+      };
+    }
+
+    const managementPeriodIds = managementPeriods.map(mp => mp.ID);
+
+    // 2. Fetch Organic Manures
+    const organicManures = await manager.find(OrganicManureEntity, {
+      where: {
+        ManagementPeriodID: In(managementPeriodIds)
+      },
+    });
+
+    // 3. Fetch Fertiliser Manures
+    const fertiliserManures = await manager.find(FertiliserManuresEntity, {
+      where: {
+        ManagementPeriodID: In(managementPeriodIds),
+      },
+    });
+
+    // 4. Return structured JSON
+    return {
+      fertiliserManures,
+      organicManures,
+    };
+  });
+}
+  
 }
 
 module.exports = { CropService };
