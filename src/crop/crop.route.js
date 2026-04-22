@@ -58,7 +58,7 @@ module.exports = [
     path: "/crops/plans/crop-types/{harvestYear}",
     options: {
       tags: ["api", "Crop"],
-      description: "Get crops plans CropTypes by harvest year",
+      description: "Get CropTypes by harvest year",
       validate: {
         params: Joi.object({
           harvestYear: Joi.number().required(),
