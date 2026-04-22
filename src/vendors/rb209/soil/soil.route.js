@@ -127,7 +127,7 @@ module.exports = [
 
   {
     method: "GET",
-    path: "/vendors/rb209/Soil/NutrientIndex/{methodologyId}",
+    path: "/vendors/rb209/Soil/NutrientIndexes/{methodologyId}",
     handler: async (request, h) => {
       const controller = new RB209SoilController(request, h);
       return controller.getNutrientIndexMethodologyId(request, h);
