@@ -47,11 +47,19 @@ const SoilAnalysisEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
+    PotassiumMethodologyID: {
+      type: "int",
+      nullable: true,
+    },
     PotassiumIndex: {
       type: "smallint",
       nullable: true,
     },
     Magnesium: {
+      type: "int",
+      nullable: true,
+    },
+    MagnesiumMethodologyID: {
       type: "int",
       nullable: true,
     },
@@ -112,10 +120,7 @@ const SoilAnalysisEntity = new EntitySchema({
       length: 20,
       nullable: true,
     },
-    SoilAnalysesMethodID: {
-      type: "int",
-      nullable: true,
-    },
+
     Comments: {
       type: "nvarchar",
       length: 255,
