@@ -70,9 +70,8 @@ const SoilAnalysisSchema = Joi.object({
   Sodium: Joi.number().integer().allow(null),
   Lime: Joi.number().precision(3).allow(null),
   PhosphorusStatus: Joi.string().max(20).allow(null),
-  PotassiumAnalysis: Joi.string().max(50).allow(null),
+
   PotassiumStatus: Joi.string().max(20).allow(null),
-  MagnesiumAnalysis: Joi.string().max(20).allow(null),
   MagnesiumStatus: Joi.string().max(20).allow(null),
   NitrogenResidueGroup: Joi.string().max(20).allow(null),
   OrganicMatterPercentage: Joi.number().integer().optional().allow(null),
