@@ -8,6 +8,15 @@ const {
   CopyPlanDto,
 } = require("./dto/crops.dto");
 const { validationFailAction } = require("../shared/validateFailSafeAction");
+const cropPlanValidation = {
+  params: Joi.object({
+    harvestYear: Joi.number().required(),
+  }),
+  query: Joi.object({
+    farmId: Joi.number().required(),
+  }),
+  failAction: validationFailAction,
+}; 
 
 module.exports = [
   {
@@ -16,15 +25,7 @@ module.exports = [
     options: {
       tags: ["api", "Crop"],
       description: "Get Crop plans by harvest year",
-      validate: {
-        params: Joi.object({
-          harvestYear: Joi.number().required(),
-        }),
-        query: Joi.object({
-          farmId: Joi.number().required(),
-        }),
-        failAction: validationFailAction
-      },
+      validate: cropPlanValidation
     },
     handler: async (request, h) => {
       const controller = new CropController(request, h);
@@ -58,7 +59,7 @@ module.exports = [
     path: "/crops/plans/crop-types/{harvestYear}",
     options: {
       tags: ["api", "Crop"],
-      description: "Get crops plans CropTypes by harvest year",
+      description: "Get CropTypes by harvest year",
       validate: {
         params: Joi.object({
           harvestYear: Joi.number().required(),
@@ -399,6 +400,24 @@ module.exports = [
     handler: async (request, h) => {
       const controller = new CropController(request, h);
       return controller.getPlanByFieldIdAndYear();
+    },
+  },
+  {
+    method: "GET",
+    path: "/crops/organic-inorganic/{cropId}",
+    options: {
+      tags: ["api", "Crop"],
+      description: "Get Organic Inorganic manures by cropId",
+      validate: {
+        params: Joi.object({
+          cropId: Joi.number().integer().required(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new CropController(request, h);
+      return controller.getOrganicInorganicManuresByCropId();
     },
   },
 ];
