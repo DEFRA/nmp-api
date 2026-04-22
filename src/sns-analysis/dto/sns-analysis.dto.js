@@ -23,6 +23,7 @@ const SnsAnalysisDto = Joi.object({
     .max(255)
     .optional()
     .allow(null),
+    NitrogenResidueGroup: Joi.string().required().allow(null),
   CreatedOn: Joi.date().iso().allow(null).default(null),
   CreatedByID: Joi.number().integer().allow(null).default(null),
   ModifiedOn: Joi.date().iso().allow(null).default(null),

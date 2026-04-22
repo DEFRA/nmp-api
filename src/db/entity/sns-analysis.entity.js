@@ -83,6 +83,11 @@ const SnsAnalysesEntity = new EntitySchema({
       type: "tinyint",
       nullable: true,
     },
+    NitrogenResidueGroup: {
+      type: "nvarchar",
+      length: 20,
+      nullable: true,
+    },
     CreatedOn: {
       type: "datetime2",
       nullable: true,
