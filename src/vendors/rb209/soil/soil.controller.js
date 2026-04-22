@@ -9,7 +9,7 @@ class RB209SoilController {
     this.#h = h;
     this.#service = new RB209SoilService();
   }
-  
+
   async getSoilTypes() {
     const url = this.#request.url.pathname.split("/rb209")[1];
     try {
@@ -81,6 +81,18 @@ class RB209SoilController {
     console.log("Nutrient Id:", nutrientId);
     const { nutrientValue } = this.#request.params;
     console.log("Nutrient Value:", nutrientValue);
+    const { methodologyId } = this.#request.params;
+    console.log("Methodology Id:", methodologyId);
+    const url = this.#request.url.pathname.split("/rb209")[1];
+    try {
+      const data = await this.#service.getData(url);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+
+  async getNutrientIndexMethodologyId() {
     const { methodologyId } = this.#request.params;
     console.log("Methodology Id:", methodologyId);
     const url = this.#request.url.pathname.split("/rb209")[1];
