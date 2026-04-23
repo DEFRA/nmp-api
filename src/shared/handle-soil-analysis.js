@@ -61,7 +61,10 @@ class HandleSoilAnalysisService {
         );
        
      const methodologyIndex = rb209CountryId === CountryMapper.SCOTLAND && nutrientId === 1 ? 1 : 0;
-        const methodologyId = getNutrientData[methodologyIndex]?.methodologyId;
+        const methodologyId =nutrientId==1?record.PhosphorusMethodologyID:
+        nutrientId==2?record.PotassiumMethodologyID:
+        nutrientId==3?record.MagnesiumMethodologyID:1;
+        // getNutrientData[methodologyIndex]?.methodologyId;
 
         if (methodologyId != null) {
           // Use dynamic countryId for the NutrientIndices API call
@@ -71,8 +74,11 @@ class HandleSoilAnalysisService {
             );
         }
 
-        // Dynamically assign indexId to each nutrient in soil analysis record
-        const nutrientIndexKey = `${nutrientName}Index`; // e.g., "PhosphateIndex"
+const nutrientIndexKey =
+  methodologyId == 2
+    ? `${nutrientName}Status`
+    : `${nutrientName}Index`;
+        // Dynamically assign indexId to each nutrient in soil analysis record        
         if (record[nutrientIndexKey] !== undefined) {
           const nutrientIndexId = await this.findIndexId(
             nutrientName,
