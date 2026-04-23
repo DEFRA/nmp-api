@@ -699,6 +699,53 @@ class FertiliserManuresService extends BaseService {
     return fertiliserResult.totalN;
   }
 
+  async getTotalNitrogenByManagementPeriodIDAndIsAutumn(managementPeriodID, isAutumn) {
+
+  const managementPeriod = await this.managementPeriodRepository.findOne({
+    where: { ID: managementPeriodID },
+  });
+
+  if (!managementPeriod) return 0;
+
+  const crop = await this.cropRepository.findOne({
+    where: { ID: managementPeriod.CropID },
+    select: ["ID", "CropTypeID", "Year"],
+  });
+
+  if (!crop) return 0;
+
+  const { CropTypeID, Year } = crop;
+
+  const qb = this.repository
+    .createQueryBuilder("fm")
+    .select("SUM(fm.N * fm.ApplicationRate)", "totalN")
+    .where("fm.ManagementPeriodID = :managementPeriodID", {
+      managementPeriodID,
+    });
+
+  if (CropTypeID === 20) {
+
+    const startAutumn = new Date(Year - 1, 7, 1);   // Aug 1
+    const endAutumn = new Date(Year - 1, 11, 31);   // Dec 31
+
+    if (isAutumn) {
+      qb.andWhere(
+        "fm.ApplicationDate >= :startAutumn AND fm.ApplicationDate <= :endAutumn",
+        { startAutumn, endAutumn }
+      );
+    } else {
+      qb.andWhere(
+        "fm.ApplicationDate > :endAutumn",
+        { endAutumn }
+      );
+    }
+  }
+
+  const result = await qb.getRawOne();
+
+  return result?.totalN || 0;
+}
+
   async getClosedPeriodByID(countryId, cropTypeId, nvzId) {
     return AppDataSource.transaction(async (transactionalManager) => {
       try {
