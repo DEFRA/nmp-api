@@ -705,14 +705,20 @@ class FertiliserManuresService extends BaseService {
     where: { ID: managementPeriodID },
   });
 
-  if (!managementPeriod) return 0;
+  if (!managementPeriod)
+  { 
+    return 0;
+  }
 
   const crop = await this.cropRepository.findOne({
     where: { ID: managementPeriod.CropID },
     select: ["ID", "CropTypeID", "Year"],
   });
 
-  if (!crop) return 0;
+  if (!crop)
+  { 
+    return 0;
+  }
 
   const { CropTypeID, Year } = crop;
 
@@ -723,10 +729,17 @@ class FertiliserManuresService extends BaseService {
       managementPeriodID,
     });
 
-  if (CropTypeID === 20) {
+  if (CropTypeID === CropTypeMapper.WINTEROILSEEDRAPE) {
 
-    const startAutumn = new Date(Year - 1, 7, 1);   // Aug 1
-    const endAutumn = new Date(Year - 1, 11, 31);   // Dec 31
+    const AUTUMN = {
+      START_MONTH: 8,   // August
+      END_MONTH: 12,    // December
+      START_DAY: 1,
+      END_DAY: 31
+    };
+
+const startAutumn = new Date(Year - 1, AUTUMN.START_MONTH, AUTUMN.START_DAY);
+const endAutumn = new Date(Year - 1, AUTUMN.END_MONTH, AUTUMN.END_DAY);
 
     if (isAutumn) {
       qb.andWhere(
