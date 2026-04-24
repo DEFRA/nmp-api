@@ -4,6 +4,11 @@ const { AppDataSource } = require("../db/data-source");
 const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const { NutrientMapperNames } = require("../constants/nutrient-mapper-names");
 const { CountryMapper } = require("../constants/country-mapper");
+const NUTRIENT_IDS = {
+  PHOSPHORUS: 1,
+  POTASSIUM: 2,
+  MAGNESIUM: 3
+};
 
 class HandleSoilAnalysisService {
   constructor() {
@@ -46,49 +51,99 @@ class HandleSoilAnalysisService {
     return null; // Return null if no match is found
   }
 
-  async assignIndexIdToSoilRecords(soilAnalysisRecords, rb209CountryId) {
-    const nutrientIndicesData = {};
+ 
+async assignIndexIdToSoilRecords(soilAnalysisRecords, rb209CountryId) {
+  const nutrientIndicesCache = {};
 
-    // Loop through each soil analysis record
-    for (const record of soilAnalysisRecords) {
-      // Loop through NutrientMapper to process each nutrient
-      for (const nutrient of NutrientMapperNames) {
-        const { nutrientId, nutrient: nutrientName, countryId } = nutrient;
-
-        // Fetch data for each nutrient and country
-        const getNutrientData = await this.RB209SoilService.getData(
-          `Soil/Methodologies/${nutrientId}/${countryId}`
-        );
-       
-     const methodologyIndex = rb209CountryId === CountryMapper.SCOTLAND && nutrientId === 1 ? 1 : 0;
-        const methodologyId = getNutrientData[methodologyIndex]?.methodologyId;
-
-        if (methodologyId != null) {
-          // Use dynamic countryId for the NutrientIndices API call
-          nutrientIndicesData[nutrientName] =
-            await this.RB209SoilService.getData(
-              `Soil/NutrientIndices/${nutrientId}/${methodologyId}/${rb209CountryId}`
-            );
-        }
-
-        // Dynamically assign indexId to each nutrient in soil analysis record
-        const nutrientIndexKey = `${nutrientName}Index`; // e.g., "PhosphateIndex"
-        if (record[nutrientIndexKey] !== undefined) {
-          const nutrientIndexId = await this.findIndexId(
-            nutrientName,
-            record[nutrientIndexKey],
-            nutrientIndicesData
-          );
-          console.log(`${nutrientName}IndexId`, nutrientIndexId);
-          record[nutrientIndexKey] =
-            nutrientIndexId || record[nutrientIndexKey]; // Update the index with indexId
-        }
-      }
-    }
-
-    return soilAnalysisRecords;
+  for (const record of soilAnalysisRecords) {
+    await this.processRecord(record, rb209CountryId, nutrientIndicesCache);
   }
 
+  return soilAnalysisRecords;
+}
+
+
+
+
+/* -----------------------------
+   PROCESS SINGLE RECORD
+------------------------------*/
+async processRecord(record, rb209CountryId, cache) {
+  for (const nutrient of NutrientMapperNames) {
+    const { nutrientId, nutrient: nutrientName } = nutrient;
+
+    const methodologyId = this.getMethodologyId(record, nutrientId);
+    if (methodologyId == null) continue;
+
+    const nutrientIndexKey = this.getNutrientIndexKey(
+      nutrientName,
+      methodologyId
+    );
+
+    if (!(nutrientIndexKey in record)) continue;
+
+    const nutrientData = await this.getNutrientIndexData(
+      nutrientId,
+      methodologyId,
+      rb209CountryId,
+      nutrientName,
+      cache
+    );
+
+    const nutrientIndexId = await this.findIndexId(
+      nutrientName,
+      record[nutrientIndexKey],
+      cache
+    );
+
+    record[nutrientIndexKey] =
+      nutrientIndexId || record[nutrientIndexKey];
+  }
+}
+
+
+/* -----------------------------
+   CACHE + API HANDLER
+------------------------------*/
+async getNutrientIndexData(
+  nutrientId,
+  methodologyId,
+  rb209CountryId,
+  nutrientName,
+  cache
+) {
+  const cacheKey =nutrientName;
+  //  `${nutrientName}-${methodologyId}-${rb209CountryId}`;
+
+  if (!cache[cacheKey]) {
+    cache[cacheKey] = await this.RB209SoilService.getData(
+      `Soil/NutrientIndices/${nutrientId}/${methodologyId}/${rb209CountryId}`
+    );
+  }
+
+  return cache[cacheKey];
+}
+ getMethodologyId(record, nutrientId) {
+  switch (nutrientId) {
+    case NUTRIENT_IDS.PHOSPHORUS:
+      return record.PhosphorusMethodologyID;
+
+    case NUTRIENT_IDS.POTASSIUM:
+      return record.PotassiumMethodologyID;
+
+    case NUTRIENT_IDS.MAGNESIUM:
+      return record.MagnesiumMethodologyID;
+
+    default:
+      return null;
+  }
+}
+
+getNutrientIndexKey(nutrientName, methodologyId) {
+  return methodologyId === 2
+    ? `${nutrientName}Status`
+    : `${nutrientName}Index`;
+}
   async handleSoilAnalysisValidation(fieldId, year, rb209CountryId,transactionalManager) {
     const errors = [];
     const fiveYearsAgo = year - 4;
