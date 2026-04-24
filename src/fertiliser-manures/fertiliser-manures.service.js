@@ -699,6 +699,66 @@ class FertiliserManuresService extends BaseService {
     return fertiliserResult.totalN;
   }
 
+  async getTotalNitrogenByManagementPeriodIDAndIsAutumn(managementPeriodID, isAutumn) {
+
+  const managementPeriod = await this.managementPeriodRepository.findOne({
+    where: { ID: managementPeriodID },
+  });
+
+  if (!managementPeriod)
+  { 
+    return 0;
+  }
+
+  const crop = await this.cropRepository.findOne({
+    where: { ID: managementPeriod.CropID },
+    select: ["ID", "CropTypeID", "Year"],
+  });
+
+  if (!crop)
+  { 
+    return 0;
+  }
+
+  const { CropTypeID, Year } = crop;
+
+  const qb = this.repository
+    .createQueryBuilder("fm")
+    .select("SUM(fm.N * fm.ApplicationRate)", "totalN")
+    .where("fm.ManagementPeriodID = :managementPeriodID", {
+      managementPeriodID,
+    });
+
+  if (CropTypeID === CropTypeMapper.WINTEROILSEEDRAPE) {
+
+    const AUTUMN = {
+      START_MONTH: 8,   // August
+      END_MONTH: 12,    // December
+      START_DAY: 1,
+      END_DAY: 31
+    };
+
+const startAutumn = new Date(Year - 1, AUTUMN.START_MONTH, AUTUMN.START_DAY);
+const endAutumn = new Date(Year - 1, AUTUMN.END_MONTH, AUTUMN.END_DAY);
+
+    if (isAutumn) {
+      qb.andWhere(
+        "fm.ApplicationDate >= :startAutumn AND fm.ApplicationDate <= :endAutumn",
+        { startAutumn, endAutumn }
+      );
+    } else {
+      qb.andWhere(
+        "fm.ApplicationDate > :endAutumn",
+        { endAutumn }
+      );
+    }
+  }
+
+  const result = await qb.getRawOne();
+
+  return result?.totalN || 0;
+}
+
   async getClosedPeriodByID(countryId, cropTypeId, nvzId) {
     return AppDataSource.transaction(async (transactionalManager) => {
       try {

@@ -200,6 +200,27 @@ module.exports = [
 
   {
     method: "GET",
+    path: "/fertiliser-manures/total-nitrogen-by-autumn/{managementPeriodID}",
+    handler: async (request, h) => {
+      return getController(request, h).getTotalNitrogenByManagementPeriodIDAndIsAutumn();
+    },
+    options: {
+      tags: ["api", "Fertiliser Manures"],
+      description: "Get Fertiliser Manure Total Nitrogen by managementPeriodID and isAutumn",
+      validate: {
+        params: Joi.object({
+          managementPeriodID: Joi.number().required(),
+        }),
+        query: Joi.object({
+          isAutumn: Joi.boolean().required(),
+        }),
+        failAction: validationFailAction
+      },
+    },
+  },
+
+  {
+    method: "GET",
     path: "/fertiliser-manures/get-closed-period/{CountryId}",
     handler: async (request, h) => {
       return getController(request, h).getClosedPeriodByID();
