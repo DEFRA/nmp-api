@@ -80,8 +80,7 @@ async processRecord(record, rb209CountryId, cache) {
       methodologyId
     );
 
-    if (!(nutrientIndexKey in record)) {continue};
-
+    if (nutrientIndexKey in record) {
     await this.getNutrientIndexData(
       nutrientId,
       methodologyId,
@@ -99,6 +98,7 @@ async processRecord(record, rb209CountryId, cache) {
     record[nutrientIndexKey] =
       nutrientIndexId || record[nutrientIndexKey];
   }
+ } 
 }
 
 
