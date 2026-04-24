@@ -4,6 +4,11 @@ const { AppDataSource } = require("../db/data-source");
 const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const { NutrientMapperNames } = require("../constants/nutrient-mapper-names");
 const { CountryMapper } = require("../constants/country-mapper");
+const NUTRIENT_IDS = {
+  PHOSPHORUS: 1,
+  POTASSIUM: 2,
+  MAGNESIUM: 3
+};
 
 class HandleSoilAnalysisService {
   constructor() {
@@ -54,9 +59,9 @@ class HandleSoilAnalysisService {
       const { nutrientId, nutrient: nutrientName } = nutrient;
 
       const methodologyId = this.getMethodologyId(record, nutrientId);
-      if (methodologyId == null) continue;
-
-      const cacheKey =nutrientName;
+      if (methodologyId != null)
+      {
+         const cacheKey =nutrientName;
 
       // cache API response
       if (!nutrientIndicesCache[cacheKey]) {
@@ -81,23 +86,33 @@ class HandleSoilAnalysisService {
 
       record[nutrientIndexKey] =
         nutrientIndexId || record[nutrientIndexKey];
+      }
+
+     
     }
   }
 
   return soilAnalysisRecords;
 }
 
-  getMethodologyId(record, nutrientId) {
+ getMethodologyId(record, nutrientId) {
   switch (nutrientId) {
-    case 1: return record.PhosphorusMethodologyID;
-    case 2: return record.PotassiumMethodologyID;
-    case 3: return record.MagnesiumMethodologyID;
-    default: return null;
+    case NUTRIENT_IDS.PHOSPHORUS:
+      return record.PhosphorusMethodologyID;
+
+    case NUTRIENT_IDS.POTASSIUM:
+      return record.PotassiumMethodologyID;
+
+    case NUTRIENT_IDS.MAGNESIUM:
+      return record.MagnesiumMethodologyID;
+
+    default:
+      return null;
   }
 }
 
 getNutrientIndexKey(nutrientName, methodologyId) {
-  return methodologyId == 2
+  return methodologyId === 2
     ? `${nutrientName}Status`
     : `${nutrientName}Index`;
 }
