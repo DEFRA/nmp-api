@@ -73,16 +73,16 @@ async processRecord(record, rb209CountryId, cache) {
     const { nutrientId, nutrient: nutrientName } = nutrient;
 
     const methodologyId = this.getMethodologyId(record, nutrientId);
-    if (methodologyId == null) continue;
+    if (methodologyId == null) {continue};
 
     const nutrientIndexKey = this.getNutrientIndexKey(
       nutrientName,
       methodologyId
     );
 
-    if (!(nutrientIndexKey in record)) continue;
+    if (!(nutrientIndexKey in record)) {continue};
 
-    const nutrientData = await this.getNutrientIndexData(
+    await this.getNutrientIndexData(
       nutrientId,
       methodologyId,
       rb209CountryId,
@@ -113,8 +113,6 @@ async getNutrientIndexData(
   cache
 ) {
   const cacheKey =nutrientName;
-  //  `${nutrientName}-${methodologyId}-${rb209CountryId}`;
-
   if (!cache[cacheKey]) {
     cache[cacheKey] = await this.RB209SoilService.getData(
       `Soil/NutrientIndices/${nutrientId}/${methodologyId}/${rb209CountryId}`
