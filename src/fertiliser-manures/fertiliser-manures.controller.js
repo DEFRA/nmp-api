@@ -175,6 +175,19 @@ class FertiliserManuresController {
       return this.#h.response({ error });
     }
   }
+   async getTotalNitrogenByManagementPeriodIDAndIsAutumn() {
+    const { managementPeriodID } = this.#request.params;
+    const { isAutumn } = this.#request.query;
+    try {
+      const totalN =
+        await this.#fertiliserManuresService.getTotalNitrogenByManagementPeriodIDAndIsAutumn(
+          managementPeriodID, isAutumn
+        );
+      return this.#h.response({ TotalN: totalN });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
 
   async getClosedPeriodByID() {
     const { CountryId } = this.#request.params;
