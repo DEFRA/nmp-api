@@ -46,7 +46,17 @@ const SoilAnalysisSchema = Joi.object({
     .allow(null),
   Potassium: Joi.number().integer().allow(null),
   PotassiumIndex: Joi.number().integer().min(-2).max(9).allow(null),
+  PotassiumMethodologyID: Joi.number()
+    .integer()
+    .default(4)
+    .required()
+    .allow(null),
   Magnesium: Joi.number().integer().allow(null),
+  MagnesiumMethodologyID: Joi.number()
+    .integer()
+    .default(4)
+    .required()
+    .allow(null),
   MagnesiumIndex: Joi.number().integer().min(0).max(255).default(0).allow(null),
   SoilNitrogenSupply: Joi.number().integer().allow(null),
   SoilNitrogenSupplyIndex: Joi.number()
@@ -60,12 +70,10 @@ const SoilAnalysisSchema = Joi.object({
   Sodium: Joi.number().integer().allow(null),
   Lime: Joi.number().precision(3).allow(null),
   PhosphorusStatus: Joi.string().max(20).allow(null),
-  PotassiumAnalysis: Joi.string().max(50).allow(null),
+
   PotassiumStatus: Joi.string().max(20).allow(null),
-  MagnesiumAnalysis: Joi.string().max(20).allow(null),
   MagnesiumStatus: Joi.string().max(20).allow(null),
   NitrogenResidueGroup: Joi.string().max(20).allow(null),
-  SoilAnalysesMethodID: Joi.number().integer().optional().allow(null),
   OrganicMatterPercentage: Joi.number().integer().optional().allow(null),
   Comments: Joi.string().max(255).allow(null),
   PreviousID: Joi.number().integer().allow(null),
