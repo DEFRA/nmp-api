@@ -59,17 +59,16 @@ class HandleSoilAnalysisService {
       const { nutrientId, nutrient: nutrientName } = nutrient;
 
       const methodologyId = this.getMethodologyId(record, nutrientId);
-      if (methodologyId != null)
-      {
+      
          const cacheKey =nutrientName;
 
       // cache API response
-      if (!nutrientIndicesCache[cacheKey]) {
+      if (!nutrientIndicesCache[cacheKey]&&methodologyId != null) {
         nutrientIndicesCache[cacheKey] =
           await this.RB209SoilService.getData(
             `Soil/NutrientIndices/${nutrientId}/${methodologyId}/${rb209CountryId}`
           );
-      }
+      
 
       const nutrientIndexKey = this.getNutrientIndexKey(
         nutrientName,
@@ -86,7 +85,7 @@ class HandleSoilAnalysisService {
 
       record[nutrientIndexKey] =
         nutrientIndexId || record[nutrientIndexKey];
-      }
+    }
 
      
     }
