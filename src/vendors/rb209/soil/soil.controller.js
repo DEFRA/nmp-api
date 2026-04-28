@@ -39,9 +39,11 @@ class RB209SoilController {
     console.log("Nutrient Id:", nutrientId);
     const { countryId } = this.#request.params;
     console.log("Country Id:", countryId);
+
     const url = this.#request.url.pathname.split("/rb209")[1];
     try {
       const data = await this.#service.getData(url);
+      console.log("methodologies by country id and nutrientId",data)
       return this.#h.response(data);
     } catch (error) {
       return this.#h.response({ error });
