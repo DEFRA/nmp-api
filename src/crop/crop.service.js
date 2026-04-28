@@ -459,7 +459,7 @@ class CropService extends BaseService {
     ) => {
       try {
         let defoliationSequenceDescription = null;
-        let defoliationSequence = await this.rB209GrassService.getData(
+        const defoliationSequence = await this.rB209GrassService.getData(
           `Grass/DefoliationSequence/${DefoliationSequenceID}`,
         );
         defoliationSequenceDescription = defoliationSequence
@@ -678,9 +678,7 @@ class CropService extends BaseService {
         .then((res) => {
           if (res === undefined) {
             console.log(res);
-          } else {
-            console.log("updateRecommendationAndOrganicManure result:", res);
-          }
+          } 
         })
         .catch((error) => {
           console.error(
@@ -1182,7 +1180,7 @@ class CropService extends BaseService {
             userId
           );
           if (isSoilAnalysisHavePAndK) {
-            if (cropPlanOfNextYear.length == 0) {
+            if (cropPlanOfNextYear.length === 0) {
               try {
                 const newPKBalance = {
                   ...pkBalanceData,
@@ -1218,7 +1216,6 @@ class CropService extends BaseService {
                     );
                   } else {
                     console.log(
-                      "updateRecommendationAndOrganicManure result:",
                       res,
                     );
                   }
@@ -1288,13 +1285,13 @@ class CropService extends BaseService {
 
             for (const manure of manures) {
               let updatedApplicationDate = null;
+              const julyMonth = 7
               if (manure.ApplicationDate) {
                 const originalDate = new Date(manure.ApplicationDate);
                 const month = originalDate.getMonth(); // 0 = Jan, 7 = Aug
-                const day = originalDate.getDate();
                 let yearToSet = harvestYear;
                 // If date is from previous harvest year window (1 Aug - 31 Dec)
-                if (month >= 7) {
+                if (month >= julyMonth) {
                   yearToSet = harvestYear - 1;
                 }
 
@@ -1393,7 +1390,6 @@ class CropService extends BaseService {
                 );
               } else {
                 console.log(
-                  "updateRecommendationAndOrganicManure result:",
                   res,
                 );
               }
