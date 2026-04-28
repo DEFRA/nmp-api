@@ -1,8 +1,6 @@
 const { RB209FieldController } = require("./field.controller");
 const Joi = require("joi");
-const {
-  formatErrorResponse,
-} = require("../../../interceptor/responseFormatter");
+const { validationFailAction } = require("../../../shared/validateFailSafeAction");
 
 module.exports = [
   {
@@ -32,19 +30,7 @@ module.exports = [
         params: Joi.object({
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -62,19 +48,7 @@ module.exports = [
         params: Joi.object({
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -93,19 +67,7 @@ module.exports = [
         params: Joi.object({
           fieldTypeId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -124,19 +86,7 @@ module.exports = [
         params: Joi.object({
           nutrientId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -159,7 +109,7 @@ module.exports = [
       const controller = new RB209FieldController(request, h);
       return controller.getSecondCropType_ListByCropGroupId1AndCropTypeId1AndCropGroupId2AndCountryId(
         request,
-        h
+        h,
       );
     },
     options: {
@@ -173,19 +123,7 @@ module.exports = [
           cropGroupId2: Joi.string().required(),
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -203,19 +141,7 @@ module.exports = [
         params: Joi.object({
           siteClassId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -233,19 +159,7 @@ module.exports = [
         params: Joi.object({
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -256,7 +170,7 @@ module.exports = [
       const controller = new RB209FieldController(request, h);
       return controller.getSiteClassItemBySoilTypeIdAndAltitudeAndPostcodeAndCountryId(
         request,
-        h
+        h,
       );
     },
     options: {
@@ -269,19 +183,7 @@ module.exports = [
           postcode: Joi.string().required(),
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
