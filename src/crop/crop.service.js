@@ -1199,13 +1199,7 @@ class CropService extends BaseService {
                   userId,
                 )
                 .then((res) => {
-                  if (res === undefined) {
-                    console.log(
-                      "updateRecommendationAndOrganicManure returned undefined",
-                    );
-                  } else {
                     console.log(res);
-                  }
                 })
                 .catch((error) => {
                   console.error(
