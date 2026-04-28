@@ -459,7 +459,7 @@ class CropService extends BaseService {
     ) => {
       try {
         let defoliationSequenceDescription = null;
-        let defoliationSequence = await this.rB209GrassService.getData(
+        const defoliationSequence = await this.rB209GrassService.getData(
           `Grass/DefoliationSequence/${DefoliationSequenceID}`,
         );
         defoliationSequenceDescription = defoliationSequence
@@ -678,9 +678,7 @@ class CropService extends BaseService {
         .then((res) => {
           if (res === undefined) {
             console.log(res);
-          } else {
-            console.log("updateRecommendationAndOrganicManure result:", res);
-          }
+          } 
         })
         .catch((error) => {
           console.error(
@@ -1181,47 +1179,27 @@ class CropService extends BaseService {
             request,
             userId
           );
-          if (isSoilAnalysisHavePAndK) {
-            if (cropPlanOfNextYear.length == 0) {
-              try {
+          if (isSoilAnalysisHavePAndK && cropPlanOfNextYear.length === 0) {
                 const newPKBalance = {
                   ...pkBalanceData,
                   FieldID: crop.FieldID,
                   ID: null, // Make it a new insert
                   Year: harvestYear, // New year
                   CreatedByID: userId,
-                  CreatedOn: new Date()
+                  CreatedOn: new Date(),
                 };
-
-               await transactionalManager.save(
-                  PKBalanceEntity,
-                  newPKBalance
-                );
-              } catch (error) {
-                console.error(
-                  `Error while saving PKBalance Data FieldId: ${crop.FieldID} And Year:${harvestYear}:`,
-                  error
-                );
-              }
-            } else {
+               await transactionalManager.save(PKBalanceEntity, newPKBalance);
+            } else if (isSoilAnalysisHavePAndK) {
               //call UpdateRecommendation function
-              this.updatingFutureRecommendations.updateRecommendationsForField(
+              this.updatingFutureRecommendations
+                .updateRecommendationsForField(
                   crop.FieldID,
                   cropPlanOfNextYear.Year,
                   request,
-                  userId
+                  userId,
                 )
                 .then((res) => {
-                  if (res === undefined) {
-                    console.log(
-                      "updateRecommendationAndOrganicManure returned undefined",
-                    );
-                  } else {
-                    console.log(
-                      "updateRecommendationAndOrganicManure result:",
-                      res,
-                    );
-                  }
+                    console.log(res);
                 })
                 .catch((error) => {
                   console.error(
@@ -1229,16 +1207,16 @@ class CropService extends BaseService {
                     error,
                   );
                 });
+            } else {
+                console.log(
+                  "Skipping PK balance and recommendation update: No soil analysis P & K available",
+                );
             }
-          }
            Recommendations.push({
              Recommendation: otherRecommendations
            });
          continue;
         }
-     
-        
-      
         const oldToNewManagementPeriodMap = {};
         let originalSowingDate = new Date(crop.SowingDate);
         originalSowingDate = crop.SowingDate ? originalSowingDate : null;
@@ -1288,13 +1266,13 @@ class CropService extends BaseService {
 
             for (const manure of manures) {
               let updatedApplicationDate = null;
+              const julyMonth = 7
               if (manure.ApplicationDate) {
                 const originalDate = new Date(manure.ApplicationDate);
                 const month = originalDate.getMonth(); // 0 = Jan, 7 = Aug
-                const day = originalDate.getDate();
                 let yearToSet = harvestYear;
                 // If date is from previous harvest year window (1 Aug - 31 Dec)
-                if (month >= 7) {
+                if (month >= julyMonth) {
                   yearToSet = harvestYear - 1;
                 }
 
@@ -1393,7 +1371,6 @@ class CropService extends BaseService {
                 );
               } else {
                 console.log(
-                  "updateRecommendationAndOrganicManure result:",
                   res,
                 );
               }

@@ -42,6 +42,7 @@ class RB209SoilController {
     const url = this.#request.url.pathname.split("/rb209")[1];
     try {
       const data = await this.#service.getData(url);
+      console.log("methodologies by country id and nutrientId",data)
       return this.#h.response(data);
     } catch (error) {
       return this.#h.response({ error });
@@ -92,6 +93,25 @@ class RB209SoilController {
     }
   }
 
+  async getNutrientIndexByNutrientIdAndNutrientValueMethodologyIdAndCountryId() {
+    const { nutrientId } = this.#request.params;
+    console.log("Nutrient Id:", nutrientId);
+    const { nutrientValue } = this.#request.params;
+    console.log("Nutrient Value:", nutrientValue);
+    const { methodologyId } = this.#request.params;
+    console.log("Methodology Id:", methodologyId);
+    const { countryId } = this.#request.params;
+    console.log("Country Id:", countryId);
+    const url = this.#request.url.pathname.split("/rb209")[1];
+    try {
+      const data = await this.#service.getData(url);
+      console.log("nutrient index by nutrient value , by methodology and by country id",data)
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+
   async getNutrientIndexMethodologyId() {
     const { methodologyId } = this.#request.params;
     console.log("Methodology Id:", methodologyId);
@@ -105,17 +125,10 @@ class RB209SoilController {
   }
 
   async getNutrientIndexIdFromValueByNutrientIdAndMethodologyIdAndNutrientValue() {
-    const { nutrientId } = this.#request.params;
-    console.log("Nutrient Id:", nutrientId);
-    const { nutrientValue } = this.#request.params;
-    console.log("Nutrient Value:", nutrientValue);
-    const { methodologyId } = this.#request.params;
-    console.log("Methodology Id:", methodologyId);
-    const { countryId } = this.#request.params;
-    console.log("Country Id:", countryId);
     const url = this.#request.url.pathname.split("/rb209")[1];
     try {
       const data = await this.#service.getData(url);
+      console.log("Nutrient Index by countryID nutrientID and Methodology",data)
       return this.#h.response(data);
     } catch (error) {
       return this.#h.response({ error });
