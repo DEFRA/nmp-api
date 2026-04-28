@@ -6,6 +6,7 @@ const {
   FieldEntitySchema,
   CreateFieldWithSoilAnalysisAndCropsDto,
 } = require("./dto/field.dto");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 const BAD_REQUEST=400;
 
@@ -20,19 +21,7 @@ module.exports = [
         params: Joi.object({
           fieldId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(BAD_REQUEST)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -55,19 +44,7 @@ module.exports = [
           year: Joi.number().integer().required(),
           confirm: Joi.boolean().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(BAD_REQUEST)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -88,19 +65,7 @@ module.exports = [
         query: Joi.object({
           shortSummary: Joi.boolean(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(BAD_REQUEST)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -118,19 +83,7 @@ module.exports = [
         params: Joi.object({
           farmId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(BAD_REQUEST)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -152,19 +105,7 @@ module.exports = [
           name: Joi.string().required(),
           fieldId: Joi.number().optional().allow(null),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(BAD_REQUEST)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -183,19 +124,7 @@ module.exports = [
           fieldId: Joi.number().integer().required(),
         }),
         payload: UpdateFieldDtoSchema, // Validate payload with UpdateFieldDtoSchema
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(BAD_REQUEST)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -211,19 +140,7 @@ module.exports = [
       description: "Update Only Field by FieldId",
       validate: {
         payload: FieldEntitySchema, // Validate payload with UpdateFieldDtoSchema
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(BAD_REQUEST)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -242,19 +159,7 @@ module.exports = [
           farmId: Joi.number().integer().required(),
         }),
         payload: CreateFieldWithSoilAnalysisAndCropsDto, // Schema to validate the request body
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(BAD_REQUEST)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -272,19 +177,7 @@ module.exports = [
         params: Joi.object({
           fieldId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(BAD_REQUEST)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -302,19 +195,7 @@ module.exports = [
         params: Joi.object({
           fieldId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(BAD_REQUEST)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
