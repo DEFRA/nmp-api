@@ -1179,8 +1179,7 @@ class CropService extends BaseService {
             request,
             userId
           );
-          if (isSoilAnalysisHavePAndK) {
-            if (cropPlanOfNextYear.length === 0) {
+          if (isSoilAnalysisHavePAndK && cropPlanOfNextYear.length === 0) {
               try {
                 const newPKBalance = {
                   ...pkBalanceData,
@@ -1188,26 +1187,24 @@ class CropService extends BaseService {
                   ID: null, // Make it a new insert
                   Year: harvestYear, // New year
                   CreatedByID: userId,
-                  CreatedOn: new Date()
+                  CreatedOn: new Date(),
                 };
 
-               await transactionalManager.save(
-                  PKBalanceEntity,
-                  newPKBalance
-                );
+                await transactionalManager.save(PKBalanceEntity, newPKBalance);
               } catch (error) {
                 console.error(
-                  `Error while saving PKBalance Data FieldId: ${crop.FieldID} And Year:${harvestYear}:`,
-                  error
+                  `Error while saving PKBalance Data  Year:${harvestYear}:`,
+                  error,
                 );
               }
-            } else {
+            } else if (isSoilAnalysisHavePAndK) {
               //call UpdateRecommendation function
-              this.updatingFutureRecommendations.updateRecommendationsForField(
+              this.updatingFutureRecommendations
+                .updateRecommendationsForField(
                   crop.FieldID,
                   cropPlanOfNextYear.Year,
                   request,
-                  userId
+                  userId,
                 )
                 .then((res) => {
                   if (res === undefined) {
@@ -1215,9 +1212,7 @@ class CropService extends BaseService {
                       "updateRecommendationAndOrganicManure returned undefined",
                     );
                   } else {
-                    console.log(
-                      res,
-                    );
+                    console.log(res);
                   }
                 })
                 .catch((error) => {
@@ -1227,7 +1222,6 @@ class CropService extends BaseService {
                   );
                 });
             }
-          }
            Recommendations.push({
              Recommendation: otherRecommendations
            });
