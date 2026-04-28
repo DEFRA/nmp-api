@@ -1180,7 +1180,6 @@ class CropService extends BaseService {
             userId
           );
           if (isSoilAnalysisHavePAndK && cropPlanOfNextYear.length === 0) {
-              try {
                 const newPKBalance = {
                   ...pkBalanceData,
                   FieldID: crop.FieldID,
@@ -1189,14 +1188,7 @@ class CropService extends BaseService {
                   CreatedByID: userId,
                   CreatedOn: new Date(),
                 };
-
-                await transactionalManager.save(PKBalanceEntity, newPKBalance);
-              } catch (error) {
-                console.error(
-                  `Error while saving PKBalance Data  Year:${harvestYear}:`,
-                  error,
-                );
-              }
+               await transactionalManager.save(PKBalanceEntity, newPKBalance);
             } else if (isSoilAnalysisHavePAndK) {
               //call UpdateRecommendation function
               this.updatingFutureRecommendations
@@ -1221,15 +1213,16 @@ class CropService extends BaseService {
                     error,
                   );
                 });
+            } else {
+                console.log(
+                  "Skipping PK balance and recommendation update: No soil analysis P & K available",
+                );
             }
            Recommendations.push({
              Recommendation: otherRecommendations
            });
          continue;
         }
-     
-        
-      
         const oldToNewManagementPeriodMap = {};
         let originalSowingDate = new Date(crop.SowingDate);
         originalSowingDate = crop.SowingDate ? originalSowingDate : null;
