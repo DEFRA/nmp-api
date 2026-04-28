@@ -105,6 +105,7 @@ class RB209SoilController {
     const url = this.#request.url.pathname.split("/rb209")[1];
     try {
       const data = await this.#service.getData(url);
+      console.log("nutrient index by nutrient value , by methodology and by country id",data)
       return this.#h.response(data);
     } catch (error) {
       return this.#h.response({ error });
