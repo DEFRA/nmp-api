@@ -1,5 +1,4 @@
 const { EntitySchema } = require("typeorm");
-//const CropEntity = require("./crop.entity");
 const UserEntity = require("./user.entity");
 
 const SnsAnalysesEntity = new EntitySchema({

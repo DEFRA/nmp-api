@@ -1,27 +1,27 @@
 const Joi = require("joi");
 const { WarningMessageItemSchema } = require("../../organic-manure/dto/organic-manure.dto");
-
+const precisionThree = 3;
 const FertiliserManureDto = Joi.object({
   ID: Joi.number().integer().allow(null).optional().default(null),
   ManagementPeriodID: Joi.number().integer().required(),
   ApplicationDate: Joi.date().iso().required(),
-  ApplicationRate: Joi.number().precision(3).required(),
+  ApplicationRate: Joi.number().precision(precisionThree).required(),
   Confirm: Joi.boolean().required(),
-  N: Joi.number().precision(3).required(),
-  P2O5: Joi.number().precision(3).required(),
-  K2O: Joi.number().precision(3).required(),
-  MgO: Joi.number().precision(3).required(),
-  SO3: Joi.number().precision(3).required(),
-  Na2O: Joi.number().precision(3).required(),
-  NFertAnalysisPercent: Joi.number().precision(3).required(),
-  P2O5FertAnalysisPercent: Joi.number().precision(3).required(),
-  K2OFertAnalysisPercent: Joi.number().precision(3).required(),
-  MgOFertAnalysisPercent: Joi.number().precision(3).required(),
-  SO3FertAnalysisPercent: Joi.number().precision(3).required(),
-  Na2OFertAnalysisPercent: Joi.number().precision(3).required(),
-  Lime: Joi.number().precision(3).required(),
-  NH4N: Joi.number().precision(3).required(),
-  NO3N: Joi.number().precision(3).required(),
+  N: Joi.number().precision(precisionThree).required(),
+  P2O5: Joi.number().precision(precisionThree).required(),
+  K2O: Joi.number().precision(precisionThree).required(),
+  MgO: Joi.number().precision(precisionThree).required(),
+  SOprecisionThree: Joi.number().precision(precisionThree).required(),
+  Na2O: Joi.number().precision(precisionThree).required(),
+  NFertAnalysisPercent: Joi.number().precision(precisionThree).required(),
+  P2O5FertAnalysisPercent: Joi.number().precision(precisionThree).required(),
+  K2OFertAnalysisPercent: Joi.number().precision(precisionThree).required(),
+  MgOFertAnalysisPercent: Joi.number().precision(precisionThree).required(),
+  SOprecisionThreeFertAnalysisPercent: Joi.number().precision(precisionThree).required(),
+  Na2OFertAnalysisPercent: Joi.number().precision(precisionThree).required(),
+  Lime: Joi.number().precision(precisionThree).required(),
+  NH4N: Joi.number().precision(precisionThree).required(),
+  NOprecisionThreeN: Joi.number().precision(precisionThree).required(),
 }).required();
 
 

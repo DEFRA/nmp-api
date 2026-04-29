@@ -1,5 +1,5 @@
 const Joi = require("joi");
-
+const precisionThree = 3;
 // Crop Schema
 const CropDto = Joi.object({
   ID: Joi.number().integer().allow(null).optional(),
@@ -12,7 +12,7 @@ const CropDto = Joi.object({
   CropInfo1: Joi.number().integer().allow(null),
   CropInfo2: Joi.number().integer().allow(null),
   SowingDate: Joi.date().iso().allow(null),
-  Yield: Joi.number().precision(3).allow(null),
+  Yield: Joi.number().precision(precisionThree).allow(null),
   CropGroupName: Joi.string().max(120).allow(null),
   Confirm: Joi.boolean().required(),
   PreviousGrass: Joi.number().integer().allow(null),
@@ -20,9 +20,9 @@ const CropDto = Joi.object({
   Comments: Joi.string().allow(null),
   Establishment: Joi.number().integer().allow(null),
   LivestockType: Joi.number().integer().allow(null),
-  MilkYield: Joi.number().allow(null).precision(3).default(0).allow(null),
-  ConcentrateUse: Joi.number().allow(null).precision(3).default(0).allow(null),
-  StockingRate: Joi.number().allow(null).precision(3).default(0).allow(null),
+  MilkYield: Joi.number().allow(null).precision(precisionThree).default(0).allow(null),
+  ConcentrateUse: Joi.number().allow(null).precision(precisionThree).default(0).allow(null),
+  StockingRate: Joi.number().allow(null).precision(precisionThree).default(0).allow(null),
   DefoliationSequenceID: Joi.number()
     .integer()
     .allow(null)
