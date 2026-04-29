@@ -968,7 +968,7 @@ class FieldService extends BaseService {
         let soilAnalysis = null;
         if (crops != null) {
           for (const crop of crops) {
-            if (crop.CropTypeID == CropTypeMapper.GRASS) {
+            if (crop.CropTypeID === CropTypeMapper.GRASS) {
               let swardType = null;
               let defoliationSequenceDescription = null;
               let swardTypeManagment = null;
@@ -992,7 +992,7 @@ class FieldService extends BaseService {
               if (crop.SwardTypeID != null) {
                 swardType = await this.findSwardType(crop.SwardTypeID);
               }
-              crop.SwardTypeName = swardType == null ? null : swardType;
+              crop.SwardTypeName = swardType === null ? null : swardType;
               if (crop.SwardManagementID != null) {
                 swardTypeManagment = await this.findSwardTypeManagment(
                   crop.SwardManagementID,
@@ -1001,7 +1001,7 @@ class FieldService extends BaseService {
               crop.SwardManagementName =
                 swardTypeManagment == null ? null : swardTypeManagment;
               crop.EstablishmentName =
-                crop.CropTypeID == CropTypeMapper.GRASS && crop.Establishment != null
+                crop.CropTypeID === CropTypeMapper.GRASS && crop.Establishment != null
                   ? await this.findGrassSeason(crop.Establishment)
                   : null;
             }
