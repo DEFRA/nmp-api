@@ -175,7 +175,7 @@ class FieldService extends BaseService {
     userId,
   ) {
     // Initialize variables for recommendations for both Crop Orders
-    let cropData = {
+    const cropData = {
       CropN: null,
       NBalance: null,
       ManureN: null,
@@ -259,8 +259,7 @@ class FieldService extends BaseService {
           SoilAnalysis.PhosphorusIndex != null
         ) {
           if (body.PKBalance) {
-            let pkBalanceBody = body.PKBalance;
-            let { CreatedByID, CreatedOn, ...createdData } = body.PKBalance;
+            const { CreatedByID, CreatedOn, ...createdData } = body.PKBalance;
             PKBalance = await transactionalManager.save(
               PKBalanceEntity,
               this.pkBalanceRepository.create({
@@ -274,7 +273,7 @@ class FieldService extends BaseService {
         }
       }
 
-      let Previouscrops = [];
+      const Previouscrops = [];
       if (body.PreviousCroppings && body.PreviousCroppings.length > 0) {
         for (const cropsData of body.PreviousCroppings) {
           const { Action, ...createPrevCrops } = cropsData;
@@ -1148,17 +1147,23 @@ class FieldService extends BaseService {
                       previousAppliedLime || 0;
 
                     Object.keys(r).forEach((recDataKey) => {
-                      if (recDataKey.startsWith("Crop_"))
+                      if (recDataKey.startsWith("Crop_")){
                         data.Crop[recDataKey.slice(5)] = r[recDataKey];
-                      else if (recDataKey.startsWith("Recommendation_"))
+                      } 
+                      else if (recDataKey.startsWith("Recommendation_")){
                         data.Recommendation[recDataKey.slice(15)] =
                           r[recDataKey];
-                      else if (recDataKey.startsWith("ManagementPeriod_"))
+                      }   
+                      else if (recDataKey.startsWith("ManagementPeriod_")){
                         data.ManagementPeriod[recDataKey.slice(17)] =
                           r[recDataKey];
-                      else if (recDataKey.startsWith("FertiliserManure_"))
+                      }   
+                      else if (recDataKey.startsWith("FertiliserManure_")){
                         data.FertiliserManure[recDataKey.slice(17)] =
                           r[recDataKey];
+                      } else{
+                        console.log("no assignment")
+                      }  
                     });
 
                     mergedRecommendation = {
@@ -1317,7 +1322,6 @@ class FieldService extends BaseService {
       const cropData = await this.findCropDataByID(Recommendation.Crop_ID); // check order 1 or 2
 
       let totalLime1 = 0;
-      let totalLime2 = 0;
       let result = 0;
       if (cropData != null) {
         // Step 4: Handle CropOrder 1 (first crop)
@@ -1355,7 +1359,7 @@ class FieldService extends BaseService {
             totalLime1 =
               await this.getApplyLimeInCaseOfMultipleCrops(CropOrderDataList);
           }
-          let cropOrder = 1;
+          const cropOrder = 1;
           const firstCropOrderData =
             await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
               fieldId,
@@ -1598,7 +1602,7 @@ class FieldService extends BaseService {
   async findSwardTypeManagment(SwardManagementID) {
     try {
       let swardManagementsName = null;
-      let swardManagementsList = await this.rB209GrassService.getData(
+      const swardManagementsList = await this.rB209GrassService.getData(
         `Grass/SwardManagements`,
       );
 
@@ -1627,9 +1631,9 @@ class FieldService extends BaseService {
     establishment,
   ) {
     try {
-      let newSward = establishment == 0 || null ? false : true;
+      const newSward = establishment == 0 || null ? false : true;
       let defoliationSequenceDescription = null;
-      let defoliationSequenceList = await this.rB209GrassService.getData(
+      const defoliationSequenceList = await this.rB209GrassService.getData(
         `Grass/DefoliationSequence/${swardManagementId}/${PotentialCut}/${newSward}`,
       );
       if (
@@ -1680,7 +1684,7 @@ class FieldService extends BaseService {
 
   async findGrassSeason(seasonID) {
     try {
-      let season = await this.rB209GrasslandService.getData(
+      const season = await this.rB209GrasslandService.getData(
         `Grassland/GrasslandSeason/${seasonID}`,
       );
       return season.seasonName;

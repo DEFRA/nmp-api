@@ -44,8 +44,7 @@ class FieldController {
     const { farmId } = this.#request.params;
     const { shortSummary } = this.#request.query;
     let selectOptions = {};
-    if (shortSummary) selectOptions = { ID: true, Name: true, FarmID: true };
-
+    if (shortSummary) { selectOptions = { ID: true, Name: true, FarmID: true }}
     try {
       const records =
         (await this.#fieldService.getBy("FarmID", farmId, selectOptions))
