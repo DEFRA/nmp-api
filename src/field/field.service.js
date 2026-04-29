@@ -964,20 +964,11 @@ class FieldService extends BaseService {
         const pkBalance = await this.pkBalanceRepository.findOne({
           where: { FieldID: field.ID, Year: year },
         });
-        const Errors = [];
         // Enrich crops with management periods and their sub-objects
-
-        // const { latestSoilAnalysis, errors: soilAnalysisErrors } =
-        //   await this.handleSoilAnalysisValidation(field.ID, year);
-
-        // Errors.push(...soilAnalysisErrors);
-        // if (Errors.length > 0) {
-        //   throw new Error(JSON.stringify(Errors));
-        // }
         let soilAnalysis = null;
         if (crops != null) {
           for (const crop of crops) {
-            if (crop.CropTypeID == 140) {
+            if (crop.CropTypeID === CropTypeMapper.GRASS) {
               let swardType = null;
               let defoliationSequenceDescription = null;
               let swardTypeManagment = null;
@@ -995,22 +986,22 @@ class FieldService extends BaseService {
                   );
               }
               crop.DefoliationSequenceName =
-                defoliationSequenceDescription != null
-                  ? defoliationSequenceDescription
-                  : null;
+                defoliationSequenceDescription == null
+                  ? null
+                  : defoliationSequenceDescription;
               if (crop.SwardTypeID != null) {
                 swardType = await this.findSwardType(crop.SwardTypeID);
               }
-              crop.SwardTypeName = swardType != null ? swardType : null;
+              crop.SwardTypeName = swardType === null ? null : swardType;
               if (crop.SwardManagementID != null) {
                 swardTypeManagment = await this.findSwardTypeManagment(
                   crop.SwardManagementID,
                 );
               }
               crop.SwardManagementName =
-                swardTypeManagment != null ? swardTypeManagment : null;
+                swardTypeManagment == null ? null : swardTypeManagment;
               crop.EstablishmentName =
-                crop.CropTypeID == 140 && crop.Establishment != null
+                crop.CropTypeID === CropTypeMapper.GRASS && crop.Establishment != null
                   ? await this.findGrassSeason(crop.Establishment)
                   : null;
             }
@@ -1436,7 +1427,7 @@ class FieldService extends BaseService {
     if (soilAnalysisYear) {
       if (year > soilAnalysisYear) {
         query.where.Year = Between(soilAnalysisYear, year); // Include years between `year` and `soilAnalysisYear`
-      } else if (year == soilAnalysisYear) {
+      } else if (year === soilAnalysisYear) {
         query.where.Year = Between(year, soilAnalysisYear); // Include years between `year` and `soilAnalysisYear`
       } else if (year < soilAnalysisYear) {
         return null;

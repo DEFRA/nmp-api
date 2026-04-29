@@ -66,22 +66,7 @@ class FertiliserManuresService extends BaseService {
 
     const toDateFormatted = new Date(toDate);
     toDateFormatted.setHours(23, 59, 59, 999); // Set time to end of the day
-
-    // const queryBuilder = this.repository
-    //   .createQueryBuilder("fertiliserManures")
-    //   .select(
-    //     "SUM(fertiliserManures.N * fertiliserManures.ApplicationRate)",
-    //     "totalN"
-    //   )
-    //   .where("fertiliserManures.ManagementPeriodID = :managementPeriodID", {
-    //     managementPeriodID,
-    //   })
-    //   .andWhere(
-    //     "fertiliserManures.ApplicationDate BETWEEN :fromDate AND :toDate",
-    //     { fromDate: fromDateFormatted, toDate: toDateFormatted }
-    //   )
-    //   .andWhere("fertiliserManures.Confirm = :confirm", { confirm });
-    const queryBuilder = await this.repository
+    const queryBuilder =  this.repository
       .createQueryBuilder("F")
       .select("SUM(F.N * F.ApplicationRate)", "totalN")
       .innerJoin("ManagementPeriods", "M", "F.ManagementPeriodID = M.ID")
@@ -242,7 +227,7 @@ class FertiliserManuresService extends BaseService {
             this.warningMessageRepository.create({
               ...msg,
               JoiningID:
-                msg?.WarningCodeID == WarningCodesMapper.NMAXLIMIT
+                msg?.WarningCodeID === WarningCodesMapper.NMAXLIMIT
                   ? msg.FieldID
                   : savedFertiliser.ID,
               CreatedByID: userId,
@@ -308,7 +293,6 @@ class FertiliserManuresService extends BaseService {
             ? true
             : false;
         }
-        //console.log("isSoilAnalysisHavePAndK", isSoilAnalysisHavePAndK);
         if (isSoilAnalysisHavePAndK) {
           const pkBalanceData = pkBalanceAllData.filter((pkBalance) => {
             return (
@@ -316,9 +300,6 @@ class FertiliserManuresService extends BaseService {
               pkBalance.Year === cropData[0]?.Year
             );
           });
-          // ({
-          //   where: { Year: cropData[0].Year, FieldID: fieldData[0].ID },
-          // });
           const cropPlanForNextYear = cropPlanAllData.filter((cropPlan) => {
             return (
               cropPlan.FieldID === fieldData[0]?.ID &&
@@ -350,8 +331,8 @@ class FertiliserManuresService extends BaseService {
             }
           }
           if (
-            isNextYearPlanExist == true &&
-            isNextYearFertiliserExist == true
+            isNextYearPlanExist === true &&
+            isNextYearFertiliserExist === true
           ) {
             //call shreyash's function
             this.updatingFutureRecommendations
@@ -414,9 +395,7 @@ class FertiliserManuresService extends BaseService {
                 );
 
                 const {
-                  latestSoilAnalysis,
-                  errors: soilAnalysisErrors,
-                  soilAnalysisRecords,
+                  latestSoilAnalysis
                 } = await this.HandleSoilAnalysisService.handleSoilAnalysisValidation(
                   fieldData[0].ID,
                   cropData[0]?.Year,
@@ -437,11 +416,11 @@ class FertiliserManuresService extends BaseService {
                 }
 
                 if (Object.keys(latestSoilAnalysis).length > 0) {
-                  if (latestSoilAnalysis.PotassiumIndex == null) {
+                  if (latestSoilAnalysis.PotassiumIndex === null) {
                     kBalance = 0;
                   }
 
-                  if (latestSoilAnalysis.PhosphorusIndex == null) {
+                  if (latestSoilAnalysis.PhosphorusIndex === null) {
                     pBalance = 0;
                   }
                 } else {
@@ -489,7 +468,7 @@ class FertiliserManuresService extends BaseService {
     });
   }
 
-  async getTotalP205AndK20(fertiliserData, managementPeriodId) {
+  async getTotalP205AndK20(fertiliserData, _managementPeriodId) {
     let sumOfP205 = 0;
     let sumOfK20 = 0;
 
