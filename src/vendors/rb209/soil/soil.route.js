@@ -144,7 +144,7 @@ module.exports = [
           countryId: Joi.number().integer().required(),
           nutrientId: Joi.number().integer().required(),
           nutrientValue: Joi.number().integer().required(),
-          methodologyId: Joi.number().integer().required()
+          methodologyId: Joi.number().integer().required(),
         }),
         failAction: validationFailAction,
       },
@@ -163,7 +163,15 @@ module.exports = [
       description: "Individual Nutrient Index ID - filtered by Methodology Id",
       validate: {
         params: Joi.object({
-          methodologyId: Joi.string().required(),
+          methodologyId: Joi.number()
+            .integer()
+            .required()
+            .description("The methodology id to filter on"),
+        }),
+        query: Joi.object({
+          methodologyId: Joi.number()
+            .integer()
+            .description("The nutrient id to filter on (optional)"),
         }),
         failAction: validationFailAction,
       },
