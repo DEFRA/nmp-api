@@ -625,7 +625,7 @@ class CropService extends BaseService {
     }
 
     // Construct the stored procedure to delete a single crop by its ID
-    const storedProcedure = storedProcedure.DELETE_CROP;
+    const storedProcedureDeletePrimaryCrop = storedProcedure.DELETE_CROP;
 
     // If the crop's CropOrder is 1, check for a second crop (CropOrder = 2) in the same year
     if (crop.CropOrder === 1) {
@@ -647,7 +647,9 @@ class CropService extends BaseService {
     }
 
     // Delete the primary crop
-    await transactionalManager.query(storedProcedure, [CropsID]);
+    await transactionalManager.query(storedProcedureDeletePrimaryCrop, [
+      CropsID,
+    ]);
     const newOrganicManure = null;
     await this.generateRecommendations.generateRecommendations(
       crop.FieldID,
