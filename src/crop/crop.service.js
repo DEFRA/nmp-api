@@ -341,9 +341,9 @@ class CropService extends BaseService {
   }
 
   async getOrganicAndInorganicDetails(farmId, harvestYear, request) {
-    const storedProcedure =
+    const storedProcedureGetPlansByHarvestYear =
       "EXEC dbo.spCrops_GetPlansByHarvestYear @farmId = @0, @harvestYear = @1";
-    const plans = await this.executeQuery(storedProcedure, [
+    const plans = await this.executeQuery(storedProcedureGetPlansByHarvestYear, [
       farmId,
       harvestYear,
     ]);
