@@ -579,15 +579,9 @@ class FertiliserManuresService extends BaseService {
           userId,
         );
 
-        const isCurrentOrganicManure = false,
-          isCurrentFertiliser = true;
-        this.ProcessFutureManuresForWarnings.ProcessFutureManures(
+        this.ProcessFutureManuresForWarnings.processWarningsByField(
           crop.FieldID,
-          fertiliserManure.ApplicationDate,
-          isCurrentOrganicManure,
-          isCurrentFertiliser,
-          fertiliserManure.ID,
-          userId,
+          userId
         );
       }
       return { FertiliserManure: updatedFertilisers };
