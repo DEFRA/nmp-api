@@ -222,7 +222,7 @@ class FertiliserManuresService extends BaseService {
     const fieldAllData = await this.fieldRepository.find();
     const fertiliserAllData = await this.repository.find();
     return await AppDataSource.transaction(async (transactionalManager) => {
-      let fertiliserManures = [];
+      const fertiliserManures = [];
       for (const fertiliser of fertiliserManureData) {
         const fertiliserManure = fertiliser.FertiliserManure;
         // Save fertiliser first

@@ -141,7 +141,7 @@ class FertiliserManuresController {
 
     try {
       // Loop through each fertliserManureIds and call the service method to delete it
-      for (let fertliserManureId of fertliserManureIds) {
+      for (const fertliserManureId of fertliserManureIds) {
         const result =
           await this.#fertiliserManuresService.deleteFertiliserManure(
             fertliserManureId,
