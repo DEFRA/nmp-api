@@ -53,10 +53,7 @@ const {
   GenerateRecommendations,
 } = require("../shared/generate-recomendations-service");
 
-const {
-  PscIndexEntity,
-} = require("../db/entity/psc-index.entity");
-
+const { PscIndexEntity } = require("../db/entity/psc-index.entity");
 
 class FieldService extends BaseService {
   constructor() {
@@ -108,9 +105,7 @@ class FieldService extends BaseService {
     this.FarmService = new FarmService();
     this.ProcessFutureManuresForWarnings =
       new ProcessFutureManuresForWarnings();
-       this.pscIndexRepository=AppDataSource.getRepository(
-      PscIndexEntity,
-    );
+    this.pscIndexRepository = AppDataSource.getRepository(PscIndexEntity);
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -1055,22 +1050,22 @@ class FieldService extends BaseService {
               for (const manure of organicManures) {
                 const manureTypeName = await this.getManureTypeName(
                   manure.ManureTypeID,
-                  allManureData
+                  allManureData,
                 );
                 const applicationMethodName =
                   await this.getApplicationMethodName(
                     manure.ApplicationMethodID,
-                    allApplicationMethodsData
+                    allApplicationMethodsData,
                   );
                 const incorporationMethodName =
                   await this.getIncorporationMethodName(
                     manure.IncorporationMethodID,
-                    allIncorporationMethodsData
+                    allIncorporationMethodsData,
                   );
                 const incorporationDelayName =
                   await this.getIncorporationDelayName(
                     manure.IncorporationDelayID,
-                    allIncorporationDelaysData
+                    allIncorporationDelaysData,
                   );
 
                 organicManuresWithNames.push({
@@ -1147,23 +1142,20 @@ class FieldService extends BaseService {
                       previousAppliedLime || 0;
 
                     Object.keys(r).forEach((recDataKey) => {
-                      if (recDataKey.startsWith("Crop_")){
+                      if (recDataKey.startsWith("Crop_")) {
                         data.Crop[recDataKey.slice(5)] = r[recDataKey];
-                      } 
-                      else if (recDataKey.startsWith("Recommendation_")){
+                      } else if (recDataKey.startsWith("Recommendation_")) {
                         data.Recommendation[recDataKey.slice(15)] =
                           r[recDataKey];
-                      }   
-                      else if (recDataKey.startsWith("ManagementPeriod_")){
+                      } else if (recDataKey.startsWith("ManagementPeriod_")) {
                         data.ManagementPeriod[recDataKey.slice(17)] =
                           r[recDataKey];
-                      }   
-                      else if (recDataKey.startsWith("FertiliserManure_")){
+                      } else if (recDataKey.startsWith("FertiliserManure_")) {
                         data.FertiliserManure[recDataKey.slice(17)] =
                           r[recDataKey];
-                      } else{
-                        console.log("no assignment")
-                      }  
+                      } else {
+                        console.log("no assignment");
+                      }
                     });
 
                     mergedRecommendation = {
@@ -1237,18 +1229,17 @@ class FieldService extends BaseService {
         );
         const soilTypeName = soil?.soilType;
         // Get SulphurDeficient from soilAnalysis
-       const sulphurDeficient = soilAnalysis?.SulphurDeficient ?? null;
-       let pscIndex=null;
-        if(farm.CountryID === CountryMapper.SCOTLAND)
-        {
-          pscIndex=await this.pscIndexRepository.findOne({
-          where: { ID: field.PscIndexID},
-        });
-      }
-        
+        const sulphurDeficient = soilAnalysis?.SulphurDeficient ?? null;
+        let pscIndex = null;
+        if (farm.CountryID === CountryMapper.SCOTLAND) {
+          pscIndex = await this.pscIndexRepository.findOne({
+            where: { ID: field.PscIndexID },
+          });
+        }
+
         // Create soilDetails object
         const soilDetails = {
-          PscIndexName :pscIndex?.Name ?? null,
+          PscIndexName: pscIndex?.Name ?? null,
           SoilTypeId: field.SoilTypeID,
           SoilTypeName: soilTypeName,
           PotashReleasingClay: field.SoilReleasingClay,
@@ -1631,7 +1622,7 @@ class FieldService extends BaseService {
     establishment,
   ) {
     try {
-      const newSward = establishment == 0 || null ? false : true;
+      const newSward = !(establishment === 0 || null);
       let defoliationSequenceDescription = null;
       const defoliationSequenceList = await this.rB209GrassService.getData(
         `Grass/DefoliationSequence/${swardManagementId}/${PotentialCut}/${newSward}`,
