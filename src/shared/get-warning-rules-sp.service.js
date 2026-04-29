@@ -155,7 +155,7 @@ class GetWarningRulesAndSpService {
       {
         sql: "EXEC spWarning_CheckScotlandHighRANPreClosedPeriod @OrganicManureID=@0",
         predicate: predicates.closedPeriodScotlandHighRanFeb,
-        key: WarningKeyMapper.HIGHRANLIMITTILFEB,
+        key: WarningKeyMapper.SLURRYMAXRATE,
         code: WarningCodesMapper.CLOSEDPERIODORGANICMANURE,
         join: manure,
       },
@@ -178,7 +178,7 @@ class GetWarningRulesAndSpService {
         predicate: predicates.scotlandHighRanInJulyMonth,
         key: WarningKeyMapper.RANMANUREJULYTOSEP,
         code: WarningCodesMapper.CLOSEDPERIODORGANICMANURE,
-        join: manure
+        join: manure,
       },
     ];
   }

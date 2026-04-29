@@ -51,6 +51,7 @@ const { ARABLE } = require("../constants/rb209-endpoints-mapper");
 const { GenerateRecommendations } = require("../shared/generate-recomendations-service");
 const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
 const { CountryEntity } = require("../db/entity/country.entity");
+const { storedProcedure } = require("../constants/stored-procedures");
 class CropService extends BaseService {
   constructor() {
     super(CropEntity);
@@ -197,7 +198,7 @@ class CropService extends BaseService {
 
       if (!linking) {
         const storedProcedureSecondCrop =
-          "EXEC dbo.spCrops_DeleteCrops @CropsID = @0";
+          storedProcedure.DELETE_CROP;
         await AppDataSource.query(storedProcedureSecondCrop, [secondCrop.ID]);
       }
     }
@@ -232,7 +233,7 @@ class CropService extends BaseService {
           Year,
           FieldName,
           EncryptedCounter,
-          FieldID: cropFieldID,
+          FieldID,
           ...updateData
         } = updatedCropData;
 
@@ -242,7 +243,7 @@ class CropService extends BaseService {
           {
             ...updateData,
             ModifiedByID: userId,
-            ModifiedOn: new Date(),
+            ModifiedOn: new Date()
           },
         );
 
@@ -340,9 +341,9 @@ class CropService extends BaseService {
   }
 
   async getOrganicAndInorganicDetails(farmId, harvestYear, request) {
-    const storedProcedure =
+    const storedProcedureGetPlansByHarvestYear =
       "EXEC dbo.spCrops_GetPlansByHarvestYear @farmId = @0, @harvestYear = @1";
-    const plans = await this.executeQuery(storedProcedure, [
+    const plans = await this.executeQuery(storedProcedureGetPlansByHarvestYear, [
       farmId,
       harvestYear,
     ]);
@@ -624,7 +625,7 @@ class CropService extends BaseService {
     }
 
     // Construct the stored procedure to delete a single crop by its ID
-    const storedProcedure = "EXEC dbo.spCrops_DeleteCrops @CropsID = @0";
+    const storedProcedureDeletePrimaryCrop = storedProcedure.DELETE_CROP;
 
     // If the crop's CropOrder is 1, check for a second crop (CropOrder = 2) in the same year
     if (crop.CropOrder === 1) {
@@ -638,7 +639,7 @@ class CropService extends BaseService {
 
       if (secondCrop) {
         const storedProcedureSecondCrop =
-          "EXEC dbo.spCrops_DeleteCrops @CropsID = @0";
+          storedProcedure.DELETE_CROP;
         await transactionalManager.query(storedProcedureSecondCrop, [
           secondCrop.ID,
         ]);
@@ -646,7 +647,9 @@ class CropService extends BaseService {
     }
 
     // Delete the primary crop
-    await transactionalManager.query(storedProcedure, [CropsID]);
+    await transactionalManager.query(storedProcedureDeletePrimaryCrop, [
+      CropsID,
+    ]);
     const newOrganicManure = null;
     await this.generateRecommendations.generateRecommendations(
       crop.FieldID,
