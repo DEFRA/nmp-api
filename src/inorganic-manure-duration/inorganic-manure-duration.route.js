@@ -3,6 +3,7 @@ const {
   InorganicManureDurationController,
 } = require("./inorganic-manure-duration.controller");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 const getController = (request, h) =>
   new InorganicManureDurationController(request, h);
@@ -32,19 +33,7 @@ module.exports = [
             .required()
             .description("Inorganic Manure Duration ID"),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
       handler: async (request, h) => {
         return getController(request, h).getInorganicManureDurationById();

@@ -13,9 +13,6 @@ class HealthCheckController {
   async checkAPIHealth() {
     try {
       const dbHealth = await this.#healthCheckService.checkDatabaseHealth();
-      // const rb209Health = await this.#healthCheckService.checkRB209Health();
-      // const addressLookupHealth =
-      //   await this.#healthCheckService.checkAddressLookupHealth();
       return this.#h.response({
         nmp_api: dbHealth,
         // rb209_api: rb209Health,

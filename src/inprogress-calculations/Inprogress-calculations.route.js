@@ -1,7 +1,8 @@
 const Joi = require("joi");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { InprogressCalculationsController } = require("./inprogress-calculations.controller");
-
+const { validationFailAction } = require("../shared/validateFailSafeAction");
+const minimumYear = 1900;
 module.exports = [
   {
     method: "GET",
@@ -16,23 +17,11 @@ module.exports = [
         query: Joi.object({
           year: Joi.number()
             .integer()
-            .min(1900)
+            .min(minimumYear)
             .max(new Date().getFullYear())
             .required(), 
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {

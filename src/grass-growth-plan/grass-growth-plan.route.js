@@ -1,6 +1,7 @@
 const Joi = require("joi");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { GrassGrowthController } = require("./grass-growth-plan.controller");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 const getController = (request, h) => new GrassGrowthController(request, h);
 
@@ -22,17 +23,7 @@ module.exports = [
             .required()
             .description("Array of field IDs, e.g., [0, 1, 2, 3]"),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: { error: err },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },

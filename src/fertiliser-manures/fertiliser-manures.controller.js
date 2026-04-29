@@ -78,24 +78,16 @@ class FertiliserManuresController {
   }
 
   async updateFertiliser() {
-    const { fertiliserId } = this.#request.params;
     const updatedFertiliserManureData = this.#request.payload.FertiliserManure; // Extract the array from payload
     const userId = this.#request.userId;
-
-    console.log("updatedFertiliserManureData", updatedFertiliserManureData);
-
     try {
-      // const results = []; // Array to store the results for each manure item
-      // for (const manure of updatedFertiliserManureData) {
       // Process each manure object
       const data = await this.#fertiliserManuresService.updateFertiliser(
         updatedFertiliserManureData, // Pass the current manure object
-        userId, // User ID
-        // parseInt(fertiliserId), // Fertiliser ID
-        this.#request, // Original request
+        userId,
+        this.#request 
       );
-      // results.push(data); // Store result of each update
-      // }
+    
 
       return this.#h.response({ data }); // Respond with the aggregated results
     } catch (error) {
