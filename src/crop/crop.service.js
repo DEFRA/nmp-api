@@ -1040,6 +1040,65 @@ class CropService extends BaseService {
     };
   }
 
+  async copyPlanOhercrop(requiredParametres) {
+    const {crop,userId,transactionalManager,managementPeriods,harvestYear,isOrganic,isFertiliser,field,request,cropPlanOfNextYear,pkBalanceData,isSoilAnalysisHavePAndK,Recommendations} = requiredParametres
+          await this.savedDefault(
+            crop,
+            userId,
+            transactionalManager,
+            managementPeriods,
+            harvestYear,
+            isOrganic,
+            isFertiliser
+          );
+         
+          const otherRecommendations= await this.generateRecommendations.generateRecommendations(
+            field.ID,
+            harvestYear,
+            newOrganicManure,
+            transactionalManager,
+            request,
+            userId
+          );
+          if (isSoilAnalysisHavePAndK && cropPlanOfNextYear.length === 0) {
+                const newPKBalance = {
+                  ...pkBalanceData,
+                  FieldID: crop.FieldID,
+                  ID: null, // Make it a new insert
+                  Year: harvestYear, // New year
+                  CreatedByID: userId,
+                  CreatedOn: new Date(),
+                };
+               await transactionalManager.save(PKBalanceEntity, newPKBalance);
+            } else if (isSoilAnalysisHavePAndK) {
+              //call UpdateRecommendation function
+              this.updatingFutureRecommendations
+                .updateRecommendationsForField(
+                  crop.FieldID,
+                  cropPlanOfNextYear.Year,
+                  request,
+                  userId,
+                )
+                .then((res) => {
+                    console.log(res);
+                })
+                .catch((error) => {
+                  console.error(
+                    "Error updating recommendation and organic manure:",
+                    error,
+                  );
+                });
+            } else {
+                console.log(
+                  "Skipping PK balance and recommendation update: No soil analysis P & K available",
+                );
+            }
+           Recommendations.push({
+             Recommendation: otherRecommendations
+           });
+        
+  }
+
   async copyPlan(body, userId, request) {
     const { farmID, harvestYear, copyYear, isOrganic, isFertiliser } = body;
     let savedCrop;
@@ -1124,60 +1183,7 @@ class CropService extends BaseService {
 
         const newOrganicManure = null;
         if (crop.CropTypeID === CropTypeMapper.OTHER) {
-          await this.savedDefault(
-            crop,
-            userId,
-            transactionalManager,
-            managementPeriods,
-            harvestYear,
-            isOrganic,
-            isFertiliser,
-          );
-         
-          const otherRecommendations= await this.generateRecommendations.generateRecommendations(
-            field.ID,
-            harvestYear,
-            newOrganicManure,
-            transactionalManager,
-            request,
-            userId
-          );
-          if (isSoilAnalysisHavePAndK && cropPlanOfNextYear.length === 0) {
-                const newPKBalance = {
-                  ...pkBalanceData,
-                  FieldID: crop.FieldID,
-                  ID: null, // Make it a new insert
-                  Year: harvestYear, // New year
-                  CreatedByID: userId,
-                  CreatedOn: new Date(),
-                };
-               await transactionalManager.save(PKBalanceEntity, newPKBalance);
-            } else if (isSoilAnalysisHavePAndK) {
-              //call UpdateRecommendation function
-              this.updatingFutureRecommendations
-                .updateRecommendationsForField(
-                  crop.FieldID,
-                  cropPlanOfNextYear.Year,
-                  request,
-                  userId,
-                )
-                .then((res) => {
-                    console.log(res);
-                })
-                .catch((error) => {
-                  console.error(
-                    "Error updating recommendation and organic manure:",
-                    error,
-                  );
-                });
-            } else {
-                console.log(
-                  "Skipping PK balance and recommendation update: No soil analysis P & K available",
-                );
-            }
-           Recommendations.push({
-             Recommendation: otherRecommendations
-           });
+         await this.copyPlanOhercrop( {crop,userId,transactionalManager,managementPeriods,harvestYear,isOrganic,isFertiliser,field,request,cropPlanOfNextYear,pkBalanceData,isSoilAnalysisHavePAndK,Recommendations})
          continue;
         }
         const oldToNewManagementPeriodMap = {};
