@@ -3,6 +3,7 @@ const {
   formatErrorResponse,
 } = require("../../../interceptor/responseFormatter");
 const { RB209GrassController } = require("./grass.controller");
+const { validationFailAction } = require("../../../shared/validateFailSafeAction");
 
 module.exports = [
   // {
@@ -139,19 +140,7 @@ module.exports = [
         params: Joi.object({
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -171,19 +160,7 @@ module.exports = [
             .required()
             .description("The Country ID to filter on"),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -203,19 +180,7 @@ module.exports = [
             .required()
             .description("The Grass History ID"),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -233,19 +198,7 @@ module.exports = [
         params: Joi.object({
           seasonId: Joi.string().required().description("The Season ID"),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -263,19 +216,7 @@ module.exports = [
         params: Joi.object({
           countryId: Joi.string().required().description("The Country ID"),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -297,19 +238,7 @@ module.exports = [
             .required()
             .description("The Grass Growth Class ID to filter on"),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -336,19 +265,7 @@ module.exports = [
           altitude: Joi.number().required(),
           chalk: Joi.boolean().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -408,19 +325,7 @@ module.exports = [
             .required()
             .description("The Sward Management Id of the field."),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -442,19 +347,7 @@ module.exports = [
             .required()
             .description("The Sward Management Id of the field."),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -470,19 +363,7 @@ module.exports = [
       description:
         "The list of different sward managements available for grass fields.",
       validate: {
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -504,19 +385,7 @@ module.exports = [
             .required()
             .description("The Sward Type Id of the field."),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -538,19 +407,7 @@ module.exports = [
             .required()
             .description("The Sward Type Id of the field."),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -566,19 +423,7 @@ module.exports = [
       description:
         "The list of different sward types available for grass fields.",
       validate: {
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -638,19 +483,7 @@ module.exports = [
             .required()
             .description("The ID of the grass growth class."),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },

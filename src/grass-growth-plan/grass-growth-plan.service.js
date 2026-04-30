@@ -5,6 +5,7 @@ const RB209GrasslandService = require("../vendors/rb209/grassland/grassland.serv
 const MannerRainfallPostApplicationService = require("../vendors/manner/rainfall-post-application/rainfall-post-application.service");
 const { FarmEntity } = require("../db/entity/farm.entity");
 const RB209GrassService = require("../vendors/rb209/grass/grass.service");
+const { FieldAboveOrBelowSeaLevelMapper } = require("../constants/field-is-above-sea-level");
 
 class GrassGrowthService extends BaseService {
   constructor() {
@@ -51,7 +52,10 @@ class GrassGrowthService extends BaseService {
       }
 
       // Determine altitude based on IsAbove300SeaLevel
-      const altitude = field.IsAbove300SeaLevel === true ? 350 : 100; 
+      const altitude =
+        field.IsAbove300SeaLevel === true
+          ? FieldAboveOrBelowSeaLevelMapper.ABOVETHREEHUNDRED
+          : FieldAboveOrBelowSeaLevelMapper.BELOWTHREEHUNDRED; 
 
       // Ensure SoilOverChalk is false if it's null
       const soilOverChalk = field.SoilOverChalk ?? false;

@@ -32,27 +32,60 @@ const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const {
   FertiliserManuresEntity,
 } = require("../db/entity/fertiliser-manures.entity");
-const { SoilTypeSoilTextureEntity } = require("../db/entity/soil-type-soil-texture.entity");
+const {
+  SoilTypeSoilTextureEntity,
+} = require("../db/entity/soil-type-soil-texture.entity");
 const { CountryEntity } = require("../db/entity/country.entity");
 const RB209SoilService = require("../vendors/rb209/soil/soil.service");
-const { GrassGrowthService } = require("../grass-growth-plan/grass-growth-plan.service");
-const { ExcessRainfallsEntity } = require("../db/entity/excess-rainfalls.entity");
+const {
+  GrassGrowthService,
+} = require("../grass-growth-plan/grass-growth-plan.service");
+const {
+  ExcessRainfallsEntity,
+} = require("../db/entity/excess-rainfalls.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
-const { CalculateMannerOutputService } = require("../shared/calculate-manner-output-service");
-const { CalculateGrassHistoryAndPreviousGrass } = require("../shared/calculate-previous-grass-id.service");
-const { CalculateTotalAvailableNForNextYear } = require("../shared/calculate-next-year-available-n");
-const { CalculateNextDefoliationService } = require("../shared/calculate-next-defoliation-totalN");
-const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-other");
-const { WarningMessagesEntity } = require("../db/entity/warning-message.entity");
-const { CreateOrUpdateWarningMessage } = require("../shared/create-update-warning-messages.service");
+const {
+  CalculateMannerOutputService,
+} = require("../shared/calculate-manner-output-service");
+const {
+  CalculateGrassHistoryAndPreviousGrass,
+} = require("../shared/calculate-previous-grass-id.service");
+const {
+  CalculateTotalAvailableNForNextYear,
+} = require("../shared/calculate-next-year-available-n");
+const {
+  CalculateNextDefoliationService,
+} = require("../shared/calculate-next-defoliation-totalN");
+const {
+  CalculatePKBalanceOther,
+} = require("../shared/calculate-pk-balance-other");
+const {
+  WarningMessagesEntity,
+} = require("../db/entity/warning-message.entity");
+const {
+  CreateOrUpdateWarningMessage,
+} = require("../shared/create-update-warning-messages.service");
 const { WarningCodesMapper } = require("../constants/warning-codes-mapper");
-const { CalculatePreviousCropService } = require("../shared/previous-year-crop-service");
+const {
+  CalculatePreviousCropService,
+} = require("../shared/previous-year-crop-service");
 const { ManureTypeMapper } = require("../constants/manure-type-mapper");
 const { normalizeDateWithTime } = require("../shared/dataValidate");
 const { JOINS } = require("../constants/joins-mapper");
-const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
-const { GenerateRecommendations } = require("../shared/generate-recomendations-service");
-const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
+const {
+  ProcessFutureManuresForWarnings,
+} = require("../shared/process-future-warning-calculations-service");
+const {
+  GenerateRecommendations,
+} = require("../shared/generate-recomendations-service");
+const {
+  UpdatingFutureRecommendations,
+} = require("../shared/updating-future-recommendations-service");
+const MANAGEMENT_PERIOD_TO_CROP_JOIN = "M.CropID = C.ID";
+const CROP_TO_FIELD_CONDITION = "C.FieldID = :fieldId";
+const API_ENDPOINTS = {
+  MANURE_TYPES: "/manure-types",
+};
 class OrganicManureService extends BaseService {
   constructor() {
     super(OrganicManureEntity);
@@ -94,9 +127,6 @@ class OrganicManureService extends BaseService {
     this.fertiliserRepository = AppDataSource.getRepository(
       FertiliserManuresEntity,
     );
-    this.soilTypeTextureRepository = AppDataSource.getRepository(
-      SoilTypeSoilTextureEntity,
-    );
     this.countryRepository = AppDataSource.getRepository(CountryEntity);
     this.grassGrowthClass = new GrassGrowthService();
     this.excessRainfallRepository = AppDataSource.getRepository(
@@ -110,6 +140,8 @@ class OrganicManureService extends BaseService {
     this.generateRecommendations = new GenerateRecommendations();
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
   }
+
+
 
   async getTotalNitrogenByManagementPeriod(
     managementPeriodID,
@@ -207,21 +239,9 @@ class OrganicManureService extends BaseService {
       SECOND: 59,
       MILLISECOND: 999,
     };
-    const fromDateFormatted = new Date(fromDate);
-    fromDateFormatted.setHours(
-      START_OF_DAY.HOUR,
-      START_OF_DAY.MINUTE,
-      START_OF_DAY.SECOND,
-      START_OF_DAY.MILLISECOND,
-    );
-
-    const toDateFormatted = new Date(toDate);
-    toDateFormatted.setHours(
-      END_OF_DAY.HOUR,
-      END_OF_DAY.MINUTE,
-      END_OF_DAY.SECOND,
-      END_OF_DAY.MILLISECOND,
-    );
+    
+       const fromDateFormatted = normalizeDateWithTime(fromDate, START_OF_DAY);
+       const toDateFormatted = normalizeDateWithTime(toDate, END_OF_DAY);
 
     const query = this.repository
       .createQueryBuilder("O") // O = OrganicManures
@@ -231,8 +251,8 @@ class OrganicManureService extends BaseService {
         "M",
         JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD,
       )
-      .innerJoin("Crops", "C", "M.CropID = C.ID")
-      .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
+      .innerJoin("Crops", "C", MANAGEMENT_PERIOD_TO_CROP_JOIN)
+      .where(CROP_TO_FIELD_CONDITION, { fieldId }) // note lowercase 'fieldId'
       .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
         fromDate: fromDateFormatted,
         toDate: toDateFormatted,
@@ -272,8 +292,8 @@ class OrganicManureService extends BaseService {
         "M",
         JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD,
       )
-      .innerJoin("Crops", "C", "M.CropID = C.ID")
-      .where("C.FieldID = :fieldId", { fieldId }) // note lowercase 'fieldId'
+      .innerJoin("Crops", "C", MANAGEMENT_PERIOD_TO_CROP_JOIN)
+      .where(CROP_TO_FIELD_CONDITION, { fieldId }) // note lowercase 'fieldId'
       .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
         fromDate: fromDateFormatted,
         toDate: toDateFormatted,
@@ -358,8 +378,6 @@ class OrganicManureService extends BaseService {
     return data?.ID; // Return only the ID field
   }
 
- 
-
   async getPKBalanceData(field, year, allPKBalanceData) {
     try {
       // Find the data by filtering allPKBalanceData
@@ -373,7 +391,6 @@ class OrganicManureService extends BaseService {
       throw error; // Re-throw the error or handle it as needed
     }
   }
- 
 
   async checkIfManagementPeriodExistsInOrganicManure(
     ManagementPeriodID,
@@ -389,7 +406,6 @@ class OrganicManureService extends BaseService {
       return false;
     }
   }
-
 
   async saveOrganicManureForOtherCropType(
     organicManureData,
@@ -409,7 +425,7 @@ class OrganicManureService extends BaseService {
     );
     organicManures.push(savedOrganicManure);
   }
- 
+
   async createOrganicManuresWithFarmManureType(request, body, userId) {
     return await AppDataSource.transaction(async (transactionalManager) => {
       let savedFarmManureType;
@@ -443,26 +459,26 @@ class OrganicManureService extends BaseService {
         const endOfDrainageDate = endOfDrainageDateObj
           .toISOString()
           .split("T")[0];
-     
+
         const managementPeriodData =
           await this.managementPeriodRepository.findOneBy({
             ID: OrganicManure.ManagementPeriodID,
           });
 
         const cropData = await this.cropRepository.findOneBy({
-          ID: managementPeriodData.CropID
+          ID: managementPeriodData.CropID,
         });
         const fieldData = await this.fieldRepository.findOneBy({
-          ID: cropData.FieldID
+          ID: cropData.FieldID,
         });
         const farmData = await this.farmRepository.findOneBy({
-          ID: organicManureData.FarmID
+          ID: organicManureData.FarmID,
         });
-        
+
         const soilAnalsisData = soilAnalysisAllData?.filter((soilAnalyses) => {
           return soilAnalyses.FieldID === cropData.FieldID;
         });
-       
+
         let isSoilAnalysisHavePAndK = false;
         if (soilAnalsisData) {
           isSoilAnalysisHavePAndK = soilAnalsisData.some(
@@ -473,7 +489,8 @@ class OrganicManureService extends BaseService {
             : false;
         }
         let mannerOutputs = null;
-        mannerOutputs = await this.CalculateMannerOutput.calculateMannerOutputForOrganicManure(
+        mannerOutputs =
+          await this.CalculateMannerOutput.calculateMannerOutputForOrganicManure(
             cropData,
             OrganicManure,
             farmData,
@@ -493,7 +510,6 @@ class OrganicManureService extends BaseService {
               cropPlan.FieldID === fieldData.ID && cropPlan.Year > cropData.Year
             );
           });
-
 
           if (cropPlanForNextYear.length > 0) {
             isNextYearPlanExist = true;
@@ -553,18 +569,18 @@ class OrganicManureService extends BaseService {
             mannerOutputs,
             transactionalManager,
             userId,
-            organicManures
+            organicManures,
           );
 
-             await this.generateRecommendations.generateRecommendations(
-               fieldData.ID,
-               cropData.Year,
-               OrganicManure,
-               transactionalManager,
-               request,
-               userId
-             );
-          
+          await this.generateRecommendations.generateRecommendations(
+            fieldData.ID,
+            cropData.Year,
+            OrganicManure,
+            transactionalManager,
+            request,
+            userId,
+          );
+
           const nextAvailableCrop = await this.cropRepository.findOne({
             where: {
               FieldID: cropData.FieldID,
@@ -582,8 +598,6 @@ class OrganicManureService extends BaseService {
             );
           }
         } else {
-        
-
           const savedOrganicManure = await transactionalManager.save(
             OrganicManureEntity,
             this.repository.create({
@@ -617,32 +631,30 @@ class OrganicManureService extends BaseService {
 
           organicManures.push(savedOrganicManure);
           const newOrganicManure = null;
-         await this.generateRecommendations.generateRecommendations(
-           fieldData.ID,
-           cropData.Year,
-           newOrganicManure,
-           transactionalManager,
-           request,
-           userId,
-         );
+          await this.generateRecommendations.generateRecommendations(
+            fieldData.ID,
+            cropData.Year,
+            newOrganicManure,
+            transactionalManager,
+            request,
+            userId,
+          );
 
-        
-            if (
-              isSoilAnalysisHavePAndK && (
-                isNextYearPlanExist  ||
-                  isNextYearOrganicManureExist  ||
-                  isNextYearFertiliserExist 
-              )
-            ) {
-              // UpdateRecommendation
-              this.updatingFutureRecommendations.updateRecommendationsForField(
-                  cropData?.FieldID,
-                  cropData?.Year,
-                  request,
-                  userId,
-                )
-            } 
-          
+          if (
+            isSoilAnalysisHavePAndK &&
+            (isNextYearPlanExist ||
+              isNextYearOrganicManureExist ||
+              isNextYearFertiliserExist)
+          ) {
+            // UpdateRecommendation
+            this.updatingFutureRecommendations.updateRecommendationsForField(
+              cropData?.FieldID,
+              cropData?.Year,
+              request,
+              userId,
+            );
+          }
+
           const isCurrentOrganicManure = true,
             isCurrentFertiliser = false;
           this.ProcessFutureManuresForWarnings.ProcessFutureManures(
@@ -729,7 +741,7 @@ class OrganicManureService extends BaseService {
     try {
       // Fetch all manure types from the API
       const allManureTypes = await this.MannerManureTypesService.getData(
-        "/manure-types",
+        API_ENDPOINTS.MANURE_TYPES,
         request,
       );
 
@@ -793,6 +805,54 @@ class OrganicManureService extends BaseService {
     }
   }
 
+  async checkLivestockManureExists(
+    cropId,
+    dateFrom,
+    dateTo,
+    organicManureID,
+    request,
+  ) {
+    try {
+      const allManureTypes = await this.MannerManureTypesService.getData("/manure-types", request,);
+      if (!allManureTypes?.data || allManureTypes.data.length === 0) {
+        console.error("No manure types returned from the Manner API");
+      }
+      const livestockManureTypes = allManureTypes.data.filter((manure) => manure.manureGroupID === 1);
+      const manureTypeIds = livestockManureTypes.map((manure) => manure.id);
+      if (!manureTypeIds || manureTypeIds.length === 0) {
+        return false; // No valid manure types found
+      }
+
+      const query = this.repository
+  .createQueryBuilder("organicManure")
+  .where("organicManure.ManureTypeID IN (:...manureTypeIds)", {
+    manureTypeIds,
+  })
+  .innerJoin("ManagementPeriods", "M", "M.ID = organicManure.ManagementPeriodID")
+  .andWhere("M.CropID = :cropId", { cropId })
+  .andWhere(
+    "organicManure.ApplicationDate BETWEEN :dateFrom AND :dateTo",
+    {
+      dateFrom: new Date(dateFrom),
+      dateTo: new Date(dateTo),
+    }
+  );
+
+if (organicManureID != null) {
+  query.andWhere("organicManure.ID != :organicManureID", {
+    organicManureID,
+  });
+}
+const manureTypeExists = await query.getCount();
+      return manureTypeExists > 0;
+    } catch (error) {
+      console.error("Error checking for manure existence:", error.message);
+      throw new Error(
+        "Failed to check manure existence due to an internal error",
+      );
+    }
+  }
+
   async getP205AndK20fromfertiliser(managementPeriodId) {
     let sumOfP205 = 0;
     let sumOfK20 = 0;
@@ -850,14 +910,14 @@ class OrganicManureService extends BaseService {
         const storedProcedure =
           "EXEC [spOrganicManures_DeleteOrganicManures] @OrganicManureID = @0";
         await transactionalManager.query(storedProcedure, [organicManureId]);
-       const newOrganicManure = null;
+        const newOrganicManure = null;
         await this.generateRecommendations.generateRecommendations(
           crop.FieldID,
           crop.Year,
-          newOrganicManure, 
+          newOrganicManure,
           transactionalManager,
           request,
-          userId
+          userId,
         );
         // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
         const nextAvailableCrop = await this.cropRepository.findOne({
@@ -871,16 +931,16 @@ class OrganicManureService extends BaseService {
         });
         if (nextAvailableCrop) {
           this.updatingFutureRecommendations.updateRecommendationsForField(
-              crop.FieldID,
-              nextAvailableCrop.Year,
-              request,
-              userId
-            )
-        }
-          this.ProcessFutureManuresForWarnings.processWarningsByCrop(
-            crop.ID,
-            userId
+            crop.FieldID,
+            nextAvailableCrop.Year,
+            request,
+            userId,
           );
+        }
+        this.ProcessFutureManuresForWarnings.processWarningsByCrop(
+          crop.ID,
+          userId,
+        );
 
         return { affectedRows: 1 }; // Success response
       } catch (error) {
@@ -889,7 +949,6 @@ class OrganicManureService extends BaseService {
       }
     });
   }
- 
 
   async updateOrganicManure(updatedOrganicManureData, userId, request) {
     return await AppDataSource.transaction(async (transactionalManager) => {
@@ -1020,14 +1079,14 @@ class OrganicManureService extends BaseService {
             );
           }
         }
-        const newOrganicManure= null
+        const newOrganicManure = null;
         await this.generateRecommendations.generateRecommendations(
           crop.FieldID,
           crop.Year,
           newOrganicManure,
           transactionalManager,
           request,
-          userId
+          userId,
         );
 
         const nextAvailableCrop = await this.cropRepository.findOne({
@@ -1039,7 +1098,8 @@ class OrganicManureService extends BaseService {
         });
 
         if (nextAvailableCrop) {
-          this.updatingFutureRecommendations.updateRecommendationsForField(
+          this.updatingFutureRecommendations
+            .updateRecommendationsForField(
               crop.FieldID,
               nextAvailableCrop.Year,
               request,
@@ -1147,5 +1207,177 @@ class OrganicManureService extends BaseService {
     const organicResult = await organicManuresResult.getRawOne();
     return organicResult.totalN;
   }
+
+  async getClosedPeriodByID(soilTypeId, queries) {
+    const {
+      fieldType,
+      harvestYear,
+      sowingDate,
+      countryId,
+      cropGroupId,
+      cropTypeId,
+      isPerennial,
+    } = queries;
+
+    return AppDataSource.transaction(async (transactionalManager) => {
+      try {
+        const storedProcedure = `
+        EXEC [spWarning_GetOrganicManureClosedPeriod]
+        @SoilTypeId = @0,
+        @FieldType = @1,
+        @HarvestYear = @2,
+        @SowingDate = @3,
+        @CountryId = @4,
+        @CropGroupId = @5,
+        @CropTypeId = @6,
+        @IsPerennial = @7
+      `;
+
+        const result = await transactionalManager.query(storedProcedure, [
+          soilTypeId,
+          fieldType,
+          harvestYear,
+          sowingDate,
+          countryId,
+          cropGroupId,
+          cropTypeId,
+          isPerennial,
+        ]);
+
+        return result[0];
+      } catch (error) {
+        console.error("Error fetching organic manure closed period:", error);
+        throw error;
+      }
+    });
+  }
+
+  async getTotalApplicationRate(
+    cropId,
+    fromDate,
+    toDate,
+    organicManureID,
+    isPoultry,
+    request,
+  ) {
+    const START_OF_DAY = {
+      HOUR: 0,
+      MINUTE: 0,
+      SECOND: 0,
+      MILLISECOND: 0,
+    };
+
+    const END_OF_DAY = {
+      HOUR: 23,
+      MINUTE: 59,
+      SECOND: 59,
+      MILLISECOND: 999,
+    };
+
+  
+       const fromDateFormatted = normalizeDateWithTime(fromDate, START_OF_DAY);
+       const toDateFormatted = normalizeDateWithTime(toDate, END_OF_DAY);
+
+    // Fetch all manure types from the API
+    const allManureTypes = await this.MannerManureTypesService.getData(
+      API_ENDPOINTS.MANURE_TYPES,
+      request,
+    );
+    const highRanManureTypes = allManureTypes.data.filter(
+      (manure) => manure.highReadilyAvailableNitrogen === true,
+    );
+
+    let manureTypeIds = highRanManureTypes.map((manure) => manure.id);
+
+    // Apply poultry logic
+    if (isPoultry) {
+      manureTypeIds = [ManureTypeMapper.PoultryManure]; 
+    } else {
+      manureTypeIds = manureTypeIds.filter(
+        (id) => id !== ManureTypeMapper.PoultryManure
+      ); // Exclude poultry
+    }
+
+    const query = this.repository
+      .createQueryBuilder("O")
+      .select("SUM(COALESCE(O.ApplicationRate, 0))", "totalApplicationRate")
+      .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
+      .where("M.CropID = :cropId", { cropId })
+      .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
+        fromDate: fromDateFormatted,
+        toDate: toDateFormatted,
+      })
+      .andWhere("O.ManureTypeID IN (:...manureTypeIds)", {
+        manureTypeIds,
+      });
+
+    if (organicManureID != null) {
+      query.andWhere("O.ID != :organicManureID", { organicManureID });
+    }
+
+    const result = await query.getRawOne();
+
+    return Number.parseInt(result?.totalApplicationRate) || 0;
+  }
+
+  async checkGreenCompostExists(fieldId, fromDate, toDate, organicManureID) {
+    const START_OF_DAY = {
+      HOUR: 0,
+      MINUTE: 0,
+      SECOND: 0,
+      MILLISECOND: 0,
+    };
+
+    const END_OF_DAY = {
+      HOUR: 23,
+      MINUTE: 59,
+      SECOND: 59,
+      MILLISECOND: 999,
+    };
+
+    const fromDateFormatted = new Date(fromDate);
+    fromDateFormatted.setHours(
+      START_OF_DAY.HOUR,
+      START_OF_DAY.MINUTE,
+      START_OF_DAY.SECOND,
+      START_OF_DAY.MILLISECOND,
+    );
+
+    const toDateFormatted = new Date(toDate);
+    toDateFormatted.setHours(
+      END_OF_DAY.HOUR,
+      END_OF_DAY.MINUTE,
+      END_OF_DAY.SECOND,
+      END_OF_DAY.MILLISECOND,
+    );
+
+    const query = this.repository
+      .createQueryBuilder("O")
+      .select("1") // lightweight existence check
+      .innerJoin("ManagementPeriods", "M", "O.ManagementPeriodID = M.ID")
+      .innerJoin("Crops", "C", MANAGEMENT_PERIOD_TO_CROP_JOIN)
+      .where(CROP_TO_FIELD_CONDITION, { fieldId })
+      .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
+        fromDate: fromDateFormatted,
+        toDate: toDateFormatted,
+      })
+      .andWhere("O.ManureTypeID IN (:...manureTypeIds)", {
+        manureTypeIds: [
+          ManureTypeMapper.GreenCompost,
+          ManureTypeMapper.GreenFoodCompost,
+        ],
+      })
+      .limit(1); 
+
+    if (organicManureID != null) {
+      query.andWhere("O.ID != :organicManureID", {
+        organicManureID,
+      });
+    }
+
+    const result = await query.getRawOne();
+
+    return !!result; // true if exists, false otherwise
+  }
 }
-module.exports = { OrganicManureService }
+module.exports = { OrganicManureService };

@@ -1,6 +1,7 @@
 const Joi = require("joi");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { StorageTypesController } = require("./storage-types.controller");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 module.exports = [
   {
@@ -12,7 +13,7 @@ module.exports = [
     },
     handler: async (request, h) => {
       const controller = new StorageTypesController(request, h);
-      return controller.getAll();
+      return controller.getAllStorageTypes();
     },
   },
   {
@@ -25,22 +26,12 @@ module.exports = [
         params: Joi.object({
           id: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: { error: err },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {
       const controller = new StorageTypesController(request, h);
-      return controller.getById();
+      return controller.getStorageTypesById();
     },
   }
 ];

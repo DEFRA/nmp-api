@@ -204,6 +204,12 @@ const FarmEntity = new EntitySchema({
       joinColumn: { name: "ID" },
       inverseSide: "Farms",
     },
+    FarmAverageYields: {
+      type: "one-to-many",
+      target: "FarmAverageYields",
+      joinColumn: { name: "ID" },
+      inverseSide: "Farms"
+    }
   },
 });
 

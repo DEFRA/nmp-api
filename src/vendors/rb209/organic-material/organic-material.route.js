@@ -5,6 +5,7 @@ const {
 const {
   formatErrorResponse,
 } = require("../../../interceptor/responseFormatter");
+const { validationFailAction } = require("../../../shared/validateFailSafeAction");
 
 module.exports = [
   {
@@ -36,19 +37,7 @@ module.exports = [
           dryMatterSplit: Joi.boolean().optional(),
           organicMaterialCategoryId: Joi.string().optional(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -67,19 +56,7 @@ module.exports = [
         params: Joi.object({
           organicMaterialTypeId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -110,19 +87,7 @@ module.exports = [
         params: Joi.object({
           incorporationMethodId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -142,19 +107,7 @@ module.exports = [
           organicMaterialTypeId: Joi.string().required(),
           dryMatterSplit: Joi.boolean().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -173,19 +126,7 @@ module.exports = [
         params: Joi.object({
           organicMaterialTypeId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -204,19 +145,7 @@ module.exports = [
         params: Joi.object({
           organicMaterialCategoryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },

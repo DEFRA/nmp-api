@@ -3,6 +3,7 @@ const { RB209ArableController } = require("./arable.controller");
 const {
   formatErrorResponse,
 } = require("../../../interceptor/responseFormatter");
+const { validationFailAction } = require("../../../shared/validateFailSafeAction");
 
 module.exports = [
   {
@@ -31,19 +32,7 @@ module.exports = [
         params: Joi.object({
           cropGroupId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -75,19 +64,7 @@ module.exports = [
         params: Joi.object({
           cropGroupId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -101,19 +78,7 @@ module.exports = [
         params: Joi.object({
           cropTypeId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -144,19 +109,7 @@ module.exports = [
         params: Joi.object({
           cropTypeId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -176,19 +129,7 @@ module.exports = [
           cropTypeId: Joi.string().required(),
           cropInfo1Id: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {
@@ -220,19 +161,7 @@ module.exports = [
         params: Joi.object({
           cropInfo2Id: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {
@@ -264,19 +193,7 @@ module.exports = [
         params: Joi.object({
           potatoGroupId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {
@@ -308,19 +225,7 @@ module.exports = [
         params: Joi.object({
           potatoGroupId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {
@@ -339,19 +244,7 @@ module.exports = [
         params: Joi.object({
           potatoVarietyId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {

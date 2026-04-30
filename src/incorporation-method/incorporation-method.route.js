@@ -3,6 +3,7 @@ const {
   IncorporationMethodController,
 } = require("./incorporation-method.controller");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 module.exports = [
   {
@@ -22,19 +23,7 @@ module.exports = [
             .required()
             .description("Incorporation Method ID"),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -62,19 +51,7 @@ module.exports = [
             .required()
             .description("1 for Arable & Horticulture, 2 for Grassland"),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },

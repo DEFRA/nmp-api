@@ -1,4 +1,5 @@
 const { EntitySchema } = require("typeorm");
+const { auditColumns } = require("../../constants/audits-columns");
 
 const PreviousGrassesEntity = new EntitySchema({
   name: "PreviousGrasses",
@@ -36,26 +37,7 @@ const PreviousGrassesEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
-    CreatedOn: {
-      type: "datetime2",
-      nullable: true,
-      precision: 7,
-      default: () => "GETDATE()",
-    },
-    CreatedByID: {
-      type: "int",
-      nullable: true,
-    },
-    ModifiedOn: {
-      type: "datetime2",
-      nullable: true,
-      precision: 7,
-      default: () => "GETDATE()",
-    },
-    ModifiedByID: {
-      type: "int",
-      nullable: true,
-    },
+   ...auditColumns
   },
   relations: {
     Fields: {
@@ -92,3 +74,4 @@ const PreviousGrassesEntity = new EntitySchema({
 });
 
 module.exports = { PreviousGrassesEntity };
+ 

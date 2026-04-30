@@ -208,25 +208,25 @@ class GenerateRecommendations {
     soilAnalysis.forEach((analysis) => {
       const soilAnalysisData = {
         ...(analysis.Date != null && {
-          soilAnalysisDate: analysis.Date
+          soilAnalysisDate: analysis.Date,
         }),
         ...(analysis.PH != null && {
-          soilpH: analysis.PH
+          soilpH: analysis.PH,
         }),
         ...(analysis.SulphurDeficient != null && {
-          sulphurDeficient: analysis.SulphurDeficient
+          sulphurDeficient: analysis.SulphurDeficient,
         }),
         ...(analysis.PhosphorusIndex != null && {
           pIndexId: analysis.PhosphorusIndex,
-          pMethodologyId: analysis.PhosphorusMethodologyID
+          pMethodologyId: analysis.PhosphorusMethodologyID,
         }),
         ...(analysis.PotassiumIndex != null && {
           kIndexId: analysis.PotassiumIndex,
-          kMethodologyId: 4
+          kMethodologyId: analysis.PotassiumMethodologyID,
         }),
         ...(analysis.MagnesiumIndex != null && {
           mgIndexId: analysis.MagnesiumIndex,
-          mgMethodologyId: 4
+          mgMethodologyId: analysis.MagnesiumMethodologyID
         }),
       };
       if (Object.keys(soilAnalysisData).length > 0) {
@@ -337,6 +337,7 @@ class GenerateRecommendations {
           soilAnalyses: [],
         },
         harvestYear: crop.Year,
+        excessWinterRainfallManuallyEntered:excessRainfall != null,
         rainfallAverage: field.Rainfall,
         excessWinterRainfall: excessRainfall === null ? 0 : excessRainfall?.WinterRainfall,
         mannerManures: mannerOutputs.length > 0,

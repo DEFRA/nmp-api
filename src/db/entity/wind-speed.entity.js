@@ -1,6 +1,4 @@
 const { EntitySchema } = require("typeorm");
-// const { OrganicManureEntity } = require("./organic-manure.entity");
-
 const WindspeedEntity = new EntitySchema({
   name: "Windspeed",
   tableName: "Windspeeds",

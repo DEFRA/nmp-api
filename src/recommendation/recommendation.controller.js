@@ -35,6 +35,19 @@ class RecommendationController {
       return this.#h.response({ error });
     }
   }
+  async getByManagementPeriodId() {
+      const { managementPeriodId } = this.#request.params;
+      try {
+        const record = await this.#recommendationService.getByManagementPeriodId(managementPeriodId);
+        if (!record) {
+          throw boom.notFound("No recommendation found.");
+        }
+        return this.#h.response({  record });
+      } catch (error) {
+        return this.#h.response({ error });
+      }
+    }
+
 }
 
 module.exports = { RecommendationController };

@@ -43,13 +43,15 @@ class FertiliserManuresService extends BaseService {
     );
     this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
-    this.soilAnalysisRepository = AppDataSource.getRepository(SoilAnalysisEntity);
+    this.soilAnalysisRepository =
+      AppDataSource.getRepository(SoilAnalysisEntity);
     this.farmRepository = AppDataSource.getRepository(FarmEntity);
     this.HandleSoilAnalysisService = new HandleSoilAnalysisService();
     this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
     this.CreateOrUpdateWarningMessage = new CreateOrUpdateWarningMessage();
-    this.ProcessFutureManuresForWarnings = new ProcessFutureManuresForWarnings();
-    this.currentAndFuture = new CurrentAndFuture();     
+    this.ProcessFutureManuresForWarnings =
+      new ProcessFutureManuresForWarnings();
+    this.currentAndFuture = new CurrentAndFuture();
   }
   async getFertiliserManureNitrogenSum(
     fieldId,
@@ -64,22 +66,7 @@ class FertiliserManuresService extends BaseService {
 
     const toDateFormatted = new Date(toDate);
     toDateFormatted.setHours(23, 59, 59, 999); // Set time to end of the day
-
-    // const queryBuilder = this.repository
-    //   .createQueryBuilder("fertiliserManures")
-    //   .select(
-    //     "SUM(fertiliserManures.N * fertiliserManures.ApplicationRate)",
-    //     "totalN"
-    //   )
-    //   .where("fertiliserManures.ManagementPeriodID = :managementPeriodID", {
-    //     managementPeriodID,
-    //   })
-    //   .andWhere(
-    //     "fertiliserManures.ApplicationDate BETWEEN :fromDate AND :toDate",
-    //     { fromDate: fromDateFormatted, toDate: toDateFormatted }
-    //   )
-    //   .andWhere("fertiliserManures.Confirm = :confirm", { confirm });
-    const queryBuilder = await this.repository
+    const queryBuilder =  this.repository
       .createQueryBuilder("F")
       .select("SUM(F.N * F.ApplicationRate)", "totalN")
       .innerJoin("ManagementPeriods", "M", "F.ManagementPeriodID = M.ID")
@@ -158,7 +145,12 @@ class FertiliserManuresService extends BaseService {
     return fertiliserResult.totalN + organicResult.totalN;
   }
 
-  async getTotalNitrogenByCropID(cropID, confirm, fertiliserID, organicManureID) {
+  async getTotalNitrogenByCropID(
+    cropID,
+    confirm,
+    fertiliserID,
+    organicManureID,
+  ) {
     // -------------------------
     // FERTILISERS
     // -------------------------
@@ -215,7 +207,7 @@ class FertiliserManuresService extends BaseService {
     const fieldAllData = await this.fieldRepository.find();
     const fertiliserAllData = await this.repository.find();
     return await AppDataSource.transaction(async (transactionalManager) => {
-      let fertiliserManures = [];
+      const fertiliserManures = [];
       for (const fertiliser of fertiliserManureData) {
         const fertiliserManure = fertiliser.FertiliserManure;
         // Save fertiliser first
@@ -235,7 +227,7 @@ class FertiliserManuresService extends BaseService {
             this.warningMessageRepository.create({
               ...msg,
               JoiningID:
-                msg?.WarningCodeID == WarningCodesMapper.NMAXLIMIT
+                msg?.WarningCodeID === WarningCodesMapper.NMAXLIMIT
                   ? msg.FieldID
                   : savedFertiliser.ID,
               CreatedByID: userId,
@@ -253,19 +245,21 @@ class FertiliserManuresService extends BaseService {
           .createQueryBuilder(ManagementPeriodEntity, "mp")
           .leftJoin(CropEntity, "crop", "crop.ID = mp.CropID")
           .select(["mp.CropID AS CropID", "crop.FieldID AS FieldID"])
-          .where("mp.ID = :managementPeriodID", { managementPeriodID:savedFertiliser.ManagementPeriodID })
+          .where("mp.ID = :managementPeriodID", {
+            managementPeriodID: savedFertiliser.ManagementPeriodID,
+          })
           .getRawOne();
 
-
-               const isCurrentOrganicManure=false, isCurrentFertiliser=true;
-                this.ProcessFutureManuresForWarnings.ProcessFutureManures(
-                   cropAndField.FieldID,
-                   savedFertiliser.ApplicationDate,
-                   isCurrentOrganicManure,
-                   isCurrentFertiliser,
-                   savedFertiliser.ID,
-                   userId
-                 );
+        const isCurrentOrganicManure = false,
+          isCurrentFertiliser = true;
+        this.ProcessFutureManuresForWarnings.ProcessFutureManures(
+          cropAndField.FieldID,
+          savedFertiliser.ApplicationDate,
+          isCurrentOrganicManure,
+          isCurrentFertiliser,
+          savedFertiliser.ID,
+          userId,
+        );
       }
 
       const soilAnalysisAllData = await this.soilAnalysisRepository.find();
@@ -299,7 +293,6 @@ class FertiliserManuresService extends BaseService {
             ? true
             : false;
         }
-        //console.log("isSoilAnalysisHavePAndK", isSoilAnalysisHavePAndK);
         if (isSoilAnalysisHavePAndK) {
           const pkBalanceData = pkBalanceAllData.filter((pkBalance) => {
             return (
@@ -307,9 +300,6 @@ class FertiliserManuresService extends BaseService {
               pkBalance.Year === cropData[0]?.Year
             );
           });
-          // ({
-          //   where: { Year: cropData[0].Year, FieldID: fieldData[0].ID },
-          // });
           const cropPlanForNextYear = cropPlanAllData.filter((cropPlan) => {
             return (
               cropPlan.FieldID === fieldData[0]?.ID &&
@@ -341,15 +331,16 @@ class FertiliserManuresService extends BaseService {
             }
           }
           if (
-            isNextYearPlanExist == true &&
-            isNextYearFertiliserExist == true
+            isNextYearPlanExist === true &&
+            isNextYearFertiliserExist === true
           ) {
             //call shreyash's function
-            this.updatingFutureRecommendations.updateRecommendationsForField(
+            this.updatingFutureRecommendations
+              .updateRecommendationsForField(
                 fieldData[0]?.ID,
                 cropData[0]?.Year,
                 request,
-                userId
+                userId,
               )
               .then((res) => {
                 if (res === undefined) {
@@ -404,14 +395,12 @@ class FertiliserManuresService extends BaseService {
                 );
 
                 const {
-                  latestSoilAnalysis,
-                  errors: soilAnalysisErrors,
-                  soilAnalysisRecords,
+                  latestSoilAnalysis
                 } = await this.HandleSoilAnalysisService.handleSoilAnalysisValidation(
                   fieldData[0].ID,
                   cropData[0]?.Year,
                   rb209CountryData.RB209CountryID,
-                  transactionalManager
+                  transactionalManager,
                 );
 
                 if (cropData[0].CropTypeID == CropTypeMapper.OTHER) {
@@ -427,11 +416,11 @@ class FertiliserManuresService extends BaseService {
                 }
 
                 if (Object.keys(latestSoilAnalysis).length > 0) {
-                  if (latestSoilAnalysis.PotassiumIndex == null) {
+                  if (latestSoilAnalysis.PotassiumIndex === null) {
                     kBalance = 0;
                   }
 
-                  if (latestSoilAnalysis.PhosphorusIndex == null) {
+                  if (latestSoilAnalysis.PhosphorusIndex === null) {
                     pBalance = 0;
                   }
                 } else {
@@ -459,27 +448,27 @@ class FertiliserManuresService extends BaseService {
                 );
               }
 
-               await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
-                 cropData[0],
-                 transactionalManager,
-                 request,
-                 userId
-               );
+              await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
+                cropData[0],
+                transactionalManager,
+                request,
+                userId,
+              );
             }
           }
         }
-          await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
-            cropData[0],
-            transactionalManager,
-            request,
-            userId
-          );
+        await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
+          cropData[0],
+          transactionalManager,
+          request,
+          userId,
+        );
       }
       return fertiliserManures;
     });
   }
 
-  async getTotalP205AndK20(fertiliserData, managementPeriodId) {
+  async getTotalP205AndK20(fertiliserData, _managementPeriodId) {
     let sumOfP205 = 0;
     let sumOfK20 = 0;
 
@@ -534,14 +523,13 @@ class FertiliserManuresService extends BaseService {
           },
         );
 
-     
-          await this.CreateOrUpdateWarningMessage.syncWarningMessages(
-            inorganicManure.ManagementPeriodID,
-            inorganicManure,
-            warningMessages,
-            transactionalManager,
-            userId,
-          );
+        await this.CreateOrUpdateWarningMessage.syncWarningMessages(
+          inorganicManure.ManagementPeriodID,
+          inorganicManure,
+          warningMessages,
+          transactionalManager,
+          userId,
+        );
 
         if (result.affected === 0) {
           console.log(`Fertiliser Manures with ID ${ID} not found`);
@@ -563,24 +551,17 @@ class FertiliserManuresService extends BaseService {
           where: { ID: managementPeriod.CropID },
         });
 
-          await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
-            crop,
-            transactionalManager,
-            request,
-            userId
-          );
+        await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
+          crop,
+          transactionalManager,
+          request,
+          userId,
+        );
 
-          const isCurrentOrganicManure = false,
-            isCurrentFertiliser = true;
-          this.ProcessFutureManuresForWarnings.ProcessFutureManures(
-            crop.FieldID,
-            fertiliserManure.ApplicationDate,
-            isCurrentOrganicManure,
-            isCurrentFertiliser,
-            fertiliserManure.ID,
-            userId
-          );
-
+        this.ProcessFutureManuresForWarnings.processWarningsByField(
+          crop.FieldID,
+          userId
+        );
       }
       return { FertiliserManure: updatedFertilisers };
     });
@@ -660,15 +641,15 @@ class FertiliserManuresService extends BaseService {
           "EXEC [spFertiliserManures_DeleteFertiliserManures] @ID = @0";
         await transactionalManager.query(storedProcedure, [fertliserManureId]);
         await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
-            crop,
-            transactionalManager,
-            request,
-            userId
-          );
-         this.ProcessFutureManuresForWarnings.processWarningsByCrop(
-           crop.ID,
-           userId
-         );  
+          crop,
+          transactionalManager,
+          request,
+          userId,
+        );
+        this.ProcessFutureManuresForWarnings.processWarningsByCrop(
+          crop.ID,
+          userId,
+        );
         return { affectedRows: 1 }; // Success response
       } catch (error) {
         // Log the error and throw an internal server error
@@ -689,6 +670,83 @@ class FertiliserManuresService extends BaseService {
 
     const fertiliserResult = await fertiliserManuresResult.getRawOne();
     return fertiliserResult.totalN;
+  }
+
+  async getTotalNitrogenByManagementPeriodIDAndIsAutumn(managementPeriodID, isAutumn) {
+
+  const managementPeriod = await this.managementPeriodRepository.findOne({
+    where: { ID: managementPeriodID },
+  });
+
+  if (!managementPeriod)
+  { 
+    return 0;
+  }
+
+  const crop = await this.cropRepository.findOne({
+    where: { ID: managementPeriod.CropID },
+    select: ["ID", "CropTypeID", "Year"],
+  });
+
+  if (!crop)
+  { 
+    return 0;
+  }
+
+  const { CropTypeID, Year } = crop;
+
+  const qb = this.repository
+    .createQueryBuilder("fm")
+    .select("SUM(fm.N * fm.ApplicationRate)", "totalN")
+    .where("fm.ManagementPeriodID = :managementPeriodID", {
+      managementPeriodID,
+    });
+
+  if (CropTypeID === CropTypeMapper.WINTEROILSEEDRAPE) {
+
+    const AUTUMN = {
+      START_MONTH: 8,   // August
+      END_MONTH: 12,    // December
+      START_DAY: 1,
+      END_DAY: 31
+    };
+
+const startAutumn = new Date(Year - 1, AUTUMN.START_MONTH, AUTUMN.START_DAY);
+const endAutumn = new Date(Year - 1, AUTUMN.END_MONTH, AUTUMN.END_DAY);
+
+    if (isAutumn) {
+      qb.andWhere(
+        "fm.ApplicationDate >= :startAutumn AND fm.ApplicationDate <= :endAutumn",
+        { startAutumn, endAutumn }
+      );
+    } else {
+      qb.andWhere(
+        "fm.ApplicationDate > :endAutumn",
+        { endAutumn }
+      );
+    }
+  }
+
+  const result = await qb.getRawOne();
+
+  return result?.totalN || 0;
+}
+
+  async getClosedPeriodByID(countryId, cropTypeId, nvzId) {
+    return AppDataSource.transaction(async (transactionalManager) => {
+      try {
+        const storedProcedure = "EXEC [spWarning_GetFertiliserManureClosedPeriod] @countryId = @0, @CropTypeId = @1, @NvzId = @2";
+        const result = await transactionalManager.query(storedProcedure, [
+          countryId,
+          cropTypeId,
+          nvzId
+        ]);
+        return result[0]
+      } catch (error) {
+        console.error( error);
+         return null;
+      }
+    });
   }
 }
 

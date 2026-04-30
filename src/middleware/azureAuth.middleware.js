@@ -99,7 +99,7 @@ class AzureAuthMiddleware {
       request["userId"] = user?.ID;
 
       if (this.#optionalUserPresentPath.includes(currentPath))
-        return h.continue;
+        {return h.continue}
 
       if (!user) {
         throw boom.unauthorized(StaticStrings.ERR_INVALID_EMAIL);

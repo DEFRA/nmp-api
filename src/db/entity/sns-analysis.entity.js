@@ -1,5 +1,4 @@
 const { EntitySchema } = require("typeorm");
-//const CropEntity = require("./crop.entity");
 const UserEntity = require("./user.entity");
 
 const SnsAnalysesEntity = new EntitySchema({
@@ -81,6 +80,11 @@ const SnsAnalysesEntity = new EntitySchema({
     },
     SoilNitrogenSupplyIndex: {
       type: "tinyint",
+      nullable: true,
+    },
+    NitrogenResidueGroup: {
+      type: "nvarchar",
+      length: 20,
       nullable: true,
     },
     CreatedOn: {

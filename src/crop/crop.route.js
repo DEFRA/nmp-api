@@ -7,7 +7,16 @@ const {
   CropDto,
   CopyPlanDto,
 } = require("./dto/crops.dto");
-const { formatErrorResponse } = require("../interceptor/responseFormatter");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
+const cropPlanValidation = {
+  params: Joi.object({
+    harvestYear: Joi.number().required(),
+  }),
+  query: Joi.object({
+    farmId: Joi.number().required(),
+  }),
+  failAction: validationFailAction,
+}; 
 
 module.exports = [
   {
@@ -16,27 +25,7 @@ module.exports = [
     options: {
       tags: ["api", "Crop"],
       description: "Get Crop plans by harvest year",
-      validate: {
-        params: Joi.object({
-          harvestYear: Joi.number().required(),
-        }),
-        query: Joi.object({
-          farmId: Joi.number().required(),
-        }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
-      },
+      validate: cropPlanValidation
     },
     handler: async (request, h) => {
       const controller = new CropController(request, h);
@@ -57,19 +46,7 @@ module.exports = [
           cropGroupName: Joi.string().optional(),
           farmId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -82,7 +59,7 @@ module.exports = [
     path: "/crops/plans/crop-types/{harvestYear}",
     options: {
       tags: ["api", "Crop"],
-      description: "Get crops plans CropTypes by harvest year",
+      description: "Get CropTypes by harvest year",
       validate: {
         params: Joi.object({
           harvestYear: Joi.number().required(),
@@ -90,19 +67,7 @@ module.exports = [
         query: Joi.object({
           farmId: Joi.number().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -127,19 +92,7 @@ module.exports = [
             .description("Comma separated Field Ids, e.g. 1,2,3"),
           cropOrder: Joi.number().integer().optional().allow(null),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -157,19 +110,7 @@ module.exports = [
         params: Joi.object({
           fieldId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -191,19 +132,7 @@ module.exports = [
             .required()
             .description("0 for Plan, 1 for Record"),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -227,19 +156,7 @@ module.exports = [
           fieldId: Joi.number().integer().required(),
         }),
         payload: CreateCropWithManagementPeriodsDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -255,19 +172,7 @@ module.exports = [
       description: "Create Crop Plan",
       validate: {
         payload: CreatePlanDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -284,19 +189,7 @@ module.exports = [
           year: Joi.number().integer().required(),
           confirm: Joi.boolean().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -321,19 +214,7 @@ module.exports = [
             .description("Confirm status (true/false)"),
         }),
         payload: CropDto, // DTO for the crop data you want to update
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -355,19 +236,7 @@ module.exports = [
         query: Joi.object({
           farmId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -385,19 +254,7 @@ module.exports = [
         params: Joi.object({
           id: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -419,19 +276,7 @@ module.exports = [
             .required()
             .description("Array of Crop IDs to delete, e.g., [1, 2, 3]"),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -454,24 +299,12 @@ module.exports = [
           year: Joi.number().integer().required(),
           farmId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
       const controller = new CropController(request, h);
-      return controller.CropGroupNameExists();
+      return controller.cropGroupNameExists();
     },
   },
   {
@@ -489,19 +322,7 @@ module.exports = [
           variety: Joi.string().allow(""),
           year: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -518,19 +339,7 @@ module.exports = [
       description: "Update multiple crops",
       validate: {
         payload: CreatePlanDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -551,19 +360,7 @@ module.exports = [
       description: "Create Crop Plan",
       validate: {
         payload: CopyPlanDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -580,53 +377,47 @@ module.exports = [
       description: "Create Crop Plan",
       validate: {
         payload: CreatePlanDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
-    {
+  {
     method: "GET",
     path: "/crops/plan/{fieldId}",
     options: {
-      tags: ["api", "Crop"],      
+      tags: ["api", "Crop"],
       description: "Get Crop plans by fieldId and harvest year",
       validate: {
         params: Joi.object({
           fieldId: Joi.number().integer().required(),
         }),
         query: Joi.object({
-          year: Joi.number().integer().required()
+          year: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code()
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
       const controller = new CropController(request, h);
       return controller.getPlanByFieldIdAndYear();
+    },
+  },
+  {
+    method: "GET",
+    path: "/crops/organic-inorganic/{cropId}",
+    options: {
+      tags: ["api", "Crop"],
+      description: "Get Organic Inorganic manures by cropId",
+      validate: {
+        params: Joi.object({
+          cropId: Joi.number().integer().required(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new CropController(request, h);
+      return controller.getOrganicInorganicManuresByCropId();
     },
   },
 ];

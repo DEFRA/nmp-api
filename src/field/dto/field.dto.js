@@ -2,7 +2,8 @@ const Joi = require("joi");
 const {
   CreateCropWithManagementPeriodsDto,
 } = require("../../crop/dto/crops.dto");
-
+ const maxTwentyValues = 20;
+ const maxTwoFiftyFive = 255;
 const FieldEntitySchema = Joi.object({
   ID: Joi.number().integer().allow(null),
   SoilTypeID: Joi.number().integer().optional(),
@@ -41,33 +42,41 @@ const SoilAnalysisSchema = Joi.object({
   PhosphorusIndex: Joi.number()
     .integer()
     .min(0)
-    .max(255)
+    .max(maxTwoFiftyFive)
     .default(0)
     .allow(null),
   Potassium: Joi.number().integer().allow(null),
   PotassiumIndex: Joi.number().integer().min(-2).max(9).allow(null),
+  PotassiumMethodologyID: Joi.number()
+    .integer()
+    .default(4)
+    .required()
+    .allow(null),
   Magnesium: Joi.number().integer().allow(null),
-  MagnesiumIndex: Joi.number().integer().min(0).max(255).default(0).allow(null),
+  MagnesiumMethodologyID: Joi.number()
+    .integer()
+    .default(4)
+    .required()
+    .allow(null),
+  MagnesiumIndex: Joi.number().integer().min(0).max(maxTwoFiftyFive).default(0).allow(null),
   SoilNitrogenSupply: Joi.number().integer().allow(null),
   SoilNitrogenSupplyIndex: Joi.number()
     .integer()
     .min(0)
-    .max(255)
+    .max(maxTwoFiftyFive)
     .default(0)
     .allow(null),
 
   SoilNitrogenSampleDate: Joi.date().iso().allow(null),
   Sodium: Joi.number().integer().allow(null),
   Lime: Joi.number().precision(3).allow(null),
-  PhosphorusStatus: Joi.string().max(20).allow(null),
-  PotassiumAnalysis: Joi.string().max(50).allow(null),
-  PotassiumStatus: Joi.string().max(20).allow(null),
-  MagnesiumAnalysis: Joi.string().max(20).allow(null),
-  MagnesiumStatus: Joi.string().max(20).allow(null),
-  NitrogenResidueGroup: Joi.string().max(20).allow(null),
-  SoilAnalysisMethod: Joi.number().integer().optional().allow(null),
+  PhosphorusStatus: Joi.string().max(maxTwentyValues).allow(null),
+
+  PotassiumStatus: Joi.string().max(maxTwentyValues).allow(null),
+  MagnesiumStatus: Joi.string().max(maxTwentyValues).allow(null),
+  NitrogenResidueGroup: Joi.string().max(maxTwentyValues).allow(null),
   OrganicMatterPercentage: Joi.number().integer().optional().allow(null),
-  Comments: Joi.string().max(255).allow(null),
+  Comments: Joi.string().max(maxTwoFiftyFive).allow(null),
   PreviousID: Joi.number().integer().allow(null),
   CreatedOn: Joi.date().iso().allow(null),
   CreatedByID: Joi.number().integer().allow(null),

@@ -40,6 +40,7 @@ const {
   PreviousCroppingEntity,
 } = require("../db/entity/previous-cropping.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
+const { CountryMapper } = require("../constants/country-mapper");
 const { PreviousCroppingMapper } = require("../constants/action-mapper");
 const { FarmService } = require("../farm/farm.service");
 const {
@@ -51,6 +52,8 @@ const {
 const {
   GenerateRecommendations,
 } = require("../shared/generate-recomendations-service");
+
+const { PscIndexEntity } = require("../db/entity/psc-index.entity");
 
 class FieldService extends BaseService {
   constructor() {
@@ -102,6 +105,7 @@ class FieldService extends BaseService {
     this.FarmService = new FarmService();
     this.ProcessFutureManuresForWarnings =
       new ProcessFutureManuresForWarnings();
+    this.pscIndexRepository = AppDataSource.getRepository(PscIndexEntity);
   }
   async getFieldCropAndSoilDetails(fieldId, year, confirm) {
     const crop = await this.cropRepository.findOneBy({
@@ -166,7 +170,7 @@ class FieldService extends BaseService {
     userId,
   ) {
     // Initialize variables for recommendations for both Crop Orders
-    let cropData = {
+    const cropData = {
       CropN: null,
       NBalance: null,
       ManureN: null,
@@ -250,8 +254,7 @@ class FieldService extends BaseService {
           SoilAnalysis.PhosphorusIndex != null
         ) {
           if (body.PKBalance) {
-            let pkBalanceBody = body.PKBalance;
-            let { CreatedByID, CreatedOn, ...createdData } = body.PKBalance;
+            const { CreatedByID, CreatedOn, ...createdData } = body.PKBalance;
             PKBalance = await transactionalManager.save(
               PKBalanceEntity,
               this.pkBalanceRepository.create({
@@ -265,7 +268,7 @@ class FieldService extends BaseService {
         }
       }
 
-      let Previouscrops = [];
+      const Previouscrops = [];
       if (body.PreviousCroppings && body.PreviousCroppings.length > 0) {
         for (const cropsData of body.PreviousCroppings) {
           const { Action, ...createPrevCrops } = cropsData;
@@ -273,7 +276,7 @@ class FieldService extends BaseService {
             PreviousCroppingEntity,
             this.previousCroppingRepository.create({
               ...createPrevCrops,
-              ...(cropsData.ID == 0 ? { ID: null } : {}),
+              ...(cropsData.ID === 0 ? { ID: null } : {}),
               FieldID: Field.ID,
               CreatedByID: userId,
               CreatedOn: new Date(),
@@ -358,16 +361,16 @@ class FieldService extends BaseService {
 
       let isSensitiveChange = false;
       for (const field of sensitiveFields) {
-        if (updatedFieldData[field] == 0) {
+        if (updatedFieldData[field] === 0) {
           updatedFieldData[field] = null;
         }
-        if (originalField[field] == 0) {
+        if (originalField[field] === 0) {
           originalField[field] = null;
         }
 
         if (
-          updatedFieldData[field] != undefined &&
-          updatedFieldData[field] != originalField[field]
+          updatedFieldData[field] !== undefined &&
+          updatedFieldData[field] !== originalField[field]
         ) {
           isSensitiveChange = true;
           break;
@@ -722,7 +725,7 @@ class FieldService extends BaseService {
     const previousCroppingData = await this.previousCroppingRepository.find({
       where: { FieldID: fieldId },
     });
-    if (previousCroppingData.CropTypeID == CropTypeMapper.GRASS) {
+    if (previousCroppingData.CropTypeID === CropTypeMapper.GRASS) {
       previousGrassesData = previousCroppingData;
     }
     return {
@@ -961,20 +964,11 @@ class FieldService extends BaseService {
         const pkBalance = await this.pkBalanceRepository.findOne({
           where: { FieldID: field.ID, Year: year },
         });
-        const Errors = [];
         // Enrich crops with management periods and their sub-objects
-
-        // const { latestSoilAnalysis, errors: soilAnalysisErrors } =
-        //   await this.handleSoilAnalysisValidation(field.ID, year);
-
-        // Errors.push(...soilAnalysisErrors);
-        // if (Errors.length > 0) {
-        //   throw new Error(JSON.stringify(Errors));
-        // }
         let soilAnalysis = null;
         if (crops != null) {
           for (const crop of crops) {
-            if (crop.CropTypeID == 140) {
+            if (crop.CropTypeID === CropTypeMapper.GRASS) {
               let swardType = null;
               let defoliationSequenceDescription = null;
               let swardTypeManagment = null;
@@ -992,22 +986,22 @@ class FieldService extends BaseService {
                   );
               }
               crop.DefoliationSequenceName =
-                defoliationSequenceDescription != null
-                  ? defoliationSequenceDescription
-                  : null;
+                defoliationSequenceDescription == null
+                  ? null
+                  : defoliationSequenceDescription;
               if (crop.SwardTypeID != null) {
                 swardType = await this.findSwardType(crop.SwardTypeID);
               }
-              crop.SwardTypeName = swardType != null ? swardType : null;
+              crop.SwardTypeName = swardType === null ? null : swardType;
               if (crop.SwardManagementID != null) {
                 swardTypeManagment = await this.findSwardTypeManagment(
                   crop.SwardManagementID,
                 );
               }
               crop.SwardManagementName =
-                swardTypeManagment != null ? swardTypeManagment : null;
+                swardTypeManagment == null ? null : swardTypeManagment;
               crop.EstablishmentName =
-                crop.CropTypeID == 140 && crop.Establishment != null
+                crop.CropTypeID === CropTypeMapper.GRASS && crop.Establishment != null
                   ? await this.findGrassSeason(crop.Establishment)
                   : null;
             }
@@ -1047,22 +1041,22 @@ class FieldService extends BaseService {
               for (const manure of organicManures) {
                 const manureTypeName = await this.getManureTypeName(
                   manure.ManureTypeID,
-                  allManureData
+                  allManureData,
                 );
                 const applicationMethodName =
                   await this.getApplicationMethodName(
                     manure.ApplicationMethodID,
-                    allApplicationMethodsData
+                    allApplicationMethodsData,
                   );
                 const incorporationMethodName =
                   await this.getIncorporationMethodName(
                     manure.IncorporationMethodID,
-                    allIncorporationMethodsData
+                    allIncorporationMethodsData,
                   );
                 const incorporationDelayName =
                   await this.getIncorporationDelayName(
                     manure.IncorporationDelayID,
-                    allIncorporationDelaysData
+                    allIncorporationDelaysData,
                   );
 
                 organicManuresWithNames.push({
@@ -1139,17 +1133,20 @@ class FieldService extends BaseService {
                       previousAppliedLime || 0;
 
                     Object.keys(r).forEach((recDataKey) => {
-                      if (recDataKey.startsWith("Crop_"))
+                      if (recDataKey.startsWith("Crop_")) {
                         data.Crop[recDataKey.slice(5)] = r[recDataKey];
-                      else if (recDataKey.startsWith("Recommendation_"))
+                      } else if (recDataKey.startsWith("Recommendation_")) {
                         data.Recommendation[recDataKey.slice(15)] =
                           r[recDataKey];
-                      else if (recDataKey.startsWith("ManagementPeriod_"))
+                      } else if (recDataKey.startsWith("ManagementPeriod_")) {
                         data.ManagementPeriod[recDataKey.slice(17)] =
                           r[recDataKey];
-                      else if (recDataKey.startsWith("FertiliserManure_"))
+                      } else if (recDataKey.startsWith("FertiliserManure_")) {
                         data.FertiliserManure[recDataKey.slice(17)] =
                           r[recDataKey];
+                      } else {
+                        console.log("no assignment");
+                      }
                     });
 
                     mergedRecommendation = {
@@ -1224,8 +1221,16 @@ class FieldService extends BaseService {
         const soilTypeName = soil?.soilType;
         // Get SulphurDeficient from soilAnalysis
         const sulphurDeficient = soilAnalysis?.SulphurDeficient ?? null;
+        let pscIndex = null;
+        if (farm.CountryID === CountryMapper.SCOTLAND) {
+          pscIndex = await this.pscIndexRepository.findOne({
+            where: { ID: field.PscIndexID },
+          });
+        }
+
         // Create soilDetails object
         const soilDetails = {
+          PscIndexName: pscIndex?.Name ?? null,
           SoilTypeId: field.SoilTypeID,
           SoilTypeName: soilTypeName,
           PotashReleasingClay: field.SoilReleasingClay,
@@ -1299,7 +1304,6 @@ class FieldService extends BaseService {
       const cropData = await this.findCropDataByID(Recommendation.Crop_ID); // check order 1 or 2
 
       let totalLime1 = 0;
-      let totalLime2 = 0;
       let result = 0;
       if (cropData != null) {
         // Step 4: Handle CropOrder 1 (first crop)
@@ -1337,7 +1341,7 @@ class FieldService extends BaseService {
             totalLime1 =
               await this.getApplyLimeInCaseOfMultipleCrops(CropOrderDataList);
           }
-          let cropOrder = 1;
+          const cropOrder = 1;
           const firstCropOrderData =
             await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
               fieldId,
@@ -1423,7 +1427,7 @@ class FieldService extends BaseService {
     if (soilAnalysisYear) {
       if (year > soilAnalysisYear) {
         query.where.Year = Between(soilAnalysisYear, year); // Include years between `year` and `soilAnalysisYear`
-      } else if (year == soilAnalysisYear) {
+      } else if (year === soilAnalysisYear) {
         query.where.Year = Between(year, soilAnalysisYear); // Include years between `year` and `soilAnalysisYear`
       } else if (year < soilAnalysisYear) {
         return null;
@@ -1551,14 +1555,10 @@ class FieldService extends BaseService {
     if (soilAnalysisRecordsFiveYears.length > 0) {
       fieldsToTrack.forEach((field) => {
         latestSoilAnalysis[field] = null;
-
         // Find the first record in descending date order where the field has a value
         const latestRecordWithFieldValue = soilAnalysisRecordsFiveYears.find(
           (record) => record[field] !== null && record[field] !== undefined,
         );
-
-        // if (latestRecordWithFieldValue) {
-
         if (latestRecordWithFieldValue) {
           latestSoilAnalysis[field] = latestRecordWithFieldValue[field];
         } else {
@@ -1580,7 +1580,7 @@ class FieldService extends BaseService {
   async findSwardTypeManagment(SwardManagementID) {
     try {
       let swardManagementsName = null;
-      let swardManagementsList = await this.rB209GrassService.getData(
+      const swardManagementsList = await this.rB209GrassService.getData(
         `Grass/SwardManagements`,
       );
 
@@ -1609,9 +1609,9 @@ class FieldService extends BaseService {
     establishment,
   ) {
     try {
-      let newSward = establishment == 0 || null ? false : true;
+      const newSward = !(establishment === 0 || null);
       let defoliationSequenceDescription = null;
-      let defoliationSequenceList = await this.rB209GrassService.getData(
+      const defoliationSequenceList = await this.rB209GrassService.getData(
         `Grass/DefoliationSequence/${swardManagementId}/${PotentialCut}/${newSward}`,
       );
       if (
@@ -1662,7 +1662,7 @@ class FieldService extends BaseService {
 
   async findGrassSeason(seasonID) {
     try {
-      let season = await this.rB209GrasslandService.getData(
+      const season = await this.rB209GrasslandService.getData(
         `Grassland/GrasslandSeason/${seasonID}`,
       );
       return season.seasonName;

@@ -30,10 +30,11 @@ class CropTypeLinkingsController {
   }
   async getCropInfoQuestionsByCropTypeID() {
     const { cropTypeID } = this.#request.params;
+    const { countryID } = this.#request.query;
     try {
       const record =
         await this.#cropTypeLinkingsService.getCropInfoQuestionsByCropTypeID(
-          cropTypeID
+          cropTypeID,countryID
         );
     
       return this.#h.response({ CropTypeQuestion: record });
@@ -52,6 +53,20 @@ class CropTypeLinkingsController {
         );
       }
       return this.#h.response({ CropTypeLinking });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+  async getScotlandNmaxByCropTypeID() {
+    const { cropTypeId } = this.#request.params;
+    const { soilTypeId,residueGroup } = this.#request.query;
+    try {
+      const record =
+        await this.#cropTypeLinkingsService.getScotlandNmaxByCropTypeID(
+          cropTypeId,soilTypeId,residueGroup
+        );
+    
+      return this.#h.response({ ScotlandNMax: record });
     } catch (error) {
       return this.#h.response({ error });
     }

@@ -223,7 +223,19 @@ const UserEntity = new EntitySchema({
       inverseSide: "ModifiedByUserFarmNvz",
       joinColumn: { name: "ID" },
     },
-  },
+    CreatedFarmAverageYields: {
+      type: "one-to-many",
+      target: "FarmAverageYields",
+      inverseSide: "CreatedByUser",
+      joinColumn: { name: "ID" }
+    },
+    ModifiedFarmAverageYields: {
+      type: "one-to-many",
+      target: "FarmAverageYields",
+      inverseSide: "ModifiedByUser",
+      joinColumn: { name: "ID" }
+    }
+}
 });
 
 module.exports = { UserEntity };
