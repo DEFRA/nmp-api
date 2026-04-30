@@ -1041,7 +1041,22 @@ class CropService extends BaseService {
   }
 
   async copyPlanOhercrop(requiredParametres) {
-    const {crop,userId,transactionalManager,managementPeriods,harvestYear,isOrganic,isFertiliser,field,request,cropPlanOfNextYear,pkBalanceData,isSoilAnalysisHavePAndK,Recommendations} = requiredParametres
+    const {
+      crop,
+      userId,
+      transactionalManager,
+      managementPeriods,
+      harvestYear,
+      isOrganic,
+      isFertiliser,
+      field,
+      request,
+      cropPlanOfNextYear,
+      pkBalanceData,
+      isSoilAnalysisHavePAndK,
+      Recommendations,
+      newOrganicManure,
+    } = requiredParametres;
           await this.savedDefault(
             crop,
             userId,
@@ -1183,7 +1198,23 @@ class CropService extends BaseService {
 
         const newOrganicManure = null;
         if (crop.CropTypeID === CropTypeMapper.OTHER) {
-         await this.copyPlanOhercrop( {crop,userId,transactionalManager,managementPeriods,harvestYear,isOrganic,isFertiliser,field,request,cropPlanOfNextYear,pkBalanceData,isSoilAnalysisHavePAndK,Recommendations})
+        const newOrganicManure = null;
+         await this.copyPlanOhercrop({
+           crop,
+           userId,
+           transactionalManager,
+           managementPeriods,
+           harvestYear,
+           isOrganic,
+           isFertiliser,
+           field,
+           request,
+           cropPlanOfNextYear,
+           pkBalanceData,
+           isSoilAnalysisHavePAndK,
+           Recommendations,
+           newOrganicManure,
+         });
          continue;
         }
         const oldToNewManagementPeriodMap = {};
