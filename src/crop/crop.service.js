@@ -773,24 +773,13 @@ class CropService extends BaseService {
   ) {
     const existingPeriods = await transactionalManager.find(
       ManagementPeriodEntity,
-      {
-        where: { CropID: cropID },
-        order: { CreatedOn: "ASC" }
-      }
+      { where: { CropID: cropID }, order: { CreatedOn: "ASC" }}
     );
-    const updatedManagementPeriods = [];
-    const existingCount = existingPeriods.length;
-    const incomingCount = incomingPeriods.length;
+    const updatedManagementPeriods = [],existingCount = existingPeriods.length,incomingCount = incomingPeriods.length;
     const minCount = Math.min(existingCount, incomingCount);
     for (let i = 0; i < minCount; i++) {
       const incoming = incomingPeriods[i],existing = existingPeriods[i];
-      const {
-        ID, // intentionally excluded
-        CreatedByID, // also exclude to avoid accidental overwrite
-        CreatedOn, // also exclude if DB manages this field
-        CropID,
-        ...dataToUpdate
-      } = incoming;
+      const { ID,CreatedByID,CreatedOn,CropID,...dataToUpdate} = incoming;
       await transactionalManager.update(ManagementPeriodEntity, existing.ID, {
         ...dataToUpdate,
         ModifiedByID: userId,
@@ -799,13 +788,9 @@ class CropService extends BaseService {
 
       const updated = await transactionalManager.findOne(
         ManagementPeriodEntity,
-        {
-          where: { ID: existing.ID }
-        },
+        {where: { ID: existing.ID }}
       );
-      if (updated) {
-        updatedManagementPeriods.push(updated);
-      }
+      if (updated) {updatedManagementPeriods.push(updated)}
     }
     for (let i = existingCount; i < incomingCount; i++) {
       const newPeriod = await transactionalManager.save(
@@ -816,7 +801,7 @@ class CropService extends BaseService {
           CreatedByID: userId,
           CreatedOn: new Date(),
           ModifiedByID: userId,
-          ModifiedOn: new Date(),
+          ModifiedOn: new Date()
         },
       );
       if (newPeriod) {updatedManagementPeriods.push(newPeriod)}

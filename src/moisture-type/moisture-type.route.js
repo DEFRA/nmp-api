@@ -1,6 +1,7 @@
 const Joi = require("joi");
 const { MoistureTypeController } = require("./moisture-type.controller");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 module.exports = [
   {
@@ -36,19 +37,7 @@ module.exports = [
               "string.isoDate": "Date format should be YYYY-MM-DD",
             }),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },

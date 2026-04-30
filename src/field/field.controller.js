@@ -176,7 +176,7 @@ class FieldController {
       // Return the Field objects with related data
       return this.#h.response(fieldData);
     } catch (error) {
-      return this.#h.response({ error: error.message }).code(400);
+      return this.#h.response({ error: error.message });
     }
   }
 }

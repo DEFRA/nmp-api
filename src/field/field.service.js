@@ -276,7 +276,7 @@ class FieldService extends BaseService {
             PreviousCroppingEntity,
             this.previousCroppingRepository.create({
               ...createPrevCrops,
-              ...(cropsData.ID == 0 ? { ID: null } : {}),
+              ...(cropsData.ID === 0 ? { ID: null } : {}),
               FieldID: Field.ID,
               CreatedByID: userId,
               CreatedOn: new Date(),
@@ -361,16 +361,16 @@ class FieldService extends BaseService {
 
       let isSensitiveChange = false;
       for (const field of sensitiveFields) {
-        if (updatedFieldData[field] == 0) {
+        if (updatedFieldData[field] === 0) {
           updatedFieldData[field] = null;
         }
-        if (originalField[field] == 0) {
+        if (originalField[field] === 0) {
           originalField[field] = null;
         }
 
         if (
-          updatedFieldData[field] != undefined &&
-          updatedFieldData[field] != originalField[field]
+          updatedFieldData[field] !== undefined &&
+          updatedFieldData[field] !== originalField[field]
         ) {
           isSensitiveChange = true;
           break;
@@ -725,7 +725,7 @@ class FieldService extends BaseService {
     const previousCroppingData = await this.previousCroppingRepository.find({
       where: { FieldID: fieldId },
     });
-    if (previousCroppingData.CropTypeID == CropTypeMapper.GRASS) {
+    if (previousCroppingData.CropTypeID === CropTypeMapper.GRASS) {
       previousGrassesData = previousCroppingData;
     }
     return {
@@ -1555,14 +1555,10 @@ class FieldService extends BaseService {
     if (soilAnalysisRecordsFiveYears.length > 0) {
       fieldsToTrack.forEach((field) => {
         latestSoilAnalysis[field] = null;
-
         // Find the first record in descending date order where the field has a value
         const latestRecordWithFieldValue = soilAnalysisRecordsFiveYears.find(
           (record) => record[field] !== null && record[field] !== undefined,
         );
-
-        // if (latestRecordWithFieldValue) {
-
         if (latestRecordWithFieldValue) {
           latestSoilAnalysis[field] = latestRecordWithFieldValue[field];
         } else {
