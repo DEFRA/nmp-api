@@ -27,6 +27,7 @@ class HealthCheckService {
     try {
       // Call the login method
       const loginResponse = await this.rb209Service.login();
+      console.log(loginResponse);
       return { message: "RB209 API is Working" };
     } catch (error) {
       console.error("RB209 API is not working:", error);

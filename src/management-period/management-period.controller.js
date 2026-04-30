@@ -27,11 +27,11 @@ class ManagementPeriodController {
             const { cropId } = this.#request.params;
             const { shortSummary } = this.#request.query;
             let selectOptions = {};
-            if (shortSummary) selectOptions = { ID: true, CropID: true };
+            if (shortSummary) {selectOptions = { ID: true, CropID: true }};
             const { records } = await this.#managementPeriodService.getBy(
                 'CropID',
                 cropId,
-                selectOptions,
+                selectOptions
             );
             return { ManagementPeriods: records };
         } catch (error) {
