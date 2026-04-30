@@ -101,7 +101,7 @@ class BaseService {
   }
 
   async countRecords(whereOptions) {
-    return await this.#entity.count({
+    return this.#entity.count({
       where: whereOptions,
     });
   }

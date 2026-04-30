@@ -95,7 +95,7 @@ class CropService extends BaseService {
     managementPeriodData,
     userId,
   ) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const crop = this.repository.create({
         ...cropData,
         FieldID: fieldId,
@@ -347,31 +347,6 @@ class CropService extends BaseService {
       farmId,
       harvestYear,
     ]);
-    const cropTypesList = await this.rB209ArableService.getData(
-      ARABLE.ALL_ARABLE_CROP_TYPES_ENDPOINT,
-    );
-    const findCropGroupId = (cropTypeId) => {
-      const cropType = cropTypesList.find(
-        (crop) => crop.cropTypeId === cropTypeId,
-      );
-      return cropType ? cropType.cropGroupId : null;
-    };
-
-    const findCropGroupName = async (cropGroupId) => {
-      try {
-        const cropGroupResponse = await this.rB209ArableService.getData(
-          `/Arable/CropGroup/${cropGroupId}`,
-        );
-
-        return cropGroupResponse.cropGroupName;
-      } catch (error) {
-        console.error(
-          `Error fetching crop group name for ID: ${cropGroupId}`,
-          error,
-        );
-        return "Unknown";
-      }
-    };
 
     const findCropDetailsFromRepo = async (CropID) => {
       try {
@@ -442,15 +417,15 @@ class CropService extends BaseService {
         return [];
       }
     };
-    const findFarmRainfall = async (farmId) => {
+    const findFarmRainfall = async (farmID) => {
       try {
         const farmRecord = await this.farmRepository.findOne({
-          where: { ID: farmId },
+          where: { ID: farmID },
           select: ["Rainfall"],
         });
         return farmRecord ? farmRecord.Rainfall : null;
       } catch (error) {
-        console.error(`Error fetching rainfall for farmId: ${farmId}`, error);
+        console.error(`Error fetching rainfall for farmId: ${farmID}`, error);
         return null;
       }
     };
@@ -601,16 +576,16 @@ class CropService extends BaseService {
   async deleteCrop(cropId, userId, request, transactionalManager) {
     // If a global transaction manager is provided, use it.
     if (transactionalManager) {
-      return await this.deleteCropById(
+      return this.deleteCropById(
         cropId,
         userId,
         request,
-        transactionalManager,
+        transactionalManager
       );
     }
 
     //  Otherwise, start a new local transaction.
-    return await AppDataSource.transaction(async (localManager) => {
+    return AppDataSource.transaction(async (localManager) => {
       return this.deleteCropById(cropId, userId, request, localManager);
     });
   }
@@ -704,7 +679,7 @@ class CropService extends BaseService {
       throw boom.badRequest("Group Name is required");
     }
 
-    const existingGroupNameCount = await this.repository
+    const existingGroupNameCount = this.repository
       .createQueryBuilder("Crops")
       .leftJoin("Fields", "Field", "Field.ID = Crops.fieldId") // Join Fields table manually
       .leftJoin("Farms", "Farm", "Farm.ID = Field.farmId") // Join Farms table manually
@@ -1069,7 +1044,7 @@ class CropService extends BaseService {
     const { farmID, harvestYear, copyYear, isOrganic, isFertiliser } = body;
     let savedCrop;
     const managementPeriodsOfNewCrop = [],organicManures = [],fertiliserManures = [],Recommendations = [];
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       // Step 1: Get all fields for the farmID
       const fields = await transactionalManager.find(FieldEntity, {
         where: { FarmID: farmID }
@@ -1472,10 +1447,8 @@ class CropService extends BaseService {
      return new Date(Math.max(d1.getTime(), d2.getTime()));
   }
 
-  async MergeCrop(
+  async mergeCrop(
     userId,
-    // year,
-    // confirm,
     Crops,
     request
   ) {

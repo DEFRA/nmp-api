@@ -1,5 +1,6 @@
 const { EntitySchema } = require("typeorm");
 const { manureNutrientColumns } = require("../../constants/manure-nutrient.columns");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const FarmManureTypeEntity = new EntitySchema({
   name: "FarmManureType",
@@ -47,25 +48,25 @@ const FarmManureTypeEntity = new EntitySchema({
   },
   relations: {
     CreatedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "CreatedByID" },
       inverseSide: "CreatedOrganicManures",
     },
     ModifiedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "ModifiedByID" },
       inverseSide: "ModifiedOrganicManures",
     },
     Farm: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "Farm",
       joinColumn: { name: "FarmID" },
       inverseSide: "FarmManureTypes",
     },
     ManureType: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "ManureType",
       joinColumn: { name: "ManureTypeID" },
       inverseSide: "FarmManureTypes",

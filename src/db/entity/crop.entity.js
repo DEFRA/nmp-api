@@ -1,4 +1,5 @@
 const { EntitySchema } = require("typeorm");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
  
 const CropEntity = new EntitySchema({
   name: "Crop",
@@ -157,47 +158,47 @@ const CropEntity = new EntitySchema({
   },
   relations: {
     Field: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "Field",
       joinColumn: { name: "FieldID" },
       inverseSide: "Crops",
     },
     CropType: {
-      type: "one-to-one",
+      type: RELATION_TYPES.ONE_TO_ONE,
       target: "CropGroupCategories",
       joinColumn: { name: "CropTypeID" },
       inverseSide: "CropTypes",
     },
     CropIDSnsAnalyses: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "Field",
       joinColumn: { name: "ID" },
       inverseSide: "Crops",
     },
     CreatedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "CreatedByID" },
       inverseSide: "CreatedCrops",
     },
     ModifiedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "ModifiedByID" },
       inverseSide: "ModifiedCrops",
     },
     ManagementPeriods: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "ManagementPeriod",
       joinColumn: { name: "CropID" },
       inverseSide: "Crop",
     },
     WarningMessages: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "WarningMessages",
       joinColumn: { name: "ID" },
       inverseSide: "Crop",
-    }
+    },
   },
 });
  
