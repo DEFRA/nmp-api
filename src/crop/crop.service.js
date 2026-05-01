@@ -1198,7 +1198,6 @@ class CropService extends BaseService {
 
         const newOrganicManure = null;
         if (crop.CropTypeID === CropTypeMapper.OTHER) {
-        const newOrganicManure = null;
          await this.copyPlanOhercrop({
            crop,
            userId,
