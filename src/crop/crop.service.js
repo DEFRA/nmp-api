@@ -81,12 +81,13 @@ class CropService extends BaseService {
     );
     this.CalculateCropsSnsAnalysis = new CalculateCropsSnsAnalysisService();
     this.planService = new PlanService();
-    this.ProcessFutureManuresForWarnings = new ProcessFutureManuresForWarnings();
-     this.generateRecommendations = new GenerateRecommendations();
-    this.updatingFutureRecommendations = new UpdatingFutureRecommendations();  
-    this.countryRepository = AppDataSource.getRepository(CountryEntity); 
-   this.fieldRepository = AppDataSource.getRepository(FieldEntity);
-      this.COUNTRY_BOTH = 3;
+    this.ProcessFutureManuresForWarnings =
+      new ProcessFutureManuresForWarnings();
+    this.generateRecommendations = new GenerateRecommendations();
+    this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
+    this.countryRepository = AppDataSource.getRepository(CountryEntity);
+    this.fieldRepository = AppDataSource.getRepository(FieldEntity);
+    this.COUNTRY_BOTH = 3;
   }
 
   async createCropWithManagementPeriods(
@@ -142,11 +143,11 @@ class CropService extends BaseService {
     if (cropTypeId === null || cropTypeId === undefined) {
       throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
     }
-    const cropTypesList = await this.rB209ArableService.getData(ARABLE.ALL_ARABLE_CROP_TYPES_ENDPOINT);
-
-    const cropType = cropTypesList.find(
-      (cT) => cT.cropTypeId === cropTypeId,
+    const cropTypesList = await this.rB209ArableService.getData(
+      ARABLE.ALL_ARABLE_CROP_TYPES_ENDPOINT,
     );
+
+    const cropType = cropTypesList.find((cT) => cT.cropTypeId === cropTypeId);
 
     return {
       cropTypeId: cropType.cropTypeId,
@@ -174,9 +175,11 @@ class CropService extends BaseService {
     updatedCrop,
     fieldId,
     year,
-    rB209CountryID
+    rB209CountryID,
   ) {
-    if (updatedCrop?.CropOrder !== 1) {return}
+    if (updatedCrop?.CropOrder !== 1) {
+      return;
+    }
     const secondCrop = await transactionalManager.findOne(CropEntity, {
       where: { FieldID: fieldId, Year: year, CropOrder: 2 },
     });
@@ -191,14 +194,13 @@ class CropService extends BaseService {
           where: {
             FirstCropID: firstCropTypeID,
             SecondCropID: secondCropTypeID,
-            RB209CountryID: In([this.COUNTRY_BOTH, rB209CountryID])
+            RB209CountryID: In([this.COUNTRY_BOTH, rB209CountryID]),
           },
         },
       );
 
       if (!linking) {
-        const storedProcedureSecondCrop =
-          storedProcedure.DELETE_CROP;
+        const storedProcedureSecondCrop = storedProcedure.DELETE_CROP;
         await AppDataSource.query(storedProcedureSecondCrop, [secondCrop.ID]);
       }
     }
@@ -243,7 +245,7 @@ class CropService extends BaseService {
           {
             ...updateData,
             ModifiedByID: userId,
-            ModifiedOn: new Date()
+            ModifiedOn: new Date(),
           },
         );
 
@@ -257,15 +259,15 @@ class CropService extends BaseService {
           where: { FieldID: fieldId, Year: year, Confirm: confirmValue },
         });
 
-      // Get the rb209CountryID of the farm
-        const rb209CountryID = await this.fetchRb209CountryId(fieldId)
-       
+        // Get the rb209CountryID of the farm
+        const rb209CountryID = await this.fetchRb209CountryId(fieldId);
+
         await this.validateAndHandleSecondCrop(
           transactionalManager,
           updatedCrop,
           fieldId,
           year,
-          rb209CountryID
+          rb209CountryID,
         );
 
         return updatedCrop;
@@ -276,31 +278,31 @@ class CropService extends BaseService {
   }
 
   async fetchRb209CountryId(fieldId) {
-  let rb209CountryID = this.COUNTRY_BOTH; // default value
+    let rb209CountryID = this.COUNTRY_BOTH; // default value
 
-  const field = await this.fieldRepository.findOne({
-    where: { ID: fieldId },
-    select: ["FarmID"],
-  });
+    const field = await this.fieldRepository.findOne({
+      where: { ID: fieldId },
+      select: ["FarmID"],
+    });
 
-  const farm = field
-    ? await this.farmRepository.findOne({
-        where: { ID: field.FarmID },
-        select: ["CountryID"],
-      })
-    : null;
+    const farm = field
+      ? await this.farmRepository.findOne({
+          where: { ID: field.FarmID },
+          select: ["CountryID"],
+        })
+      : null;
 
-  const country = farm
-    ? await this.countryRepository.findOne({
-        where: { ID: farm.CountryID },
-        select: ["RB209CountryID"],
-      })
-    : null;
+    const country = farm
+      ? await this.countryRepository.findOne({
+          where: { ID: farm.CountryID },
+          select: ["RB209CountryID"],
+        })
+      : null;
 
-  rb209CountryID = country?.RB209CountryID ?? this.COUNTRY_BOTH;
+    rb209CountryID = country?.RB209CountryID ?? this.COUNTRY_BOTH;
 
-  return rb209CountryID;
-}
+    return rb209CountryID;
+  }
 
   // Other methods...
   async mapCropTypeIdWithTheirNames(plans) {
@@ -343,10 +345,10 @@ class CropService extends BaseService {
   async getOrganicAndInorganicDetails(farmId, harvestYear, request) {
     const storedProcedureGetPlansByHarvestYear =
       "EXEC dbo.spCrops_GetPlansByHarvestYear @farmId = @0, @harvestYear = @1";
-    const plans = await this.executeQuery(storedProcedureGetPlansByHarvestYear, [
-      farmId,
-      harvestYear,
-    ]);
+    const plans = await this.executeQuery(
+      storedProcedureGetPlansByHarvestYear,
+      [farmId, harvestYear],
+    );
 
     const findCropDetailsFromRepo = async (CropID) => {
       try {
@@ -501,8 +503,6 @@ class CropService extends BaseService {
 
         // Process each organicManure entry asynchronously
         return Promise.all(
-          
-
           organicManureData.map(async (organicManure) => {
             // Fetch the manure type data from MannerManureTypesService
             let mannerManureTypeData = {};
@@ -511,13 +511,10 @@ class CropService extends BaseService {
                 allManureData,
                 organicManure.ManureTypeID,
               );
- 
+
               mannerManureTypeData = manureTypeResponse.data;
             } catch (error) {
-              console.error(
-                `Error fetching manure type`,
-                error,
-              );
+              console.error(`Error fetching manure type`, error);
             }
 
             // Return the organic manure data with TypeOfManure fetched from the API
@@ -576,12 +573,7 @@ class CropService extends BaseService {
   async deleteCrop(cropId, userId, request, transactionalManager) {
     // If a global transaction manager is provided, use it.
     if (transactionalManager) {
-      return this.deleteCropById(
-        cropId,
-        userId,
-        request,
-        transactionalManager
-      );
+      return this.deleteCropById(cropId, userId, request, transactionalManager);
     }
 
     //  Otherwise, start a new local transaction.
@@ -613,8 +605,7 @@ class CropService extends BaseService {
       });
 
       if (secondCrop) {
-        const storedProcedureSecondCrop =
-          storedProcedure.DELETE_CROP;
+        const storedProcedureSecondCrop = storedProcedure.DELETE_CROP;
         await transactionalManager.query(storedProcedureSecondCrop, [
           secondCrop.ID,
         ]);
@@ -632,7 +623,7 @@ class CropService extends BaseService {
       newOrganicManure,
       transactionalManager,
       request,
-      userId
+      userId,
     );
     // Find the next available crop
     const nextAvailableCrop = await transactionalManager.findOne(CropEntity, {
@@ -647,7 +638,8 @@ class CropService extends BaseService {
 
     if (nextAvailableCrop) {
       // Not transactional — it's okay if this fails independently
-      this.updatingFutureRecommendations.updateRecommendationsForField(
+      this.updatingFutureRecommendations
+        .updateRecommendationsForField(
           crop.FieldID,
           nextAvailableCrop.Year,
           request,
@@ -656,7 +648,7 @@ class CropService extends BaseService {
         .then((res) => {
           if (res === undefined) {
             console.log(res);
-          } 
+          }
         })
         .catch((error) => {
           console.error(
@@ -748,24 +740,29 @@ class CropService extends BaseService {
   ) {
     const existingPeriods = await transactionalManager.find(
       ManagementPeriodEntity,
-      { where: { CropID: cropID }, order: { CreatedOn: "ASC" }}
+      { where: { CropID: cropID }, order: { CreatedOn: "ASC" } },
     );
-    const updatedManagementPeriods = [],existingCount = existingPeriods.length,incomingCount = incomingPeriods.length;
+    const updatedManagementPeriods = [],
+      existingCount = existingPeriods.length,
+      incomingCount = incomingPeriods.length;
     const minCount = Math.min(existingCount, incomingCount);
     for (let i = 0; i < minCount; i++) {
-      const incoming = incomingPeriods[i],existing = existingPeriods[i];
-      const { ID,CreatedByID,CreatedOn,CropID,...dataToUpdate} = incoming;
+      const incoming = incomingPeriods[i],
+        existing = existingPeriods[i];
+      const { ID, CreatedByID, CreatedOn, CropID, ...dataToUpdate } = incoming;
       await transactionalManager.update(ManagementPeriodEntity, existing.ID, {
         ...dataToUpdate,
         ModifiedByID: userId,
-        ModifiedOn: new Date()
+        ModifiedOn: new Date(),
       });
 
       const updated = await transactionalManager.findOne(
         ManagementPeriodEntity,
-        {where: { ID: existing.ID }}
+        { where: { ID: existing.ID } },
       );
-      if (updated) {updatedManagementPeriods.push(updated)}
+      if (updated) {
+        updatedManagementPeriods.push(updated);
+      }
     }
     for (let i = existingCount; i < incomingCount; i++) {
       const newPeriod = await transactionalManager.save(
@@ -776,15 +773,17 @@ class CropService extends BaseService {
           CreatedByID: userId,
           CreatedOn: new Date(),
           ModifiedByID: userId,
-          ModifiedOn: new Date()
+          ModifiedOn: new Date(),
         },
       );
-      if (newPeriod) {updatedManagementPeriods.push(newPeriod)}
+      if (newPeriod) {
+        updatedManagementPeriods.push(newPeriod);
+      }
     }
     for (let i = incomingCount; i < existingCount; i++) {
       const periodToDelete = existingPeriods[i];
       await transactionalManager.delete(OrganicManureEntity, {
-        ManagementPeriodID: periodToDelete.ID
+        ManagementPeriodID: periodToDelete.ID,
       });
       await transactionalManager.delete(FertiliserManuresEntity, {
         ManagementPeriodID: periodToDelete.ID,
@@ -860,16 +859,15 @@ class CropService extends BaseService {
         where: { ID: ID },
       });
 
-       
-        // Get the rb209CountryID of the farm
-        const rb209CountryID =await this.fetchRb209CountryId(crop.FieldID)
+      // Get the rb209CountryID of the farm
+      const rb209CountryID = await this.fetchRb209CountryId(crop.FieldID);
 
       await this.validateAndHandleSecondCrop(
         transactionalManager,
         updatedCrop,
         updatedCrop.FieldID,
         updatedCrop.Year,
-        rb209CountryID
+        rb209CountryID,
       );
 
       const updatedManagementPeriods =
@@ -887,7 +885,7 @@ class CropService extends BaseService {
         organicManure,
         transactionalManager,
         request,
-        userId
+        userId,
       );
 
       const nextAvailableCrop = await transactionalManager.findOne(CropEntity, {
@@ -900,11 +898,12 @@ class CropService extends BaseService {
       console.log("nextAvailableCrop", nextAvailableCrop);
 
       if (nextAvailableCrop) {
-        this.updatingFutureRecommendations.updateRecommendationsForField(
+        this.updatingFutureRecommendations
+          .updateRecommendationsForField(
             updatedCrop.FieldID,
             nextAvailableCrop.Year,
             request,
-            userId
+            userId,
           )
           .catch((error) => {
             console.error("Error updating next crop's recommendations:", error);
@@ -926,7 +925,7 @@ class CropService extends BaseService {
 
     return updatedResults;
   }
-  
+
   async savedDefault(
     cropData,
     userId,
@@ -950,7 +949,7 @@ class CropService extends BaseService {
         FieldID: cropData.FieldID,
         Year: harvestYear,
         CreatedByID: userId,
-        CreatedOn: new Date()
+        CreatedOn: new Date(),
       }),
     );
 
@@ -961,7 +960,7 @@ class CropService extends BaseService {
         ID: null,
         CropID: savedCrop.ID,
         CreatedByID: userId,
-        CreatedOn: new Date()
+        CreatedOn: new Date(),
       };
 
       const savedPeriod = await transactionalManager.save(
@@ -979,7 +978,7 @@ class CropService extends BaseService {
         const organicManures = await transactionalManager.find(
           OrganicManureEntity,
           {
-            where: { ManagementPeriodID: oldPeriod.ID }
+            where: { ManagementPeriodID: oldPeriod.ID },
           },
         );
 
@@ -989,7 +988,7 @@ class CropService extends BaseService {
             ID: null,
             ManagementPeriodID: OldToNewManagementPeriodMap[oldPeriod.ID],
             CreatedByID: userId,
-            CreatedOn: new Date()
+            CreatedOn: new Date(),
           };
 
           const savedManure = await transactionalManager.save(
@@ -1009,7 +1008,7 @@ class CropService extends BaseService {
           FertiliserManuresEntity,
           {
             where: { ManagementPeriodID: oldPeriod.ID },
-          }
+          },
         );
 
         for (const fert of fertilisers) {
@@ -1018,12 +1017,12 @@ class CropService extends BaseService {
             ID: null,
             ManagementPeriodID: OldToNewManagementPeriodMap[oldPeriod.ID],
             CreatedByID: userId,
-            CreatedOn: new Date()
+            CreatedOn: new Date(),
           };
 
           const savedFert = await transactionalManager.save(
             FertiliserManuresEntity,
-            newFert
+            newFert,
           );
 
           FertiliserManures.push(savedFert);
@@ -1036,7 +1035,7 @@ class CropService extends BaseService {
       Crop: savedCrop,
       ManagementPeriods,
       OrganicManures,
-      FertiliserManures
+      FertiliserManures,
     };
   }
 
@@ -1057,339 +1056,356 @@ class CropService extends BaseService {
       Recommendations,
       newOrganicManure,
     } = requiredParametres;
-          await this.savedDefault(
-            crop,
-            userId,
-            transactionalManager,
-            managementPeriods,
-            harvestYear,
-            isOrganic,
-            isFertiliser
+    await this.savedDefault(
+      crop,
+      userId,
+      transactionalManager,
+      managementPeriods,
+      harvestYear,
+      isOrganic,
+      isFertiliser,
+    );
+
+    const otherRecommendations =
+      await this.generateRecommendations.generateRecommendations(
+        field.ID,
+        harvestYear,
+        newOrganicManure,
+        transactionalManager,
+        request,
+        userId,
+      );
+    if (isSoilAnalysisHavePAndK && cropPlanOfNextYear.length === 0) {
+      const newPKBalance = {
+        ...pkBalanceData,
+        FieldID: crop.FieldID,
+        ID: null, // Make it a new insert
+        Year: harvestYear, // New year
+        CreatedByID: userId,
+        CreatedOn: new Date(),
+      };
+      await transactionalManager.save(PKBalanceEntity, newPKBalance);
+    } else if (isSoilAnalysisHavePAndK) {
+      //call UpdateRecommendation function
+      this.updatingFutureRecommendations
+        .updateRecommendationsForField(
+          crop.FieldID,
+          cropPlanOfNextYear.Year,
+          request,
+          userId,
+        )
+        .then((res) => {
+          console.log(res);
+        })
+        .catch((error) => {
+          console.error(
+            "Error updating recommendation and organic manure:",
+            error,
           );
-         
-          const otherRecommendations= await this.generateRecommendations.generateRecommendations(
-            field.ID,
-            harvestYear,
-            newOrganicManure,
-            transactionalManager,
-            request,
-            userId
-          );
-          if (isSoilAnalysisHavePAndK && cropPlanOfNextYear.length === 0) {
-                const newPKBalance = {
-                  ...pkBalanceData,
-                  FieldID: crop.FieldID,
-                  ID: null, // Make it a new insert
-                  Year: harvestYear, // New year
-                  CreatedByID: userId,
-                  CreatedOn: new Date(),
-                };
-               await transactionalManager.save(PKBalanceEntity, newPKBalance);
-            } else if (isSoilAnalysisHavePAndK) {
-              //call UpdateRecommendation function
-              this.updatingFutureRecommendations
-                .updateRecommendationsForField(
-                  crop.FieldID,
-                  cropPlanOfNextYear.Year,
-                  request,
-                  userId,
-                )
-                .then((res) => {
-                    console.log(res);
-                })
-                .catch((error) => {
-                  console.error(
-                    "Error updating recommendation and organic manure:",
-                    error,
-                  );
-                });
-            } else {
-                console.log(
-                  "Skipping PK balance and recommendation update: No soil analysis P & K available",
-                );
-            }
-           Recommendations.push({
-             Recommendation: otherRecommendations
-           });
-        
+        });
+    } else {
+      console.log(
+        "Skipping PK balance and recommendation update: No soil analysis P & K available",
+      );
+    }
+    Recommendations.push({
+      Recommendation: otherRecommendations,
+    });
+  }
+  async getFields(manager, farmID) {
+    return manager.find(FieldEntity, { where: { FarmID: farmID } });
   }
 
+  async getCropsByFieldIdAndYear(manager, fields, year) {
+    const ids = fields.map((f) => f.ID);
+    return manager.find(CropEntity, {
+      where: { FieldID: In(ids), Year: year },
+    });
+  }
+
+  hasSoilPK(data) {
+    return data.some(
+      (d) => d.PhosphorusIndex !== null || d.PotassiumIndex !== null,
+    );
+  }
+
+  isOtherCrop(crop) {
+    return crop.CropTypeID === CropTypeMapper.OTHER;
+  }
+
+  initResults() {
+    return {
+      Recommendations: [],
+      ManagementPeriods: [],
+      OrganicManures: [],
+      Fertilisers: [],
+    };
+  }
+
+  async createNewCrop(manager, crop, harvestYear, userId) {
+    const sowingDate = crop.SowingDate
+      ? new Date(new Date(crop.SowingDate).setFullYear(harvestYear))
+      : null;
+
+    return manager.save(CropEntity, {
+      ...crop,
+      ID: null,
+      Year: harvestYear,
+      SowingDate: sowingDate,
+      CreatedByID: userId,
+      CreatedOn: new Date(),
+    });
+  }
+
+  async handleOtherCrop(crop, field, managementPeriods, ctx, extra) {
+    const {
+      manager,
+      userId,
+      harvestYear,
+      isOrganic,
+      isFertiliser,
+      request,
+      results,
+    } = ctx;
+
+    const { nextYearCrop, pkBalance, hasPK } = extra;
+
+    const newOrganicManure = null;
+
+    await this.copyPlanOhercrop({
+      crop,
+      userId,
+      transactionalManager: manager,
+      managementPeriods,
+      harvestYear,
+      isOrganic,
+      isFertiliser,
+      field,
+      request,
+      cropPlanOfNextYear: nextYearCrop,
+      pkBalanceData: pkBalance,
+      isSoilAnalysisHavePAndK: hasPK,
+      Recommendations: results.Recommendations,
+      newOrganicManure,
+    });
+  }
+
+  async processCrop(crop, fields, ctx) {
+    const {
+      manager,
+      userId,
+      harvestYear,
+      isOrganic,
+      isFertiliser,
+      request,
+      results,
+    } = ctx;
+
+    const field = fields.find((f) => f.ID === crop.FieldID);
+
+    const [soilAnalysis, pkBalance, nextYearCrop, managementPeriods] =
+      await this.loadCropDependencies(manager, crop, harvestYear);
+
+    const hasPK = this.hasSoilPK(soilAnalysis);
+
+    await this.copyPKBalance(manager, pkBalance, crop, harvestYear, userId);
+
+    if (this.isOtherCrop(crop)) {
+      return this.handleOtherCrop(crop, field, managementPeriods, ctx, {
+        nextYearCrop,
+        pkBalance,
+        hasPK,
+      });
+    }
+
+    const savedCrop = await this.createNewCrop(
+      manager,
+      crop,
+      harvestYear,
+      userId,
+    );
+    const periodMap = await this.copyManagementPeriods(
+      manager,
+      managementPeriods,
+      savedCrop,
+      userId,
+      results,
+    );
+
+    if (isOrganic) {
+      await this.copyOrganic(
+        manager,
+        managementPeriods,
+        periodMap,
+        harvestYear,
+        userId,
+        results,
+      );
+    }
+
+    if (isFertiliser) {
+      await this.copyFertiliser(
+        manager,
+        managementPeriods,
+        periodMap,
+        harvestYear,
+        userId,
+        results,
+      );
+    }
+
+    await this.generateAndStoreRecommendations(field, ctx);
+
+    this.triggerFutureUpdate(crop, nextYearCrop, request, userId);
+  }
+
+  async copyPKBalance(manager, pk, crop, year, userId) {
+    if (!pk) {
+      return;
+    }
+
+    await manager.save(PKBalanceEntity, {
+      ...pk,
+      ID: null,
+      Year: year,
+      CreatedByID: userId,
+      CreatedOn: new Date(),
+    });
+  }
+
+  async loadCropDependencies(manager, crop, harvestYear) {
+    return Promise.all([
+      manager.find(SoilAnalysisEntity, { where: { FieldID: crop.FieldID } }),
+      manager.findOne(PKBalanceEntity, {
+        where: { FieldID: crop.FieldID, Year: crop.Year },
+      }),
+      manager.findOne(CropEntity, {
+        where: { FieldID: crop.FieldID, Year: MoreThan(harvestYear) },
+      }),
+      manager.find(ManagementPeriodEntity, { where: { CropID: crop.ID } }),
+    ]);
+  }
+
+  async copyManagementPeriods(manager, periods, crop, userId, results) {
+    const map = {};
+
+    for (const p of periods) {
+      const saved = await manager.save(ManagementPeriodEntity, {
+        ...p,
+        ID: null,
+        CropID: crop.ID,
+        CreatedByID: userId,
+        CreatedOn: new Date(),
+      });
+
+      map[p.ID] = saved.ID;
+      results.ManagementPeriods.push(saved);
+    }
+
+    return map;
+  }
+
+  async copyFertiliser(manager, periods, map, year, userId, results) {
+    for (const p of periods) {
+      const ferts = await manager.find(FertiliserManuresEntity, {
+        where: { ManagementPeriodID: p.ID },
+      });
+
+      for (const f of ferts) {
+        const date = f.ApplicationDate
+          ? new Date(new Date(f.ApplicationDate).setFullYear(year))
+          : null;
+
+        const saved = await manager.save(FertiliserManuresEntity, {
+          ...f,
+          ID: null,
+          ManagementPeriodID: map[p.ID],
+          ApplicationDate: date,
+          CreatedByID: userId,
+          CreatedOn: new Date(),
+        });
+
+        results.Fertilisers.push(saved);
+      }
+    }
+  }
+
+  async copyOrganic(manager, periods, map, year, userId, results) {
+    for (const p of periods) {
+      const manures = await manager.find(OrganicManureEntity, {
+        where: { ManagementPeriodID: p.ID },
+      });
+
+      for (const m of manures) {
+        const date = this.adjustOrganicDate(m.ApplicationDate, year);
+
+        const saved = await manager.save(OrganicManureEntity, {
+          ...m,
+          ID: null,
+          ManagementPeriodID: map[p.ID],
+          ApplicationDate: date,
+          CreatedByID: userId,
+          CreatedOn: new Date(),
+        });
+
+        results.OrganicManures.push(saved);
+      }
+    }
+  }
+
+  async generateAndStoreRecommendations(field, ctx) {
+    const rec = await this.generateRecommendations.generateRecommendations(
+      field.ID,
+      ctx.harvestYear,
+      null,
+      ctx.manager,
+      ctx.request,
+      ctx.userId,
+    );
+
+    ctx.results.Recommendations.push({ Recommendation: rec });
+  }
+
+  triggerFutureUpdate(crop, nextYearCrop, request, userId) {
+    if (!nextYearCrop) return;
+
+    this.updatingFutureRecommendations
+      .updateRecommendationsForField(
+        crop.FieldID,
+        nextYearCrop.Year,
+        request,
+        userId,
+      )
+      .catch(console.error);
+  }
   async copyPlan(body, userId, request) {
     const { farmID, harvestYear, copyYear, isOrganic, isFertiliser } = body;
-    let savedCrop;
-    const managementPeriodsOfNewCrop = [],organicManures = [],fertiliserManures = [],Recommendations = [];
-    return AppDataSource.transaction(async (transactionalManager) => {
-      // Step 1: Get all fields for the farmID
-      const fields = await transactionalManager.find(FieldEntity, {
-        where: { FarmID: farmID }
-      });
 
-      const fieldIDs = fields.map((field) => field.ID);
+    return AppDataSource.transaction(async (manager) => {
+      const fields = await this.getFields(manager, farmID);
+      if (!fields.length) return [];
 
-      if (fieldIDs.length === 0) {
-        return []; // No fields found
-      }
+      const crops = await this.getCropsByFieldIdAndYear(
+        manager,
+        fields,
+        copyYear,
+      );
 
-      // Step 2: Fetch crops with FieldID IN (...) and Year = copyYear
-      const crops = await transactionalManager.find(CropEntity, {
-        where: {
-          FieldID: In(fieldIDs),
-          Year: copyYear
-        },
-      });
-
-      // Step 3: Loop through each crop
-      for (const crop of crops) {
-        // Check if any soil analysis record has P or K index
-        const soilAnalysis = await transactionalManager.find(
-          SoilAnalysisEntity,
-          {
-            where: { FieldID: crop.FieldID }
-          },
-        );
-
-        const isSoilAnalysisHavePAndK = soilAnalysis.some(
-          (item) =>
-            item.PhosphorusIndex !== null || item.PotassiumIndex !== null,
-        );
-        const pkBalanceData = await transactionalManager.findOne(
-          PKBalanceEntity,
-          {
-            where: {
-              FieldID: crop.FieldID,
-              Year: copyYear
-            },
-          },
-        );
-
-        if (pkBalanceData) {
-          const newPkBalance = {
-            ...pkBalanceData,
-            ID: null, // Ensure it's treated as a new insert
-            Year: harvestYear,
-            CreatedByID: userId,
-            CreatedOn: new Date()
-          };
-
-          await transactionalManager.save(PKBalanceEntity, newPkBalance);
-        }
-
-        // Find any crop plan with the same field and year > copyYear
-        const cropPlanOfNextYear = await transactionalManager.findOne(
-          CropEntity,
-          {
-            where: {
-              FieldID: crop.FieldID,
-              Year: MoreThan(harvestYear)
-            },
-          },
-        );
-       
-
-        // Reuse existing field data
-        const field = fields.find((f) => f.ID === crop.FieldID);
-        
-        const managementPeriods = await transactionalManager.find(
-          ManagementPeriodEntity,
-          {
-            where: { CropID: crop.ID }
-          },
-        );
-
-        const newOrganicManure = null;
-        if (crop.CropTypeID === CropTypeMapper.OTHER) {
-         await this.copyPlanOhercrop({
-           crop,
-           userId,
-           transactionalManager,
-           managementPeriods,
-           harvestYear,
-           isOrganic,
-           isFertiliser,
-           field,
-           request,
-           cropPlanOfNextYear,
-           pkBalanceData,
-           isSoilAnalysisHavePAndK,
-           Recommendations,
-           newOrganicManure,
-         });
-         continue;
-        }
-        const oldToNewManagementPeriodMap = {};
-        let originalSowingDate = new Date(crop.SowingDate);
-        originalSowingDate = crop.SowingDate ? originalSowingDate : null;
-        let updatedSowingDate = new Date(originalSowingDate);
-        updatedSowingDate.setFullYear(harvestYear);
-        updatedSowingDate = crop.SowingDate ? updatedSowingDate : null;
-        // 1. Save the new crop
-        savedCrop = await transactionalManager.save(  
-          CropEntity,
-          this.cropRepository.create({
-            ...crop,
-            ID: null, // ensure it's treated as new
-            Year: harvestYear,
-            SowingDate: updatedSowingDate,
-            CreatedByID: userId,
-            CreatedOn: new Date()
-          }),
-        );
-
-        // 3. Copy and save management periods
-        for (const oldPeriod of managementPeriods) {
-          const newPeriod = {
-            ...oldPeriod,
-            ID: null,
-            CropID: savedCrop.ID,
-            CreatedByID: userId,
-            CreatedOn: new Date()
-          };
-
-          const savedPeriod = await transactionalManager.save(
-            ManagementPeriodEntity,
-            newPeriod,
-          );
-          oldToNewManagementPeriodMap[oldPeriod.ID] = savedPeriod.ID;
-          managementPeriodsOfNewCrop.push(savedPeriod);
-        }
-
-        // 4. If isOrganic, copy organic manure
-        if (isOrganic) {
-          for (const oldPeriod of managementPeriods) {
-            const manures = await transactionalManager.find(
-              OrganicManureEntity,
-              {
-                where: { ManagementPeriodID: oldPeriod.ID }
-              },
-            );
-
-            for (const manure of manures) {
-              let updatedApplicationDate = null;
-              const julyMonth = 7
-              if (manure.ApplicationDate) {
-                const originalDate = new Date(manure.ApplicationDate);
-                const month = originalDate.getMonth(); // 0 = Jan, 7 = Aug
-                let yearToSet = harvestYear;
-                // If date is from previous harvest year window (1 Aug - 31 Dec)
-                if (month >= julyMonth) {
-                  yearToSet = harvestYear - 1;
-                }
-
-                updatedApplicationDate = new Date(originalDate);
-                updatedApplicationDate.setFullYear(yearToSet);
-              }
-              const newManure = {
-                ...manure,
-                ID: null,
-                ManagementPeriodID: oldToNewManagementPeriodMap[oldPeriod.ID],
-                ApplicationDate: updatedApplicationDate,
-                CreatedByID: userId,
-                CreatedOn: new Date()
-              };
-
-              const savedManure = await transactionalManager.save(
-                OrganicManureEntity,
-                newManure
-              );
-              organicManures.push(savedManure);
-            }
-          }
-        }
-
-        for (const oldPeriod of managementPeriods) {
-           await transactionalManager.find(
-            RecommendationEntity,
-            {
-              where: { ManagementPeriodID: oldPeriod.ID }
-            },
-          );
-
-        }
-       
-        // 5. If isFertiliser, copy fertiliser manures
-        if (isFertiliser) {
-          for (const oldPeriod of managementPeriods) {
-            const fertilisers = await transactionalManager.find(
-              FertiliserManuresEntity,
-              {
-                where: { ManagementPeriodID: oldPeriod.ID }
-              },
-            );
-
-            for (const fert of fertilisers) {
-              let updatedApplicationDate = null;
-              if (fert.ApplicationDate) {
-                const originalDate = new Date(fert.ApplicationDate);
-                updatedApplicationDate = new Date(originalDate);
-                updatedApplicationDate.setFullYear(harvestYear);
-              }
-              const newFert = {
-                ...fert,
-                ID: null,
-                ManagementPeriodID: oldToNewManagementPeriodMap[oldPeriod.ID],
-                ApplicationDate: updatedApplicationDate,
-                CreatedByID: userId,
-                CreatedOn: new Date()
-              };
-
-              const savedFert = await transactionalManager.save(
-                FertiliserManuresEntity,
-                newFert
-              );
-              fertiliserManures.push(savedFert);
-            }
-          }
-        }
-
-      
-       const updatedRecommendation = await this.generateRecommendations.generateRecommendations(
-          field.ID,
-          harvestYear,
-          newOrganicManure,
-          transactionalManager,
-          request,
-          userId
-        );
-
-         Recommendations.push({
-           Recommendation: updatedRecommendation
-         });
-        
-
-        if (cropPlanOfNextYear) {
-          this.updatingFutureRecommendations.updateRecommendationsForField(
-              crop.FieldID,
-              cropPlanOfNextYear.Year,
-              request,
-              userId
-            )
-            .then((res) => {
-              if (res === undefined) {
-                console.log(
-                  "updateRecommendationAndOrganicManure returned undefined",
-                );
-              } else {
-                console.log(
-                  res,
-                );
-              }
-            })
-            .catch((error) => {
-              console.error(
-                "Error updating recommendation and organic manure:",
-                error
-              );
-            });
-        }
-      }
-
-      // You can return crops or any processed result
-      return {
-        Recommendations: Recommendations,
-        ManagementPeriods: managementPeriodsOfNewCrop,
-        OrganicManures: organicManures,
-        Fertilisers: fertiliserManures
+      const context = {
+        manager,
+        userId,
+        harvestYear,
+        isOrganic,
+        isFertiliser,
+        request,
+        results: this.initResults(),
       };
+
+      for (const crop of crops) {
+        await this.processCrop(crop, fields, context);
+      }
+
+      return context.results;
     });
   }
 
@@ -1398,7 +1414,7 @@ class CropService extends BaseService {
       // 1. Crop latest
       const crop = await transactionalManager.findOne(CropEntity, {
         where: { ID: cropId },
-        select: ["CreatedOn", "ModifiedOn"]
+        select: ["CreatedOn", "ModifiedOn"],
       });
 
       let cropLatest = null;
@@ -1409,7 +1425,7 @@ class CropService extends BaseService {
       // 2. Get ManagementPeriod IDs
       const periods = await transactionalManager.find(ManagementPeriodEntity, {
         where: { CropID: cropId },
-        select: ["ID"]
+        select: ["ID"],
       });
       const periodIds = periods.map((p) => p.ID);
 
@@ -1418,7 +1434,7 @@ class CropService extends BaseService {
       if (periodIds.length) {
         const organics = await transactionalManager.find(OrganicManureEntity, {
           where: { ManagementPeriodID: In(periodIds) },
-          select: ["CreatedOn", "ModifiedOn"]
+          select: ["CreatedOn", "ModifiedOn"],
         });
 
         for (const o of organics) {
@@ -1434,7 +1450,7 @@ class CropService extends BaseService {
           FertiliserManuresEntity,
           {
             where: { ManagementPeriodID: In(periodIds) },
-            select: ["CreatedOn", "ModifiedOn"]
+            select: ["CreatedOn", "ModifiedOn"],
           },
         );
 
@@ -1451,7 +1467,7 @@ class CropService extends BaseService {
           RecommendationEntity,
           {
             where: { ManagementPeriodID: In(periodIds) },
-            select: ["CreatedOn", "ModifiedOn"]
+            select: ["CreatedOn", "ModifiedOn"],
           },
         );
 
@@ -1459,7 +1475,7 @@ class CropService extends BaseService {
           const latest = await this.maxDate(r.CreatedOn, r.ModifiedOn);
           recommendationLatest = await this.maxDate(
             recommendationLatest,
-            latest
+            latest,
           );
         }
       }
@@ -1469,8 +1485,8 @@ class CropService extends BaseService {
         cropLatest,
         await this.maxDate(
           organicLatest,
-          await this.maxDate(fertiliserLatest, recommendationLatest)
-        )
+          await this.maxDate(fertiliserLatest, recommendationLatest),
+        ),
       );
 
       return finalLatest;
@@ -1478,18 +1494,18 @@ class CropService extends BaseService {
   }
 
   async maxDate(d1, d2) {
-    if (!d1) {return d2 || null};
-    if (!d2) {return d1 || null};
-     return new Date(Math.max(d1.getTime(), d2.getTime()));
+    if (!d1) {
+      return d2 || null;
+    }
+    if (!d2) {
+      return d1 || null;
+    }
+    return new Date(Math.max(d1.getTime(), d2.getTime()));
   }
 
-  async mergeCrop(
-    userId,
-    Crops,
-    request
-  ) {
+  async mergeCrop(userId, Crops, request) {
     const cropsWithID = {
-      Crops: Crops.Crops.filter((crop) => crop.Crop.ID !== null)
+      Crops: Crops.Crops.filter((crop) => crop.Crop.ID !== null),
     };
     const cropsWithoutID = Crops.Crops.filter((crop) => crop.Crop.ID === null);
 
@@ -1498,7 +1514,6 @@ class CropService extends BaseService {
     ) // Adding condition for IsDeleted and ID not null
       .map((crop) => crop.Crop.ID);
     return await AppDataSource.transaction(async (transactionalManager) => {
-      
       if (cropIds.length > 0) {
         for (const cropId of cropIds) {
           await this.deleteCrop(cropId, userId, request, transactionalManager);
@@ -1508,7 +1523,7 @@ class CropService extends BaseService {
         cropsWithID,
         userId,
         request,
-        transactionalManager
+        transactionalManager,
       );
 
       const createdPlan =
@@ -1516,9 +1531,9 @@ class CropService extends BaseService {
           cropsWithoutID,
           userId,
           request,
-          transactionalManager
+          transactionalManager,
         );
-      return createdPlan != null
+      return createdPlan != null;
     });
   }
 
@@ -1526,7 +1541,7 @@ class CropService extends BaseService {
     const cropData = await this.repository.find({
       where: {
         FieldID: fieldId,
-        Year: year
+        Year: year,
       },
     });
 
@@ -1534,45 +1549,43 @@ class CropService extends BaseService {
   }
 
   async getOrganicInorganicManuresByCropId(cropId) {
-  return AppDataSource.transaction(async (manager) => {
+    return AppDataSource.transaction(async (manager) => {
+      // 1. Fetch Management Periods for the crop
+      const managementPeriods = await manager.find(ManagementPeriodEntity, {
+        where: { CropID: cropId },
+        select: ["ID"],
+      });
 
-    // 1. Fetch Management Periods for the crop
-    const managementPeriods = await manager.find(ManagementPeriodEntity, {
-      where: { CropID: cropId },
-      select: ['ID']
-    });
+      if (!managementPeriods.length) {
+        return {
+          fertiliserManures: [],
+          organicManures: [],
+        };
+      }
 
-    if (!managementPeriods.length) {
+      const managementPeriodIds = managementPeriods.map((mp) => mp.ID);
+
+      // 2. Fetch Organic Manures
+      const organicManures = await manager.find(OrganicManureEntity, {
+        where: {
+          ManagementPeriodID: In(managementPeriodIds),
+        },
+      });
+
+      // 3. Fetch Fertiliser Manures
+      const fertiliserManures = await manager.find(FertiliserManuresEntity, {
+        where: {
+          ManagementPeriodID: In(managementPeriodIds),
+        },
+      });
+
+      // 4. Return structured JSON
       return {
-        fertiliserManures: [],
-        organicManures: []
+        fertiliserManures,
+        organicManures,
       };
-    }
-
-    const managementPeriodIds = managementPeriods.map(mp => mp.ID);
-
-    // 2. Fetch Organic Manures
-    const organicManures = await manager.find(OrganicManureEntity, {
-      where: {
-        ManagementPeriodID: In(managementPeriodIds)
-      },
     });
-
-    // 3. Fetch Fertiliser Manures
-    const fertiliserManures = await manager.find(FertiliserManuresEntity, {
-      where: {
-        ManagementPeriodID: In(managementPeriodIds),
-      },
-    });
-
-    // 4. Return structured JSON
-    return {
-      fertiliserManures,
-      organicManures,
-    };
-  });
-}
-  
+  }
 }
 
 module.exports = { CropService };
