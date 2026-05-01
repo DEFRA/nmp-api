@@ -1250,7 +1250,7 @@ class CropService extends BaseService {
     this.triggerFutureUpdate(crop, nextYearCrop, request, userId);
   }
 
-  async copyPKBalance(manager, pk, crop, year, userId) {
+  async copyPKBalance(manager, pk, _crop, year, userId) {
     if (!pk) {
       return;
     }
@@ -1358,7 +1358,7 @@ class CropService extends BaseService {
   }
 
   triggerFutureUpdate(crop, nextYearCrop, request, userId) {
-    if (!nextYearCrop) return;
+    if (!nextYearCrop) {return};
 
     this.updatingFutureRecommendations
       .updateRecommendationsForField(
