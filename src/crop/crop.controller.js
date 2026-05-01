@@ -382,13 +382,12 @@ class CropController {
     }
   }
 
-  async MergeCrop() {
+  async mergeCrop() {
     try {
       const body = this.#request.payload;
       const userId = this.#request.userId;
 
-      const results = await this.#cropService.MergeCrop(
-        // body,
+      const results = await this.#cropService.mergeCrop(
         userId,
         body,
         this.#request,

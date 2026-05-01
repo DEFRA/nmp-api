@@ -1,4 +1,5 @@
 const { EntitySchema } = require("typeorm");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const FieldEntity = new EntitySchema({
   name: "Field",
@@ -109,25 +110,25 @@ const FieldEntity = new EntitySchema({
   },
   relations: {
     Farm: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "Farm",
       joinColumn: { name: "FarmID" },
       inverseSide: "Fields",
     },
     Crops: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "Crop",
       joinColumn: { name: "ID" },
       inverseSide: "Field",
     },
     SoilAnalyses: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "SoilAnalysis",
       joinColumn: { name: "ID" },
       inverseSide: "Field",
     },
     PreviousGrasses: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "PreviousGrasses",
       joinColumn: { name: "ID" },
       inverseSide: "Fields",
@@ -135,18 +136,18 @@ const FieldEntity = new EntitySchema({
 
     CreatedByUser: {
       target: "User",
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       inverseSide: "Fields",
       joinColumn: { name: "CreatedByID" },
     },
     ModifiedByUser: {
       target: "User",
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       inverseSide: "Fields",
       joinColumn: { name: "ModifiedByID" },
     },
     SnsAnalyses: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "SnsAnalyses",
       inverseSide: "Field", // Matches the relation in SnsAnalysesEntity
       joinColumn: {
@@ -154,25 +155,25 @@ const FieldEntity = new EntitySchema({
       },
     },
     PKBalances: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "PKBalances",
       joinColumn: { name: "ID" },
       inverseSide: "Fields",
     },
     InprogressCalculations: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "InprogressCalculations",
       joinColumn: { name: "ID" },
       inverseSide: "Field",
     },
     WarningMessages: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "WarningMessages",
       joinColumn: { name: "ID" },
       inverseSide: "Field",
     },
     PreviousCropingField: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "PreviousCroppings",
       joinColumn: { name: "ID" },
       inverseSide: "Fields",

@@ -1,4 +1,5 @@
 const { EntitySchema } = require("typeorm");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const ManagementPeriodEntity = new EntitySchema({
   name: "ManagementPeriod",
@@ -66,41 +67,41 @@ const ManagementPeriodEntity = new EntitySchema({
   },
   relations: {
     Crops: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "Crop",
       joinColumn: { name: "CropID" },
       inverseSide: "ManagementPeriods",
     },
     CreatedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "CreatedByID" },
       inverseSide: "CreatedManagementPeriods",
     },
     ModifiedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "ModifiedByID" },
       inverseSide: "ModifiedManagementPeriods",
     },
     Recommendations: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "Recommendation",
       joinColumn: { name: "ID" },
       inverseSide: "ManagementPeriod",
     },
     OrganicManures: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "OrganicManure",
       joinColumn: { name: "ID" },
       inverseSide: "ManagementPeriod",
     },
-    FertiliserManures:{
-      type: "one-to-many",
+    FertiliserManures: {
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "FertiliserManures",
       joinColumn: { name: "ID" },
-      inverseSide:"ManagementPeriod"
-    }
+      inverseSide: "ManagementPeriod",
+    },
   },
 });
 

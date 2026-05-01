@@ -1,4 +1,5 @@
 const { EntitySchema } = require("typeorm");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const IncorporationMethodEntity = new EntitySchema({
   name: "IncorporationMethod",
@@ -28,19 +29,19 @@ const IncorporationMethodEntity = new EntitySchema({
   },
   relations: {
     ApplicationMethodsIncorpMethods: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "ApplicationMethodsIncorpMethod",
       joinColumn: { name: "ID" },
       inverseSide: "IncorporationMethod",
     },
     IncorpMethodsIncorpDelays: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "IncorpMethodsIncorpDelay",
       joinColumn: { name: "ID" },
       inverseSide: "IncorporationMethod",
     },
     OrganicManures: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "OrganicManure",
       joinColumn: { name: "ID" },
       inverseSide: "IncorporationMethod",
