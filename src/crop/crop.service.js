@@ -1087,13 +1087,12 @@ class CropService extends BaseService {
       await transactionalManager.save(PKBalanceEntity, newPKBalance);
     } else if (isSoilAnalysisHavePAndK) {
       //call UpdateRecommendation function
-      this.updatingFutureRecommendations
-        .updateRecommendationsForField(
-          crop.FieldID,
-          cropPlanOfNextYear.Year,
-          request,
-          userId,
-        )
+      this.updatingFutureRecommendations.updateRecommendationsForField(
+        crop.FieldID,
+        cropPlanOfNextYear.Year,
+        request,
+        userId,
+      );
     } else {
       console.log(
         "Skipping PK balance and recommendation update: No soil analysis P & K available",
@@ -1144,7 +1143,7 @@ class CropService extends BaseService {
       Year: harvestYear,
       SowingDate: sowingDate,
       CreatedByID: userId,
-      CreatedOn: new Date()
+      CreatedOn: new Date(),
     });
   }
 
@@ -1177,7 +1176,7 @@ class CropService extends BaseService {
       pkBalanceData: pkBalance,
       isSoilAnalysisHavePAndK: hasPK,
       Recommendations: results.Recommendations,
-      newOrganicManure
+      newOrganicManure,
     });
   }
 
@@ -1196,11 +1195,8 @@ class CropService extends BaseService {
 
     const [soilAnalysis, pkBalance, nextYearCrop, managementPeriods] =
       await this.loadCropDependencies(manager, crop, harvestYear);
-
     const hasPK = this.hasSoilPK(soilAnalysis);
-
     await this.copyPKBalance(manager, pkBalance, crop, harvestYear, userId);
-
     if (this.isOtherCrop(crop)) {
       return this.handleOtherCrop(crop, field, managementPeriods, ctx, {
         nextYearCrop,
@@ -1215,6 +1211,7 @@ class CropService extends BaseService {
       harvestYear,
       userId,
     );
+
     const periodMap = await this.copyManagementPeriods(
       manager,
       managementPeriods,
@@ -1248,6 +1245,12 @@ class CropService extends BaseService {
     await this.generateAndStoreRecommendations(field, ctx);
 
     this.triggerFutureUpdate(crop, nextYearCrop, request, userId);
+
+    // ✅ Explicit return for main flow
+    return {
+      cropId: savedCrop.ID,
+      fieldId: crop.FieldID,
+    };
   }
 
   async copyPKBalance(manager, pk, _crop, year, userId) {
@@ -1358,7 +1361,9 @@ class CropService extends BaseService {
   }
 
   triggerFutureUpdate(crop, nextYearCrop, request, userId) {
-    if (!nextYearCrop) {return};
+    if (!nextYearCrop) {
+      return;
+    }
 
     this.updatingFutureRecommendations
       .updateRecommendationsForField(
@@ -1374,7 +1379,9 @@ class CropService extends BaseService {
 
     return AppDataSource.transaction(async (manager) => {
       const fields = await this.getFields(manager, farmID);
-      if (!fields.length) {return []};
+      if (!fields.length) {
+        return [];
+      }
 
       const crops = await this.getCropsByFieldIdAndYear(
         manager,
