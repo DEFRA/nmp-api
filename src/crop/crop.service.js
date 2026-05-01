@@ -515,7 +515,7 @@ class CropService extends BaseService {
               mannerManureTypeData = manureTypeResponse.data;
             } catch (error) {
               console.error(
-                `Error fetching manure type for ID: ${organicManure.ManureTypeID}`,
+                `Error fetching manure type`,
                 error,
               );
             }
@@ -1224,7 +1224,7 @@ class CropService extends BaseService {
         updatedSowingDate.setFullYear(harvestYear);
         updatedSowingDate = crop.SowingDate ? updatedSowingDate : null;
         // 1. Save the new crop
-        savedCrop = await transactionalManager.save(
+        savedCrop = await transactionalManager.save(  
           CropEntity,
           this.cropRepository.create({
             ...crop,
