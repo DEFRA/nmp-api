@@ -1094,15 +1094,6 @@ class CropService extends BaseService {
           request,
           userId,
         )
-        .then((res) => {
-          console.log(res);
-        })
-        .catch((error) => {
-          console.error(
-            "Error updating recommendation and organic manure:",
-            error,
-          );
-        });
     } else {
       console.log(
         "Skipping PK balance and recommendation update: No soil analysis P & K available",
@@ -1153,7 +1144,7 @@ class CropService extends BaseService {
       Year: harvestYear,
       SowingDate: sowingDate,
       CreatedByID: userId,
-      CreatedOn: new Date(),
+      CreatedOn: new Date()
     });
   }
 
@@ -1186,7 +1177,7 @@ class CropService extends BaseService {
       pkBalanceData: pkBalance,
       isSoilAnalysisHavePAndK: hasPK,
       Recommendations: results.Recommendations,
-      newOrganicManure,
+      newOrganicManure
     });
   }
 
@@ -1383,7 +1374,7 @@ class CropService extends BaseService {
 
     return AppDataSource.transaction(async (manager) => {
       const fields = await this.getFields(manager, farmID);
-      if (!fields.length) return [];
+      if (!fields.length) {return []};
 
       const crops = await this.getCropsByFieldIdAndYear(
         manager,
