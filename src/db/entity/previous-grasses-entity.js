@@ -1,5 +1,6 @@
 const { EntitySchema } = require("typeorm");
 const { auditColumns } = require("../../constants/audits-columns");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const PreviousGrassesEntity = new EntitySchema({
   name: "PreviousGrasses",
@@ -37,35 +38,35 @@ const PreviousGrassesEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
-   ...auditColumns
+    ...auditColumns,
   },
   relations: {
     Fields: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "Field",
       joinColumn: { name: "FieldID" },
       inverseSide: "PreviousGrasses",
     },
     GrassManagementOptions: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "GrassManagementOptions",
       joinColumn: { name: "GrassManagementOptionID" },
       inverseSide: "PreviousGrasses",
     },
     SoilNitrogenSupplyItems: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "SoilNitrogenSupplyItems",
       joinColumn: { name: "SoilNitrogenSupplyItemID" },
       inverseSide: "PreviousGrasses",
     },
     CreatedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "CreatedByID" },
       inverseSide: "CreatedPreviousGrasses",
     },
     ModifiedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "ModifiedByID" },
       inverseSide: "ModifiedPreviousGrasses",
