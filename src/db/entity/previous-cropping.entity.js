@@ -1,5 +1,6 @@
 const { EntitySchema } = require("typeorm");
 const { RELATION_TYPES } = require("../../constants/relations-mapper");
+const { auditColumns } = require("../../constants/audits-columns");
 
 const PreviousCroppingEntity = new EntitySchema({
   name: "PreviousCroppings",
@@ -46,23 +47,7 @@ const PreviousCroppingEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
-    CreatedOn: {
-      type: "datetime2",
-      nullable: true,
-      default: () => "getdate()",
-    },
-    CreatedByID: {
-      type: "int",
-      nullable: true,
-    },
-    ModifiedOn: {
-      type: "datetime2",
-      nullable: true,
-    },
-    ModifiedByID: {
-      type: "int",
-      nullable: true,
-    },
+    ...auditColumns
   },
   relations: {
     Fields: {
