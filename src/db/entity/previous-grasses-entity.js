@@ -1,7 +1,7 @@
 const { EntitySchema } = require("typeorm");
 const { auditColumns } = require("../../constants/audits-columns");
 const { RELATION_TYPES } = require("../../constants/relations-mapper");
-const { previousGrassRelations } = require("../../constants/previous-grass-entitiy-relations");
+const { previousGrassRelations, previousRelations } = require("../../constants/previous-grass-entitiy-relations");
 
 const PreviousGrassesEntity = new EntitySchema({
   name: "PreviousGrasses",
@@ -41,7 +41,31 @@ const PreviousGrassesEntity = new EntitySchema({
     },
     ...auditColumns,
   },
-  relations: previousGrassRelations
+  relations: {
+    ...previousRelations,
+
+    Fields: {
+      ...previousRelations.Fields,
+      target: "Field",
+      inverseSide: "PreviousGrasses",
+    },
+    GrassManagementOptions: {
+      ...previousRelations.GrassManagementOptions,
+      inverseSide: "PreviousGrasses",
+    },
+    SoilNitrogenSupplyItems: {
+      ...previousRelations.SoilNitrogenSupplyItems,
+      inverseSide: "PreviousGrasses",
+    },
+    CreatedByUser: {
+      ...previousRelations.CreatedByUser,
+      inverseSide: "CreatedPreviousGrasses",
+    },
+    ModifiedByUser: {
+      ...previousRelations.ModifiedByUser,
+      inverseSide: "ModifiedPreviousGrasses",
+    },
+  },
 });
 
 module.exports = { PreviousGrassesEntity };
