@@ -1096,9 +1096,14 @@ class FieldService extends BaseService {
                     SulphurDeficient: soilAnalysisRecords.SulphurDeficient,
                     Date: soilAnalysisRecords.Date,
                     PH: recommendation.PH,
+                    PhosphorusMethodologyID:soilAnalysisRecords.PhosphorusMethodologyID,
                     PhosphorusIndex: recommendation.PIndex,
                     PotassiumIndex: recommendation.KIndex,
                     MagnesiumIndex: recommendation.MgIndex,
+                    PhosphorusStatus: soilAnalysisRecords.PhosphorusStatus,
+                    PotassiumStatus: soilAnalysisRecords.PotassiumStatus,
+                    MagnesiumStatus: soilAnalysisRecords.MagnesiumStatus,
+                    OrganicMatter:soilAnalysisRecords.OrganicMatterPercentage,
                   };
                   isSoilAnalysisAdded = true;
                 } else {

@@ -17,7 +17,8 @@ const cropPlanValidation = {
   }),
   failAction: validationFailAction,
 }; 
-
+const cropListPath="/crops/fields/{fieldId}";
+const createCropDescription="Create Crop Plan";
 module.exports = [
   {
     method: "GET",
@@ -25,7 +26,7 @@ module.exports = [
     options: {
       tags: ["api", "Crop"],
       description: "Get Crop plans by harvest year",
-      validate: cropPlanValidation
+      validate: cropPlanValidation,
     },
     handler: async (request, h) => {
       const controller = new CropController(request, h);
@@ -102,7 +103,7 @@ module.exports = [
   },
   {
     method: "GET",
-    path: "/crops/fields/{fieldId}",
+    path: cropListPath,
     options: {
       tags: ["api", "Crop"],
       description: "Get Crops By Field id",
@@ -143,7 +144,7 @@ module.exports = [
 
   {
     method: "POST",
-    path: "/crops/fields/{fieldId}",
+    path: cropListPath,
     handler: async (request, h) => {
       const controller = new CropController(request, h);
       return controller.createCrop();
@@ -169,7 +170,7 @@ module.exports = [
     },
     options: {
       tags: ["api", "Crop"],
-      description: "Create Crop Plan",
+      description: createCropDescription,
       validate: {
         payload: CreatePlanDto,
         failAction: validationFailAction,
@@ -199,7 +200,7 @@ module.exports = [
   },
   {
     method: "PUT",
-    path: "/crops/fields/{fieldId}",
+    path: cropListPath,
     options: {
       tags: ["api", "Crop"],
       description: "Update crop by Field ID, Year, and Confirm status",
@@ -357,7 +358,7 @@ module.exports = [
     },
     options: {
       tags: ["api", "Crop"],
-      description: "Create Crop Plan",
+      description: createCropDescription,
       validate: {
         payload: CopyPlanDto,
         failAction: validationFailAction,
@@ -370,11 +371,11 @@ module.exports = [
     path: "/crops/mergeCrop",
     handler: async (request, h) => {
       const controller = new CropController(request, h);
-      return controller.MergeCrop();
+      return controller.mergeCrop();
     },
     options: {
       tags: ["api", "Crop"],
-      description: "Create Crop Plan",
+      description: createCropDescription,
       validate: {
         payload: CreatePlanDto,
         failAction: validationFailAction,

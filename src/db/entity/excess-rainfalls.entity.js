@@ -1,4 +1,5 @@
 const { EntitySchema } = require("typeorm");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const ExcessRainfallsEntity = new EntitySchema({
   name: "ExcessRainfalls", // Entity name
@@ -43,19 +44,19 @@ const ExcessRainfallsEntity = new EntitySchema({
   },
   relations: {
     Farm: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "Farms",
       joinColumn: { name: "FarmID" },
       inverseSide: "ExcessRainfalls", // Adjust this based on inverse side in Farms entity
     },
     CreatedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "CreatedByID" },
       inverseSide: "CreatedExcessRainfalls", // Adjust this based on inverse side in Users entity
     },
     ModifiedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "ModifiedByID" },
       inverseSide: "ModifiedExcessRainfalls", // Adjust this based on inverse side in Users entity
