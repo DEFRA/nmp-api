@@ -1,4 +1,5 @@
 const { EntitySchema } = require("typeorm");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const OrganicManureEntity = new EntitySchema({
   name: "OrganicManure",
@@ -204,61 +205,61 @@ const OrganicManureEntity = new EntitySchema({
   },
   relations: {
     CreatedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "CreatedByID" },
       inverseSide: "CreatedOrganicManures",
     },
     ModifiedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "ModifiedByID" },
       inverseSide: "ModifiedOrganicManures",
     },
     ManagementPeriod: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "ManagementPeriod",
       joinColumn: { name: "ManagementPeriodID" },
       inverseSide: "OrganicManures",
     },
     ManureType: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "ManureType",
       joinColumn: { name: "ManureTypeID" },
       inverseSide: "OrganicManures",
     },
     ApplicationMethod: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "ApplicationMethod",
       joinColumn: { name: "ApplicationMethodID" },
       inverseSide: "OrganicManures",
     },
     IncorporationMethod: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "IncorporationMethod",
       joinColumn: { name: "IncorporationMethodID" },
       inverseSide: "OrganicManures",
     },
     IncorporationDelay: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "IncorporationDelay",
       joinColumn: { name: "IncorporationDelayID" },
       inverseSide: "OrganicManures",
     },
     Windspeed: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "Windspeed",
       joinColumn: { name: "WindspeedID" },
       inverseSide: "OrganicManures",
     },
     RainType: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "RainType",
       joinColumn: { name: "RainfallWithinSixHoursID" },
       inverseSide: "OrganicManures",
     },
     MoistureType: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "MoistureType",
       joinColumn: { name: "MoistureID" },
       inverseSide: "OrganicManures",

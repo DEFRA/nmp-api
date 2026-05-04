@@ -1,4 +1,5 @@
 const { EntitySchema } = require("typeorm");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const RecommendationCommentEntity = new EntitySchema({
   name: "RecommendationComment",
@@ -47,19 +48,19 @@ const RecommendationCommentEntity = new EntitySchema({
   },
   relations: {
     Recommendation: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "Recommendation",
       joinColumn: { name: "RecommendationID" },
       inverseSide: "RecommendationComments",
     },
     CreatedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "CreatedByID" },
       inverseSide: "CreatedRecommendationComments",
     },
     ModifiedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "ModifiedByID" },
       inverseSide: "ModifiedRecommendationComments",

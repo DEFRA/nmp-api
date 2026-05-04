@@ -1,4 +1,5 @@
 const { EntitySchema } = require("typeorm");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const NutrientsLoadingLiveStocksEntity = new EntitySchema({
   name: "NutrientsLoadingLiveStocks",
@@ -148,31 +149,25 @@ const NutrientsLoadingLiveStocksEntity = new EntitySchema({
   },
   relations: {
     Farm: {
-      type: "one-to-many",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "Farms",
       joinColumn: { name: "FarmID" },
       inverseSide: "NutrientsLoadingLiveStocks",
     },
-    // NutrientsLoadingLiveStocksGroup: {
-    //   type: "many-to-one",
-    //   target: "LivestockGroups",
-    //   joinColumn: { name: "LiveStockGroupID" },
-    //   inverseSide: "LivestockGroupsIdInLiveStocks",
-    // },
     NutrientsLoadingLiveStocksType: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "LivestockTypes",
       joinColumn: { name: "LiveStockTypeID" },
       inverseSide: "LivestockGroupsIdInLiveStocks",
     },
     CreatedBy: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "CreatedByID" },
       inverseSide: "CreatedNutrientsLoadingLiveStocks",
     },
     ModifiedBy: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "ModifiedByID" },
       inverseSide: "ModifiedNutrientsLoadingLiveStocks",
