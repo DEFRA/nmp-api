@@ -78,7 +78,7 @@ const PreviousCroppingEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
-  ...auditColumns
+  ...auditColumns,
   },
   relations: previousRelations
 });
