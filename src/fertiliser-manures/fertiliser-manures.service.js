@@ -60,12 +60,25 @@ class FertiliserManuresService extends BaseService {
     confirm,
     fertiliserId,
   ) {
-    // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
-    const fromDateFormatted = new Date(fromDate);
-    fromDateFormatted.setHours(0, 0, 0, 0); // Set time to start of the day
 
-    const toDateFormatted = new Date(toDate);
-    toDateFormatted.setHours(23, 59, 59, 999); // Set time to end of the day
+     const START_OF_DAY = {
+       HOUR: 0,
+       MINUTE: 0,
+       SECOND: 0,
+       MILLISECOND: 0,
+     };
+
+     const END_OF_DAY = {
+       HOUR: 23,
+       MINUTE: 59,
+       SECOND: 59,
+       MILLISECOND: 999,
+     };
+    // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
+   
+  const fromDateFormatted = normalizeDateWithTime(fromDate, START_OF_DAY);
+   const toDateFormatted = normalizeDateWithTime(toDate, END_OF_DAY);
+    
     const queryBuilder =  this.repository
       .createQueryBuilder("F")
       .select("SUM(F.N * F.ApplicationRate)", "totalN")
@@ -403,7 +416,7 @@ class FertiliserManuresService extends BaseService {
                   transactionalManager,
                 );
 
-                if (cropData[0].CropTypeID == CropTypeMapper.OTHER) {
+                if (cropData[0].CropTypeID === CropTypeMapper.OTHER) {
                   const otherPKBalance =
                     await this.CalculatePKBalanceOther.calculatePKBalanceOther(
                       cropData[0],
@@ -584,14 +597,18 @@ class FertiliserManuresService extends BaseService {
           ? fertiliserData.filter((item) => {
               const itemDate = new Date(item?.ApplicationDate);
               const fertiliserDate = new Date(fertiliser?.ApplicationDate);
-              const isMatching =
-                itemDate.getTime() === fertiliserDate.getTime() &&
+              const isSameDate =
+                itemDate.getTime() === fertiliserDate.getTime();
+              const isSameNutrients =
                 item?.Nitrogen === fertiliser?.N &&
                 item?.P2O5 === fertiliser?.P2O5 &&
                 item?.SO3 === fertiliser?.SO3 &&
                 item?.K2O === fertiliser?.K2O &&
-                item?.Lime === fertiliser?.Lime &&
                 item?.MgO === fertiliser?.MgO;
+
+              const isSameOther = item?.Lime === fertiliser?.Lime;
+
+              const isMatching = isSameDate && isSameNutrients && isSameOther;
 
               return isMatching;
             })

@@ -487,18 +487,20 @@ class FieldService extends BaseService {
               );
               hasPrevCropUpdated = true;
             }
-          }
+          } else {console.log("no value assigned")}
         }
 
-        // ✅ Recalculate Recommendations if any change
+        // Recalculate Recommendations if any change
         if (hasPrevCropUpdated) {
           const crops = await transactionalManager.find(CropEntity, {
             where: { FieldID: fieldId },
           });
 
           if (crops.length > 0) {
-            const oldestCrop = crops.reduce((oldest, current) =>
-              current.Year < oldest.Year ? current : oldest,
+            const oldestCrop = crops.reduce(
+              (oldest, current) =>
+                current.Year < oldest.Year ? current : oldest,
+              crops[0]
             );
 
             this.updatingFutureRecommendations
