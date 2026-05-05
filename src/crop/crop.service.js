@@ -18,33 +18,19 @@ const MannerManureTypesService = require("../vendors/manner/manure-types/manure-
 const { FieldEntity } = require("../db/entity/field.entity");
 const { MoreThan } = require("typeorm");
 const { In } = require("typeorm");
-const {
-  SecondCropLinkingEntity,
-} = require("../db/entity/second-crop-linking.entity");
+const {SecondCropLinkingEntity} = require("../db/entity/second-crop-linking.entity");
 const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const RB209SoilService = require("../vendors/rb209/soil/soil.service");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
-const {
-  GrassGrowthService,
-} = require("../grass-growth-plan/grass-growth-plan.service");
+const {GrassGrowthService} = require("../grass-growth-plan/grass-growth-plan.service");
 const { CropOrderMapper } = require("../constants/crop-order-mapper");
-const {
-  CalculateGrassHistoryAndPreviousGrass,
-} = require("../shared/calculate-previous-grass-id.service");
+const {CalculateGrassHistoryAndPreviousGrass} = require("../shared/calculate-previous-grass-id.service");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
-const {
-  CalculateMannerOutputService,
-} = require("../shared/calculate-manner-output-service");
-const {
-  RecommendationCommentEntity,
-} = require("../db/entity/recommendation-comment.entity");
-const {
-  RB209RecommendationService,
-} = require("../vendors/rb209/recommendation/recommendation.service");
-const {
-  CalculateCropsSnsAnalysisService,
-} = require("../shared/calculate-crops-sns-analysis-service");
+const {CalculateMannerOutputService} = require("../shared/calculate-manner-output-service");
+const {RecommendationCommentEntity} = require("../db/entity/recommendation-comment.entity");
+const {RB209RecommendationService} = require("../vendors/rb209/recommendation/recommendation.service");
+const { CalculateCropsSnsAnalysisService} = require("../shared/calculate-crops-sns-analysis-service");
 const PlanService = require("../plan/plan.service");
 const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
 const { ARABLE } = require("../constants/rb209-endpoints-mapper");
@@ -56,9 +42,7 @@ class CropService extends BaseService {
   constructor() {
     super(CropEntity);
     this.repository = AppDataSource.getRepository(CropEntity);
-    this.managementPeriodRepository = AppDataSource.getRepository(
-      ManagementPeriodEntity,
-    );
+    this.managementPeriodRepository = AppDataSource.getRepository(ManagementPeriodEntity);
     this.rB209ArableService = new RB209ArableService();
     this.rB209GrassService = new RB209GrassService();
     this.RB209SoilService = new RB209SoilService();
@@ -67,18 +51,12 @@ class CropService extends BaseService {
     this.CalculateMannerOutput = new CalculateMannerOutputService();
     this.rB209RecommendationService = new RB209RecommendationService();
     this.farmRepository = AppDataSource.getRepository(FarmEntity);
-    this.organicManureRepository =
-      AppDataSource.getRepository(OrganicManureEntity);
+    this.organicManureRepository =AppDataSource.getRepository(OrganicManureEntity);
     this.cropRepository = AppDataSource.getRepository(CropEntity);
-    this.recommendationRepository =
-      AppDataSource.getRepository(RecommendationEntity);
-    this.fertiliserRepository = AppDataSource.getRepository(
-      FertiliserManuresEntity,
-    );
+    this.recommendationRepository =AppDataSource.getRepository(RecommendationEntity);
+    this.fertiliserRepository = AppDataSource.getRepository(FertiliserManuresEntity);
     this.MannerManureTypesService = new MannerManureTypesService();
-    this.recommendationCommentRepository = AppDataSource.getRepository(
-      RecommendationCommentEntity,
-    );
+    this.recommendationCommentRepository = AppDataSource.getRepository(RecommendationCommentEntity);
     this.CalculateCropsSnsAnalysis = new CalculateCropsSnsAnalysisService();
     this.planService = new PlanService();
     this.ProcessFutureManuresForWarnings =
@@ -94,26 +72,19 @@ class CropService extends BaseService {
     fieldId,
     cropData,
     managementPeriodData,
-    userId,
+    userId
   ) {
     return AppDataSource.transaction(async (transactionalManager) => {
-      const crop = this.repository.create({
-        ...cropData,
-        FieldID: fieldId,
-        CreatedByID: userId,
-      });
+      const crop = this.repository.create({...cropData,FieldID: fieldId,CreatedByID: userId});
       const savedCrop = await transactionalManager.save(CropEntity, crop);
       const managementPeriods = [];
       for (const managementPeriod of managementPeriodData) {
         const createdManagementPeriod = this.managementPeriodRepository.create({
           ...managementPeriod,
           CropID: savedCrop.ID,
-          CreatedByID: userId,
+          CreatedByID: userId
         });
-        const savedManagementPeriod = await transactionalManager.save(
-          ManagementPeriodEntity,
-          createdManagementPeriod,
-        );
+        const savedManagementPeriod = await transactionalManager.save(ManagementPeriodEntity,createdManagementPeriod);
         managementPeriods.push(savedManagementPeriod);
       }
       return { Crop: savedCrop, ManagementPeriods: managementPeriods };
@@ -122,64 +93,28 @@ class CropService extends BaseService {
   async getCrops(fieldId, year, confirm) {
     const confirmValue = confirm ? 1 : 0;
     const cropData = await this.repository.findOne({
-      where: {
-        FieldID: fieldId,
-        Year: year,
-        Confirm: confirmValue,
-      },
+      where: {FieldID: fieldId,Year: year,Confirm: confirmValue},
     });
     return cropData;
   }
   async getCropTypeDataByFieldAndYear(fieldId, year, confirm) {
     const cropData = await this.repository.findOne({
-      where: {
-        FieldID: fieldId,
-        Year: year,
-        Confirm: confirm,
-      },
+      where: {FieldID: fieldId,Year: year,Confirm: confirm},
     });
     const cropTypeId = cropData?.CropTypeID;
-
-    if (cropTypeId === null || cropTypeId === undefined) {
-      throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
-    }
-    const cropTypesList = await this.rB209ArableService.getData(
-      ARABLE.ALL_ARABLE_CROP_TYPES_ENDPOINT,
-    );
-
+    if (cropTypeId === null || cropTypeId === undefined) {throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND)}
+    const cropTypesList = await this.rB209ArableService.getData(ARABLE.ALL_ARABLE_CROP_TYPES_ENDPOINT);
     const cropType = cropTypesList.find((cT) => cT.cropTypeId === cropTypeId);
-
-    return {
-      cropTypeId: cropType.cropTypeId,
-      cropType: cropType.cropType,
-    };
+    return {cropTypeId: cropType.cropTypeId,cropType: cropType.cropType};
   }
 
   async filterBySingleSequenceId(data, sequenceId) {
-    const filteredCalculations = data.calculations.filter(
-      (item) => item.sequenceId === sequenceId,
-    );
-
-    const filteredAdviceNotes = data.adviceNotes.filter(
-      (item) => item.sequenceId === sequenceId,
-    );
-
-    return {
-      ...data,
-      calculations: filteredCalculations,
-      adviceNotes: filteredAdviceNotes,
-    };
+    const filteredCalculations = data.calculations.filter((item) => item.sequenceId === sequenceId);
+    const filteredAdviceNotes = data.adviceNotes.filter((item) => item.sequenceId === sequenceId);
+    return {...data,calculations: filteredCalculations,adviceNotes: filteredAdviceNotes};
   }
-  async validateAndHandleSecondCrop(
-    transactionalManager,
-    updatedCrop,
-    fieldId,
-    year,
-    rB209CountryID,
-  ) {
-    if (updatedCrop?.CropOrder !== 1) {
-      return;
-    }
+  async validateAndHandleSecondCrop(transactionalManager,updatedCrop,fieldId,year,rB209CountryID) {
+    if (updatedCrop?.CropOrder !== 1) {return}
     const secondCrop = await transactionalManager.findOne(CropEntity, {
       where: { FieldID: fieldId, Year: year, CropOrder: 2 },
     });
@@ -187,18 +122,9 @@ class CropService extends BaseService {
     if (secondCrop) {
       const firstCropTypeID = updatedCrop.CropTypeID;
       const secondCropTypeID = secondCrop.CropTypeID;
-
       const linking = await transactionalManager.findOne(
         SecondCropLinkingEntity,
-        {
-          where: {
-            FirstCropID: firstCropTypeID,
-            SecondCropID: secondCropTypeID,
-            RB209CountryID: In([this.COUNTRY_BOTH, rB209CountryID]),
-          },
-        },
-      );
-
+        {where: {FirstCropID: firstCropTypeID,SecondCropID: secondCropTypeID,RB209CountryID: In([this.COUNTRY_BOTH, rB209CountryID])}});
       if (!linking) {
         const storedProcedureSecondCrop = storedProcedure.DELETE_CROP;
         await AppDataSource.query(storedProcedureSecondCrop, [secondCrop.ID]);
@@ -214,17 +140,13 @@ class CropService extends BaseService {
     confirm,
   ) {
     const confirmValue = confirm ? 1 : 0;
-
     const result = await AppDataSource.transaction(
       async (transactionalManager) => {
         const existingCrop = await transactionalManager.findOne(CropEntity, {
           where: { FieldID: fieldId, Year: year, Confirm: confirmValue },
         });
-
         if (!existingCrop) {
-          throw boom.notFound(
-            `Crop for FieldID ${fieldId}, Year ${year}, and Confirm ${confirm} not found`,
-          );
+          throw boom.notFound(`Crop for FieldID ${fieldId}, Year ${year}, and Confirm ${confirm} not found`);
         }
 
         const {
@@ -250,9 +172,7 @@ class CropService extends BaseService {
         );
 
         if (updateResult.affected === 0) {
-          throw boom.notFound(
-            `Crop for FieldID ${fieldId}, Year ${year}, and Confirm ${confirmValue} not found`,
-          );
+          throw boom.notFound(`Crop for FieldID ${fieldId}, Year ${year}, and Confirm ${confirmValue} not found`);
         }
 
         const updatedCrop = await transactionalManager.findOne(CropEntity, {
@@ -282,25 +202,16 @@ class CropService extends BaseService {
 
     const field = await this.fieldRepository.findOne({
       where: { ID: fieldId },
-      select: ["FarmID"],
+      select: ["FarmID"]
     });
-
-    const farm = field
-      ? await this.farmRepository.findOne({
-          where: { ID: field.FarmID },
-          select: ["CountryID"],
-        })
-      : null;
-
+    const farm = field ? await this.farmRepository.findOne({where: { ID: field.FarmID },select: ["CountryID"]}): null;
     const country = farm
       ? await this.countryRepository.findOne({
           where: { ID: farm.CountryID },
           select: ["RB209CountryID"],
         })
       : null;
-
     rb209CountryID = country?.RB209CountryID ?? this.COUNTRY_BOTH;
-
     return rb209CountryID;
   }
 
@@ -311,15 +222,12 @@ class CropService extends BaseService {
       const cropTypesList = await this.rB209ArableService.getData(
         ARABLE.ALL_ARABLE_CROP_TYPES_ENDPOINT,
       );
-
       for (const cropType of cropTypesList) {
         unorderedMap[cropType.cropTypeId] = cropType.cropType;
       }
-
       for (const plan of plans) {
         plan.CropTypeName = unorderedMap[plan.CropTypeID] || null;
       }
-
       return plans;
     } catch (error) {
       console.error("Error mapping CropTypeId with their names:", error);
@@ -331,15 +239,11 @@ class CropService extends BaseService {
     const manureType = manureTypesResponse.data.find(
       (mt) => mt.id === manureTypeID,
     );
-
     if (!manureType) {
       console.log(`ManureType not found for ID ${manureTypeID}`);
     }
-
     //  Match API response structure
-    return {
-      data: manureType,
-    };
+    return {data: manureType};
   }
 
   async getOrganicAndInorganicDetails(farmId, harvestYear, request) {
@@ -349,27 +253,20 @@ class CropService extends BaseService {
       storedProcedureGetPlansByHarvestYear,
       [farmId, harvestYear],
     );
-
     const findCropDetailsFromRepo = async (CropID) => {
       try {
         const cropRecord = await this.repository.findOne({
           where: { ID: CropID },
         });
-        return {
-          PlantingDate: cropRecord ? cropRecord.SowingDate : null,
-        };
+        return {PlantingDate: cropRecord ? cropRecord.SowingDate : null};
       } catch (error) {
         console.error(
           `Error fetching crop details for CropID: ${CropID}`,
-          error,
+          error
         );
-        return {
-          CropId: null,
-          PlantingDate: null,
-        };
+        return {CropId: null,PlantingDate: null};
       }
     };
-
     const findManagementPeriodId = async (cropId) => {
       try {
         const managementPeriods = await this.managementPeriodRepository.find({
@@ -389,15 +286,13 @@ class CropService extends BaseService {
     const findOrganicManureData = async (managementPeriodIds) => {
       try {
         const organicManureEntries = await this.organicManureRepository.find({
-          where: {
-            ManagementPeriodID: In(managementPeriodIds),
-          },
+          where: {ManagementPeriodID: In(managementPeriodIds)}
         });
         return organicManureEntries;
       } catch (error) {
         console.error(
           `Error fetching organic manure data for ManagementPeriodIDs: ${managementPeriodIds}`,
-          error,
+          error
         );
         return [];
       }
@@ -423,7 +318,7 @@ class CropService extends BaseService {
       try {
         const farmRecord = await this.farmRepository.findOne({
           where: { ID: farmID },
-          select: ["Rainfall"],
+          select: ["Rainfall"]
         });
         return farmRecord ? farmRecord.Rainfall : null;
       } catch (error) {
@@ -432,18 +327,13 @@ class CropService extends BaseService {
       }
     };
 
-    const findDefoliationSequenceDescription = async (
-      DefoliationSequenceID,
-    ) => {
+    const findDefoliationSequenceDescription = async (DefoliationSequenceID) => {
       try {
         let defoliationSequenceDescription = null;
         const defoliationSequence = await this.rB209GrassService.getData(
           `Grass/DefoliationSequence/${DefoliationSequenceID}`,
         );
-        defoliationSequenceDescription = defoliationSequence
-          ? defoliationSequence.defoliationSequenceDescription
-          : null;
-
+        defoliationSequenceDescription = defoliationSequence ? defoliationSequence.defoliationSequenceDescription: null;
         return defoliationSequenceDescription;
       } catch (error) {
         console.error(
@@ -455,19 +345,14 @@ class CropService extends BaseService {
     };
     const rainfall = await findFarmRainfall(farmId);
     const plansWithNames = await this.mapCropTypeIdWithTheirNames(plans);
-
     const cropDetails = [];
-
     for (const plan of plansWithNames) {
       const { PlantingDate } = await findCropDetailsFromRepo(plan.CropID);
-
       let defoliationSequenceDescription = null;
       if (plan.DefoliationSequenceID != null) {
-        defoliationSequenceDescription =
-          await findDefoliationSequenceDescription(plan.DefoliationSequenceID);
+        defoliationSequenceDescription = await findDefoliationSequenceDescription(plan.DefoliationSequenceID);
       }
       const lastModifiedDate = await this.getLatestModifiedDate(plan.CropID);
-
       cropDetails.push({
         CropId: plan.CropID,
         CropTypeID: plan.CropTypeID,
@@ -488,10 +373,7 @@ class CropService extends BaseService {
 
     const organicMaterials = await Promise.all(
       cropDetails.map(async (crop) => {
-        // Fetch the management period ID for the crop
         const managementPeriodId = await findManagementPeriodId(crop.CropId);
-
-        // Fetch the organic manure data if management period ID exists
         const organicManureData = managementPeriodId
           ? await findOrganicManureData(managementPeriodId)
           : [];
