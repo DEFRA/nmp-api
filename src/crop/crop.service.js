@@ -682,7 +682,7 @@ class CropService extends BaseService {
       .andWhere("Crops.Year = :year", { year })
       .andWhere("Crops.ID NOT IN (:...cropIds)", { cropIds });
 
-    return await existingGroupNameCount.getCount();
+    return existingGroupNameCount.getCount();
   }
 
   async updateCropGroupName(cropIds, cropGroupName, variety, year, userId) {
@@ -816,7 +816,7 @@ class CropService extends BaseService {
     }
 
     //  Otherwise, start a new local transaction.
-    return await AppDataSource.transaction(async (localManager) => {
+    return AppDataSource.transaction(async (localManager) => {
       return this.updateCrop(body, userId, request, localManager);
     });
   }
@@ -1511,7 +1511,7 @@ class CropService extends BaseService {
       (crop) => crop.Crop.ID !== null && crop.Crop.IsDeleted === true,
     ) // Adding condition for IsDeleted and ID not null
       .map((crop) => crop.Crop.ID);
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       if (cropIds.length > 0) {
         for (const cropId of cropIds) {
           await this.deleteCrop(cropId, userId, request, transactionalManager);
