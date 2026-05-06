@@ -1,89 +1,75 @@
 const Joi = require("joi");
 const precisionThree = 3,maximumLength = 250;
 // Define the validation schema for OrganicManureEntity
-const OrganicManureEntitySchema = Joi.object({
-  ID: Joi.number().integer().required().allow(null).default(null),
+
+const baseOrganicManureSchema = {
   ManagementPeriodID: Joi.number().integer().required(),
   ManureTypeID: Joi.number().integer().required(),
   ManureTypeName: Joi.string().optional(),
   ApplicationDate: Joi.date().iso().allow(null),
   Confirm: Joi.boolean().allow(null),
+
   N: Joi.number().precision(precisionThree).required(),
   P2O5: Joi.number().precision(precisionThree).required(),
   K2O: Joi.number().precision(precisionThree).required(),
   MgO: Joi.number().precision(precisionThree).required(),
   SO3: Joi.number().precision(precisionThree).required(),
+
   AvailableN: Joi.number().precision(precisionThree).required(),
   ApplicationRate: Joi.number().precision(1).required(),
   DryMatterPercent: Joi.number().precision(2).required(),
   UricAcid: Joi.number().precision(2).required(),
+
   EndOfDrain: Joi.date().iso().allow(null),
   Rainfall: Joi.number().integer().required(),
+
   AreaSpread: Joi.number().precision(precisionThree).allow(null),
   ManureQuantity: Joi.number().precision(precisionThree).allow(null),
+
   ApplicationMethodID: Joi.number().integer().allow(null),
   IncorporationMethodID: Joi.number().integer().allow(null),
   IncorporationDelayID: Joi.number().integer().allow(null),
+
   NH4N: Joi.number().precision(precisionThree).required(),
   NO3N: Joi.number().precision(precisionThree).required(),
+
   AvailableP2O5: Joi.number().precision(precisionThree).allow(null),
   AvailableK2O: Joi.number().precision(precisionThree).allow(null),
   AvailableSO3: Joi.number().precision(precisionThree).allow(null),
+
+  WindspeedID: Joi.number().integer().allow(null),
+  RainfallWithinSixHoursID: Joi.number().integer().allow(null),
+  MoistureID: Joi.number().integer().allow(null),
+
+  AutumnCropNitrogenUptake: Joi.number().integer().precision(2).default(0),
+
+  AvailableNForNMax: Joi.number().precision(precisionThree).allow(null),
+
+  AvailableNForNextYear: Joi.number().precision(precisionThree).allow(null),
+
+  AvailableNForNextDefoliation: Joi.number()
+    .precision(precisionThree)
+    .allow(null),
+};
+const OrganicManureEntitySchema = Joi.object({
+  ID: Joi.number().integer().required().allow(null).default(null),
+  ...baseOrganicManureSchema,
   TotalN: Joi.number().precision(precisionThree).allow(null),
   TotalP2O5: Joi.number().precision(precisionThree).allow(null),
   TotalK2O: Joi.number().precision(precisionThree).allow(null),
   TotalSO3: Joi.number().precision(precisionThree).allow(null),
   TotalMgO: Joi.number().precision(precisionThree).allow(null),
-  WindspeedID: Joi.number().integer().allow(null),
-  RainfallWithinSixHoursID: Joi.number().integer().allow(null),
-  MoistureID: Joi.number().integer().allow(null),
-  AutumnCropNitrogenUptake: Joi.number().integer().precision(2).default(0),
   SoilDrainageEndDate: Joi.date().iso().allow(null),
-  AvailableNForNMax: Joi.number().precision(precisionThree).allow(null),
   FieldName: Joi.string().optional().allow(null),
   EncryptedCounter: Joi.string().optional().allow(null),
   Defoliation: Joi.number().integer().optional().allow(null),
   FieldID: Joi.number().integer().allow(null),
   DefoliationName: Joi.string().optional().allow(null),
-  AvailableNForNextYear: Joi.number().precision(precisionThree).allow(null),
-  AvailableNForNextDefoliation: Joi.number().precision(precisionThree).allow(null)
 });
 
 const UpdateOrganicManureEntitySchema = Joi.object({
   ID: Joi.number().integer().required(),
-  ManagementPeriodID: Joi.number().integer().required(),
-  ManureTypeID: Joi.number().integer().required(),
-  ManureTypeName: Joi.string().optional(),
-  ApplicationDate: Joi.date().iso().allow(null),
-  Confirm: Joi.boolean().allow(null),
-  N: Joi.number().precision(precisionThree).required(),
-  P2O5: Joi.number().precision(precisionThree).required(),
-  K2O: Joi.number().precision(precisionThree).required(),
-  MgO: Joi.number().precision(precisionThree).required(),
-  SO3: Joi.number().precision(precisionThree).required(),
-  AvailableN: Joi.number().precision(precisionThree).required(),
-  ApplicationRate: Joi.number().precision(1).required(),
-  DryMatterPercent: Joi.number().precision(2).required(),
-  UricAcid: Joi.number().precision(2).required(),
-  EndOfDrain: Joi.date().iso().allow(null),
-  Rainfall: Joi.number().integer().required(),
-  AreaSpread: Joi.number().precision(precisionThree).allow(null),
-  ManureQuantity: Joi.number().precision(precisionThree).allow(null),
-  ApplicationMethodID: Joi.number().integer().allow(null),
-  IncorporationMethodID: Joi.number().integer().allow(null),
-  IncorporationDelayID: Joi.number().integer().allow(null),
-  NH4N: Joi.number().precision(precisionThree).required(),
-  NO3N: Joi.number().precision(precisionThree).required(),
-  AvailableP2O5: Joi.number().precision(precisionThree).allow(null),
-  AvailableK2O: Joi.number().precision(precisionThree).allow(null),
-  AvailableSO3: Joi.number().precision(precisionThree).allow(null),
-  WindspeedID: Joi.number().integer().allow(null),
-  RainfallWithinSixHoursID: Joi.number().integer().allow(null),
-  MoistureID: Joi.number().integer().allow(null),
-  AutumnCropNitrogenUptake: Joi.number().integer().precision(2).default(0),
-  AvailableNForNMax: Joi.number().precision(precisionThree).allow(null),
-  AvailableNForNextYear: Joi.number().precision(precisionThree).allow(null),
-  AvailableNForNextDefoliation: Joi.number().precision(precisionThree).allow(null)
+  ...baseOrganicManureSchema
 });
 
 const WarningMessageItemSchema = Joi.object({
