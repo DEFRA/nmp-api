@@ -2,8 +2,7 @@ const Joi = require("joi");
 const {
   CreateCropWithManagementPeriodsDto,
 } = require("../../crop/dto/crops.dto");
- const maxTwentyValues = 20;
- const maxTwoFiftyFive = 255;
+ const maxTwentyValues = 20,maxTwoFiftyFive = 255,minMinuesTwo = -2,precisionEighteen= 18,precisionNine = 9,precisionThree = 3;
 const FieldEntitySchema = Joi.object({
   ID: Joi.number().integer().allow(null),
   SoilTypeID: Joi.number().integer().optional(),
@@ -36,7 +35,7 @@ const SoilAnalysisSchema = Joi.object({
   Year: Joi.number().integer().required(),
   SulphurDeficient: Joi.boolean().default(true).required(),
   Date: Joi.date().iso().allow(null),
-  PH: Joi.number().precision(18).allow(null),
+  PH: Joi.number().precision(precisionEighteen).allow(null),
   PhosphorusMethodologyID: Joi.number().integer().allow(null),
   Phosphorus: Joi.number().integer().allow(null),
   PhosphorusIndex: Joi.number()
@@ -46,7 +45,7 @@ const SoilAnalysisSchema = Joi.object({
     .default(0)
     .allow(null),
   Potassium: Joi.number().integer().allow(null),
-  PotassiumIndex: Joi.number().integer().min(-2).max(9).allow(null),
+  PotassiumIndex: Joi.number().integer().min(minMinuesTwo).max(precisionNine).allow(null),
   PotassiumMethodologyID: Joi.number()
     .integer()
     .default(4)
@@ -58,7 +57,12 @@ const SoilAnalysisSchema = Joi.object({
     .default(4)
     .required()
     .allow(null),
-  MagnesiumIndex: Joi.number().integer().min(0).max(maxTwoFiftyFive).default(0).allow(null),
+  MagnesiumIndex: Joi.number()
+    .integer()
+    .min(0)
+    .max(maxTwoFiftyFive)
+    .default(0)
+    .allow(null),
   SoilNitrogenSupply: Joi.number().integer().allow(null),
   SoilNitrogenSupplyIndex: Joi.number()
     .integer()
@@ -69,7 +73,7 @@ const SoilAnalysisSchema = Joi.object({
 
   SoilNitrogenSampleDate: Joi.date().iso().allow(null),
   Sodium: Joi.number().integer().allow(null),
-  Lime: Joi.number().precision(3).allow(null),
+  Lime: Joi.number().precision(precisionThree).allow(null),
   PhosphorusStatus: Joi.string().max(maxTwentyValues).allow(null),
 
   PotassiumStatus: Joi.string().max(maxTwentyValues).allow(null),
