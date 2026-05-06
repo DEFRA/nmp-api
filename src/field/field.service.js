@@ -1239,19 +1239,10 @@ class FieldService extends BaseService {
 
       // Step 2: Check if any year has pH value > 0
       const soilAnalysisWithPH = soilAnalyses.find((rec) => rec.PH > 0);
-
-      // If no pH > 0 is found, return early without doing any further processing
-      if (!soilAnalysisWithPH) {
-        return null; // Exit if no recommendation with pH > 0 is found
-      }
-
+      if (!soilAnalysisWithPH) { return null}
       // Get the soilAnalysisYear from the recommendation with pH > 0
       const soilAnalysisWithPhYear = soilAnalysisWithPH.Year;
-   
-      // Step 3: Proceed with the process only if pH > 0 is found
-
       const cropData = await this.findCropDataByID(Recommendation.Crop_ID); // check order 1 or 2
-
       let totalLime1 = 0;
       let result = 0;
       if (cropData != null) {
@@ -1271,8 +1262,6 @@ class FieldService extends BaseService {
               firstCropOrderDataList,
             );
           }
-
-          // Now, totalLime1 contains the sum of lime for all crops found in the list
           console.log(`Total Lime from all firstCropOrderData: ${totalLime1}`);
         }
 
@@ -1287,8 +1276,7 @@ class FieldService extends BaseService {
             );
 
           if (CropOrderDataList != null) {
-            totalLime1 =
-              await this.getApplyLimeInCaseOfMultipleCrops(CropOrderDataList);
+            totalLime1 = await this.getApplyLimeInCaseOfMultipleCrops(CropOrderDataList);
           }
           const cropOrder = 1;
           const firstCropOrderData =
@@ -1296,19 +1284,13 @@ class FieldService extends BaseService {
               fieldId,
               cropData.Year,
               null,
-              cropOrder,
+              cropOrder
             );
           if (firstCropOrderData != null) {
-            totalLime1 +=
-              await this.getApplyLimeInCaseOfMultipleCrops(firstCropOrderData);
+            totalLime1 += await this.getApplyLimeInCaseOfMultipleCrops(firstCropOrderData);
           }
         }
-
-        // Step 6: Sum total lime values for both crops
-
-        // Step 7: Subtract the total lime from cropN in the recommendation
         const cropNeedValue = Recommendation.Recommendation_CropN;
-
         if (totalLime1 > 0) {
           result = cropNeedValue - totalLime1;
           console.log("result", result);
