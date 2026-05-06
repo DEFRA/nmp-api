@@ -230,8 +230,8 @@ class OrganicManureService extends BaseService {
     return Number(result?.totalN ?? 0);
   }
 
-  async getTotalNitrogen(fieldId, fromDate, toDate, confirm, organicManureID) {
-    // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
+  async formatDateRange(fromDate, toDate) {
+     // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
     const START_OF_DAY = {
       HOUR: 0,
       MINUTE: 0,
@@ -245,10 +245,17 @@ class OrganicManureService extends BaseService {
       SECOND: 59,
       MILLISECOND: 999,
     };
-    
-       const fromDateFormatted = normalizeDateWithTime(fromDate, START_OF_DAY);
-       const toDateFormatted = normalizeDateWithTime(toDate, END_OF_DAY);
+  return {
+    fromDateFormatted: normalizeDateWithTime(fromDate, START_OF_DAY),
+    toDateFormatted: normalizeDateWithTime(toDate, END_OF_DAY),
+  };
+}
 
+  async getTotalNitrogen(fieldId, fromDate, toDate, confirm, organicManureID) {
+   const { fromDateFormatted, toDateFormatted } = this.formatDateRange(
+     fromDate,
+     toDate
+   );
     const query = this.repository
       .createQueryBuilder("O") // O = OrganicManures
       .select("SUM(O.N * O.ApplicationRate)", "totalN")
