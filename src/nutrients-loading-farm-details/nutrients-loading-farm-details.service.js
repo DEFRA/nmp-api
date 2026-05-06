@@ -28,7 +28,7 @@ class NutrientsLoadingFarmDetailsService extends BaseService {
   }
 
   async getByFarmId(farmId) {
-    return await AppDataSource.transaction(
+    return AppDataSource.transaction(
       async (transactionalEntityManager) => {
         const records = await transactionalEntityManager.find(
           NutrientsLoadingFarmDetailsEntity, // target is the entity class
@@ -43,7 +43,7 @@ class NutrientsLoadingFarmDetailsService extends BaseService {
   }
 
   async checkRecordExists(farmId, year) {
-    return await this.recordExists({
+    return this.recordExists({
       FarmID: farmId,
       CalendarYear: year,
     });
@@ -52,7 +52,7 @@ class NutrientsLoadingFarmDetailsService extends BaseService {
   async createNutrientsLoadingFarmDetails(payload, userId) {
     const { FarmID, CalendarYear } = payload;
 
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const existingRecord = await transactionalManager.findOne(
         NutrientsLoadingFarmDetailsEntity,
         { where: { FarmID: FarmID, CalendarYear: CalendarYear } }
@@ -60,7 +60,7 @@ class NutrientsLoadingFarmDetailsService extends BaseService {
 
       if (existingRecord) {
         const { ID, CreatedByID, CreatedOn, ...rest } = payload;
-        const saved = await transactionalManager.update(
+        await transactionalManager.update(
           NutrientsLoadingFarmDetailsEntity,
           { FarmID: FarmID, CalendarYear: CalendarYear },
           {

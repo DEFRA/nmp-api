@@ -5,6 +5,7 @@ const {
 
 const { NutrientsLoadingFarmDetailsDto } = require("./dto/nutrients-loading-farm-details.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 
 module.exports = [
@@ -19,13 +20,9 @@ module.exports = [
           farmId: Joi.number().integer().required(),
         }),
         query: Joi.object({
-          year: Joi.number().integer().required()
+          year: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) =>
-          h
-            .response(formatErrorResponse({ source: { error: err }, request }))
-            .code(400)
-            .takeover(),
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -44,11 +41,7 @@ module.exports = [
         params: Joi.object({
           farmId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) =>
-          h
-            .response(formatErrorResponse({ source: { error: err }, request }))
-            .code(400)
-            .takeover(),
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -66,11 +59,7 @@ module.exports = [
       description: "Create NutrientsLoadingFarmDetails",
       validate: {
         payload: NutrientsLoadingFarmDetailsDto,
-        failAction: (request, h, err) =>
-          h
-            .response(formatErrorResponse({ source: { error: err }, request }))
-            .code(400)
-            .takeover(),
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -88,11 +77,7 @@ module.exports = [
       description: "Update NutrientsLoadingFarmDetails",
       validate: {
         payload: NutrientsLoadingFarmDetailsDto,
-        failAction: (request, h, err) =>
-          h
-            .response(formatErrorResponse({ source: { error: err }, request }))
-            .code(400)
-            .takeover(),
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {

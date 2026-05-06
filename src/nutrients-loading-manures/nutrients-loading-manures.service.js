@@ -34,29 +34,17 @@ class NutrientsLoadingManuresService extends BaseService {
   }
 
   async checkRecordExists(farmId) {
-    return await this.recordExists({
+    return this.recordExists({
       FarmID: farmId,
     });
   }
 
   async createNutrientsLoadingManures(payload, userId) {
-    //const { FarmID, } = payload;
     console.log("payload", payload);
-    return await AppDataSource.transaction(async (transactionalManager) => {
-      // const existingRecord = await transactionalManager.findOne(
-      //   NutrientsLoadingManuresEntity,
-      //   { where: { FarmID: FarmID } }
-      // );
+    return AppDataSource.transaction(async (transactionalManager) => {
       const { SaveDefaultForFarm, NutrientsLoadingManure } = payload;
       const {
         ID,
-        // DryMatterPercent,
-        // NH4N,
-        // UricAcid,
-        // NO3N,
-        // K2O,
-        // SO3,
-        // MgO,
         EncryptedID,
         ModifiedByID,
         ModifiedOn,
@@ -70,8 +58,6 @@ class NutrientsLoadingManuresService extends BaseService {
           CreatedOn: new Date(),
         }
       );
-      // console.log("cleanPayload123", ...cleanPayload);
-      // console.log("cleanPayload12223", newRecord);
       const saved = await transactionalManager.save(
         NutrientsLoadingManuresEntity,
         newRecord
@@ -145,7 +131,7 @@ class NutrientsLoadingManuresService extends BaseService {
         nutrientsLoadingFarmDetails != null &&
         nutrientsLoadingFarmDetails.IsAnyLivestockImportExport != 1
       ) {
-        await await transactionalManager.update(
+        await transactionalManager.update(
           NutrientsLoadingFarmDetailsEntity,
           nutrientsLoadingFarmDetails.ID,
           {
@@ -154,7 +140,6 @@ class NutrientsLoadingManuresService extends BaseService {
         );
       }
       return saved;
-      //}
     });
   }
 
@@ -166,13 +151,6 @@ class NutrientsLoadingManuresService extends BaseService {
         FarmID,
         CreatedByID,
         CreatedOn,
-        // DryMatterPercent,
-        // NH4N,
-        // UricAcid,
-        // NO3N,
-        // K2O,
-        // SO3,
-        // MgO,
         EncryptedID,
         ...dataToUpdate
       } = NutrientsLoadingManure;
@@ -264,7 +242,7 @@ class NutrientsLoadingManuresService extends BaseService {
     });
 
     // If the NutrientsLoadingManure does not exist, throw a not found error
-    if (nutrientsLoadingManureData == null) {
+    if (nutrientsLoadingManureData === null) {
       throw boom.notFound(
         `NutrientsLoadingManure with ID ${nutrientsLoadingManureId} not found`
       );
@@ -285,7 +263,7 @@ class NutrientsLoadingManuresService extends BaseService {
           year: year,
         })
         .getOne();
-      if (nutrientsLoadingManure == null) {
+      if (nutrientsLoadingManure === null) {
   const nutrientsLoadingFarmDetails = await this.nutrientsLoadingFarmDetailsRepository.findOneBy({
     FarmID: nutrientsLoadingManureData.FarmID, 
     CalendarYear: year, 
