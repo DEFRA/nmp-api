@@ -103,7 +103,8 @@ class FieldService extends BaseService {
     this.generateRecommendations = new GenerateRecommendations();
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
     this.FarmService = new FarmService();
-    this.ProcessFutureManuresForWarnings = new ProcessFutureManuresForWarnings();
+    this.ProcessFutureManuresForWarnings =
+      new ProcessFutureManuresForWarnings();
     this.pscIndexRepository = AppDataSource.getRepository(PscIndexEntity);
     this.currentAndFuture = new CurrentAndFuture();
   }
@@ -332,65 +333,108 @@ class FieldService extends BaseService {
     });
   }
 
+  async handlePreviousCroppingAction(
+    transactionalManager,
+    prevCrop,
+    fieldId,
+    userId
+  ) {
+    const {
+      ID,
+      CreatedOn,
+      CreatedByID,
+      PreviousCroppings,
+      Action,
+      ...prevCropData
+    } = prevCrop;
+
+    const existingPrevCrop = ID
+      ? await transactionalManager.findOne(PreviousCroppingEntity, {
+          where: { ID },
+        })
+      : null;
+
+    switch (Action) {
+      case PreviousCroppingMapper.INSERT:
+        await transactionalManager.insert(PreviousCroppingEntity, {
+          ...prevCropData,
+          FieldID: fieldId,
+          CreatedByID: userId,
+          CreatedOn: new Date(),
+        });
+
+        return true;
+
+      case PreviousCroppingMapper.UPDATE:
+        if (!existingPrevCrop) {
+          return false;
+        }
+
+        await transactionalManager.update(
+          PreviousCroppingEntity,
+          existingPrevCrop.ID,
+          {
+            ...prevCropData,
+            ModifiedByID: userId,
+            ModifiedOn: new Date(),
+          },
+        );
+
+        return true;
+
+      case PreviousCroppingMapper.DELETE:
+        if (!existingPrevCrop) {
+          return false;
+        }
+
+        await transactionalManager.delete(
+          PreviousCroppingEntity,
+          existingPrevCrop.ID,
+        );
+
+        return true;
+
+      default:
+        console.log("No action assigned");
+        return false;
+    }
+  }
+
   async processPreviousCroppings(
     transactionalManager,
     PreviousCroppings,
     fieldId,
     request,
-    userId
+    userId,
   ) {
-    if (!Array.isArray(PreviousCroppings) || PreviousCroppings.length === 0) {return []}
-      const crops = await transactionalManager.find(CropEntity, {
-        where: { FieldID: fieldId },
-      });
-    const oldestCrop = crops.reduce(
-      (oldest, current) => (current.Year < oldest.Year ? current : oldest),
-      crops[0],
-    );
-    let hasPrevCropUpdated = false;
-    for (const prevCrop of PreviousCroppings) {
-      const {ID,CreatedOn,CreatedByID,PreviousCroppings,Action,...prevCropData} = prevCrop;
-      let existingPrevCrop = null;
-      if (ID) {
-        existingPrevCrop = await transactionalManager.findOne(
-          PreviousCroppingEntity,
-          {where: { ID }},
-        );
-      }
-      switch (Action) {
-        case PreviousCroppingMapper.INSERT:
-          await transactionalManager.insert(PreviousCroppingEntity, {
-            ...prevCropData,
-            FieldID: fieldId,
-            CreatedByID: userId,
-            CreatedOn: new Date()
-          });
-          hasPrevCropUpdated = true;
-          break;
+    if (!Array.isArray(PreviousCroppings) || PreviousCroppings.length === 0) {
+      return [];
+    }
 
-        case PreviousCroppingMapper.UPDATE:
-          if (existingPrevCrop) {
-            await transactionalManager.update(
-              PreviousCroppingEntity,
-              existingPrevCrop.ID,
-              {
-                ...prevCropData,
-                ModifiedByID: userId,
-                ModifiedOn: new Date()
-              },
-            );
-            hasPrevCropUpdated = true;
-          }
-          break;
-        case PreviousCroppingMapper.DELETE:
-          if (existingPrevCrop) {
-            await transactionalManager.delete(PreviousCroppingEntity,existingPrevCrop.ID);
-            hasPrevCropUpdated = true;
-          }
-          break;
-        default:
-          console.log("No action assigned");
-      }
+    const crops = await transactionalManager.find(CropEntity, {
+      where: { FieldID: fieldId },
+    });
+
+    const oldestCrop =
+      crops.length > 0
+        ? crops.reduce(
+            (oldest, current) =>
+              current.Year < oldest.Year ? current : oldest,
+            crops[0],
+          )
+        : null;
+
+    let hasPrevCropUpdated = false;
+
+    for (const prevCrop of PreviousCroppings) {
+      const isUpdated = await this.handlePreviousCroppingAction(
+        transactionalManager,
+        prevCrop,
+        fieldId,
+        userId,
+      );
+
+      hasPrevCropUpdated = hasPrevCropUpdated || isUpdated;
     }
 
     if (hasPrevCropUpdated && oldestCrop) {
@@ -409,42 +453,51 @@ class FieldService extends BaseService {
   async updateField(payload, userId, fieldId, request) {
     return await AppDataSource.transaction(async (transactionalManager) => {
       const { Field: updatedFieldData, PreviousCroppings } = payload;
-      const { ID, CreatedByID, CreatedOn, EncryptedFieldId, ...dataToUpdate } = updatedFieldData;
-      const originalField = await this.getOriginalField(transactionalManager,ID);
+      const { ID, CreatedByID, CreatedOn, EncryptedFieldId, ...dataToUpdate } =
+        updatedFieldData;
+      const originalField = await this.getOriginalField(
+        transactionalManager,
+        ID,
+      );
       const isSensitiveChange = await this.hasSensitiveFieldChanged(
         payload,
-        originalField
+        originalField,
       );
       if (isSensitiveChange) {
         await this.handleSensitiveFieldChange(
           transactionalManager,
           ID,
           request,
-          userId
+          userId,
         );
       }
-   
-      const updatedOrInsertedPrevCroppings =await this.processPreviousCroppings(
+
+      const updatedOrInsertedPrevCroppings =
+        await this.processPreviousCroppings(
           transactionalManager,
           PreviousCroppings,
           fieldId,
           request,
-          userId
+          userId,
         );
-      
+
       const updateResult = await transactionalManager.update(
         FieldEntity,
         fieldId,
         {
           ...dataToUpdate,
           ModifiedByID: userId,
-          ModifiedOn: new Date()
+          ModifiedOn: new Date(),
         },
       );
 
-      if (updateResult.affected === 0) {throw boom.notFound(`Field with ID ${fieldId} not found`)}
+      if (updateResult.affected === 0) {
+        throw boom.notFound(`Field with ID ${fieldId} not found`);
+      }
       // 5. Fetch updated field inside same transaction
-      const updatedField = await transactionalManager.findOne(FieldEntity, {where: { ID: fieldId }});
+      const updatedField = await transactionalManager.findOne(FieldEntity, {
+        where: { ID: fieldId },
+      });
       return {
         Field: updatedField,
         PreviousCroppings: updatedOrInsertedPrevCroppings,
@@ -501,22 +554,23 @@ class FieldService extends BaseService {
     const crops = await transactionalManager.find(CropEntity, {
       where: { FieldID: fieldId },
     });
-    if (!crops.length) {return}
-    const oldestCrop = crops.reduce((oldest, current) =>
-      current.Year < oldest.Year ? current : oldest,
-     crops[0]
+    if (!crops.length) {
+      return;
+    }
+    const oldestCrop = crops.reduce(
+      (oldest, current) => (current.Year < oldest.Year ? current : oldest),
+      crops[0],
     );
     await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
       oldestCrop,
       transactionalManager,
       request,
-      userId
+      userId,
     );
-     this.ProcessFutureManuresForWarnings.processWarningsByField(
-       fieldId,
-       userId
-     );
-
+    this.ProcessFutureManuresForWarnings.processWarningsByField(
+      fieldId,
+      userId,
+    );
   }
 
   async getUpdatedField(transactionalManager, fieldId) {
