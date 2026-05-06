@@ -161,10 +161,7 @@ class NutrientsLoadingManuresService extends BaseService {
           ModifiedOn: new Date(),
         },
       );
-
-      let savedFarmManureType;
       let farmManureTypeData;
-
       if (SaveDefaultForFarm) {
         farmManureTypeData = {
           FarmID: NutrientsLoadingManure.FarmID,
