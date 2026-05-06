@@ -46,8 +46,6 @@ async createPKBalance() {
   async getPKBalanceByYearAndFieldId() {
     const { year } = this.#request.params;
     const { fieldId } = this.#request.query;
-    //let selectOptions = {};
-    //if (shortSummary) selectOptions = { ID: true, Date: true, FieldID: true };
     try {
       const PkBalances = await this.#PKBalanceService.getPKBalanceByYearAndFieldId(
         year,

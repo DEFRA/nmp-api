@@ -126,8 +126,8 @@ class NutrientsLoadingManuresService extends BaseService {
           ).getFullYear(),
         });
       if (
-        nutrientsLoadingFarmDetails != null &&
-        nutrientsLoadingFarmDetails.IsAnyLivestockImportExport != 1
+        nutrientsLoadingFarmDetails !== null &&
+        nutrientsLoadingFarmDetails.IsAnyLivestockImportExport !== 1
       ) {
         await transactionalManager.update(
           NutrientsLoadingFarmDetailsEntity,
@@ -202,14 +202,8 @@ class NutrientsLoadingManuresService extends BaseService {
             },
           );
 
-          savedFarmManureType = {
-            ...existingFarmManureType,
-            ...farmManureTypeData,
-            ModifiedByID: userId,
-            ModifiedOn: new Date(),
-          };
         } else {
-          savedFarmManureType = await transactionalManager.save(
+         await transactionalManager.save(
             FarmManureTypeEntity,
             this.farmManureTypeRepository.create({
               ...farmManureTypeData,

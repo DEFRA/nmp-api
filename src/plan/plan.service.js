@@ -252,7 +252,7 @@ class PlanService extends BaseService {
     request,
     transactionalManager
   ) {
-    let Recommendations = [];
+    const Recommendations = [];
     const Errors = [];
     for (const cropData of crops) {
       const crop = cropData?.Crop;
@@ -448,7 +448,6 @@ class PlanService extends BaseService {
     cropOrder
   ) {
     try {
-      //cropOrder = cropOrder || 1;
       const storedProcedure =
         "EXEC dbo.spCrops_GetCropPlansManagementPeriodByHarvestYear @fieldIds = @0, @harvestYear = @1, @cropGroupName = @2 , @cropOrder = @3";
       const plans = await this.executeQuery(storedProcedure, [
@@ -478,7 +477,7 @@ class PlanService extends BaseService {
     transactionalManager,
     previousCrop
   ) {
-    let fertiliserData = null;
+    const fertiliserData = null;
     try {
       let pBalance = 0;
       let kBalance = 0;

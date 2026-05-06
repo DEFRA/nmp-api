@@ -1,7 +1,7 @@
 const Joi = require("joi");
 const { PKBalanceController } = require("./pk-balance.controller");
 const { CreatePKBalanceDto } = require("./dto/pk-balance.dto");
-const { formatErrorResponse } = require("../interceptor/responseFormatter");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 module.exports = [
   {
@@ -17,19 +17,7 @@ module.exports = [
         query: Joi.object({
           fieldId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -37,7 +25,7 @@ module.exports = [
       return controller.getPKBalanceByYearAndFieldId();
     },
   },
-{
+  {
     method: "POST",
     path: "/pk-Balance",
     handler: async (request, h) => {
@@ -49,19 +37,7 @@ module.exports = [
       description: "Create Pk Balance",
       validate: {
         payload: CreatePKBalanceDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -78,24 +54,11 @@ module.exports = [
       description: "Update PK Balance by Id",
       validate: {
         params: Joi.object({
-            pKBalanceId: Joi.number().integer().required(),
+          pKBalanceId: Joi.number().integer().required(),
         }),
         payload: CreatePKBalanceDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
-  
 ];
