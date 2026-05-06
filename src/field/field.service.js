@@ -1082,17 +1082,25 @@ class FieldService extends BaseService {
                     data.Recommendation.PreviousAppliedLime =
                       previousAppliedLime || 0;
 
+                     const PREFIXES = {
+                       CROP: "Crop_",
+                       RECOMMENDATION: "Recommendation_",
+                       MANAGEMENT_PERIOD: "ManagementPeriod_",
+                       FERTILISER_MANURE: "FertiliserManure_",
+                     }; 
+                
                     Object.keys(r).forEach((recDataKey) => {
-                      if (recDataKey.startsWith("Crop_")) {
-                        data.Crop[recDataKey.slice(5)] = r[recDataKey];
-                      } else if (recDataKey.startsWith("Recommendation_")) {
-                        data.Recommendation[recDataKey.slice(15)] =
+                      if (recDataKey.startsWith(PREFIXES.CROP)) {
+                        data.Crop[recDataKey.slice(PREFIXES.CROP.length)] =
                           r[recDataKey];
-                      } else if (recDataKey.startsWith("ManagementPeriod_")) {
-                        data.ManagementPeriod[recDataKey.slice(17)] =
+                      } else if (recDataKey.startsWith(PREFIXES.RECOMMENDATION)) {
+                        data.Recommendation[recDataKey.slice(PREFIXES.RECOMMENDATION.length)] =
                           r[recDataKey];
-                      } else if (recDataKey.startsWith("FertiliserManure_")) {
-                        data.FertiliserManure[recDataKey.slice(17)] =
+                      } else if (recDataKey.startsWith(PREFIXES.MANAGEMENT_PERIOD)) {
+                        data.ManagementPeriod[recDataKey.slice(PREFIXES.MANAGEMENT_PERIOD.length)] =
+                          r[recDataKey];
+                      } else if (recDataKey.startsWith(PREFIXES.FERTILISER_MANURE)) {
+                        data.FertiliserManure[recDataKey.slice(PREFIXES.FERTILISER_MANURE.length)] =
                           r[recDataKey];
                       } else {
                         console.log("no assignment");
@@ -1216,9 +1224,10 @@ class FieldService extends BaseService {
   }
 
   async processSoilRecommendations(harvestYear, fieldId, Recommendation) {
+    const fiveYearBack = 5;
     try {
       const currentYear = harvestYear;
-      const fiveYearsAgo = currentYear - 5;
+      const fiveYearsAgo = currentYear - fiveYearBack;
 
       // Step 1: Fetch soil recommendations (before fertiliser apply)
       const soilAnalyses = await this.soilAnalysisRepository.find({
@@ -1230,29 +1239,10 @@ class FieldService extends BaseService {
 
       // Step 2: Check if any year has pH value > 0
       const soilAnalysisWithPH = soilAnalyses.find((rec) => rec.PH > 0);
-
-      // If no pH > 0 is found, return early without doing any further processing
-      if (!soilAnalysisWithPH) {
-        return null; // Exit if no recommendation with pH > 0 is found
-      }
-
+      if (!soilAnalysisWithPH) { return null}
       // Get the soilAnalysisYear from the recommendation with pH > 0
       const soilAnalysisWithPhYear = soilAnalysisWithPH.Year;
-      // console.log(
-      //   "RecommendationData",
-      //   Recommendation.Crop_ID
-      // );
-      // console.log(
-      //   "RecommendationData1",
-      //   Recommendation
-      // );
-      // const managementPeriodData = await this.findManagementPeriodByID(
-      //   Recommendation.ManagementPeriodID
-      // );
-      // Step 3: Proceed with the process only if pH > 0 is found
-
       const cropData = await this.findCropDataByID(Recommendation.Crop_ID); // check order 1 or 2
-
       let totalLime1 = 0;
       let result = 0;
       if (cropData != null) {
@@ -1272,8 +1262,6 @@ class FieldService extends BaseService {
               firstCropOrderDataList,
             );
           }
-
-          // Now, totalLime1 contains the sum of lime for all crops found in the list
           console.log(`Total Lime from all firstCropOrderData: ${totalLime1}`);
         }
 
@@ -1288,8 +1276,7 @@ class FieldService extends BaseService {
             );
 
           if (CropOrderDataList != null) {
-            totalLime1 =
-              await this.getApplyLimeInCaseOfMultipleCrops(CropOrderDataList);
+            totalLime1 = await this.getApplyLimeInCaseOfMultipleCrops(CropOrderDataList);
           }
           const cropOrder = 1;
           const firstCropOrderData =
@@ -1297,19 +1284,13 @@ class FieldService extends BaseService {
               fieldId,
               cropData.Year,
               null,
-              cropOrder,
+              cropOrder
             );
           if (firstCropOrderData != null) {
-            totalLime1 +=
-              await this.getApplyLimeInCaseOfMultipleCrops(firstCropOrderData);
+            totalLime1 += await this.getApplyLimeInCaseOfMultipleCrops(firstCropOrderData);
           }
         }
-
-        // Step 6: Sum total lime values for both crops
-
-        // Step 7: Subtract the total lime from cropN in the recommendation
         const cropNeedValue = Recommendation.Recommendation_CropN;
-
         if (totalLime1 > 0) {
           result = cropNeedValue - totalLime1;
           console.log("result", result);
@@ -1381,7 +1362,7 @@ class FieldService extends BaseService {
         query.where.Year = Between(year, soilAnalysisYear); // Include years between `year` and `soilAnalysisYear`
       } else if (year < soilAnalysisYear) {
         return null;
-      }
+      } else{return null}
     }
 
     // Determine whether to use `findOne` or `find` based on the provided parameters

@@ -70,17 +70,18 @@ class AzureAuthMiddleware {
     const currentPath = request.route.path;
 
     if (this.#otherExcludedPaths.includes(currentPath)) {
-      // Skip token validation and proceed with the request
       return h.continue;
     } else if (
       this.#excludedPaths.some((path) => currentPath.startsWith(path))
     ) {
       console.log(`Skipping token validation for path: ${currentPath}`); // Debugging
       return h.continue; // Skip token validation and proceed
+    } else {
+      console.log(`Validating token for path: ${currentPath}`);
     }
 
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!authHeader?.startsWith("Bearer ")) {
       throw boom.unauthorized(StaticStrings.ERR_TOKEN_NOT_PROVIDED);
     }
 

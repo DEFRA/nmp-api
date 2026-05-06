@@ -41,7 +41,7 @@ class NutrientsLoadingLiveStocksService extends BaseService {
   }
 
   async createNutrientsLiveStocks(payload, userId) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const {
         ID,
         FarmID,
@@ -50,15 +50,6 @@ class NutrientsLoadingLiveStocksService extends BaseService {
         CreatedOn,
         ...cleanPayload
       } = payload;
-
-      // const existingRecord = await transactionalManager.findOne(
-      //   NutrientsLoadingLiveStocksEntity,
-      //   { where: { FarmID: FarmID, CalendarYear: CalendarYear } }
-      // );
-
-      //  if (existingRecord) {
-      //    return { message: "Record already exists", existingRecord };
-      //  }
       const newRecord = transactionalManager.create(
         NutrientsLoadingLiveStocksEntity,
         {
@@ -86,8 +77,8 @@ class NutrientsLoadingLiveStocksService extends BaseService {
             CalendarYear: CalendarYear,
           });
         if (
-          nutrientsLoadingFarmDetails != null &&
-          nutrientsLoadingFarmDetails.IsAnyLivestockNumber != 1
+          nutrientsLoadingFarmDetails !== null &&
+          nutrientsLoadingFarmDetails.IsAnyLivestockNumber !== 1
         ) {
           await transactionalManager.update(
             NutrientsLoadingFarmDetailsEntity,

@@ -1,5 +1,7 @@
 // responseFormatter.js
 
+const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
+
 const formatSuccessResponse = (response) => {
   const data = response?.source;
   return {
@@ -19,7 +21,9 @@ const formatErrorResponse =  (errorResponse) => {
     status: false,
     data: errorResponse?.source?.data || null,
     statusCode:
-      error?.output?.statusCode || errorResponse?.source?.status || 500,
+      error?.output?.statusCode ||
+      errorResponse?.source?.status ||
+      StatusCodeMapper.INTERNAL_SERVER_ERROR,
     timestamp: new Date().toISOString(),
     error: {
       message:

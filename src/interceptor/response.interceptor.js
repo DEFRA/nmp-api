@@ -1,6 +1,7 @@
 // response.interceptor.js
 "use strict";
 
+const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 const {
   formatSuccessResponse,
   formatErrorResponse,
@@ -18,12 +19,13 @@ const responseHandlerPlugin = {
         return h.continue;
       }
       const response = request.response;
-
       // If the response is an error
       if (
         response &&
-        (response?.source?.error || response?.source?.Errors?.length ||
-          (response?.source?.status && response?.source?.status !== 200))
+        (response?.source?.error ||
+          response?.source?.Errors?.length ||
+          (response?.source?.status &&
+            response?.source?.status !== StatusCodeMapper.SUCCESS))
       ) {
         const payload = formatErrorResponse(response);
         return h.response(payload).code(payload.statusCode);
@@ -32,9 +34,9 @@ const responseHandlerPlugin = {
       else if (response && !response?.source?.error) {
         const payload = formatSuccessResponse(response);
         return h.response(payload).code(payload.statusCode);
+      } else{
+        return h.continue;
       }
-
-      return h.continue;
     });
   },
 };

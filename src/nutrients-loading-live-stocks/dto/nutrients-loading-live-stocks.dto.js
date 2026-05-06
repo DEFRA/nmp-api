@@ -1,15 +1,16 @@
 const Joi = require("joi");
-
+const precisionThree = 3;
+const precisionSix = 6;
 const createNutrientsLoadingLiveStocks = Joi.object({
   ID: Joi.number().integer().optional().allow(null).default(null),
   FarmID: Joi.number().required(),
   CalendarYear: Joi.number().required().allow(null).optional(),
   LiveStockTypeID: Joi.number().allow(null),
-  Units: Joi.number().precision(3).allow(null),
-  NByUnit: Joi.number().precision(6).allow(null),
-  TotalNProduced: Joi.number().precision(3).allow(null),
+  Units: Joi.number().precision(precisionThree).allow(null),
+  NByUnit: Joi.number().precision(precisionSix).allow(null),
+  TotalNProduced: Joi.number().precision(precisionThree).allow(null),
   Occupancy: Joi.number().allow(null),
-  PByUnit: Joi.number().precision(6).allow(null),
+  PByUnit: Joi.number().precision(precisionSix).allow(null),
   TotalPProduced: Joi.number().allow(null),
   Jan: Joi.number().allow(null),
   Feb: Joi.number().allow(null),

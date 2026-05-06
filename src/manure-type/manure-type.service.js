@@ -9,10 +9,11 @@ class ManureTypeService extends BaseService {
     }
 
     async getManureTypes(manureGroupId, countryId) {
+        const countryIdThreshold = 3; 
         const manureTypes = await this.repository.find({
             where: {
                 ManureGroupID: manureGroupId,
-                CountryID: In([countryId, 3]),
+                CountryID: In([countryId, countryIdThreshold]),
             },
         });
         return { ManureTypes: manureTypes };
