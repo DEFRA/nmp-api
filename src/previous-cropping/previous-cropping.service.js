@@ -24,13 +24,13 @@ class PreviousCroppingService extends BaseService {
       let previousCroppingData = null;
       previousCroppingBody.sort((a, b) => a.HarvestYear - b.HarvestYear);
       // Get the field and greatest year
-      let MaxYear = Math.max(
+      const MaxYear = Math.max(
         ...previousCroppingBody.map((item) => item.HarvestYear)
       );
-      let MinYear = Math.min(
+      const MinYear = Math.min(
         ...previousCroppingBody.map((item) => item.HarvestYear)
       );
-      let greatestYearField = previousCroppingBody[0].FieldID;
+      const greatestYearField = previousCroppingBody[0].FieldID;
 
       const existingCrops = await this.repository.find({
         where: previousCroppingBody.map((crop) => ({
@@ -127,7 +127,7 @@ class PreviousCroppingService extends BaseService {
 
   async getPreviousCroppingDataByFieldIdAndYear(fieldId, year) {
     const whereClause = { FieldID: fieldId };
-    var previousCroppingData = null;
+    let previousCroppingData = null;
     if (year !== null && year !== undefined) {
       whereClause.HarvestYear = year;
 
@@ -146,10 +146,10 @@ class PreviousCroppingService extends BaseService {
 
   async getPreviousCroppingPreviousYearsDataByFieldIdAndYear(fieldId, year) {
     let previousCroppingData = null;
-
+    const threeYearAgo = 3; 
     if (year !== null && year !== undefined) {
       // Last 3 years BEFORE the given year
-      const fromYear = year - 3;
+      const fromYear = year - threeYearAgo;
       const toYear = year - 1;
 
       previousCroppingData = await this.repository.find({
