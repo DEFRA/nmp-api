@@ -213,9 +213,9 @@ class RecommendationService extends BaseService {
 
   async processSoilRecommendations(harvestYear, fieldId, Recommendation) {
     try {
+      const fiveYears = 5;
       const currentYear = harvestYear;
-      const fiveYearsAgo = currentYear - 5;
-
+      const fiveYearsAgo = currentYear - fiveYears;
       // Step 1: Fetch soil recommendations (before fertiliser apply)
       const soilAnalyses = await this.soilAnalysisRepository.find({
         where: {
@@ -231,25 +231,12 @@ class RecommendationService extends BaseService {
       if (!soilAnalysisWithPH) {
         return null; // Exit if no recommendation with pH > 0 is found
       }
-
       // Get the soilAnalysisYear from the recommendation with pH > 0
       const soilAnalysisWithPhYear = soilAnalysisWithPH.Year;
-      // console.log(
-      //   "RecommendationData",
-      //   Recommendation.Crop_ID
-      // );
-      // console.log(
-      //   "RecommendationData1",
-      //   Recommendation
-      // );
-      // const managementPeriodData = await this.findManagementPeriodByID(
-      //   Recommendation.ManagementPeriodID
-      // );
       // Step 3: Proceed with the process only if pH > 0 is found
       const cropData = await this.findCropDataByID(Recommendation.Crop_ID); // check order 1 or 2
 
       let totalLime1 = 0;
-      let totalLime2 = 0;
       let result = 0;
       if (cropData != null) {
         // Step 4: Handle CropOrder 1 (first crop)
@@ -288,7 +275,7 @@ class RecommendationService extends BaseService {
               CropOrderDataList
             );
           }
-          let cropOrder = 1;
+          const cropOrder = 1;
           const firstCropOrderData =
             await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
               fieldId,
@@ -349,16 +336,30 @@ class RecommendationService extends BaseService {
         );
         // Add previousAppliedLime to Recommendation object
         data.Recommendation.PreviousAppliedLime = previousAppliedLime || 0;
-
+        const PREFIXES = {
+          CROP: "Crop_",
+          RECOMMENDATION:    "Recommendation_",
+          MANAGEMENT_PERIOD: "ManagementPeriod_",
+          FERTILISER_MANURE: "FertiliserManure_",
+        };
         Object.keys(r).forEach((recDataKey) => {
-          if (recDataKey.startsWith("Crop_"))
-            data.Crop[recDataKey.slice(5)] = r[recDataKey];
-          else if (recDataKey.startsWith("Recommendation_"))
-            data.Recommendation[recDataKey.slice(15)] = r[recDataKey];
-          else if (recDataKey.startsWith("ManagementPeriod_"))
-            data.ManagementPeriod[recDataKey.slice(17)] = r[recDataKey];
-          else if (recDataKey.startsWith("FertiliserManure_"))
-            data.FertiliserManure[recDataKey.slice(17)] = r[recDataKey];
+          if (recDataKey.startsWith(PREFIXES.CROP)) {
+            data.Crop[recDataKey.slice(PREFIXES.CROP.length)] = r[recDataKey];
+          } else if (recDataKey.startsWith(PREFIXES.RECOMMENDATION)) {
+            data.Recommendation[
+              recDataKey.slice(PREFIXES.RECOMMENDATION.length)
+            ] = r[recDataKey];
+          } else if (recDataKey.startsWith(PREFIXES.MANAGEMENT_PERIOD)) {
+            data.ManagementPeriod[
+              recDataKey.slice(PREFIXES.MANAGEMENT_PERIOD.length)
+            ] = r[recDataKey];
+          } else if (recDataKey.startsWith(PREFIXES.FERTILISER_MANURE)) {
+            data.FertiliserManure[
+              recDataKey.slice(PREFIXES.FERTILISER_MANURE.length)
+            ] = r[recDataKey];
+          } else {
+            console.log("no assignment");
+          }
         });
         return data;
       });
