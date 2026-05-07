@@ -190,7 +190,7 @@ class OrganicManureController {
 
     try {
       // Loop through each organicManureId and call the service method to delete it
-      for (let organicManureId of organicManureIds) {
+      for (const organicManureId of organicManureIds) {
         const result = await this.#organicManureService.deleteOrganicManure(
           organicManureId,
           userId,
@@ -255,12 +255,8 @@ class OrganicManureController {
       const data = await this.#organicManureService.updateOrganicManure(
         updatedOrganicManureData, // Pass the current manure object
         userId, // User ID
-        // parseInt(fertiliserId), // Fertiliser ID
-        this.#request, // Original request
+        this.#request
       );
-      // results.push(data); // Store result of each update
-      // }
-
       return this.#h.response({ data }); // Respond with the aggregated results
     } catch (error) {
       return this.#h.response({ error });

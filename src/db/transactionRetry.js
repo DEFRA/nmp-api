@@ -2,14 +2,14 @@
 
 async function runWithDeadlockRetry(fn, options = {}) {
   const { retries = 3, delayMs = 100, backoffMultiplier = 2 } = options;
-
+  const driverErrorDeadlockNumber = 1205;
   try {
     return await fn();
   } catch (error) {
     const driverError = error?.driverError;
 
     // SQL Server deadlock error number
-    if (driverError?.number === 1205 && retries > 0) {
+    if (driverError?.number === driverErrorDeadlockNumber && retries > 0) {
       console.warn(
         `Deadlock detected. Retrying transaction (${retries} left)...`,
       );
