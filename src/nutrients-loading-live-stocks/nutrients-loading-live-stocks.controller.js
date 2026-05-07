@@ -21,6 +21,7 @@ class NutrientsLoadingLiveStocksController {
       return this.#h.response(data);
     } catch (error) {
       console.error("Error in getByFarmId:", error);
+      return this.#h.response( error );
     }
   }
   async getById() {
@@ -46,6 +47,7 @@ class NutrientsLoadingLiveStocksController {
       return this.#h.response(result);
     } catch (error) {
       console.error("Error in create:", error);
+      return this.#h.response(error);
     }
   }
 

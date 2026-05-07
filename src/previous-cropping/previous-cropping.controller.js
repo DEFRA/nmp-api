@@ -27,7 +27,7 @@ class PreviousCroppingController {
       // Return the Previous croppping objects with related data
       return this.#h.response(result);
     } catch (error) {
-      return this.#h.response({ error: error.message }).code(400);
+      return this.#h.response({ error: error.message });
     }
   }
   async getPreviousCroppingPreviousYearsDataByFieldIdAndYear() {
@@ -46,7 +46,7 @@ class PreviousCroppingController {
       // Return the Previous croppping objects with related data
       return this.#h.response(result);
     } catch (error) {
-      return this.#h.response({ error: error.message }).code(400);
+      return this.#h.response({ error: error.message });
     }
   }
 
@@ -64,7 +64,7 @@ class PreviousCroppingController {
       // Return the Previous croppping objects with related data
       return this.#h.response(result);
     } catch (error) {
-      return this.#h.response({ error: error.message }).code(400);
+      return this.#h.response({ error: error.message });
     }
   }
 

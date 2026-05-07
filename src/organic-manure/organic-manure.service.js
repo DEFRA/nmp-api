@@ -140,9 +140,6 @@ class OrganicManureService extends BaseService {
     this.generateRecommendations = new GenerateRecommendations();
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
   }
-
-
-
   async getTotalNitrogenByManagementPeriod(
     managementPeriodID,
     fromDate,
@@ -150,13 +147,22 @@ class OrganicManureService extends BaseService {
     confirm,
     organicManureID,
   ) {
+      const START_OF_DAY = {
+        HOUR: 0,
+        MINUTE: 0,
+        SECOND: 0,
+        MILLISECOND: 0,
+      };
+
+      const END_OF_DAY = {
+        HOUR: 23,
+        MINUTE: 59,
+        SECOND: 59,
+        MILLISECOND: 999,
+      };
     // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
-    const fromDateFormatted = new Date(fromDate);
-    fromDateFormatted.setHours(0, 0, 0, 0);
-
-    const toDateFormatted = new Date(toDate);
-    toDateFormatted.setHours(23, 59, 59, 999);
-
+      const fromDateFormatted = normalizeDateWithTime(fromDate, START_OF_DAY);
+      const toDateFormatted = normalizeDateWithTime(toDate, END_OF_DAY);
     const query = this.repository
       .createQueryBuilder("O") // O = OrganicManures
       .select("SUM(O.N * O.ApplicationRate)", "totalN")
@@ -224,8 +230,8 @@ class OrganicManureService extends BaseService {
     return Number(result?.totalN ?? 0);
   }
 
-  async getTotalNitrogen(fieldId, fromDate, toDate, confirm, organicManureID) {
-    // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
+  async formatDateRange(fromDate, toDate) {
+     // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
     const START_OF_DAY = {
       HOUR: 0,
       MINUTE: 0,
@@ -239,10 +245,17 @@ class OrganicManureService extends BaseService {
       SECOND: 59,
       MILLISECOND: 999,
     };
-    
-       const fromDateFormatted = normalizeDateWithTime(fromDate, START_OF_DAY);
-       const toDateFormatted = normalizeDateWithTime(toDate, END_OF_DAY);
+  return {
+    fromDateFormatted: normalizeDateWithTime(fromDate, START_OF_DAY),
+    toDateFormatted: normalizeDateWithTime(toDate, END_OF_DAY),
+  };
+}
 
+  async getTotalNitrogen(fieldId, fromDate, toDate, confirm, organicManureID) {
+   const { fromDateFormatted, toDateFormatted } = this.formatDateRange(
+     fromDate,
+     toDate
+   );
     const query = this.repository
       .createQueryBuilder("O") // O = OrganicManures
       .select("SUM(O.N * O.ApplicationRate)", "totalN")
@@ -276,12 +289,21 @@ class OrganicManureService extends BaseService {
     isGreenFoodCompost,
     organicManureID,
   ) {
+      const START_OF_DAY = {
+        HOUR: 0,
+        MINUTE: 0,
+        SECOND: 0,
+        MILLISECOND: 0,
+      };
+      const END_OF_DAY = {
+        HOUR: 23,
+        MINUTE: 59,
+        SECOND: 59,
+        MILLISECOND: 999,
+      };
     // Ensure fromDate starts at 00:00:00 and toDate ends at 23:59:59
-    const fromDateFormatted = new Date(fromDate);
-    fromDateFormatted.setHours(0, 0, 0, 0); // Set time to start of the day
-
-    const toDateFormatted = new Date(toDate);
-    toDateFormatted.setHours(23, 59, 59, 999); // Set time to end of the day
+  const fromDateFormatted = normalizeDateWithTime(fromDate, START_OF_DAY);
+  const toDateFormatted = normalizeDateWithTime(toDate, END_OF_DAY);
 
     // Add additional filtering for ManureTypeID when isGreenFoodCompost is true
     const query = this.repository
@@ -400,16 +422,12 @@ class OrganicManureService extends BaseService {
       (data) => data.ManagementPeriodID === ManagementPeriodID,
     );
 
-    if (managementPeriodExists) {
-      return true;
-    } else {
-      return false;
-    }
+    return !!(managementPeriodExists);
   }
 
   async saveOrganicManureForOtherCropType(
     organicManureData,
-    mannerOutputs,
+    _mannerOutputs,
     transactionalManager,
     userId,
     organicManures,
@@ -418,7 +436,7 @@ class OrganicManureService extends BaseService {
       OrganicManureEntity,
       this.repository.create({
         ...organicManureData.OrganicManure,
-        ...(organicManureData.OrganicManure.ID == 0 ? { ID: null } : {}),
+        ...(organicManureData.OrganicManure.ID === 0 ? { ID: null } : {}),
         CreatedByID: userId,
         CreatedOn: new Date(),
       }),
@@ -450,16 +468,7 @@ class OrganicManureService extends BaseService {
             "NH4N + NO3N + UricAcid must be less than or equal to TotalN",
           );
         }
-        // Convert the Date object to YYYY-MM-DD string format
-        const applicationDateObj = new Date(OrganicManure.ApplicationDate);
-
-        // Convert the Date object to YYYY-MM-DD format
-        const applicationDate = applicationDateObj.toISOString().split("T")[0]; // returns a Date object
-        const endOfDrainageDateObj = new Date(OrganicManure.EndOfDrain);
-        const endOfDrainageDate = endOfDrainageDateObj
-          .toISOString()
-          .split("T")[0];
-
+ 
         const managementPeriodData =
           await this.managementPeriodRepository.findOneBy({
             ID: OrganicManure.ManagementPeriodID,
@@ -481,12 +490,10 @@ class OrganicManureService extends BaseService {
 
         let isSoilAnalysisHavePAndK = false;
         if (soilAnalsisData) {
-          isSoilAnalysisHavePAndK = soilAnalsisData.some(
+          isSoilAnalysisHavePAndK = !!soilAnalsisData.some(
             (item) =>
               item.PhosphorusIndex !== null || item.PotassiumIndex !== null,
-          )
-            ? true
-            : false;
+          );
         }
         let mannerOutputs = null;
         mannerOutputs =
@@ -615,7 +622,7 @@ class OrganicManureService extends BaseService {
                 transactionalManager.create(WarningMessagesEntity, {
                   ...wm,
                   JoiningID:
-                    wm.WarningCodeID == WarningCodesMapper.NMAXLIMIT
+                    wm.WarningCodeID === WarningCodesMapper.NMAXLIMIT
                       ? cropData.FieldID
                       : savedOrganicManure.ID,
                   CreatedByID: userId,
@@ -980,18 +987,7 @@ const manureTypeExists = await query.getCount();
         const fieldData = await transactionalManager.findOne(FieldEntity, {
           where: { ID: crop?.FieldID },
         });
-
-        let manureBody = null,
-          manureRequestBody = null,
-          mannerOutput = null;
-        // Fetch existing OrganicManure from DB
-        const existingOrganicManure = await transactionalManager.findOne(
-          OrganicManureEntity,
-          { where: { ID } },
-        );
-
         let dataToUpdate;
-
         {
           dataToUpdate = {
             ...updatedData,
