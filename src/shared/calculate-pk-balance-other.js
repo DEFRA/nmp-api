@@ -102,16 +102,12 @@ async calculatePKBalanceOther(
     fertiliserP2O5;
 
   // ---------- K Balance ----------
-  cropNeed = 0;
-
   // normalize PotassiumIndex value
   let potassiumIndex = latestSoilAnalysis.PotassiumIndex;
-
   // convert -2 => 2-
   if (potassiumIndex?.toString() === "-2") {
     potassiumIndex = "2-";
   }
-
   if (potassiumIndex?.toString() === "2+") {
     cropNeed = 0;
   } else if (potassiumIndex == 0) {
@@ -123,9 +119,7 @@ async calculatePKBalanceOther(
   } else if (potassiumIndex?.toString() === "2-") {
     cropNeed =
       OtherCropOfftake.KOFFTAKE + PKBalanceIndexAdjustmentMapper.INDEXTWOMINUS;
-  }
-
-
+  } else {console.log("Unexpected PotassiumIndex value:", potassiumIndex)}
 
   const kBalance =
     (pkBalanceLastYear ? pkBalanceLastYear.KBalance : 0) -
