@@ -3,6 +3,7 @@ const { SNSAnalysesController } = require("./sns-analysis.controller");
 
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { CreateSnsAnalysisDto, UpdateSnsAnalysisDto } = require("./dto/sns-analysis.dto");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 module.exports = [
   {
@@ -15,19 +16,7 @@ module.exports = [
         params: Joi.object({
           cropId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -48,19 +37,7 @@ module.exports = [
       description: "Create SNS Analysis",
       validate: {
         payload: CreateSnsAnalysisDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -74,19 +51,7 @@ module.exports = [
         params: Joi.object({
           snsAnalysisId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -110,19 +75,7 @@ module.exports = [
           snsAnalysisId: Joi.number().integer().required(),
         }),
         payload: UpdateSnsAnalysisDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
