@@ -364,7 +364,7 @@ class RecommendationService extends BaseService {
        ) => {
          try {
            let defoliationSequenceDescription = null;
-           let defoliationSequence = await this.rB209GrassService.getData(
+           const defoliationSequence = await this.rB209GrassService.getData(
           `Grass/DefoliationSequence/${DefoliationSequenceID}`
         );
 
@@ -383,7 +383,7 @@ defoliationSequenceDescription = defoliationSequence
       const findSwardType = async (SwardTypeID) => {
         try {
           let swardTypeName = null;
-          let swardTypeList = await this.rB209GrassService.getData(
+          const swardTypeList = await this.rB209GrassService.getData(
             `Grass/SwardTypes`
           );
 
@@ -405,7 +405,7 @@ defoliationSequenceDescription = defoliationSequence
 
       const findGrassSeason = async (seasonID) => {
         try {
-          let season = await this.rB209GrasslandService.getData(
+          const season = await this.rB209GrasslandService.getData(
             `Grassland/GrasslandSeason/${seasonID}`
           );
           return season.seasonName;
@@ -414,9 +414,6 @@ defoliationSequenceDescription = defoliationSequence
           return "Unknown";
         }
       };
-
-     
-     
       const mappedRecommendationsNew = await Promise.all(mappedRecommendations);
       console.log("mappedRecommendationsNew", mappedRecommendationsNew);
       
@@ -425,23 +422,19 @@ defoliationSequenceDescription = defoliationSequence
           Crop: {
             ...r.Crop,
             EstablishmentName:
-              r.Crop.CropTypeID == 140 && r.Crop.Establishment != null
+              r.Crop.CropTypeID == 140 && r.Crop.Establishment !== null
                 ? await findGrassSeason(r.Crop.Establishment)
                 : null,
             SwardManagementName:
-              r.Crop.CropTypeID == 140 && r.Crop.SwardManagementID != null
+              r.Crop.CropTypeID === 140 && r.Crop.SwardManagementID !== null
                 ? await this.findSwardTypeManagment(r.Crop.SwardManagementID)
                 : null,
-            SwardTypeName:
-              r.Crop.CropTypeID == 140 && r.Crop.SwardTypeID != null
+            SwardTypeName: r.Crop.CropTypeID === 140 && r.Crop.SwardTypeID !== null
                 ? await findSwardType(r.Crop.SwardTypeID)
                 : null,
               DefoliationSequenceName:
-              r.Crop.CropTypeID == 140 &&
-              r.Crop.DefoliationSequenceID != null
-                ? await findDefoliationSequenceDescription(
-                    r.Crop.DefoliationSequenceID
-                  )
+              r.Crop.CropTypeID === 140 && r.Crop.DefoliationSequenceID !== null
+                ? await findDefoliationSequenceDescription(r.Crop.DefoliationSequenceID)
                 : null,
           },
           PKbalance: PKbalance,
