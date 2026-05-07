@@ -12,11 +12,6 @@ const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const { FertiliserManuresEntity } = require("../db/entity/fertiliser-manures.entity");
 
 class CalculatePKBalanceOther {
-  constructor() {}
-
-  
-
-
 async calculatePKBalanceOther(
   crop,
   latestSoilAnalysis,
@@ -107,17 +102,13 @@ async calculatePKBalanceOther(
     fertiliserP2O5;
 
   // ---------- K Balance ----------
-  cropNeed = 0;
-
   // normalize PotassiumIndex value
   let potassiumIndex = latestSoilAnalysis.PotassiumIndex;
-
   // convert -2 => 2-
-  if (potassiumIndex && potassiumIndex.toString() === "-2") {
+  if (potassiumIndex?.toString() === "-2") {
     potassiumIndex = "2-";
   }
-
-  if (potassiumIndex && potassiumIndex.toString() === "2+") {
+  if (potassiumIndex?.toString() === "2+") {
     cropNeed = 0;
   } else if (potassiumIndex == 0) {
     cropNeed =
@@ -125,12 +116,10 @@ async calculatePKBalanceOther(
   } else if (potassiumIndex == 1) {
     cropNeed =
       OtherCropOfftake.KOFFTAKE + PKBalanceIndexAdjustmentMapper.INDEXONE;
-  } else if (potassiumIndex && potassiumIndex.toString() === "2-") {
+  } else if (potassiumIndex?.toString() === "2-") {
     cropNeed =
       OtherCropOfftake.KOFFTAKE + PKBalanceIndexAdjustmentMapper.INDEXTWOMINUS;
-  }
-
-
+  } else {console.log("Unexpected PotassiumIndex value:", potassiumIndex)}
 
   const kBalance =
     (pkBalanceLastYear ? pkBalanceLastYear.KBalance : 0) -

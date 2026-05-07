@@ -132,17 +132,18 @@ class RecommendationService extends BaseService {
     if (soilAnalysisYear) {
       if (year > soilAnalysisYear) {
         query.where.Year = Between(soilAnalysisYear, year); // Include years between `year` and `soilAnalysisYear`
-      } else if (year == soilAnalysisYear) {
+      } else if (year === soilAnalysisYear) {
         query.where.Year = Between(year, soilAnalysisYear); // Include years between `year` and `soilAnalysisYear`
       } else if (year < soilAnalysisYear) {
         return null;
-      }
+      }else {console.log("Invalid year and soilAnalysisYear combination")}
     }
 
     // Determine whether to use `findOne` or `find` based on the provided parameters
     if (!soilAnalysisYear && cropOrder) {
       // If only fieldID, year, and cropOrder are provided, return a single result using findOne
-      return await this.cropRepository.findOne(query);
+      const cropDatabyFieldAndYear = await this.cropRepository.findOne(query);
+      return cropDatabyFieldAndYear;
     } else {
       // If soilAnalysisYear is provided, return all crop data between year and soilAnalysisYear
       const cropDataList = await this.cropRepository.find(query);

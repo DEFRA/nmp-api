@@ -3,6 +3,7 @@ const {
   SecondCropLinkingsController,
 } = require("./second-crop-linkings.controller");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 module.exports = [
   {
@@ -28,21 +29,9 @@ module.exports = [
             }),
         }),
         query: Joi.object({
-                 rB209CountryID: Joi.number().required(),
-               }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+          rB209CountryID: Joi.number().required(),
+        }),
+        failAction: validationFailAction
       },
     },
   },

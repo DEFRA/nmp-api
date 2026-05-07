@@ -5,8 +5,6 @@ const { CropOrderMapper } = require("../constants/crop-order-mapper");
 
 
 class CalculateNextDefoliationService {
-  constructor() {}
-
 async calculateAvailableNForNextDefoliation(
   transactionalManager,
   managementPeriod,
