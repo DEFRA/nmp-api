@@ -255,8 +255,6 @@ class RecommendationService extends BaseService {
               firstCropOrderDataList
             );
           }
-
-          // Now, totalLime1 contains the sum of lime for all crops found in the list
           console.log(`Total Lime from all firstCropOrderData: ${totalLime1}`);
         }
 
@@ -276,8 +274,7 @@ class RecommendationService extends BaseService {
             );
           }
           const cropOrder = 1;
-          const firstCropOrderData =
-            await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
+          const firstCropOrderData = await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
               fieldId,
               cropData.Year,
               null,
@@ -290,15 +287,9 @@ class RecommendationService extends BaseService {
             );
           }
         }
-
-        // Step 6: Sum total lime values for both crops
-
-        // Step 7: Subtract the total lime from cropN in the recommendation
         const cropNeedValue = Recommendation.Recommendation_CropN;
         console.log("cropNeedValue", cropNeedValue);
-        if (totalLime1 > 0) {
-          result = cropNeedValue - totalLime1;
-        }
+        if (totalLime1 > 0) {result = cropNeedValue - totalLime1}
       }
       // Return the result of the calculation
       if(result < 0){
@@ -314,12 +305,8 @@ class RecommendationService extends BaseService {
 
   async getNutrientsRecommendationsForField(fieldId, harvestYear, request) {
     try {
-      const storedProcedure =
-        "EXEC dbo.spRecommendations_GetRecommendations @fieldId = @0, @harvestYear = @1";
-      const recommendations = await this.executeQuery(storedProcedure, [
-        fieldId,
-        harvestYear,
-      ]);
+      const storedProcedure ="EXEC dbo.spRecommendations_GetRecommendations @fieldId = @0, @harvestYear = @1";
+      const recommendations = await this.executeQuery(storedProcedure, [fieldId,harvestYear]);
 
       const mappedRecommendations = recommendations.map(async (r) => {
         const data = {
@@ -329,11 +316,7 @@ class RecommendationService extends BaseService {
           FertiliserManure: {},
         };
 
-        const previousAppliedLime = await this.processSoilRecommendations(
-          harvestYear,
-          fieldId,
-          r
-        );
+        const previousAppliedLime = await this.processSoilRecommendations(harvestYear,fieldId,r);
         // Add previousAppliedLime to Recommendation object
         data.Recommendation.PreviousAppliedLime = previousAppliedLime || 0;
         const PREFIXES = {
