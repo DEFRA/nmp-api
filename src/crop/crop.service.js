@@ -365,6 +365,7 @@ class CropService extends BaseService {
         CropInfo1: plan.CropInfo1,
         CropInfo2: plan.CropInfo2,
         Yield: plan.Yield,
+        CropOrder:plan.CropOrder,
         LastModifiedOn: lastModifiedDate,
         PlantingDate: PlantingDate,
         Management: defoliationSequenceDescription,
