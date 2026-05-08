@@ -19,6 +19,7 @@ const {
 } = require("../db/entity/management-period.entity");
 const RB209GrassService = require("../vendors/rb209/grass/grass.service");
 const RB209GrasslandService = require("../vendors/rb209/grassland/grassland.service");
+const { CropTypeMapper } = require("../constants/crop-type-mapper");
 
 class RecommendationService extends BaseService {
   constructor() {
@@ -213,9 +214,9 @@ class RecommendationService extends BaseService {
 
   async processSoilRecommendations(harvestYear, fieldId, Recommendation) {
     try {
+      const fiveYears = 5;
       const currentYear = harvestYear;
-      const fiveYearsAgo = currentYear - 5;
-
+      const fiveYearsAgo = currentYear - fiveYears;
       // Step 1: Fetch soil recommendations (before fertiliser apply)
       const soilAnalyses = await this.soilAnalysisRepository.find({
         where: {
@@ -231,25 +232,12 @@ class RecommendationService extends BaseService {
       if (!soilAnalysisWithPH) {
         return null; // Exit if no recommendation with pH > 0 is found
       }
-
       // Get the soilAnalysisYear from the recommendation with pH > 0
       const soilAnalysisWithPhYear = soilAnalysisWithPH.Year;
-      // console.log(
-      //   "RecommendationData",
-      //   Recommendation.Crop_ID
-      // );
-      // console.log(
-      //   "RecommendationData1",
-      //   Recommendation
-      // );
-      // const managementPeriodData = await this.findManagementPeriodByID(
-      //   Recommendation.ManagementPeriodID
-      // );
       // Step 3: Proceed with the process only if pH > 0 is found
       const cropData = await this.findCropDataByID(Recommendation.Crop_ID); // check order 1 or 2
 
       let totalLime1 = 0;
-      let totalLime2 = 0;
       let result = 0;
       if (cropData != null) {
         // Step 4: Handle CropOrder 1 (first crop)
@@ -268,8 +256,6 @@ class RecommendationService extends BaseService {
               firstCropOrderDataList
             );
           }
-
-          // Now, totalLime1 contains the sum of lime for all crops found in the list
           console.log(`Total Lime from all firstCropOrderData: ${totalLime1}`);
         }
 
@@ -288,9 +274,8 @@ class RecommendationService extends BaseService {
               CropOrderDataList
             );
           }
-          let cropOrder = 1;
-          const firstCropOrderData =
-            await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
+          const cropOrder = 1;
+          const firstCropOrderData = await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
               fieldId,
               cropData.Year,
               null,
@@ -303,15 +288,9 @@ class RecommendationService extends BaseService {
             );
           }
         }
-
-        // Step 6: Sum total lime values for both crops
-
-        // Step 7: Subtract the total lime from cropN in the recommendation
         const cropNeedValue = Recommendation.Recommendation_CropN;
         console.log("cropNeedValue", cropNeedValue);
-        if (totalLime1 > 0) {
-          result = cropNeedValue - totalLime1;
-        }
+        if (totalLime1 > 0) {result = cropNeedValue - totalLime1}
       }
       // Return the result of the calculation
       if(result < 0){
@@ -327,12 +306,8 @@ class RecommendationService extends BaseService {
 
   async getNutrientsRecommendationsForField(fieldId, harvestYear, request) {
     try {
-      const storedProcedure =
-        "EXEC dbo.spRecommendations_GetRecommendations @fieldId = @0, @harvestYear = @1";
-      const recommendations = await this.executeQuery(storedProcedure, [
-        fieldId,
-        harvestYear,
-      ]);
+      const storedProcedure ="EXEC dbo.spRecommendations_GetRecommendations @fieldId = @0, @harvestYear = @1";
+      const recommendations = await this.executeQuery(storedProcedure, [fieldId,harvestYear]);
 
       const mappedRecommendations = recommendations.map(async (r) => {
         const data = {
@@ -342,23 +317,33 @@ class RecommendationService extends BaseService {
           FertiliserManure: {},
         };
 
-        const previousAppliedLime = await this.processSoilRecommendations(
-          harvestYear,
-          fieldId,
-          r
-        );
+        const previousAppliedLime = await this.processSoilRecommendations(harvestYear,fieldId,r);
         // Add previousAppliedLime to Recommendation object
         data.Recommendation.PreviousAppliedLime = previousAppliedLime || 0;
-
+        const PREFIXES = {
+          CROP: "Crop_",
+          RECOMMENDATION:    "Recommendation_",
+          MANAGEMENT_PERIOD: "ManagementPeriod_",
+          FERTILISER_MANURE: "FertiliserManure_",
+        };
         Object.keys(r).forEach((recDataKey) => {
-          if (recDataKey.startsWith("Crop_"))
-            data.Crop[recDataKey.slice(5)] = r[recDataKey];
-          else if (recDataKey.startsWith("Recommendation_"))
-            data.Recommendation[recDataKey.slice(15)] = r[recDataKey];
-          else if (recDataKey.startsWith("ManagementPeriod_"))
-            data.ManagementPeriod[recDataKey.slice(17)] = r[recDataKey];
-          else if (recDataKey.startsWith("FertiliserManure_"))
-            data.FertiliserManure[recDataKey.slice(17)] = r[recDataKey];
+          if (recDataKey.startsWith(PREFIXES.CROP)) {
+            data.Crop[recDataKey.slice(PREFIXES.CROP.length)] = r[recDataKey];
+          } else if (recDataKey.startsWith(PREFIXES.RECOMMENDATION)) {
+            data.Recommendation[
+              recDataKey.slice(PREFIXES.RECOMMENDATION.length)
+            ] = r[recDataKey];
+          } else if (recDataKey.startsWith(PREFIXES.MANAGEMENT_PERIOD)) {
+            data.ManagementPeriod[
+              recDataKey.slice(PREFIXES.MANAGEMENT_PERIOD.length)
+            ] = r[recDataKey];
+          } else if (recDataKey.startsWith(PREFIXES.FERTILISER_MANURE)) {
+            data.FertiliserManure[
+              recDataKey.slice(PREFIXES.FERTILISER_MANURE.length)
+            ] = r[recDataKey];
+          } else {
+            console.log("no assignment");
+          }
         });
         return data;
       });
@@ -380,7 +365,7 @@ class RecommendationService extends BaseService {
        ) => {
          try {
            let defoliationSequenceDescription = null;
-           let defoliationSequence = await this.rB209GrassService.getData(
+           const defoliationSequence = await this.rB209GrassService.getData(
           `Grass/DefoliationSequence/${DefoliationSequenceID}`
         );
 
@@ -399,7 +384,7 @@ defoliationSequenceDescription = defoliationSequence
       const findSwardType = async (SwardTypeID) => {
         try {
           let swardTypeName = null;
-          let swardTypeList = await this.rB209GrassService.getData(
+          const swardTypeList = await this.rB209GrassService.getData(
             `Grass/SwardTypes`
           );
 
@@ -421,7 +406,7 @@ defoliationSequenceDescription = defoliationSequence
 
       const findGrassSeason = async (seasonID) => {
         try {
-          let season = await this.rB209GrasslandService.getData(
+          const season = await this.rB209GrasslandService.getData(
             `Grassland/GrasslandSeason/${seasonID}`
           );
           return season.seasonName;
@@ -430,9 +415,6 @@ defoliationSequenceDescription = defoliationSequence
           return "Unknown";
         }
       };
-
-     
-     
       const mappedRecommendationsNew = await Promise.all(mappedRecommendations);
       console.log("mappedRecommendationsNew", mappedRecommendationsNew);
       
@@ -441,23 +423,19 @@ defoliationSequenceDescription = defoliationSequence
           Crop: {
             ...r.Crop,
             EstablishmentName:
-              r.Crop.CropTypeID == 140 && r.Crop.Establishment != null
+              r.Crop.CropTypeID === CropTypeMapper.GRASS && r.Crop.Establishment !== null
                 ? await findGrassSeason(r.Crop.Establishment)
                 : null,
             SwardManagementName:
-              r.Crop.CropTypeID == 140 && r.Crop.SwardManagementID != null
+              r.Crop.CropTypeID === CropTypeMapper.GRASS && r.Crop.SwardManagementID !== null
                 ? await this.findSwardTypeManagment(r.Crop.SwardManagementID)
                 : null,
-            SwardTypeName:
-              r.Crop.CropTypeID == 140 && r.Crop.SwardTypeID != null
+            SwardTypeName: r.Crop.CropTypeID === CropTypeMapper.GRASS && r.Crop.SwardTypeID !== null
                 ? await findSwardType(r.Crop.SwardTypeID)
                 : null,
               DefoliationSequenceName:
-              r.Crop.CropTypeID == 140 &&
-              r.Crop.DefoliationSequenceID != null
-                ? await findDefoliationSequenceDescription(
-                    r.Crop.DefoliationSequenceID
-                  )
+              r.Crop.CropTypeID === CropTypeMapper.GRASS && r.Crop.DefoliationSequenceID !== null
+                ? await findDefoliationSequenceDescription(r.Crop.DefoliationSequenceID)
                 : null,
           },
           PKbalance: PKbalance,

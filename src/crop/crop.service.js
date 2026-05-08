@@ -38,6 +38,7 @@ const { GenerateRecommendations } = require("../shared/generate-recomendations-s
 const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
 const { CountryEntity } = require("../db/entity/country.entity");
 const { storedProcedure } = require("../constants/stored-procedures");
+const { CurrentAndFuture } = require("../shared/generate-current-and-future-recommendations-service");
 class CropService extends BaseService {
   constructor() {
     super(CropEntity);
@@ -62,6 +63,7 @@ class CropService extends BaseService {
     this.ProcessFutureManuresForWarnings =new ProcessFutureManuresForWarnings();
     this.generateRecommendations = new GenerateRecommendations();
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
+    this.currentAndFuture = new CurrentAndFuture();
     this.countryRepository = AppDataSource.getRepository(CountryEntity);
     this.fieldRepository = AppDataSource.getRepository(FieldEntity);
     this.COUNTRY_BOTH = 3;
@@ -427,11 +429,11 @@ class CropService extends BaseService {
       }
     }
     await transactionalManager.query(storedProcedureDeletePrimaryCrop, [CropsID]);
-   await this.CurrentAndFuture.regenerateCurrentAndFutureRecommendations(
+   await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
      crop,
      transactionalManager,
      request,
-     userId
+     userId,
    );
   }
   async cropGroupNameExists(cropIds, newGroupName, year, farmId) {
