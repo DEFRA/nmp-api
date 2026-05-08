@@ -19,6 +19,7 @@ const {
 } = require("../db/entity/management-period.entity");
 const RB209GrassService = require("../vendors/rb209/grass/grass.service");
 const RB209GrasslandService = require("../vendors/rb209/grassland/grassland.service");
+const { CropTypeMapper } = require("../constants/crop-type-mapper");
 
 class RecommendationService extends BaseService {
   constructor() {
@@ -422,18 +423,18 @@ defoliationSequenceDescription = defoliationSequence
           Crop: {
             ...r.Crop,
             EstablishmentName:
-              r.Crop.CropTypeID == 140 && r.Crop.Establishment !== null
+              r.Crop.CropTypeID === CropTypeMapper.GRASS && r.Crop.Establishment !== null
                 ? await findGrassSeason(r.Crop.Establishment)
                 : null,
             SwardManagementName:
-              r.Crop.CropTypeID === 140 && r.Crop.SwardManagementID !== null
+              r.Crop.CropTypeID === CropTypeMapper.GRASS && r.Crop.SwardManagementID !== null
                 ? await this.findSwardTypeManagment(r.Crop.SwardManagementID)
                 : null,
-            SwardTypeName: r.Crop.CropTypeID === 140 && r.Crop.SwardTypeID !== null
+            SwardTypeName: r.Crop.CropTypeID === CropTypeMapper.GRASS && r.Crop.SwardTypeID !== null
                 ? await findSwardType(r.Crop.SwardTypeID)
                 : null,
               DefoliationSequenceName:
-              r.Crop.CropTypeID === 140 && r.Crop.DefoliationSequenceID !== null
+              r.Crop.CropTypeID === CropTypeMapper.GRASS && r.Crop.DefoliationSequenceID !== null
                 ? await findDefoliationSequenceDescription(r.Crop.DefoliationSequenceID)
                 : null,
           },
