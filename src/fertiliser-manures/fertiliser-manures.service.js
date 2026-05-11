@@ -219,8 +219,43 @@ class FertiliserManuresService extends BaseService {
     return this.CalculatePKBalanceOther.calculatePKBalanceOther(
       crop,
       latestSoilAnalysis,
-      transactionalManager
+      transactionalManager,
     );
+  }
+
+  async preparePKBalanceUpdateData(
+    latestSoilAnalysis,
+    pBalance,
+    kBalance,
+    crop,
+    field,
+    existingPKBalance,
+    userId,
+  ) {
+    const hasSoilAnalysis = Object.keys(latestSoilAnalysis || {}).length > 0;
+    if (hasSoilAnalysis) {
+      if (latestSoilAnalysis.PotassiumIndex === null) {
+        kBalance = 0;
+      }
+      if (latestSoilAnalysis.PhosphorusIndex === null) {
+        pBalance = 0;
+      }
+    } else {
+      pBalance = 0;
+      kBalance = 0;
+    }
+    const updateData = {
+      Year: crop?.Year,
+      FieldID: field?.ID,
+      PBalance: pBalance,
+      KBalance: kBalance,
+    };
+    return {
+      ...existingPKBalance,
+      ...updateData,
+      ModifiedOn: new Date(),
+      ModifiedByID: userId,
+    };
   }
   async createFertiliserManures(fertiliserManureData, userId, request) {
     const cropPlanAllData = await this.cropRepository.find();
@@ -425,37 +460,21 @@ class FertiliserManuresService extends BaseService {
               const otherPKBalance = await this.setOtherCropPKBalance(
                 cropData[0],
                 latestSoilAnalysis,
-                transactionalManager
+                transactionalManager,
               );
               if (otherPKBalance) {
                 pBalance = otherPKBalance.pBalance;
                 kBalance = otherPKBalance.kBalance;
               }
-              if (Object.keys(latestSoilAnalysis).length > 0) {
-                if (latestSoilAnalysis.PotassiumIndex === null) {
-                  kBalance = 0;
-                }
-
-                if (latestSoilAnalysis.PhosphorusIndex === null) {
-                  pBalance = 0;
-                }
-              } else {
-                pBalance = 0;
-                kBalance = 0;
-              }
-              const updateData = {
-                Year: cropData[0]?.Year,
-                FieldID: fieldData[0]?.ID,
-                PBalance: pBalance,
-                KBalance: kBalance,
-              };
-
-              updatePKBalance = {
-                ...pkBalanceData[0],
-                ...updateData,
-                ModifiedOn: new Date(),
-                ModifiedByID: userId,
-              };
+              updatePKBalance = await this.preparePKBalanceUpdateData(
+               latestSoilAnalysis,
+               pBalance,
+               kBalance,
+               cropData[0],
+               fieldData[0],
+               pkBalanceData[0],
+               userId
+             );
             }
             if (updatePKBalance) {
               await transactionalManager.save(PKBalanceEntity, updatePKBalance);
