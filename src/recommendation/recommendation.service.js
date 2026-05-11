@@ -497,26 +497,21 @@ console.log('groupedObj',groupedObj)
                     NO3N: true,
                   },
                 });
-              // const previousAppliedLime = await this.processSoilRecommendations(
-              //   harvestYear,
-              //   fieldId,
-              //   recData.Recommendation
-              // );
-              const currentYear = harvestYear;
-              const fiveYearsAgo = currentYear - 5; //crop table crop ID se Management PeriodID Fertilisertable managementperiod se recommendation main croplime se fertriliser minus kaarna hai
-
+            
               // Fetch ManureType details from external API
               const organicManuresWithDetails = await Promise.all(
                 organicManures.map(async (o) => {
+                    const manureTypeId = Number(o.ManureTypeID);
+                    const applicationMethodId = Number(o.ApplicationMethodID);
                   const manureTypeData =
                     await this.MannerManureTypesService.getData(
-                      `/manure-types/${o.ManureTypeID}`,
-                      request
+                      `/manure-types/${manureTypeId}`,
+                      request,
                     );
                   const applicationMethodData =
                     await this.MannerApplicationMethodService.getData(
-                      `/application-methods/${o.ApplicationMethodID}`,
-                      request
+                      `/application-methods/${applicationMethodId}`,
+                      request,
                     );
                   return {
                     ...o,
@@ -530,11 +525,7 @@ console.log('groupedObj',groupedObj)
                 ...recData.Recommendation,
                 ...recData.FertiliserManure, // Adds FertiliserManure properties to Recommendation
               };
-              // console.log()
-              //               // Add previousAppliedLime to the mergedRecommendation object
-              //               mergedRecommendation.PreviousAppliedLime =
-              //                 previousAppliedLime || 0;
-
+          
               return {
                 Recommendation: mergedRecommendation,
                 RecommendationComments: comments,
@@ -556,7 +547,7 @@ console.log('groupedObj',groupedObj)
   async findSwardTypeManagment(SwardManagementID) {
     try {
       let swardManagementsName = null;
-      let swardManagementsList = await this.rB209GrassService.getData(
+      const swardManagementsList = await this.rB209GrassService.getData(
         `Grass/SwardManagements`
       );
 console.log('swardManagementsList',swardManagementsList);

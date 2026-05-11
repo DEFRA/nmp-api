@@ -80,8 +80,8 @@ async calculatePKBalanceOther(
 
   // ---------- P Balance ----------
   if (
-    latestSoilAnalysis.PhosphorusIndex &&
-    latestSoilAnalysis.PhosphorusIndex >= 3
+
+    latestSoilAnalysis?.PhosphorusIndex >= 3
   ) {
     cropNeed = 0;
   } else if (latestSoilAnalysis.PhosphorusIndex == 0) {
@@ -126,7 +126,6 @@ async calculatePKBalanceOther(
     cropNeed +
     organicK2O +
     fertiliserK2O;
-
   return {
     pBalance,
     kBalance,

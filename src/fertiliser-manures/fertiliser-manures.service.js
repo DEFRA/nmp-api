@@ -372,8 +372,7 @@ class FertiliserManuresService extends BaseService {
                   error,
                 );
               });
-          } else {
-            if (pkBalanceData.length > 0) {
+          } else if (pkBalanceData.length > 0) {
               let updatePKBalance;
               const totalP205AndK20 = await this.getTotalP205AndK20(
                 fertiliserData,
@@ -469,7 +468,6 @@ class FertiliserManuresService extends BaseService {
                 userId,
               );
             }
-          }
         }
         await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
           cropData[0],
