@@ -257,6 +257,65 @@ class FertiliserManuresService extends BaseService {
       ModifiedByID: userId,
     };
   }
+
+  async buildPKBalanceData(
+    totalP205AndK20,
+    fertiliserManure,
+    recommendationData,
+    crop,
+    pkBalance,
+    userId,
+    transactionalManager,
+  ) {
+    if (!totalP205AndK20 || !recommendationData) {
+      return null;
+    }
+
+    let pBalance =
+      totalP205AndK20.p205 + fertiliserManure?.P2O5 - recommendationData.p205;
+
+    let kBalance =
+      totalP205AndK20.k20 + fertiliserManure?.K2O - recommendationData.k20;
+
+    const farmData = await this.farmRepository.findOneBy({
+      ID: field.FarmID,
+    });
+
+    const rb209CountryData = await transactionalManager.findOne(CountryEntity, {
+      where: {
+        ID: farmData.CountryID,
+      },
+    });
+
+    const { latestSoilAnalysis } =
+      await this.HandleSoilAnalysisService.handleSoilAnalysisValidation(
+        crop.FieldID,
+        crop?.Year,
+        rb209CountryData.RB209CountryID,
+        transactionalManager
+      );
+
+    const otherPKBalance = await this.setOtherCropPKBalance(
+      crop,
+      latestSoilAnalysis,
+      transactionalManager,
+    );
+
+    if (otherPKBalance?.pBalance !== null) {
+      pBalance = otherPKBalance.pBalance;
+      kBalance = otherPKBalance.kBalance;
+    }
+
+    return this.preparePKBalanceUpdateData(
+      latestSoilAnalysis,
+      pBalance,
+      kBalance,
+      crop,
+      field,
+      pkBalance,
+      userId
+    );
+  }
   async createFertiliserManures(fertiliserManureData, userId, request) {
     const cropPlanAllData = await this.cropRepository.find();
     const recommandationAllData = await this.RecommendationRepository.find();
@@ -427,55 +486,15 @@ class FertiliserManuresService extends BaseService {
                 recommandationAllData,
               );
 
-            if (totalP205AndK20 && recommandationData) {
-              let pBalance =
-                totalP205AndK20.p205 +
-                fertiliserManureData[0]?.FertiliserManure.P2O5 -
-                recommandationData.p205;
-              let kBalance =
-                totalP205AndK20.k20 +
-                fertiliserManureData[0]?.FertiliserManure.K2O -
-                recommandationData.k20;
-              const farmData = await this.farmRepository.findOneBy({
-                ID: fieldData[0].FarmID,
-              });
-
-              const rb209CountryData = await transactionalManager.findOne(
-                CountryEntity,
-                {
-                  where: {
-                    ID: farmData.CountryID,
-                  },
-                },
-              );
-
-              const { latestSoilAnalysis } =
-                await this.HandleSoilAnalysisService.handleSoilAnalysisValidation(
-                  fieldData[0].ID,
-                  cropData[0]?.Year,
-                  rb209CountryData.RB209CountryID,
-                  transactionalManager,
-                );
-
-              const otherPKBalance = await this.setOtherCropPKBalance(
-                cropData[0],
-                latestSoilAnalysis,
-                transactionalManager,
-              );
-              if (otherPKBalance) {
-                pBalance = otherPKBalance.pBalance;
-                kBalance = otherPKBalance.kBalance;
-              }
-              updatePKBalance = await this.preparePKBalanceUpdateData(
-               latestSoilAnalysis,
-               pBalance,
-               kBalance,
-               cropData[0],
-               fieldData[0],
-               pkBalanceData[0],
-               userId
-             );
-            }
+            updatePKBalance = await this.buildPKBalanceData(
+              totalP205AndK20,
+              fertiliserManureData[0]?.FertiliserManure,
+              recommandationData,
+              cropData[0],
+              pkBalanceData[0],
+              userId,
+              transactionalManager,
+            );
             if (updatePKBalance) {
               await transactionalManager.save(PKBalanceEntity, updatePKBalance);
             }
