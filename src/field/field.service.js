@@ -225,7 +225,7 @@ class FieldService extends BaseService {
       throw boom.conflict("Field already exists with this Farm Id and Name");
     }
 
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const field = this.repository.create({
         ...body.Field,
         FarmID: farmId,

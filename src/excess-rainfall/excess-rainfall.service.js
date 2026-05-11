@@ -22,7 +22,8 @@ class ExcessRainfallService extends BaseService {
     };
   }
   async checkExcessRainfalExists(farmId, year) {
-    return await this.recordExists({ FarmID: farmId, Year: year });
+    const recordExist = await this.recordExists({ FarmID: farmId, Year: year });
+    return recordExist;
   }
   async createExcessRainfall(farmId, year, body, userId, request) {
     // Check if an ExcessRainfall with the same farmId and year already exists
@@ -33,7 +34,7 @@ class ExcessRainfallService extends BaseService {
       );
     }
 
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const excessRainfall = this.repository.create({
         ...body,
         FarmID: farmId,
