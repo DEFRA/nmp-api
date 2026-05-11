@@ -468,7 +468,6 @@ class FertiliserManuresService extends BaseService {
                 );
               });
           } else if (pkBalanceData.length > 0) {
-            let updatePKBalance;
             const totalP205AndK20 = await this.getTotalP205AndK20(
               fertiliserData,
               managementPeriodData[0]?.ID,
@@ -477,10 +476,10 @@ class FertiliserManuresService extends BaseService {
             const recommandationData =
               await this.getTotalFertiliserP205AndK20FromRecommandation(
                 managementPeriodData[0]?.ID,
-                recommandationAllData,
+                recommandationAllData
               );
 
-            updatePKBalance = await this.buildPKBalanceData(
+            const updatePKBalance = await this.buildPKBalanceData(
               totalP205AndK20,
               fertiliserManureData[0]?.FertiliserManure,
               recommandationData,
@@ -499,7 +498,7 @@ class FertiliserManuresService extends BaseService {
               cropData[0],
               transactionalManager,
               request,
-              userId,
+              userId
             );
           } else {
             console.log("PK Balance data not found for field and year:");
