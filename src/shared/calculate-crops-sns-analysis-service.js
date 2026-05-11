@@ -40,12 +40,13 @@ class CalculateCropsSnsAnalysisService {
 
   // Helper method with transactional manager
   async getSnsAnalysesData(transactionalManager, cropId) {
-    return await transactionalManager.findOne(
+     const snsAnalysesData = await transactionalManager.findOne(
       SnsAnalysesEntity,
       {
         where: { CropID: cropId },
       }
     );
+    return snsAnalysesData;
   }
 }
 

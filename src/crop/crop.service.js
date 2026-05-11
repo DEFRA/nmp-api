@@ -38,6 +38,7 @@ const { GenerateRecommendations } = require("../shared/generate-recomendations-s
 const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
 const { CountryEntity } = require("../db/entity/country.entity");
 const { storedProcedure } = require("../constants/stored-procedures");
+const { CurrentAndFuture } = require("../shared/generate-current-and-future-recommendations-service");
 class CropService extends BaseService {
   constructor() {
     super(CropEntity);
@@ -59,20 +60,16 @@ class CropService extends BaseService {
     this.recommendationCommentRepository = AppDataSource.getRepository(RecommendationCommentEntity);
     this.CalculateCropsSnsAnalysis = new CalculateCropsSnsAnalysisService();
     this.planService = new PlanService();
-    this.ProcessFutureManuresForWarnings =
-      new ProcessFutureManuresForWarnings();
+    this.ProcessFutureManuresForWarnings =new ProcessFutureManuresForWarnings();
     this.generateRecommendations = new GenerateRecommendations();
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
+    this.currentAndFuture = new CurrentAndFuture();
     this.countryRepository = AppDataSource.getRepository(CountryEntity);
     this.fieldRepository = AppDataSource.getRepository(FieldEntity);
     this.COUNTRY_BOTH = 3;
   }
 
-  async createCropWithManagementPeriods(
-    fieldId,
-    cropData,
-    managementPeriodData,
-    userId
+  async createCropWithManagementPeriods(fieldId,cropData,managementPeriodData,userId
   ) {
     return AppDataSource.transaction(async (transactionalManager) => {
       const crop = this.repository.create({...cropData,FieldID: fieldId,CreatedByID: userId});
@@ -132,35 +129,15 @@ class CropService extends BaseService {
     }
   }
 
-  async updateCropByFieldYearAndConfirm(
-    updatedCropData,
-    userId,
-    fieldId,
-    year,
-    confirm,
-  ) {
+  async updateCropByFieldYearAndConfirm(updatedCropData,userId,fieldId,year,confirm) {
     const confirmValue = confirm ? 1 : 0;
     const result = await AppDataSource.transaction(
       async (transactionalManager) => {
         const existingCrop = await transactionalManager.findOne(CropEntity, {
           where: { FieldID: fieldId, Year: year, Confirm: confirmValue },
         });
-        if (!existingCrop) {
-          throw boom.notFound(`Crop for FieldID ${fieldId}, Year ${year}, and Confirm ${confirm} not found`);
-        }
-
-        const {
-          ID,
-          CreatedByID,
-          CreatedOn,
-          PreviousID,
-          Year,
-          FieldName,
-          EncryptedCounter,
-          FieldID,
-          ...updateData
-        } = updatedCropData;
-
+        if (!existingCrop) {throw boom.notFound(`Crop for FieldID ${fieldId}, Year ${year}, and Confirm ${confirm} not found`)}
+        const {ID,CreatedByID,CreatedOn,PreviousID,Year,FieldName,EncryptedCounter,FieldID,...updateData} = updatedCropData;
         const updateResult = await transactionalManager.update(
           CropEntity,
           { FieldID: fieldId, Year: year, Confirm: confirmValue },
@@ -170,26 +147,13 @@ class CropService extends BaseService {
             ModifiedOn: new Date(),
           },
         );
-
-        if (updateResult.affected === 0) {
-          throw boom.notFound(`Crop for FieldID ${fieldId}, Year ${year}, and Confirm ${confirmValue} not found`);
-        }
-
+        if (updateResult.affected === 0) {throw boom.notFound(`Crop for FieldID ${fieldId}, Year ${year}, and Confirm ${confirmValue} not found`)}
         const updatedCrop = await transactionalManager.findOne(CropEntity, {
           where: { FieldID: fieldId, Year: year, Confirm: confirmValue },
         });
-
         // Get the rb209CountryID of the farm
         const rb209CountryID = await this.fetchRb209CountryId(fieldId);
-
-        await this.validateAndHandleSecondCrop(
-          transactionalManager,
-          updatedCrop,
-          fieldId,
-          year,
-          rb209CountryID,
-        );
-
+        await this.validateAndHandleSecondCrop(transactionalManager,updatedCrop,fieldId,year,rb209CountryID);
         return updatedCrop;
       },
     );
@@ -215,7 +179,6 @@ class CropService extends BaseService {
     return rb209CountryID;
   }
 
-  // Other methods...
   async mapCropTypeIdWithTheirNames(plans) {
     try {
       const unorderedMap = {};
@@ -236,28 +199,17 @@ class CropService extends BaseService {
   }
 
   async getManureTypeById(manureTypesResponse, manureTypeID) {
-    const manureType = manureTypesResponse.data.find(
-      (mt) => mt.id === manureTypeID,
-    );
-    if (!manureType) {
-      console.log(`ManureType not found for ID ${manureTypeID}`);
-    }
-    //  Match API response structure
+    const manureType = manureTypesResponse.data.find((mt) => mt.id === manureTypeID);
+    if (!manureType) {console.log(`ManureType not found for ID ${manureTypeID}`)}
     return {data: manureType};
   }
 
   async getOrganicAndInorganicDetails(farmId, harvestYear, request) {
-    const storedProcedureGetPlansByHarvestYear =
-      "EXEC dbo.spCrops_GetPlansByHarvestYear @farmId = @0, @harvestYear = @1";
-    const plans = await this.executeQuery(
-      storedProcedureGetPlansByHarvestYear,
-      [farmId, harvestYear],
-    );
+    const storedProcedureGetPlansByHarvestYear = "EXEC dbo.spCrops_GetPlansByHarvestYear @farmId = @0, @harvestYear = @1";
+    const plans = await this.executeQuery(storedProcedureGetPlansByHarvestYear, [farmId, harvestYear]);
     const findCropDetailsFromRepo = async (CropID) => {
       try {
-        const cropRecord = await this.repository.findOne({
-          where: { ID: CropID },
-        });
+        const cropRecord = await this.repository.findOne({where: { ID: CropID }});
         return {PlantingDate: cropRecord ? cropRecord.SowingDate : null};
       } catch (error) {
         console.error(
@@ -271,7 +223,7 @@ class CropService extends BaseService {
       try {
         const managementPeriods = await this.managementPeriodRepository.find({
           where: { CropID: cropId },
-          select: ["ID"],
+          select: ["ID"]
         });
 
         return managementPeriods.map((period) => period.ID);
@@ -383,8 +335,6 @@ class CropService extends BaseService {
           "/manure-types",
           request,
         );
-
-        // Process each organicManure entry asynchronously
         return Promise.all(
           organicManureData.map(async (organicManure) => {
             // Fetch the manure type data from MannerManureTypesService
@@ -394,7 +344,6 @@ class CropService extends BaseService {
                 allManureData,
                 organicManure.ManureTypeID,
               );
-
               mannerManureTypeData = manureTypeResponse.data;
             } catch (error) {
               console.error(`Error fetching manure type`, error);
@@ -444,12 +393,10 @@ class CropService extends BaseService {
     );
 
     return {
-      farmDetails: {
-        rainfall: rainfall || "Unknown",
-      },
+      farmDetails: {rainfall: rainfall || "Unknown"},
       CropDetails: cropDetails,
       OrganicMaterial: flattenedOrganicMaterials,
-      InorganicFertiliserApplication: inorganicFertiliserApplications.flat(),
+      InorganicFertiliserApplication: inorganicFertiliserApplications.flat()
     };
   }
 
@@ -458,91 +405,37 @@ class CropService extends BaseService {
     if (transactionalManager) {
       return this.deleteCropById(cropId, userId, request, transactionalManager);
     }
-
-    //  Otherwise, start a new local transaction.
     return AppDataSource.transaction(async (localManager) => {
       return this.deleteCropById(cropId, userId, request, localManager);
     });
   }
   async deleteCropById(CropsID, userId, request, transactionalManager) {
-    // await AppDataSource.manager.transaction(async (transactionalManager) => {
     const crop = await transactionalManager.findOne(this.repository.target, {
       where: { ID: CropsID },
     });
-
-    if (!crop) {
-      throw new Error("Crop not found");
-    }
-
-    // Construct the stored procedure to delete a single crop by its ID
+    if (!crop) {throw new Error("Crop not found")}
     const storedProcedureDeletePrimaryCrop = storedProcedure.DELETE_CROP;
-
-    // If the crop's CropOrder is 1, check for a second crop (CropOrder = 2) in the same year
     if (crop.CropOrder === 1) {
       const secondCrop = await transactionalManager.findOne(CropEntity, {
         where: {
           Year: crop.Year,
           CropOrder: CropOrderMapper.SECONDCROP,
-          FieldID: crop.FieldID,
+          FieldID: crop.FieldID
         },
       });
-
       if (secondCrop) {
         const storedProcedureSecondCrop = storedProcedure.DELETE_CROP;
-        await transactionalManager.query(storedProcedureSecondCrop, [
-          secondCrop.ID,
-        ]);
+        await transactionalManager.query(storedProcedureSecondCrop, [secondCrop.ID]);
       }
     }
-
-    // Delete the primary crop
-    await transactionalManager.query(storedProcedureDeletePrimaryCrop, [
-      CropsID,
-    ]);
-    const newOrganicManure = null;
-    await this.generateRecommendations.generateRecommendations(
-      crop.FieldID,
-      crop.Year,
-      newOrganicManure,
-      transactionalManager,
-      request,
-      userId,
-    );
-    // Find the next available crop
-    const nextAvailableCrop = await transactionalManager.findOne(CropEntity, {
-      where: {
-        FieldID: crop.FieldID,
-        Year: MoreThan(crop.Year),
-      },
-      order: {
-        Year: "ASC",
-      },
-    });
-
-    if (nextAvailableCrop) {
-      // Not transactional — it's okay if this fails independently
-      this.updatingFutureRecommendations
-        .updateRecommendationsForField(
-          crop.FieldID,
-          nextAvailableCrop.Year,
-          request,
-          userId,
-        )
-        .then((res) => {
-          if (res === undefined) {
-            console.log(res);
-          }
-        })
-        .catch((error) => {
-          console.error(
-            "Error updating recommendation and organic manure:",
-            error,
-          );
-        });
-    }
-    // });
+    await transactionalManager.query(storedProcedureDeletePrimaryCrop, [CropsID]);
+   await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
+     crop,
+     transactionalManager,
+     request,
+     userId,
+   );
   }
-
   async cropGroupNameExists(cropIds, newGroupName, year, farmId) {
     return (
       (await this.existingGroupNameCount(cropIds, newGroupName, year, farmId)) >

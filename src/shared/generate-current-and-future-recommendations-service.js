@@ -41,7 +41,7 @@ async regenerateCurrentAndFutureRecommendations(
   );
 
   if (nextAvailableCrop) {
-    await this.updatingFutureRecommendations.updateRecommendationsForField(
+    this.updatingFutureRecommendations.updateRecommendationsForField(
       crop.FieldID,
       nextAvailableCrop.Year,
       request,

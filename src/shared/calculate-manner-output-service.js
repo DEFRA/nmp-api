@@ -63,7 +63,7 @@ class CalculateMannerOutputService {
         );
       }
     }
-    if (CropData.CropOrder == CropOrderMapper.SECONDCROP) {
+    if (CropData.CropOrder === CropOrderMapper.SECONDCROP) {
       nextCropAvailableN = 0;
       availableNForNextDefoliation = 0;
     }
@@ -169,7 +169,7 @@ class CalculateMannerOutputService {
     }
 
     if (organicManureData != null) {
-      if (organicManureData.ManagementPeriodID == managementPeriodID) {
+      if (organicManureData.ManagementPeriodID === managementPeriodID) {
         if (Object.keys(organicManureData).length !== 0) {
           // Handle the single organicManureData object and push its values into the array
           // Fetch manure type data for the single organicManureData object
