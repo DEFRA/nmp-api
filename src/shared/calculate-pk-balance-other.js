@@ -94,6 +94,11 @@ async calculatePKBalanceOther(
   } else if (latestSoilAnalysis.PhosphorusIndex === potassiumIndexValueTwo) {
     cropNeed =
       OtherCropOfftake.POFFTAKE + PKBalanceIndexAdjustmentMapper.INDEXTWO;
+  } else {
+    console.log(
+      "Unexpected PhosphorusIndex value:",
+      latestSoilAnalysis.PhosphorusIndex
+    );
   }
 
   const pBalance =
