@@ -41,8 +41,6 @@ async calculatePKBalanceOther(
     );
 
     const managementPeriodIds = managementPeriods.map((mp) => mp.ID);
-
-    if (managementPeriodIds.length > 0) {
       const organicManures = await transactionalManager.find(
         OrganicManureEntity,
         {
@@ -73,7 +71,7 @@ async calculatePKBalanceOther(
         0
       );
       fertiliserK2O = fertiliserData.reduce((sum, f) => sum + (f.K2O || 0), 0);
-    }
+    
   }
 
   let cropNeed = 0;
@@ -81,7 +79,6 @@ async calculatePKBalanceOther(
 
   // ---------- P Balance ----------
   if (
-
     latestSoilAnalysis?.PhosphorusIndex >= 3
   ) {
     cropNeed = 0;
