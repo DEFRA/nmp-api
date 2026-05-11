@@ -76,7 +76,8 @@ async calculatePKBalanceOther(
     }
   }
 
-  let cropNeed = 0,potassiumIndexValueZero = 0,potassiumIndexValueOne = 1,potassiumIndexValueTwo = 2; 
+  let cropNeed = 0;
+ const potassiumIndexValueZero = 0,potassiumIndexValueOne = 1,potassiumIndexValueTwo = 2; 
 
   // ---------- P Balance ----------
   if (
