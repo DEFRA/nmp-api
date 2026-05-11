@@ -358,7 +358,9 @@ class CalculateMannerOutputService {
         otherPeriods = null,
         orderedPeriods = null;
 
-      if (organicManure != null) {
+      if (organicManure == null) {
+        orderedPeriods = managementPeriods;
+      } else {
         matchingPeriod = managementPeriods.find(
           (p) => p.ID === organicManure.ManagementPeriodID,
         );
@@ -369,8 +371,6 @@ class CalculateMannerOutputService {
         orderedPeriods = matchingPeriod
           ? [matchingPeriod, ...otherPeriods]
           : otherPeriods;
-      } else {
-        orderedPeriods = managementPeriods;
       }
 
       // Step 4: Process each management period
