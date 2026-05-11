@@ -262,17 +262,14 @@ class FertiliserManuresService extends BaseService {
     totalP205AndK20,
     fertiliserManure,
     recommendationData,
+    field,
     crop,
     pkBalance,
-    userId,
-    transactionalManager,
+    transactionalAndUserId
   ) {
-    if (!totalP205AndK20 || !recommendationData) {
-      return null;
-    }
-
-    let pBalance =
-      totalP205AndK20.p205 + fertiliserManure?.P2O5 - recommendationData.p205;
+    const { transactionalManager, userId } = transactionalAndUserId;
+    if (!totalP205AndK20 || !recommendationData) {return null}
+    let pBalance =totalP205AndK20.p205 + fertiliserManure?.P2O5 - recommendationData.p205;
 
     let kBalance =
       totalP205AndK20.k20 + fertiliserManure?.K2O - recommendationData.k20;
@@ -280,16 +277,13 @@ class FertiliserManuresService extends BaseService {
     const farmData = await this.farmRepository.findOneBy({
       ID: field.FarmID,
     });
-
     const rb209CountryData = await transactionalManager.findOne(CountryEntity, {
-      where: {
-        ID: farmData.CountryID,
-      },
+      where: {ID: farmData.CountryID}
     });
 
     const { latestSoilAnalysis } =
       await this.HandleSoilAnalysisService.handleSoilAnalysisValidation(
-        crop.FieldID,
+        field.ID,
         crop?.Year,
         rb209CountryData.RB209CountryID,
         transactionalManager
@@ -490,10 +484,13 @@ class FertiliserManuresService extends BaseService {
               totalP205AndK20,
               fertiliserManureData[0]?.FertiliserManure,
               recommandationData,
+              fieldData[0],
               cropData[0],
               pkBalanceData[0],
+              {
               userId,
-              transactionalManager,
+              transactionalManager
+              }
             );
             if (updatePKBalance) {
               await transactionalManager.save(PKBalanceEntity, updatePKBalance);
