@@ -491,9 +491,7 @@ class FertiliserManuresService extends BaseService {
               transactionalManager
               }
             );
-            if (updatePKBalance) {
-              await transactionalManager.save(PKBalanceEntity, updatePKBalance);
-            }
+            await transactionalManager.save(PKBalanceEntity, updatePKBalance);
             await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
               cropData[0],
               transactionalManager,
