@@ -14,7 +14,7 @@ class SNSAnalysesController {
 
   async getSNSAnalysesByCropId() {
     const { cropId } = this.#request.params;
-    let selectOptions = {};
+    const selectOptions = {};
     try {
       const snsAnalyses = await this.#snsAnalysisService.getBy(
         "CropID",
