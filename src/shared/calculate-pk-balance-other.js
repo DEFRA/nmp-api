@@ -75,12 +75,9 @@ async calculatePKBalanceOther(
   }
 
   let cropNeed = 0;
- const potassiumIndexValueZero = 0,potassiumIndexValueOne = 1,potassiumIndexValueTwo = 2; 
-
+ const potassiumIndexValueZero = 0,potassiumIndexValueOne = 1,potassiumIndexValueTwo = 2,potassiumIndexValueThree = 3; 
   // ---------- P Balance ----------
-  if (
-    latestSoilAnalysis?.PhosphorusIndex >= 3
-  ) {
+  if (latestSoilAnalysis?.PhosphorusIndex >= potassiumIndexValueThree) {
     cropNeed = 0;
   } else if (latestSoilAnalysis.PhosphorusIndex === potassiumIndexValueZero) {
     cropNeed =
@@ -94,7 +91,7 @@ async calculatePKBalanceOther(
   } else {
     console.log(
       "Unexpected PhosphorusIndex value:",
-      latestSoilAnalysis.PhosphorusIndex
+      latestSoilAnalysis.PhosphorusIndex,
     );
   }
 
