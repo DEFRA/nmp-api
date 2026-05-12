@@ -662,15 +662,14 @@ class CalculateGrassHistoryAndPreviousGrass {
       organicNextDefoliationN +
       organicPrevYearNextYearN +
       fertiliserN;
-
-    // Step 5: Classify nitrogen use
-    nitrogenUse =
-      nitrogenTotal > 250
-        ? CloverMapper.HighClover
-        : nitrogenTotal > 100
-          ? CloverMapper.ModerateClover
-          : CloverMapper.LowClover;
-
+  const nitrogenTotalTwoFiftyLimit = 250,nitrogenTotalOneHundredLimit = 100;
+   if (nitrogenTotal > nitrogenTotalTwoFiftyLimit) {
+     nitrogenUse = CloverMapper.HighClover;
+   } else if (nitrogenTotal > nitrogenTotalOneHundredLimit) {
+     nitrogenUse = CloverMapper.ModerateClover;
+   } else {
+     nitrogenUse = CloverMapper.LowClover;
+   }
     return {
       nitrogenTotal,
       nitrogenUse,
@@ -736,9 +735,9 @@ class CalculateGrassHistoryAndPreviousGrass {
 
     const [firstHyFieldType, secondHyFieldType, thirdHyFieldType] = fieldTypes;
     if (
-      firstHyFieldType == FieldTypeMapper.ARABLE &&
-      secondHyFieldType == FieldTypeMapper.ARABLE &&
-      thirdHyFieldType == FieldTypeMapper.ARABLE
+      firstHyFieldType === FieldTypeMapper.ARABLE &&
+      secondHyFieldType === FieldTypeMapper.ARABLE &&
+      thirdHyFieldType === FieldTypeMapper.ARABLE
     ) {
       return 1;
     }
@@ -758,7 +757,7 @@ class CalculateGrassHistoryAndPreviousGrass {
       isHighClover,
       nitrogenUse,
     } = lastGrass;
-    if (nitrogenUse == CloverMapper.ModerateClover) {
+    if (nitrogenUse === CloverMapper.ModerateClover) {
       nitrogenUse = CloverMapper.LowClover;
     }
     if (isHighClover) {
