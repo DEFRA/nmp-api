@@ -470,7 +470,7 @@ class CalculateGrassHistoryAndPreviousGrass {
       transactionalManager,
     );
 
-    if (!prevGrass || prevGrass.CropTypeID !== CropTypeMapper.GRASS) {
+    if (prevGrass?.CropTypeID !== CropTypeMapper.GRASS) {
       return null;
     }
 
@@ -721,7 +721,7 @@ class CalculateGrassHistoryAndPreviousGrass {
     // Step 1: Fetch crops for current and previous years
     let cropThisYear = crop;
     if (!cropThisYear) {
-      cropThisYear = await transactionalManager.findOne(CropEntity, {
+       await transactionalManager.findOne(CropEntity, {
         where: { FieldID: crop.FieldID, Year: crop.Year },
       });
     }

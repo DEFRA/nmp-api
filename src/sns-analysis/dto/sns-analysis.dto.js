@@ -1,5 +1,5 @@
 const Joi = require("joi");
-
+const precisionThree = 3,maxIndexValue = 255;
 const SnsAnalysisDto = Joi.object({
   ID: Joi.number().integer().allow(null),
   CropID: Joi.number().integer().required(),
@@ -11,16 +11,16 @@ const SnsAnalysisDto = Joi.object({
   SampleDepth: Joi.number().integer().optional().allow(null),
   SoilMineralNitrogen: Joi.number().integer().optional().allow(null),
   NumberOfShoots: Joi.number().integer().optional().allow(null),
-  GreenAreaIndex: Joi.number().precision(3).optional().allow(null),
-  CropHeight: Joi.number().precision(3).optional().allow(null),
+  GreenAreaIndex: Joi.number().precision(precisionThree).optional().allow(null),
+  CropHeight: Joi.number().precision(precisionThree).optional().allow(null),
   SeasonId: Joi.number().integer().optional().allow(null),
-  PercentageOfOrganicMatter: Joi.number().precision(3).optional().allow(null),
-  AdjustmentValue: Joi.number().precision(3).optional().allow(null),
+  PercentageOfOrganicMatter: Joi.number().precision(precisionThree).optional().allow(null),
+  AdjustmentValue: Joi.number().precision(precisionThree).optional().allow(null),
   SoilNitrogenSupplyValue: Joi.number().integer().optional().allow(null),
   SoilNitrogenSupplyIndex: Joi.number()
     .integer()
     .min(0)
-    .max(255)
+    .max(maxIndexValue)
     .optional()
     .allow(null),
     NitrogenResidueGroup: Joi.string().required().allow(null),

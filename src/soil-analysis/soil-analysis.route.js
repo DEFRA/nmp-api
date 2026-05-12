@@ -2,6 +2,7 @@ const Joi = require("joi");
 const { SoilAnalysesController } = require("./soil-analysis.controller");
 const { CreateSoilAnalysisDto, UpdateSoilAnalysisDto } = require("./dto/soil-analysis.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 module.exports = [
   {
@@ -14,19 +15,7 @@ module.exports = [
         params: Joi.object({
           soilAnalysisId: Joi.number().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {
@@ -47,19 +36,7 @@ module.exports = [
         query: Joi.object({
           shortSummary: Joi.boolean(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {
@@ -80,19 +57,7 @@ module.exports = [
       description: "Create Soil Analysis",
       validate: {
         payload: CreateSoilAnalysisDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -112,19 +77,7 @@ module.exports = [
           soilAnalysisId: Joi.number().integer().required(),
         }),
         payload: UpdateSoilAnalysisDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -139,19 +92,7 @@ module.exports = [
         params: Joi.object({
           soilAnalysisId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
