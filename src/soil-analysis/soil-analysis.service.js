@@ -25,7 +25,7 @@ class SoilAnalysesService extends BaseService {
       });
 
       // Check for PK Balance entry
-      let pkBalanceEntry = await transactionalManager.find(PKBalanceEntity, {
+      const pkBalanceEntry = await transactionalManager.find(PKBalanceEntity, {
         where: {
           Year: soilAnalysis.Year,
           FieldID: soilAnalysis.FieldID,
@@ -39,7 +39,7 @@ class SoilAnalysesService extends BaseService {
         soilAnalysis.PhosphorusIndex != null
       ) {
         if (pkBalanceEntry.length === 0 && pKBalanceData) {
-          let { CreatedByID, CreatedOn, ...updatedPKBalanceData } =
+          const { CreatedByID, CreatedOn, ...updatedPKBalanceData } =
             pKBalanceData;
            await transactionalManager.save(PKBalanceEntity, {
             ...updatedPKBalanceData,
@@ -57,7 +57,7 @@ class SoilAnalysesService extends BaseService {
 
       // Retrieve the updated PKBalance entry
 
-      let PKBalance = await transactionalManager.findOne(PKBalanceEntity, {
+      const PKBalance = await transactionalManager.findOne(PKBalanceEntity, {
         where: {
           Year: soilAnalysis.Year,
           FieldID: soilAnalysis.FieldID,
@@ -162,14 +162,12 @@ class SoilAnalysesService extends BaseService {
       );
 
       // Check for PK Balance entry
-      let pkBalanceEntry = await transactionalManager.find(PKBalanceEntity, {
+       const pkBalanceEntry = await transactionalManager.find(PKBalanceEntity, {
         where: {
           Year: SoilAnalysis.Date.Year,
           FieldID: SoilAnalysis.FieldID,
         },
       });
-
-      let newPKBalanceData = null;
 
       if (
         SoilAnalysis.Potassium != null ||
@@ -178,9 +176,9 @@ class SoilAnalysesService extends BaseService {
         SoilAnalysis.PhosphorusIndex != null
       ) {
         if (pkBalanceEntry.length === 0 && pKBalanceData) {
-          let { CreatedByID, CreatedOn, ...updatedPKBalanceData } =
+          const { CreatedByID, CreatedOn, ...updatedPKBalanceData } =
             pKBalanceData;
-          newPKBalanceData = await transactionalManager.save(PKBalanceEntity, {
+          await transactionalManager.save(PKBalanceEntity, {
             ...updatedPKBalanceData,
             CreatedByID: userId,
           });
@@ -195,7 +193,7 @@ class SoilAnalysesService extends BaseService {
 
       // Retrieve the updated PKBalance entry
 
-      let PKBalance = await transactionalManager.findOne(PKBalanceEntity, {
+      const PKBalance = await transactionalManager.findOne(PKBalanceEntity, {
         where: {
           Year: SoilAnalysis.Date.Year,
           FieldID: SoilAnalysis.FieldID,
