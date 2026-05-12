@@ -41,8 +41,6 @@ async calculatePKBalanceOther(
     );
 
     const managementPeriodIds = managementPeriods.map((mp) => mp.ID);
-
-    if (managementPeriodIds.length > 0) {
       const organicManures = await transactionalManager.find(
         OrganicManureEntity,
         {
@@ -73,26 +71,31 @@ async calculatePKBalanceOther(
         0
       );
       fertiliserK2O = fertiliserData.reduce((sum, f) => sum + (f.K2O || 0), 0);
-    }
+    
   }
 
   let cropNeed = 0;
+ const potassiumIndexValueZero = 0,potassiumIndexValueOne = 1,potassiumIndexValueTwo = 2; 
 
   // ---------- P Balance ----------
   if (
-
     latestSoilAnalysis?.PhosphorusIndex >= 3
   ) {
     cropNeed = 0;
-  } else if (latestSoilAnalysis.PhosphorusIndex == 0) {
+  } else if (latestSoilAnalysis.PhosphorusIndex === potassiumIndexValueZero) {
     cropNeed =
       OtherCropOfftake.POFFTAKE + PKBalanceIndexAdjustmentMapper.INDEXZERO;
-  } else if (latestSoilAnalysis.PhosphorusIndex == 1) {
+  } else if (latestSoilAnalysis.PhosphorusIndex === potassiumIndexValueOne) {
     cropNeed =
       OtherCropOfftake.POFFTAKE + PKBalanceIndexAdjustmentMapper.INDEXONE;
-  } else if (latestSoilAnalysis.PhosphorusIndex == 2) {
+  } else if (latestSoilAnalysis.PhosphorusIndex === potassiumIndexValueTwo) {
     cropNeed =
       OtherCropOfftake.POFFTAKE + PKBalanceIndexAdjustmentMapper.INDEXTWO;
+  } else {
+    console.log(
+      "Unexpected PhosphorusIndex value:",
+      latestSoilAnalysis.PhosphorusIndex
+    );
   }
 
   const pBalance =
@@ -110,17 +113,18 @@ async calculatePKBalanceOther(
   }
   if (potassiumIndex?.toString() === "2+") {
     cropNeed = 0;
-  } else if (potassiumIndex == 0) {
+  } else if (potassiumIndex === potassiumIndexValueZero) {
     cropNeed =
       OtherCropOfftake.KOFFTAKE + PKBalanceIndexAdjustmentMapper.INDEXZERO;
-  } else if (potassiumIndex == 1) {
+  } else if (potassiumIndex === potassiumIndexValueOne) {
     cropNeed =
       OtherCropOfftake.KOFFTAKE + PKBalanceIndexAdjustmentMapper.INDEXONE;
   } else if (potassiumIndex?.toString() === "2-") {
     cropNeed =
       OtherCropOfftake.KOFFTAKE + PKBalanceIndexAdjustmentMapper.INDEXTWOMINUS;
-  } else {console.log("Unexpected PotassiumIndex value:", potassiumIndex)}
-
+  } else {
+    console.log("Unexpected PotassiumIndex value:", potassiumIndex);
+  }
   const kBalance =
     (pkBalanceLastYear ? pkBalanceLastYear.KBalance : 0) -
     cropNeed +
@@ -131,8 +135,6 @@ async calculatePKBalanceOther(
     kBalance,
   };
 }
-
-
 }
 
 module.exports = {
