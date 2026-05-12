@@ -23,11 +23,11 @@ class HandleSoilAnalysisService {
       return null;
     }
     const nutrientData = nutrientIndicesData[nutrient];
-
+  const indexValueTwo = 2, indexValueNegativeTwo = -2;
     // Special case for Potassium (nutrientId = 2)
     if (nutrient === "Potassium") {
       // Check if indexValue is 2 and match with "2+"
-      if (indexValue === 2) {
+      if (indexValue === indexValueTwo) {
         for (const data of nutrientData) {
           if (data.index.trim() === "2+") {
             return data.indexId;
@@ -35,7 +35,7 @@ class HandleSoilAnalysisService {
         }
       }
       // Check if indexValue is -2 and match with "2-"
-      if (indexValue === -2) {
+      if (indexValue === indexValueNegativeTwo) {
         for (const data of nutrientData) {
           if (data.index.trim() === "2-") {
             return data.indexId;
