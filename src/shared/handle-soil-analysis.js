@@ -53,10 +53,10 @@ class HandleSoilAnalysisService {
 
  
 async assignIndexIdToSoilRecords(soilAnalysisRecords, rb209CountryId) {
-  const nutrientIndicesCache = {};
+
 
   for (const record of soilAnalysisRecords) {
-    await this.processRecord(record, rb209CountryId, nutrientIndicesCache);
+    await this.processRecord(record, rb209CountryId);
   }
 
   return soilAnalysisRecords;
@@ -68,7 +68,8 @@ async assignIndexIdToSoilRecords(soilAnalysisRecords, rb209CountryId) {
 /* -----------------------------
    PROCESS SINGLE RECORD
 ------------------------------*/
-async processRecord(record, rb209CountryId, cache) {
+async processRecord(record, rb209CountryId) {
+  const cache = {};
   for (const nutrient of NutrientMapperNames) {
     const { nutrientId, nutrient: nutrientName } = nutrient;
 
@@ -94,7 +95,6 @@ async processRecord(record, rb209CountryId, cache) {
       record[nutrientIndexKey],
       cache
     );
-
     record[nutrientIndexKey] =
       nutrientIndexId || record[nutrientIndexKey];
   }
@@ -138,9 +138,10 @@ async getNutrientIndexData(
 }
 
 getNutrientIndexKey(nutrientName, methodologyId) {
-  return methodologyId === 2
+ const methodologyName= methodologyId === 2
     ? `${nutrientName}Status`
     : `${nutrientName}Index`;
+  return methodologyName;
 }
   async handleSoilAnalysisValidation(fieldId, year, rb209CountryId,transactionalManager) {
     const errors = [];
