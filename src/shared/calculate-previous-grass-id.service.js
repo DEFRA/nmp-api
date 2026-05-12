@@ -719,7 +719,7 @@ class CalculateGrassHistoryAndPreviousGrass {
 
   async getPreviousGrassID(crop, transactionalManager, harvestYear) {
     // Step 1: Fetch crops for current and previous years
-    let cropThisYear = crop;
+    const cropThisYear = crop;
     if (!cropThisYear) {
        await transactionalManager.findOne(CropEntity, {
         where: { FieldID: crop.FieldID, Year: crop.Year },
