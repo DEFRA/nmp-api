@@ -11,13 +11,14 @@ const { CropTypeMapper } = require("../constants/crop-type-mapper");
 
 class CalculatePreviousCropService {
   async findPreviousCrop(fieldID, currentYear, transactionalManager) {
-    const yearsToCheck = [currentYear - 1, currentYear - 2, currentYear - 3];
+    const yearOne =1, yearTwo = 2, yearThree = 3;
+    const yearsToCheck = [currentYear - yearOne, currentYear - yearTwo, currentYear - yearThree];
     const collectedCrops = [];
 
-    // 1️⃣ COLLECT CROPS FOR LAST THREE YEARS
+    // COLLECT CROPS FOR LAST THREE YEARS
     for (const year of yearsToCheck) {
       // Fetch from CropEntity first
-      let yearCrops = await transactionalManager.find(CropEntity, {
+      const yearCrops = await transactionalManager.find(CropEntity, {
         where: { FieldID: fieldID, Year: year },
       });
 
@@ -31,6 +32,8 @@ class CalculatePreviousCropService {
       } else if (yearCrops.length === 1) {
         // If one crop — pick it
         selectedCrop = yearCrops[0];
+      }else{
+        console.warn(`No crop found in CropEntity for FieldID`);
       }
 
       if (!selectedCrop) {
@@ -57,15 +60,16 @@ class CalculatePreviousCropService {
     }
 
 
-    // 3️⃣ GET PREVIOUS YEAR CROP (Y-1 AGAIN) FOR FINAL RETURN
-    let previousYearCrops = await transactionalManager.find(CropEntity, {
+    //  GET PREVIOUS YEAR CROP (Y-1 AGAIN) FOR FINAL RETURN
+    const previousYearCrops = await transactionalManager.find(CropEntity, {
       where: { FieldID: fieldID, Year: currentYear - 1 },
     });
 
     if (previousYearCrops.length === 0) {
-      return await transactionalManager.findOne(PreviousCroppingEntity, {
+      const preCrop = await transactionalManager.findOne(PreviousCroppingEntity, {
         where: { FieldID: fieldID, HarvestYear: currentYear - 1 },
       });
+      return preCrop;
     }
 
     if (previousYearCrops.length > 1) {

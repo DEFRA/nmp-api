@@ -225,7 +225,7 @@ class FieldService extends BaseService {
       throw boom.conflict("Field already exists with this Farm Id and Name");
     }
 
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const field = this.repository.create({
         ...body.Field,
         FarmID: farmId,
@@ -1193,10 +1193,8 @@ class FieldService extends BaseService {
           SoilTypeName: soilTypeName,
           PotashReleasingClay: field.SoilReleasingClay,
           SulphurDeficient: sulphurDeficient,
-          StartingP:
-            pkBalance && pkBalance.PBalance != null ? pkBalance.PBalance : null,
-          Startingk:
-            pkBalance && pkBalance.KBalance != null ? pkBalance.KBalance : null,
+          StartingP: pkBalance?.PBalance == null ? null : pkBalance.PBalance,
+          Startingk: pkBalance?.KBalance == null ? null : pkBalance.KBalance,
         };
         console.log("soilDetails", soilDetails);
         // Build the full field object with all associated sub-objects

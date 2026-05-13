@@ -25,7 +25,7 @@ class SoilAnalysesService extends BaseService {
       });
 
       // Check for PK Balance entry
-      let pkBalanceEntry = await transactionalManager.find(PKBalanceEntity, {
+      const pkBalanceEntry = await transactionalManager.find(PKBalanceEntity, {
         where: {
           Year: soilAnalysis.Year,
           FieldID: soilAnalysis.FieldID,
@@ -39,7 +39,7 @@ class SoilAnalysesService extends BaseService {
         soilAnalysis.PhosphorusIndex != null
       ) {
         if (pkBalanceEntry.length === 0 && pKBalanceData) {
-          let { CreatedByID, CreatedOn, ...updatedPKBalanceData } =
+          const { CreatedByID, CreatedOn, ...updatedPKBalanceData } =
             pKBalanceData;
            await transactionalManager.save(PKBalanceEntity, {
             ...updatedPKBalanceData,
@@ -57,7 +57,7 @@ class SoilAnalysesService extends BaseService {
 
       // Retrieve the updated PKBalance entry
 
-      let PKBalance = await transactionalManager.findOne(PKBalanceEntity, {
+      const PKBalance = await transactionalManager.findOne(PKBalanceEntity, {
         where: {
           Year: soilAnalysis.Year,
           FieldID: soilAnalysis.FieldID,
@@ -136,9 +136,7 @@ class SoilAnalysesService extends BaseService {
     request
   ) {
     return await AppDataSource.transaction(async (transactionalManager) => {
-      const { CreatedByID, CreatedOn, ...updatedData } =
-        updatedSoilAnalysisData;
-
+      const { CreatedByID, CreatedOn, ...updatedData } = updatedSoilAnalysisData;
       // Update SoilAnalysis
       const result = await transactionalManager.update(
         SoilAnalysisEntity,
@@ -146,31 +144,23 @@ class SoilAnalysesService extends BaseService {
         {
           ...updatedData,
           ModifiedByID: userId,
-          ModifiedOn: new Date(),
+          ModifiedOn: new Date()
         }
       );
-
-      if (result.affected === 0) {
-        throw new Error(`Soil Analysis with ID ${soilAnalysisId} not found`);
-      }
-
+      if (result.affected === 0) {throw new Error(`Soil Analysis with ID ${soilAnalysisId} not found`)}
       const SoilAnalysis = await transactionalManager.findOne(
         SoilAnalysisEntity,
         {
           where: { ID: soilAnalysisId },
         }
       );
-
       // Check for PK Balance entry
-      let pkBalanceEntry = await transactionalManager.find(PKBalanceEntity, {
+       const pkBalanceEntry = await transactionalManager.find(PKBalanceEntity, {
         where: {
           Year: SoilAnalysis.Date.Year,
           FieldID: SoilAnalysis.FieldID,
         },
       });
-
-      let newPKBalanceData = null;
-
       if (
         SoilAnalysis.Potassium != null ||
         SoilAnalysis.Phosphorus != null ||
@@ -178,11 +168,11 @@ class SoilAnalysesService extends BaseService {
         SoilAnalysis.PhosphorusIndex != null
       ) {
         if (pkBalanceEntry.length === 0 && pKBalanceData) {
-          let { CreatedByID, CreatedOn, ...updatedPKBalanceData } =
-            pKBalanceData;
-          newPKBalanceData = await transactionalManager.save(PKBalanceEntity, {
+          const { ...updatedPKBalanceData } = pKBalanceData;
+          await transactionalManager.save(PKBalanceEntity, {
             ...updatedPKBalanceData,
             CreatedByID: userId,
+            CreatedOn: new Date()
           });
         }
       } else {
@@ -195,7 +185,7 @@ class SoilAnalysesService extends BaseService {
 
       // Retrieve the updated PKBalance entry
 
-      let PKBalance = await transactionalManager.findOne(PKBalanceEntity, {
+      const PKBalance = await transactionalManager.findOne(PKBalanceEntity, {
         where: {
           Year: SoilAnalysis.Date.Year,
           FieldID: SoilAnalysis.FieldID,

@@ -1,5 +1,5 @@
 const Joi = require("joi");
-
+const minimumMinuesTwo = -2, maximumNine = 9,defaultMethodologyId = 4;
 const SoilAnalysisDto = Joi.object({
   FieldID: Joi.number().integer().required().allow(null),
   Year: Joi.number().integer().required().allow(null),
@@ -10,11 +10,24 @@ const SoilAnalysisDto = Joi.object({
   Phosphorus: Joi.number().required().allow(null),
   PhosphorusIndex: Joi.number().integer().required().allow(null),
   Potassium: Joi.number().required().allow(null),
-  PotassiumIndex: Joi.number().integer().min(-2).max(9).required().allow(null),
-  PotassiumMethodologyID: Joi.number().integer().default(4).required().allow(null),
+  PotassiumIndex: Joi.number()
+    .integer()
+    .min(minimumMinuesTwo)
+    .max(maximumNine)
+    .required()
+    .allow(null),
+  PotassiumMethodologyID: Joi.number()
+    .integer()
+    .default(defaultMethodologyId)
+    .required()
+    .allow(null),
   Magnesium: Joi.number().required().allow(null),
   MagnesiumIndex: Joi.number().integer().required().allow(null),
-  MagnesiumMethodologyID: Joi.number().integer().default(4).required().allow(null),
+  MagnesiumMethodologyID: Joi.number()
+    .integer()
+    .default(4)
+    .required()
+    .allow(null),
   SoilNitrogenSupply: Joi.number().required().allow(null),
   SoilNitrogenSupplyIndex: Joi.number().integer().required().allow(null),
   SoilNitrogenSampleDate: Joi.date().iso().optional().allow(null),
