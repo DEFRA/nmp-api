@@ -10,7 +10,7 @@ class UserExtensionService extends BaseService {
 
   // Method to update or create UserExtensions record with transaction
   async updateIsTermsOfUseAccepted(updatedIsTermsOfUseAccepted, userId) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       // Check if record exists within the transaction
       const existingRecord = await this.repository.findOne({
         where: { UserID: userId }
@@ -46,7 +46,7 @@ class UserExtensionService extends BaseService {
     updateDoNotShowAboutThisService,
     userId
   ) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       // Check if record exists within the transaction
       const existingRecord = await this.repository.findOne({
         where: { UserID: userId }

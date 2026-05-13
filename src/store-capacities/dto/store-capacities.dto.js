@@ -1,6 +1,6 @@
 const Joi = require("joi");
 
-
+const precisionThree = 3;
 const StoreCapacitiesCreateDto = Joi.object({
   ID: Joi.number().integer().optional().allow(null).default(null),
   FarmID: Joi.number().integer().required().default(null),
@@ -12,16 +12,16 @@ const StoreCapacitiesCreateDto = Joi.object({
     .optional()
     .allow(null)
     .default(null),
-  Length: Joi.number().precision(3).optional().allow(null),
-  Width: Joi.number().precision(3).optional().allow(null),
-  Depth: Joi.number().precision(3).optional().allow(null),
-  Circumference: Joi.number().precision(3).optional().allow(null),
-  Diameter: Joi.number().precision(3).optional().allow(null),
+  Length: Joi.number().precision(precisionThree).optional().allow(null),
+  Width: Joi.number().precision(precisionThree).optional().allow(null),
+  Depth: Joi.number().precision(precisionThree).optional().allow(null),
+  Circumference: Joi.number().precision(precisionThree).optional().allow(null),
+  Diameter: Joi.number().precision(precisionThree).optional().allow(null),
   BankSlopeAngleID: Joi.number().integer().optional().allow(null),
   IsCovered: Joi.boolean().optional().allow(null),
-  CapacityVolume: Joi.number().precision(3).optional().allow(null),
-  CapacityWeight: Joi.number().precision(3).optional().allow(null),
-  SurfaceArea: Joi.number().precision(3).optional().allow(null),
+  CapacityVolume: Joi.number().precision(precisionThree).optional().allow(null),
+  CapacityWeight: Joi.number().precision(precisionThree).optional().allow(null),
+  SurfaceArea: Joi.number().precision(precisionThree).optional().allow(null),
   CreatedOn: Joi.date().iso().allow(null).default(null),
   CreatedByID: Joi.number().integer().allow(null).default(null),
   ModifiedOn: Joi.date().iso().allow(null).default(null),
