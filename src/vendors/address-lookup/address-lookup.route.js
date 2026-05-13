@@ -1,6 +1,7 @@
 const Joi = require("joi");
 const { AddressLookupController } = require("./address-lookup.controller");
 const { formatErrorResponse } = require("../../interceptor/responseFormatter");
+const { validationFailAction } = require("../../shared/validateFailSafeAction");
 const getController = (request, h) => new AddressLookupController(request, h);
 
 module.exports = [
@@ -30,19 +31,7 @@ module.exports = [
             .default(0)
             .description("Offset for pagination"),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {

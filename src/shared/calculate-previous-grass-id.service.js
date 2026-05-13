@@ -630,7 +630,6 @@ class CalculateGrassHistoryAndPreviousGrass {
         fertiliserN += fert.N || 0;
       }
     }
-
     // Step 3: OrganicManure of previous year's crop (AvailableNForNextYear)
     const previousCrop = await this.getCropForYear(
       crop.FieldID,
@@ -643,7 +642,6 @@ class CalculateGrassHistoryAndPreviousGrass {
         ManagementPeriodEntity,
         { where: { CropID: previousCrop.ID } },
       );
-
       for (const mp of prevMgmtPeriods) {
         const organicManures = await transactionalManager.find(
           OrganicManureEntity,
@@ -713,7 +711,6 @@ class CalculateGrassHistoryAndPreviousGrass {
         return prevGrassResult;
       }
     }
-
     return null;
   }
 
