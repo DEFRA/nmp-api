@@ -22,13 +22,8 @@ class RB209ArableController {
     }
 
     async getCropGroupsBycropGroupId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+    const cropGroupsByGroupId = await this.getCropGroups();
+         return cropGroupsByGroupId
     }
 
     async getCropTypes() {
