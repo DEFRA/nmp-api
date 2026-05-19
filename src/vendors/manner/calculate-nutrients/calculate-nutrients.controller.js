@@ -6,7 +6,7 @@ class MannerCalculateNutrientsController {
   #h;
   #service;
 
-  constructor(request) {
+  constructor(request,h) {
     this.#request = request;
     this.#h = h;
     this.#service = new MannerCalculateNutrientsService(); // Initialize the service
