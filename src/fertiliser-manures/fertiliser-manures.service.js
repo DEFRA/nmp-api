@@ -258,9 +258,9 @@ class FertiliserManuresService extends BaseService {
     };
   }
   async findAsArray(list, predicate) {
-  const item = list.find(predicate);
-  return item === undefined ? [] : [item];
-};
+    const item = list.find(predicate);
+    return item === undefined ? [] : [item];
+  }
   async buildPKBalanceData(
     totalP205AndK20,
     fertiliserManure,
@@ -268,11 +268,14 @@ class FertiliserManuresService extends BaseService {
     field,
     crop,
     pkBalance,
-    transactionalAndUserId
+    transactionalAndUserId,
   ) {
     const { transactionalManager, userId } = transactionalAndUserId;
-    if (!totalP205AndK20 || !recommendationData) {return null}
-    let pBalance =totalP205AndK20.p205 + fertiliserManure?.P2O5 - recommendationData.p205;
+    if (!totalP205AndK20 || !recommendationData) {
+      return null;
+    }
+    let pBalance =
+      totalP205AndK20.p205 + fertiliserManure?.P2O5 - recommendationData.p205;
 
     let kBalance =
       totalP205AndK20.k20 + fertiliserManure?.K2O - recommendationData.k20;
@@ -281,7 +284,7 @@ class FertiliserManuresService extends BaseService {
       ID: field.FarmID,
     });
     const rb209CountryData = await transactionalManager.findOne(CountryEntity, {
-      where: {ID: farmData.CountryID}
+      where: { ID: farmData.CountryID },
     });
 
     const { latestSoilAnalysis } =
@@ -289,7 +292,7 @@ class FertiliserManuresService extends BaseService {
         field.ID,
         crop?.Year,
         rb209CountryData.RB209CountryID,
-        transactionalManager
+        transactionalManager,
       );
 
     const otherPKBalance = await this.setOtherCropPKBalance(
@@ -310,8 +313,66 @@ class FertiliserManuresService extends BaseService {
       crop,
       field,
       pkBalance,
-      userId
+      userId,
     );
+  }
+
+  async saveWarningMessages(
+    fertiliser,
+    savedFertiliser,
+    userId,
+    transactionalManager,
+  ) {
+    const warningMessages = fertiliser.WarningMessages;
+    if (!warningMessages?.length) {
+      return;
+    }
+    const warningMessagesToSave = warningMessages.map((msg) =>
+      this.warningMessageRepository.create({
+        ...msg,
+        JoiningID:
+          msg?.WarningCodeID === WarningCodesMapper.NMAXLIMIT
+            ? msg.FieldID
+            : savedFertiliser.ID,
+        CreatedByID: userId,
+        CreatedOn: new Date(),
+      }),
+    );
+
+    await transactionalManager.save(
+      WarningMessagesEntity,
+      warningMessagesToSave,
+    );
+  }
+
+  checkNextYearPlanAndFertiliserExist(
+    cropPlanForNextYear,
+    managementPeriodAllData,
+    fertiliserAllData,
+    fertManure,
+  ) {
+    const isNextYearPlanExist = cropPlanForNextYear?.length > 0;
+    if (!isNextYearPlanExist) {
+      return {isNextYearPlanExist: false,isNextYearFertiliserExist: false};
+    }
+
+    const isNextYearFertiliserExist = cropPlanForNextYear.some((crop) => {
+      const managementPeriodExists = managementPeriodAllData.some(
+        (manData) => manData.CropID === crop.ID,
+      );
+
+      if (!managementPeriodExists) {return false}
+
+      return fertiliserAllData.some(
+        (fertData) =>
+          fertData.ManagementPeriodID === fertManure.ManagementPeriodID,
+      );
+    });
+
+    return {
+      isNextYearPlanExist,
+      isNextYearFertiliserExist,
+    };
   }
   async createFertiliserManures(fertiliserManureData, userId, request) {
     const cropPlanAllData = await this.cropRepository.find();
@@ -334,27 +395,12 @@ class FertiliserManuresService extends BaseService {
           }),
         );
         fertiliserManures.push(savedFertiliser);
-        // Now save its WarningMessages (if any)
-        const warningMessage = fertiliser.WarningMessages;
-        if (warningMessage && warningMessage?.length > 0) {
-          const warningMessagesToSave = warningMessage.map((msg) =>
-            this.warningMessageRepository.create({
-              ...msg,
-              JoiningID:
-                msg?.WarningCodeID === WarningCodesMapper.NMAXLIMIT
-                  ? msg.FieldID
-                  : savedFertiliser.ID,
-              CreatedByID: userId,
-              CreatedOn: new Date(),
-            }),
-          );
-
-          await transactionalManager.save(
-            WarningMessagesEntity,
-            warningMessagesToSave,
-          );
-        }
-
+        await this.saveWarningMessages(
+          fertiliser,
+          savedFertiliser,
+          userId,
+          transactionalManager,
+        );
         const cropAndField = await transactionalManager
           .createQueryBuilder(ManagementPeriodEntity, "mp")
           .leftJoin(CropEntity, "crop", "crop.ID = mp.CropID")
@@ -382,20 +428,20 @@ class FertiliserManuresService extends BaseService {
         const fertiliserData = fertiliserAllData.filter((fertData) => {
           return fertData.ManagementPeriodID === fertManure.ManagementPeriodID;
         });
-      const managementPeriodData = this.findAsArray(
-        managementPeriodAllData,
-        (manData) => manData.ID === fertManure.ManagementPeriodID,
-      );
+        const managementPeriodData = this.findAsArray(
+          managementPeriodAllData,
+          (manData) => manData.ID === fertManure.ManagementPeriodID,
+        );
 
-      const cropData = this.findAsArray(
-        cropPlanAllData,
-        (cropData) => cropData.ID === managementPeriodData[0]?.CropID,
-      );
+        const cropData = this.findAsArray(
+          cropPlanAllData,
+          (cropData) => cropData.ID === managementPeriodData[0]?.CropID,
+        );
 
-      const fieldData = this.findAsArray(
-        fieldAllData,
-        (fieldData) => fieldData.ID === cropData[0]?.FieldID,
-      );
+        const fieldData = this.findAsArray(
+          fieldAllData,
+          (fieldData) => fieldData.ID === cropData[0]?.FieldID,
+        );
 
         const soilAnalsisData = soilAnalysisAllData.filter((soilAnalyses) => {
           return soilAnalyses.FieldID === cropData[0]?.FieldID;
@@ -420,30 +466,12 @@ class FertiliserManuresService extends BaseService {
               cropPlan.Year > cropData[0]?.Year
             );
           });
-          let isNextYearPlanExist = false;
-          let isNextYearFertiliserExist = false;
-          if (cropPlanForNextYear && cropPlanForNextYear.length > 0) {
-            isNextYearPlanExist = true;
-            for (const crop of cropPlanForNextYear) {
-              const managementPeriodDataId = managementPeriodAllData
-                .filter((manData) => manData.CropID === crop.ID)
-                .map((manData) => manData.ID);
-              if (managementPeriodDataId.length > 0) {
-                const filterFertiliserData = fertiliserAllData.filter(
-                  (fertData) =>
-                    fertData.ManagementPeriodID ===
-                    fertManure.ManagementPeriodID,
-                );
-
-                if (
-                  filterFertiliserData != null &&
-                  filterFertiliserData.length > 0
-                ) {
-                  isNextYearFertiliserExist = true;
-                }
-              }
-            }
-          }
+         const { isNextYearPlanExist, isNextYearFertiliserExist } = this.checkNextYearPlanAndFertiliserExist(
+             cropPlanForNextYear,
+             managementPeriodAllData,
+             fertiliserAllData,
+             fertManure
+           );
           if (
             isNextYearPlanExist === true &&
             isNextYearFertiliserExist === true
@@ -481,7 +509,7 @@ class FertiliserManuresService extends BaseService {
             const recommandationData =
               await this.getTotalFertiliserP205AndK20FromRecommandation(
                 managementPeriodData[0]?.ID,
-                recommandationAllData
+                recommandationAllData,
               );
 
             const updatePKBalance = await this.buildPKBalanceData(
@@ -492,16 +520,16 @@ class FertiliserManuresService extends BaseService {
               cropData[0],
               pkBalanceData[0],
               {
-              userId,
-              transactionalManager
-              }
+                userId,
+                transactionalManager,
+              },
             );
             await transactionalManager.save(PKBalanceEntity, updatePKBalance);
             await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
               cropData[0],
               transactionalManager,
               request,
-              userId
+              userId,
             );
           } else {
             console.log("PK Balance data not found for field and year:");
