@@ -353,7 +353,7 @@ class FertiliserManuresService extends BaseService {
   ) {
     const isNextYearPlanExist = cropPlanForNextYear?.length > 0;
     if (!isNextYearPlanExist) {
-      return {isNextYearPlanExist: false,isNextYearFertiliserExist: false};
+      return { isNextYearPlanExist: false, isNextYearFertiliserExist: false };
     }
 
     const isNextYearFertiliserExist = cropPlanForNextYear.some((crop) => {
@@ -361,7 +361,9 @@ class FertiliserManuresService extends BaseService {
         (manData) => manData.CropID === crop.ID,
       );
 
-      if (!managementPeriodExists) {return false}
+      if (!managementPeriodExists) {
+        return false;
+      }
 
       return fertiliserAllData.some(
         (fertData) =>
@@ -373,6 +375,53 @@ class FertiliserManuresService extends BaseService {
       isNextYearPlanExist,
       isNextYearFertiliserExist,
     };
+  }
+
+  async updatePKBalanceAndRegenerateRecommendations({
+    fertiliserData,
+    managementPeriodData,
+    fertiliserManureData,
+    recommandationAllData,
+    fieldData,
+    cropData,
+    pkBalanceData,
+    userId,
+    transactionalManager,
+    request
+  }) {
+    const managementPeriodId = managementPeriodData[0]?.ID;
+
+    const totalP205AndK20 = await this.getTotalP205AndK20(
+      fertiliserData,
+      managementPeriodId
+    );
+
+    const recommandationData =
+      await this.getTotalFertiliserP205AndK20FromRecommandation(
+        managementPeriodId,
+        recommandationAllData
+      );
+
+    const updatePKBalance = await this.buildPKBalanceData(
+      totalP205AndK20,
+      fertiliserManureData[0]?.FertiliserManure,
+      recommandationData,
+      fieldData[0],
+      cropData[0],
+      pkBalanceData[0],
+      {
+        userId,
+        transactionalManager,
+      },
+    );
+
+    await transactionalManager.save(PKBalanceEntity, updatePKBalance);
+    await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
+      cropData[0],
+      transactionalManager,
+      request,
+      userId
+    );
   }
   async createFertiliserManures(fertiliserManureData, userId, request) {
     const cropPlanAllData = await this.cropRepository.find();
@@ -466,71 +515,37 @@ class FertiliserManuresService extends BaseService {
               cropPlan.Year > cropData[0]?.Year
             );
           });
-         const { isNextYearPlanExist, isNextYearFertiliserExist } = this.checkNextYearPlanAndFertiliserExist(
-             cropPlanForNextYear,
-             managementPeriodAllData,
-             fertiliserAllData,
-             fertManure
-           );
+          const { isNextYearPlanExist, isNextYearFertiliserExist } =
+            this.checkNextYearPlanAndFertiliserExist(
+              cropPlanForNextYear,
+              managementPeriodAllData,
+              fertiliserAllData,
+              fertManure,
+            );
           if (
             isNextYearPlanExist === true &&
             isNextYearFertiliserExist === true
           ) {
             //call shreyash's function
-            this.updatingFutureRecommendations
-              .updateRecommendationsForField(
-                fieldData[0]?.ID,
-                cropData[0]?.Year,
-                request,
-                userId,
-              )
-              .then((res) => {
-                if (res === undefined) {
-                  console.log(res);
-                } else {
-                  console.log(
-                    "updateRecommendationAndOrganicManure result:",
-                    res,
-                  );
-                }
-              })
-              .catch((error) => {
-                console.error(
-                  "Error updating recommendation and organic manure:",
-                  error,
-                );
-              });
-          } else if (pkBalanceData.length > 0) {
-            const totalP205AndK20 = await this.getTotalP205AndK20(
-              fertiliserData,
-              managementPeriodData[0]?.ID,
-            );
-
-            const recommandationData =
-              await this.getTotalFertiliserP205AndK20FromRecommandation(
-                managementPeriodData[0]?.ID,
-                recommandationAllData,
-              );
-
-            const updatePKBalance = await this.buildPKBalanceData(
-              totalP205AndK20,
-              fertiliserManureData[0]?.FertiliserManure,
-              recommandationData,
-              fieldData[0],
-              cropData[0],
-              pkBalanceData[0],
-              {
-                userId,
-                transactionalManager,
-              },
-            );
-            await transactionalManager.save(PKBalanceEntity, updatePKBalance);
-            await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
-              cropData[0],
-              transactionalManager,
+            this.updatingFutureRecommendations.updateRecommendationsForField(
+              fieldData[0]?.ID,
+              cropData[0]?.Year,
               request,
               userId,
             );
+          } else if (pkBalanceData.length > 0) {
+           await this.updatePKBalanceAndRegenerateRecommendations({
+           fertiliserData,
+           managementPeriodData,
+           fertiliserManureData,
+           recommandationAllData,
+           fieldData,
+           cropData,
+           pkBalanceData,
+           userId,
+           transactionalManager,
+           request
+         });
           } else {
             console.log("PK Balance data not found for field and year:");
           }
