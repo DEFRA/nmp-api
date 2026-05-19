@@ -470,10 +470,8 @@ class FertiliserManuresService extends BaseService {
   async createFertiliserManures(fertiliserManureData, userId, request) {
     const cropPlanAllData = await this.cropRepository.find();
     const recommandationAllData = await this.RecommendationRepository.find();
-    const managementPeriodAllData =
-      await this.managementPeriodRepository.find();
-    const fieldAllData = await this.fieldRepository.find(),
-      fertiliserAllData = await this.repository.find();
+    const managementPeriodAllData =await this.managementPeriodRepository.find();
+    const fieldAllData = await this.fieldRepository.find(),fertiliserAllData = await this.repository.find();
     return AppDataSource.transaction(async (transactionalManager) => {
       const fertiliserManures = [];
       for (const fertiliser of fertiliserManureData) {
@@ -481,91 +479,34 @@ class FertiliserManuresService extends BaseService {
         // Save fertiliser first
         const savedFertiliser = await transactionalManager.save(
           FertiliserManuresEntity,
-          this.repository.create({
-            ...fertiliserManure,
-            CreatedByID: userId,
-            CreatedOn: new Date(),
-          }),
+          this.repository.create({...fertiliserManure,CreatedByID: userId,CreatedOn: new Date()}),
         );
         fertiliserManures.push(savedFertiliser);
-        await this.saveWarningMessages(
-          fertiliser,
-          savedFertiliser,
-          userId,
-          transactionalManager,
-        );
-        const cropAndField = await transactionalManager
-          .createQueryBuilder(ManagementPeriodEntity, "mp")
+        await this.saveWarningMessages(fertiliser,savedFertiliser,userId,transactionalManager);
+        const cropAndField = await transactionalManager.createQueryBuilder(ManagementPeriodEntity, "mp")
           .leftJoin(CropEntity, "crop", "crop.ID = mp.CropID")
           .select(["mp.CropID AS CropID", "crop.FieldID AS FieldID"])
           .where("mp.ID = :managementPeriodID", {
             managementPeriodID: savedFertiliser.ManagementPeriodID,
           })
           .getRawOne();
-        const isCurrentOrganicManure = false,
-          isCurrentFertiliser = true;
-        this.ProcessFutureManuresForWarnings.ProcessFutureManures(
-          cropAndField.FieldID,
-          savedFertiliser.ApplicationDate,
-          isCurrentOrganicManure,
-          isCurrentFertiliser,
-          savedFertiliser.ID,
-          userId,
-        );
+        const isCurrentOrganicManure = false,isCurrentFertiliser = true;
+        this.ProcessFutureManuresForWarnings.ProcessFutureManures(cropAndField.FieldID,savedFertiliser.ApplicationDate,isCurrentOrganicManure,isCurrentFertiliser,savedFertiliser.ID,userId);
       }
-      const soilAnalysisAllData = await this.soilAnalysisRepository.find(),
-        pkBalanceAllData = await this.pkBalanceRepository.find();
+      const soilAnalysisAllData = await this.soilAnalysisRepository.find(),pkBalanceAllData = await this.pkBalanceRepository.find();
       for (const fertManure of fertiliserManures) {
-        const fertiliserData = fertiliserAllData.filter((fertData) => {
-          return fertData.ManagementPeriodID === fertManure.ManagementPeriodID;
-        });
-        const managementPeriodData = this.findAsArray(
-          managementPeriodAllData,
-          (manData) => manData.ID === fertManure.ManagementPeriodID,
-        );
-        const cropData = this.findAsArray(
-          cropPlanAllData,
-          (crop) => crop.ID === managementPeriodData[0]?.CropID,
-        );
-        const fieldData = this.findAsArray(
-          fieldAllData,
-          (field) => field.ID === cropData[0]?.FieldID,
-        );
-        const soilAnalsisData = soilAnalysisAllData.filter((soilAnalyses) => {
-          return soilAnalyses.FieldID === cropData[0]?.FieldID;
-        });
+        const fertiliserData = fertiliserAllData.filter((fertData) => {return fertData.ManagementPeriodID === fertManure.ManagementPeriodID});
+        const managementPeriodData = this.findAsArray(managementPeriodAllData,(manData) => manData.ID === fertManure.ManagementPeriodID);
+        const cropData = this.findAsArray(cropPlanAllData,(crop) => crop.ID === managementPeriodData[0]?.CropID);
+        const fieldData = this.findAsArray(fieldAllData,(field) => field.ID === cropData[0]?.FieldID);
+        const soilAnalsisData = soilAnalysisAllData.filter((soilAnalyses) => {return soilAnalyses.FieldID === cropData[0]?.FieldID});
         let isSoilAnalysisHavePAndK = false;
-        if (soilAnalsisData.length > 0) {
-          isSoilAnalysisHavePAndK = !!soilAnalsisData.some(
-            (item) =>
-              item.PhosphorusIndex !== null || item.PotassiumIndex !== null,
-          );
-        }
+        if (soilAnalsisData.length > 0) {isSoilAnalysisHavePAndK = !!soilAnalsisData.some((item) =>item.PhosphorusIndex !== null || item.PotassiumIndex !== null)}
         if (isSoilAnalysisHavePAndK) {
-          const pkBalanceData = pkBalanceAllData.filter((pkBalance) => {
-            return (
-              pkBalance.FieldID === fieldData[0]?.ID &&
-              pkBalance.Year === cropData[0]?.Year
-            );
-          });
-          const cropPlanForNextYear = cropPlanAllData.filter((cropPlan) => {
-            return (
-              cropPlan.FieldID === fieldData[0]?.ID &&
-              cropPlan.Year > cropData[0]?.Year
-            );
-          });
-          const { isNextYearPlanExist, isNextYearFertiliserExist } =
-            this.checkNextYearPlanAndFertiliserExist(
-              cropPlanForNextYear,
-              managementPeriodAllData,
-              fertiliserAllData,
-              fertManure,
-            );
-           await this.handlePKBalanceAndFutureRecommendations({
-             isNextYearPlanExist,
-             isNextYearFertiliserExist,
-             fieldData,
-             cropData,
+          const pkBalanceData = pkBalanceAllData.filter((pkBalance) => {return (pkBalance.FieldID === fieldData[0]?.ID && pkBalance.Year === cropData[0]?.Year)});
+          const cropPlanForNextYear = cropPlanAllData.filter((cropPlan) => {return (cropPlan.FieldID === fieldData[0]?.ID && cropPlan.Year > cropData[0]?.Year)});
+          const { isNextYearPlanExist, isNextYearFertiliserExist } = this.checkNextYearPlanAndFertiliserExist(cropPlanForNextYear,managementPeriodAllData,fertiliserAllData,fertManure);
+          await this.handlePKBalanceAndFutureRecommendations({isNextYearPlanExist,isNextYearFertiliserExist,fieldData,cropData,
              request,
              userId,
              pkBalanceData,
@@ -576,12 +517,7 @@ class FertiliserManuresService extends BaseService {
              transactionalManager,
            });
         }
-        await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
-          cropData[0],
-          transactionalManager,
-          request,
-          userId,
-        );
+        await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(cropData[0],transactionalManager,request,userId);
       }
       return fertiliserManures;
     });
@@ -733,20 +669,19 @@ class FertiliserManuresService extends BaseService {
       const fertiliserManureToDelete = await this.repository.findOneBy({
         ID: fertliserManureId,
       });
-
       // If the fertiliserManure does not exist, throw a not found error
       if (fertiliserManureToDelete == null) {
         console.log(`Fertiliser Manure with ID ${fertliserManureId} not found`);
       }
       const managementPeriod = await this.managementPeriodRepository.findOne({
         where: { ID: fertiliserManureToDelete.ManagementPeriodID },
-        select: ["CropID"],
+        select: ["CropID"]
       });
 
       // If the managementPeriod does not exist, throw a not found error
       if (managementPeriod == null) {
         console.log(
-          `managementPeriod with ID ${fertiliserManureToDelete.ManagementPeriodID} not found`,
+          `managementPeriod not found`,
         );
       }
       const crop = await this.cropRepository.findOne({
@@ -755,7 +690,7 @@ class FertiliserManuresService extends BaseService {
 
       // If the crop does not exist, throw a not found error
       if (crop == null) {
-        console.log(`crop with ID ${managementPeriod.CropID} not found`);
+        console.log(`crop  not found`);
       }
 
       try {
@@ -767,16 +702,17 @@ class FertiliserManuresService extends BaseService {
           crop,
           transactionalManager,
           request,
-          userId,
+          userId
         );
         this.ProcessFutureManuresForWarnings.processWarningsByCrop(
           crop.ID,
-          userId,
+          userId
         );
         return { affectedRows: 1 }; // Success response
       } catch (error) {
         // Log the error and throw an internal server error
         console.error("Error deleting fertiliserManure:", error);
+        return error
       }
     });
   }
