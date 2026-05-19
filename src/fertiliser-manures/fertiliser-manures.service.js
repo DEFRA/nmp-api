@@ -257,7 +257,10 @@ class FertiliserManuresService extends BaseService {
       ModifiedByID: userId,
     };
   }
-
+  async findAsArray(list, predicate) {
+  const item = list.find(predicate);
+  return item === undefined ? [] : [item];
+};
   async buildPKBalanceData(
     totalP205AndK20,
     fertiliserManure,
@@ -317,7 +320,7 @@ class FertiliserManuresService extends BaseService {
       await this.managementPeriodRepository.find();
     const fieldAllData = await this.fieldRepository.find();
     const fertiliserAllData = await this.repository.find();
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const fertiliserManures = [];
       for (const fertiliser of fertiliserManureData) {
         const fertiliserManure = fertiliser.FertiliserManure;
@@ -379,18 +382,20 @@ class FertiliserManuresService extends BaseService {
         const fertiliserData = fertiliserAllData.filter((fertData) => {
           return fertData.ManagementPeriodID === fertManure.ManagementPeriodID;
         });
-        const managementPeriodData = managementPeriodAllData.filter(
-          (manData) => {
-            return manData.ID === fertManure.ManagementPeriodID;
-          },
-        );
-        const cropData = cropPlanAllData.filter((cropData) => {
-          return cropData.ID === managementPeriodData[0].CropID;
-        });
+      const managementPeriodData = this.findAsArray(
+        managementPeriodAllData,
+        (manData) => manData.ID === fertManure.ManagementPeriodID,
+      );
 
-        const fieldData = fieldAllData.filter((fieldData) => {
-          return fieldData.ID === cropData[0]?.FieldID;
-        });
+      const cropData = this.findAsArray(
+        cropPlanAllData,
+        (cropData) => cropData.ID === managementPeriodData[0]?.CropID,
+      );
+
+      const fieldData = this.findAsArray(
+        fieldAllData,
+        (fieldData) => fieldData.ID === cropData[0]?.FieldID,
+      );
 
         const soilAnalsisData = soilAnalysisAllData.filter((soilAnalyses) => {
           return soilAnalyses.FieldID === cropData[0]?.FieldID;
@@ -551,7 +556,7 @@ class FertiliserManuresService extends BaseService {
   }
 
   async updateFertiliser(updatedFertiliserManureData, userId, request) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const updatedFertilisers = [];
       for (const manure of updatedFertiliserManureData) {
         const inorganicManure = manure.FertiliserManure;
@@ -654,7 +659,7 @@ class FertiliserManuresService extends BaseService {
   }
 
   async deleteFertiliserManure(fertliserManureId, userId, request) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       // Check if the Organic Manure exists
       const fertiliserManureToDelete = await this.repository.findOneBy({
         ID: fertliserManureId,

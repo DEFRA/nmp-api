@@ -179,7 +179,7 @@ class CalculateGrassHistoryAndPreviousGrass {
     let grassCrop;
 
     if (isHighClover === 1) {
-      nitrogenUse = null; // Skip calculation
+      console.log("High clover detected");
     } else if (isHighClover === 0) {
       grassCrop = null;
       if (firstHYFieldType === FieldTypeMapper.GRASS && (crop1 || prevGrass1)) {
@@ -200,6 +200,8 @@ class CalculateGrassHistoryAndPreviousGrass {
         );
         nitrogenUse = nitrogenUse?.nitrogenUse;
       }
+    } else {
+      console.log("no change in nitrogen use")
     }
 
     // -----------------------------

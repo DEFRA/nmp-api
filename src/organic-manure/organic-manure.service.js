@@ -445,7 +445,7 @@ class OrganicManureService extends BaseService {
   }
 
   async createOrganicManuresWithFarmManureType(request, body, userId) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       let savedFarmManureType;
       let farmManureTypeData;
       const organicManures = [];
@@ -882,7 +882,7 @@ const manureTypeExists = await query.getCount();
     return { p205: sumOfP205, k20: sumOfK20 };
   }
   async deleteOrganicManure(organicManureId, userId, request) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       // Check if the Organic Manure exists
       const organicManureToDelete = await this.repository.findOneBy({
         ID: organicManureId,
@@ -958,7 +958,7 @@ const manureTypeExists = await query.getCount();
   }
 
   async updateOrganicManure(updatedOrganicManureData, userId, request) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const updatedOrganicManures = [];
       let savedFarmManureType = null;
 
