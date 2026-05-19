@@ -451,7 +451,7 @@ class FieldService extends BaseService {
     });
   }
   async updateField(payload, userId, fieldId, request) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const { Field: updatedFieldData, PreviousCroppings } = payload;
       const { ID, CreatedByID, CreatedOn, EncryptedFieldId, ...dataToUpdate } =
         updatedFieldData;

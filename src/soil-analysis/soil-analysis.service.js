@@ -135,7 +135,7 @@ class SoilAnalysesService extends BaseService {
     pKBalanceData,
     request
   ) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const { CreatedByID, CreatedOn, ...updatedData } = updatedSoilAnalysisData;
       // Update SoilAnalysis
       const result = await transactionalManager.update(
@@ -267,7 +267,7 @@ class SoilAnalysesService extends BaseService {
   }
 
   async deleteSoilAnalysis(soilAnalysisId, userId, request) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       // Check if the soilAnalysis exists
       const soilAnalysisToDelete = await transactionalManager.findOne(
         SoilAnalysisEntity,
