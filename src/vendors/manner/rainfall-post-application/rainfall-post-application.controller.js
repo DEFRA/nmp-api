@@ -13,21 +13,18 @@ class MannerRainfallPostApplicationController {
 
   async calculateRainfallPostApplicationOfManure() {
     const payload = this.#request.payload;
-
     // Extract the relevant part of the URL
     const url = this.#request.url.pathname.split("/manner")[1];
-
     // Call the service method to handle the nutrient calculation
-    return await this.#service.postData(url, payload, this.#request);
+    const rainfallData = await this.#service.postData(url, payload, this.#request);
+    return this.#h.response(rainfallData);
   }
   async calculateRainfallAprilToSeptemberOfManure() {
-    const postcode = this.#request.params;
-
     // Extract the relevant part of the URL
     const url = this.#request.url.pathname.split("/manner")[1];
-
     // Call the service method to handle the nutrient calculation
-    return await this.#service.getData(url, this.#request);
+    const rainfallData = await this.#service.getData(url, this.#request);
+    return this.#h.response(rainfallData);
   }
 }
 

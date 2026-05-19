@@ -4,44 +4,8 @@ const {
 } = require("../../../interceptor/responseFormatter");
 const { RB209GrassController } = require("./grass.controller");
 const { validationFailAction } = require("../../../shared/validateFailSafeAction");
-
+const grassDescriptionVendor = "RB209 Grass";
 module.exports = [
-  // {
-  //   method: "GET",
-  //   path: "/vendors/rb209/Grass/DefoliationSequence",
-  //   handler: async (request, h) => {
-  //     const controller = new RB209GrassController(request, h);
-  //     return controller.getGrassDefoliationSequence(request, h);
-  //   },
-  //   options: {
-  //     tags: ["api", "RB209 Grass"],
-  //     description:
-  //       "The list of different defoliation sequences available for grass fields.",
-  //     validate: {
-  //       query: Joi.object({
-  //         swardTypeId: Joi.number()
-  //           .integer()
-  //           .description("The Sward Type Id of the field."),
-  //         numberOfCuts: Joi.number()
-  //           .integer()
-  //           .description("The number of cuts made to the field in the season."),
-  //       }),
-  //       failAction: (request, h, err) => {
-  //         return h
-  //           .response(
-  //             formatErrorResponse({
-  //               source: {
-  //                 error: err,
-  //               },
-  //               request,
-  //             })
-  //           )
-  //           .code(400)
-  //           .takeover();
-  //       },
-  //     },
-  //   },
-  // },
   {
     method: "GET",
     path: "/vendors/rb209/Grass/DefoliationSequence/{defoliationSequenceId}",
@@ -49,11 +13,11 @@ module.exports = [
       const controller = new RB209GrassController(request, h);
       return controller.getGrassDefoliationSequenceByDefoliationSequenceId(
         request,
-        h
+        h,
       );
     },
     options: {
-      tags: ["api", "RB209 Grass"],
+      tags: ["api", grassDescriptionVendor],
       description:
         "Get the text of the defoliation sequence for the provided defoliation sequence id.",
       validate: {
@@ -63,19 +27,7 @@ module.exports = [
             .required()
             .description("The Defoliation Sequence Id of the field."),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -88,7 +40,7 @@ module.exports = [
       return controller.getGrassDefoliationSequence(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grass"],
+      tags: ["api", grassDescriptionVendor],
       description:
         "The list of different defoliation sequences available for grass fields.",
       validate: {
@@ -109,19 +61,7 @@ module.exports = [
             .required()
             .description("Whether a new sward (true) or not (false)"),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -133,14 +73,14 @@ module.exports = [
       return controller.getGrassGrowthClassesByCountryId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grass"],
+      tags: ["api", grassDescriptionVendor],
       description:
         "Full list of available Grass Growth Classes (GGC) for Grassland fields",
       validate: {
         params: Joi.object({
           countryId: Joi.string().required(),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
@@ -152,7 +92,7 @@ module.exports = [
       return controller.getGrassHistoriesByCountryId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grass"],
+      tags: ["api", grassDescriptionVendor],
       description: "Grass History list of Grass Fields",
       validate: {
         params: Joi.object({
@@ -160,7 +100,7 @@ module.exports = [
             .required()
             .description("The Country ID to filter on"),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
@@ -172,7 +112,7 @@ module.exports = [
       return controller.getGrassHistoryByGrassHistoryId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grass"],
+      tags: ["api", grassDescriptionVendor],
       description: "Grass History of Grass History ID provided",
       validate: {
         params: Joi.object({
@@ -180,7 +120,7 @@ module.exports = [
             .required()
             .description("The Grass History ID"),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
@@ -192,13 +132,13 @@ module.exports = [
       return controller.getGrassSeasonBySeasonId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grass"],
+      tags: ["api", grassDescriptionVendor],
       description: "This endpoint is used to return grass season",
       validate: {
         params: Joi.object({
           seasonId: Joi.string().required().description("The Season ID"),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
@@ -210,13 +150,13 @@ module.exports = [
       return controller.getGrassSeasonByCountryId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grass"],
+      tags: ["api", grassDescriptionVendor],
       description: "This endpoint is used to return grass seasons",
       validate: {
         params: Joi.object({
           countryId: Joi.string().required().description("The Country ID"),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
@@ -229,7 +169,7 @@ module.exports = [
       return controller.getGrassGrowthClassByGrassGrowthClassId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grass"],
+      tags: ["api", grassDescriptionVendor],
       description:
         "Individual Grass Growth Class (GGC) Text filtered from the supplied corresponding Grass Growth Class ID",
       validate: {
@@ -238,7 +178,7 @@ module.exports = [
             .required()
             .description("The Grass Growth Class ID to filter on"),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
@@ -251,11 +191,11 @@ module.exports = [
       const controller = new RB209GrassController(request, h);
       return controller.getGrassGrowthClassBySoilTypeIdAndRainfallAndAltitudeAndChalk(
         request,
-        h
+        h,
       );
     },
     options: {
-      tags: ["api", "RB209 Grass"],
+      tags: ["api", grassDescriptionVendor],
       description:
         "Grass growth class filtered by soil type, rainfall, altitude, and chalk",
       validate: {
@@ -265,45 +205,10 @@ module.exports = [
           altitude: Joi.number().required(),
           chalk: Joi.boolean().required(),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
-  // {
-  //     method: "GET",
-  //     path: "/vendors/rb209/Grass/PotentialCuts",
-  //     handler: async (request, h) => {
-  //       const controller = new RB209GrassController(request, h);
-  //       return controller.getGrassCutsForField(request, h);
-  //     },
-  //     options: {
-  //       tags: ["api", "RB209 Grass"],
-  //       description: "The list of different number of cuts for the field.",
-  //       validate: {
-  //         query: Joi.object({
-  //           swardTypeId: Joi.number()
-  //             .integer()
-  //             .description("The Sward Type Id of the field."),
-  //           swardManagementId: Joi.number()
-  //             .integer()
-  //             .description("The Sward Management Id of the field."),
-  //         }),
-  //         failAction: (request, h, err) => {
-  //           return h
-  //             .response(
-  //               formatErrorResponse({
-  //                 source: {
-  //                   error: err,
-  //                 },
-  //                 request,
-  //               })
-  //             )
-  //             .code(400)
-  //             .takeover();
-  //         },
-  //       },
-  //     },
-  //   },
   {
     method: "GET",
     path: "/vendors/rb209/Grass/PotentialCuts/{swardTypeId}/{swardManagementId}",
@@ -312,7 +217,7 @@ module.exports = [
       return controller.getGrassCutsForField(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grass"],
+      tags: ["api", grassDescriptionVendor],
       description: "The list of different number of cuts for the field.",
       validate: {
         params: Joi.object({
@@ -325,7 +230,7 @@ module.exports = [
             .required()
             .description("The Sward Management Id of the field."),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
@@ -337,7 +242,7 @@ module.exports = [
       return controller.getSwardManagementBySwardManagementId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grass"],
+      tags: ["api", grassDescriptionVendor],
       description:
         "Get the text of the sward management for the provided sward management id.",
       validate: {
@@ -347,7 +252,7 @@ module.exports = [
             .required()
             .description("The Sward Management Id of the field."),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
@@ -359,11 +264,11 @@ module.exports = [
       return controller.getSwardManagementsForGrassFields(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grass"],
+      tags: ["api", grassDescriptionVendor],
       description:
         "The list of different sward managements available for grass fields.",
       validate: {
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
@@ -375,7 +280,7 @@ module.exports = [
       return controller.getSwardManagementBySwardTypeId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grass"],
+      tags: ["api", grassDescriptionVendor],
       description:
         "The list of different sward managements available for the provided sward type.",
       validate: {
@@ -385,7 +290,7 @@ module.exports = [
             .required()
             .description("The Sward Type Id of the field."),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
@@ -397,7 +302,7 @@ module.exports = [
       return controller.getSwardTypeBySwardTypeId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grass"],
+      tags: ["api", grassDescriptionVendor],
       description:
         "Get the text of the sward type for the provided sward type id.",
       validate: {
@@ -407,7 +312,7 @@ module.exports = [
             .required()
             .description("The Sward Type Id of the field."),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
@@ -419,48 +324,15 @@ module.exports = [
       return controller.getSwardTypesForField(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grass"],
+      tags: ["api", grassDescriptionVendor],
       description:
         "The list of different sward types available for grass fields.",
       validate: {
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
 
-  // {
-  //   method: "GET",
-  //   path: "/vendors/rb209/Grass/YieldRangesEnglandAndWales",
-  //   handler: async (request, h) => {
-  //     const controller = new RB209GrassController(request, h);
-  //     return controller.getYieldRangesForGrassFields(request, h);
-  //   },
-  //   options: {
-  //     tags: ["api", "RB209 Grass"],
-  //     description: "The list of yield ranges for grass fields in England and Wales.",
-  //     validate: {
-  //       query: Joi.object({
-  //         sequenceId: Joi.number()
-  //           .integer(),
-  //         grassGrowthClassId: Joi.number()
-  //           .integer(),
-  //       }),
-  //       failAction: (request, h, err) => {
-  //         return h
-  //           .response(
-  //             formatErrorResponse({
-  //               source: {
-  //                 error: err,
-  //               },
-  //               request,
-  //             })
-  //           )
-  //           .code(400)
-  //           .takeover();
-  //       },
-  //     },
-  //   },
-  // },
   {
     method: "GET",
     path: "/vendors/rb209/Grass/YieldRangesEnglandAndWales/{sequenceId}/{grassGrowthClassId}",
@@ -469,7 +341,7 @@ module.exports = [
       return controller.getYieldRangesForGrassFields(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grass"],
+      tags: ["api", grassDescriptionVendor],
       description:
         "The list of yield ranges for grass fields in England and Wales.",
       validate: {
@@ -483,7 +355,7 @@ module.exports = [
             .required()
             .description("The ID of the grass growth class."),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },

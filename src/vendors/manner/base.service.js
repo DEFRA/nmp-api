@@ -20,10 +20,7 @@ class MannerBaseService {
     this.#request.interceptors.request.use(
       async (config) => {
         //Retrieve the access token from the request headers
-
-        // const token = this.req.headers["authorization"];
         const token = this.#token; 
-
         //Add token to Authorization header if it exists
         if (token) {
           config.headers["Authorization"] = `${token}`;

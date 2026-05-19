@@ -13,30 +13,25 @@ class MannerIncorporationDelayController {
     this.#service = new MannerIncorporationDelayService();
   }
 
-  async getAllIncorporationDelays() {
+  async handlerGetData() {
     const endpoint = this.#request.url.pathname.split("/manner")[1];
     const data = await this.#service.getData(endpoint, this.#request);
     return this.#h.response(data);
   }
-
+  async getAllIncorporationDelays() {
+    return this.handlerGetData();
+  }
   async getIncorporationDelayById() {
-    const { id } = this.#request.params;
-    const endpoint = this.#request.url.pathname.split("/manner")[1];
-    const data = await this.#service.getData(endpoint, this.#request);
-    return this.#h.response(data);
+    return this.handlerGetData();
   }
   async getIncorporationDelayByIncorporationId() {
-    const { methodId } = this.#request.params;
-    const endpoint = this.#request.url.pathname.split("/manner")[1];
-    const data = await this.#service.getData(endpoint, this.#request);
-    return this.#h.response(data);
+    return this.handlerGetData();
   }
   async getIncorporationMethodByAppMethodAndApplicableFor() {
-    const { methodId } = this.#request.params; 
     const { applicableFor } = this.#request.query;
     let endpoint = this.#request.url.pathname.split("/manner")[1];
     endpoint += `?applicableFor=${applicableFor}`;
-   
+
     const data = await this.#service.getData(endpoint, this.#request);
     return this.#h.response(data);
   }
