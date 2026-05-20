@@ -11,7 +11,7 @@ class RB209OrganicMaterialController {
     this.#service = new RB209OrganicMaterialService();
   }
 
-  async getOrganicMaterialCategories() {
+  async getOrganicMaterialDataHelper() {
     const url = this.#request.url.pathname.split("/rb209")[1];
     try {
       const data = await this.#service.getData(url);
@@ -19,6 +19,10 @@ class RB209OrganicMaterialController {
     } catch (error) {
       return this.#h.response({ error });
     }
+  }
+
+  async getOrganicMaterialCategories() {
+    return this.getOrganicMaterialDataHelper();
   }
 
   async getOrganicMaterialTypes() {
@@ -41,72 +45,27 @@ class RB209OrganicMaterialController {
   }
 
   async getIncorporationMethods() {
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.getOrganicMaterialDataHelper();
   }
 
   async getIncorporationMethodsByOrganicMaterialTypeId() {
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.getOrganicMaterialDataHelper();
   }
 
   async getIncorporationMethodByIncorporationMethodId() {
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.getOrganicMaterialDataHelper();
   }
 
   async getOrganicMaterialCategoryItemByOrganicMaterialCategoryId() {
-    const { organicMaterialCategoryId } = this.#request.params;
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      console.error(
-        "Error in getOrganicMaterialCategoryItemByOrganicMaterialCategoryId:",
-        error
-      );
-      return this.#h.response({ error });
-    }
+    return this.getOrganicMaterialDataHelper();
   }
 
   async getOrganicMaterialTypeItemByOrganicMaterialTypeId() {
-    const { organicMaterialTypeId } = this.#request.params;
-    const url = this.#request.url.pathname.split("/rb209")[1];;
-
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+       return this.getOrganicMaterialDataHelper();
   }
 
   async getOrganicMaterialTypeItemByOrganicMaterialTypeIdAndDryMatterSplit() {
-    const { organicMaterialTypeId, dryMatterSplit } = this.#request.params;
-    const url = this.#request.url.pathname.split("/rb209")[1];;
-
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.getOrganicMaterialDataHelper();
   }
 }
 

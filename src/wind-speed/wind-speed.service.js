@@ -16,20 +16,18 @@ class WindspeedService extends BaseService {
       "windspeeds",
       request
     );
-
     // Check if the response was successful and data exists
     if (mannerWindSpeedList.success && mannerWindSpeedList.data) {
       // Sort the windspeeds by ID in ascending order and take the first one
       const sortedList = mannerWindSpeedList.data.sort(
         (a, b) => a.ID - b.ID
       );
-
       // Return the first row from the sorted list
       const firstRow = sortedList[0];
-
       return firstRow;
     } else {
       console.error("Failed to fetch windspeed data or data is unavailable");
+      return null; 
     }
   }
 }
