@@ -235,7 +235,7 @@ class PlanService extends BaseService {
     }
 
     // ✅ Otherwise, start a new local transaction.
-    return await AppDataSource.transaction(async (localManager) => {
+    return AppDataSource.transaction(async (localManager) => {
       savedPlan = await this.createNutrientsRecommendationWithinTransaction(
         crops,
         userId,

@@ -35,11 +35,11 @@ class UserExtensionService extends BaseService {
         });
         await transactionalManager.save(UserExtensionsEntity, newRecord);
       }
-
       // Return the updated or newly created record
-      return await transactionalManager.findOne(UserExtensionsEntity, {
+       const updatedUserRecord = await transactionalManager.findOne(UserExtensionsEntity, {
         where: { UserID: userId }
       });
+      return updatedUserRecord;
     });
   }
   async updateDoNotShowAboutThisService(
@@ -73,9 +73,10 @@ class UserExtensionService extends BaseService {
       }
 
       // Return the updated or newly created record
-      return await transactionalManager.findOne(UserExtensionsEntity, {
+      const updatedOrNewlySavedRecord = await transactionalManager.findOne(UserExtensionsEntity, {
         where: { UserID: userId }
       });
+      return updatedOrNewlySavedRecord;
     });
   }
   async getUserExtensionByUserId(userId) {
