@@ -17,7 +17,7 @@ class SoilAnalysesService extends BaseService {
   }
 
   async createSoilAnalysis(soilAnalysisBody, userId, pKBalanceData, request) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const soilAnalysis = await transactionalManager.save(SoilAnalysisEntity, {
         ...soilAnalysisBody,
         CreatedByID: userId,

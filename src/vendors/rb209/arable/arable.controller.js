@@ -22,138 +22,59 @@ class RB209ArableController {
     }
 
     async getCropGroupsBycropGroupId() {
-    const cropGroupsByGroupId = await this.getCropGroups();
-         return cropGroupsByGroupId
+         return this.getCropGroups();
     }
 
     async getCropTypes() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+         return this.getCropGroups();
     }
 
     async getCropTypesByCropGroupId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+         return this.getCropGroups();
     }
 
     async getCropTypeByCropTypeId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+        return this.getCropGroups();
     }
 
     async getCropInfo1s() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+       return this.getCropGroups();
     }
 
     async getCropInfo1sByCropTypeId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+        return this.getCropGroups();
     }
 
     async getCropInfo1ByCropTypeIdAndCropInfo1Id() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+        return this.getCropGroups();
     }
 
     async getCropInfo2s() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+        return this.getCropGroups();
     }
 
     async getCropInfo2CropInfo2Id() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+        return this.getCropGroups();
     }
 
     async getPotatoGroups() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+       return this.getCropGroups();
     }
 
     async getPotatoGroupByPotatoGroupId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+        return this.getCropGroups();
     }
 
     async getPotatoVarieties() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+        return this.getCropGroups();
     }
 
     async getPotatoVarietiesByPotatoGroupId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+        return this.getCropGroups();
     }
 
     async getPotatoVarietyByPotatoVarietyId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+        return this.getCropGroups();
     }
 }
 

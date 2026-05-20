@@ -107,7 +107,7 @@ module.exports = [
     path: "/vendors/rb209/Field/SecondCropType_List/{cropGroupId1}/{cropTypeId1}/{cropGroupId2}/{countryId}",
     handler: async (request, h) => {
       const controller = new RB209FieldController(request, h);
-      return controller.getSecondCropType_ListByCropGroupId1AndCropTypeId1AndCropGroupId2AndCountryId(
+      return controller.getSecondCropTypeListByCropGroupId1AndCropTypeIdOneAndCropGroupIdTwoAndCountryId(
         request,
         h,
       );

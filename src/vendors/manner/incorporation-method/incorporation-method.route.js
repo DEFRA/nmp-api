@@ -2,7 +2,7 @@ const Joi = require("joi"); // For validation
 
 
 const MannerIncorporationMethodsController = require("./incorporation-method.controller");
-
+const methodDescription = "Manner Incorporation Methods"
 module.exports = [
   {
     method: "GET",
@@ -12,7 +12,7 @@ module.exports = [
       return controller.getAllIncorporationMethods(request, h);
     },
     options: {
-      tags: ["api", "Manner Incorporation Methods"],
+      tags: ["api", methodDescription],
       description: "Retrieve all incorporation methods",
     },
   },
@@ -24,7 +24,7 @@ module.exports = [
       return controller.getIncorporationMethodsById(request, h);
     },
     options: {
-      tags: ["api", "Manner Incorporation Methods"],
+      tags: ["api", methodDescription],
       description: "Retrieve incorporation method by Id'",
       validate: {
         params: Joi.object({
@@ -41,7 +41,7 @@ module.exports = [
       return controller.getIncorporationMethodByIncorporationId(request, h);
     },
     options: {
-      tags: ["api", "Manner Incorporation Methods"],
+      tags: ["api", methodDescription],
       description: "Retrieve incorporation Method by incorporation method ID",
       validate: {
         params: Joi.object({
@@ -57,11 +57,11 @@ module.exports = [
       const controller = new MannerIncorporationMethodsController(request, h);
       return controller.getIncorporationMethodByAppMethodAndApplicableFor(
         request,
-        h
+        h,
       );
     },
     options: {
-      tags: ["api", "Manner Incorporation Methods"],
+      tags: ["api", methodDescription],
       description: "Retrieve incorporation methods by applications method ID",
       validate: {
         params: Joi.object({
@@ -71,7 +71,7 @@ module.exports = [
           applicableFor: Joi.string()
             .required()
             .description(
-              "Filter by ApplicableFor ('G' for Grass, 'A' for Arable and Horticulture, 'B' for Both, 'NULL' for N/A)"
+              "Filter by ApplicableFor ('G' for Grass, 'A' for Arable and Horticulture, 'B' for Both, 'NULL' for N/A)",
             ),
         }),
       },

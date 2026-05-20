@@ -3,6 +3,7 @@ const { RB209RainfallController } = require("./rainfall.controller");
 const {
   formatErrorResponse,
 } = require("../../../interceptor/responseFormatter");
+const { validationFailAction } = require("../../../shared/validateFailSafeAction");
 
 module.exports = [
   {
@@ -21,19 +22,7 @@ module.exports = [
             .required()
             .description("First half of postcode, eg: AB12"),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },

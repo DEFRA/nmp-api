@@ -10,7 +10,7 @@ class RB209SoilController {
     this.#service = new RB209SoilService();
   }
 
-  async getSoilTypes() {
+  async getSoilDataHander() {
     const url = this.#request.url.pathname.split("/rb209")[1];
     try {
       const data = await this.#service.getData(url);
@@ -18,193 +18,62 @@ class RB209SoilController {
     } catch (error) {
       return this.#h.response({ error });
     }
+  }
+
+  async getSoilTypes() {
+   return this.getSoilDataHander();
   }
 
   async getSoilTypeBySoilTypeId() {
-    const { soilTypeId } = this.#request.params;
-    console.log("Soil Type ID:", soilTypeId);
-
-    const url = this.#request.url.pathname.split("/rb209")[1];
-
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+   return this.getSoilDataHander();
   }
 
   async getMethodologiesByNutrientIdAndCountryId() {
-    const { nutrientId } = this.#request.params;
-    console.log("Nutrient Id:", nutrientId);
-    const { countryId } = this.#request.params;
-    console.log("Country Id:", countryId);
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      console.log("methodologies by country id and nutrientId",data)
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+   return this.getSoilDataHander();
   }
 
   async getMethodologyByNutrientIdAndMethodologyId() {
-    const { nutrientId } = this.#request.params;
-    console.log("Nutrient Id:", nutrientId);
-    const { methodologyId } = this.#request.params;
-    console.log("Methodology Id:", methodologyId);
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+   return this.getSoilDataHander();
   }
 
   async getNutrientIndexByNutrientIdAndIndexId() {
-    const { nutrientId } = this.#request.params;
-    console.log("Nutrient Id:", nutrientId);
-    const { indexId } = this.#request.params;
-    console.log("Index Id:", indexId);
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+   return this.getSoilDataHander();
   }
 
   async getNutrientIndexByNutrientIdAndNutrientValueAndMethodologyId() {
-    const { nutrientId } = this.#request.params;
-    console.log("Nutrient Id:", nutrientId);
-    const { nutrientValue } = this.#request.params;
-    console.log("Nutrient Value:", nutrientValue);
-    const { methodologyId } = this.#request.params;
-    console.log("Methodology Id:", methodologyId);
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+   return this.getSoilDataHander();
   }
 
   async getNutrientIndexByNutrientIdAndNutrientValueMethodologyIdAndCountryId() {
-    const { nutrientId } = this.#request.params;
-    console.log("Nutrient Id:", nutrientId);
-    const { nutrientValue } = this.#request.params;
-    console.log("Nutrient Value:", nutrientValue);
-    const { methodologyId } = this.#request.params;
-    console.log("Methodology Id:", methodologyId);
-    const { countryId } = this.#request.params;
-    console.log("Country Id:", countryId);
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      console.log("nutrient index by nutrient value , by methodology and by country id",data)
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.getSoilDataHander();
   }
 
   async getNutrientIndexMethodologyId() {
-    const { methodologyId } = this.#request.params;
-    console.log("Methodology Id:", methodologyId);
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.getSoilDataHander();
   }
 
   async getNutrientIndexIdFromValueByNutrientIdAndMethodologyIdAndNutrientValue() {
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      console.log("Nutrient Index by countryID nutrientID and Methodology",data)
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.getSoilDataHander();
   }
 
   async getNutrientIndicesByNutrientIdAndMethodologyIdAndCountryId() {
-    const { nutrientId } = this.#request.params;
-    console.log("Nutrient Id:", nutrientId);
-    const { methodologyId } = this.#request.params;
-    console.log("Methodology Id:", methodologyId);
-    const { countryId } = this.#request.params;
-    console.log("Country Id:", countryId);
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.getSoilDataHander();
   }
 
   async getNutrientTargetIndexByCropGroupIdAndNutrientIdAndCountryId() {
-    const { cropGroupId } = this.#request.params;
-    console.log("Crop Group Id:", cropGroupId);
-    const { nutrientId } = this.#request.params;
-    console.log("Nutrient Id:", nutrientId);
-    const { countryId } = this.#request.params;
-    console.log("Country Id:", countryId);
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.getSoilDataHander();
   }
 
   async getNvzActionProgramByCountryId() {
-    const { countryId } = this.#request.params;
-    console.log("Country Id:", countryId);
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.getSoilDataHander();
   }
 
   async getSoilPhRecommendationBySoilTypeIdAndCountryId() {
-    const { soilTypeId } = this.#request.params;
-    console.log("Soil Type Id:", soilTypeId);
-    const { countryId } = this.#request.params;
-    console.log("Country Id:", countryId);
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.getSoilDataHander();
   }
 
   async getSoilPscByCropGroupIdAndPIndexId() {
-    const { cropGroupId } = this.#request.params;
-    console.log("Crop Group Id:", cropGroupId);
-    const { pIndexId } = this.#request.params;
-    console.log("pIndex Id:", pIndexId);
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.getSoilDataHander();
   }
 }
 

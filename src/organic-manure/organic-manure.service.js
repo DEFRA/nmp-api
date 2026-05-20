@@ -252,7 +252,7 @@ class OrganicManureService extends BaseService {
 }
 
   async getTotalNitrogen(fieldId, fromDate, toDate, confirm, organicManureID) {
-   const { fromDateFormatted, toDateFormatted } = this.formatDateRange(
+   const { fromDateFormatted, toDateFormatted } = await this.formatDateRange(
      fromDate,
      toDate
    );

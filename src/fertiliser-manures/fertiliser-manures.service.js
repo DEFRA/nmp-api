@@ -390,18 +390,11 @@ class FertiliserManuresService extends BaseService {
     request,
   }) {
     const managementPeriodId = managementPeriodData[0]?.ID;
-
     const totalP205AndK20 = await this.getTotalP205AndK20(
       fertiliserData,
       managementPeriodId,
     );
-
-    const recommandationData =
-      await this.getTotalFertiliserP205AndK20FromRecommandation(
-        managementPeriodId,
-        recommandationAllData,
-      );
-
+    const recommandationData = await this.getTotalFertiliserP205AndK20FromRecommandation(managementPeriodId,recommandationAllData);
     const updatePKBalance = await this.buildPKBalanceData(
       totalP205AndK20,
       fertiliserManureData[0]?.FertiliserManure,

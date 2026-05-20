@@ -11,7 +11,7 @@ class RB209MeasurementController {
     this.#service = new RB209MeasurementService();
   }
 
-  async getCropHeights() {
+  async getMeasurementDataHelper() {
     const url = this.#request.url.pathname.split("/rb209")[1];
     try {
       const data = await this.#service.getData(url);
@@ -19,58 +19,36 @@ class RB209MeasurementController {
     } catch (error) {
       return this.#h.response({ error });
     }
+  }
+
+  async getCropHeights() {
+    return this.getMeasurementDataHelper();
   }
 
   async getGreenAreaIndexes() {
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.getMeasurementDataHelper();
   }
-  
+
   async getSeasons() {
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.getMeasurementDataHelper();
+   
   }
 
   async getShootNumbers() {
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.getMeasurementDataHelper();
+  
   }
 
   async getSmnConversionMethodBySmnValueAndSoilLayer() {
-    const { smnValue } = this.#request.params;
-    console.log("Smn Value:", smnValue);
-    const { soilLayer } = this.#request.params;
-    console.log("Soil Layer:", soilLayer);
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.getMeasurementDataHelper();
   }
 
   async calculateSnsIndex() {
-    const url = this.#request.url.pathname.split('/rb209')[1];
+    const url = this.#request.url.pathname.split("/rb209")[1];
     const payload = this.#request.payload;
     try {
       const data = await this.#service.postData(url, payload);
-      return this.#h.response(data)
+      return this.#h.response(data);
     } catch (error) {
       return this.#h.response({ error });
     }
