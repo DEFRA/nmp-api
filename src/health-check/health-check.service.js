@@ -14,6 +14,7 @@ class HealthCheckService {
       if (this.dataSource.isInitialized) {
         return { message: "NMP API is working" };
       }
+       return { message: "Database connection is not initialized" };
     } catch (error) {
       console.error("Database connection error:", error);
       return {

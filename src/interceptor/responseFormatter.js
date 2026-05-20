@@ -32,8 +32,7 @@ const formatErrorResponse =  (errorResponse) => {
         errorResponse?.source?.data?.message ||
         errorResponse?.source?.data?.Invalid ||
         errorResponse?.source?.data?.error ||
-        error?.message ||
-        "An error occurred",
+       (error?.message ?? "An error occurred"),
       stack: process.env.NODE_ENV === "production" ? null : error?.stack,
       path: errorResponse?.request?.path || null,
     },
