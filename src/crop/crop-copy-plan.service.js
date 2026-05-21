@@ -23,21 +23,15 @@ async savedDefault(
   isOrganic,
   isFertiliser,
 ) {
-  const ManagementPeriods = [];
-  const OrganicManures = [];
-  const FertiliserManures = [];
-  const OldToNewManagementPeriodMap = {};
-
+  const ManagementPeriods = [],OrganicManures = [],FertiliserManures = [],OldToNewManagementPeriodMap = {};
   // 1. Save the new Crop
   const savedCrop = await transactionalManager.save(
     CropEntity,
     this.cropRepository.create({
       ...cropData.Crop,
       ID: null,
-      FieldID: cropData.FieldID,
-      Year: harvestYear,
-      CreatedByID: userId,
-      CreatedOn: new Date(),
+      FieldID: cropData.FieldID,Year: harvestYear,
+      CreatedByID: userId,CreatedOn: new Date()
     }),
   );
 
@@ -45,17 +39,10 @@ async savedDefault(
   for (const oldPeriod of managementPeriods) {
     const newPeriod = {
       ...oldPeriod,
-      ID: null,
-      CropID: savedCrop.ID,
-      CreatedByID: userId,
-      CreatedOn: new Date(),
+      ID: null,CropID: savedCrop.ID,
+      CreatedByID: userId,CreatedOn: new Date()
     };
-
-    const savedPeriod = await transactionalManager.save(
-      ManagementPeriodEntity,
-      newPeriod,
-    );
-
+    const savedPeriod = await transactionalManager.save(ManagementPeriodEntity,newPeriod);
     OldToNewManagementPeriodMap[oldPeriod.ID] = savedPeriod.ID;
     ManagementPeriods.push(savedPeriod);
   }
@@ -65,66 +52,41 @@ async savedDefault(
     for (const oldPeriod of managementPeriods) {
       const organicManures = await transactionalManager.find(
         OrganicManureEntity,
-        {
-          where: { ManagementPeriodID: oldPeriod.ID },
-        },
+        {where: { ManagementPeriodID: oldPeriod.ID }}
       );
-
       for (const manure of organicManures) {
         const newManure = {
           ...manure,
-          ID: null,
-          ManagementPeriodID: OldToNewManagementPeriodMap[oldPeriod.ID],
-          CreatedByID: userId,
-          CreatedOn: new Date(),
+          ID: null, ManagementPeriodID: OldToNewManagementPeriodMap[oldPeriod.ID],
+          CreatedByID: userId,CreatedOn: new Date()
         };
-
         const savedManure = await transactionalManager.save(
-          OrganicManureEntity,
-          newManure,
-        );
-
+          OrganicManureEntity,newManure);
         OrganicManures.push(savedManure);
       }
     }
   }
-
   // 4. Copy FertiliserManures if isFertiliser is true
   if (isFertiliser) {
     for (const oldPeriod of managementPeriods) {
       const fertilisers = await transactionalManager.find(
         FertiliserManuresEntity,
-        {
-          where: { ManagementPeriodID: oldPeriod.ID },
-        },
+        {where: { ManagementPeriodID: oldPeriod.ID }}
       );
 
       for (const fert of fertilisers) {
         const newFert = {
           ...fert,
-          ID: null,
-          ManagementPeriodID: OldToNewManagementPeriodMap[oldPeriod.ID],
-          CreatedByID: userId,
-          CreatedOn: new Date(),
+          ID: null,ManagementPeriodID: OldToNewManagementPeriodMap[oldPeriod.ID],
+          CreatedByID: userId,CreatedOn: new Date()
         };
-
-        const savedFert = await transactionalManager.save(
-          FertiliserManuresEntity,
-          newFert,
-        );
-
+        const savedFert = await transactionalManager.save(FertiliserManuresEntity,newFert);
         FertiliserManures.push(savedFert);
       }
     }
   }
-
   // 5. Return everything copied
-  return {
-    Crop: savedCrop,
-    ManagementPeriods,
-    OrganicManures,
-    FertiliserManures,
-  };
+  return {Crop: savedCrop,ManagementPeriods,OrganicManures,FertiliserManures};
 },
 
 async copyPlanOhercrop(requiredParametres) {
@@ -270,83 +232,23 @@ async handleOtherCrop(crop, field, managementPeriods, ctx, extra) {
 },
 
 async processCrop(crop, fields, ctx) {
-  const {
-    manager,
-    userId,
-    harvestYear,
-    isOrganic,
-    isFertiliser,
-    request,
-    results,
-  } = ctx;
-
+  const { manager, userId, harvestYear, isOrganic, isFertiliser, request, results} = ctx;
   const field = fields.find((f) => f.ID === crop.FieldID);
-
   const [soilAnalysis, pkBalance, nextYearCrop, managementPeriods] =
     await this.loadCropDependencies(manager, crop, harvestYear);
   const hasPK = this.hasSoilPK(soilAnalysis);
   await this.copyPKBalance(manager, pkBalance, crop, harvestYear, userId);
-  if (this.isOtherCrop(crop)) {
-    return this.handleOtherCrop(crop, field, managementPeriods, ctx, {
-      nextYearCrop,
-      pkBalance,
-      hasPK,
-    });
-  }
-
-  const savedCrop = await this.createNewCrop(
-    manager,
-    crop,
-    harvestYear,
-    userId,
-  );
-
-  const periodMap = await this.copyManagementPeriods(
-    manager,
-    managementPeriods,
-    savedCrop,
-    userId,
-    results,
-  );
-
-  if (isOrganic) {
-    await this.copyOrganic(
-      manager,
-      managementPeriods,
-      periodMap,
-      harvestYear,
-      userId,
-      results,
-    );
-  }
-
-  if (isFertiliser) {
-    await this.copyFertiliser(
-      manager,
-      managementPeriods,
-      periodMap,
-      harvestYear,
-      userId,
-      results,
-    );
-  }
-
+  if (this.isOtherCrop(crop)) {return this.handleOtherCrop(crop, field, managementPeriods, ctx, {nextYearCrop,pkBalance,hasPK})}
+  const savedCrop = await this.createNewCrop(manager,crop,harvestYear,userId);
+  const periodMap = await this.copyManagementPeriods(manager,managementPeriods,savedCrop,userId,results);
+  if (isOrganic) {await this.copyOrganic(manager,managementPeriods,periodMap,harvestYear,userId,results)}
+  if (isFertiliser) {await this.copyFertiliser(manager,managementPeriods,periodMap,harvestYear,userId,results)}
   await this.generateAndStoreRecommendations(field, ctx);
-
   this.triggerFutureUpdate(crop, nextYearCrop, request, userId);
-
-  // ✅ Explicit return for main flow
-  return {
-    cropId: savedCrop.ID,
-    fieldId: crop.FieldID,
-  };
+  return {cropId: savedCrop.ID,fieldId: crop.FieldID};
 },
-
 async copyPKBalance(manager, pk, _crop, year, userId) {
-  if (!pk) {
-    return;
-  }
-
+  if (!pk) {return}
   await manager.save(PKBalanceEntity, {
     ...pk,
     ID: null,
