@@ -268,54 +268,21 @@ async updateCropData(body, userId, request, transactionalManager) {
 },
 
 async updateCrop(body, userId, request, transactionalManager) {
-  const updatedResults = [];
-  const cropData = body.Crops;
-
+  const updatedResults = [],cropData = body.Crops;
   for (const cropEntry of cropData) {
     const crop = cropEntry?.Crop;
-    const {
-      ID,
-      CreatedByID,
-      CreatedOn,
-      ModifiedOn,
-      ModifiedByID,
-      EncryptedCounter,
-      FieldName,
-      IsDeleted,
-      ...updatedCropData
-    } = crop;
-
-    // Update the crop record
+    const {ID,CreatedByID,CreatedOn,ModifiedOn,ModifiedByID,EncryptedCounter,FieldName,IsDeleted,...updatedCropData} = crop;
     const cropUpdateResult = await transactionalManager.update(
-      CropEntity,
-      ID,
-      {
-        ...updatedCropData,
-        ModifiedByID: userId,
-        ModifiedOn: new Date(),
-      },
+      CropEntity,ID,
+      {...updatedCropData,ModifiedByID: userId,ModifiedOn: new Date()}
     );
 
-    if (cropUpdateResult.affected === 0) {
-      console.warn(`Crop with ID ${ID} not found`);
-      continue;
-    }
-
-    const updatedCrop = await transactionalManager.findOne(CropEntity, {
-      where: { ID: ID },
-    });
-
+    if (cropUpdateResult.affected === 0) {console.warn(`Crop with ID ${ID} not found`);
+      continue}
+    const updatedCrop = await transactionalManager.findOne(CropEntity, {where: { ID: ID }});
     // Get the rb209CountryID of the farm
     const rb209CountryID = await this.fetchRb209CountryId(crop.FieldID);
-
-    await this.validateAndHandleSecondCrop(
-      transactionalManager,
-      updatedCrop,
-      updatedCrop.FieldID,
-      updatedCrop.Year,
-      rb209CountryID,
-    );
-
+    await this.validateAndHandleSecondCrop(transactionalManager,updatedCrop,updatedCrop.FieldID,updatedCrop.Year,rb209CountryID);
     const updatedManagementPeriods =
       await this.syncManagementPeriodsBySequence(
         transactionalManager,

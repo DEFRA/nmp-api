@@ -109,10 +109,7 @@ async getOrganicAndInorganicDetails(farmId, harvestYear, request) {
       const cropRecord = await this.repository.findOne({where: { ID: CropID }});
       return {PlantingDate: cropRecord ? cropRecord.SowingDate : null};
     } catch (error) {
-      console.error(
-        `Error fetching crop details for CropID: ${CropID}`,
-        error
-      );
+      console.error( `Error fetching crop details for CropID: ${CropID}`,error);
       return {CropId: null,PlantingDate: null};
     }
   };
@@ -122,53 +119,33 @@ async getOrganicAndInorganicDetails(farmId, harvestYear, request) {
         where: { CropID: cropId },
         select: ["ID"]
       });
-
       return managementPeriods.map((period) => period.ID);
     } catch (error) {
-      console.error(
-        `Error fetching ManagementPeriodIDs for CropId: ${cropId}`,
-        error,
-      );
+      console.error(`Error fetching ManagementPeriodIDs for CropId: ${cropId}`,error);
       return [];
     }
   };
   const findOrganicManureData = async (managementPeriodIds) => {
     try {
-      const organicManureEntries = await this.organicManureRepository.find({
-        where: {ManagementPeriodID: In(managementPeriodIds)}
-      });
+      const organicManureEntries = await this.organicManureRepository.find({where: {ManagementPeriodID: In(managementPeriodIds)}});
       return organicManureEntries;
     } catch (error) {
-      console.error(
-        `Error fetching organic manure data for ManagementPeriodIDs: ${managementPeriodIds}`,
-        error
-      );
+      console.error(`Error fetching organic manure data for ManagementPeriodIDs: ${managementPeriodIds}`,error);
       return [];
     }
   };
-
   const findInorganicFertiliserData = async (managementPeriodIds) => {
     try {
-      const fertiliserEntries = await this.fertiliserRepository.find({
-        where: {
-          ManagementPeriodID: In(managementPeriodIds),
-        },
-      });
+      const fertiliserEntries = await this.fertiliserRepository.find({ where: { ManagementPeriodID: In(managementPeriodIds) }});
       return fertiliserEntries;
     } catch (error) {
-      console.error(
-        `Error fetching inorganic fertiliser data for ManagementPeriodIDs: ${managementPeriodIds}`,
-        error,
-      );
+      console.error(`Error fetching inorganic fertiliser data for ManagementPeriodIDs: ${managementPeriodIds}`,error );
       return [];
     }
   };
   const findFarmRainfall = async (farmID) => {
     try {
-      const farmRecord = await this.farmRepository.findOne({
-        where: { ID: farmID },
-        select: ["Rainfall"]
-      });
+      const farmRecord = await this.farmRepository.findOne({where: { ID: farmID }, select: ["Rainfall"]});
       return farmRecord ? farmRecord.Rainfall : null;
     } catch (error) {
       console.error(`Error fetching rainfall for farmId: ${farmID}`, error);
@@ -179,16 +156,11 @@ async getOrganicAndInorganicDetails(farmId, harvestYear, request) {
   const findDefoliationSequenceDescription = async (DefoliationSequenceID) => {
     try {
       let defoliationSequenceDescription = null;
-      const defoliationSequence = await this.rB209GrassService.getData(
-        `Grass/DefoliationSequence/${DefoliationSequenceID}`,
-      );
+      const defoliationSequence = await this.rB209GrassService.getData(`Grass/DefoliationSequence/${DefoliationSequenceID}`);
       defoliationSequenceDescription = defoliationSequence ? defoliationSequence.defoliationSequenceDescription: null;
       return defoliationSequenceDescription;
     } catch (error) {
-      console.error(
-        `Error fetching Defoliation Sequence by id ${DefoliationSequenceID}`,
-        error,
-      );
+      console.error(`Error fetching Defoliation Sequence by id ${DefoliationSequenceID}`,error);
       return "Unknown";
     }
   };
@@ -198,101 +170,51 @@ async getOrganicAndInorganicDetails(farmId, harvestYear, request) {
   for (const plan of plansWithNames) {
     const { PlantingDate } = await findCropDetailsFromRepo(plan.CropID);
     let defoliationSequenceDescription = null;
-    if (plan.DefoliationSequenceID != null) {
-      defoliationSequenceDescription = await findDefoliationSequenceDescription(plan.DefoliationSequenceID);
-    }
+    if (plan.DefoliationSequenceID != null) {defoliationSequenceDescription = await findDefoliationSequenceDescription(plan.DefoliationSequenceID)}
     const lastModifiedDate = await this.getLatestModifiedDate(plan.CropID);
-    cropDetails.push({
-      CropId: plan.CropID,
-      CropTypeID: plan.CropTypeID,
-      CropTypeName: plan.CropTypeName,
-      CropGroupName: plan.CropGroupName,
-      FieldID: plan.FieldID,
-      FieldName: plan.FieldName,
-      CropVariety: plan.CropVariety,
-      OtherCropName: plan.OtherCropName,
-      CropInfo1: plan.CropInfo1,
-      CropInfo2: plan.CropInfo2,
-      Yield: plan.Yield,
-      CropOrder:plan.CropOrder,
-      LastModifiedOn: lastModifiedDate,
-      PlantingDate: PlantingDate,
-      Management: defoliationSequenceDescription,
-    });
+    cropDetails.push({CropId: plan.CropID,CropTypeID: plan.CropTypeID,CropTypeName: plan.CropTypeName,CropGroupName: plan.CropGroupName,
+      FieldID: plan.FieldID, FieldName: plan.FieldName, CropVariety: plan.CropVariety, OtherCropName: plan.OtherCropName, CropInfo1: plan.CropInfo1,
+      CropInfo2: plan.CropInfo2, Yield: plan.Yield,CropOrder:plan.CropOrder,LastModifiedOn: lastModifiedDate,PlantingDate: PlantingDate,Management: defoliationSequenceDescription});
   }
-
   const organicMaterials = await Promise.all(
     cropDetails.map(async (crop) => {
       const managementPeriodId = await findManagementPeriodId(crop.CropId);
-      const organicManureData = managementPeriodId
-        ? await findOrganicManureData(managementPeriodId)
-        : [];
-
-      const allManureData = await this.MannerManureTypesService.getData(
-        "/manure-types",
-        request,
-      );
+      const organicManureData = managementPeriodId ? await findOrganicManureData(managementPeriodId): [];
+      const allManureData = await this.MannerManureTypesService.getData("/manure-types",request);
       return Promise.all(
         organicManureData.map(async (organicManure) => {
-          // Fetch the manure type data from MannerManureTypesService
           let mannerManureTypeData = {};
           try {
-            const manureTypeResponse = await this.getManureTypeById(
-              allManureData,
-              organicManure.ManureTypeID,
-            );
+            const manureTypeResponse = await this.getManureTypeById(allManureData,organicManure.ManureTypeID);
             mannerManureTypeData = manureTypeResponse.data;
           } catch (error) {
             console.error(`Error fetching manure type`, error);
           }
-
           // Return the organic manure data with TypeOfManure fetched from the API
           return {
-            OrganicMaterialId: organicManure.ID,
-            ApplicationDate: organicManure.ApplicationDate,
-            ManureTypeId: organicManure.ManureTypeID,
-            Field: crop.FieldName,
-            FieldId: crop.FieldID,
-            Crop: crop.CropTypeName,
-            TypeOfManure: mannerManureTypeData.name, // Set the fetched manure type name here
-            Rate: organicManure.ApplicationRate,
+            OrganicMaterialId: organicManure.ID,ApplicationDate: organicManure.ApplicationDate,ManureTypeId: organicManure.ManureTypeID,
+            Field: crop.FieldName,FieldId: crop.FieldID,Crop: crop.CropTypeName,TypeOfManure: mannerManureTypeData.name, Rate: organicManure.ApplicationRate,
           };
         }),
       );
     }),
   );
-
   // Flatten the result (since Promise.all returns an array of arrays)
   const flattenedOrganicMaterials = organicMaterials.flat();
-
   const inorganicFertiliserApplications = await Promise.all(
     cropDetails.map(async (crop) => {
       const managementPeriodId = await findManagementPeriodId(crop.CropId);
-      const fertiliserData = managementPeriodId
-        ? await findInorganicFertiliserData(managementPeriodId)
-        : [];
+      const fertiliserData = managementPeriodId ? await findInorganicFertiliserData(managementPeriodId): [];
       return fertiliserData.map((fertiliser) => ({
-        InorganicFertiliserId: fertiliser.ID,
-        ApplicationDate: fertiliser.ApplicationDate,
-        Field: crop.FieldName,
-        Crop: crop.CropTypeName,
-        N: fertiliser.N,
-        P2O5: fertiliser.P2O5,
-        K2O: fertiliser.K2O,
-        MgO: fertiliser.MgO,
-        SO3: fertiliser.SO3,
-        Na2O: fertiliser.Na2O,
-        Lime: fertiliser.Lime,
-        NH4N: fertiliser.NH4N,
-        NO3N: fertiliser.NO3N,
+        InorganicFertiliserId: fertiliser.ID,ApplicationDate: fertiliser.ApplicationDate,
+        Field: crop.FieldName,Crop: crop.CropTypeName,N: fertiliser.N,
+        P2O5: fertiliser.P2O5,K2O: fertiliser.K2O,MgO: fertiliser.MgO,SO3: fertiliser.SO3,Na2O: fertiliser.Na2O,
+        Lime: fertiliser.Lime,NH4N: fertiliser.NH4N,NO3N: fertiliser.NO3N,
       }));
     }),
   );
-
   return {
-    farmDetails: {rainfall: rainfall || "Unknown"},
-    CropDetails: cropDetails,
-    OrganicMaterial: flattenedOrganicMaterials,
+    farmDetails: {rainfall: rainfall || "Unknown"},CropDetails: cropDetails,OrganicMaterial: flattenedOrganicMaterials,
     InorganicFertiliserApplication: inorganicFertiliserApplications.flat()
   };
 },
