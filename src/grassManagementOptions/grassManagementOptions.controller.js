@@ -5,7 +5,7 @@ class GrassManagementOptionsController {
   #h;
   #GrassManagementOptionsService;
 
-  constructor(h) {
+  constructor(_request,h) {
     this.#h = h;
     this.#GrassManagementOptionsService = new GrassManagementOptionsService();
   }
