@@ -19,7 +19,7 @@ class AzureAuthMiddleware {
 
   constructor() {
     this.#excludedPaths = [
-      EnvironmentService.APPLICATION_SWAGGER_PATH() || "/docs",
+      EnvironmentService.applicationSwaggerPath() || "/docs",
       "/swagger.json",
       "/swaggerui",
     ];

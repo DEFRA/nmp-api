@@ -96,12 +96,12 @@ const { entities } = require("./entity/register-entities.js");
 //const entities = requireContext.keys().map(requireContext);
 //entities: entities.map(module => module.default || module),
 
-const isProduction = EnvironmentService.NODE_ENV() === "production";
+const isProduction = EnvironmentService.nodeEnv() === "production";
 const baseConfig = {
   type: "mssql",
-  host: EnvironmentService.DATABASE_HOST(),
-  port: EnvironmentService.DATABASE_PORT(),
-  database: EnvironmentService.DATABASE_NAME(),
+  host: EnvironmentService.databaseHost(),
+  port: EnvironmentService.databasePort(),
+  database: EnvironmentService.databaseName(),
   entities: entities,
   migrations: [],
   subscribers: [],
@@ -117,15 +117,15 @@ if (isProduction) {
     },
     extra: {
       authentication: {
-        type: EnvironmentService.AZURE_AD_CONNECTION_TYPE(),
+        type: EnvironmentService.azureAdConnectionType(),
       },
     },
   };
 } else {
   dataSourceConfig = {
     ...baseConfig,
-    username: EnvironmentService.DATABASE_USER(),
-    password: EnvironmentService.DATABASE_PASSWORD(),
+    username: EnvironmentService.databaseUser(),
+    password: EnvironmentService.databasePassword(),
     options: {
       trustServerCertificate: true,
     },
