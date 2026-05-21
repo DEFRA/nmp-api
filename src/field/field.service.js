@@ -322,13 +322,13 @@ class FieldService extends BaseService {
           Crops.push({ Crop: savedCrop, ManagementPeriods });
         }
       }
-
       return {
         Field,
         SoilAnalysis,
         // SnsAnalysis,
         Previouscrops,
         PKBalance,
+        Crops
       };
     });
   }
@@ -1133,9 +1133,9 @@ class FieldService extends BaseService {
                 OrganicManures: organicManuresWithNames,
                 Recommendation: recommendation
                   ? {
-                      ...(mergedRecommendation != null
-                        ? mergedRecommendation
-                        : recommendation),
+                      ...(mergedRecommendation == null
+                        ? recommendation
+                        : mergedRecommendation),
                       RecommendationComments: recommendationComments,
                     }
                   : null,
@@ -1171,10 +1171,9 @@ class FieldService extends BaseService {
             });
           }
         }
-
         // Fetch SoilTypeName by passing field.SoilTypeID
         const soil = await this.rB209SoilService.getData(
-          `/Soil/SoilType/${field.SoilTypeID}`,
+          `/Soil/SoilType/${Number(field.SoilTypeID)}`,
         );
         const soilTypeName = soil?.soilType;
         // Get SulphurDeficient from soilAnalysis
@@ -1366,7 +1365,8 @@ class FieldService extends BaseService {
     // Determine whether to use `findOne` or `find` based on the provided parameters
     if (!soilAnalysisYear && cropOrder) {
       // If only fieldID, year, and cropOrder are provided, return a single result using findOne
-      return await this.cropRepository.findOne(query);
+      const cropByFieldAndYear = await this.cropRepository.findOne(query);
+      return cropByFieldAndYear;
     } else {
       // If soilAnalysisYear is provided, return all crop data between year and soilAnalysisYear
       const cropDataList = await this.cropRepository.find(query);
