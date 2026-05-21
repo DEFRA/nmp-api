@@ -55,7 +55,7 @@ class EnvironmentService {
     return this.getEnv("APPLICATION_SWAGGER_PATH");
   }
 
-  static appLICATION_API_KEY() {
+  static applicationApiKey() {
     return this.getEnv("APPLICATION_API_KEY");
   }
 
