@@ -20,7 +20,7 @@ class PreviousCroppingService extends BaseService {
   }
 
   async mergePreviousCropping(previousCroppingBody, userId, request) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       let previousCroppingData = null;
       previousCroppingBody.sort((a, b) => a.HarvestYear - b.HarvestYear);
       // Get the field and greatest year

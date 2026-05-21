@@ -11,27 +11,21 @@ class MannerIncorporationMethodsController {
     this.#h = h;
     this.#service = new MannerIncorporationMethodService();
   }
-
-  async getAllIncorporationMethods() {
+  async handlerGetData() {
     const endpoint = this.#request.url.pathname.split("/manner")[1];
     const data = await this.#service.getData(endpoint, this.#request);
     return this.#h.response(data);
   }
-
+  async getAllIncorporationMethods() {
+    return this.handlerGetData();
+  }
   async getIncorporationMethodsById() {
-    const { id } = this.#request.params;
-    const endpoint = this.#request.url.pathname.split("/manner")[1];
-    const data = await this.#service.getData(endpoint, this.#request);
-    return this.#h.response(data);
+    return this.handlerGetData();
   }
   async getIncorporationMethodByIncorporationId() {
-    const { methodId } = this.#request.params;
-    const endpoint = this.#request.url.pathname.split("/manner")[1];
-    const data = await this.#service.getData(endpoint, this.#request);
-    return this.#h.response(data);
+    return this.handlerGetData();
   }
   async getIncorporationMethodByAppMethodAndApplicableFor() {
-    const { methodId } = this.#request.params;
     const { applicableFor } = this.#request.query;
     let endpoint = this.#request.url.pathname.split("/manner")[1];
     endpoint += `?applicableFor=${applicableFor}`;

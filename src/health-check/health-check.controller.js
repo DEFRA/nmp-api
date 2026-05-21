@@ -1,12 +1,10 @@
 const { HealthCheckService } = require("./health-check.service");
 
 class HealthCheckController {
-  #request;
   #h;
   #healthCheckService;
 
-  constructor(request, h) {
-    this.#request = request;
+  constructor(h) {
     this.#h = h;
     this.#healthCheckService = new HealthCheckService();
   }
@@ -15,8 +13,7 @@ class HealthCheckController {
       const dbHealth = await this.#healthCheckService.checkDatabaseHealth();
       return this.#h.response({
         nmp_api: dbHealth,
-        // rb209_api: rb209Health,
-        // addressLookup_api: addressLookupHealth,
+    
       });
     } catch (error) {
       console.error("Error during health check:", error);

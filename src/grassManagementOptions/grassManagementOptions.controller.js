@@ -2,12 +2,10 @@ const { GrassManagementOptionsService } = require("./grassManagementOptions.serv
 
 
 class GrassManagementOptionsController {
-  #request;
   #h;
   #GrassManagementOptionsService;
 
-  constructor(request, h) {
-    this.#request = request;
+  constructor(h) {
     this.#h = h;
     this.#GrassManagementOptionsService = new GrassManagementOptionsService();
   }

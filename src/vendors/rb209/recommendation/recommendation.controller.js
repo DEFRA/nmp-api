@@ -1,3 +1,4 @@
+
 const { RB209RecommendationService } = require("./recommendation.service");
 
 class RB209RecommendationController {
@@ -39,8 +40,6 @@ class RB209RecommendationController {
   }
 
   async calculateNutrientDeficiency() {
-    const { cropTypeId, leafSamplingPosition, nutrientId, nutrientContent } =
-      this.#request.params;
     const url = this.#request.url.pathname.split("/rb209")[1];
     try {
       const data = await this.#recommendationService.getData(url);
