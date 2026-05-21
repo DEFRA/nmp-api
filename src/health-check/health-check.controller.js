@@ -4,7 +4,7 @@ class HealthCheckController {
   #h;
   #healthCheckService;
 
-  constructor(h) {
+  constructor(_request,h) {
     this.#h = h;
     this.#healthCheckService = new HealthCheckService();
   }
@@ -13,7 +13,6 @@ class HealthCheckController {
       const dbHealth = await this.#healthCheckService.checkDatabaseHealth();
       return this.#h.response({
         nmp_api: dbHealth,
-    
       });
     } catch (error) {
       console.error("Error during health check:", error);

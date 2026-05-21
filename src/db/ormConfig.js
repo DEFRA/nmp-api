@@ -94,14 +94,14 @@ const { entities } = require("./entity/register-entities.js");
 
 dotven.config();
 
-const isProduction = EnvironmentService.NODE_ENV() === "production";
+const isProduction = EnvironmentService.nodeEnv() === "production";
 
 const baseConfig = {
   type: "mssql",
-  host: EnvironmentService.DATABASE_HOST(),
-  port: EnvironmentService.DATABASE_PORT(),
-  database: EnvironmentService.DATABASE_NAME(),
-  entities: entities
+  host: EnvironmentService.databaseHost(),
+  port: EnvironmentService.databasePort(),
+  database: EnvironmentService.databaseName(),
+  entities: entities,
 };
 
 let ormConfig;
@@ -114,15 +114,15 @@ if (isProduction) {
     },
     extra: {
       authentication: {
-        type: EnvironmentService.AZURE_AD_CONNECTION_TYPE(),
+        type: EnvironmentService.azureAdConnectionType(),
       },
     },
   };
 } else {
   ormConfig = {
     ...baseConfig,
-    username: EnvironmentService.DATABASE_USER(),
-    password: EnvironmentService.DATABASE_PASSWORD(),
+    username: EnvironmentService.databaseUser(),
+    password: EnvironmentService.databasePassword(),
     options: {
       trustServerCertificate: true,
     },

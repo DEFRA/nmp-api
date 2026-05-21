@@ -21,8 +21,8 @@ const init = async () => {
       title: "Nutrients Management Planning Api",
       version: pack.version,
     },
-    schemes: ["http","https"],
-    documentationPath: EnvironmentService.APPLICATION_SWAGGER_PATH() || "/docs",
+    schemes: ["http", "https"],
+    documentationPath: EnvironmentService.applicationSwaggerPath() || "/docs",
     grouping: "tags",
     securityDefinitions: {
       Bearer: {
@@ -44,7 +44,7 @@ const init = async () => {
   const azureAuthMiddleware = new AzureAuthMiddleware();
 
   const server = hapi.server({
-    port: process.env.PORT ?? EnvironmentService.APPLICATION_PORT(),
+    port: process.env.PORT ?? EnvironmentService.applicationPort(),
     // Use the port provided by IIS,
     // host: "localhost",
   });
