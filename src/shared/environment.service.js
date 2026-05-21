@@ -9,53 +9,53 @@ class EnvironmentService {
     console.warn(`Environment variable ${envName} does not exist`);
   }
 
-  static NODE_ENV() {
+  static nodeEnv() {
     return this.getEnv("NODE_ENV");
   }
 
-  static AZURE_AD_CONNECTION_TYPE() {
+  static azureAdConnectionType() {
     return this.getEnv("AZURE_AD_CONNECTION_TYPE");
   }
 
-  static DATABASE_HOST() {
+  static databaseHost() {
     return this.getEnv("DATABASE_HOST");
   }
 
-  static DATABASE_PORT() {
+  static databasePort() {
     return Number.parseInt(this.getEnv("DATABASE_PORT"));
   }
 
-  static DATABASE_NAME() {
+  static databaseName() {
     return process.env.NODE_ENV === "test"
       ? this.getEnv("TEST_DATABASE_NAME")
       : this.getEnv("DATABASE_NAME");
   }
 
-  static DATABASE_USER() {
+  static databaseUser() {
     return this.getEnv("DATABASE_USER");
   }
 
-  static DATABASE_PASSWORD() {
+  static databasePassword() {
     return this.getEnv("DATABASE_PASSWORD");
   }
 
-  static APPLICATION_VER() {
+  static applicationVer() {
     return this.getEnv("APPLICATION_VER");
   }
 
-  static APPLICATION_URL() {
+  static applicationUrl() {
     return this.getEnv("APPLICATION_URL");
   }
 
-  static APPLICATION_PORT() {
+  static applicationPort() {
     return this.getEnv("APPLICATION_PORT");
   }
 
-  static APPLICATION_SWAGGER_PATH() {
+  static applicationSwaggerPath() {
     return this.getEnv("APPLICATION_SWAGGER_PATH");
   }
 
-  static APPLICATION_API_KEY() {
+  static appLICATION_API_KEY() {
     return this.getEnv("APPLICATION_API_KEY");
   }
 
