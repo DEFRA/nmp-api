@@ -11,9 +11,8 @@ const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 const { validationFailAction } = require("../shared/validateFailSafeAction");
 
-const getController = (request, h) =>
-  new FertiliserManuresController(request, h);
-
+const getController = (request, h) => new FertiliserManuresController(request, h);
+const fertiliserManuresTag ="Fertiliser Manures"
 module.exports = [
   {
     method: "GET",
@@ -22,7 +21,7 @@ module.exports = [
       return getController(request, h).getFertiliserManureNitrogenSum();
     },
     options: {
-      tags: ["api", "Fertiliser Manures"],
+      tags: ["api", fertiliserManuresTag],
       description: "Get Fertiliser Manure Total Nitrogen by field ID",
       validate: {
         params: Joi.object({
@@ -34,7 +33,7 @@ module.exports = [
           confirm: Joi.boolean().required(),
           fertiliserId: Joi.number().optional().allow(null),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
@@ -46,7 +45,7 @@ module.exports = [
       return getController(request, h).getTotalNitrogen();
     },
     options: {
-      tags: ["api", "Fertiliser Manures"],
+      tags: ["api", fertiliserManuresTag],
       description:
         "Get total nitrogen from both Fertiliser and Organic Manures by Management Period ID",
       validate: {
@@ -58,7 +57,7 @@ module.exports = [
           fertiliserID: Joi.number().integer().allow(null).optional(),
           organicManureID: Joi.number().integer().allow(null).optional(),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
@@ -69,7 +68,7 @@ module.exports = [
       return getController(request, h).getTotalNitrogenByCropID();
     },
     options: {
-      tags: ["api", "Fertiliser Manures"],
+      tags: ["api", fertiliserManuresTag],
       description:
         "Get total nitrogen from both Fertiliser and Organic Manures by crop ID",
       validate: {
@@ -81,7 +80,7 @@ module.exports = [
           fertiliserID: Joi.number().integer().allow(null).optional(),
           organicManureID: Joi.number().integer().allow(null).optional(),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
@@ -93,11 +92,11 @@ module.exports = [
       return getController(request, h).createFertiliserManure();
     },
     options: {
-      tags: ["api", "Fertiliser Manures"],
+      tags: ["api", fertiliserManuresTag],
       description: "Create Fertiliser Manures",
       validate: {
         payload: CreateFertiliserManuresDto,
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
@@ -106,13 +105,13 @@ module.exports = [
     method: "GET",
     path: "/fertiliser-manures/{fertiliserId}",
     options: {
-      tags: ["api", "Fertiliser Manures"],
+      tags: ["api", fertiliserManuresTag],
       description: "Get fertliser by ID",
       validate: {
         params: Joi.object({
           fertiliserId: Joi.number().integer().required(),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -123,7 +122,7 @@ module.exports = [
     method: "GET",
     path: "/fertiliser-manures/FertliserData/{fertiliserId}",
     options: {
-      tags: ["api", "Fertiliser Manures"],
+      tags: ["api", fertiliserManuresTag],
       description: "Get fertliser by farmId and harvest year",
       validate: {
         params: Joi.object({
@@ -133,7 +132,7 @@ module.exports = [
           farmId: Joi.number().integer().required(),
           harvestYear: Joi.number().integer().required(),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -149,11 +148,11 @@ module.exports = [
       return controller.updateFertiliser();
     },
     options: {
-      tags: ["api", "Fertiliser Manures"],
+      tags: ["api", fertiliserManuresTag],
       description: "Update Fertiliser Manures by Id",
       validate: {
         payload: CreateFertiliserManuresDto,
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
@@ -161,7 +160,7 @@ module.exports = [
     method: "DELETE",
     path: "/fertiliser-manures/",
     options: {
-      tags: ["api", "Fertiliser Manures"],
+      tags: ["api", fertiliserManuresTag],
       description: "Delete Fertiliser Manures by fertiliserManure Ids",
       validate: {
         payload: Joi.object({
@@ -173,7 +172,7 @@ module.exports = [
               "Array of fertiliserManure IDs to delete, e.g., [1, 2, 3]",
             ),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -187,13 +186,13 @@ module.exports = [
       return getController(request, h).getTotalNitrogenByManagementPeriodID();
     },
     options: {
-      tags: ["api", "Fertiliser Manures"],
+      tags: ["api", fertiliserManuresTag],
       description: "Get Fertiliser Manure Total Nitrogen by managementPeriodID",
       validate: {
         params: Joi.object({
           managementPeriodID: Joi.number().required(),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
@@ -202,11 +201,15 @@ module.exports = [
     method: "GET",
     path: "/fertiliser-manures/total-nitrogen-by-autumn/{managementPeriodID}",
     handler: async (request, h) => {
-      return getController(request, h).getTotalNitrogenByManagementPeriodIDAndIsAutumn();
+      return getController(
+        request,
+        h,
+      ).getTotalNitrogenByManagementPeriodIDAndIsAutumn();
     },
     options: {
-      tags: ["api", "Fertiliser Manures"],
-      description: "Get Fertiliser Manure Total Nitrogen by managementPeriodID and isAutumn",
+      tags: ["api", fertiliserManuresTag],
+      description:
+        "Get Fertiliser Manure Total Nitrogen by managementPeriodID and isAutumn",
       validate: {
         params: Joi.object({
           managementPeriodID: Joi.number().required(),
@@ -214,7 +217,7 @@ module.exports = [
         query: Joi.object({
           isAutumn: Joi.boolean().required(),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
@@ -226,7 +229,7 @@ module.exports = [
       return getController(request, h).getClosedPeriodByID();
     },
     options: {
-      tags: ["api", "Fertiliser Manures"],
+      tags: ["api", fertiliserManuresTag],
       description: "Get Closed Period by ID",
       validate: {
         params: Joi.object({
@@ -236,7 +239,7 @@ module.exports = [
           CropTypeId: Joi.number().integer().required(),
           NvzId: Joi.number().integer().allow(null).optional(),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
