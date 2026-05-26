@@ -1,4 +1,5 @@
 const { EntitySchema } = require("typeorm");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const SoilAnalysisEntity = new EntitySchema({
   name: "SoilAnalysis",
@@ -146,7 +147,7 @@ const SoilAnalysisEntity = new EntitySchema({
   },
   relations: {
     Field: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "Field",
       inverseSide: "SoilAnalyses",
       joinColumn: {
@@ -154,14 +155,14 @@ const SoilAnalysisEntity = new EntitySchema({
       },
     },
     CreatedByUser: {
-      type: "many-to-one",
+      type:  RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: {
         name: "CreatedByID",
       },
     },
     ModifiedByUser: {
-      type: "many-to-one",
+      type:  RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: {
         name: "ModifiedByID",
