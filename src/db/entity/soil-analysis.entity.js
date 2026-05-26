@@ -1,5 +1,6 @@
 const { EntitySchema } = require("typeorm");
 const { RELATION_TYPES } = require("../../constants/relations-mapper");
+const { auditColumns } = require("../../constants/audits-columns");
 
 const SoilAnalysisEntity = new EntitySchema({
   name: "SoilAnalysis",
@@ -125,25 +126,7 @@ const SoilAnalysisEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
-    CreatedOn: {
-      type: "datetime2",
-      nullable: true,
-      precision: 7,
-      default: () => "GETDATE()",
-    },
-    CreatedByID: {
-      type: "int",
-      nullable: true,
-    },
-    ModifiedOn: {
-      type: "datetime2",
-      nullable: true,
-      precision: 7,
-    },
-    ModifiedByID: {
-      type: "int",
-      nullable: true,
-    },
+    ...auditColumns,
   },
   relations: {
     Field: {
@@ -155,14 +138,14 @@ const SoilAnalysisEntity = new EntitySchema({
       },
     },
     CreatedByUser: {
-      type:  RELATION_TYPES.MANY_TO_ONE,
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: {
         name: "CreatedByID",
       },
     },
     ModifiedByUser: {
-      type:  RELATION_TYPES.MANY_TO_ONE,
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: {
         name: "ModifiedByID",
