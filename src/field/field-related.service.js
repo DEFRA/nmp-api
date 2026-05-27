@@ -154,15 +154,15 @@ async addGrassCropName(crop) {
       )
     : null;
   crop.SwardTypeName =
-    crop.SwardTypeID != null ? await this.findSwardType(crop.SwardTypeID) : null;
+    crop.SwardTypeID == null ? null : await this.findSwardType(crop.SwardTypeID);
   crop.SwardManagementName =
-    crop.SwardManagementID != null
-      ? await this.findSwardTypeManagment(crop.SwardManagementID)
-      : null;
+    crop.SwardManagementID == null
+      ? null
+      : await this.findSwardTypeManagment(crop.SwardManagementID);
   crop.EstablishmentName =
-    crop.Establishment != null
-      ? await this.findGrassSeason(crop.Establishment)
-      : null;
+    crop.Establishment == null
+      ? null
+      : await this.findGrassSeason(crop.Establishment);
 },
 
 async buildCropsWithManagement(
