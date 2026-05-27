@@ -9,11 +9,11 @@ const {
 const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 const BAD_REQUEST=400;
-
+const FIELD_ID_PATH = "/fields/{fieldId}";
 module.exports = [
   {
     method: "GET",
-    path: "/fields/{fieldId}",
+    path: FIELD_ID_PATH,
     options: {
       tags: ["api", "Field"],
       description: "Get field by Field Id",
@@ -115,7 +115,7 @@ module.exports = [
   },
   {
     method: "PUT",
-    path: "/fields/{fieldId}",
+    path: FIELD_ID_PATH,
     options: {
       tags: ["api", "Field"],
       description: "Update Field by FieldId",
@@ -169,7 +169,7 @@ module.exports = [
   },
   {
     method: "DELETE",
-    path: "/fields/{fieldId}",
+    path: FIELD_ID_PATH,
     options: {
       tags: ["api", "Field"],
       description: "Delete Field by Field Id",
