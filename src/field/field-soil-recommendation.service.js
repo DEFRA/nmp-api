@@ -34,7 +34,7 @@ async processSoilRecommendations(harvestYear, fieldId, Recommendation) {
     const result = Recommendation.Recommendation_CropN - totalLime;
     console.log("result", result);
 
-    return result < 0 ? 0 : result;
+    return Math.max(result, 0);
   } catch (error) {
     console.error("Error in processSoilRecommendations:", error);
     throw error;
@@ -188,11 +188,9 @@ async findCropDataByFieldIDAndYearToSoilAnalysisYear(
   // If soilAnalysisYear 2024 is provided, adjust the query to include years up to soilAnalysisYear
   //Harvestyear 2024
   if (soilAnalysisYear) {
-    if (year > soilAnalysisYear) {
+    if (year >= soilAnalysisYear) {
       query.where.Year = Between(soilAnalysisYear, year); // Include years between `year` and `soilAnalysisYear`
-    } else if (year === soilAnalysisYear) {
-      query.where.Year = Between(year, soilAnalysisYear); // Include years between `year` and `soilAnalysisYear`
-    } else if (year < soilAnalysisYear) {
+    }  else if (year < soilAnalysisYear) {
       return null;
     } else{return null}
   }
