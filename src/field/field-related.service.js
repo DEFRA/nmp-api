@@ -23,7 +23,8 @@ async getFieldRelatedData(fieldIds, year, request) {
 
   farm.Fields = await Promise.all(
     fields.map((field) =>
-      this.buildFieldRelatedData(
+      fieldRelatedMethods.buildFieldRelatedData.call(
+        this,
         field,
         year,
         farm,
@@ -46,7 +47,8 @@ async buildFieldRelatedData(
   const crops = await this.cropRepository.find({
     where: { FieldID: field.ID, Year: year },
   });
-  const previousCropData = await this.getPreviousCropData(
+  const previousCropData = await fieldRelatedMethods.getPreviousCropData.call(
+    this,
     field.ID,
     year,
   );
@@ -55,21 +57,26 @@ async buildFieldRelatedData(
     : null;
   const previousGrasses = await this.getPreviousCropDataByFieldID(field.ID);
   const grassManagementOptionName =
-    await this.getGrassManagementOptionName(previousGrasses);
+    await fieldRelatedMethods.getGrassManagementOptionName.call(
+      this,
+      previousGrasses,
+    );
   const pkBalance = await this.pkBalanceRepository.findOne({
     where: { FieldID: field.ID, Year: year },
   });
 
-  await this.addGrassCropNames(crops);
+  await fieldRelatedMethods.addGrassCropNames.call(this, crops);
   const { cropsWithManagement, soilAnalysis } =
-    await this.buildCropsWithManagement(
+    await fieldRelatedMethods.buildCropsWithManagement.call(
+      this,
       crops,
       field.ID,
       year,
       cropTypeAllData,
       applicationReferenceData,
     );
-  const soilDetails = await this.buildSoilDetails(
+  const soilDetails = await fieldRelatedMethods.buildSoilDetails.call(
+    this,
     field,
     farm,
     pkBalance,
@@ -127,7 +134,7 @@ async addGrassCropNames(crops) {
 
   for (const crop of crops) {
     if (crop.CropTypeID === CropTypeMapper.GRASS) {
-      await this.addGrassCropName(crop);
+      await fieldRelatedMethods.addGrassCropName.call(this, crop);
     }
   }
 },
@@ -169,7 +176,8 @@ async buildCropsWithManagement(
   let soilAnalysis = null;
 
   for (const crop of crops) {
-    const cropResult = await this.buildCropWithManagement(
+    const cropResult = await fieldRelatedMethods.buildCropWithManagement.call(
+      this,
       crop,
       fieldId,
       year,
@@ -193,19 +201,27 @@ async buildCropWithManagement(
   currentSoilAnalysis,
 ) {
   try {
-    const snsAnalysis = await this.getSnsAnalysis(crop.ID);
+    const snsAnalysis = await fieldRelatedMethods.getSnsAnalysis.call(
+      this,
+      crop.ID,
+    );
     const managementPeriods = await this.managementPeriodRepository.find({
       where: { CropID: crop.ID },
     });
     const { managementWithSubData, soilAnalysis } =
-      await this.buildManagementWithSubData(
+      await fieldRelatedMethods.buildManagementWithSubData.call(
+        this,
         managementPeriods,
         fieldId,
         year,
         applicationReferenceData,
         currentSoilAnalysis,
       );
-    const cropNames = await this.getCropNames(crop, cropTypeAllData);
+    const cropNames = await fieldRelatedMethods.getCropNames.call(
+      this,
+      crop,
+      cropTypeAllData,
+    );
 
     return {
       crop: {
@@ -254,14 +270,16 @@ async buildManagementWithSubData(
   let isSoilAnalysisAdded = null;
 
   for (const managementPeriod of managementPeriods) {
-    const managementResult = await this.buildManagementPeriodData(
+    const managementResult =
+      await fieldRelatedMethods.buildManagementPeriodData.call(
+        this,
       managementPeriod,
       fieldId,
       year,
       applicationReferenceData,
       soilAnalysis,
-      isSoilAnalysisAdded,
-    );
+        isSoilAnalysisAdded,
+      );
     managementWithSubData.push(managementResult.managementPeriod);
     soilAnalysis = managementResult.soilAnalysis;
     isSoilAnalysisAdded = managementResult.isSoilAnalysisAdded;
@@ -278,21 +296,26 @@ async buildManagementPeriodData(
   soilAnalysis,
   isSoilAnalysisAdded,
 ) {
-  const organicManuresWithNames = await this.getOrganicManuresWithNames(
+  const organicManuresWithNames =
+    await fieldRelatedMethods.getOrganicManuresWithNames.call(
+      this,
     managementPeriod.ID,
     applicationReferenceData,
   );
   const recommendation = await this.recommendationRepository.findOne({
     where: { ManagementPeriodID: managementPeriod.ID },
   });
-  const soilAnalysisResult = await this.getSoilAnalysisForManagementPeriod(
+  const soilAnalysisResult =
+    await fieldRelatedMethods.getSoilAnalysisForManagementPeriod.call(
+      this,
     fieldId,
     year,
     recommendation,
     soilAnalysis,
-    isSoilAnalysisAdded,
-  );
-  const recommendationData = await this.getRecommendationData(
+      isSoilAnalysisAdded,
+    );
+  const recommendationData = await fieldRelatedMethods.getRecommendationData.call(
+    this,
     fieldId,
     year,
     managementPeriod.ID,
@@ -321,7 +344,11 @@ async getOrganicManuresWithNames(managementPeriodId, applicationReferenceData) {
 
   return Promise.all(
     organicManures.map((manure) =>
-      this.addOrganicManureNames(manure, applicationReferenceData),
+      fieldRelatedMethods.addOrganicManureNames.call(
+        this,
+        manure,
+        applicationReferenceData,
+      ),
     ),
   );
 },
@@ -366,14 +393,20 @@ async getSoilAnalysisForManagementPeriod(
     return { soilAnalysis, isSoilAnalysisAdded };
   }
 
-  const soilAnalysisRecords = await this.getRecentSoilAnalysisRecord(
-    fieldId,
-    year,
-  );
+  const soilAnalysisRecords =
+    await fieldRelatedMethods.getRecentSoilAnalysisRecord.call(
+      this,
+      fieldId,
+      year,
+    );
 
   if (recommendation && soilAnalysisRecords != null) {
     return {
-      soilAnalysis: this.mapSoilAnalysis(recommendation, soilAnalysisRecords),
+      soilAnalysis: fieldRelatedMethods.mapSoilAnalysis.call(
+        this,
+        recommendation,
+        soilAnalysisRecords,
+      ),
       isSoilAnalysisAdded: true,
     };
   }
@@ -412,7 +445,8 @@ mapSoilAnalysis(recommendation, soilAnalysisRecords) {
 },
 
 async getRecommendationData(fieldId, year, managementPeriodId, recommendation) {
-  const mergedRecommendation = await this.getMergedRecommendation(
+  const mergedRecommendation = await fieldRelatedMethods.getMergedRecommendation.call(
+    this,
     fieldId,
     year,
     managementPeriodId,
@@ -448,7 +482,8 @@ async getMergedRecommendation(fieldId, year, managementPeriodId) {
     );
 
     for (const recommendationRow of recBasedOnManId) {
-      mergedRecommendation = await this.mapRecommendationRow(
+      mergedRecommendation = await fieldRelatedMethods.mapRecommendationRow.call(
+        this,
         recommendationRow,
         fieldId,
         year,
@@ -473,7 +508,11 @@ async mapRecommendationRow(recommendationRow, fieldId, year) {
   );
 
   data.Recommendation.PreviousAppliedLime = previousAppliedLime || 0;
-  this.assignRecommendationRowData(recommendationRow, data);
+  fieldRelatedMethods.assignRecommendationRowData.call(
+    this,
+    recommendationRow,
+    data,
+  );
 
   return {
     ...data.Recommendation,
@@ -526,7 +565,11 @@ async buildSoilDetails(field, farm, pkBalance, soilAnalysis) {
   const soil = await this.rB209SoilService.getData(
     `/Soil/SoilType/${Number(field.SoilTypeID)}`,
   );
-  const pscIndex = await this.getPscIndex(field, farm);
+  const pscIndex = await fieldRelatedMethods.getPscIndex.call(
+    this,
+    field,
+    farm,
+  );
   const soilDetails = {
     PscIndexName: pscIndex?.Name ?? null,
     SoilTypeId: field.SoilTypeID,
