@@ -233,7 +233,7 @@ async createCrops(transactionalManager, fieldId, body, userId) {
 
     await this.saveRecommendationCrops(
       transactionalManager,
-      ManagementPeriods[ManagementPeriods.length - 1].ID,
+      ManagementPeriods.at(-1).ID,
       userId,
     );
 

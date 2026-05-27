@@ -7,7 +7,7 @@ const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const { PreviousGrassesEntity } = require("../db/entity/previous-grasses-entity");
 const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
 const { GrassManagementOptionsEntity } = require("../db/entity/grassManagementOptionsEntity");
-const { MoreThan } = require("typeorm");
+const { MoreThan, Between } = require("typeorm");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
 const { CountryMapper } = require("../constants/country-mapper");
 
@@ -80,48 +80,6 @@ async getFieldRelatedData(fieldIds, year, request) {
             : null;
         }
       }
-      // const snsAnalysis = await this.snsAnalysisRepository.find({
-      //   where: { FieldID: field.ID },
-      // });
-      // Fetch the latest SoilAnalysis entry for the current field
-      // const latestSoilAnalysis = await this.soilAnalysisRepository.findOne({
-      //   where: { FieldID: field.ID },
-      //   order: { ModifiedOn: "DESC" }, // Sort by ModifiedOn descending
-      //   take: 1, // Retrieve only the latest entry
-      // });
-
-      // If no SoilAnalysis is found, you can handle it accordingly (e.g., set default values)
-      // const soilAnalysisAndSNSanalysis =
-      //   latestSoilAnalysis || snsAnalysis.length > 0
-      //     ? {
-      //         PH:
-      //           latestSoilAnalysis != null
-      //             ? latestSoilAnalysis.PH
-      //             : "Not Entered",
-      //         PhosphorusIndex:
-      //           latestSoilAnalysis != null
-      //             ? latestSoilAnalysis.PhosphorusIndex
-      //             : "Not Entered",
-      //         PotassiumIndex:
-      //           latestSoilAnalysis != null
-      //             ? latestSoilAnalysis.PotassiumIndex
-      //             : "Not Entered",
-      //         MagnesiumIndex:
-      //           latestSoilAnalysis != null
-      //             ? latestSoilAnalysis.MagnesiumIndex
-      //             : "Not Entered",
-      //         SNS:
-      //           snsAnalysis.length > 0
-      //             ? snsAnalysis[0].SoilNitrogenSupplyValue
-      //             : "Not Entered",
-      //         SNSIndex:
-      //           snsAnalysis.length > 0
-      //             ? snsAnalysis[0].SoilNitrogenSupplyIndex
-      //             : "Not Entered",
-      //         SNSMethod: "Not Entered",
-      //       }
-      //     : null;
-
       const pkBalance = await this.pkBalanceRepository.findOne({
         where: { FieldID: field.ID, Year: year },
       });
