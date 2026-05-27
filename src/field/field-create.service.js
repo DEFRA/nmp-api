@@ -72,102 +72,38 @@ async createFieldWithSoilAnalysisAndCrops(farmId, body, userId) {
   }
 
   return AppDataSource.transaction(async (transactionalManager) => {
-    const field = this.repository.create({
-      ...body.Field,
-      FarmID: farmId,
-      CreatedByID: userId,
-      CreatedOn: new Date(),
-    });
-    const Field = await transactionalManager.save(FieldEntity, field);
+    const Field = await this.createField(
+      transactionalManager,
+      farmId,
+      body.Field,
+      userId,
+    );
+    const SoilAnalysis = await this.createSoilAnalysis(
+      transactionalManager,
+      Field.ID,
+      body.SoilAnalysis,
+      userId,
+    );
+    const PKBalance = await this.createPKBalance(
+      transactionalManager,
+      Field.ID,
+      SoilAnalysis,
+      body.PKBalance,
+      userId,
+    );
+    const Previouscrops = await this.createPreviousCroppings(
+      transactionalManager,
+      Field.ID,
+      body.PreviousCroppings,
+      userId,
+    );
+    const Crops = await this.createCrops(
+      transactionalManager,
+      Field.ID,
+      body,
+      userId,
+    );
 
-    let SoilAnalysis = null;
-    if (body.SoilAnalysis) {
-      SoilAnalysis = await transactionalManager.save(
-        SoilAnalysisEntity,
-        this.soilAnalysisRepository.create({
-          ...body?.SoilAnalysis,
-          FieldID: Field.ID,
-          CreatedByID: userId,
-          CreatedOn: new Date(),
-        }),
-      );
-    }
-    let PKBalance = null;
-    if (body.SoilAnalysis != null) {
-      if (
-        SoilAnalysis.Potassium != null ||
-        SoilAnalysis.Phosphorus != null ||
-        SoilAnalysis.PotassiumIndex != null ||
-        SoilAnalysis.PhosphorusIndex != null
-      ) {
-        if (body.PKBalance) {
-          const { CreatedByID, CreatedOn, ...createdData } = body.PKBalance;
-          PKBalance = await transactionalManager.save(
-            PKBalanceEntity,
-            this.pkBalanceRepository.create({
-              ...createdData,
-              FieldID: Field.ID,
-              CreatedByID: userId,
-              CreatedOn: new Date(),
-            }),
-          );
-        }
-      }
-    }
-
-    const Previouscrops = [];
-    if (body.PreviousCroppings && body.PreviousCroppings.length > 0) {
-      for (const cropsData of body.PreviousCroppings) {
-        const { Action, ...createPrevCrops } = cropsData;
-        const savedCrops = await transactionalManager.save(
-          PreviousCroppingEntity,
-          this.previousCroppingRepository.create({
-            ...createPrevCrops,
-            ...(cropsData.ID === 0 ? { ID: null } : {}),
-            FieldID: Field.ID,
-            CreatedByID: userId,
-            CreatedOn: new Date(),
-          }),
-        );
-
-        Previouscrops.push(savedCrops);
-      }
-    }
-    const Crops = [];
-    if (body.crops) {
-      for (const cropData of body.Crops) {
-        const savedCrop = await transactionalManager.save(
-          CropEntity,
-          this.cropRepository.create({
-            ...cropData.Crop,
-            FieldID: Field.ID,
-            CreatedByID: userId,
-            CreatedOn: new Date(),
-          }),
-        );
-        const ManagementPeriods = [];
-        let savedManagementPeriod;
-        for (const managementPeriod of cropData.ManagementPeriods) {
-          savedManagementPeriod = await transactionalManager.save(
-            ManagementPeriodEntity,
-            this.managementPeriodRepository.create({
-              ...managementPeriod,
-              CropID: savedCrop.ID,
-              CreatedByID: userId,
-              CreatedOn: new Date(),
-            }),
-          );
-          ManagementPeriods.push(savedManagementPeriod);
-        }
-        await this.saveRecommendationCrops(
-          transactionalManager,
-          savedManagementPeriod.ID,
-          userId,
-        );
-
-        Crops.push({ Crop: savedCrop, ManagementPeriods });
-      }
-    }
     return {
       Field,
       SoilAnalysis,
@@ -177,6 +113,170 @@ async createFieldWithSoilAnalysisAndCrops(farmId, body, userId) {
       Crops
     };
   });
+},
+
+async createField(transactionalManager, farmId, fieldData, userId) {
+  const field = this.repository.create({
+    ...fieldData,
+    FarmID: farmId,
+    CreatedByID: userId,
+    CreatedOn: new Date()
+  });
+
+  return transactionalManager.save(FieldEntity, field);
+},
+
+async createSoilAnalysis(
+  transactionalManager,
+  fieldId,
+  soilAnalysisData,
+  userId,
+) {
+  if (!soilAnalysisData) {
+    return null;
+  }
+
+  return transactionalManager.save(
+    SoilAnalysisEntity,
+    this.soilAnalysisRepository.create({
+      ...soilAnalysisData,
+      FieldID: fieldId,
+      CreatedByID: userId,
+      CreatedOn: new Date(),
+    }),
+  );
+},
+
+async createPKBalance(
+  transactionalManager,
+  fieldId,
+  soilAnalysis,
+  pkBalanceData,
+  userId,
+) {
+  if (!soilAnalysis || !pkBalanceData) {
+    return null;
+  }
+
+  const hasPKValues =
+    soilAnalysis.Potassium != null ||
+    soilAnalysis.Phosphorus != null ||
+    soilAnalysis.PotassiumIndex != null ||
+    soilAnalysis.PhosphorusIndex != null;
+
+  if (!hasPKValues) {
+    return null;
+  }
+
+  const { CreatedByID, CreatedOn, ...createdData } = pkBalanceData;
+
+  return transactionalManager.save(
+    PKBalanceEntity,
+    this.pkBalanceRepository.create({
+      ...createdData,
+      FieldID: fieldId,
+      CreatedByID: userId,
+      CreatedOn: new Date(),
+    }),
+  );
+},
+
+async createPreviousCroppings(
+  transactionalManager,
+  fieldId,
+  previousCroppings,
+  userId,
+) {
+  const Previouscrops = [];
+  if (!previousCroppings || previousCroppings.length === 0) {
+    return Previouscrops;
+  }
+
+  for (const cropsData of previousCroppings) {
+    const { Action, ...createPrevCrops } = cropsData;
+    const savedCrops = await transactionalManager.save(
+      PreviousCroppingEntity,
+      this.previousCroppingRepository.create({
+        ...createPrevCrops,
+        ...(cropsData.ID === 0 ? { ID: null } : {}),
+        FieldID: fieldId,
+        CreatedByID: userId,
+        CreatedOn: new Date(),
+      }),
+    );
+
+    Previouscrops.push(savedCrops);
+  }
+
+  return Previouscrops;
+},
+
+async createCrops(transactionalManager, fieldId, body, userId) {
+  const Crops = [];
+  if (!body.crops) {
+    return Crops;
+  }
+
+  for (const cropData of body.Crops) {
+    const savedCrop = await this.createCrop(
+      transactionalManager,
+      fieldId,
+      cropData.Crop,
+      userId,
+    );
+    const ManagementPeriods = await this.createManagementPeriods(
+      transactionalManager,
+      savedCrop.ID,
+      cropData.ManagementPeriods,
+      userId,
+    );
+
+    await this.saveRecommendationCrops(
+      transactionalManager,
+      ManagementPeriods[ManagementPeriods.length - 1].ID,
+      userId,
+    );
+
+    Crops.push({ Crop: savedCrop, ManagementPeriods });
+  }
+
+  return Crops;
+},
+
+async createCrop(transactionalManager, fieldId, cropData, userId) {
+  return transactionalManager.save(
+    CropEntity,
+    this.cropRepository.create({
+      ...cropData,
+      FieldID: fieldId,
+      CreatedByID: userId,
+      CreatedOn: new Date(),
+    }),
+  );
+},
+
+async createManagementPeriods(
+  transactionalManager,
+  cropId,
+  managementPeriodData,
+  userId,
+) {
+  const ManagementPeriods = [];
+
+  for (const managementPeriod of managementPeriodData) {
+    const savedManagementPeriod = await transactionalManager.save(
+      ManagementPeriodEntity,
+      this.managementPeriodRepository.create({
+        ...managementPeriod,
+        CropID: cropId,
+        CreatedByID: userId,
+        CreatedOn: new Date(),
+      }),
+    );
+    ManagementPeriods.push(savedManagementPeriod);
+  }
+
+  return ManagementPeriods;
 },
 
 async handlePreviousCroppingAction(

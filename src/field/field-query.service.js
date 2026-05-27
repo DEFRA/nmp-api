@@ -4,6 +4,7 @@ const boom = require("@hapi/boom");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
 const { Between } = require("typeorm");
+const { CropTypeMapper } = require("../constants/crop-type-mapper");
 
 const fieldQueryMethods = {
 async getFieldCropAndSoilDetails(fieldId, year, confirm) {
