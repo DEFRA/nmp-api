@@ -40,7 +40,11 @@ class AddressLookupBaseService {
         ) {
           const accessToken = await this.fetchAccessToken();
           this.updateAccessToken(accessToken);
-          return await this.#request({ ...error.config, _retryRequest: true });
+          const updateAccesTokenRequest = await this.#request({
+            ...error.config,
+            _retryRequest: true
+          });
+          return updateAccesTokenRequest;
         }
         throw error;
       }
@@ -56,8 +60,10 @@ class AddressLookupBaseService {
            "Content-Type": "application/x-www-form-urlencoded",
         },
        });
+
+       const accessToken = response.data.access_token;
     
-        return response.data.access_token;
+        return accessToken;
       } catch (error) {
         console.error(`Failed to fetch access token: ${error.message}`);
       }
@@ -65,8 +71,9 @@ class AddressLookupBaseService {
 
   // Cache the access token
   async updateAccessToken(accessToken) {
+    const fiftyMinutesInSeconds = 60 * 50;
     await this.#cacheManager.set(this.#accessTokenKey, accessToken, {
-      ttl: 60 * 50, // Cache for 50 minutes
+      ttl: fiftyMinutesInSeconds, // Cache for 50 minutes
     });
   }
 

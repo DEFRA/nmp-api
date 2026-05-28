@@ -14,8 +14,17 @@ const formatSuccessResponse = (response) => {
   };
 };
 
-const formatErrorResponse =  (errorResponse) => {
+const formatErrorResponse = (errorResponse) => {
   const error = errorResponse?.source?.error || errorResponse;
+
+  const errorMessage =
+    errorResponse?.source?.Errors ||
+    errorResponse?.source?.data?.errorMessage ||
+    errorResponse?.source?.data?.message ||
+    errorResponse?.source?.data?.Invalid ||
+    errorResponse?.source?.data?.error ||
+    (error?.message ?? "An error occurred");
+
   return {
     message: "fail",
     status: false,
@@ -26,13 +35,7 @@ const formatErrorResponse =  (errorResponse) => {
       StatusCodeMapper.INTERNAL_SERVER_ERROR,
     timestamp: new Date().toISOString(),
     error: {
-      message:
-        errorResponse?.source?.Errors ||
-        errorResponse?.source?.data?.errorMessage ||
-        errorResponse?.source?.data?.message ||
-        errorResponse?.source?.data?.Invalid ||
-        errorResponse?.source?.data?.error ||
-       (error?.message ?? "An error occurred"),
+      message: errorMessage,
       stack: process.env.NODE_ENV === "production" ? null : error?.stack,
       path: errorResponse?.request?.path || null,
     },

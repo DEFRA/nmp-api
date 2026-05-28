@@ -2,7 +2,7 @@ const axios = require("axios");
 const EnvironmentService = require("../../shared/environment.service");
 const { StatusCodeMapper } = require("../../constants/http-status-codes-mapper");
 const userLoginUrl = "/Users/Login";
-
+const refreshAccessTokenUrl = "/Users/Refresh_Token";
 class RB209BaseService {
   #cacheManager;
   #accessTokenKey;
@@ -21,7 +21,7 @@ class RB209BaseService {
       async (config) => {
         if (
           config.url === userLoginUrl ||
-          config.url === "/Users/Refresh_Token"
+          config.url === refreshAccessTokenUrl
         ) {
           return config;
         }
@@ -50,7 +50,7 @@ class RB209BaseService {
       async (error) => {
         if (error.config.url === userLoginUrl) {
           throw error;
-        } else if (error.config.url === "/Users/Refresh_Token") {
+        } else if (error.config.url === refreshAccessTokenUrl) {
           const loginResponse = await this.login();
           return loginResponse;
         } else if (
@@ -91,7 +91,7 @@ class RB209BaseService {
   }
 
   async refreshAccessToken() {
-    const response = await this.#request.post("/Users/Refresh_Token", {
+    const response = await this.#request.post(refreshAccessTokenUrl, {
       email: EnvironmentService.rb209UserEmail(),
       refreshToken: await this.#cacheManager.get(this.#refreshTokenKey),
     });

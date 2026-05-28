@@ -3,13 +3,13 @@ const { SoilAnalysesController } = require("./soil-analysis.controller");
 const { CreateSoilAnalysisDto, UpdateSoilAnalysisDto } = require("./dto/soil-analysis.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { validationFailAction } = require("../shared/validateFailSafeAction");
-
+const soilAnalysisTag = "Soil Analysis";
 module.exports = [
   {
     method: "GET",
     path: "/soil-analyses/{soilAnalysisId}",
     options: {
-      tags: ["api", "Soil Analysis"],
+      tags: ["api", soilAnalysisTag],
       description: "Get Soil Analysis by Id",
       validate: {
         params: Joi.object({
@@ -27,7 +27,7 @@ module.exports = [
     method: "GET",
     path: "/soil-analyses/fields/{fieldId}",
     options: {
-      tags: ["api", "Soil Analysis"],
+      tags: ["api", soilAnalysisTag],
       description: "Get Soil Analyses by Field Id",
       validate: {
         params: Joi.object({
@@ -53,7 +53,7 @@ module.exports = [
       return controller.createSoilAnalysis();
     },
     options: {
-      tags: ["api", "Soil Analysis"],
+      tags: ["api", soilAnalysisTag],
       description: "Create Soil Analysis",
       validate: {
         payload: CreateSoilAnalysisDto,
@@ -70,7 +70,7 @@ module.exports = [
       return controller.updateSoilAnalysis();
     },
     options: {
-      tags: ["api", "Soil Analysis"],
+      tags: ["api", soilAnalysisTag],
       description: "Update Soil Analysis by Id",
       validate: {
         params: Joi.object({
@@ -86,7 +86,7 @@ module.exports = [
     method: "DELETE",
     path: "/soilAnalysis/{soilAnalysisId}",
     options: {
-      tags: ["api", "Soil Analysis"],
+      tags: ["api", soilAnalysisTag],
       description: "Delete SoilAnalysis by SoilAnalysis Id",
       validate: {
         params: Joi.object({

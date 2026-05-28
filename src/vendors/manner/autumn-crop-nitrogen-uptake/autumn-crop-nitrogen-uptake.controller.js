@@ -18,7 +18,7 @@ class MannerAutumnCropNitorgenUptakeController {
 
     // Call the service method to handle the nutrient calculation
     const createCropNitrogenUptake = await this.#service.postData(url, payload, this.#request);
-    return createCropNitrogenUptake;
+    return this.#h.response(createCropNitrogenUptake);
   }
 }
 

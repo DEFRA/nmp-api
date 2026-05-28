@@ -1,7 +1,7 @@
 const { RB209FieldController } = require("./field.controller");
 const Joi = require("joi");
 const { validationFailAction } = require("../../../shared/validateFailSafeAction");
-
+const rb209FieldTag = "RB209 Field";
 module.exports = [
   {
     method: "GET",
@@ -11,7 +11,7 @@ module.exports = [
       return controller.getCountries();
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description: "The full list of available Countries",
     },
   },
@@ -23,7 +23,7 @@ module.exports = [
       return controller.getCountryByCountryId();
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description:
         "Individual Country Text filtered from the supplied corresponding Country Id",
       validate: {
@@ -42,7 +42,7 @@ module.exports = [
       return controller.getFieldTypesByCountryId();
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description: "The full list of available Field Types",
       validate: {
         params: Joi.object({
@@ -60,7 +60,7 @@ module.exports = [
       return controller.getFieldTypeByFieldTypeId();
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description:
         "Individual Field Type Text filtered from the supplied corresponding Field Type Id",
       validate: {
@@ -79,7 +79,7 @@ module.exports = [
       return controller.getNutrientByNutrientId();
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description:
         "Individual Nutrient Text filtered from the supplied corresponding Nutrient Id",
       validate: {
@@ -98,7 +98,7 @@ module.exports = [
       return controller.getNutrients(request, h);
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description: "The full list of available Nutrients",
     },
   },
@@ -113,7 +113,7 @@ module.exports = [
       );
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description:
         "Some Crops (both Arable and Grassland) allow a second Crop to be sown in the same Crop Year: The filtered list of available Second Crop Types after the first Crop",
       validate: {
@@ -135,7 +135,7 @@ module.exports = [
       return controller.getSiteClassBySiteClassId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description: "The full list of available Nutrients",
       validate: {
         params: Joi.object({
@@ -153,7 +153,7 @@ module.exports = [
       return controller.getSiteClassesByCountryId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description: "Site Class list",
       validate: {
         params: Joi.object({
@@ -174,7 +174,7 @@ module.exports = [
       );
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description: "Site Class list",
       validate: {
         params: Joi.object({
