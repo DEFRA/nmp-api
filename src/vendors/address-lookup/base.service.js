@@ -1,5 +1,6 @@
 const axios = require("axios");
 const EnvironmentService = require("../../shared/environment.service");
+const { StatusCodeMapper } = require("../../constants/http-status-codes-mapper");
 
 class AddressLookupBaseService {
   #accessTokenKey;
@@ -12,7 +13,7 @@ class AddressLookupBaseService {
 
     // Create axios instance for making API requests
     this.#request = axios.create({
-      baseURL: EnvironmentService.ADDR_LOOKUP_BASE_URL(),
+      baseURL: EnvironmentService.addrLookupBaseUrl(),
     });
 
     // Add request interceptor to handle token management
@@ -34,29 +35,21 @@ class AddressLookupBaseService {
       (response) => response,
       async (error) => {
         if (
-          error.response &&
-          error.response.status === 401 &&
+          error.response?.status === StatusCodeMapper.UNAUTHORIZED &&
           !error.config._retryRequest
         ) {
           const accessToken = await this.fetchAccessToken();
           this.updateAccessToken(accessToken);
           return await this.#request({ ...error.config, _retryRequest: true });
         }
-        return Promise.reject(error);
+        throw error;
       }
     );
   }
 
     async fetchAccessToken() {
-      const tokenUrl = `https://login.microsoftonline.com/${EnvironmentService.ADDR_TENANT_ID()}/oauth2/v2.0/token`;
-      const requestBody = `grant_type=client_credentials&scope=${
-        EnvironmentService.ADDR_SCOPE()
-      }&client_id=${
-        EnvironmentService.ADDR_CLIENT_ID()
-      }&client_secret=${
-        EnvironmentService.ADDR_CLIENT_SECRET()
-      }`;
-     
+      const tokenUrl = `https://login.microsoftonline.com/${EnvironmentService.addrTenantId()}/oauth2/v2.0/token`;
+      const requestBody = `grant_type=client_credentials&scope=${EnvironmentService.addrScope()}&client_id=${EnvironmentService.addrClientId()}&client_secret=${EnvironmentService.addrClientSecret()}`;
       try {
         const response = await axios.post(tokenUrl, requestBody, {
         headers: {

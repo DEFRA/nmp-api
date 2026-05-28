@@ -1,6 +1,7 @@
 const axios = require("axios");
 const EnvironmentService = require("../../shared/environment.service");
 const { StatusCodeMapper } = require("../../constants/http-status-codes-mapper");
+const userLoginUrl = "/Users/Login";
 
 class RB209BaseService {
   #cacheManager;
@@ -14,13 +15,12 @@ class RB209BaseService {
     this.#refreshTokenKey = "rb209-refresh-token";
 
     this.#request = axios.create({
-      baseURL: EnvironmentService.RB209_BASE_URL(),
+      baseURL: EnvironmentService.rb209BaseUrl(),
     });
-
     this.#request.interceptors.request.use(
       async (config) => {
         if (
-          config.url === "/Users/Login" ||
+          config.url === userLoginUrl ||
           config.url === "/Users/Refresh_Token"
         ) {
           return config;
@@ -48,17 +48,24 @@ class RB209BaseService {
     this.#request.interceptors.response.use(
       (response) => response,
       async (error) => {
-        if (error.config.url === "/Users/Login") {
+        if (error.config.url === userLoginUrl) {
           throw error;
         } else if (error.config.url === "/Users/Refresh_Token") {
-          return await this.login();
+          const loginResponse = await this.login();
+          return loginResponse;
         } else if (
           error.response?.status === StatusCodeMapper.UNAUTHORIZED &&
           !error.config._retryRequest
         ) {
           const tokens = await this.refreshAccessToken();
           this.updateTokens(tokens);
-          return await this.#request({ ...error.config, _retryRequest: true });
+          const retryRequest = this.#request({
+            ...error.config,
+            _retryRequest: true,
+          });
+          return retryRequest;
+        } else {
+          console.log("Request not matching");
         }
         throw error;
       }
@@ -66,8 +73,9 @@ class RB209BaseService {
   }
 
   async updateTokens(tokens) {
+    const accesTokenMinutes = 50;
     await this.#cacheManager.set(this.#accessTokenKey, tokens.accessToken, {
-      ttl: 60 * 50,
+      ttl: 60 * accesTokenMinutes,
     });
     await this.#cacheManager.set(this.#refreshTokenKey, tokens.refreshToken, {
       ttl: 60 * 60 * 24 * 24,
@@ -75,16 +83,16 @@ class RB209BaseService {
   }
 
   async login() {
-    const response = await this.#request.post("/Users/Login", {
-      email: EnvironmentService.RB209_USER_EMAIL(),
-      password: EnvironmentService.RB209_USER_PASSWORD(),
+    const response = await this.#request.post(userLoginUrl, {
+      email: EnvironmentService.rb209UserEmail(),
+      password: EnvironmentService.rb209UserPassword(),
     });
     return response;
   }
 
   async refreshAccessToken() {
     const response = await this.#request.post("/Users/Refresh_Token", {
-      email: EnvironmentService.RB209_USER_EMAIL(),
+      email: EnvironmentService.rb209UserEmail(),
       refreshToken: await this.#cacheManager.get(this.#refreshTokenKey),
     });
     return response.data;

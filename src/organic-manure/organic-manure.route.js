@@ -8,14 +8,14 @@ const { OrganicManureController } = require("./organic-manure.controller");
 const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 const { validationFailAction } = require("../shared/validateFailSafeAction");
 const getController = (request, h) => new OrganicManureController(request, h);
-
+const organicManureTag = "Organic Manure";
 // Define routes
 module.exports = [
   {
     method: "GET",
     path: "/organic-manures/total-nitrogen-by-management-period/{managementPeriodID}",
     options: {
-      tags: ["api", "Organic Manure"],
+      tags: ["api", organicManureTag],
       description:
         "Get Total Nitrogen by managementPeriodID and Application Date Range",
       validate: {
@@ -39,7 +39,7 @@ module.exports = [
     method: "GET",
     path: "/organic-manures/total-nitrogen-by-crop-id/{cropID}",
     options: {
-      tags: ["api", "Organic Manure"],
+      tags: ["api", organicManureTag],
       description: "Get Total Nitrogen by cropID and Application Date Range",
       validate: {
         params: Joi.object({
@@ -62,7 +62,7 @@ module.exports = [
     method: "GET",
     path: "/organic-manures/total-nitrogen/{fieldId}",
     options: {
-      tags: ["api", "Organic Manure"],
+      tags: ["api", organicManureTag],
       description: "Get Total Nitrogen by fieldID and Application Date Range",
       validate: {
         params: Joi.object({
@@ -85,7 +85,7 @@ module.exports = [
     method: "GET",
     path: "/organic-manures/total-nitrogen-if-green-food-compost/{fieldId}",
     options: {
-      tags: ["api", "Organic Manure"],
+      tags: ["api", organicManureTag],
       description:
         "Get Total Nitrogen by fieldID,GreenFoodCompost and Application Date Range",
       validate: {
@@ -110,7 +110,7 @@ module.exports = [
     method: "GET",
     path: "/organic-manures/manure-type/{fieldId}",
     options: {
-      tags: ["api", "Organic Manure"],
+      tags: ["api", organicManureTag],
       description: "Get ManureType IDs by FieldId and Harvest Year",
       validate: {
         params: Joi.object({
@@ -132,7 +132,7 @@ module.exports = [
     method: "GET",
     path: "/organic-manures/manure-types/{managementPeriodID}",
     options: {
-      tags: ["api", "Organic Manure"],
+      tags: ["api", organicManureTag],
       description: "Get ManureType IDs by ManagementPeriodID",
       validate: {
         params: Joi.object({
@@ -149,7 +149,7 @@ module.exports = [
     method: "POST",
     path: "/organic-manures",
     options: {
-      tags: ["api", "Organic Manure"],
+      tags: ["api", organicManureTag],
       description: "Create Organic Manures along with Farm Manure Type",
       validate: {
         payload: CreateOrganicManuresWithFarmManureTypeDtoSchema,
@@ -164,7 +164,7 @@ module.exports = [
     method: "GET",
     path: "/organic-manures/check-existence",
     options: {
-      tags: ["api", "Organic Manure"],
+      tags: ["api", organicManureTag],
       description:
         "Check if liquid manure or ManureTypeID = 8 exists within the date range",
       validate: {
@@ -187,7 +187,7 @@ module.exports = [
     method: "GET",
     path: "/organic-manures/check-livestock-existence",
     options: {
-      tags: ["api", "Organic Manure"],
+      tags: ["api", organicManureTag],
       description: "Check if livestock manure exists within the date range",
       validate: {
         query: Joi.object({
@@ -207,7 +207,7 @@ module.exports = [
     method: "DELETE",
     path: "/organic-manures/",
     options: {
-      tags: ["api", "Organic Manure"],
+      tags: ["api", organicManureTag],
       description: "Delete Organic Manures by OrganicManure Ids",
       validate: {
         payload: Joi.object({
@@ -230,7 +230,7 @@ module.exports = [
     method: "GET",
     path: "/organic-manures/{organicManureID}",
     options: {
-      tags: ["api", "Organic Manure"],
+      tags: ["api", organicManureTag],
       description: "Get organicManure Data By ID",
       validate: {
         params: Joi.object({
@@ -247,7 +247,7 @@ module.exports = [
     method: "GET",
     path: "/organic-manures/OrganicManuresData/{organicManureId}",
     options: {
-      tags: ["api", "Organic Manure"],
+      tags: ["api", organicManureTag],
       description: "Get organic manure by farmId and harvest year",
       validate: {
         params: Joi.object({
@@ -268,7 +268,7 @@ module.exports = [
     method: "PUT",
     path: "/organic-manures",
     options: {
-      tags: ["api", "Organic Manure"],
+      tags: ["api", organicManureTag],
       description: "Update Organic Manures",
       validate: {
         payload: UpdateOrganicManuresWithFarmManureTypeDtoSchema,
@@ -289,7 +289,7 @@ module.exports = [
       ).getTotalAvailableNitrogenByManagementPeriodID();
     },
     options: {
-      tags: ["api", "Organic Manure"],
+      tags: ["api", organicManureTag],
       description:
         "Get Organic Manure Total Available Nitrogen by managementPeriodID",
       validate: {
@@ -308,7 +308,7 @@ module.exports = [
       return getController(request, h).getClosedPeriodByID();
     },
     options: {
-      tags: ["api", "Organic Manure"],
+      tags: ["api", organicManureTag],
       description: "Get Closed Period by ID",
       validate: {
         params: Joi.object({
@@ -335,7 +335,7 @@ module.exports = [
       return getController(request, h).getTotalApplicationRate();
     },
     options: {
-      tags: ["api", "Organic Manure"],
+      tags: ["api", organicManureTag],
       description: "Get total application rate between dates for a crop",
       validate: {
         params: Joi.object({
@@ -359,7 +359,7 @@ module.exports = [
       return getController(request, h).checkGreenCompostExists();
     },
     options: {
-      tags: ["api", "Organic Manure"],
+      tags: ["api", organicManureTag],
       description: "Check if Green Compost exists for a field in 2 years",
       validate: {
         params: Joi.object({
