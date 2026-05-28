@@ -81,7 +81,7 @@ class ProcessFutureManuresForWarnings {
     }
   }
 
-  async ProcessFutureManures(
+  async processFutureManures(
     fieldId,
     applicationDate,
     isCurrentOrganicManure,

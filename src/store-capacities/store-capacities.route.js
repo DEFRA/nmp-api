@@ -3,13 +3,14 @@ const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { StoreCapacitiesController } = require("./store-capacities.controller");
 const { StoreCapacitiesCreateDto, CopyStoreCapacitiesDto } = require("./dto/store-capacities.dto");
 const { validationFailAction } = require("../shared/validateFailSafeAction");
-
+const storeCapacitiesRoute = "/store-capacities";
+const storeCapacitiesTag = "Store Capacities";
 module.exports = [
   {
     method: "GET",
-    path: "/store-capacities",
+    path: storeCapacitiesRoute,
     options: {
-      tags: ["api", "Store Capacities"],
+      tags: ["api", storeCapacitiesTag],
       description: "Get all store capacities",
     },
     handler: async (request, h) => {
@@ -21,7 +22,7 @@ module.exports = [
     method: "GET",
     path: "/store-capacities/{farmId}",
     options: {
-      tags: ["api", "Store Capacities"],
+      tags: ["api", storeCapacitiesTag],
       description: "Get store capacity by farmId",
       validate: {
         params: Joi.object({
@@ -39,7 +40,7 @@ module.exports = [
     method: "GET",
     path: "/store-capacities/{FarmId}/{StoreName}",
     options: {
-      tags: ["api", "Store Capacities"],
+      tags: ["api", storeCapacitiesTag],
       description: "Check if store capacity exists by farmId, and storeName",
       validate: {
         params: Joi.object({
@@ -61,7 +62,7 @@ module.exports = [
     method: "GET",
     path: "/storage-capacities/{id}",
     options: {
-      tags: ["api", "Store Capacities"],
+      tags: ["api", storeCapacitiesTag],
       description: "Get Storage Capacities by ID",
       validate: {
         params: Joi.object({
@@ -83,7 +84,7 @@ module.exports = [
       return controller.copyStorageCapacititesByYearAndFarmID();
     },
     options: {
-      tags: ["api", "Store Capacities"],
+      tags: ["api", storeCapacitiesTag],
       description: "copy Store Capacities",
       validate: {
         payload: CopyStoreCapacitiesDto,
@@ -93,9 +94,9 @@ module.exports = [
   },
   {
     method: "POST",
-    path: "/store-capacities",
+    path: storeCapacitiesRoute,
     options: {
-      tags: ["api", "Store Capacities"],
+      tags: ["api", storeCapacitiesTag],
       description: "Create a new store capacity",
       validate: {
         payload: StoreCapacitiesCreateDto,
@@ -109,9 +110,9 @@ module.exports = [
   },
   {
     method: "PUT",
-    path: "/store-capacities",
+    path: storeCapacitiesRoute,
     options: {
-      tags: ["api", "Store Capacities"],
+      tags: ["api", storeCapacitiesTag],
       description: "Update Store Capacities",
       validate: {
         payload: StoreCapacitiesCreateDto,
@@ -127,13 +128,13 @@ module.exports = [
     method: "DELETE",
     path: "/store-capacities/{storeCapacitiesId}",
     options: {
-      tags: ["api", "Store Capacities"],
+      tags: ["api", storeCapacitiesTag],
       description: "Delete Store Capacities by Store Capacity Id ",
       validate: {
         params: Joi.object({
           storeCapacitiesId: Joi.number().integer().required(),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {

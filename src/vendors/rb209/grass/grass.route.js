@@ -5,6 +5,9 @@ const {
 const { RB209GrassController } = require("./grass.controller");
 const { validationFailAction } = require("../../../shared/validateFailSafeAction");
 const grassDescriptionVendor = "RB209 Grass";
+const defoliationSequenceIdDescription = "The Defoliation Sequence Id of the field.";
+const swardTypeIdDescription = "The Sward Type Id of the field.";
+const swardManagementIdDescription = "The Sward Management Id of the field.";
 module.exports = [
   {
     method: "GET",
@@ -25,7 +28,7 @@ module.exports = [
           defoliationSequenceId: Joi.number()
             .integer()
             .required()
-            .description("The Defoliation Sequence Id of the field."),
+            .description(defoliationSequenceIdDescription),
         }),
         failAction: validationFailAction,
       },
@@ -48,11 +51,11 @@ module.exports = [
           swardTypeId: Joi.number()
             .integer()
             .required()
-            .description("The Sward Type Id of the field."),
+            .description(swardTypeIdDescription),
           swardManagementId: Joi.number()
             .integer()
             .required()
-            .description("The Sward Management Id of the field."),
+            .description(swardManagementIdDescription),
           numberOfCuts: Joi.number()
             .integer()
             .required()
@@ -224,11 +227,11 @@ module.exports = [
           swardTypeId: Joi.number()
             .integer()
             .required()
-            .description("The Sward Type Id of the field."),
+            .description(swardTypeIdDescription),
           swardManagementId: Joi.number()
             .integer()
             .required()
-            .description("The Sward Management Id of the field."),
+            .description(swardManagementIdDescription),
         }),
         failAction: validationFailAction,
       },
@@ -250,7 +253,7 @@ module.exports = [
           swardManagementId: Joi.number()
             .integer()
             .required()
-            .description("The Sward Management Id of the field."),
+            .description(swardManagementIdDescription),
         }),
         failAction: validationFailAction,
       },
@@ -288,7 +291,7 @@ module.exports = [
           swardTypeId: Joi.number()
             .integer()
             .required()
-            .description("The Sward Type Id of the field."),
+            .description(swardTypeIdDescription),
         }),
         failAction: validationFailAction,
       },
@@ -310,7 +313,7 @@ module.exports = [
           swardTypeId: Joi.number()
             .integer()
             .required()
-            .description("The Sward Type Id of the field."),
+            .description(swardTypeIdDescription),
         }),
         failAction: validationFailAction,
       },

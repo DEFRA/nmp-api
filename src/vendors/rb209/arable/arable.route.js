@@ -4,7 +4,7 @@ const {
   formatErrorResponse,
 } = require("../../../interceptor/responseFormatter");
 const { validationFailAction } = require("../../../shared/validateFailSafeAction");
-
+const rb209ArableTag = "RB209 Arable";
 module.exports = [
   {
     method: "GET",
@@ -14,7 +14,7 @@ module.exports = [
       return controller.getCropGroups();
     },
     options: {
-      tags: ["api", "RB209 Arable"],
+      tags: ["api", rb209ArableTag],
       description: "The full list of available Crop Groups",
     },
   },
@@ -26,7 +26,7 @@ module.exports = [
       return controller.getCropGroupsBycropGroupId();
     },
     options: {
-      tags: ["api", "RB209 Arable"],
+      tags: ["api", rb209ArableTag],
       description: "Individual Crop Group - filtered by Crop Group Id",
       validate: {
         params: Joi.object({
@@ -44,7 +44,7 @@ module.exports = [
       return controller.getCropTypes();
     },
     options: {
-      tags: ["api", "RB209 Arable"],
+      tags: ["api", rb209ArableTag],
       description: "The full list of available Crop Types",
     },
   },
@@ -57,7 +57,7 @@ module.exports = [
       return controller.getCropTypesByCropGroupId();
     },
     options: {
-      tags: ["api", "RB209 Arable"],
+      tags: ["api", rb209ArableTag],
       description:
         "A filtered list of available Crop Types - filtered by Crop Group Id",
       validate: {
@@ -72,7 +72,7 @@ module.exports = [
     method: "GET",
     path: "/vendors/rb209/Arable/CropType/{cropTypeId}",
     options: {
-      tags: ["api", "RB209 Arable"],
+      tags: ["api", rb209ArableTag],
       description: "Individual Crop Type - filtered by Crop Type Id",
       validate: {
         params: Joi.object({
@@ -90,7 +90,7 @@ module.exports = [
     method: "GET",
     path: "/vendors/rb209/Arable/CropInfo1s",
     options: {
-      tags: ["api", "RB209 Arable"],
+      tags: ["api", rb209ArableTag],
       description: "The full list of available Crop Info 1s",
     },
     handler: async (request, h) => {
@@ -102,7 +102,7 @@ module.exports = [
     method: "GET",
     path: "/vendors/rb209/Arable/CropInfo1s/{cropTypeId}",
     options: {
-      tags: ["api", "RB209 Arable"],
+      tags: ["api", rb209ArableTag],
       description:
         "A filtered list of available Crop Info 1s - filtered by Crop Type Id",
       validate: {
@@ -121,7 +121,7 @@ module.exports = [
     method: "GET",
     path: "/vendors/rb209/Arable/CropInfo1/{cropTypeId}/{cropInfo1Id}",
     options: {
-      tags: ["api", "RB209 Arable"],
+      tags: ["api", rb209ArableTag],
       description:
         "Individual Crop Info 1 - filtered by Crop Type Id and Crop Info 1 Id",
       validate: {
@@ -141,7 +141,7 @@ module.exports = [
     method: "GET",
     path: "/vendors/rb209/Arable/CropInfo2s",
     options: {
-      tags: ["api", "RB209 Arable"],
+      tags: ["api", rb209ArableTag],
       description:
         "The full list of available Crop Info 2s (only required for Arable Cereals crops)",
     },
@@ -154,7 +154,7 @@ module.exports = [
     method: "GET",
     path: "/vendors/rb209/Arable/CropInfo2/{cropInfo2Id}",
     options: {
-      tags: ["api", "RB209 Arable"],
+      tags: ["api", rb209ArableTag],
       description:
         "Individual Crop Info 2 - filtered by Crop Info 2 Id (only required for Arable Cereals crops)",
       validate: {
@@ -173,7 +173,7 @@ module.exports = [
     method: "GET",
     path: "/vendors/rb209/Arable/PotatoGroups",
     options: {
-      tags: ["api", "RB209 Arable"],
+      tags: ["api", rb209ArableTag],
       description:
         "The full list of available Potato Groups (only required for Arable Potato crops)",
     },
@@ -186,7 +186,7 @@ module.exports = [
     method: "GET",
     path: "/vendors/rb209/Arable/PotatoGroup/{potatoGroupId}",
     options: {
-      tags: ["api", "RB209 Arable"],
+      tags: ["api", rb209ArableTag],
       description:
         "Individual Potato Group - filtered by Potato Group Id (only required for Arable Potato crops)",
       validate: {
@@ -205,7 +205,7 @@ module.exports = [
     method: "GET",
     path: "/vendors/rb209/Arable/PotatoVarieties",
     options: {
-      tags: ["api", "RB209 Arable"],
+      tags: ["api", rb209ArableTag],
       description:
         "The full list of available Potato Varieties (only required for Arable Potato crops)",
     },
@@ -218,7 +218,7 @@ module.exports = [
     method: "GET",
     path: "/vendors/rb209/Arable/PotatoVarieties/{potatoGroupId}",
     options: {
-      tags: ["api", "RB209 Arable"],
+      tags: ["api", rb209ArableTag],
       description:
         "A filtered list of available Potato Varieties - filtered by Potato Group Id (only required for Arable Potato crops)",
       validate: {
@@ -237,7 +237,7 @@ module.exports = [
     method: "GET",
     path: "/vendors/rb209/Arable/PotatoVariety/{potatoVarietyId}",
     options: {
-      tags: ["api", "RB209 Arable"],
+      tags: ["api", rb209ArableTag],
       description:
         "Individual Potato Variety - filtered by Potato Variety Id (only required for Arable Potato crops)",
       validate: {
