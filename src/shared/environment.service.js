@@ -59,63 +59,63 @@ class EnvironmentService {
     return this.getEnv("APPLICATION_API_KEY");
   }
 
-  static RB209_BASE_URL() {
+  static rb209BaseUrl() {
     return this.getEnv("RB209_BASE_URL");
   }
 
-  static RB209_USER_EMAIL() {
+  static rb209UserEmail() {
     return this.getEnv("RB209_USER_EMAIL");
   }
 
-  static RB209_USER_PASSWORD() {
+  static rb209UserPassword() {
     return this.getEnv("RB209_USER_PASSWORD");
   }
 
-  static ADDR_LOOKUP_BASE_URL() {
+  static addrLookupBaseUrl() {
     return this.getEnv("ADDR_LOOKUP_BASE_URL");
   }
 
-  static ADDR_LOOKUP_SUBSCRIPTION_KEY() {
+  static addrLookupSubscriptionKey() {
     return this.getEnv("ADDR_LOOKUP_SUBSCRIPTION_KEY");
   }
 
-  static ADDR_SCOPE() {
+  static addrScope() {
     return this.getEnv("ADDR_SCOPE");
   }
 
-  static ADDR_CLIENT_ID() {
+  static addrClientId() {
     return this.getEnv("ADDR_CLIENT_ID");
   }
 
-  static ADDR_CLIENT_SECRET() {
+  static addrClientSecret() {
     return this.getEnv("ADDR_CLIENT_SECRET");
   }
 
-  static ADDR_TENANT_ID() {
+  static addrTenantId() {
     return this.getEnv("ADDR_TENANT_ID");
   }
 
-  static MANNER_BASE_URL() {
+  static mannerBaseUrl() {
     return this.getEnv("MANNER_BASE_URL");
   }
 
-  static APPLICATION_ENV() {
+  static applicationEnv() {
     return this.getEnv("APPLICATION_ENV");
   }
 
-  static AZURE_AD_B2C_TENANT_NAME() {
+  static azureAdB2CTenantName() {
     return this.getEnv("AZURE_AD_B2C_TENANT_NAME");
   }
 
-  static AZURE_AD_B2C_POLICY_NAME() {
+  static azureAdB2CPolicyName() {
     return this.getEnv("AZURE_AD_B2C_POLICY_NAME");
   }
 
-  static AZURE_AD_B2C_CLIENT_ID() {
+  static azureAdB2cClientId() {
     return this.getEnv("AZURE_AD_B2C_CLIENT_ID");
   }
 
-  static AZURE_IDENTITY_INSTANCE() {
+  static azureIdentityInstance() {
     return this.getEnv("AZURE_IDENTITY_INSTANCE");
   }
 
@@ -123,7 +123,7 @@ class EnvironmentService {
     return this.getEnv("AZURE_IDENTITY_METADATA_URL");
   }
 
-  static AZURE_IDENTITY_DOMAIN() {
+  static azureIdentityDomain() {
     return this.getEnv("AZURE_IDENTITY_DOMAIN");
   }
 }

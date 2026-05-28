@@ -1,12 +1,12 @@
 const { GrassManagementOptionsController } = require("./grassManagementOptions.controller");
-
+const grassManagementTag ="Grass Management "
 
 module.exports = [
   {
     method: "GET",
     path: "/grassland/grassManagementOptions",
     options: {
-      tags: ["api", "Grass Management "],
+      tags: ["api", grassManagementTag],
       description: "Get all GrassManagementOptions data",
     },
     handler: async (request, h) => {
@@ -18,7 +18,7 @@ module.exports = [
     method: "GET",
     path: "/grassland/grassTypicalCuts",
     options: {
-      tags: ["api", "Grass Management "],
+      tags: ["api", grassManagementTag],
       description: "Get all GrassManagementOptions data",
     },
     handler: async (request, h) => {
@@ -30,7 +30,7 @@ module.exports = [
     method: "GET",
     path: "/grassland/soilNitrogenSupply",
     options: {
-      tags: ["api", "Grass Management "],
+      tags: ["api", grassManagementTag],
       description: "Get all SoilNitrogenSupply data",
     },
     handler: async (request, h) => {
