@@ -72,32 +72,37 @@ async createFieldWithSoilAnalysisAndCrops(farmId, body, userId) {
   }
 
   return AppDataSource.transaction(async (transactionalManager) => {
-    const Field = await this.createField(
+    const Field = await fieldCreateMethods.createField.call(
+      this,
       transactionalManager,
       farmId,
       body.Field,
       userId,
     );
-    const SoilAnalysis = await this.createSoilAnalysis(
+    const SoilAnalysis = await fieldCreateMethods.createSoilAnalysis.call(
+      this,
       transactionalManager,
       Field.ID,
       body.SoilAnalysis,
       userId,
     );
-    const PKBalance = await this.createPKBalance(
+    const PKBalance = await fieldCreateMethods.createPKBalance.call(
+      this,
       transactionalManager,
       Field.ID,
       SoilAnalysis,
       body.PKBalance,
       userId,
     );
-    const Previouscrops = await this.createPreviousCroppings(
+    const Previouscrops = await fieldCreateMethods.createPreviousCroppings.call(
+      this,
       transactionalManager,
       Field.ID,
       body.PreviousCroppings,
       userId,
     );
-    const Crops = await this.createCrops(
+    const Crops = await fieldCreateMethods.createCrops.call(
+      this,
       transactionalManager,
       Field.ID,
       body,
@@ -218,18 +223,21 @@ async createCrops(transactionalManager, fieldId, body, userId) {
   }
 
   for (const cropData of body.Crops) {
-    const savedCrop = await this.createCrop(
+    const savedCrop = await fieldCreateMethods.createCrop.call(
+      this,
       transactionalManager,
       fieldId,
       cropData.Crop,
       userId,
     );
-    const ManagementPeriods = await this.createManagementPeriods(
+    const ManagementPeriods =
+      await fieldCreateMethods.createManagementPeriods.call(
+        this,
       transactionalManager,
       savedCrop.ID,
       cropData.ManagementPeriods,
       userId,
-    );
+      );
 
     await this.saveRecommendationCrops(
       transactionalManager,
