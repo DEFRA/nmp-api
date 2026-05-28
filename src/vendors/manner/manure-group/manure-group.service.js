@@ -1,9 +1,5 @@
 const MannerBaseService = require("../base.service");
 
-class MannerManureGroupService extends MannerBaseService {
-  constructor() {
-    super();
-  }
-}
+class MannerManureGroupService extends MannerBaseService {}
 
 module.exports = MannerManureGroupService;

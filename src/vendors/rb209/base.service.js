@@ -48,19 +48,18 @@ class RB209BaseService {
       (response) => response,
       async (error) => {
         if (error.config.url === "/Users/Login") {
-          return Promise.reject(error);
+          throw error;
         } else if (error.config.url === "/Users/Refresh_Token") {
           return await this.login();
         } else if (
-          error.response &&
-          error.response.status === 401 &&
+          error.response?.status === 401 &&
           !error.config._retryRequest
         ) {
           const tokens = await this.refreshAccessToken();
           this.updateTokens(tokens);
           return await this.#request({ ...error.config, _retryRequest: true });
         }
-        return Promise.reject(error);
+        throw error;
       }
     );
   }
