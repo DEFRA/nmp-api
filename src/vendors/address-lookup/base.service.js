@@ -71,9 +71,9 @@ class AddressLookupBaseService {
 
   // Cache the access token
   async updateAccessToken(accessToken) {
-    const fiftyMinutesInSeconds = 60 * 50;
+    const fiftyMinutesInSeconds = 50;
     await this.#cacheManager.set(this.#accessTokenKey, accessToken, {
-      ttl: fiftyMinutesInSeconds, // Cache for 50 minutes
+      ttl: 60 * fiftyMinutesInSeconds, // Cache for 50 minutes
     });
   }
 
