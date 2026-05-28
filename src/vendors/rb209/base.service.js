@@ -1,5 +1,6 @@
 const axios = require("axios");
 const EnvironmentService = require("../../shared/environment.service");
+const { StatusCodeMapper } = require("../../constants/http-status-codes-mapper");
 
 class RB209BaseService {
   #cacheManager;
@@ -30,10 +31,10 @@ class RB209BaseService {
         );
         let tokens;
         if (!accessToken) {
-          if (!refreshToken) {
-            tokens = (await this.login()).data;
-          } else {
+          if (refreshToken) {
             tokens = await this.refreshAccessToken();
+          } else {
+            tokens = (await this.login()).data;
           }
           accessToken = tokens.accessToken;
           this.updateTokens(tokens);
@@ -52,7 +53,7 @@ class RB209BaseService {
         } else if (error.config.url === "/Users/Refresh_Token") {
           return await this.login();
         } else if (
-          error.response?.status === 401 &&
+          error.response?.status === StatusCodeMapper.UNAUTHORIZED &&
           !error.config._retryRequest
         ) {
           const tokens = await this.refreshAccessToken();
