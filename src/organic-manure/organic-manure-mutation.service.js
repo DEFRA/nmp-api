@@ -100,157 +100,269 @@ const organicManureMutationMethods = {
 ,
 
   async updateOrganicManure(updatedOrganicManureData, userId, request) {
-    return AppDataSource.transaction(async (transactionalManager) => {
-      const updatedOrganicManures = [];
-      let savedFarmManureType = null;
+    return AppDataSource.transaction((transactionalManager) =>
+      organicManureMutationMethods.updateOrganicManureTransaction.call(
+        this,
+        updatedOrganicManureData,
+        userId,
+        request,
+        transactionalManager,
+      ),
+    );
+  },
 
-      for (const manureEntry of updatedOrganicManureData) {
-        const {
-          OrganicManure,
-          WarningMessages,
-          FarmID,
-          FieldTypeID,
-          SaveDefaultForFarm,
-        } = manureEntry;
+  async updateOrganicManureTransaction(
+    updatedOrganicManureData,
+    userId,
+    request,
+    transactionalManager,
+  ) {
+    const updatedOrganicManures = [];
+    let savedFarmManureType = null;
 
-        const { ID, CreatedByID, CreatedOn, ...updatedData } = OrganicManure;
-        // ?? Update recommendations
-        const managementPeriod = await transactionalManager.findOne(
-          ManagementPeriodEntity,
-          {
-            where: { ID: OrganicManure.ManagementPeriodID },
-          },
-        );
-
-        const crop = await transactionalManager.findOne(CropEntity, {
-          where: { ID: managementPeriod?.CropID },
-        });
-
-        const fieldData = await transactionalManager.findOne(FieldEntity, {
-          where: { ID: crop?.FieldID },
-        });
-        let dataToUpdate;
-        {
-          dataToUpdate = {
-            ...updatedData,
-            ModifiedByID: userId,
-            ModifiedOn: new Date(),
-            ManagementPeriodID: OrganicManure.ManagementPeriodID,
-          };
-        }
-
-        await transactionalManager.update(
-          OrganicManureEntity,
-          ID,
-          dataToUpdate,
-        );
-
-        await this.CreateOrUpdateWarningMessage.syncWarningMessages(
-          OrganicManure.ManagementPeriodID,
-          OrganicManure,
-          WarningMessages,
-          transactionalManager,
+    for (const manureEntry of updatedOrganicManureData) {
+      const updateResult =
+        await organicManureMutationMethods.updateOrganicManureEntry.call(
+          this,
+          manureEntry,
           userId,
-        );
-
-        // Fetch the updated version to return
-        const organicManure = await transactionalManager.findOne(
-          OrganicManureEntity,
-          { where: { ID } },
-        );
-
-        if (organicManure) {
-          updatedOrganicManures.push(organicManure);
-        }
-
-        // ? Update FarmManureType if SaveDefaultForFarm is true (no creation)
-        if (SaveDefaultForFarm) {
-          const farmManureTypeData = {
-            FarmID,
-            ManureTypeID: OrganicManure.ManureTypeID,
-            ManureTypeName: OrganicManure.ManureTypeName,
-            FieldTypeID,
-            TotalN: OrganicManure.N,
-            DryMatter: OrganicManure.DryMatterPercent,
-            NH4N: OrganicManure.NH4N,
-            Uric: OrganicManure.UricAcid,
-            NO3N: OrganicManure.NO3N,
-            P2O5: OrganicManure.P2O5,
-            SO3: OrganicManure.SO3,
-            K2O: OrganicManure.K2O,
-            MgO: OrganicManure.MgO,
-          };
-
-          savedFarmManureType =
-            await organicManureFarmManureTypeMethods.saveFarmManureTypeDefault.call(
-              this,
-              farmManureTypeData,
-              transactionalManager,
-              userId,
-            );
-        }
-        const newOrganicManure = null;
-        await this.generateRecommendations.generateRecommendations(
-          crop.FieldID,
-          crop.Year,
-          newOrganicManure,
+          request,
           transactionalManager,
+        );
+
+      if (updateResult.organicManure) {
+        updatedOrganicManures.push(updateResult.organicManure);
+      }
+      savedFarmManureType =
+        updateResult.savedFarmManureType || savedFarmManureType;
+    }
+
+    return {
+      OrganicManure: updatedOrganicManures,
+      FarmManureType: savedFarmManureType,
+    };
+  },
+
+  async updateOrganicManureEntry(
+    manureEntry,
+    userId,
+    request,
+    transactionalManager,
+  ) {
+    const { OrganicManure, WarningMessages } = manureEntry;
+    const relatedData =
+      await organicManureMutationMethods.getOrganicManureUpdateRelatedData.call(
+        this,
+        OrganicManure,
+        transactionalManager,
+      );
+
+    await organicManureMutationMethods.updateOrganicManureEntity.call(
+      this,
+      OrganicManure,
+      userId,
+      transactionalManager,
+    );
+    await organicManureMutationMethods.syncOrganicManureWarnings.call(
+      this,
+      OrganicManure,
+      WarningMessages,
+      userId,
+      transactionalManager,
+    );
+
+    const organicManure =
+      await organicManureMutationMethods.findUpdatedOrganicManure.call(
+        this,
+        OrganicManure.ID,
+        transactionalManager,
+      );
+    const savedFarmManureType =
+      await organicManureMutationMethods.saveFarmManureTypeForUpdate.call(
+        this,
+        manureEntry,
+        userId,
+        transactionalManager,
+      );
+
+    await organicManureMutationMethods.updateRecommendationsAfterManureChange.call(
+      this,
+      relatedData.crop,
+      request,
+      userId,
+      transactionalManager,
+    );
+    organicManureMutationMethods.processUpdatedManureWarnings.call(
+      this,
+      relatedData.fieldData,
+      OrganicManure,
+      userId,
+    );
+
+    return { organicManure, savedFarmManureType };
+  },
+
+  async getOrganicManureUpdateRelatedData(OrganicManure, transactionalManager) {
+    const managementPeriod = await transactionalManager.findOne(
+      ManagementPeriodEntity,
+      { where: { ID: OrganicManure.ManagementPeriodID } },
+    );
+    const crop = await transactionalManager.findOne(CropEntity, {
+      where: { ID: managementPeriod?.CropID },
+    });
+    const fieldData = await transactionalManager.findOne(FieldEntity, {
+      where: { ID: crop?.FieldID },
+    });
+
+    return { managementPeriod, crop, fieldData };
+  },
+
+  async updateOrganicManureEntity(
+    OrganicManure,
+    userId,
+    transactionalManager,
+  ) {
+    const { ID, CreatedByID, CreatedOn, ...updatedData } = OrganicManure;
+    const dataToUpdate = {
+      ...updatedData,
+      ModifiedByID: userId,
+      ModifiedOn: new Date(),
+      ManagementPeriodID: OrganicManure.ManagementPeriodID,
+    };
+
+    await transactionalManager.update(OrganicManureEntity, ID, dataToUpdate);
+  },
+
+  async syncOrganicManureWarnings(
+    OrganicManure,
+    WarningMessages,
+    userId,
+    transactionalManager,
+  ) {
+    await this.CreateOrUpdateWarningMessage.syncWarningMessages(
+      OrganicManure.ManagementPeriodID,
+      OrganicManure,
+      WarningMessages,
+      transactionalManager,
+      userId,
+    );
+  },
+
+  async findUpdatedOrganicManure(organicManureId, transactionalManager) {
+    return transactionalManager.findOne(OrganicManureEntity, {
+      where: { ID: organicManureId },
+    });
+  },
+
+  async saveFarmManureTypeForUpdate(
+    manureEntry,
+    userId,
+    transactionalManager,
+  ) {
+    if (!manureEntry.SaveDefaultForFarm) {
+      return null;
+    }
+
+    const farmManureTypeData =
+      organicManureMutationMethods.buildFarmManureTypeData(manureEntry);
+
+    return organicManureFarmManureTypeMethods.saveFarmManureTypeDefault.call(
+      this,
+      farmManureTypeData,
+      transactionalManager,
+      userId,
+    );
+  },
+
+  buildFarmManureTypeData(manureEntry) {
+    const { OrganicManure, FarmID, FieldTypeID } = manureEntry;
+
+    return {
+      FarmID,
+      ManureTypeID: OrganicManure.ManureTypeID,
+      ManureTypeName: OrganicManure.ManureTypeName,
+      FieldTypeID,
+      TotalN: OrganicManure.N,
+      DryMatter: OrganicManure.DryMatterPercent,
+      NH4N: OrganicManure.NH4N,
+      Uric: OrganicManure.UricAcid,
+      NO3N: OrganicManure.NO3N,
+      P2O5: OrganicManure.P2O5,
+      SO3: OrganicManure.SO3,
+      K2O: OrganicManure.K2O,
+      MgO: OrganicManure.MgO,
+    };
+  },
+
+  async updateRecommendationsAfterManureChange(
+    crop,
+    request,
+    userId,
+    transactionalManager,
+  ) {
+    const newOrganicManure = null;
+    await this.generateRecommendations.generateRecommendations(
+      crop.FieldID,
+      crop.Year,
+      newOrganicManure,
+      transactionalManager,
+      request,
+      userId,
+    );
+    await organicManureMutationMethods.updateNextCropRecommendations.call(
+      this,
+      crop,
+      request,
+      userId,
+    );
+  },
+
+  async updateNextCropRecommendations(crop, request, userId) {
+    const nextAvailableCrop = await this.cropRepository.findOne({
+      where: {
+        FieldID: crop.FieldID,
+        Year: MoreThan(crop.Year),
+      },
+      order: { Year: "ASC" },
+    });
+
+    if (nextAvailableCrop) {
+      this.updatingFutureRecommendations
+        .updateRecommendationsForField(
+          crop.FieldID,
+          nextAvailableCrop.Year,
           request,
           userId,
-        );
-
-        const nextAvailableCrop = await this.cropRepository.findOne({
-          where: {
-            FieldID: crop.FieldID,
-            Year: MoreThan(crop.Year),
-          },
-          order: { Year: "ASC" },
+        )
+        .then(organicManureMutationMethods.logFutureRecommendationResult)
+        .catch((error) => {
+          console.error(
+            "Error updating recommendation and organic manure:",
+            error,
+          );
         });
+    }
+  },
 
-        if (nextAvailableCrop) {
-          this.updatingFutureRecommendations
-            .updateRecommendationsForField(
-              crop.FieldID,
-              nextAvailableCrop.Year,
-              request,
-              userId,
-            )
-            .then((res) => {
-              if (res === undefined) {
-                console.log(
-                  "updateRecommendationAndOrganicManure returned undefined",
-                );
-              } else {
-                console.log(
-                  "updateRecommendationAndOrganicManure result:",
-                  res,
-                );
-              }
-            })
-            .catch((error) => {
-              console.error(
-                "Error updating recommendation and organic manure:",
-                error,
-              );
-            });
-        }
-        const isCurrentOrganicManure = true,
-          isCurrentFertiliser = false;
-        this.ProcessFutureManuresForWarnings.processFutureManures(
-          fieldData.ID,
-          OrganicManure.ApplicationDate,
-          isCurrentOrganicManure,
-          isCurrentFertiliser,
-          ID,
-          userId,
-        );
-      }
+  logFutureRecommendationResult(res) {
+    if (res === undefined) {
+      console.log("updateRecommendationAndOrganicManure returned undefined");
+    } else {
+      console.log("updateRecommendationAndOrganicManure result:", res);
+    }
+  },
 
-      return {
-        OrganicManure: updatedOrganicManures,
-        FarmManureType: savedFarmManureType,
-      };
-    });
+  processUpdatedManureWarnings(fieldData, OrganicManure, userId) {
+    const isCurrentOrganicManure = true;
+    const isCurrentFertiliser = false;
+    this.ProcessFutureManuresForWarnings.processFutureManures(
+      fieldData.ID,
+      OrganicManure.ApplicationDate,
+      isCurrentOrganicManure,
+      isCurrentFertiliser,
+      OrganicManure.ID,
+      userId,
+    );
   }
 
 
