@@ -16,7 +16,7 @@ const {
   CROP_TO_FIELD_CONDITION,
   API_ENDPOINTS,
 } = require("./organic-manure-dependencies");
-
+const sumOfNitrogen = "SUM(O.N * O.ApplicationRate)"
 const organicManureQueryMethods = {
   async getTotalNitrogenByManagementPeriod(
     managementPeriodID,
@@ -43,7 +43,7 @@ const organicManureQueryMethods = {
       const toDateFormatted = normalizeDateWithTime(toDate, END_OF_DAY);
     const query = this.repository
       .createQueryBuilder("O") // O = OrganicManures
-      .select("SUM(O.N * O.ApplicationRate)", "totalN")
+      .select(sumOfNitrogen, "totalN")
       .where("O.ManagementPeriodID = :managementPeriodID", {
         managementPeriodID,
       })
@@ -89,7 +89,7 @@ const organicManureQueryMethods = {
     const toDateFormatted = normalizeDateWithTime(toDate, END_OF_DAY);
     const query = this.repository
       .createQueryBuilder("O") // O = OrganicManures
-      .select("SUM(O.N * O.ApplicationRate)", "totalN")
+      .select(sumOfNitrogen, "totalN")
       .innerJoin(
         "ManagementPeriods",
         "M",
@@ -142,7 +142,7 @@ const organicManureQueryMethods = {
    );
     const query = this.repository
       .createQueryBuilder("O") // O = OrganicManures
-      .select("SUM(O.N * O.ApplicationRate)", "totalN")
+      .select(sumOfNitrogen, "totalN")
       .innerJoin(
         "ManagementPeriods",
         "M",
@@ -194,7 +194,7 @@ const organicManureQueryMethods = {
     // Add additional filtering for ManureTypeID when isGreenFoodCompost is true
     const query = this.repository
       .createQueryBuilder("O") // O = OrganicManures
-      .select("SUM(O.N * O.ApplicationRate)", "totalN")
+      .select(sumOfNitrogen, "totalN")
       .innerJoin(
         "ManagementPeriods",
         "M",

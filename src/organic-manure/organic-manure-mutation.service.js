@@ -93,6 +93,7 @@ const organicManureMutationMethods = {
       } catch (error) {
         // Log the error and throw an internal server error
         console.error("Error deleting organicManure:", error);
+        return error
       }
     });
   }

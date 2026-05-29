@@ -169,10 +169,12 @@ const organicManureCreateMethods = {
       relatedData,
       futurePlanStatus,
       mannerOutputs,
+      {
       transactionalManager,
-      request,
+      request
+      },
       userId,
-      organicManures,
+      organicManures
     );
 
     return organicManureCreateMethods.buildFarmManureTypeData(
@@ -225,11 +227,11 @@ const organicManureCreateMethods = {
     relatedData,
     futurePlanStatus,
     mannerOutputs,
-    transactionalManager,
-    request,
+    transactionalRequest,
     userId,
-    organicManures,
+    organicManures
   ) {
+    const {transactionalManager, request} = transactionalRequest;
     const previousCrop =
       await this.CalculatePreviousCropService.findPreviousCrop(
         relatedData.fieldData.ID,
