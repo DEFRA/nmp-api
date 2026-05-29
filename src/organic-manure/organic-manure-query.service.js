@@ -18,6 +18,8 @@ const {
 } = require("./organic-manure-dependencies");
 const sumOfNitrogen = "SUM(O.N * O.ApplicationRate)"
 const applicationDateCondition ="O.ApplicationDate BETWEEN :fromDate AND :toDate";
+const confirmCondition = "O.Confirm = :confirm";
+const organicManureIdCondition = "O.ID != :organicManureID";
 const organicManureQueryMethods = {
   async getTotalNitrogenByManagementPeriod(
     managementPeriodID,
@@ -52,10 +54,10 @@ const organicManureQueryMethods = {
         fromDate: fromDateFormatted,
         toDate: toDateFormatted,
       })
-      .andWhere("O.Confirm = :confirm", { confirm });
+      .andWhere(confirmCondition, { confirm });
 
     if (organicManureID != null) {
-      query.andWhere("O.ID != :organicManureID", {
+      query.andWhere(organicManureIdCondition, {
         organicManureID,
       });
     }
@@ -101,10 +103,10 @@ const organicManureQueryMethods = {
         fromDate: fromDateFormatted,
         toDate: toDateFormatted,
       })
-      .andWhere("O.Confirm = :confirm", { confirm });
+      .andWhere(confirmCondition, { confirm });
 
     if (organicManureID != null) {
-      query.andWhere("O.ID != :organicManureID", { organicManureID });
+      query.andWhere(organicManureIdCondition, { organicManureID });
     }
 
     const result = await query.getRawOne();
@@ -155,9 +157,9 @@ const organicManureQueryMethods = {
         fromDate: fromDateFormatted,
         toDate: toDateFormatted,
       })
-      .andWhere("O.Confirm = :confirm", { confirm });
+      .andWhere(confirmCondition, { confirm });
     if (organicManureID != null) {
-      query.andWhere("O.ID != :organicManureID", {
+      query.andWhere(organicManureIdCondition, {
         organicManureID,
       });
     }
@@ -207,7 +209,7 @@ const organicManureQueryMethods = {
         fromDate: fromDateFormatted,
         toDate: toDateFormatted,
       })
-      .andWhere("O.Confirm = :confirm", { confirm });
+      .andWhere(confirmCondition, { confirm });
     if (isGreenFoodCompost) {
       query.andWhere("O.ManureTypeID IN (:...manureTypeIDs)", {
         manureTypeIDs: [24, 32],
@@ -219,7 +221,7 @@ const organicManureQueryMethods = {
       });
     }
     if (organicManureID != null) {
-      query.andWhere("O.ID != :organicManureID", {
+      query.andWhere(organicManureIdCondition, {
         organicManureID,
       });
     }
