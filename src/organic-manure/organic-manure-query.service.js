@@ -17,6 +17,7 @@ const {
   API_ENDPOINTS,
 } = require("./organic-manure-dependencies");
 const sumOfNitrogen = "SUM(O.N * O.ApplicationRate)"
+const applicationDateCondition ="O.ApplicationDate BETWEEN :fromDate AND :toDate";
 const organicManureQueryMethods = {
   async getTotalNitrogenByManagementPeriod(
     managementPeriodID,
@@ -47,7 +48,7 @@ const organicManureQueryMethods = {
       .where("O.ManagementPeriodID = :managementPeriodID", {
         managementPeriodID,
       })
-      .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
+      .andWhere(applicationDateCondition, {
         fromDate: fromDateFormatted,
         toDate: toDateFormatted,
       })
@@ -96,7 +97,7 @@ const organicManureQueryMethods = {
         JOINS.ORGANIC_MANURE_TO_MANAGEMENT_PERIOD,
       )
       .where("M.CropID = :cropID", { cropID })
-      .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
+      .andWhere(applicationDateCondition, {
         fromDate: fromDateFormatted,
         toDate: toDateFormatted,
       })
@@ -150,7 +151,7 @@ const organicManureQueryMethods = {
       )
       .innerJoin("Crops", "C", MANAGEMENT_PERIOD_TO_CROP_JOIN)
       .where(CROP_TO_FIELD_CONDITION, { fieldId }) // note lowercase 'fieldId'
-      .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
+      .andWhere(applicationDateCondition, {
         fromDate: fromDateFormatted,
         toDate: toDateFormatted,
       })
@@ -202,7 +203,7 @@ const organicManureQueryMethods = {
       )
       .innerJoin("Crops", "C", MANAGEMENT_PERIOD_TO_CROP_JOIN)
       .where(CROP_TO_FIELD_CONDITION, { fieldId }) // note lowercase 'fieldId'
-      .andWhere("O.ApplicationDate BETWEEN :fromDate AND :toDate", {
+      .andWhere(applicationDateCondition, {
         fromDate: fromDateFormatted,
         toDate: toDateFormatted,
       })
