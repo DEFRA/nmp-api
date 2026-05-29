@@ -17,22 +17,29 @@ const {
   API_ENDPOINTS,
 } = require("./organic-manure-dependencies");
 
+const ORGANIC_MANURE_MATCH_FIELDS = [
+  ["ManureTypeID", "ManureTypeID"],
+  ["Nitrogen", "N"],
+  ["P2O5", "P2O5"],
+  ["SO3", "SO3"],
+  ["K2O", "K2O"],
+  ["MgO", "MgO"],
+  ["UricAcid", "UricAcid"],
+  ["DryMatterPercent", "DryMatterPercent"],
+  ["NH4N", "NH4N"],
+  ["NO3N", "NO3N"],
+];
+
 function isOrganicManureMatch(item, organicManure) {
   const itemDate = new Date(item?.ApplicationDate);
   const organicDate = new Date(organicManure?.ApplicationDate);
 
-  return (
-    itemDate.getTime() === organicDate.getTime() &&
-    item?.ManureTypeID === organicManure?.ManureTypeID &&
-    item?.Nitrogen === organicManure?.N &&
-    item?.P2O5 === organicManure?.P2O5 &&
-    item?.SO3 === organicManure?.SO3 &&
-    item?.K2O === organicManure?.K2O &&
-    item?.MgO === organicManure?.MgO &&
-    item?.UricAcid === organicManure?.UricAcid &&
-    item?.DryMatterPercent === organicManure?.DryMatterPercent &&
-    item?.NH4N === organicManure?.NH4N &&
-    item?.NO3N === organicManure?.NO3N
+  if (itemDate.getTime() !== organicDate.getTime()) {
+    return false;
+  }
+
+  return ORGANIC_MANURE_MATCH_FIELDS.every(
+    ([itemKey, organicKey]) => item?.[itemKey] === organicManure?.[organicKey],
   );
 }
 
