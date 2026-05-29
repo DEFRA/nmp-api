@@ -664,7 +664,7 @@ class OrganicManureService extends BaseService {
 
           const isCurrentOrganicManure = true,
             isCurrentFertiliser = false;
-          this.ProcessFutureManuresForWarnings.ProcessFutureManures(
+          this.ProcessFutureManuresForWarnings.processFutureManures(
             fieldData.ID,
             savedOrganicManure.ApplicationDate,
             isCurrentOrganicManure,
@@ -1122,7 +1122,7 @@ const manureTypeExists = await query.getCount();
         }
         const isCurrentOrganicManure = true,
           isCurrentFertiliser = false;
-        this.ProcessFutureManuresForWarnings.ProcessFutureManures(
+        this.ProcessFutureManuresForWarnings.processFutureManures(
           fieldData.ID,
           OrganicManure.ApplicationDate,
           isCurrentOrganicManure,

@@ -1,5 +1,5 @@
 const axios = require("axios");
-const https = require("https");
+const https = require("node:https");
 const EnvironmentService = require("../../shared/environment.service");
  // Adjust the path accordingly
 
@@ -10,9 +10,9 @@ class MannerBaseService {
   constructor() {
     // Set up Axios instance with base URL and https agent
     this.#request = axios.create({
-      baseURL: EnvironmentService.MANNER_BASE_URL(), // Get the base URL from environment service
+      baseURL: EnvironmentService.mannerBaseUrl(), // Get the base URL from environment service
       httpsAgent: new https.Agent({
-        rejectUnauthorized: false, 
+        rejectUnauthorized: false,
       }),
     });
 

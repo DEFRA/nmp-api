@@ -25,7 +25,7 @@ class AzureAuthMiddleware {
     ];
     this.#otherExcludedPaths="/";
     this.#optionalUserPresentPath = ["/users"];
-    this.#clientId = EnvironmentService.AZURE_AD_B2C_CLIENT_ID();
+    this.#clientId = EnvironmentService.azureAdB2cClientId();
     this.#azureAuthService = new AzureAuthService();
     this.#userRepository = getRepository(UserEntity);
   }

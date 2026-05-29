@@ -2,7 +2,7 @@ const Joi = require("joi"); // For validation
 
 
 const MannerIncorporationDelayController = require("./incorporation-delay.controller");
-
+const mannerIncorporationDelaysTag = "Manner Incorporation Delays"
 module.exports = [
   {
     method: "GET",
@@ -12,7 +12,7 @@ module.exports = [
       return controller.getAllIncorporationDelays(request, h);
     },
     options: {
-      tags: ["api", "Manner Incorporation Delays"],
+      tags: ["api", mannerIncorporationDelaysTag],
       description: "Retrieve all incorporation delays",
     },
   },
@@ -24,7 +24,7 @@ module.exports = [
       return controller.getIncorporationDelayById(request, h);
     },
     options: {
-      tags: ["api", "Manner Incorporation Delays"],
+      tags: ["api", mannerIncorporationDelaysTag],
       description: "Retrieve incorporation delay by ID",
       validate: {
         params: Joi.object({
@@ -41,7 +41,7 @@ module.exports = [
       return controller.getIncorporationDelayByIncorporationId(request, h);
     },
     options: {
-      tags: ["api", "Manner Incorporation Delays"],
+      tags: ["api", mannerIncorporationDelaysTag],
       description: "Retrieve incorporation delays by incorporation method ID",
       validate: {
         params: Joi.object({
@@ -61,7 +61,7 @@ module.exports = [
       );
     },
     options: {
-      tags: ["api", "Manner Incorporation Delays"],
+      tags: ["api", mannerIncorporationDelaysTag],
       description: "Retrieve incorporation method by applications method ID",
       validate: {
         params: Joi.object({

@@ -288,7 +288,7 @@ async createFertiliserManures(fertiliserManureData, userId, request) {
         })
         .getRawOne();
       const isCurrentOrganicManure = false,isCurrentFertiliser = true;
-      this.ProcessFutureManuresForWarnings.ProcessFutureManures(cropAndField.FieldID,savedFertiliser.ApplicationDate,isCurrentOrganicManure,isCurrentFertiliser,savedFertiliser.ID,userId);
+      this.ProcessFutureManuresForWarnings.processFutureManures(cropAndField.FieldID,savedFertiliser.ApplicationDate,isCurrentOrganicManure,isCurrentFertiliser,savedFertiliser.ID,userId);
     }
     const soilAnalysisAllData = await this.soilAnalysisRepository.find(),pkBalanceAllData = await this.pkBalanceRepository.find();
     for (const fertManure of fertiliserManures) {
