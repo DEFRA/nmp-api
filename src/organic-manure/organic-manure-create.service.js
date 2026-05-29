@@ -16,6 +16,9 @@ const {
   CROP_TO_FIELD_CONDITION,
   API_ENDPOINTS,
 } = require("./organic-manure-dependencies");
+const {
+  organicManureFarmManureTypeMethods,
+} = require("./organic-manure-farm-manure-type.service");
 
 const organicManureCreateMethods = {
   async createOrganicManuresWithFarmManureType(request, body, userId) {
@@ -267,40 +270,13 @@ const organicManureCreateMethods = {
         }
       }
       if (farmManureTypeData) {
-        const existingFarmManureType =
-          await this.farmManureTypeRepository.findOne({
-            where: {
-              FarmID: farmManureTypeData.FarmID,
-              ManureTypeID: farmManureTypeData.ManureTypeID,
-              ManureTypeName: farmManureTypeData.ManureTypeName,
-            },
-          });
-        if (existingFarmManureType) {
-          await this.farmManureTypeRepository.update(
-            existingFarmManureType.ID,
-            {
-              ...farmManureTypeData,
-              ModifiedByID: userId,
-              ModifiedOn: new Date(),
-            },
+        savedFarmManureType =
+          await organicManureFarmManureTypeMethods.saveFarmManureTypeDefault.call(
+            this,
+            farmManureTypeData,
+            transactionalManager,
+            userId,
           );
-
-          savedFarmManureType = {
-            ...existingFarmManureType,
-            ...farmManureTypeData,
-            ModifiedByID: userId,
-            ModifiedOn: new Date(),
-          };
-        } else {
-          savedFarmManureType = await transactionalManager.save(
-            FarmManureTypeEntity,
-            this.farmManureTypeRepository.create({
-              ...farmManureTypeData,
-              CreatedByID: userId,
-              CreatedOn: new Date(),
-            }),
-          );
-        }
       }
 
       return {
