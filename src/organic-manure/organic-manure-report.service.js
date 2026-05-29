@@ -17,6 +17,25 @@ const {
   API_ENDPOINTS,
 } = require("./organic-manure-dependencies");
 
+function isOrganicManureMatch(item, organicManure) {
+  const itemDate = new Date(item?.ApplicationDate);
+  const organicDate = new Date(organicManure?.ApplicationDate);
+
+  return (
+    itemDate.getTime() === organicDate.getTime() &&
+    item?.ManureTypeID === organicManure?.ManureTypeID &&
+    item?.Nitrogen === organicManure?.N &&
+    item?.P2O5 === organicManure?.P2O5 &&
+    item?.SO3 === organicManure?.SO3 &&
+    item?.K2O === organicManure?.K2O &&
+    item?.MgO === organicManure?.MgO &&
+    item?.UricAcid === organicManure?.UricAcid &&
+    item?.DryMatterPercent === organicManure?.DryMatterPercent &&
+    item?.NH4N === organicManure?.NH4N &&
+    item?.NO3N === organicManure?.NO3N
+  );
+}
+
 const organicManureReportMethods = {
   async getOrganicManureByFarmIdAndYear(organicManureId, farmId, harvestYear) {
     try {
@@ -33,24 +52,9 @@ const organicManureReportMethods = {
 
       const records =
         organicManureList.length > 0 && organicManure != null
-          ? organicManureList.filter((item) => {
-              const itemDate = new Date(item?.ApplicationDate);
-              const organicDate = new Date(organicManure?.ApplicationDate);
-              const isMatching =
-                itemDate.getTime() === organicDate.getTime() &&
-                item?.ManureTypeID === organicManure?.ManureTypeID &&
-                item?.Nitrogen === organicManure?.N &&
-                item?.P2O5 === organicManure?.P2O5 &&
-                item?.SO3 === organicManure?.SO3 &&
-                item?.K2O === organicManure?.K2O &&
-                item?.MgO === organicManure?.MgO &&
-                item?.UricAcid === organicManure?.UricAcid &&
-                item?.DryMatterPercent === organicManure?.DryMatterPercent &&
-                item?.NH4N === organicManure?.NH4N &&
-                item?.NO3N === organicManure?.NO3N;
-
-              return isMatching;
-            })
+          ? organicManureList.filter((item) =>
+              isOrganicManureMatch(item, organicManure),
+            )
           : null;
 
       return records;
@@ -58,9 +62,7 @@ const organicManureReportMethods = {
       console.error("Error occurred while fetching organic records:", error);
       return null;
     }
-  }
-,
-
+  },
   async getTotalAvailableNitrogenByManagementPeriodID(managementPeriodID) {
     const organicManuresResult = await this.repository
       .createQueryBuilder("OrganicManures")
@@ -83,9 +85,7 @@ const organicManureReportMethods = {
       ); //exclude StrawMulch, PaperCrumbleChemicallyPhysciallyTreated,PaperCrumbleBiologicallyTreated
     const organicResult = await organicManuresResult.getRawOne();
     return organicResult.totalN;
-  }
-
-,
+  },
 
   async getClosedPeriodByID(soilTypeId, queries) {
     const {
@@ -129,9 +129,7 @@ const organicManureReportMethods = {
         throw error;
       }
     });
-  }
-
-,
+  },
 
   async getTotalApplicationRate(
     cropId,
@@ -155,9 +153,8 @@ const organicManureReportMethods = {
       MILLISECOND: 999,
     };
 
-  
-       const fromDateFormatted = normalizeDateWithTime(fromDate, START_OF_DAY);
-       const toDateFormatted = normalizeDateWithTime(toDate, END_OF_DAY);
+    const fromDateFormatted = normalizeDateWithTime(fromDate, START_OF_DAY);
+    const toDateFormatted = normalizeDateWithTime(toDate, END_OF_DAY);
 
     // Fetch all manure types from the API
     const allManureTypes = await this.MannerManureTypesService.getData(
@@ -172,10 +169,10 @@ const organicManureReportMethods = {
 
     // Apply poultry logic
     if (isPoultry) {
-      manureTypeIds = [ManureTypeMapper.PoultryManure]; 
+      manureTypeIds = [ManureTypeMapper.PoultryManure];
     } else {
       manureTypeIds = manureTypeIds.filter(
-        (id) => id !== ManureTypeMapper.PoultryManure
+        (id) => id !== ManureTypeMapper.PoultryManure,
       ); // Exclude poultry
     }
 
@@ -199,9 +196,7 @@ const organicManureReportMethods = {
     const result = await query.getRawOne();
 
     return Number.parseInt(result?.totalApplicationRate) || 0;
-  }
-
-,
+  },
 
   async checkGreenCompostExists(fieldId, fromDate, toDate, organicManureID) {
     const START_OF_DAY = {
@@ -250,7 +245,7 @@ const organicManureReportMethods = {
           ManureTypeMapper.GreenFoodCompost,
         ],
       })
-      .limit(1); 
+      .limit(1);
 
     if (organicManureID != null) {
       query.andWhere("O.ID != :organicManureID", {
@@ -261,8 +256,7 @@ const organicManureReportMethods = {
     const result = await query.getRawOne();
 
     return !!result; // true if exists, false otherwise
-  }
-
+  },
 };
 
 module.exports = { organicManureReportMethods };
