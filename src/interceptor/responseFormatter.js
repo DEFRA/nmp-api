@@ -18,12 +18,14 @@ const formatErrorResponse = (errorResponse) => {
   const error = errorResponse?.source?.error || errorResponse;
 
   const errorMessage =
-    errorResponse?.source?.Errors ||
-    errorResponse?.source?.data?.errorMessage ||
-    errorResponse?.source?.data?.message ||
-    errorResponse?.source?.data?.Invalid ||
-    errorResponse?.source?.data?.error ||
-    (error?.message ?? "An error occurred");
+    [
+      errorResponse?.source?.Errors,
+      errorResponse?.source?.data?.errorMessage,
+      errorResponse?.source?.data?.message,
+      errorResponse?.source?.data?.Invalid,
+      errorResponse?.source?.data?.error,
+      error?.message,
+    ].find(Boolean) || "An error occurred";
 
   return {
     message: "fail",
