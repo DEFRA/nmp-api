@@ -66,6 +66,7 @@ class AddressLookupBaseService {
         return accessToken;
       } catch (error) {
         console.error(`Failed to fetch access token: ${error.message}`);
+        return error;
       }
     }      
 
