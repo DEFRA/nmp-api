@@ -85,10 +85,8 @@ async findCropDataByFieldIDAndYearToSoilAnalysisYear(
   // If soilAnalysisYear 2024 is provided, adjust the query to include years up to soilAnalysisYear
   //Harvestyear 2024
   if (soilAnalysisYear) {
-    if (year > soilAnalysisYear) {
+    if (year >= soilAnalysisYear) {
       query.where.Year = Between(soilAnalysisYear, year); // Include years between `year` and `soilAnalysisYear`
-    } else if (year === soilAnalysisYear) {
-      query.where.Year = Between(year, soilAnalysisYear); // Include years between `year` and `soilAnalysisYear`
     } else if (year < soilAnalysisYear) {
       return null;
     }else {console.log("Invalid year and soilAnalysisYear combination")}
