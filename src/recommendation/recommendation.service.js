@@ -212,6 +212,83 @@ class RecommendationService extends BaseService {
     return totalLime; // Return the total lime value
   }
 
+  async calculateFirstCropPreviousLime(fieldId, cropData, soilAnalysisYear) {
+    const firstCropOrderDataList =
+      await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
+        fieldId,
+        cropData.Year - 1,
+        soilAnalysisYear,
+        1
+      );
+
+    if (firstCropOrderDataList == null) {
+      return 0;
+    }
+
+    const totalLime = await this.getApplyLimeInCaseOfMultipleCrops(
+      firstCropOrderDataList
+    );
+    console.log(`Total Lime from all firstCropOrderData: ${totalLime}`);
+    return totalLime;
+  }
+
+  async calculateSecondCropPreviousLime(fieldId, cropData, soilAnalysisYear) {
+    const cropOrderDataList =
+      await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
+        fieldId,
+        cropData.Year - 1,
+        soilAnalysisYear
+      );
+    const priorCropLime = cropOrderDataList == null
+      ? 0
+      : await this.getApplyLimeInCaseOfMultipleCrops(cropOrderDataList);
+    const firstCropOrderData =
+      await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
+        fieldId,
+        cropData.Year,
+        null,
+        1
+      );
+
+    if (firstCropOrderData == null) {
+      return priorCropLime;
+    }
+
+    console.log("CropOrderDataList", firstCropOrderData);
+    return (
+      priorCropLime +
+      await this.getApplyLimeInCaseOfMultipleCrops(firstCropOrderData)
+    );
+  }
+
+  async calculatePreviousAppliedLime(fieldId, cropData, soilAnalysisYear) {
+    if (cropData.CropOrder === 1) {
+      return this.calculateFirstCropPreviousLime(
+        fieldId,
+        cropData,
+        soilAnalysisYear
+      );
+    }
+
+    if (cropData.CropOrder === 2) {
+      return this.calculateSecondCropPreviousLime(
+        fieldId,
+        cropData,
+        soilAnalysisYear
+      );
+    }
+
+    return 0;
+  }
+
+  getPreviousAppliedLimeRecommendation(cropNeedValue, totalLime) {
+    if (totalLime <= 0) {
+      return 0;
+    }
+
+    return Math.max(cropNeedValue - totalLime, 0);
+  }
+
   async processSoilRecommendations(harvestYear, fieldId, Recommendation) {
     try {
       const fiveYears = 5;
@@ -237,308 +314,304 @@ class RecommendationService extends BaseService {
       // Step 3: Proceed with the process only if pH > 0 is found
       const cropData = await this.findCropDataByID(Recommendation.Crop_ID); // check order 1 or 2
 
-      let totalLime1 = 0;
-      let result = 0;
-      if (cropData != null) {
-        // Step 4: Handle CropOrder 1 (first crop)
-        if (cropData.CropOrder === 1) {
-          // Step: Fetch multiple firstCropOrderData based on fieldID, year, and soilAnalysisYear
-          const firstCropOrderDataList =
-            await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
-              fieldId,
-              cropData.Year - 1,
-              soilAnalysisWithPhYear,
-              1
-            );
-
-          if (firstCropOrderDataList != null) {
-            totalLime1 = await this.getApplyLimeInCaseOfMultipleCrops(
-              firstCropOrderDataList
-            );
-          }
-          console.log(`Total Lime from all firstCropOrderData: ${totalLime1}`);
-        }
-
-        // Step 5: Handle CropOrder 2 (second crop)
-        if (cropData.CropOrder === 2) {
-          totalLime1 = 0;
-          const CropOrderDataList =
-            await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
-              fieldId,
-              cropData.Year - 1,
-              soilAnalysisWithPhYear
-            );
-
-          if (CropOrderDataList != null) {
-            totalLime1 = await this.getApplyLimeInCaseOfMultipleCrops(
-              CropOrderDataList
-            );
-          }
-          const cropOrder = 1;
-          const firstCropOrderData = await this.findCropDataByFieldIDAndYearToSoilAnalysisYear(
-              fieldId,
-              cropData.Year,
-              null,
-              cropOrder
-            );
-          if (firstCropOrderData != null) {
-            console.log("CropOrderDataList", firstCropOrderData);
-            totalLime1 += await this.getApplyLimeInCaseOfMultipleCrops(
-              firstCropOrderData
-            );
-          }
-        }
-        const cropNeedValue = Recommendation.Recommendation_CropN;
-        console.log("cropNeedValue", cropNeedValue);
-        if (totalLime1 > 0) {result = cropNeedValue - totalLime1}
-      }
-      // Return the result of the calculation
-      if(result < 0){
+      if (cropData == null) {
         return 0;
-      }else{
-        return result;
       }
+
+      const totalLime = await this.calculatePreviousAppliedLime(
+        fieldId,
+        cropData,
+        soilAnalysisWithPhYear
+      );
+      const cropNeedValue = Recommendation.Recommendation_CropN;
+      console.log("cropNeedValue", cropNeedValue);
+      return this.getPreviousAppliedLimeRecommendation(cropNeedValue, totalLime);
     } catch (error) {
       console.error("Error in processSoilRecommendations:", error);
       throw error;
     }
   }
 
+  mapRecommendationField(recDataKey, recommendationRow, data) {
+    const PREFIXES = {
+      CROP: "Crop_",
+      RECOMMENDATION: "Recommendation_",
+      MANAGEMENT_PERIOD: "ManagementPeriod_",
+      FERTILISER_MANURE: "FertiliserManure_",
+    };
+
+    if (recDataKey.startsWith(PREFIXES.CROP)) {
+      data.Crop[recDataKey.slice(PREFIXES.CROP.length)] =
+        recommendationRow[recDataKey];
+    } else if (recDataKey.startsWith(PREFIXES.RECOMMENDATION)) {
+      data.Recommendation[recDataKey.slice(PREFIXES.RECOMMENDATION.length)] =
+        recommendationRow[recDataKey];
+    } else if (recDataKey.startsWith(PREFIXES.MANAGEMENT_PERIOD)) {
+      data.ManagementPeriod[recDataKey.slice(PREFIXES.MANAGEMENT_PERIOD.length)] =
+        recommendationRow[recDataKey];
+    } else if (recDataKey.startsWith(PREFIXES.FERTILISER_MANURE)) {
+      data.FertiliserManure[recDataKey.slice(PREFIXES.FERTILISER_MANURE.length)] =
+        recommendationRow[recDataKey];
+    } else {
+      console.log("no assignment");
+    }
+  }
+
+  async mapRecommendationRow(recommendationRow, harvestYear, fieldId) {
+    const data = {
+      Crop: {},
+      Recommendation: {},
+      ManagementPeriod: {},
+      FertiliserManure: {},
+    };
+
+    const previousAppliedLime = await this.processSoilRecommendations(
+      harvestYear,
+      fieldId,
+      recommendationRow,
+    );
+    data.Recommendation.PreviousAppliedLime = previousAppliedLime || 0;
+
+    Object.keys(recommendationRow).forEach((recDataKey) => {
+      this.mapRecommendationField(recDataKey, recommendationRow, data);
+    });
+
+    return data;
+  }
+
+  async getPreviousYearPKBalance(fieldId, harvestYear) {
+    return this.PKbalanceRepository.findOne({
+      where: {
+        Year: harvestYear - 1,
+        FieldID: fieldId,
+      },
+      select: {
+        ID: true,
+        PBalance: true,
+        KBalance: true,
+      },
+    });
+  }
+
+  async findDefoliationSequenceDescription(DefoliationSequenceID) {
+    try {
+      const defoliationSequence = await this.rB209GrassService.getData(
+        `Grass/DefoliationSequence/${DefoliationSequenceID}`
+      );
+
+      return defoliationSequence
+        ? defoliationSequence.defoliationSequenceDescription
+        : null;
+    } catch (error) {
+      console.error(
+        `Error fetching Defoliation Sequence by id ${DefoliationSequenceID}`,
+        error
+      );
+      return "Unknown";
+    }
+  }
+
+  async findSwardType(SwardTypeID) {
+    try {
+      let swardTypeName = null;
+      const swardTypeList = await this.rB209GrassService.getData(
+        `Grass/SwardTypes`
+      );
+
+      if (swardTypeList.length > 0) {
+        const matchingSward = swardTypeList.find(
+          (x) => x.swardTypeId === SwardTypeID
+        );
+        if (matchingSward != null) {
+          swardTypeName = matchingSward ? matchingSward.swardType : null;
+        }
+      }
+
+      return swardTypeName;
+    } catch (error) {
+      console.error(`Error fetching sward Type list`, error);
+      return "Unknown";
+    }
+  }
+
+  async findGrassSeason(seasonID) {
+    try {
+      const season = await this.rB209GrasslandService.getData(
+        `Grassland/GrasslandSeason/${seasonID}`
+      );
+      return season.seasonName;
+    } catch (error) {
+      console.error(`Error fetching Grassland Season`, error);
+      return "Unknown";
+    }
+  }
+
+  async addGrassCropNames(crop) {
+    const isGrass = crop.CropTypeID === CropTypeMapper.GRASS;
+
+    return {
+      ...crop,
+      EstablishmentName: isGrass && crop.Establishment !== null
+        ? await this.findGrassSeason(crop.Establishment)
+        : null,
+      SwardManagementName: isGrass && crop.SwardManagementID !== null
+        ? await this.findSwardTypeManagment(crop.SwardManagementID)
+        : null,
+      SwardTypeName: isGrass && crop.SwardTypeID !== null
+        ? await this.findSwardType(crop.SwardTypeID)
+        : null,
+      DefoliationSequenceName: isGrass && crop.DefoliationSequenceID !== null
+        ? await this.findDefoliationSequenceDescription(crop.DefoliationSequenceID)
+        : null,
+    };
+  }
+
+  async groupRecommendationsByCrop(mappedRecommendations, PKbalance) {
+    const groupedObj = {};
+
+    for (const recommendation of mappedRecommendations) {
+      groupedObj[recommendation.Crop.ID] = {
+        Crop: await this.addGrassCropNames(recommendation.Crop),
+        PKbalance,
+        Recommendations: (
+          groupedObj[recommendation.Crop.ID]?.Recommendations || []
+        ).concat({
+          Recommendation: recommendation.Recommendation,
+          ManagementPeriod: recommendation.ManagementPeriod,
+          FertiliserManure: recommendation.FertiliserManure,
+        }),
+      };
+    }
+
+    return groupedObj;
+  }
+
+  async getOrganicManuresWithDetails(managementPeriodId, request) {
+    const organicManures = await this.organicManureRepository.find({
+      where: {
+        ManagementPeriodID: managementPeriodId,
+      },
+      select: {
+        ID: true,
+        ManureTypeID: true,
+        ApplicationDate: true,
+        ApplicationRate: true,
+        ApplicationMethodID: true,
+      },
+    });
+
+    return Promise.all(
+      organicManures.map(async (organicManure) =>
+        this.addOrganicManureReferenceDetails(organicManure, request),
+      )
+    );
+  }
+
+  async addOrganicManureReferenceDetails(organicManure, request) {
+    const manureTypeId = Number(organicManure.ManureTypeID);
+    const applicationMethodId = Number(organicManure.ApplicationMethodID);
+    const manureTypeData = await this.MannerManureTypesService.getData(
+      `/manure-types/${manureTypeId}`,
+      request,
+    );
+    const applicationMethodData =
+      await this.MannerApplicationMethodService.getData(
+        `/application-methods/${applicationMethodId}`,
+        request,
+      );
+
+    return {
+      ...organicManure,
+      ManureTypeName: manureTypeData.data.name,
+      ApplicationMethodName: applicationMethodData.data.name,
+    };
+  }
+
+  async getFertiliserManuresForManagementPeriod(managementPeriodId) {
+    return this.FertiliserManuresRepository.find({
+      where: {
+        ManagementPeriodID: managementPeriodId,
+      },
+      select: {
+        ID: true,
+        ApplicationDate: true,
+        ApplicationRate: true,
+        N: true,
+        P2O5: true,
+        K2O: true,
+        MgO: true,
+        SO3: true,
+        Na2O: true,
+        Lime: true,
+        NH4N: true,
+        NO3N: true,
+      },
+    });
+  }
+
+  async addRecommendationDetails(recData, request) {
+    const comments = await this.recommendationCommentRepository.find({
+      where: {
+        RecommendationID: recData.Recommendation.ID,
+      },
+    });
+    const organicManuresWithDetails = await this.getOrganicManuresWithDetails(
+      recData.ManagementPeriod.ID,
+      request,
+    );
+    const FertiliserManures =
+      await this.getFertiliserManuresForManagementPeriod(
+        recData.ManagementPeriod.ID,
+      );
+    const mergedRecommendation = {
+      ...recData.Recommendation,
+      ...recData.FertiliserManure,
+    };
+
+    return {
+      Recommendation: mergedRecommendation,
+      RecommendationComments: comments,
+      ManagementPeriod: recData.ManagementPeriod,
+      OrganicManures: organicManuresWithDetails,
+      FertiliserManures,
+    };
+  }
+
+  async addDetailsToGroupedRecommendations(groupedObj, request) {
+    return Promise.all(
+      Object.values(groupedObj).map(async (recommendationGroup) => ({
+        ...recommendationGroup,
+        Recommendations: await Promise.all(
+          recommendationGroup.Recommendations.map((recData) =>
+            this.addRecommendationDetails(recData, request),
+          )
+        ),
+      }))
+    );
+  }
+
   async getNutrientsRecommendationsForField(fieldId, harvestYear, request) {
     try {
       const storedProcedure ="EXEC dbo.spRecommendations_GetRecommendations @fieldId = @0, @harvestYear = @1";
       const recommendations = await this.executeQuery(storedProcedure, [fieldId,harvestYear]);
-
-      const mappedRecommendations = recommendations.map(async (r) => {
-        const data = {
-          Crop: {},
-          Recommendation: {},
-          ManagementPeriod: {},
-          FertiliserManure: {},
-        };
-
-        const previousAppliedLime = await this.processSoilRecommendations(harvestYear,fieldId,r);
-        // Add previousAppliedLime to Recommendation object
-        data.Recommendation.PreviousAppliedLime = previousAppliedLime || 0;
-        const PREFIXES = {
-          CROP: "Crop_",
-          RECOMMENDATION:    "Recommendation_",
-          MANAGEMENT_PERIOD: "ManagementPeriod_",
-          FERTILISER_MANURE: "FertiliserManure_",
-        };
-        Object.keys(r).forEach((recDataKey) => {
-          if (recDataKey.startsWith(PREFIXES.CROP)) {
-            data.Crop[recDataKey.slice(PREFIXES.CROP.length)] = r[recDataKey];
-          } else if (recDataKey.startsWith(PREFIXES.RECOMMENDATION)) {
-            data.Recommendation[
-              recDataKey.slice(PREFIXES.RECOMMENDATION.length)
-            ] = r[recDataKey];
-          } else if (recDataKey.startsWith(PREFIXES.MANAGEMENT_PERIOD)) {
-            data.ManagementPeriod[
-              recDataKey.slice(PREFIXES.MANAGEMENT_PERIOD.length)
-            ] = r[recDataKey];
-          } else if (recDataKey.startsWith(PREFIXES.FERTILISER_MANURE)) {
-            data.FertiliserManure[
-              recDataKey.slice(PREFIXES.FERTILISER_MANURE.length)
-            ] = r[recDataKey];
-          } else {
-            console.log("no assignment");
-          }
-        });
-        return data;
-      });
-      
-      const PKbalance = await this.PKbalanceRepository.findOne({
-        where: {
-          Year: harvestYear - 1,
-          FieldID: fieldId,
-        },
-        select: {
-          ID: true,
-          PBalance: true,
-          KBalance: true,
-        },
-      });
-      const groupedObj = {};
-         const findDefoliationSequenceDescription = async (
-         DefoliationSequenceID
-       ) => {
-         try {
-           let defoliationSequenceDescription = null;
-           const defoliationSequence = await this.rB209GrassService.getData(
-          `Grass/DefoliationSequence/${DefoliationSequenceID}`
-        );
-
-defoliationSequenceDescription = defoliationSequence
-               ? defoliationSequence.defoliationSequenceDescription
-               : null;
-           return defoliationSequenceDescription;
-         } catch (error) {
-           console.error(
-             `Error fetching Defoliation Sequence by id ${DefoliationSequenceID}`,
-             error
-           );
-           return "Unknown";
-         }
-       };
-      const findSwardType = async (SwardTypeID) => {
-        try {
-          let swardTypeName = null;
-          const swardTypeList = await this.rB209GrassService.getData(
-            `Grass/SwardTypes`
-          );
-
-          if (swardTypeList.length > 0) {
-            const matchingSward = swardTypeList.find(
-              (x) => x.swardTypeId === SwardTypeID
-            );
-            if (matchingSward != null) {
-              swardTypeName = matchingSward ? matchingSward.swardType : null;
-            }
-          }
-
-          return swardTypeName;
-        } catch (error) {
-          console.error(`Error fetching sward Type list`, error);
-          return "Unknown";
-        }
-      };
-
-      const findGrassSeason = async (seasonID) => {
-        try {
-          const season = await this.rB209GrasslandService.getData(
-            `Grassland/GrasslandSeason/${seasonID}`
-          );
-          return season.seasonName;
-        } catch (error) {
-          console.error(`Error fetching Grassland Season`, error);
-          return "Unknown";
-        }
-      };
-      const mappedRecommendationsNew = await Promise.all(mappedRecommendations);
-      console.log("mappedRecommendationsNew", mappedRecommendationsNew);
-      
-      for (const r of mappedRecommendationsNew) {
-        groupedObj[r.Crop.ID] = {
-          Crop: {
-            ...r.Crop,
-            EstablishmentName:
-              r.Crop.CropTypeID === CropTypeMapper.GRASS && r.Crop.Establishment !== null
-                ? await findGrassSeason(r.Crop.Establishment)
-                : null,
-            SwardManagementName:
-              r.Crop.CropTypeID === CropTypeMapper.GRASS && r.Crop.SwardManagementID !== null
-                ? await this.findSwardTypeManagment(r.Crop.SwardManagementID)
-                : null,
-            SwardTypeName: r.Crop.CropTypeID === CropTypeMapper.GRASS && r.Crop.SwardTypeID !== null
-                ? await findSwardType(r.Crop.SwardTypeID)
-                : null,
-              DefoliationSequenceName:
-              r.Crop.CropTypeID === CropTypeMapper.GRASS && r.Crop.DefoliationSequenceID !== null
-                ? await findDefoliationSequenceDescription(r.Crop.DefoliationSequenceID)
-                : null,
-          },
-          PKbalance: PKbalance,
-          Recommendations: (
-            groupedObj[r.Crop.ID]?.Recommendations || []
-          ).concat({
-            Recommendation: r.Recommendation,
-            ManagementPeriod: r.ManagementPeriod,
-            FertiliserManure: r.FertiliserManure,
-          }),
-        };
-      }
-
-      
-     
-console.log('groupedObj',groupedObj)
-
-      const dataWithComments = await Promise.all(
-        Object.values(groupedObj).map(async (r) => ({
-          ...r,
-          Recommendations: await Promise.all(
-            r.Recommendations.map(async (recData) => {
-              const comments = await this.recommendationCommentRepository.find({
-                where: {
-                  RecommendationID: recData.Recommendation.ID,
-                },
-              });
-
-              const organicManures = await this.organicManureRepository.find({
-                where: {
-                  ManagementPeriodID: recData.ManagementPeriod.ID,
-                },
-                select: {
-                  ID: true,
-                  ManureTypeID: true,
-                  ApplicationDate: true,
-                  ApplicationRate: true,
-                  ApplicationMethodID: true,
-                },
-              });
-
-              const FertiliserManures =
-                await this.FertiliserManuresRepository.find({
-                  where: {
-                    ManagementPeriodID: recData.ManagementPeriod.ID,
-                  },
-                  select: {
-                    ID: true,
-                    ApplicationDate: true,
-                    ApplicationRate: true,
-                    N: true,
-                    P2O5: true,
-                    K2O: true,
-                    MgO: true,
-                    SO3: true,
-                    Na2O: true,
-                    Lime: true,
-                    NH4N: true,
-                    NO3N: true,
-                  },
-                });
-            
-              // Fetch ManureType details from external API
-              const organicManuresWithDetails = await Promise.all(
-                organicManures.map(async (o) => {
-                    const manureTypeId = Number(o.ManureTypeID);
-                    const applicationMethodId = Number(o.ApplicationMethodID);
-                  const manureTypeData =
-                    await this.MannerManureTypesService.getData(
-                      `/manure-types/${manureTypeId}`,
-                      request,
-                    );
-                  const applicationMethodData =
-                    await this.MannerApplicationMethodService.getData(
-                      `/application-methods/${applicationMethodId}`,
-                      request,
-                    );
-                  return {
-                    ...o,
-                    ManureTypeName: manureTypeData.data.name,
-                    ApplicationMethodName: applicationMethodData.data.name,
-                  };
-                })
-              );
-
-              const mergedRecommendation = {
-                ...recData.Recommendation,
-                ...recData.FertiliserManure, // Adds FertiliserManure properties to Recommendation
-              };
-          
-              return {
-                Recommendation: mergedRecommendation,
-                RecommendationComments: comments,
-                ManagementPeriod: recData.ManagementPeriod,
-                OrganicManures: organicManuresWithDetails,
-                FertiliserManures: FertiliserManures,
-              };
-            })
-          ),
-        }))
+      const mappedRecommendations = await Promise.all(
+        recommendations.map((recommendation) =>
+          this.mapRecommendationRow(recommendation, harvestYear, fieldId),
+        )
       );
+      console.log("mappedRecommendationsNew", mappedRecommendations);
 
-      return dataWithComments;
+      const PKbalance = await this.getPreviousYearPKBalance(
+        fieldId,
+        harvestYear,
+      );
+      const groupedObj = await this.groupRecommendationsByCrop(
+        mappedRecommendations,
+        PKbalance,
+      );
+      console.log("groupedObj", groupedObj);
+
+      return this.addDetailsToGroupedRecommendations(groupedObj, request);
     } catch (error) {
       console.error("Error while fetching join data:", error);
       throw error;
