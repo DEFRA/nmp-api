@@ -121,6 +121,26 @@ module.exports = [
         query: Joi.object({
           shortSummary: Joi.boolean().optional(),
         }),
+        failAction: validationFailAction,
+      },
+    },
+  },
+  {
+    method: "POST",
+    path: "/farms/last-updated/{farmId}",
+    handler: async (request, h) => {
+      return getController(request, h).getLastUpdatedDates(request, h);
+    },
+    options: {
+      tags: ["api", "Farm"],
+      description: "Get last updated dates for farm data",
+      validate: {
+        params: Joi.object({
+          farmId: Joi.number().integer().required(),
+        }),
+        payload: Joi.object({
+          years: Joi.array().items(Joi.number().integer()).min(1).required(),
+        }),
         failAction: validationFailAction
       },
     },

@@ -3,7 +3,7 @@ const { FarmEntity } = require("../db/entity/farm.entity");
 const { BaseService } = require("../base/base.service");
 const { AppDataSource } = require("../db/data-source");
 const { FieldEntity } = require("../db/entity/field.entity");
-const { getRepository } = require("typeorm");
+const { getRepository, In } = require("typeorm");
 const { FieldNVZMapper } = require("../constants/field-nvz-mapper");
 const {
   FieldAbove300SeaLevelMapper,
@@ -17,12 +17,25 @@ const {
   ProcessFutureManuresForWarnings,
 } = require("../shared/process-future-warning-calculations-service");
 const { FarmsNVZEntity } = require("../db/entity/farms-nvz.entity");
+const { NutrientsLoadingLiveStocksEntity } = require("../db/entity/nutrients-loading-live-stocks-entity");
+const { NutrientsLoadingFarmDetailsEntity } = require("../db/entity/nutrients-loading-farm-details-entity");
+const { NutrientsLoadingManuresEntity } = require("../db/entity/nutrients-loading-manures-entity");
 
 class FarmService extends BaseService {
   constructor() {
     super(FarmEntity);
     this.repository = getRepository(FarmEntity);
-    this.ProcessFieldsService = new ProcessFieldsService();
+    this.nutrientsLoadingLiveStocksRepository = getRepository(
+      NutrientsLoadingLiveStocksEntity,
+    );
+    this.nutrientsLoadingFarmDetailsRepository = getRepository(
+      NutrientsLoadingFarmDetailsEntity,
+    );
+    this.nutrientsLoadingManuresRepository = getRepository(
+      NutrientsLoadingManuresEntity,
+    );
+    his.ProcessFieldsService =
+      new ProcessFieldsService();
     this.ProcessFutureManuresForWarnings =
       new ProcessFutureManuresForWarnings();
   }
@@ -123,7 +136,7 @@ class FarmService extends BaseService {
         };
       });
     } catch (error) {
-      console.log(error)
+      console.log(error);
       throw error; // rethrow so controller handles it
     }
   }
@@ -229,9 +242,11 @@ class FarmService extends BaseService {
     const result = await AppDataSource.transaction(
       async (transactionalManager) => {
         const existingFarm = await transactionalManager.findOne(FarmEntity, {
-          where: { ID: farmId }
+          where: { ID: farmId },
         });
-        if (!existingFarm) {throw boom.notFound(`Farm with ID ${farmId} not found`)}
+        if (!existingFarm) {
+          throw boom.notFound(`Farm with ID ${farmId} not found`);
+        }
         const updatedFarmData = updatedFarmAndNvzData.Farm;
         const farmNvzList = updatedFarmAndNvzData.FarmsNvz;
         const {
@@ -248,7 +263,11 @@ class FarmService extends BaseService {
           existingFarm.OrganisationID,
           farmId,
         );
-        if (farmCount > 0) {throw boom.badRequest("Farm already exists with this Name and Postcode")}
+        if (farmCount > 0) {
+          throw boom.badRequest(
+            "Farm already exists with this Name and Postcode",
+          );
+        }
         const updatedNvz = await this.syncFarmNvz(
           transactionalManager,
           farmId,
@@ -297,6 +316,71 @@ class FarmService extends BaseService {
       },
     );
     return result;
+  }
+
+  updateLatestDates(latestDatesByYear, records) {
+    for (const record of records) {
+      const currentDate = record.ModifiedOn || record.CreatedOn;
+
+      if (!currentDate) {
+        continue;
+      }
+
+      const existingDate = latestDatesByYear.get(record.Year);
+
+      if (!existingDate || currentDate > existingDate) {
+        latestDatesByYear.set(record.Year, currentDate);
+      }
+    }
+  }
+
+  async getLastUpdatedDates(farmId, years) {
+    const liveStocks = await this.nutrientsLoadingLiveStocksRepository.find({
+      where: {
+        FarmID: farmId,
+        Year: In(years),
+      },
+      select: {
+        Year: true,
+        CreatedOn: true,
+        ModifiedOn: true,
+      },
+    });
+
+    const farmDetails = await this.nutrientsLoadingFarmDetailsRepository.find({
+      where: {
+        FarmID: farmId,
+        Year: In(years),
+      },
+      select: {
+        Year: true,
+        CreatedOn: true,
+        ModifiedOn: true,
+      },
+    });
+
+    const manures = await this.nutrientsLoadingManuresRepository.find({
+      where: {
+        FarmID: farmId,
+        Year: In(years),
+      },
+      select: {
+        Year: true,
+        CreatedOn: true,
+        ModifiedOn: true
+      },
+    });
+
+    const latestDatesByYear = new Map();
+
+    this.updateLatestDates(latestDatesByYear, liveStocks);
+    this.updateLatestDates(latestDatesByYear, farmDetails);
+    this.updateLatestDates(latestDatesByYear, manures);
+
+    return years.map((year) => ({
+      Year: year,
+      LastUpdatedDate: latestDatesByYear.get(year) || null,
+    }));
   }
 }
 
