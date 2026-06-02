@@ -19,108 +19,163 @@ class PreviousCroppingService extends BaseService {
     this.generateRecommendations = new GenerateRecommendations();
   }
 
+  getPreviousCroppingYearContext(previousCroppingBody) {
+    previousCroppingBody.sort((a, b) => a.HarvestYear - b.HarvestYear);
+
+    return {
+      MaxYear: Math.max(
+        ...previousCroppingBody.map((item) => item.HarvestYear)
+      ),
+      MinYear: Math.min(
+        ...previousCroppingBody.map((item) => item.HarvestYear)
+      ),
+      greatestYearField: previousCroppingBody[0].FieldID,
+    };
+  }
+
+  buildPreviousCroppingData(crop, previousCropExist, userId) {
+    if (previousCropExist == null) {
+      return {
+        ...crop,
+        CreatedByID: userId,
+        CreatedOn: new Date(),
+        ModifiedByID: null,
+        ModifiedOn: null,
+      };
+    }
+
+    return {
+      ...crop,
+      CreatedByID: previousCropExist.CreatedByID,
+      CreatedOn: previousCropExist.CreatedOn,
+      ModifiedByID: userId,
+      ModifiedOn: new Date(),
+    };
+  }
+
+  async savePreviousCroppingData(
+    previousCroppingBody,
+    existingCrops,
+    userId,
+    transactionalManager,
+  ) {
+    let previousCroppingData = null;
+
+    for (const crop of previousCroppingBody) {
+      const previousCropExist = existingCrops.find(
+        (existingCrop) =>
+          existingCrop.FieldID === crop.FieldID &&
+          existingCrop.HarvestYear === crop.HarvestYear
+      );
+      const cropData = this.buildPreviousCroppingData(
+        crop,
+        previousCropExist,
+        userId,
+      );
+
+      previousCroppingData = await transactionalManager.save(
+        PreviousCroppingEntity,
+        cropData
+      );
+    }
+
+    return previousCroppingData;
+  }
+
+  async regenerateNextYearRecommendations(
+    fieldId,
+    year,
+    userId,
+    request,
+    transactionalManager,
+  ) {
+    const cropExist = await this.cropRepository.findOne({
+      where: {
+        FieldID: fieldId,
+        Year: year,
+      },
+    });
+
+    if (cropExist == null) {
+      return;
+    }
+
+    const organicManure = null;
+    await this.generateRecommendations.generateRecommendations(
+      fieldId,
+      year,
+      organicManure,
+      transactionalManager,
+      request,
+      userId
+    );
+  }
+
+  async triggerFutureRecommendationUpdate(fieldId, minYear, request, userId) {
+    const nextAvailableCrop = await this.cropRepository.findOne({
+      where: {
+        FieldID: fieldId,
+        Year: MoreThan(minYear),
+      },
+      order: {
+        Year: "ASC",
+      },
+    });
+
+    if (!nextAvailableCrop) {
+      return;
+    }
+
+    this.updatingFutureRecommendations.updateRecommendationsForField(
+        fieldId,
+        nextAvailableCrop.Year,
+        request,
+        userId
+      )
+      .then((res) => {
+        if (res === undefined) {
+          console.log(
+            "updateRecommendationAndOrganicManure returned undefined",
+          );
+        } else {
+          console.log("updateRecommendationAndOrganicManure result:", res);
+        }
+      })
+      .catch((error) => {
+        console.error("Error updating recommendation:", error);
+      });
+  }
+
   async mergePreviousCropping(previousCroppingBody, userId, request) {
     return AppDataSource.transaction(async (transactionalManager) => {
-      let previousCroppingData = null;
-      previousCroppingBody.sort((a, b) => a.HarvestYear - b.HarvestYear);
-      // Get the field and greatest year
-      const MaxYear = Math.max(
-        ...previousCroppingBody.map((item) => item.HarvestYear)
-      );
-      const MinYear = Math.min(
-        ...previousCroppingBody.map((item) => item.HarvestYear)
-      );
-      const greatestYearField = previousCroppingBody[0].FieldID;
-
+      const { MaxYear, MinYear, greatestYearField } =
+        this.getPreviousCroppingYearContext(previousCroppingBody);
       const existingCrops = await this.repository.find({
         where: previousCroppingBody.map((crop) => ({
           FieldID: crop.FieldID,
         })),
       });
-      for (const crop of previousCroppingBody) {
-        let cropData;
-        const previousCropExist = existingCrops.find(
-          (existingCrop) =>
-            existingCrop.FieldID === crop.FieldID &&
-            existingCrop.HarvestYear === crop.HarvestYear
-        );
 
-        if (previousCropExist == null) {
-          cropData = {
-            ...crop,
-            CreatedByID: userId,
-            CreatedOn: new Date(),
-            ModifiedByID: null,
-            ModifiedOn: null,
-          };
-        } else {
-          cropData = {
-            ...crop,
-            CreatedByID: previousCropExist.CreatedByID,
-            CreatedOn: previousCropExist.CreatedOn,
-            ModifiedByID: userId,
-            ModifiedOn: new Date(),
-          };
-        }
+      const previousCroppingData = await this.savePreviousCroppingData(
+        previousCroppingBody,
+        existingCrops,
+        userId,
+        transactionalManager,
+      );
+      await this.regenerateNextYearRecommendations(
+        greatestYearField,
+        MaxYear + 1,
+        userId,
+        request,
+        transactionalManager,
+      );
+      await this.triggerFutureRecommendationUpdate(
+        greatestYearField,
+        MinYear,
+        request,
+        userId,
+      );
 
-        // Use save() for both insert and update (upsert)
-        previousCroppingData = await transactionalManager.save(
-          PreviousCroppingEntity,
-          cropData
-        );
-      }
-
-      const cropExist = await this.cropRepository.findOne({
-        where: {
-          FieldID: greatestYearField,
-          Year: MaxYear + 1, // Find the next available year greater than the current MaxYear
-        },
-      });
-      if (cropExist != null) {
-       
-        const organicManure = null
-          await this.generateRecommendations.generateRecommendations(
-             greatestYearField,
-             MaxYear + 1,
-             organicManure,
-             transactionalManager,
-             request,
-             userId
-           );
-      }
-
-      // Check if there are any records in the repository for crop.FieldID with a year greater than crop.Year
-      const nextAvailableCrop = await this.cropRepository.findOne({
-        where: {
-          FieldID: greatestYearField,
-          Year: MoreThan(MinYear), // Find the next available year greater than the current MinYear
-        },
-        order: {
-          Year: "ASC", // Ensure we get the next immediate year
-        },
-      });
-      if (nextAvailableCrop) {
-        this.updatingFutureRecommendations.updateRecommendationsForField(
-            greatestYearField,
-            nextAvailableCrop.Year,
-            request,
-            userId
-          )
-          .then((res) => {
-            if (res === undefined) {
-              console.log(
-                "updateRecommendationAndOrganicManure returned undefined",
-              );
-            } else {
-              console.log("updateRecommendationAndOrganicManure result:", res);
-            }
-          })
-          .catch((error) => {
-            console.error("Error updating recommendation:", error);
-          });
-      }
-
-      // Return a boolean indicating if any data was saved/updated
       return previousCroppingData != null;
     });
   }

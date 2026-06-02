@@ -246,6 +246,120 @@ class PlanService extends BaseService {
     });
   }
 
+  async validateCropAndField(crop, Errors) {
+    const errors = this.handleCropValidation(crop);
+    Errors.push(...errors);
+
+    const fieldId = crop.FieldID;
+    const { field, errors: fieldErrors } = await this.handleFieldValidation(
+      fieldId
+    );
+    Errors.push(...fieldErrors);
+
+    if (Errors.length > 0) {
+      throw new Error(JSON.stringify(Errors));
+    }
+
+    return field;
+  }
+
+  async saveDefaultCropPlan(cropData, crop, userId, request, transactionalManager) {
+    await this.savedDefault(cropData, userId, transactionalManager);
+    await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
+      crop,
+      transactionalManager,
+      request,
+      userId
+    );
+
+    return {
+      message: "Default crop saved",
+      crop: crop.FieldID,
+    };
+  }
+
+  async saveCropAndManagementPeriods(cropData, crop, userId, transactionalManager) {
+    const savedCrop = await transactionalManager.save(
+      CropEntity,
+      this.cropRepository.create({
+        ...crop,
+        CreatedByID: userId,
+        CreatedOn: new Date(),
+      })
+    );
+
+    const ManagementPeriods = [];
+    for (const managementPeriod of cropData.ManagementPeriods) {
+      const savedManagementPeriod = await transactionalManager.save(
+        ManagementPeriodEntity,
+        this.managementPeriodRepository.create({
+          ...managementPeriod,
+          CropID: savedCrop.ID,
+          CreatedByID: userId,
+          CreatedOn: new Date(),
+        })
+      );
+      ManagementPeriods.push(savedManagementPeriod);
+    }
+
+    return ManagementPeriods;
+  }
+
+  async updateNextCropRecommendations(crop, request, userId) {
+    const nextAvailableCrop = await this.cropRepository.findOne({
+      where: {
+        FieldID: crop.FieldID,
+        Year: MoreThan(crop.Year),
+      },
+      order: { Year: "ASC" },
+    });
+
+    if (nextAvailableCrop) {
+      this.updatingFutureRecommendations.updateRecommendationsForField(
+        crop.FieldID,
+        nextAvailableCrop.Year,
+        request,
+        userId,
+      );
+    }
+  }
+
+  async saveCropPlanWithRecommendations(
+    cropData,
+    crop,
+    field,
+    userId,
+    request,
+    transactionalManager
+  ) {
+    const organicManure = null;
+    const ManagementPeriods = await this.saveCropAndManagementPeriods(
+      cropData,
+      crop,
+      userId,
+      transactionalManager
+    );
+
+    const savedRecommendation =
+      await this.generateRecommendations.generateRecommendations(
+        field.ID,
+        crop.Year,
+        organicManure,
+        transactionalManager,
+        request,
+        userId
+      );
+
+    await this.updateNextCropRecommendations(crop, request, userId);
+
+    return {
+      message: "crop saved",
+      crop: crop.FieldID,
+      Recommendations: savedRecommendation,
+      ManagementPeriods: ManagementPeriods
+    };
+  }
+
   async createNutrientsRecommendationWithinTransaction(
     crops,
     userId,
@@ -256,16 +370,7 @@ class PlanService extends BaseService {
     const Errors = [];
     for (const cropData of crops) {
       const crop = cropData?.Crop;
-      const errors = this.handleCropValidation(crop);
-      Errors.push(...errors);
-      const fieldId = crop.FieldID;
-      const { field, errors: fieldErrors } = await this.handleFieldValidation(
-        fieldId
-      );
-      Errors.push(...fieldErrors);
-      if (Errors.length > 0) {
-        throw new Error(JSON.stringify(Errors));
-      }
+      const field = await this.validateCropAndField(crop, Errors);
     
       const previousCrop =
         await this.CalculatePreviousCropService.findPreviousCrop(
@@ -273,74 +378,26 @@ class PlanService extends BaseService {
           crop.Year,
           transactionalManager
         );
-       const organicManure = null;
+
       if (crop.CropTypeID === CropTypeMapper.OTHER || !previousCrop) {
-        await this.savedDefault(cropData, userId, transactionalManager);
-        await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
+        const savedDefaultCrop = await this.saveDefaultCropPlan(
+          cropData,
           crop,
-          transactionalManager,
+          userId,
           request,
-          userId
+          transactionalManager
         );
-        Recommendations.push({
-          message: "Default crop saved",
-          crop: crop.FieldID,
-        });
+        Recommendations.push(savedDefaultCrop);
       } else {
-        const savedCrop = await transactionalManager.save(
-          CropEntity,
-          this.cropRepository.create({
-            ...crop,
-            CreatedByID: userId,
-            CreatedOn: new Date(),
-          })
+        const savedCropPlan = await this.saveCropPlanWithRecommendations(
+          cropData,
+          crop,
+          field,
+          userId,
+          request,
+          transactionalManager
         );
-
-        const ManagementPeriods = [];
-        for (const managementPeriod of cropData.ManagementPeriods) {
-          const savedManagementPeriod = await transactionalManager.save(
-            ManagementPeriodEntity,
-            this.managementPeriodRepository.create({
-              ...managementPeriod,
-              CropID: savedCrop.ID,
-              CreatedByID: userId,
-              CreatedOn: new Date(),
-            })
-          );
-          ManagementPeriods.push(savedManagementPeriod);
-        }
-    
-      const savedRecommendation = await this.generateRecommendations.generateRecommendations(
-        field.ID,
-        crop.Year,
-        organicManure,
-        transactionalManager,
-        request,
-        userId
-      );
-       
-        const nextAvailableCrop = await this.cropRepository.findOne({
-          where: {
-            FieldID: crop.FieldID,
-            Year: MoreThan(crop.Year),
-          },
-          order: { Year: "ASC" },
-        });
-
-        if (nextAvailableCrop) {
-          this.updatingFutureRecommendations.updateRecommendationsForField(
-            crop.FieldID,
-            nextAvailableCrop.Year,
-            request,
-            userId,
-          );
-        }
-        Recommendations.push({
-          message: "crop saved",
-          crop: crop.FieldID, // Include additional crop-related info
-          Recommendations: savedRecommendation,
-          ManagementPeriods: ManagementPeriods
-        });
+        Recommendations.push(savedCropPlan);
       }
     }
 
