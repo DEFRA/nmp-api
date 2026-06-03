@@ -328,6 +328,18 @@ class FarmService extends BaseService {
     }
   }
 
+  formatDate(date) {
+    if (!date) {
+      return null;
+    }
+
+    return date.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  }
+
   async getLastUpdatedDates(farmId, years) {
     const liveStocks = await this.nutrientsLoadingLiveStocksRepository.find({
       where: {
@@ -389,7 +401,7 @@ class FarmService extends BaseService {
 
     return years.map((year) => ({
       Year: year,
-      LastUpdatedDate: latestDatesByYear.get(year) || null,
+      LastUpdatedDate: this.formatDate(latestDatesByYear.get(year) || null),
     }));
   }
 }
