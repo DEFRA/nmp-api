@@ -285,7 +285,6 @@ class FarmService extends BaseService {
         if (updateResult.affected === 0) {
           console.log(`Farm with ID ${farmId} not found`);
         }
-
         if (
           this.hasFieldRecommendationTriggerChanges(
             existingFarm,
@@ -308,10 +307,7 @@ class FarmService extends BaseService {
         const updatedFarm = await transactionalManager.findOne(FarmEntity, {
           where: { ID: farmId },
         });
-        return {
-          updatedFarm: updatedFarm,
-          farmNvz: updatedNvz,
-        };
+        return { updatedFarm: updatedFarm, farmNvz: updatedNvz };
       },
     );
     return result;
@@ -320,21 +316,14 @@ class FarmService extends BaseService {
   updateLatestDates(latestDatesByYear, records, yearSelector) {
     for (const record of records) {
       const year = yearSelector(record);
-
-      if (year === null || year === undefined) {
-        continue;
-      }
-
       const currentDate = record.ModifiedOn || record.CreatedOn;
 
-      if (!currentDate) {
-        continue;
-      }
+      if (year !== null && year !== undefined && currentDate) {
+        const existingDate = latestDatesByYear.get(year);
 
-      const existingDate = latestDatesByYear.get(year);
-
-      if (!existingDate || currentDate > existingDate) {
-        latestDatesByYear.set(year, currentDate);
+        if (!existingDate || currentDate > existingDate) {
+          latestDatesByYear.set(year, currentDate);
+        }
       }
     }
   }
