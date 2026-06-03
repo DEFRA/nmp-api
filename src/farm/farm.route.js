@@ -126,7 +126,7 @@ module.exports = [
     },
   },
   {
-    method: "POST",
+    method: "GET",
     path: "/farms/last-updated/{farmId}",
     handler: async (request, h) => {
       return getController(request, h).getLastUpdatedDates(request, h);
@@ -138,8 +138,8 @@ module.exports = [
         params: Joi.object({
           farmId: Joi.number().integer().required(),
         }),
-        payload: Joi.object({
-          years: Joi.array().items(Joi.number().integer()).min(1).required(),
+        query: Joi.object({
+          years: Joi.array().items(Joi.number().integer()).min(1).required()
         }),
         failAction: validationFailAction
       },

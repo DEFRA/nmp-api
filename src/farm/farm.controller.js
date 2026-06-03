@@ -132,7 +132,7 @@ class FarmController {
   async getLastUpdatedDates(request, h) {
     try {
     const { farmId } = this.#request.params;
-    const { years } = this.#request.payload;
+    const { years } = this.#request.query;
     const lastUpdatedDateData = await this.#farmService.getLastUpdatedDates(farmId, years);
     return this.#h.response(lastUpdatedDateData);
     } catch (error) {

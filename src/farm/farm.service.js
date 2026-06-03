@@ -34,7 +34,7 @@ class FarmService extends BaseService {
     this.nutrientsLoadingManuresRepository = getRepository(
       NutrientsLoadingManuresEntity,
     );
-    his.ProcessFieldsService =
+    this.ProcessFieldsService =
       new ProcessFieldsService();
     this.ProcessFutureManuresForWarnings =
       new ProcessFutureManuresForWarnings();
