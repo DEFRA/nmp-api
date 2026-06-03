@@ -308,6 +308,78 @@ class CalculateMannerOutputService {
     return defaultMannerCropTypeId;
   }
 
+  getOrderedManagementPeriods(managementPeriods, organicManure) {
+    if (!organicManure) {
+      return managementPeriods;
+    }
+
+    const matchingPeriod = managementPeriods.find(
+      (p) => p.ID === organicManure.ManagementPeriodID,
+    );
+    const otherPeriods = managementPeriods.filter(
+      (p) => p.ID !== organicManure.ManagementPeriodID,
+    );
+
+    return matchingPeriod ? [matchingPeriod, ...otherPeriods] : otherPeriods;
+  }
+
+  async processManagementPeriod({
+    crop,
+    period,
+    organicManure,
+    allManureData,
+    farmData,
+    fieldData,
+    mannerCropTypeID,
+    soilTypeTextureData,
+    transactionalManager,
+    request,
+  }) {
+    const manureApplications = await this.buildManureApplications(
+      period.ID,
+      organicManure,
+      allManureData,
+      transactionalManager,
+    );
+
+    if (manureApplications.length === 0) {
+      console.log("there is no manure for the crop");
+      return [];
+    }
+
+    const mannerOutputReq = await this.buildMannerOutputReq(
+      farmData,
+      fieldData,
+      mannerCropTypeID,
+      manureApplications,
+      soilTypeTextureData,
+      transactionalManager,
+    );
+
+    if (!mannerOutputReq) {
+      return [];
+    }
+
+    const mannerOutput = await this.MannerCalculateNutrientsService.postData(
+      "/calculate-nutrients",
+      mannerOutputReq,
+      request,
+    );
+
+    if (!mannerOutput) {
+      return [];
+    }
+
+
+    const buildManureOutputs = await this.buildMannerOutputs(
+      crop,
+      mannerOutput,
+      period,
+      transactionalManager,
+    );
+    return buildManureOutputs;
+  }
+
   async calculateMannerOutputForOrganicManure(
     cropData,
     organicManure,
@@ -318,7 +390,6 @@ class CalculateMannerOutputService {
   ) {
     const allMannerOutputs = [];
 
-    // Step 1: Get all crops for the field and year
     const allCrops = await transactionalManager.find(CropEntity, {
       where: {
         FieldID: cropData.FieldID,
@@ -331,15 +402,12 @@ class CalculateMannerOutputService {
       request,
     );
 
-    // Step 2: Process cropData first, then rest
     const cropsToProcess = [
       cropData,
       ...allCrops.filter((c) => c.ID !== cropData.ID),
     ];
 
-    // Step 3: Loop through crops
     for (const crop of cropsToProcess) {
-      // Fetch management periods for the crop
       const managementPeriods = await transactionalManager.find(
         ManagementPeriodEntity,
         { where: { CropID: crop.ID } },
@@ -357,69 +425,25 @@ class CalculateMannerOutputService {
         },
       );
 
-      let matchingPeriod = null,
-        otherPeriods = null,
-        orderedPeriods = null;
+      const orderedPeriods = this.getOrderedManagementPeriods(
+        managementPeriods,
+        organicManure,
+      );
 
-      if (organicManure == null) {
-        orderedPeriods = managementPeriods;
-      } else {
-        matchingPeriod = managementPeriods.find(
-          (p) => p.ID === organicManure.ManagementPeriodID,
-        );
-        otherPeriods = managementPeriods.filter(
-          (p) => p.ID !== organicManure.ManagementPeriodID,
-        );
-
-        orderedPeriods = matchingPeriod
-          ? [matchingPeriod, ...otherPeriods]
-          : otherPeriods;
-      }
-
-      // Step 4: Process each management period
       for (const period of orderedPeriods) {
-        const managementPeriodID = period.ID;
-
-        // 4.1: Build manureApplications
-        const manureApplications = await this.buildManureApplications(
-          managementPeriodID,
+        const output = await this.processManagementPeriod({
+          crop,
+          period,
           organicManure,
           allManureData,
+          farmData,
+          fieldData,
+          mannerCropTypeID,
+          soilTypeTextureData,
           transactionalManager,
-        );
-        let mannerOutputReq = null;
-        // 4.2: Build mannerOutputReq
-        if (manureApplications.length > 0) {
-          mannerOutputReq = await this.buildMannerOutputReq(
-            farmData,
-            fieldData,
-            mannerCropTypeID,
-            manureApplications,
-            soilTypeTextureData,
-            transactionalManager,
-          );
-        } else {
-          console.log("there is no manure for the crop");
-        }
-        let mannerOutput = null;
-        // 4.3: Post to calculate nutrients
-        if (mannerOutputReq) {
-          mannerOutput = await this.MannerCalculateNutrientsService.postData(
-            "/calculate-nutrients",
-            mannerOutputReq,
-            request,
-          );
-        }
-        let output = [];
-        // 4.4: Build output and add to final array
-        if (mannerOutput) {
-          output = await this.buildMannerOutputs(
-            crop,
-            mannerOutput,
-            period,
-            transactionalManager,
-          );
-        }
+          request,
+        });
+
         allMannerOutputs.push(...output);
       }
     }
