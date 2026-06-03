@@ -1,13 +1,21 @@
 const { In } = require("typeorm");
 const { CropOrderMapper } = require("../constants/crop-order-mapper");
-const { CropTypeLinkingEntity } = require("../db/entity/crop-type-linking.entity");
+const {
+  CropTypeLinkingEntity,
+} = require("../db/entity/crop-type-linking.entity");
 const { CropEntity } = require("../db/entity/crop.entity");
-const { ManagementPeriodEntity } = require("../db/entity/management-period.entity");
+const {
+  ManagementPeriodEntity,
+} = require("../db/entity/management-period.entity");
 const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
-const { SoilTypeSoilTextureEntity } = require("../db/entity/soil-type-soil-texture.entity");
+const {
+  SoilTypeSoilTextureEntity,
+} = require("../db/entity/soil-type-soil-texture.entity");
 const MannerCalculateNutrientsService = require("../vendors/manner/calculate-nutrients/calculate-nutrients.service");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
-const { CalculateTotalAvailableNForNextYear } = require("./calculate-next-year-available-n");
+const {
+  CalculateTotalAvailableNForNextYear,
+} = require("./calculate-next-year-available-n");
 const { RunTypeMapper } = require("../constants/run-type-mapper");
 const { CountryEntity } = require("../db/entity/country.entity");
 
@@ -102,13 +110,94 @@ class CalculateMannerOutputService {
     };
   }
 
+  async buildManureApplicationObject(manure, manureTypeData) {
+    return {
+      manureDetails: {
+        manureID: manure.ManureTypeID,
+        name: manureTypeData.data.name,
+        isLiquid: manureTypeData.data.isLiquid,
+        dryMatter: manure.DryMatterPercent,
+        totalN: manure.N,
+        nH4N: manure.NH4N,
+        uric: manure.UricAcid,
+        nO3N: manure.NO3N,
+        p2O5: manure.P2O5,
+        sO3: manure.SO3,
+        k2O: manure.K2O,
+        mgO: manure.MgO,
+      },
+      applicationDate: new Date(manure.ApplicationDate)
+        .toISOString()
+        .split("T")[0],
+      applicationRate: {
+        value: manure.ApplicationRate,
+        unit: "kg/hectare",
+      },
+      applicationMethodID: manure.ApplicationMethodID,
+      incorporationMethodID: manure.IncorporationMethodID,
+      incorporationDelayID: manure.IncorporationDelayID,
+      autumnCropNitrogenUptake: {
+        value: manure.AutumnCropNitrogenUptake,
+        unit: "string",
+      },
+      endOfDrainageDate: new Date(manure.EndOfDrain)
+        .toISOString()
+        .split("T")[0],
+      rainfallPostApplication: manure.Rainfall,
+      cropNUptake: manure.AutumnCropNitrogenUptake,
+      windspeedID: manure.WindspeedID,
+      rainTypeID: manure.RainfallWithinSixHoursID,
+      topsoilMoistureID: manure.MoistureID,
+    };
+  }
+
+  async processMultipleManures(
+    mulOrganicManuresData,
+    allManureData,
+    manureApplications,
+  ) {
+    for (const manure of mulOrganicManuresData) {
+      const manureTypeData = await this.getManureTypeData(
+        allManureData,
+        manure.ManureTypeID,
+      );
+      const manureApplication = await this.buildManureApplicationObject(
+        manure,
+        manureTypeData,
+      );
+      manureApplications.push(manureApplication);
+    }
+  }
+
+  async processSingleManure(
+    organicManureData,
+    managementPeriodID,
+    allManureData,
+    manureApplications,
+  ) {
+    if (
+      organicManureData &&
+      organicManureData.ManagementPeriodID === managementPeriodID &&
+      Object.keys(organicManureData).length !== 0
+    ) {
+      const manureTypeData = await this.getManureTypeData(
+        allManureData,
+        organicManureData.ManureTypeID,
+      );
+      const manureApplication = await this.buildManureApplicationObject(
+        organicManureData,
+        manureTypeData,
+      );
+      manureApplications.push(manureApplication);
+    }
+  }
+
   async buildManureApplications(
     managementPeriodID,
     organicManureData,
     allManureData,
     transactionalManager,
   ) {
-    // Filter the organicManureAllData for the given managementPeriodID
     const mulOrganicManuresData = await transactionalManager.find(
       OrganicManureEntity,
       {
@@ -116,111 +205,21 @@ class CalculateMannerOutputService {
       },
     );
 
-    // Initialize an empty array for storing results
     const manureApplications = [];
 
-    // Loop through the mulOrganicManuresData (array of objects)
-    for (const manure of mulOrganicManuresData) {
-      // Fetch manure type data for each manure by its ManureTypeID
-      const manureTypeData = await this.getManureTypeData(
-        allManureData,
-        manure.ManureTypeID,
-      );
+    await this.processMultipleManures(
+      mulOrganicManuresData,
+      allManureData,
+      manureApplications,
+    );
 
-      // Push each manure application details into the array
-      manureApplications.push({
-        manureDetails: {
-          manureID: manure.ManureTypeID,
-          name: manureTypeData.data.name,
-          isLiquid: manureTypeData.data.isLiquid,
-          dryMatter: manure.DryMatterPercent,
-          totalN: manure.N,
-          nH4N: manure.NH4N,
-          uric: manure.UricAcid,
-          nO3N: manure.NO3N,
-          p2O5: manure.P2O5,
-          sO3: manure.SO3,
-          k2O: manure.K2O,
-          mgO: manure.MgO,
-        },
-        applicationDate: new Date(manure.ApplicationDate)
-          .toISOString()
-          .split("T")[0],
-        applicationRate: {
-          value: manure.ApplicationRate,
-          unit: "kg/hectare",
-        },
-        applicationMethodID: manure.ApplicationMethodID,
-        incorporationMethodID: manure.IncorporationMethodID,
-        incorporationDelayID: manure.IncorporationDelayID,
-        autumnCropNitrogenUptake: {
-          value: manure.AutumnCropNitrogenUptake,
-          unit: "string",
-        },
-        endOfDrainageDate: new Date(manure.EndOfDrain)
-          .toISOString()
-          .split("T")[0],
-        rainfallPostApplication: manure.Rainfall,
-        cropNUptake: manure.AutumnCropNitrogenUptake,
-        windspeedID: manure.WindspeedID,
-        rainTypeID: manure.RainfallWithinSixHoursID,
-        topsoilMoistureID: manure.MoistureID,
-      });
-    }
+    await this.processSingleManure(
+      organicManureData,
+      managementPeriodID,
+      allManureData,
+      manureApplications,
+    );
 
-    if (organicManureData != null) {
-      if (organicManureData.ManagementPeriodID === managementPeriodID) {
-        if (Object.keys(organicManureData).length !== 0) {
-          // Handle the single organicManureData object and push its values into the array
-          // Fetch manure type data for the single organicManureData object
-          const manureTypeData = await this.getManureTypeData(
-            allManureData,
-            organicManureData.ManureTypeID,
-          );
-
-          manureApplications.push({
-            manureDetails: {
-              manureID: organicManureData.ManureTypeID,
-              name: manureTypeData.data.name,
-              isLiquid: manureTypeData.data.isLiquid,
-              dryMatter: organicManureData.DryMatterPercent,
-              totalN: organicManureData.N,
-              nH4N: organicManureData.NH4N,
-              uric: organicManureData.UricAcid,
-              nO3N: organicManureData.NO3N,
-              p2O5: organicManureData.P2O5,
-              sO3: organicManureData.SO3,
-              k2O: organicManureData.K2O,
-              mgO: organicManureData.MgO,
-            },
-            applicationDate: new Date(organicManureData.ApplicationDate)
-              .toISOString()
-              .split("T")[0],
-            applicationRate: {
-              value: organicManureData.ApplicationRate,
-              unit: "kg/hectare",
-            },
-            applicationMethodID: organicManureData.ApplicationMethodID,
-            incorporationMethodID: organicManureData.IncorporationMethodID,
-            incorporationDelayID: organicManureData.IncorporationDelayID,
-            autumnCropNitrogenUptake: {
-              value: organicManureData.AutumnCropNitrogenUptake,
-              unit: "string",
-            },
-            endOfDrainageDate: new Date(organicManureData.EndOfDrain)
-              .toISOString()
-              .split("T")[0],
-            rainfallPostApplication: organicManureData.Rainfall,
-            cropNUptake: organicManureData.AutumnCropNitrogenUptake,
-            windspeedID: organicManureData.WindspeedID,
-            rainTypeID: organicManureData.RainfallWithinSixHoursID,
-            topsoilMoistureID: organicManureData.MoistureID,
-          });
-        }
-      }
-    }
-
-    // Return the manure applications array
     return manureApplications;
   }
   async buildMannerOutputReq(
@@ -255,11 +254,13 @@ class CalculateMannerOutputService {
   }
 
   async getMannerCropTypeId(crop, transactionalManager) {
-    const SEPTEMBER_MONTH_INDEX = 8; 
+    const SEPTEMBER_MONTH_INDEX = 8;
     const JULY_MONTH_INDEX = 6;
     const LATE_SOWN_START_DAY = 15;
     const LATE_SOWN_END_DAY = 31;
-    if (crop?.CropTypeID === null) {console.log("Invalid crop data: CropTypeID is required");}
+    if (crop?.CropTypeID === null) {
+      console.log("Invalid crop data: CropTypeID is required");
+    }
 
     const cropTypeLinkingData = await transactionalManager.findOne(
       CropTypeLinkingEntity,
@@ -271,7 +272,9 @@ class CalculateMannerOutputService {
     );
 
     if (!cropTypeLinkingData) {
-      console.log(`CropTypeLinking not found for CropTypeID ${crop.CropTypeID}`);
+      console.log(
+        `CropTypeLinking not found for CropTypeID ${crop.CropTypeID}`,
+      );
     }
 
     // Default value
@@ -292,7 +295,7 @@ class CalculateMannerOutputService {
     const lateSownEndDate = new Date(
       crop.Year + 1,
       JULY_MONTH_INDEX,
-      LATE_SOWN_END_DAY
+      LATE_SOWN_END_DAY,
     );
 
     const isLateSown =
