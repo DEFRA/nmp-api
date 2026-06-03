@@ -34,8 +34,7 @@ class FarmService extends BaseService {
     this.nutrientsLoadingManuresRepository = AppDataSource.getRepository(
       NutrientsLoadingManuresEntity,
     );
-    this.ProcessFieldsService =
-      new ProcessFieldsService();
+    this.ProcessFieldsService = new ProcessFieldsService();
     this.ProcessFutureManuresForWarnings =
       new ProcessFutureManuresForWarnings();
   }
@@ -318,18 +317,24 @@ class FarmService extends BaseService {
     return result;
   }
 
-  updateLatestDates(latestDatesByYear, records) {
+  updateLatestDates(latestDatesByYear, records, yearSelector) {
     for (const record of records) {
+      const year = yearSelector(record);
+
+      if (year === null || year === undefined) {
+        continue;
+      }
+
       const currentDate = record.ModifiedOn || record.CreatedOn;
 
       if (!currentDate) {
         continue;
       }
 
-      const existingDate = latestDatesByYear.get(record.Year);
+      const existingDate = latestDatesByYear.get(year);
 
       if (!existingDate || currentDate > existingDate) {
-        latestDatesByYear.set(record.Year, currentDate);
+        latestDatesByYear.set(year, currentDate);
       }
     }
   }
@@ -338,10 +343,10 @@ class FarmService extends BaseService {
     const liveStocks = await this.nutrientsLoadingLiveStocksRepository.find({
       where: {
         FarmID: farmId,
-        Year: In(years),
+        CalendarYear: In(years),
       },
       select: {
-        Year: true,
+        CalendarYear: true,
         CreatedOn: true,
         ModifiedOn: true,
       },
@@ -350,10 +355,11 @@ class FarmService extends BaseService {
     const farmDetails = await this.nutrientsLoadingFarmDetailsRepository.find({
       where: {
         FarmID: farmId,
-        Year: In(years),
+        CalendarYear: In(years),
       },
       select: {
-        Year: true,
+        CalendarYear: true,
+        TotalFarmed: true,
         CreatedOn: true,
         ModifiedOn: true,
       },
@@ -362,20 +368,35 @@ class FarmService extends BaseService {
     const manures = await this.nutrientsLoadingManuresRepository.find({
       where: {
         FarmID: farmId,
-        Year: In(years),
       },
       select: {
-        Year: true,
+        ManureDate: true,
         CreatedOn: true,
-        ModifiedOn: true
+        ModifiedOn: true,
       },
     });
 
     const latestDatesByYear = new Map();
 
-    this.updateLatestDates(latestDatesByYear, liveStocks);
-    this.updateLatestDates(latestDatesByYear, farmDetails);
-    this.updateLatestDates(latestDatesByYear, manures);
+    this.updateLatestDates(
+      latestDatesByYear,
+      liveStocks,
+      (record) => record.CalendarYear,
+    );
+
+    this.updateLatestDates(
+      latestDatesByYear,
+      farmDetails.filter((record) => record.TotalFarmed !== null),
+      (record) => record.CalendarYear,
+    );
+
+    this.updateLatestDates(
+      latestDatesByYear,
+      manures.filter((record) =>
+        years.includes(new Date(record.ManureDate).getFullYear()),
+      ),
+      (record) => new Date(record.ManureDate).getFullYear(),
+    );
 
     return years.map((year) => ({
       Year: year,

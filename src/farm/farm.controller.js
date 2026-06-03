@@ -129,7 +129,7 @@ class FarmController {
     }
   }
 
-  async getLastUpdatedDates(request, h) {
+  async getLastUpdatedDates() {
     try {
     const { farmId } = this.#request.params;
     const { years } = this.#request.query;
