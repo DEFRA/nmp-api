@@ -7,6 +7,7 @@ class EnvironmentService {
       return envValue;
     }
     console.warn(`Environment variable ${envName} does not exist`);
+     return `Environment variable ${envName} does not exist`
   }
 
   static nodeEnv() {
