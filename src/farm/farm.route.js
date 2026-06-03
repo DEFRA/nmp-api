@@ -121,7 +121,29 @@ module.exports = [
         query: Joi.object({
           shortSummary: Joi.boolean().optional(),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
+      },
+    },
+  },
+  {
+    method: "GET",
+    path: "/farms/last-updated/{farmId}",
+    handler: async (request, h) => {
+      return getController(request, h).getLastUpdatedDates();
+    },
+    options: {
+      tags: ["api", "Farm"],
+      description: "Get last updated dates for farm data",
+      validate: {
+        params: Joi.object({
+          farmId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          years: Joi.string()
+            .required()
+            .description("Comma separated years E.g. 2022,2023,2024")
+        }),
+        failAction: validationFailAction,
       },
     },
   },
