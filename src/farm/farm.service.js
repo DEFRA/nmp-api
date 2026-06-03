@@ -24,14 +24,14 @@ const { NutrientsLoadingManuresEntity } = require("../db/entity/nutrients-loadin
 class FarmService extends BaseService {
   constructor() {
     super(FarmEntity);
-    this.repository = getRepository(FarmEntity);
-    this.nutrientsLoadingLiveStocksRepository = getRepository(
+    this.repository = AppDataSource.getRepository(FarmEntity);
+    this.nutrientsLoadingLiveStocksRepository = AppDataSource.getRepository(
       NutrientsLoadingLiveStocksEntity,
     );
-    this.nutrientsLoadingFarmDetailsRepository = getRepository(
+    this.nutrientsLoadingFarmDetailsRepository = AppDataSource.getRepository(
       NutrientsLoadingFarmDetailsEntity,
     );
-    this.nutrientsLoadingManuresRepository = getRepository(
+    this.nutrientsLoadingManuresRepository = AppDataSource.getRepository(
       NutrientsLoadingManuresEntity,
     );
     this.ProcessFieldsService =
