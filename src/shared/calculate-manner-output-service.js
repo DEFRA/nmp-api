@@ -370,12 +370,14 @@ class CalculateMannerOutputService {
       return [];
     }
 
-    return await this.buildMannerOutputs(
+
+    const buildManureOutputs = await this.buildMannerOutputs(
       crop,
       mannerOutput,
       period,
       transactionalManager,
     );
+    return buildManureOutputs;
   }
 
   async calculateMannerOutputForOrganicManure(
