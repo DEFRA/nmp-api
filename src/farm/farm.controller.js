@@ -133,7 +133,11 @@ class FarmController {
     try {
     const { farmId } = this.#request.params;
     const { years } = this.#request.query;
-    const lastUpdatedDateData = await this.#farmService.getLastUpdatedDates(farmId, years);
+      const yearsOfFarm = years.split(",").map(Number);
+    const lastUpdatedDateData = await this.#farmService.getLastUpdatedDates(
+      farmId,
+      yearsOfFarm
+    );
     return this.#h.response(lastUpdatedDateData);
     } catch (error) {
       console.error(error);

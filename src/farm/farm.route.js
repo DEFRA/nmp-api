@@ -129,7 +129,7 @@ module.exports = [
     method: "GET",
     path: "/farms/last-updated/{farmId}",
     handler: async (request, h) => {
-      return getController(request, h).getLastUpdatedDates(request, h);
+      return getController(request, h).getLastUpdatedDates();
     },
     options: {
       tags: ["api", "Farm"],
@@ -139,9 +139,11 @@ module.exports = [
           farmId: Joi.number().integer().required(),
         }),
         query: Joi.object({
-          years: Joi.array().items(Joi.number().integer()).min(1).required()
+          years: Joi.string()
+            .required()
+            .description("Comma separated years E.g. 2022,2023,2024")
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
