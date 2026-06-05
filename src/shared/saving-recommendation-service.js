@@ -342,7 +342,7 @@ class SavingRecommendationService {
   ) {
     const existingComments = await transactionalManager.find(
       RecommendationCommentEntity,
-      { where: { RecommendationID: savedCrop.ID } },
+      { where: { RecommendationID: savedCrop?.ID } },
     );
 
     const processedNutrients = [];
@@ -371,9 +371,9 @@ class SavingRecommendationService {
           await transactionalManager.save(RecommendationCommentEntity, {
             Nutrient: nutrient,
             Comment: commentText,
-            RecommendationID: savedCrop.ID,
+            RecommendationID: savedCrop?.ID,
             CreatedOn: new Date(),
-            CreatedByID: userId,
+            CreatedByID: userId
           }),
         );
       }
