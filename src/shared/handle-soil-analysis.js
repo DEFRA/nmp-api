@@ -18,15 +18,18 @@ class HandleSoilAnalysisService {
   }
 
   getIndexString(nutrient, indexValue) {
+    const minusTwo = -2;
+    const plusTwo = 2;
+
     if (indexValue === null) {
       return null;
     }
 
     if (nutrient === "Potassium") {
-      if (indexValue === 2) {
+      if (indexValue === plusTwo) {
         return "2+";
       }
-      if (indexValue === -2) {
+      if (indexValue === minusTwo) {
         return "2-";
       }
     }
