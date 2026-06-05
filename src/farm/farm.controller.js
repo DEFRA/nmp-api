@@ -128,6 +128,22 @@ class FarmController {
       return this.#h.response({ error });
     }
   }
+
+  async getLastUpdatedDates() {
+    try {
+    const { farmId } = this.#request.params;
+    const { years } = this.#request.query;
+      const yearsOfFarm = years.split(",").map(Number);
+    const lastUpdatedDateData = await this.#farmService.getLastUpdatedDates(
+      farmId,
+      yearsOfFarm
+    );
+    return this.#h.response(lastUpdatedDateData);
+    } catch (error) {
+      console.error(error);
+      return this.#h.response({ error });
+    }
+  }
 }
 
 module.exports = { FarmController };
