@@ -306,9 +306,6 @@ class CalculateGrassHistoryAndPreviousGrass {
     let currentStreak = 0;
 
     for (const ft of fieldTypesArray) {
-      if (ft.isHistory) {
-        continue;
-      }
       if (ft.fieldType === FieldTypeMapper.GRASS) {
         currentStreak++;
         leyCount = Math.max(leyCount, currentStreak);

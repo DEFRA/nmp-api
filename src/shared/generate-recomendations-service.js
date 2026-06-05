@@ -465,6 +465,7 @@ class GenerateRecommendations {
           cropTypesList
         );
       nutrientRecommendationsData =await this.rB209RecommendationService.postData("Recommendation/Recommendations",nutrientRecommendationnReqBody);
+      console.log("Received nutrient recommendations data from RB209:", nutrientRecommendationsData);
       recommendation = await this.savingRecommendationService.processAndSaveRecommendations(
           crops, latestSoilAnalysis,
           nutrientRecommendationsData,

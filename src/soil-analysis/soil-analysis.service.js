@@ -4,8 +4,12 @@ const { BaseService } = require("../base/base.service");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const { MoreThan } = require("typeorm");
 const { CropEntity } = require("../db/entity/crop.entity");
-const { GenerateRecommendations } = require("../shared/generate-recomendations-service");
-const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
+const {
+  GenerateRecommendations,
+} = require("../shared/generate-recomendations-service");
+const {
+  UpdatingFutureRecommendations,
+} = require("../shared/updating-future-recommendations-service");
 
 class SoilAnalysesService extends BaseService {
   constructor() {
@@ -18,113 +22,155 @@ class SoilAnalysesService extends BaseService {
 
   async createSoilAnalysis(soilAnalysisBody, userId, pKBalanceData, request) {
     return AppDataSource.transaction(async (transactionalManager) => {
-      const soilAnalysis = await transactionalManager.save(SoilAnalysisEntity, {
-        ...soilAnalysisBody,
-        CreatedByID: userId,
-        CreatedOn: new Date(),
-      });
+      const soilAnalysis = await this.saveSoilAnalysisHelper(
+        transactionalManager,
+        soilAnalysisBody,
+        userId,
+      );
 
-      // Check for PK Balance entry
-      const pkBalanceEntry = await transactionalManager.find(PKBalanceEntity, {
-        where: {
-          Year: soilAnalysis.Year,
-          FieldID: soilAnalysis.FieldID,
-        },
-      });
-     
-      if (
-        soilAnalysis.Potassium != null ||
-        soilAnalysis.Phosphorus != null ||
-        soilAnalysis.PotassiumIndex != null ||
-        soilAnalysis.PhosphorusIndex != null
-      ) {
-        if (pkBalanceEntry.length === 0 && pKBalanceData) {
-          const { CreatedByID, CreatedOn, ...updatedPKBalanceData } =
-            pKBalanceData;
-           await transactionalManager.save(PKBalanceEntity, {
-            ...updatedPKBalanceData,
-            CreatedByID: userId,
-            CreatedOn: new Date()
-          });
-        }
-      } else {
-        // Delete PK Balance entry if applicable
-        await transactionalManager.delete(PKBalanceEntity, {
-          Year: soilAnalysis.Year,
-          FieldID: soilAnalysis.FieldID,
+      const PKBalance = await this.processPkBalanceForSoilAnalysisHelper(
+        transactionalManager,
+        soilAnalysis,
+        pKBalanceData,
+        userId,
+      );
+
+      await this.generateRecommendationsForSoilAnalysisHelper(
+        transactionalManager,
+        soilAnalysis,
+        request,
+        userId,
+      );
+
+      return { soilAnalysis, PKBalance };
+    });
+  }
+
+  async saveSoilAnalysisHelper(transactionalManager, soilAnalysisBody, userId) {
+    return transactionalManager.save(SoilAnalysisEntity, {
+      ...soilAnalysisBody,
+      CreatedByID: userId,
+      CreatedOn: new Date(),
+    });
+  }
+
+  async processPkBalanceForSoilAnalysisHelper(
+    transactionalManager,
+    soilAnalysis,
+    pKBalanceData,
+    userId,
+  ) {
+    const pkBalanceEntry = await transactionalManager.find(PKBalanceEntity, {
+      where: {
+        Year: soilAnalysis.Year,
+        FieldID: soilAnalysis.FieldID,
+      },
+    });
+
+    if (this.hasSoilAnalysisPkValuesHelper(soilAnalysis)) {
+      if (pkBalanceEntry.length === 0 && pKBalanceData) {
+        const { CreatedByID, CreatedOn, ...updatedPKBalanceData } =
+          pKBalanceData;
+        await transactionalManager.save(PKBalanceEntity, {
+          ...updatedPKBalanceData,
+          CreatedByID: userId,
+          CreatedOn: new Date(),
         });
       }
 
-      // Retrieve the updated PKBalance entry
-
-      const PKBalance = await transactionalManager.findOne(PKBalanceEntity, {
-        where: {
-          Year: soilAnalysis.Year,
-          FieldID: soilAnalysis.FieldID,
-        },
+      await this.updateExistingPkBalanceIfNeededHelper(
+        transactionalManager,
+        soilAnalysis,
+        userId,
+      );
+    } else {
+      await transactionalManager.delete(PKBalanceEntity, {
+        Year: soilAnalysis.Year,
+        FieldID: soilAnalysis.FieldID,
       });
+    }
 
-      if (
-        soilAnalysis.Potassium != null ||
-        soilAnalysis.Phosphorus != null ||
-        soilAnalysis.PotassiumIndex != null ||
-        soilAnalysis.PhosphorusIndex != null
-      ) {
-        if (PKBalance) {
-          const updateData = {
-            Year: PKBalance.Year,
-            FieldID: PKBalance.FieldID,
-            PBalance: 0,
-            KBalance: 0,
-          };
+    return transactionalManager.findOne(PKBalanceEntity, {
+      where: {
+        Year: soilAnalysis.Year,
+        FieldID: soilAnalysis.FieldID,
+      },
+    });
+  }
 
-          const saveAndUpdatePKBalance = {
-            ...PKBalance,
-            ...updateData,
-            ModifiedOn: new Date(),
-            ModifiedByID: userId,
-          };
+  hasSoilAnalysisPkValuesHelper(soilAnalysis) {
+    return (
+      soilAnalysis.Potassium != null ||
+      soilAnalysis.Phosphorus != null ||
+      soilAnalysis.PotassiumIndex != null ||
+      soilAnalysis.PhosphorusIndex != null
+    );
+  }
 
-          if (saveAndUpdatePKBalance) {
-            await transactionalManager.save(
-              PKBalanceEntity,
-              saveAndUpdatePKBalance
-            );
-          }
-        }
-      } 
+  async updateExistingPkBalanceIfNeededHelper(
+    transactionalManager,
+    soilAnalysis,
+    userId,
+  ) {
+    const PKBalance = await transactionalManager.findOne(PKBalanceEntity, {
+      where: {
+        Year: soilAnalysis.Year,
+        FieldID: soilAnalysis.FieldID,
+      },
+    });
 
-      const newOrganicManure = null;
-        await this.generateRecommendations.generateRecommendations(
-          soilAnalysis.FieldID,
-          soilAnalysis.Year,
-          newOrganicManure,
-          transactionalManager,
-          request,
-          userId
-        );
+    if (!PKBalance) {
+      return;
+    }
 
-        const nextAvailableCrop = await transactionalManager.findOne(
-          CropEntity,
-          {
-            where: {
-              FieldID: soilAnalysis.FieldID,
-              Year: MoreThan(soilAnalysis.Year),
-            },
-            order: { Year: "ASC" },
-          }
-        );
-        if (nextAvailableCrop) {
-          this.updatingFutureRecommendations.updateRecommendationsForField(
-              soilAnalysis.FieldID,
-              nextAvailableCrop.Year,
-              request,
-              userId
-            )
-        }
+    await transactionalManager.save(PKBalanceEntity, {
+      ...PKBalance,
+      PBalance: 0,
+      KBalance: 0,
+      ModifiedOn: new Date(),
+      ModifiedByID: userId,
+    });
+  }
 
-      return { soilAnalysis, PKBalance };
-      // return soilAnalysis;
+  async generateRecommendationsForSoilAnalysisHelper(
+    transactionalManager,
+    soilAnalysis,
+    request,
+    userId,
+  ) {
+    const newOrganicManure = null;
+    await this.generateRecommendations.generateRecommendations(
+      soilAnalysis.FieldID,
+      soilAnalysis.Year,
+      newOrganicManure,
+      transactionalManager,
+      request,
+      userId,
+    );
+
+    const nextAvailableCrop = await this.findNextAvailableCropHelper(
+      transactionalManager,
+      soilAnalysis.FieldID,
+      soilAnalysis.Year,
+    );
+
+    if (nextAvailableCrop) {
+      this.updatingFutureRecommendations.updateRecommendationsForField(
+        soilAnalysis.FieldID,
+        nextAvailableCrop.Year,
+        request,
+        userId,
+      );
+    }
+  }
+
+  async findNextAvailableCropHelper(transactionalManager, fieldId, year) {
+    return transactionalManager.findOne(CropEntity, {
+      where: {
+        FieldID: fieldId,
+        Year: MoreThan(year),
+      },
+      order: { Year: "ASC" },
     });
   }
 
@@ -133,10 +179,11 @@ class SoilAnalysesService extends BaseService {
     userId,
     soilAnalysisId,
     pKBalanceData,
-    request
+    request,
   ) {
     return AppDataSource.transaction(async (transactionalManager) => {
-      const { CreatedByID, CreatedOn, ...updatedData } = updatedSoilAnalysisData;
+      const { CreatedByID, CreatedOn, ...updatedData } =
+        updatedSoilAnalysisData;
       // Update SoilAnalysis
       const result = await transactionalManager.update(
         SoilAnalysisEntity,
@@ -144,18 +191,20 @@ class SoilAnalysesService extends BaseService {
         {
           ...updatedData,
           ModifiedByID: userId,
-          ModifiedOn: new Date()
-        }
+          ModifiedOn: new Date(),
+        },
       );
-      if (result.affected === 0) {throw new Error(`Soil Analysis with ID ${soilAnalysisId} not found`)}
+      if (result.affected === 0) {
+        throw new Error(`Soil Analysis with ID ${soilAnalysisId} not found`);
+      }
       const SoilAnalysis = await transactionalManager.findOne(
         SoilAnalysisEntity,
         {
           where: { ID: soilAnalysisId },
-        }
+        },
       );
       // Check for PK Balance entry
-       const pkBalanceEntry = await transactionalManager.find(PKBalanceEntity, {
+      const pkBalanceEntry = await transactionalManager.find(PKBalanceEntity, {
         where: {
           Year: SoilAnalysis.Date.Year,
           FieldID: SoilAnalysis.FieldID,
@@ -172,7 +221,7 @@ class SoilAnalysesService extends BaseService {
           await transactionalManager.save(PKBalanceEntity, {
             ...updatedPKBalanceData,
             CreatedByID: userId,
-            CreatedOn: new Date()
+            CreatedOn: new Date(),
           });
         }
       } else {
@@ -196,38 +245,37 @@ class SoilAnalysesService extends BaseService {
           SoilAnalysis.Phosphorus != null ||
           SoilAnalysis.PotassiumIndex != null ||
           SoilAnalysis.PhosphorusIndex != null) &&
-          PKBalance
+        PKBalance
       ) {
-          const updateData = {
-            Year: PKBalance.Year,
-            FieldID: PKBalance.FieldID,
-            PBalance: 0,
-            KBalance: 0,
-          };
+        const updateData = {
+          Year: PKBalance.Year,
+          FieldID: PKBalance.FieldID,
+          PBalance: 0,
+          KBalance: 0,
+        };
 
-          const saveAndUpdatePKBalance = {
-            ...PKBalance,
-            ...updateData,
-            ModifiedOn: new Date(),
-            ModifiedByID: userId,
-          };
+        const saveAndUpdatePKBalance = {
+          ...PKBalance,
+          ...updateData,
+          ModifiedOn: new Date(),
+          ModifiedByID: userId,
+        };
 
-          if (saveAndUpdatePKBalance) {
-            await transactionalManager.save(
-              PKBalanceEntity,
-              saveAndUpdatePKBalance
-            );
-          }
-        
+        if (saveAndUpdatePKBalance) {
+          await transactionalManager.save(
+            PKBalanceEntity,
+            saveAndUpdatePKBalance,
+          );
+        }
       }
-      const newOrganicManure= null;
+      const newOrganicManure = null;
       await this.generateRecommendations.generateRecommendations(
         updatedSoilAnalysisData.FieldID,
         updatedSoilAnalysisData.Year,
         newOrganicManure,
         transactionalManager,
         request,
-        userId
+        userId,
       );
 
       const nextAvailableCrop = await transactionalManager.findOne(CropEntity, {
@@ -239,11 +287,12 @@ class SoilAnalysesService extends BaseService {
       });
 
       if (nextAvailableCrop) {
-        this.updatingFutureRecommendations.updateRecommendationsForField(
+        this.updatingFutureRecommendations
+          .updateRecommendationsForField(
             updatedSoilAnalysisData.FieldID,
             nextAvailableCrop.Year,
             request,
-            userId
+            userId,
           )
           .then((res) => {
             if (res === undefined) {
@@ -273,7 +322,7 @@ class SoilAnalysesService extends BaseService {
         SoilAnalysisEntity,
         {
           where: { ID: soilAnalysisId },
-        }
+        },
       );
 
       // If the soilAnalysis does not exist, throw a not found error
@@ -287,7 +336,8 @@ class SoilAnalysesService extends BaseService {
           "EXEC spSoilAnalyses_DeleteSoilAnalyses @SoilAnalysesID = @0";
         await AppDataSource.query(storedProcedure, [soilAnalysisId]);
 
-        this.updatingFutureRecommendations.updateRecommendationsForField(
+        this.updatingFutureRecommendations
+          .updateRecommendationsForField(
             soilAnalysisToDelete.FieldID,
             soilAnalysisToDelete.Year,
             request,

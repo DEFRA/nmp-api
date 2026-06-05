@@ -1,4 +1,4 @@
-const {  Between } = require("typeorm");
+const { Between } = require("typeorm");
 const RB209SoilService = require("../vendors/rb209/soil/soil.service");
 const { AppDataSource } = require("../db/data-source");
 const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
@@ -7,155 +7,154 @@ const { CountryMapper } = require("../constants/country-mapper");
 const NUTRIENT_IDS = {
   PHOSPHORUS: 1,
   POTASSIUM: 2,
-  MAGNESIUM: 3
+  MAGNESIUM: 3,
 };
 
 class HandleSoilAnalysisService {
   constructor() {
     this.RB209SoilService = new RB209SoilService();
-     this.soilAnalysisRepository = AppDataSource.getRepository(SoilAnalysisEntity);
+    this.soilAnalysisRepository =
+      AppDataSource.getRepository(SoilAnalysisEntity);
   }
 
+  getIndexString(nutrient, indexValue) {
+    const minusTwo = -2;
+    const plusTwo = 2;
 
-  async findIndexId(nutrient, indexValue, nutrientIndicesData) {
-    // Return null immediately if indexValue is null
     if (indexValue === null) {
       return null;
     }
-    const nutrientData = nutrientIndicesData[nutrient];
-  const indexValueTwo = 2, indexValueNegativeTwo = -2;
-    // Special case for Potassium (nutrientId = 2)
+
     if (nutrient === "Potassium") {
-      // Check if indexValue is 2 and match with "2+"
-      if (indexValue === indexValueTwo) {
-        for (const data of nutrientData) {
-          if (data.index.trim() === "2+") {
-            return data.indexId;
-          }
-        }
+      if (indexValue === plusTwo) {
+        return "2+";
       }
-      // Check if indexValue is -2 and match with "2-"
-      if (indexValue === indexValueNegativeTwo) {
-        for (const data of nutrientData) {
-          if (data.index.trim() === "2-") {
-            return data.indexId;
-          }
-        }
+      if (indexValue === minusTwo) {
+        return "2-";
       }
     }
-    for (const data of nutrientData) {
-      if (data.index.trim() === indexValue.toString()) {
-        return data.indexId;
-      }
+
+    return indexValue.toString();
+  }
+
+  async findIndexId(nutrient, indexValue, nutrientIndicesData) {
+    const indexString = this.getIndexString(nutrient, indexValue);
+    if (indexString === null) {
+      return null;
     }
-    return null; // Return null if no match is found
+
+    const nutrientData = nutrientIndicesData[nutrient] || [];
+    const matchedIndex = nutrientData.find(
+      (data) => data.index.trim() === indexString,
+    );
+
+    return matchedIndex ? matchedIndex.indexId : null;
   }
 
- 
-async assignIndexIdToSoilRecords(soilAnalysisRecords, rb209CountryId) {
+  async assignIndexIdToSoilRecords(soilAnalysisRecords, rb209CountryId) {
+    for (const record of soilAnalysisRecords) {
+      await this.processRecord(record, rb209CountryId);
+    }
 
-
-  for (const record of soilAnalysisRecords) {
-    await this.processRecord(record, rb209CountryId);
+    return soilAnalysisRecords;
   }
 
-  return soilAnalysisRecords;
-}
-
-
-
-
-/* -----------------------------
+  /* -----------------------------
    PROCESS SINGLE RECORD
 ------------------------------*/
-async processRecord(record, rb209CountryId) {
-  const cache = {};
-  for (const nutrient of NutrientMapperNames) {
-    const { nutrientId, nutrient: nutrientName } = nutrient;
+  async processRecord(record, rb209CountryId) {
+    const cache = {};
+    for (const nutrient of NutrientMapperNames) {
+      const { nutrientId, nutrient: nutrientName } = nutrient;
 
-    const methodologyId = this.getMethodologyId(record, nutrientId);
-    if (methodologyId == null) {continue};
+      const methodologyId = this.getMethodologyId(record, nutrientId);
+      if (methodologyId == null) {
+        continue;
+      }
 
-    const nutrientIndexKey = this.getNutrientIndexKey(
-      nutrientName,
-      methodologyId
-    );
+      const nutrientIndexKey = this.getNutrientIndexKey(
+        nutrientName,
+        methodologyId,
+      );
 
-    if (nutrientIndexKey in record) {
-    await this.getNutrientIndexData(
-      nutrientId,
-      methodologyId,
-      rb209CountryId,
-      nutrientName,
-      cache
-    );
+      if (nutrientIndexKey in record) {
+        await this.getNutrientIndexData(
+          nutrientId,
+          methodologyId,
+          rb209CountryId,
+          nutrientName,
+          cache,
+        );
 
-    const nutrientIndexId = await this.findIndexId(
-      nutrientName,
-      record[nutrientIndexKey],
-      cache
-    );
-    record[nutrientIndexKey] =
-      nutrientIndexId || record[nutrientIndexKey];
+        const nutrientIndexId = await this.findIndexId(
+          nutrientName,
+          record[nutrientIndexKey],
+          cache,
+        );
+        record[nutrientIndexKey] = nutrientIndexId || record[nutrientIndexKey];
+      }
+    }
   }
- } 
-}
 
-
-/* -----------------------------
+  /* -----------------------------
    CACHE + API HANDLER
 ------------------------------*/
-async getNutrientIndexData(
-  nutrientId,
-  methodologyId,
-  rb209CountryId,
-  nutrientName,
-  cache
-) {
-  const cacheKey =nutrientName;
-  if (!cache[cacheKey]) {
-    cache[cacheKey] = await this.RB209SoilService.getData(
-      `Soil/NutrientIndices/${nutrientId}/${methodologyId}/${rb209CountryId}`
-    );
+  async getNutrientIndexData(
+    nutrientId,
+    methodologyId,
+    rb209CountryId,
+    nutrientName,
+    cache,
+  ) {
+    const cacheKey = nutrientName;
+    if (!cache[cacheKey]) {
+      cache[cacheKey] = await this.RB209SoilService.getData(
+        `Soil/NutrientIndices/${nutrientId}/${methodologyId}/${rb209CountryId}`,
+      );
+    }
+
+    return cache[cacheKey];
+  }
+  getMethodologyId(record, nutrientId) {
+    switch (nutrientId) {
+      case NUTRIENT_IDS.PHOSPHORUS:
+        return record.PhosphorusMethodologyID;
+
+      case NUTRIENT_IDS.POTASSIUM:
+        return record.PotassiumMethodologyID;
+
+      case NUTRIENT_IDS.MAGNESIUM:
+        return record.MagnesiumMethodologyID;
+
+      default:
+        return null;
+    }
   }
 
-  return cache[cacheKey];
-}
- getMethodologyId(record, nutrientId) {
-  switch (nutrientId) {
-    case NUTRIENT_IDS.PHOSPHORUS:
-      return record.PhosphorusMethodologyID;
-
-    case NUTRIENT_IDS.POTASSIUM:
-      return record.PotassiumMethodologyID;
-
-    case NUTRIENT_IDS.MAGNESIUM:
-      return record.MagnesiumMethodologyID;
-
-    default:
-      return null;
+  getNutrientIndexKey(nutrientName, methodologyId) {
+    const methodologyName =
+      methodologyId === 2 ? `${nutrientName}Status` : `${nutrientName}Index`;
+    return methodologyName;
   }
-}
-
-getNutrientIndexKey(nutrientName, methodologyId) {
- const methodologyName= methodologyId === 2
-    ? `${nutrientName}Status`
-    : `${nutrientName}Index`;
-  return methodologyName;
-}
-  async handleSoilAnalysisValidation(fieldId, year, rb209CountryId,transactionalManager) {
+  async handleSoilAnalysisValidation(
+    fieldId,
+    year,
+    rb209CountryId,
+    transactionalManager,
+  ) {
     const errors = [];
     const fiveYearsAgo = year - 4;
 
     // Fetch all soil analyses for the last 5 years
-    const soilAnalysisRecordsFiveYears = await transactionalManager.find(SoilAnalysisEntity,
+    const soilAnalysisRecordsFiveYears = await transactionalManager.find(
+      SoilAnalysisEntity,
       {
         where: {
           FieldID: fieldId,
           Year: Between(fiveYearsAgo, year), // Fetch records within 5 years
         },
-        order: { Date: "DESC" } // Order by date, most recent first
-      }
+        order: { Date: "DESC" }, // Order by date, most recent first
+      },
     );
 
     // Define the fields we want the latest values for
@@ -164,7 +163,7 @@ getNutrientIndexKey(nutrientName, methodologyId) {
       "SoilNitrogenSupplyIndex",
       "PhosphorusIndex",
       "PotassiumIndex",
-      "MagnesiumIndex"
+      "MagnesiumIndex",
     ];
 
     // Initialize the latest values object
@@ -175,7 +174,7 @@ getNutrientIndexKey(nutrientName, methodologyId) {
 
         // Find the first record in descending date order where the field has a value
         const latestRecordWithFieldValue = soilAnalysisRecordsFiveYears.find(
-          (record) => record[field] !== null && record[field] !== undefined
+          (record) => record[field] !== null && record[field] !== undefined,
         );
         if (latestRecordWithFieldValue) {
           latestSoilAnalysis[field] = latestRecordWithFieldValue[field];
@@ -189,7 +188,7 @@ getNutrientIndexKey(nutrientName, methodologyId) {
 
     const soilAnalysisRecords = await this.assignIndexIdToSoilRecords(
       soilAnalysisRecordsFiveYears,
-      rb209CountryId
+      rb209CountryId,
     );
 
     return { latestSoilAnalysis, errors, soilAnalysisRecords };
