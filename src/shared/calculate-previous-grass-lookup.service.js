@@ -147,16 +147,20 @@ async calculateNitrogenUseFromPreviousGrass(prevGrass) {
   }
 },
 
-async calculateTotalNitrogenUseForCrop(crop, transactionalManager) {
-  if (!crop?.ID) {
-    return { nitrogenTotal: 0, nitrogenUse: CloverMapper.LowClover };
+mapSoilNitrogenSupplyToNitrogenUse(soilNitrogenSupplyId) {
+  switch (soilNitrogenSupplyId) {
+    case SoilNitrogenMapper.HIGHN:
+      return CloverMapper.HighClover;
+    case SoilNitrogenMapper.MODERATEN:
+      return CloverMapper.ModerateClover;
+    case SoilNitrogenMapper.LOWN:
+    default:
+      return CloverMapper.LowClover;
   }
+},
 
-  let organicAvailableN = 0;
-  let organicNextDefoliationN = 0;
-  let organicPrevYearNextYearN = 0;
-  let fertiliserN = 0;
-  const isHistoryCrop = await transactionalManager
+async getHistoryCropNitrogenUse(crop, transactionalManager) {
+  const historyCrop = await transactionalManager
     .createQueryBuilder(PreviousCroppingEntity, "pc")
     .leftJoin(
       SoilNitrogenSupplyItemsEntity,
@@ -166,91 +170,148 @@ async calculateTotalNitrogenUseForCrop(crop, transactionalManager) {
     .select(["sns.SoilNitrogenSupplyId AS SoilNitrogenSupplyId"])
     .where("pc.ID = :id", { id: crop.ID })
     .getRawOne();
-  let nitrogenUse = null;
-  if (isHistoryCrop) {
-    const soilNitrogenSupplyItemID = isHistoryCrop.SoilNitrogenSupplyId;
-    if (soilNitrogenSupplyItemID) {
-      if (soilNitrogenSupplyItemID === SoilNitrogenMapper.LOWN) {
-        nitrogenUse = CloverMapper.LowClover;
-      } else if (soilNitrogenSupplyItemID === SoilNitrogenMapper.MODERATEN) {
-        nitrogenUse = CloverMapper.ModerateClover;
-      } else if (soilNitrogenSupplyItemID === SoilNitrogenMapper.HIGHN) {
-        nitrogenUse = CloverMapper.HighClover;
-      } else {
-        nitrogenUse = CloverMapper.LowClover;
-      }
 
-      return { nitrogenUse };
-    }
+  if (!historyCrop?.SoilNitrogenSupplyId) {
+    return null;
   }
-  // Step 1: Current year's Organic Manures
-  const managementPeriods = await transactionalManager.find(
-    ManagementPeriodEntity,
-    { where: { CropID: crop.ID } },
+
+  return this.mapSoilNitrogenSupplyToNitrogenUse(
+    historyCrop.SoilNitrogenSupplyId,
+  );
+},
+
+async getManagementPeriodsForCrop(cropId, transactionalManager) {
+  return transactionalManager.find(ManagementPeriodEntity, {
+    where: { CropID: cropId },
+  });
+},
+
+async calculateCurrentCropNitrogenTotals(crop, transactionalManager) {
+  const totals = {
+    organicAvailableN: 0,
+    organicNextDefoliationN: 0,
+    fertiliserN: 0,
+  };
+  const managementPeriods = await this.getManagementPeriodsForCrop(
+    crop.ID,
+    transactionalManager,
   );
 
-  for (const mp of managementPeriods) {
-    const organicManures = await transactionalManager.find(
-      OrganicManureEntity,
-      { where: { ManagementPeriodID: mp.ID } },
+  for (const managementPeriod of managementPeriods) {
+    await this.addOrganicNitrogenTotals(
+      managementPeriod.ID,
+      totals,
+      transactionalManager,
     );
-
-    for (const manure of organicManures) {
-      organicAvailableN += manure.AvailableN || 0;
-      organicNextDefoliationN += manure.AvailableNForNextDefoliation || 0;
-    }
-
-    // Step 2: Fertiliser Manures for same ManagementPeriod
-    const fertiliserManures = await transactionalManager.find(
-      FertiliserManuresEntity,
-      { where: { ManagementPeriodID: mp.ID } },
+    await this.addFertiliserNitrogenTotal(
+      managementPeriod.ID,
+      totals,
+      transactionalManager,
     );
-
-    for (const fert of fertiliserManures) {
-      fertiliserN += fert.N || 0;
-    }
   }
-  // Step 3: OrganicManure of previous year's crop (AvailableNForNextYear)
+
+  return totals;
+},
+
+async addOrganicNitrogenTotals(managementPeriodId, totals, transactionalManager) {
+  const organicManures = await transactionalManager.find(OrganicManureEntity, {
+    where: { ManagementPeriodID: managementPeriodId },
+  });
+
+  for (const manure of organicManures) {
+    totals.organicAvailableN += manure.AvailableN || 0;
+    totals.organicNextDefoliationN +=
+      manure.AvailableNForNextDefoliation || 0;
+  }
+},
+
+async addFertiliserNitrogenTotal(managementPeriodId, totals, transactionalManager) {
+  const fertiliserManures = await transactionalManager.find(
+    FertiliserManuresEntity,
+    { where: { ManagementPeriodID: managementPeriodId } },
+  );
+
+  for (const fertiliser of fertiliserManures) {
+    totals.fertiliserN += fertiliser.N || 0;
+  }
+},
+
+async calculatePreviousCropOrganicNextYearN(crop, transactionalManager) {
   const previousCrop = await this.getCropForYear(
     crop.FieldID,
     crop.Year - 1,
     transactionalManager,
   );
 
-  if (previousCrop?.ID) {
-    const prevMgmtPeriods = await transactionalManager.find(
-      ManagementPeriodEntity,
-      { where: { CropID: previousCrop.ID } },
-    );
-    for (const mp of prevMgmtPeriods) {
-      const organicManures = await transactionalManager.find(
-        OrganicManureEntity,
-        { where: { ManagementPeriodID: mp.ID } },
-      );
+  if (!previousCrop?.ID) {
+    return 0;
+  }
 
-      for (const manure of organicManures) {
-        organicPrevYearNextYearN += manure.AvailableNForNextYear || 0;
-      }
+  let organicPrevYearNextYearN = 0;
+  const previousManagementPeriods = await this.getManagementPeriodsForCrop(
+    previousCrop.ID,
+    transactionalManager,
+  );
+
+  for (const managementPeriod of previousManagementPeriods) {
+    const organicManures = await transactionalManager.find(
+      OrganicManureEntity,
+      { where: { ManagementPeriodID: managementPeriod.ID } },
+    );
+    for (const manure of organicManures) {
+      organicPrevYearNextYearN += manure.AvailableNForNextYear || 0;
     }
   }
 
-  // Step 4: Total N
+  return organicPrevYearNextYearN;
+},
+
+getNitrogenUseFromTotal(nitrogenTotal) {
+  const nitrogenTotalTwoFiftyLimit = 250;
+  const nitrogenTotalOneHundredLimit = 100;
+
+  if (nitrogenTotal > nitrogenTotalTwoFiftyLimit) {
+    return CloverMapper.HighClover;
+  }
+
+  if (nitrogenTotal > nitrogenTotalOneHundredLimit) {
+    return CloverMapper.ModerateClover;
+  }
+
+  return CloverMapper.LowClover;
+},
+
+async calculateTotalNitrogenUseForCrop(crop, transactionalManager) {
+  if (!crop?.ID) {
+    return { nitrogenTotal: 0, nitrogenUse: CloverMapper.LowClover };
+  }
+
+  const historyNitrogenUse = await this.getHistoryCropNitrogenUse(
+    crop,
+    transactionalManager,
+  );
+  if (historyNitrogenUse !== null) {
+    return { nitrogenUse: historyNitrogenUse };
+  }
+
+  const currentTotals = await this.calculateCurrentCropNitrogenTotals(
+    crop,
+    transactionalManager,
+  );
+  const organicPrevYearNextYearN =
+    await this.calculatePreviousCropOrganicNextYearN(
+      crop,
+      transactionalManager,
+    );
   const nitrogenTotal =
-    organicAvailableN +
-    organicNextDefoliationN +
+    currentTotals.organicAvailableN +
+    currentTotals.organicNextDefoliationN +
     organicPrevYearNextYearN +
-    fertiliserN;
-const nitrogenTotalTwoFiftyLimit = 250,nitrogenTotalOneHundredLimit = 100;
- if (nitrogenTotal > nitrogenTotalTwoFiftyLimit) {
-   nitrogenUse = CloverMapper.HighClover;
- } else if (nitrogenTotal > nitrogenTotalOneHundredLimit) {
-   nitrogenUse = CloverMapper.ModerateClover;
- } else {
-   nitrogenUse = CloverMapper.LowClover;
- }
+    currentTotals.fertiliserN;
+
   return {
     nitrogenTotal,
-    nitrogenUse,
+    nitrogenUse: this.getNitrogenUseFromTotal(nitrogenTotal),
   };
 },
 

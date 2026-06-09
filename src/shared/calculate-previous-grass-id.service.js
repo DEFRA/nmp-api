@@ -123,6 +123,38 @@ class CalculateGrassHistoryAndPreviousGrass {
     return calculatePreviousGrassLookupMethods.calculateNitrogenUseFromPreviousGrass.call(this, ...args);
   }
 
+  mapSoilNitrogenSupplyToNitrogenUse(...args) {
+    return calculatePreviousGrassLookupMethods.mapSoilNitrogenSupplyToNitrogenUse.call(this, ...args);
+  }
+
+  async getHistoryCropNitrogenUse(...args) {
+    return calculatePreviousGrassLookupMethods.getHistoryCropNitrogenUse.call(this, ...args);
+  }
+
+  async getManagementPeriodsForCrop(...args) {
+    return calculatePreviousGrassLookupMethods.getManagementPeriodsForCrop.call(this, ...args);
+  }
+
+  async calculateCurrentCropNitrogenTotals(...args) {
+    return calculatePreviousGrassLookupMethods.calculateCurrentCropNitrogenTotals.call(this, ...args);
+  }
+
+  async addOrganicNitrogenTotals(...args) {
+    return calculatePreviousGrassLookupMethods.addOrganicNitrogenTotals.call(this, ...args);
+  }
+
+  async addFertiliserNitrogenTotal(...args) {
+    return calculatePreviousGrassLookupMethods.addFertiliserNitrogenTotal.call(this, ...args);
+  }
+
+  async calculatePreviousCropOrganicNextYearN(...args) {
+    return calculatePreviousGrassLookupMethods.calculatePreviousCropOrganicNextYearN.call(this, ...args);
+  }
+
+  getNitrogenUseFromTotal(...args) {
+    return calculatePreviousGrassLookupMethods.getNitrogenUseFromTotal.call(this, ...args);
+  }
+
   async calculateTotalNitrogenUseForCrop(...args) {
     return calculatePreviousGrassLookupMethods.calculateTotalNitrogenUseForCrop.call(this, ...args);
   }
