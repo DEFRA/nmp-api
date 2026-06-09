@@ -7,6 +7,58 @@ class CalculateGrassHistoryAndPreviousGrass {
     return calculatePreviousGrassHistoryMethods.calculateIsReseeded.call(this, ...args);
   }
 
+  isHighCloverSward(...args) {
+    return calculatePreviousGrassHistoryMethods.isHighCloverSward.call(this, ...args);
+  }
+
+  getReseededValue(...args) {
+    return calculatePreviousGrassHistoryMethods.getReseededValue.call(this, ...args);
+  }
+
+  async getFirstHarvestYearState(...args) {
+    return calculatePreviousGrassHistoryMethods.getFirstHarvestYearState.call(this, ...args);
+  }
+
+  async resolveFirstYearPreviousGrass(...args) {
+    return calculatePreviousGrassHistoryMethods.resolveFirstYearPreviousGrass.call(this, ...args);
+  }
+
+  async getSecondHarvestYearState(...args) {
+    return calculatePreviousGrassHistoryMethods.getSecondHarvestYearState.call(this, ...args);
+  }
+
+  applySecondYearCropFlags(...args) {
+    return calculatePreviousGrassHistoryMethods.applySecondYearCropFlags.call(this, ...args);
+  }
+
+  async resolveSecondYearPreviousGrass(...args) {
+    return calculatePreviousGrassHistoryMethods.resolveSecondYearPreviousGrass.call(this, ...args);
+  }
+
+  applyPreviousGrassHighClover(...args) {
+    return calculatePreviousGrassHistoryMethods.applyPreviousGrassHighClover.call(this, ...args);
+  }
+
+  isAllArableHistory(...args) {
+    return calculatePreviousGrassHistoryMethods.isAllArableHistory.call(this, ...args);
+  }
+
+  getGrassCropForNitrogenUse(...args) {
+    return calculatePreviousGrassHistoryMethods.getGrassCropForNitrogenUse.call(this, ...args);
+  }
+
+  async calculateGrassHistoryNitrogenUse(...args) {
+    return calculatePreviousGrassHistoryMethods.calculateGrassHistoryNitrogenUse.call(this, ...args);
+  }
+
+  async getAllArableCategoryIds(...args) {
+    return calculatePreviousGrassHistoryMethods.getAllArableCategoryIds.call(this, ...args);
+  }
+
+  async buildGrassHistoryMappingCriteria(...args) {
+    return calculatePreviousGrassHistoryMethods.buildGrassHistoryMappingCriteria.call(this, ...args);
+  }
+
   async getGrassHistoryID(...args) {
     return calculatePreviousGrassHistoryMethods.getGrassHistoryID.call(this, ...args);
   }
