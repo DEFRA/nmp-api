@@ -11,12 +11,13 @@ const RecommendationNutrientsDto = Joi.object({
 });
 
 const RecommendationPreviousCroppingDto = Joi.object({
-  previousGrassId: Joi.number(),
-  previousCropGroupId: Joi.number(),
-  previousCropTypeId: Joi.number(),
+  previousGrassId: Joi.number().allow(null),
+  previousCropGroupId: Joi.number().allow(null),
+  previousCropTypeId: Joi.number().allow(null),
+  grassHistoryId: Joi.number().allow(null),
   snsId: Joi.number().allow(null),
   smnDepth: Joi.number().allow(null),
-  measuredSmn: Joi.number().allow(null),
+  measuredSmn: Joi.number().allow(null)
 });
 
 const RecommendationOrganicMaterialDto = Joi.object({
@@ -93,9 +94,6 @@ const RecommendationFieldDto = Joi.object({
   grassland: RecommendationGrasslandDto.optional(),
   soil: RecommendationSoilDto,
   harvestYear: Joi.number().required(),
-  area: Joi.number().required(),
-  postcode: Joi.string().required(),
-  altitude: Joi.number().required(),
   rainfallAverage: Joi.number().required(),
   excessWinterRainfall: Joi.number().required(),
   mannerManures: Joi.boolean().optional().allow(null),
