@@ -19,7 +19,7 @@ module.exports = [
       return controller.calculateRainfallPostApplicationOfManure();
     },
     options: {
-      tags: ["api", "Manner Climates"],
+      tags: ["api", "Manner climates"],
       description: "Calculate Rainfall Post Application of Manure",
       validate: {
         payload: CreateRainfallPostApplicationDto,
@@ -38,7 +38,7 @@ module.exports = [
       return controller.calculateRainfallAprilToSeptemberOfManure();
     },
     options: {
-      tags: ["api", "Manner Climates"],
+      tags: ["api", "Manner climates"],
       description: "Calculate Rainfall April to September of Manure",
       validate: {
         params: Joi.object({
