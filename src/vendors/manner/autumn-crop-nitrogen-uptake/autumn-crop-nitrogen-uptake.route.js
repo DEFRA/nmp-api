@@ -17,7 +17,7 @@ module.exports = [
       return controller.createAutoCropNitrogenUptake();
     },
     options: {
-      tags: ["api", "Manner Crop Types"],
+      tags: ["api", "Manner crop-types"],
       description: "Get Autumn Crop Nitrogen Uptake",
       validate: {
         payload: CreateAutumnCropUptakeNitrogenDto,
