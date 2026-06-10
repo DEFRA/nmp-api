@@ -7,17 +7,17 @@ const { CreateAutumnCropUptakeNitrogenDto } = require("./dto/autumn-crop-nitroge
 module.exports = [
   {
     method: "POST",
-    path: "/vendors/manner/autumn-crop-nitrogen-uptake",
+    path: "/vendors/manner/crop-types/autumn-crop-nitrogen-uptake",
     handler: async (request, h) => {
       // Create a new instance of the controller for each request
       const controller = new MannerAutumnCropNitorgenUptakeController(
         request,
-        h
+        h,
       );
       return controller.createAutoCropNitrogenUptake();
     },
     options: {
-      tags: ["api", "Manner autumn-crop-nitrogen-uptake"],
+      tags: ["api", "Manner Crop Types"],
       description: "Get Autumn Crop Nitrogen Uptake",
       validate: {
         payload: CreateAutumnCropUptakeNitrogenDto,
