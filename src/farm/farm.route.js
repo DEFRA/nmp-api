@@ -40,6 +40,22 @@ module.exports = [
     },
   },
   {
+  method: "GET",
+  path: "/farmsWithLastUpdatedDate/{organisationId}",
+  options: {
+    tags: ["api", "Farm"],
+    description: "Get all farms with last updated date",
+    validate: {
+      params: Joi.object({
+        organisationId: Joi.string().required(),
+      }),
+    },
+  },
+  handler: async (request, h) => {
+    return getController(request, h).getAllWithLastUpdatedDate();
+  },
+},
+  {
     method: "GET",
     path: "/farms/{farmId}",
     options: {
