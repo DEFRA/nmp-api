@@ -6,6 +6,11 @@ class RB209GrassService extends RB209BaseService {
   constructor() {
     super(cacheManager);
   }
+
+  async getSwardTypesFilterByCountryId(countryId) {
+    const records = await this.getData("Grass/SwardTypes");
+      return records.filter((record) => record.countryId === countryId);
+  }
 }
 
 module.exports = RB209GrassService;
