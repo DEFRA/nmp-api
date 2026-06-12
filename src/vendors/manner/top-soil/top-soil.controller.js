@@ -16,10 +16,10 @@ class MannerTopSoilsController {
     const data = await this.#service.getData(endpoint, this.#request);
     return this.#h.response(data);
   }
-  async getAllTopSoils() {
+  async getAllSoils() {
     return this.handlerGetData();
   }
-  async getTopSoilsById() {
+  async getSoilsById() {
     return this.handlerGetData();
   }
 }

@@ -37,7 +37,7 @@ module.exports = [
 
   {
     method: "GET",
-    path: "/vendors/rb209/Grass/DefoliationSequences/{swardTypeId}/{swardManagementId}/{numberOfCuts}/{newSward}",
+    path: "/vendors/rb209/Grass/DefoliationSequences/{swardTypeId}/{swardManagementId}/{numberOfCuts}/{newSward}/{countryId}",
     handler: async (request, h) => {
       const controller = new RB209GrassController(request, h);
       return controller.getGrassDefoliationSequence(request, h);
@@ -63,6 +63,10 @@ module.exports = [
           newSward: Joi.boolean()
             .required()
             .description("Whether a new sward (true) or not (false)"),
+          countryId: Joi.number()
+            .integer()
+            .required()
+            .description("The country id to filter on."),
         }),
         failAction: validationFailAction,
       },
@@ -239,6 +243,36 @@ module.exports = [
   },
   {
     method: "GET",
+    path: "/vendors/rb209/Grass/SiteClassId/{soilTypeId}/{rainfall}/{altitude}",
+    handler: async (request, h) => {
+      const controller = new RB209GrassController(request, h);
+      return controller.getSiteClassIdBySoilTypeIdAndRainfallAndAltitude(
+        request,
+        h,
+      );
+    },
+    options: {
+      tags: ["api", grassDescriptionVendor],
+      description: "Calculate the site class id for Scottish grassland fields.",
+      validate: {
+        params: Joi.object({
+          soilTypeId: Joi.number()
+            .integer()
+            .required()
+            .description("The soil type id of the field."),
+          rainfall: Joi.number()
+            .required()
+            .description("The rainfall value at the field (mm)."),
+          altitude: Joi.number()
+            .required()
+            .description("The altitude of the field (metres above sea level)."),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+  },
+  {
+    method: "GET",
     path: "/vendors/rb209/Grass/SwardManagement/{swardManagementId}",
     handler: async (request, h) => {
       const controller = new RB209GrassController(request, h);
@@ -335,6 +369,28 @@ module.exports = [
       },
     },
   },
+  {
+    method: "GET",
+    path: "/vendors/rb209/Grass/SwardTypesByCountryId/{countryId}",
+    handler: async (request, h) => {
+      const controller = new RB209GrassController(request, h);
+      return controller.getSwardTypesFilterByCountryId(request, h);
+    },
+    options: {
+      tags: ["api", grassDescriptionVendor],
+      description:
+        "The list of different sward types available for grass fields By CountryId.",
+      validate: {
+        params: Joi.object({
+          countryId: Joi.number()
+            .integer()
+            .required()
+            .description("The id of the country to filter on."),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+  },
 
   {
     method: "GET",
@@ -357,6 +413,34 @@ module.exports = [
             .integer()
             .required()
             .description("The ID of the grass growth class."),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+  },
+  {
+    method: "GET",
+    path: "/vendors/rb209/Grass/YieldRangesScotland/{sequenceId}/{siteClassId}",
+    handler: async (request, h) => {
+      const controller = new RB209GrassController(request, h);
+      return controller.getYieldRangesForGrassFieldsBySequenceIdAndSiteClassId(
+        request,
+        h,
+      );
+    },
+    options: {
+      tags: ["api", grassDescriptionVendor],
+      description: "The list of yield ranges for grass fields in Scotland.",
+      validate: {
+        params: Joi.object({
+          sequenceId: Joi.number()
+            .integer()
+            .required()
+            .description("The id of the defoliation sequence to filter on."),
+          siteClassId: Joi.number()
+            .integer()
+            .required()
+            .description("The id of the site class to filter on."),
         }),
         failAction: validationFailAction,
       },
