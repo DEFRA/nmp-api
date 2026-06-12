@@ -6,10 +6,10 @@ module.exports = [
     path: "/vendors/manner/top-soils",
     handler: async (request, h) => {
       const controller = new MannerTopSoilsController(request, h);
-      return controller.getAllTopSoils(request, h);
+      return controller.getAllSoils(request, h);
     },
     options: {
-      tags: ["api", "Manner top-soils"],
+      tags: ["api", "Manner Soils"],
       description: "Retrieve all top-soils",
     },
   },
@@ -18,11 +18,40 @@ module.exports = [
     path: "/vendors/manner/top-soils/{id}",
     handler: async (request, h) => {
       const controller = new MannerTopSoilsController(request, h);
-      return controller.getTopSoilsById(request, h);
+      return controller.getSoilsById(request, h);
     },
     options: {
-      tags: ["api", "Manner top-soils"],
+      tags: ["api", "Manner Soils"],
       description: "Retrieve top-soil by Id'",
+      validate: {
+        params: Joi.object({
+          id: Joi.number().required(),
+        }),
+      },
+    },
+  },
+  {
+    method: "GET",
+    path: "/vendors/manner/sub-soils",
+    handler: async (request, h) => {
+      const controller = new MannerTopSoilsController(request, h);
+      return controller.getAllSoils(request, h);
+    },
+    options: {
+      tags: ["api", "Manner Soils"],
+      description: "Retrieve all sub-soils",
+    },
+  },
+  {
+    method: "GET",
+    path: "/vendors/manner/sub-soils/{id}",
+    handler: async (request, h) => {
+      const controller = new MannerTopSoilsController(request, h);
+      return controller.getSoilsById(request, h);
+    },
+    options: {
+      tags: ["api", "Manner Soils"],
+      description: "Retrieve sub-soil by Id'",
       validate: {
         params: Joi.object({
           id: Joi.number().required(),
