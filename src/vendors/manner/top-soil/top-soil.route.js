@@ -1,5 +1,6 @@
 const Joi = require("joi"); // For validation
 const MannerTopSoilsController = require("./top-soil.controller");
+const manngerServiceTag = "Manner Soils";
 module.exports = [
   {
     method: "GET",
@@ -9,7 +10,7 @@ module.exports = [
       return controller.getAllSoils(request, h);
     },
     options: {
-      tags: ["api", "Manner Soils"],
+      tags: ["api", manngerServiceTag],
       description: "Retrieve all top-soils",
     },
   },
@@ -21,7 +22,7 @@ module.exports = [
       return controller.getSoilsById(request, h);
     },
     options: {
-      tags: ["api", "Manner Soils"],
+      tags: ["api", manngerServiceTag],
       description: "Retrieve top-soil by Id'",
       validate: {
         params: Joi.object({
@@ -38,7 +39,7 @@ module.exports = [
       return controller.getAllSoils(request, h);
     },
     options: {
-      tags: ["api", "Manner Soils"],
+      tags: ["api", manngerServiceTag],
       description: "Retrieve all sub-soils",
     },
   },
@@ -50,7 +51,7 @@ module.exports = [
       return controller.getSoilsById(request, h);
     },
     options: {
-      tags: ["api", "Manner Soils"],
+      tags: ["api", manngerServiceTag],
       description: "Retrieve sub-soil by Id'",
       validate: {
         params: Joi.object({

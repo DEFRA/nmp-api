@@ -1,3 +1,4 @@
+const { CountryMapper } = require("../../../constants/country-mapper");
 const RB209BaseService = require("../base.service");
 const CacheManager = require("../cacheManager");
 
@@ -9,7 +10,10 @@ class RB209GrassService extends RB209BaseService {
 
   async getSwardTypesFilterByCountryId(countryId) {
     const records = await this.getData("Grass/SwardTypes");
-      return records.filter((record) => record.countryId === 3 || record.countryId === countryId);
+      return records.filter(
+        (record) =>
+          record.countryId === CountryMapper.WELSH || record.countryId === countryId,
+      );
   }
 }
 
