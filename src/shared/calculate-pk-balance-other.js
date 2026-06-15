@@ -15,7 +15,7 @@ const {
 
 class CalculatePKBalanceOther {
   async getLastYearBalance(crop, transactionalManager) {
-    return await transactionalManager.findOneBy(PKBalanceEntity, {
+    return transactionalManager.findOneBy(PKBalanceEntity, {
       FieldID: crop.FieldID,
       Year: crop.Year - 1,
     });
