@@ -86,15 +86,8 @@ const { WarningMessagesEntity } = require("./entity/warning-message.entity.js");
 const { PreviousCroppingEntity } = require("./entity/previous-cropping.entity.js");
 const { WarningCodeEntity } = require("./entity/warning-code.entity.js");
 const { WarningsEntity } = require("./entity/warning.entity.js");
-const { FarmsNVZEntity } = require("./entity/farms-nvz.entity.js");
 const { entities } = require("./entity/register-entities.js");
 
-
-
-
-//const requireContext = require.context('./entity/', false, /\.entity\.js$/);
-//const entities = requireContext.keys().map(requireContext);
-//entities: entities.map(module => module.default || module),
 
 const isProduction = EnvironmentService.nodeEnv() === "production";
 const baseConfig = {

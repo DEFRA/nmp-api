@@ -8,15 +8,15 @@ const CountryEntity = new EntitySchema({
       type: "int",
       primary: true,
       generated: true,
-      generationStrategy: "identity",
+      generationStrategy: "identity"
     },
     Name: {
       type: "nvarchar",
-      length: 50,
+      length: 50
     },
     RB209CountryID: {
       type: "int",
-      nullable: false,
+      nullable: false
     },
   },
   relations: {
@@ -24,13 +24,19 @@ const CountryEntity = new EntitySchema({
       target: "ManureType",
       type: "one-to-many",
       inverseSide: "Country",
-      joinColumn: { name: "ID" },
+      joinColumn: { name: "ID" }
     },
     Farms: {
       target: "Farm",
       type: "one-to-many",
       inverseSide: "Country",
-      joinColumn: { name: "CountryID" }, // Specifies the column in the Farm table that links to Country
+      joinColumn: { name: "ID" }
+    },
+    MannerEstimations: {
+      target: "MannerEstimations",
+      type: "one-to-many",
+      inverseSide: "Country",
+      joinColumn: { name: "ID" }
     },
   },
 });
