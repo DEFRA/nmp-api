@@ -13,4 +13,6 @@ module.exports = [
   ...require("./windspeed/windspeed.route"),
   ...require("./autumn-crop-nitrogen-uptake/autumn-crop-nitrogen-uptake.route"),
   ...require("./crop-types/crop-types.route"),
+  ...require("./nutrients/nutrients.route"),
+  ...require("./nutrient-products/nutrients-product.route"),
 ];
