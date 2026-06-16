@@ -16,15 +16,25 @@ class MannerEstimationsController {
       const payload = this.#request.payload;
       const userId = this.#request.userId;
 
-      const result = await this.#mannerEstimationsService.createMannerEstimation(
+      const result =
+        await this.#mannerEstimationsService.createMannerEstimation(
           payload,
-          userId
+          userId,
         );
 
-      return this.#h.response(result)
+      return this.#h.response(result);
     } catch (error) {
       console.error("Error creating Manner Estimation:", error);
-      return this.#h.response( error )
+      return this.#h.response(error);
+    }
+  }
+  async getAll() {
+    try {
+      const records = await this.#mannerEstimationsService.getAll();
+      return this.#h.response(records);
+    } catch (error) {
+      console.error("Error in getAll:", error);
+      return this.#h.response(error);
     }
   }
 }

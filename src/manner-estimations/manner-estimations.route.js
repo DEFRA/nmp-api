@@ -25,13 +25,25 @@ module.exports = [
             .response(
               formatErrorResponse({
                 source: { error: err },
-                request
-              })
+                request,
+              }),
             )
             .code(StatusCodeMapper.BAD_REQUEST)
             .takeover();
         },
       },
+    },
+  },
+  {
+    method: "GET",
+    path: "/manner-estimations",
+    options: {
+      tags: ["api", "Manner Estimations"],
+      description: "Get all Manner Estimations",
+    },
+    handler: async (request, h) => {
+      const controller = new MannerEstimationsController(request, h);
+      return controller.getAll();
     },
   },
 ];
