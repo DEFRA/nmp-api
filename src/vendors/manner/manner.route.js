@@ -15,4 +15,6 @@ module.exports = [
   ...require("./crop-types/crop-types.route"),
   ...require("./nutrients/nutrients.route"),
   ...require("./nutrient-products/nutrients-product.route"),
+  ...require("./manure-type-category/manure-types.route"),
+  ...require("./countries/countries.route"),
 ];
