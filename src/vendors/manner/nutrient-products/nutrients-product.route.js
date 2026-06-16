@@ -1,6 +1,6 @@
 const Joi = require("joi"); // For validation
 const MannerApiNutrientsProductController = require("./nutrients-product.controller");
-
+const mannerNutrientsProductsTag = "Manner Nutrients Products"
 module.exports = [
   {
     method: "GET",
@@ -10,7 +10,7 @@ module.exports = [
       return controller.getAllNutrientsProducts(request, h);
     },
     options: {
-      tags: ["api", "Manner Nutrients Products"],
+      tags: ["api", mannerNutrientsProductsTag],
       description: "Retrieve all nutrients products",
     },
   },
@@ -22,7 +22,7 @@ module.exports = [
       return controller.getNutrientsProductsById(request, h);
     },
     options: {
-      tags: ["api", "Manner Nutrients Products"],
+      tags: ["api", mannerNutrientsProductsTag],
       description: "Retrieve Nutrients Product by ID'",
       validate: {
         params: Joi.object({
@@ -39,7 +39,7 @@ module.exports = [
       return controller.getNutrientsProductsByNutrientId(request, h);
     },
     options: {
-      tags: ["api", "Manner Nutrients Products"],
+      tags: ["api", mannerNutrientsProductsTag],
       description: "Retrieve Nutrients Product by Nutrient ID'",
       validate: {
         params: Joi.object({
