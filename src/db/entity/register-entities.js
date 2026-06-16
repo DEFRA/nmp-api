@@ -120,6 +120,7 @@ const { ScotlandNMaxValuesEntity } = require("./scotland-nmax-values.entity");
 const { FarmAverageYieldsEntity } = require("./farm-average-yield-entity");
 const { MannerEstimationsEntity } = require("./manner-estimations.entity");
 const { MannerEstimationApplicationsEntity } = require("./manner-estimation-applications.entity");
+const { MannerFinancialValuesEntity } = require("./manner-financial-values.entity");
 // Export as a single array
 
 const entities = [
@@ -188,7 +189,8 @@ const entities = [
   ScotlandNMaxValuesEntity,
   FarmAverageYieldsEntity,
   MannerEstimationsEntity,
-  MannerEstimationApplicationsEntity
+  MannerEstimationApplicationsEntity,
+  MannerFinancialValuesEntity
 ];
 
 module.exports = { entities };

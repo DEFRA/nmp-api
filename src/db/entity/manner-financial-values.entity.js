@@ -1,78 +1,94 @@
 const { EntitySchema } = require("typeorm");
 
-const MannerEstimationsEntity = new EntitySchema({
-  name: "MannerEstimations",
-  tableName: "MannerEstimations",
+const MannerFinancialValuesEntity = new EntitySchema({
+  name: "MannerFinancialValues",
+  tableName: "MannerFinancialValues",
 
   columns: {
-    ID: {
+    Id: {
       type: "int",
       primary: true,
       generated: true,
     },
 
-    FarmName: {
-      type: "nvarchar",
-      length: 250,
-      nullable: false,
-    },
-
-    CountryID: {
+    MannerEstimationApplicationID: {
       type: "int",
       nullable: false,
     },
 
-    Postcode: {
-      type: "nvarchar",
-      length: 50,
-      nullable: false,
-    },
-
-    AverageAnuualRainfall: {
+    NitrogenValue: {
       type: "int",
       nullable: false,
     },
 
-    FieldName: {
-      type: "nvarchar",
-      length: 50,
-      nullable: false,
-    },
-
-    IsWithinNVZ: {
-      type: "bit",
-      nullable: false,
-    },
-
-    NVZProgrammeID: {
-      type: "int",
-      nullable: true,
-    },
-
-    TopSoilID: {
+    PhosphateValue: {
       type: "int",
       nullable: false,
     },
 
-    SubSoilID: {
+    PotashValue: {
       type: "int",
       nullable: false,
     },
 
-    CropTypeID: {
+    NitrogenProductId: {
       type: "int",
       nullable: false,
     },
 
-    MannerCropTypeID: {
+    PhosphateProductId: {
       type: "int",
       nullable: false,
     },
 
-    SowingDate: {
-      type: "datetime2",
-      precision: 7,
-      nullable: true,
+    PotashProductId: {
+      type: "int",
+      nullable: false,
+    },
+
+    NitrogenProductName: {
+      type: "int",
+      nullable: false,
+    },
+
+    PhosphateProductName: {
+      type: "int",
+      nullable: false,
+    },
+
+    PotashProductName: {
+      type: "int",
+      nullable: false,
+    },
+
+    NitrogenProductPrice: {
+      type: "int",
+      nullable: false,
+    },
+
+    PhosphateProductPrice: {
+      type: "int",
+      nullable: false,
+    },
+
+    PotashProductPrice: {
+      type: "int",
+      nullable: false,
+    },
+
+    NitrogenPrice: {
+      type: "int",
+      nullable: false,
+    },
+
+    PhosphatePrice: {
+      type: "int",
+      nullable: false,
+    },
+
+    PotashPrice: {
+      type: "int",
+      nullable: false,
     },
 
     CreatedOn: {
@@ -100,41 +116,35 @@ const MannerEstimationsEntity = new EntitySchema({
   },
 
   relations: {
-    Country: {
+    MannerEstimationApplication: {
       type: "many-to-one",
-      target: "Countries",
-      joinColumn: {
-        name: "CountryID",
-      },
-      inverseSide: "MannerEstimations",
-    },
-
-    MannerEstimationApplications: {
-      type: "one-to-many",
       target: "MannerEstimationApplications",
-      inverseSide: "MannerEstimation",
+      joinColumn: {
+        name: "MannerEstimationApplicationID",
+      },
+      inverseSide: "MannerFinancialValues",
     },
 
     CreatedByUser: {
       type: "many-to-one",
-      target: "Users", // change to your actual Users entity
+      target: "Users",
       joinColumn: {
         name: "CreatedByID",
       },
-      inverseSide: "CreatedMannerEstimations",
+      inverseSide: "CreatedMannerFinancialValues",
       nullable: true,
     },
 
     ModifiedByUser: {
       type: "many-to-one",
-      target: "Users", // change to your actual Users entity
+      target: "Users",
       joinColumn: {
         name: "ModifiedByID",
       },
-      inverseSide: "ModifiedMannerEstimations",
+      inverseSide: "ModifiedMannerFinancialValues",
       nullable: true,
     },
   },
 });
 
-module.exports = { MannerEstimationsEntity };
+module.exports = { MannerFinancialValuesEntity };
