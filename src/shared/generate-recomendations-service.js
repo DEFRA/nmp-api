@@ -59,14 +59,7 @@ class GenerateRecommendations {
     this.HanldeMannerAndAnalysis = new HanldeMannerAndAnalysis();
   }
 
-  async generateRecommendations(
-    fieldID,
-    Year,
-    newOrganicManure,
-    transactionalManager,
-    request,
-    userId,
-  ) {
+  async getGenerateRecommendationsContext(fieldID, Year, transactionalManager) {
     const cropTypesList =
       await this.rB209ArableService.getData("/Arable/CropTypes");
     const fieldRelatedData = await this.fieldRelated.getFieldAndCountryData(
@@ -83,7 +76,146 @@ class GenerateRecommendations {
         Year,
       );
 
-    let recommendation;
+    return { cropTypesList, fieldRelatedData, crops, fertiliserData };
+  }
+
+  async processStandardCropRecommendation(cropContext) {
+    const {
+      crop,
+      crops,
+      soilAnalysisRecords,
+      snsAnalysesData,
+      mannerOutputs,
+      latestSoilAnalysis,
+      previousCrop,
+      fieldRelatedData,
+      request,
+      transactionalManager,
+      cropTypesList,
+      fertiliserData,
+      userId,
+      cropPOfftake,
+    } = cropContext;
+
+    const analysis = { soilAnalysisRecords, snsAnalysesData };
+    const singleAndMultipleCrops = { crops, crop };
+    const nutrientRecommendationnReqBody =
+      await this.buildNutrientRecommendationReqBody(
+        fieldRelatedData,
+        analysis,
+        singleAndMultipleCrops,
+        mannerOutputs,
+        request,
+        transactionalManager,
+        cropTypesList,
+      );
+    const nutrientRecommendationsData =
+      await this.rB209RecommendationService.postData(
+        "Recommendation/Recommendations",
+        nutrientRecommendationnReqBody,
+      );
+    console.log(
+      "Received nutrient recommendations data from RB209:",
+      nutrientRecommendationsData,
+    );
+
+    const recommendation =
+      await this.savingRecommendationService.processAndSaveRecommendations(
+        crops,
+        latestSoilAnalysis,
+        nutrientRecommendationsData,
+        transactionalManager,
+        userId,
+        mannerOutputs,
+      );
+
+    const saveAndUpdatePKBalance =
+      await this.CalculatePKBalance.createOrUpdatePKBalance(
+        crop,
+        nutrientRecommendationsData,
+        userId,
+        fertiliserData,
+        transactionalManager,
+        { cropPOfftake, latestSoilAnalysis },
+        previousCrop,
+      );
+    if (saveAndUpdatePKBalance) {
+      await transactionalManager.save(
+        PKBalanceEntity,
+        saveAndUpdatePKBalance.saveAndUpdatePKBalance,
+      );
+    }
+
+    return {
+      cropId: crop.ID,
+      recommendations: recommendation,
+      pkBalance: saveAndUpdatePKBalance ?? null,
+    };
+  }
+
+  async processCropRecommendation(cropContext) {
+    const {
+      crop,
+      previousCrop,
+      mannerOutputs,
+      latestSoilAnalysis,
+      newOrganicManure,
+      transactionalManager,
+      userId,
+      fertiliserData,
+    } = cropContext;
+
+    const cropPOfftake = await this.calculateCropPOfftake(
+      latestSoilAnalysis,
+      crop.CropTypeID,
+      crop.Yield,
+    );
+
+    if (
+      crop.CropTypeID === CropTypeMapper.OTHER ||
+      crop?.IsBasePlan ||
+      !previousCrop
+    ) {
+      const otherCropContext = {
+        crop,
+        previousCrop,
+        mannerOutputs,
+        latestSoilAnalysis,
+        nutrientRecommendationsData: null,
+        cropPOfftake,
+      };
+      const sharedContext = {
+        transactionalManager,
+        newOrganicManure,
+        userId,
+        fertiliserData,
+      };
+      return this.handleOtherCropRecommendation(
+        otherCropContext,
+        sharedContext,
+      );
+    }
+
+    return this.processStandardCropRecommendation({
+      ...cropContext,
+      cropPOfftake,
+    });
+  }
+
+  async generateRecommendations(
+    fieldID,
+    Year,
+    newOrganicManure,
+    transactionalManager,
+    request,
+    userId,
+  ) {
+    const { cropTypesList, fieldRelatedData, crops, fertiliserData } =
+      await this.getGenerateRecommendationsContext(
+        fieldID,
+        Year,
+        transactionalManager,
+      );
     const results = [];
 
     for (const crop of crops) {
@@ -102,94 +234,23 @@ class GenerateRecommendations {
         request,
       );
 
-      const cropPOfftake = await this.calculateCropPOfftake(
+      const result = await this.processCropRecommendation({
+        crop,
+        crops,
+        snsAnalysesData,
         latestSoilAnalysis,
-        crop.CropTypeID,
-        crop.Yield,
-      );
-      let nutrientRecommendationsData = null;
-
-      if (
-        crop.CropTypeID === CropTypeMapper.OTHER ||
-        crop?.IsBasePlan ||
-        !previousCrop
-      ) {
-        const otherCropContext = {
-          crop,
-          previousCrop,
-          mannerOutputs,
-          latestSoilAnalysis,
-          nutrientRecommendationsData,
-          cropPOfftake,
-        };
-        const sharedContext = {
-          transactionalManager,
-          newOrganicManure,
-          userId,
-          fertiliserData,
-        };
-        const result = await this.handleOtherCropRecommendation(
-          otherCropContext,
-          sharedContext,
-        );
-        results.push(result);
-        continue;
-      }
-
-      const analysis = { soilAnalysisRecords, snsAnalysesData };
-      const singleAndMultipleCrops = { crops, crop };
-      const nutrientRecommendationnReqBody =
-        await this.buildNutrientRecommendationReqBody(
-          fieldRelatedData,
-          analysis,
-          singleAndMultipleCrops,
-          mannerOutputs,
-          request,
-          transactionalManager,
-          cropTypesList,
-        );
-      nutrientRecommendationsData =
-        await this.rB209RecommendationService.postData(
-          "Recommendation/Recommendations",
-          nutrientRecommendationnReqBody,
-        );
-      console.log(
-        "Received nutrient recommendations data from RB209:",
-        nutrientRecommendationsData,
-      );
-
-      recommendation =
-        await this.savingRecommendationService.processAndSaveRecommendations(
-          crops,
-          latestSoilAnalysis,
-          nutrientRecommendationsData,
-          transactionalManager,
-          userId,
-          mannerOutputs,
-        );
-
-      const saveAndUpdatePKBalance =
-        await this.CalculatePKBalance.createOrUpdatePKBalance(
-          crop,
-          nutrientRecommendationsData,
-          userId,
-          fertiliserData,
-          transactionalManager,
-          { cropPOfftake, latestSoilAnalysis },
-          previousCrop,
-        );
-      if (saveAndUpdatePKBalance) {
-        await transactionalManager.save(
-          PKBalanceEntity,
-          saveAndUpdatePKBalance.saveAndUpdatePKBalance,
-        );
-      }
-
-      results.push({
-        cropId: crop.ID,
-        recommendations: recommendation,
-        pkBalance: saveAndUpdatePKBalance ?? null,
+        soilAnalysisRecords,
+        mannerOutputs,
+        previousCrop,
+        fieldRelatedData,
+        request,
+        transactionalManager,
+        cropTypesList,
+        newOrganicManure,
+        userId,
+        fertiliserData,
       });
+      results.push(result);
     }
 
     return results;
