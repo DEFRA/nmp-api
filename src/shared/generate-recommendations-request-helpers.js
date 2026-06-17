@@ -221,39 +221,65 @@ const recommendationRequestHelpers = {
     };
   },
 
+  addSoilAnalysisFieldIfPresent(target, key, value) {
+    if (value != null) {
+      target[key] = value;
+    }
+  },
+
+  buildSoilAnalysisData(analysis) {
+    const soilAnalysisData = {};
+
+    this.addSoilAnalysisFieldIfPresent(
+      soilAnalysisData,
+      "soilAnalysisDate",
+      analysis.Date,
+    );
+    this.addSoilAnalysisFieldIfPresent(soilAnalysisData, "soilpH", analysis.PH);
+    this.addSoilAnalysisFieldIfPresent(
+      soilAnalysisData,
+      "sulphurDeficient",
+      analysis.SulphurDeficient,
+    );
+
+    const nutrientFieldMappings = [
+      {
+        value: analysis.PhosphorusIndex ?? analysis.PhosphorusStatus,
+        indexKey: "pIndexId",
+        methodologyKey: "pMethodologyId",
+        methodologyValue: analysis.PhosphorusMethodologyID,
+      },
+      {
+        value: analysis.PotassiumIndex ?? analysis.PotassiumStatus,
+        indexKey: "kIndexId",
+        methodologyKey: "kMethodologyId",
+        methodologyValue: analysis.PotassiumMethodologyID,
+      },
+      {
+        value: analysis.MagnesiumIndex ?? analysis.MagnesiumStatus,
+        indexKey: "mgIndexId",
+        methodologyKey: "mgMethodologyId",
+        methodologyValue: analysis.MagnesiumMethodologyID,
+      },
+    ];
+
+    nutrientFieldMappings.forEach((mapping) => {
+      if (mapping.value != null) {
+        soilAnalysisData[mapping.indexKey] = mapping.value;
+        soilAnalysisData[mapping.methodologyKey] = mapping.methodologyValue;
+      }
+    });
+
+    return soilAnalysisData;
+  },
+
   async addSoilAnalysesToRequest(soilAnalysis, nutrientRecommendationReqBody) {
     if (!soilAnalysis || !Array.isArray(soilAnalysis)) {
       return;
     }
 
     soilAnalysis.forEach((analysis) => {
-      const pIndexId = analysis.PhosphorusIndex ?? analysis.PhosphorusStatus;
-      const kIndexId = analysis.PotassiumIndex ?? analysis.PotassiumStatus;
-      const mgIndexId = analysis.MagnesiumIndex ?? analysis.MagnesiumStatus;
-
-      const soilAnalysisData = {
-        ...(analysis.Date != null && {
-          soilAnalysisDate: analysis.Date,
-        }),
-        ...(analysis.PH != null && {
-          soilpH: analysis.PH,
-        }),
-        ...(analysis.SulphurDeficient != null && {
-          sulphurDeficient: analysis.SulphurDeficient,
-        }),
-        ...(pIndexId != null && {
-          pIndexId,
-          pMethodologyId: analysis.PhosphorusMethodologyID,
-        }),
-        ...(kIndexId != null && {
-          kIndexId,
-          kMethodologyId: analysis.PotassiumMethodologyID,
-        }),
-        ...(mgIndexId != null && {
-          mgIndexId,
-          mgMethodologyId: analysis.MagnesiumMethodologyID,
-        }),
-      };
+      const soilAnalysisData = this.buildSoilAnalysisData(analysis);
 
       if (Object.keys(soilAnalysisData).length > 0) {
         nutrientRecommendationReqBody.field.soil.soilAnalyses.push(
