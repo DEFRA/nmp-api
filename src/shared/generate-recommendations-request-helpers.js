@@ -333,17 +333,14 @@ const recommendationRequestHelpers = {
     };
   },
 
-  async buildNutrientRecommendationReqBody(
+  async getRecommendationRequestContext(
     field,
-    analysis,
-    singleAndMultipleCrops,
-    mannerOutputs,
+    crop,
+    dataMultipleCrops,
     request,
     transactionalManager,
     cropTypesList,
   ) {
-    const { soilAnalysisRecords: soilAnalysis, snsAnalysesData } = analysis;
-    const { crops: dataMultipleCrops, crop } = singleAndMultipleCrops;
     const grassGrowthClass =
       await this.grassGrowthClass.calculateGrassGrowthClassByFieldId(
         field.ID,
@@ -394,7 +391,34 @@ const recommendationRequestHelpers = {
     );
     const fieldType = await this.determineFieldType(crop, transactionalManager);
 
-    const nutrientRecommendationnReqBody = {
+    return {
+      previousCrop,
+      pkBalanceData,
+      excessRainfall,
+      grassHistoryID,
+      previousGrassId,
+      arableBody,
+      grassObject,
+      fieldType,
+    };
+  },
+
+  buildBaseNutrientRecommendationReqBody(
+    field,
+    crop,
+    dataMultipleCrops,
+    mannerOutputs,
+    recommendationContext,
+  ) {
+    const {
+      pkBalanceData,
+      excessRainfall,
+      arableBody,
+      grassObject,
+      fieldType,
+    } = recommendationContext;
+
+    return {
       field: {
         fieldType,
         multipleCrops: dataMultipleCrops.length > 1,
@@ -423,7 +447,7 @@ const recommendationRequestHelpers = {
           excessRainfall === null ? 0 : excessRainfall?.WinterRainfall,
         mannerManures: mannerOutputs.length > 0,
         organicMaterials: [],
-        mannerOutputs: [],
+        mannerOutputs,
         previousCropping: {},
         countryId: field.RB209CountryID,
       },
@@ -439,8 +463,37 @@ const recommendationRequestHelpers = {
       totals: true,
       referenceValue: `${field.ID}-${crop.ID}-${crop.Year}`,
     };
+  },
 
-    nutrientRecommendationnReqBody.field.mannerOutputs = mannerOutputs;
+  async buildNutrientRecommendationReqBody(
+    field,
+    analysis,
+    singleAndMultipleCrops,
+    mannerOutputs,
+    request,
+    transactionalManager,
+    cropTypesList,
+  ) {
+    const { soilAnalysisRecords: soilAnalysis, snsAnalysesData } = analysis;
+    const { crops: dataMultipleCrops, crop } = singleAndMultipleCrops;
+    const recommendationContext = await this.getRecommendationRequestContext(
+      field,
+      crop,
+      dataMultipleCrops,
+      request,
+      transactionalManager,
+      cropTypesList,
+    );
+
+    const nutrientRecommendationnReqBody =
+      this.buildBaseNutrientRecommendationReqBody(
+        field,
+        crop,
+        dataMultipleCrops,
+        mannerOutputs,
+        recommendationContext,
+      );
+
     await this.addSoilAnalysesToRequest(
       soilAnalysis,
       nutrientRecommendationnReqBody,
@@ -451,10 +504,10 @@ const recommendationRequestHelpers = {
     );
     nutrientRecommendationnReqBody.field.previousCropping =
       await this.buildPreviousCroppingData({
-        previousCrop,
+        previousCrop: recommendationContext.previousCrop,
         cropTypesList,
-        grassHistoryID,
-        previousGrassId,
+        grassHistoryID: recommendationContext.grassHistoryID,
+        previousGrassId: recommendationContext.previousGrassId,
       });
     nutrientRecommendationnReqBody.referenceValue = `${field.ID}-${crop.ID}-${crop.Year}`;
 
