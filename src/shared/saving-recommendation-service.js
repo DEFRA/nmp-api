@@ -190,17 +190,21 @@ class SavingRecommendationService {
         cropRecData.ManureP2O5 = normalizeManure(c.manures);
         cropRecData.PBalance = c.pkBalance;
         cropRecData.FertilizerP2O5 = c.cropNeed;
+        cropRecData.PIndex = c.indexpH;
       },
       2: (c) => {
         cropRecData.CropK2O = c.recommendation;
         cropRecData.ManureK2O = normalizeManure(c.manures);
         cropRecData.KBalance = c.pkBalance;
         cropRecData.FertilizerK2O = c.cropNeed;
+        cropRecData.KIndex = c.indexpH;
+
       },
       3: (c) => {
         cropRecData.CropMgO = c.recommendation;
         cropRecData.MgBalance = c.pkBalance;
         cropRecData.FertilizerMgO = c.cropNeed;
+        cropRecData.MgIndex = c.indexpH;
       },
       4: (c) => {
         cropRecData.CropNa2O = c.recommendation;
