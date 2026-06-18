@@ -2,9 +2,16 @@ const Joi = require("joi");
 const {
   CreateMannerEstimationApplicationDto,
 } = require("../../manner-estimation-applications/dto/manner-estimation-applications.dto");
-const maxTwoFifty = 250,maxFifty =50
+const { CreateMannerFinancialValuesDto } = require("../../manner-financial-values/dto/manner-financial-values.dto");
+const maxTwoFifty = 250;
+const maxFifty = 50;
+
 const CreateMannerEstimationDto = Joi.object({
   ID: Joi.number().integer().allow(null).default(null),
+
+  Name: Joi.string().max(maxTwoFifty).required(),
+
+  OrganisationID: Joi.string().guid().required(),
 
   FarmName: Joi.string().max(maxTwoFifty).required(),
 
@@ -42,9 +49,17 @@ const CreateMannerEstimationDto = Joi.object({
 const CreateMannerEstimationWithApplicationDto = Joi.object({
   MannerEstimation: CreateMannerEstimationDto.required(),
   MannerEstimationApplication: CreateMannerEstimationApplicationDto.required(),
+  MannerEstimationFinancialValues: CreateMannerFinancialValuesDto.required()
+});
+
+const CheckMannerEstimationExistsDto = Joi.object({
+  organisationId: Joi.string().guid().required(),
+  name: Joi.string().max(maxTwoFifty).required(),
 });
 
 module.exports = {
   CreateMannerEstimationDto,
+  CreateMannerFinancialValuesDto,
   CreateMannerEstimationWithApplicationDto,
+  CheckMannerEstimationExistsDto,
 };

@@ -232,7 +232,7 @@ const MannerEstimationApplicationsEntity = new EntitySchema({
 
     MannerFinancialValues: {
       type: RELATION_TYPES.ONE_TO_MANY,
-      target: "MannerFinancialValues",
+      target: "MannerEstimationFinancialValues",
       joinColumn: {
         name: "ID",
       },
