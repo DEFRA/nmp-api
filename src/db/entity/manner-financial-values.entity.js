@@ -2,8 +2,8 @@ const { EntitySchema } = require("typeorm");
 const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const MannerFinancialValuesEntity = new EntitySchema({
-  name: "MannerFinancialValues",
-  tableName: "MannerFinancialValues",
+  name: "MannerEstimationFinancialValues",
+  tableName: "MannerEstimationFinancialValues",
 
   columns: {
     Id: {
@@ -48,17 +48,20 @@ const MannerFinancialValuesEntity = new EntitySchema({
     },
 
     NitrogenProductName: {
-      type: "int",
+      type: "nvarchar",
+      length: 100,
       nullable: false,
     },
 
     PhosphateProductName: {
-      type: "int",
+      type: "nvarchar",
+      length: 100,
       nullable: false,
     },
 
     PotashProductName: {
-      type: "int",
+      type: "nvarchar",
+      length: 100,
       nullable: false,
     },
 

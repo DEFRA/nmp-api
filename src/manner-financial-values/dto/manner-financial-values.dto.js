@@ -1,5 +1,5 @@
 const Joi = require("joi");
-
+const maxHundred = 100;
 const CreateMannerFinancialValuesDto = Joi.object({
   Id: Joi.number().integer().allow(null).default(null),
 
@@ -17,11 +17,11 @@ const CreateMannerFinancialValuesDto = Joi.object({
 
   PotashProductId: Joi.number().integer().required(),
 
-  NitrogenProductName: Joi.number().integer().required(),
+  NitrogenProductName: Joi.string().max(maxHundred).required(),
 
-  PhosphateProductName: Joi.number().integer().required(),
+  PhosphateProductName: Joi.string().max(maxHundred).required(),
 
-  PotashProductName: Joi.number().integer().required(),
+  PotashProductName: Joi.string().max(maxHundred).required(),
 
   NitrogenProductPrice: Joi.number().integer().required(),
 

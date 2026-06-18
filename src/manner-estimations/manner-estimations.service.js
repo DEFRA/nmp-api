@@ -20,11 +20,9 @@ class MannerEstimationsService extends BaseService {
     const {
       MannerEstimation,
       MannerEstimationApplication,
-      MannerFinancialValues,
       MannerEstimationFinancialValues,
     } = payload;
-    const financialValuesPayload =
-      MannerFinancialValues || MannerEstimationFinancialValues;
+    const financialValuesPayload = MannerEstimationFinancialValues;
 
     return AppDataSource.transaction(async (transactionalManager) => {
       // Create & save MannerEstimation
