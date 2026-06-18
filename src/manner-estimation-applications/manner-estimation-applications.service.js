@@ -18,8 +18,8 @@ class MannerEstimationApplicationsService extends BaseService {
       CreatedByID: userId,
       CreatedOn: new Date(),
     });
-
-    return await this.repository.save(result);
+    const savedApplications = await this.repository.save(result);
+    return savedApplications;
   }
 }
 

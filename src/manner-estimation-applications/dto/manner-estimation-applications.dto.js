@@ -1,5 +1,5 @@
 const Joi = require("joi");
-
+const precisionThree = 3,precisionTwo = 2;
 const CreateMannerEstimationApplicationDto = Joi.object({
   ID: Joi.number().integer().allow(null).default(null),
 
@@ -9,25 +9,25 @@ const CreateMannerEstimationApplicationDto = Joi.object({
 
   ApplicationDate: Joi.date().required(),
 
-  N: Joi.number().precision(3).required(),
+  N: Joi.number().precision(precisionThree).required(),
 
-  P2O5: Joi.number().precision(3).required(),
+  P2O5: Joi.number().precision(precisionThree).required(),
 
-  K2O: Joi.number().precision(3).required(),
+  K2O: Joi.number().precision(precisionThree).required(),
 
-  MgO: Joi.number().precision(3).required(),
+  MgO: Joi.number().precision(precisionThree).required(),
 
-  SO3: Joi.number().precision(3).required(),
+  SO3: Joi.number().precision(precisionThree).required(),
 
-  DryMatterPercent: Joi.number().precision(2).required(),
+  DryMatterPercent: Joi.number().precision(precisionTwo).required(),
 
-  UricAcid: Joi.number().precision(2).required(),
+  UricAcid: Joi.number().precision(precisionTwo).required(),
 
   ApplicationRate: Joi.number().precision(1).required(),
 
-  AreaSpread: Joi.number().precision(3).allow(null),
+  AreaSpread: Joi.number().precision(precisionThree).allow(null),
 
-  ManureQuantity: Joi.number().precision(3).allow(null),
+  ManureQuantity: Joi.number().precision(precisionThree).allow(null),
 
   IncorporationMethodID: Joi.number().integer().required(),
 

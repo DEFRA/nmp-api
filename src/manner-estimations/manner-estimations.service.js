@@ -14,7 +14,7 @@ class MannerEstimationsService extends BaseService {
   async createMannerEstimation(payload, userId) {
     const { MannerEstimation, MannerEstimationApplication } = payload;
 
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
         // Create & save MannerEstimation
         const mannerEstimation = transactionalManager.create(
         MannerEstimationsEntity,

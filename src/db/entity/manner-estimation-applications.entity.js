@@ -1,4 +1,5 @@
 const { EntitySchema } = require("typeorm");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const MannerEstimationApplicationsEntity = new EntitySchema({
   name: "MannerEstimationApplications",
@@ -229,7 +230,7 @@ const MannerEstimationApplicationsEntity = new EntitySchema({
 
   relations: {
     MannerEstimation: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "MannerEstimations",
       joinColumn: {
         name: "MannerEstimationID",
@@ -238,7 +239,7 @@ const MannerEstimationApplicationsEntity = new EntitySchema({
     },
 
     MannerFinancialValues: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "MannerFinancialValues",
       joinColumn: {
         name: "ID",
@@ -247,7 +248,7 @@ const MannerEstimationApplicationsEntity = new EntitySchema({
     },
 
     CreatedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: {
         name: "CreatedByID",
@@ -257,7 +258,7 @@ const MannerEstimationApplicationsEntity = new EntitySchema({
     },
 
     ModifiedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: {
         name: "ModifiedByID",
