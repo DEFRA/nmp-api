@@ -1,6 +1,13 @@
 const { EntitySchema } = require("typeorm");
 const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
+const nutrientDecimalColumn = {
+  type: "decimal",
+  precision: 18,
+  scale: 3,
+  nullable: false,
+};
+
 const MannerEstimationApplicationsEntity = new EntitySchema({
   name: "MannerEstimationApplications",
   tableName: "MannerEstimationApplications",
@@ -28,38 +35,23 @@ const MannerEstimationApplicationsEntity = new EntitySchema({
     },
 
     N: {
-      type: "decimal",
-      precision: 18,
-      scale: 3,
-      nullable: false,
+      ...nutrientDecimalColumn,
     },
 
     P2O5: {
-      type: "decimal",
-      precision: 18,
-      scale: 3,
-      nullable: false,
+      ...nutrientDecimalColumn,
     },
 
     K2O: {
-      type: "decimal",
-      precision: 18,
-      scale: 3,
-      nullable: false,
+      ...nutrientDecimalColumn,
     },
 
     MgO: {
-      type: "decimal",
-      precision: 18,
-      scale: 3,
-      nullable: false,
+      ...nutrientDecimalColumn,
     },
 
     SO3: {
-      type: "decimal",
-      precision: 18,
-      scale: 3,
-      nullable: false,
+      ...nutrientDecimalColumn,
     },
 
     DryMatterPercent: {
