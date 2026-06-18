@@ -11,6 +11,17 @@ const MannerEstimationsEntity = new EntitySchema({
       generated: true,
     },
 
+    Name: {
+      type: "nvarchar",
+      length: 250,
+      nullable: false,
+    },
+
+    OrganisationID: {
+      type: "uniqueidentifier",
+      nullable: false,
+    },
+
     FarmName: {
       type: "nvarchar",
       length: 250,
@@ -113,6 +124,15 @@ const MannerEstimationsEntity = new EntitySchema({
       type: "one-to-many",
       target: "MannerEstimationApplications",
       inverseSide: "MannerEstimation",
+    },
+
+    Organisation: {
+      type: "many-to-one",
+      target: "Organisations",
+      joinColumn: {
+        name: "OrganisationID",
+      },
+      inverseSide: "MannerEstimations",
     },
 
     CreatedByUser: {

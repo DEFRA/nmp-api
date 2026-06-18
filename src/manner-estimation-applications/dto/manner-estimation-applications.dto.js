@@ -45,29 +45,33 @@ const CreateMannerEstimationApplicationDto = Joi.object({
 
   RainfallPostApplication: Joi.number().integer().required(),
 
-  TotalN: Joi.number().integer().allow(null),
+  TotalN: Joi.number().integer().required(),
 
-  TotalP2O5: Joi.number().integer().allow(null),
+  CropAvailableNCurrentCrop: Joi.number().integer().required(),
 
-  TotalSO3: Joi.number().integer().allow(null),
+  CropAvailableNitrogenFollowingCropYearTwo: Joi.number().integer().required(),
 
-  TotalMgO: Joi.number().integer().allow(null),
+  TotalP2O5: Joi.number().integer().required(),
 
-  TotalK2O: Joi.number().integer().allow(null),
+  CropAvailableP2O5: Joi.number().integer().required(),
 
-  CropAvailableNCurrentCrop: Joi.number().integer().allow(null),
+  TotalSO3: Joi.number().integer().required(),
 
-  CropAvailableNitrogenFollowingCropYearTwo: Joi.number().integer().allow(null),
+  TotalMgO: Joi.number().integer().required(),
+
+  TotalK2O: Joi.number().integer().required(),
+
+  CropAvailableK2O: Joi.number().integer().required(),
 
   NitrogenUseEfficiency: Joi.number().integer().allow(null),
 
-  MineralisedNitrogenLosses: Joi.number().integer().allow(null),
+  MineralisedNitrogenLosses: Joi.number().integer().required(),
 
-  LostNitrateLosses: Joi.number().integer().allow(null),
+  LostNitrateLosses: Joi.number().integer().required(),
 
-  LostAmmonia: Joi.number().integer().allow(null),
+  LostAmmonia: Joi.number().integer().required(),
 
-  LostDenitrified: Joi.number().integer().allow(null),
+  LostDenitrified: Joi.number().integer().required(),
 
   CreatedOn: Joi.date().iso().allow(null).default(null),
 
@@ -78,4 +82,6 @@ const CreateMannerEstimationApplicationDto = Joi.object({
   ModifiedByID: Joi.number().integer().allow(null).default(null),
 });
 
-module.exports = { CreateMannerEstimationApplicationDto };
+module.exports = {
+  CreateMannerEstimationApplicationDto
+};

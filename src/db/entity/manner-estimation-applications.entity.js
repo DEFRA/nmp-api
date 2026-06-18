@@ -180,7 +180,14 @@ const MannerEstimationApplicationsEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
-
+    CropAvailableP2O5: {
+      type: "int",
+      nullable: false,
+    },
+    CropAvailableK2O: {
+      type: "int",
+      nullable: false,
+    },
     LostNitrateLosses: {
       type: "int",
       nullable: true,
@@ -236,7 +243,7 @@ const MannerEstimationApplicationsEntity = new EntitySchema({
       joinColumn: {
         name: "ID",
       },
-      inverseSide: "MannerEstimationApplication"
+      inverseSide: "MannerEstimationApplication",
     },
 
     CreatedByUser: {

@@ -21,6 +21,12 @@ const OrganisationEntity = new EntitySchema({
       joinColumn: { name: "ID" },
       inverseSide: "Organisation",
     },
+    MannerEstimations: {
+      type: "one-to-many",
+      target: "MannerEstimations",
+      joinColumn: { name: "ID" },
+      inverseSide: "Organisation",
+    },
   },
 });
 
