@@ -240,39 +240,45 @@ class GenerateRecommendations {
       ),
     };
   }
+
+  buildSoilAnalysisData(analysis) {
+    const pIndexId = analysis.PhosphorusIndex ?? analysis.PhosphorusStatus;
+    const kIndexId = analysis.PotassiumIndex ?? analysis.PotassiumStatus;
+    const mgIndexId = analysis.MagnesiumIndex ?? analysis.MagnesiumStatus;
+
+    const data = {};
+
+    if (analysis.Date != null) {
+      data.soilAnalysisDate = analysis.Date;
+    }
+    if (analysis.PH != null) {
+      data.soilpH = analysis.PH;
+    }
+    if (analysis.SulphurDeficient != null) {
+      data.sulphurDeficient = analysis.SulphurDeficient;
+    }
+    if (pIndexId != null) {
+      data.pIndexId = pIndexId;
+      data.pMethodologyId = analysis.PhosphorusMethodologyID;
+    }
+    if (kIndexId != null) {
+      data.kIndexId = kIndexId;
+      data.kMethodologyId = analysis.PotassiumMethodologyID;
+    }
+    if (mgIndexId != null) {
+      data.mgIndexId = mgIndexId;
+      data.mgMethodologyId = analysis.MagnesiumMethodologyID;
+    }
+
+    return data;
+  }
   async addSoilAnalysesToRequest(soilAnalysis, nutrientRecommendationReqBody) {
     if (!soilAnalysis || !Array.isArray(soilAnalysis)) {
       return;
     }
 
     soilAnalysis.forEach((analysis) => {
-      const pIndexId = analysis.PhosphorusIndex ?? analysis.PhosphorusStatus;
-      const kIndexId = analysis.PotassiumIndex ?? analysis.PotassiumStatus;
-      const mgIndexId = analysis.MagnesiumIndex ?? analysis.MagnesiumStatus;
-
-      const soilAnalysisData = {
-        ...(analysis.Date != null && {
-          soilAnalysisDate: analysis.Date,
-        }),
-        ...(analysis.PH != null && {
-          soilpH: analysis.PH,
-        }),
-        ...(analysis.SulphurDeficient != null && {
-          sulphurDeficient: analysis.SulphurDeficient,
-        }),
-        ...(pIndexId != null && {
-          pIndexId,
-          pMethodologyId: analysis.PhosphorusMethodologyID,
-        }),
-        ...(kIndexId != null && {
-          kIndexId,
-          kMethodologyId: analysis.PotassiumMethodologyID,
-        }),
-        ...(mgIndexId != null && {
-          mgIndexId,
-          mgMethodologyId: analysis.MagnesiumMethodologyID,
-        }),
-      };
+      const soilAnalysisData = this.buildSoilAnalysisData(analysis);
 
       if (Object.keys(soilAnalysisData).length > 0) {
         nutrientRecommendationReqBody.field.soil.soilAnalyses.push(
