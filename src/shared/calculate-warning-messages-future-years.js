@@ -30,32 +30,30 @@ class CalculateFutureWarningMessageService {
 
     for (const r of rules) {
       const sp = await this.execSP(manager, r.sql, [entity.ID]);
-      if (!sp || !(await r.predicate.call(this, sp))) {
-        continue;
+
+      if (sp && (await r.predicate.call(this, sp))) {
+        const template = await this.getTemplate(
+          manager,
+          context.farm.CountryID,
+          r.key,
+        );
+
+        if (template) {
+          const localized = await this.bind(
+            template,
+            r.values ? await r.values(sp) : [],
+          );
+
+          warnings.push(
+            await this.buildMessage({
+              field: context.field,
+              crop: context.crop,
+              joining: r.join === "FIELD" ? context.field : entity,
+              localized,
+            }),
+          );
+        }
       }
-
-      const template = await this.getTemplate(
-        manager,
-        context.farm.CountryID,
-        r.key,
-      );
-      if (!template) {
-        continue;
-      }
-
-      const localized = await this.bind(
-        template,
-        r.values ? await r.values(sp) : [],
-      );
-
-      warnings.push(
-        await this.buildMessage({
-          field: context.field,
-          crop: context.crop,
-          joining: r.join === "FIELD" ? context.field : entity,
-          localized,
-        }),
-      );
     }
 
     return warnings;

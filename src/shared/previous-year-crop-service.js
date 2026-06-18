@@ -6,79 +6,88 @@ const {
 const { CropOrderMapper } = require("../constants/crop-order-mapper");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { CropEntity } = require("../db/entity/crop.entity");
-const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
+const {
+  PreviousCroppingEntity,
+} = require("../db/entity/previous-cropping.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
 
 class CalculatePreviousCropService {
+  pickCropFromList(crops) {
+    if (crops.length > 1) {
+      return (
+        crops.find((crop) => crop.CropOrder === CropOrderMapper.SECONDCROP) ||
+        null
+      );
+    }
+
+    if (crops.length === 1) {
+      return crops[0];
+    }
+
+    console.warn(`No crop found in CropEntity for FieldID`);
+    return null;
+  }
+
+  async findCropForYear(fieldID, year, transactionalManager) {
+    const yearCrops = await transactionalManager.find(CropEntity, {
+      where: { FieldID: fieldID, Year: year },
+    });
+
+    const selectedCrop = this.pickCropFromList(yearCrops);
+
+    if (selectedCrop) {
+      return selectedCrop;
+    }
+
+    return transactionalManager.findOne(PreviousCroppingEntity, {
+      where: { FieldID: fieldID, HarvestYear: year },
+    });
+  }
+
+  async getPreviousYearCrop(fieldID, currentYear, transactionalManager) {
+    const previousYear = currentYear - 1;
+    const previousYearCrops = await transactionalManager.find(CropEntity, {
+      where: { FieldID: fieldID, Year: previousYear },
+    });
+
+    if (previousYearCrops.length === 0) {
+      return transactionalManager.findOne(PreviousCroppingEntity, {
+        where: { FieldID: fieldID, HarvestYear: previousYear },
+      });
+    }
+
+    return this.pickCropFromList(previousYearCrops);
+  }
+
   async findPreviousCrop(fieldID, currentYear, transactionalManager) {
-    const yearOne =1, yearTwo = 2, yearThree = 3;
-    const yearsToCheck = [currentYear - yearOne, currentYear - yearTwo, currentYear - yearThree];
+    const yearOne = 1,
+      yearTwo = 2,
+      yearThree = 3;
+    const yearsToCheck = [
+      currentYear - yearOne,
+      currentYear - yearTwo,
+      currentYear - yearThree,
+    ];
     const collectedCrops = [];
 
-    // COLLECT CROPS FOR LAST THREE YEARS
     for (const year of yearsToCheck) {
-      // Fetch from CropEntity first
-      const yearCrops = await transactionalManager.find(CropEntity, {
-        where: { FieldID: fieldID, Year: year },
-      });
-
-      let selectedCrop = null;
-
-      if (yearCrops.length > 1) {
-        // If two crops — pick SECOND CROP
-        selectedCrop = yearCrops.find(
-          (crop) => crop.CropOrder === CropOrderMapper.SECONDCROP
-        );
-      } else if (yearCrops.length === 1) {
-        // If one crop — pick it
-        selectedCrop = yearCrops[0];
-      }else{
-        console.warn(`No crop found in CropEntity for FieldID`);
-      }
-
-      if (!selectedCrop) {
-        // Fallback to PreviousCroppingEntity
-        selectedCrop = await transactionalManager.findOne(
-          PreviousCroppingEntity,
-          {
-            where: { FieldID: fieldID, HarvestYear: year },
-          }
-        );
-      }
-
+      const selectedCrop = await this.findCropForYear(
+        fieldID,
+        year,
+        transactionalManager,
+      );
       collectedCrops.push(selectedCrop || null);
     }
 
-    // ✔ Renamed variables
-    const lastYearCrop = collectedCrops[0]; // Year - 1
-    const secondLastYearCrop = collectedCrops[1]; // Year - 2
-    const thirdLastYearCrop = collectedCrops[2]; // Year - 3
+    const lastYearCrop = collectedCrops[0];
+    const secondLastYearCrop = collectedCrops[1];
+    const thirdLastYearCrop = collectedCrops[2];
 
-    // 2️⃣ VALIDATIONS
     if (!lastYearCrop || !secondLastYearCrop || !thirdLastYearCrop) {
       return null;
     }
 
-
-    //  GET PREVIOUS YEAR CROP (Y-1 AGAIN) FOR FINAL RETURN
-    const previousYearCrops = await transactionalManager.find(CropEntity, {
-      where: { FieldID: fieldID, Year: currentYear - 1 },
-    });
-
-    if (previousYearCrops.length === 0) {
-      const preCrop = await transactionalManager.findOne(PreviousCroppingEntity, {
-        where: { FieldID: fieldID, HarvestYear: currentYear - 1 },
-      });
-      return preCrop;
-    }
-
-    if (previousYearCrops.length > 1) {
-      return previousYearCrops.find(
-        (crop) => crop.CropOrder === CropOrderMapper.SECONDCROP
-      );
-    }
-
-    return previousYearCrops[0] || null;
+    return this.getPreviousYearCrop(fieldID, currentYear, transactionalManager);
   }
 }
 
