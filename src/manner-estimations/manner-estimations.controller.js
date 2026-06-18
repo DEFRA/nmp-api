@@ -28,12 +28,13 @@ class MannerEstimationsController {
       return this.#h.response(error);
     }
   }
-  async getAll() {
+  async getByOrganisationId() {
     try {
-      const records = await this.#mannerEstimationsService.getAll();
+      const { organisationId } = this.#request.params;
+      const records = await this.#mannerEstimationsService.getByOrganisationId(organisationId);
       return this.#h.response(records);
     } catch (error) {
-      console.error("Error in getAll:", error);
+      console.error("Error in getByOrganisationId:", error);
       return this.#h.response(error);
     }
   }
@@ -45,7 +46,7 @@ class MannerEstimationsController {
       const result =
         await this.#mannerEstimationsService.checkMannerEstimationExists(
           organisationId,
-          name
+          name,
         );
 
       return this.#h.response(result);

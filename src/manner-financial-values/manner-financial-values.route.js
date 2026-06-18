@@ -7,6 +7,7 @@ const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 const {
   CreateMannerFinancialValuesDto,
 } = require("./dto/manner-financial-values.dto");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 module.exports = [
   {
@@ -21,17 +22,7 @@ module.exports = [
       description: "Create Manner Financial Values",
       validate: {
         payload: CreateMannerFinancialValuesDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: { error: err },
-                request,
-              }),
-            )
-            .code(StatusCodeMapper.BAD_REQUEST)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },

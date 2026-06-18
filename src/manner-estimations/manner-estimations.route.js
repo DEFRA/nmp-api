@@ -7,6 +7,8 @@ const {
 } = require("./dto/create-manner-estimation.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
+const Joi = require("joi");
 
 module.exports = [
   {
@@ -21,30 +23,26 @@ module.exports = [
       description: "Create a Manner Estimation",
       validate: {
         payload: CreateMannerEstimationWithApplicationDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: { error: err },
-                request,
-              }),
-            )
-            .code(StatusCodeMapper.BAD_REQUEST)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
   {
     method: "GET",
-    path: "/manner-estimations",
+    path: "/manner-estimations/{organisationId}",
     options: {
       tags: ["api", "Manner Estimations"],
-      description: "Get all Manner Estimations",
+      description: "Get Manner Estimations by Organisation ID",
+      validate: {
+        params: Joi.object({
+          organisationId: Joi.number().integer().required(),
+        }),
+        failAction: validationFailAction,
+      },
     },
     handler: async (request, h) => {
       const controller = new MannerEstimationsController(request, h);
-      return controller.getAll();
+      return controller.getByOrganisationId();
     },
   },
   {
@@ -56,17 +54,7 @@ module.exports = [
         "Check whether a Manner Estimation exists by organisation id and name",
       validate: {
         query: CheckMannerEstimationExistsDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: { error: err },
-                request,
-              }),
-            )
-            .code(StatusCodeMapper.BAD_REQUEST)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {

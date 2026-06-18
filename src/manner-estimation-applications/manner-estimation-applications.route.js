@@ -5,6 +5,7 @@ const {
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 const { CreateMannerEstimationApplicationDto } = require("./dto/manner-estimation-applications.dto");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 module.exports = [
   {
@@ -19,17 +20,7 @@ module.exports = [
       description: "Create Manner Estimation Application",
       validate: {
         payload: CreateMannerEstimationApplicationDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: { error: err },
-                request,
-              }),
-            )
-            .code(StatusCodeMapper.BAD_REQUEST)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
