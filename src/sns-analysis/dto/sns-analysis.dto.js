@@ -27,7 +27,7 @@ const SnsAnalysisDto = Joi.object({
   CreatedOn: Joi.date().iso().allow(null).default(null),
   CreatedByID: Joi.number().integer().allow(null).default(null),
   ModifiedOn: Joi.date().iso().allow(null).default(null),
-  ModifiedByID: Joi.number().integer().allow(null).default(null),
+  ModifiedByID: Joi.number().integer().allow(null).default(null)
 });
 
 const CreateSnsAnalysisDto = Joi.object({

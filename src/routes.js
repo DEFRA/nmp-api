@@ -52,5 +52,7 @@ module.exports = [
   ...require("./psc-index/psc-index.route"),
   ...require("./soil-analyses-method/soil-analyses-method.route"),
   ...require("./scotland-nmax-values/scotland-nmax-values.route"),
-  ...require("./farm-average-yield/farm-average-yields.route")
+  ...require("./farm-average-yield/farm-average-yields.route"),
+  ...require("./manner-estimations/manner-estimations.route"),
+  ...require("./manner-estimation-applications/manner-estimation-applications.route")
 ];
