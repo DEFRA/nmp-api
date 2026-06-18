@@ -9,7 +9,7 @@ const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 const { validationFailAction } = require("../shared/validateFailSafeAction");
 const Joi = require("joi");
-
+const mannerEstimations = "Manner Estimations"
 module.exports = [
   {
     method: "POST",
@@ -19,7 +19,7 @@ module.exports = [
       return controller.createMannerEstimation();
     },
     options: {
-      tags: ["api", "Manner Estimations"],
+      tags: ["api", mannerEstimations],
       description: "Create a Manner Estimation",
       validate: {
         payload: CreateMannerEstimationWithApplicationDto,
@@ -31,7 +31,7 @@ module.exports = [
     method: "GET",
     path: "/manner-estimations/{organisationId}",
     options: {
-      tags: ["api", "Manner Estimations"],
+      tags: ["api", mannerEstimations],
       description: "Get Manner Estimations by Organisation ID",
       validate: {
         params: Joi.object({
@@ -49,7 +49,7 @@ module.exports = [
     method: "GET",
     path: "/manner-estimations/exists",
     options: {
-      tags: ["api", "Manner Estimations"],
+      tags: ["api", mannerEstimations],
       description:
         "Check whether a Manner Estimation exists by organisation id and name",
       validate: {

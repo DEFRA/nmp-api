@@ -43,8 +43,7 @@ class MannerEstimationsController {
     try {
       const { organisationId, name } = this.#request.query;
 
-      const result =
-        await this.#mannerEstimationsService.checkMannerEstimationExists(
+      const result = await this.#mannerEstimationsService.checkMannerEstimationExists(
           organisationId,
           name,
         );
