@@ -37,6 +37,23 @@ class MannerEstimationsController {
       return this.#h.response(error);
     }
   }
+
+  async checkMannerEstimationExists() {
+    try {
+      const { organisationId, name } = this.#request.query;
+
+      const result =
+        await this.#mannerEstimationsService.checkMannerEstimationExists(
+          organisationId,
+          name,
+        );
+
+      return this.#h.response(result);
+    } catch (error) {
+      console.error("Error checking Manner Estimation existence:", error);
+      return this.#h.response(error);
+    }
+  }
 }
 
 module.exports = { MannerEstimationsController };
