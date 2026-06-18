@@ -20,11 +20,11 @@ const PreviousGrassesEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
-    GrassManagementOptionID: {
+    LayDuration: {
       type: "int",
       nullable: true,
     },
-    GrassTypicalCutID: {
+    GrassManagementOptionID: {
       type: "int",
       nullable: true,
     },
@@ -68,12 +68,6 @@ const PreviousGrassesEntity = new EntitySchema({
       type: "many-to-one",
       target: "GrassManagementOptions",
       joinColumn: { name: "GrassManagementOptionID" },
-      inverseSide: "PreviousGrasses",
-    },
-    GrassTypicalCuts: {
-      type: "many-to-one",
-      target: "GrassTypicalCuts",
-      joinColumn: { name: "GrassTypicalCutID" },
       inverseSide: "PreviousGrasses",
     },
     SoilNitrogenSupplyItems: {

@@ -5,6 +5,7 @@ const {
 } = require("./dto/farm-manure-type.dto");
 const { FarmManureTypeController } = require("./farm-manure-type.controller");
 const getController = (request, h) => new FarmManureTypeController(request, h);
+const farmManureType="Farm Manure Type";
 
 // Define routes
 module.exports = [
@@ -12,7 +13,7 @@ module.exports = [
     method: "GET",
     path: "/farm-manure-type/{farmId}",
     options: {
-      tags: ["api", "Farm Manure Type"],
+      tags: ["api", `${farmManureType}`],
       description: "Get FarmManureType by FarmId",
       validate: {
         params: Joi.object({
@@ -26,7 +27,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -41,7 +42,7 @@ module.exports = [
     method: "GET",
     path: "/farm-manure-type/check",
     options: {
-      tags: ["api", "Farm Manure Type"],
+      tags: ["api", `${farmManureType}`],
       description:
         "Check if FarmManureType exists by FarmID, ManureTypeID, and ManureTypeName",
       validate: {
@@ -58,7 +59,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -67,6 +68,35 @@ module.exports = [
       handler: async (request, h) => {
         return getController(request, h).checkFarmManureTypeExists();
       },
+    },
+  },
+  {
+    method: "GET",
+    path: "/farm-manure-type/farm-manure-type-by-id/{farmManureTypeId}",
+    options: {
+      tags: ["api",`${farmManureType}`],
+      description: "Get Farm Manure Type by id",
+      validate: {
+        params: Joi.object({
+          farmManureTypeId: Joi.number().integer().required(),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              }),
+            )
+            .code()
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      return getController(request, h).getById();
     },
   },
 ];

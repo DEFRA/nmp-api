@@ -21,6 +21,11 @@ const FieldEntity = new EntitySchema({
       default: 1,
       nullable: true,
     },
+    PscIndexID: {
+      type: "int",
+      default: 1,
+      nullable: true,
+    },
     Name: {
       type: "nvarchar",
       length: 50,
@@ -159,6 +164,18 @@ const FieldEntity = new EntitySchema({
       target: "InprogressCalculations",
       joinColumn: { name: "ID" },
       inverseSide: "Field",
+    },
+    WarningMessages: {
+      type: "one-to-many",
+      target: "WarningMessages",
+      joinColumn: { name: "ID" },
+      inverseSide: "Field",
+    },
+    PreviousCropingField: {
+      type: "one-to-many",
+      target: "PreviousCroppings",
+      joinColumn: { name: "ID" },
+      inverseSide: "Fields",
     },
   },
 });

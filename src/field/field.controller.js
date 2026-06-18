@@ -29,7 +29,7 @@ class FieldController {
       const records = await this.#fieldService.getFieldCropAndSoilDetails(
         fieldId,
         year,
-        confirm
+        confirm,
       );
       if (!records) {
         throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
@@ -71,8 +71,13 @@ class FieldController {
   async checkFarmFieldExists() {
     const { farmId } = this.#request.params;
     const { name } = this.#request.query;
+    const { fieldId } = this.#request.query;
     try {
-      const exists = await this.#fieldService.checkFieldExists(farmId, name);
+      const exists = await this.#fieldService.checkFieldExists(
+        farmId,
+        name,
+        fieldId,
+      );
 
       return this.#h.response({ exists });
     } catch (error) {
@@ -83,12 +88,28 @@ class FieldController {
   async updateField() {
     const { fieldId } = this.#request.params;
     const userId = this.#request.userId;
-    const { Field } = this.#request.payload;
+    const payload = this.#request.payload;
     try {
       const updatedField = await this.#fieldService.updateField(
-        Field,
+        payload,
         userId,
-        fieldId
+        fieldId,
+        this.#request,
+      );
+      return this.#h.response({ Field: updatedField });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+
+  async updateOnlyField() {
+    const userId = this.#request.userId;
+    const payload = this.#request.payload;
+    try {
+      const updatedField = await this.#fieldService.updateOnlyField(
+        payload,
+        userId,
+        this.#request,
       );
       return this.#h.response({ Field: updatedField });
     } catch (error) {
@@ -103,7 +124,7 @@ class FieldController {
       const data = await this.#fieldService.createFieldWithSoilAnalysisAndCrops(
         farmId,
         body,
-        userId
+        userId,
       );
       return this.#h.response(data);
     } catch (error) {
@@ -113,9 +134,8 @@ class FieldController {
   async deleteFieldById() {
     const { fieldId } = this.#request.params;
     try {
-      const result = await this.#fieldService.deleteFieldAndRelatedEntities(
-        fieldId
-      );
+      const result =
+        await this.#fieldService.deleteFieldAndRelatedEntities(fieldId);
       if (result?.affectedRows === 0) {
         throw boom.notFound(`Field with ID ${fieldId} not found.`);
       }
@@ -129,7 +149,7 @@ class FieldController {
     try {
       const records =
         await this.#fieldService.getFieldSoilAnalysisAndSnsAnalysisDetails(
-          fieldId
+          fieldId,
         );
       if (!records) {
         throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
@@ -142,12 +162,11 @@ class FieldController {
 
   async getFieldRelatedData() {
     const { fieldId } = this.#request.params;
-     const { year } = this.#request.query;
+    const { year } = this.#request.query;
 
     try {
       // Handle multiple FieldIDs, split by comma if needed (if multiple IDs are passed)
-      const fieldIds = fieldId.split(",").map((id) => parseInt(id));
-
+      const fieldIds = fieldId.split(",").map((id) => Number.parseInt(id));
       // Fetch related data for the fields
       const fieldData = await this.#fieldService.getFieldRelatedData(
         fieldIds,

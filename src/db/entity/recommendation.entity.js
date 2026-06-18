@@ -179,6 +179,34 @@ const RecommendationEntity = new EntitySchema({
       length: 30,
       nullable: true,
     },
+    NBalance: {
+      type: "int",
+      nullable: true,
+    },
+    PBalance: {
+      type: "int",
+      nullable: true,
+    },
+    KBalance: {
+      type: "int",
+      nullable: true,
+    },
+    MgBalance: {
+      type: "int",
+      nullable: true,
+    },
+    SBalance: {
+      type: "int",
+      nullable: true,
+    },
+    NaBalance: {
+      type: "int",
+      nullable: true,
+    },
+    LimeBalance: {
+      type: "int",
+      nullable: true,
+    },
     Comments: {
       type: "nvarchar",
       nullable: true,

@@ -47,11 +47,21 @@ const CropDto = Joi.object({
   PreviousID: Joi.number().integer().allow(null),
   CropOrder: Joi.number().integer().required(),
   CreatedOn: Joi.date().iso().allow(null).optional(),
+  IsBasePlan: Joi.boolean().required(),
   CreatedByID: Joi.number().integer().allow(null).optional(),
   ModifiedOn: Joi.date().iso().allow(null).optional(),
   ModifiedByID: Joi.number().integer().allow(null).optional(),
   FieldName: Joi.string().optional().allow(null),
   EncryptedCounter: Joi.number().integer().allow(null),
+  IsDeleted: Joi.boolean().allow(null),
+}).required();
+
+const CopyPlanDto = Joi.object({
+  farmID: Joi.number().integer().allow(null).optional(),
+  harvestYear: Joi.number().integer().required(),
+  copyYear: Joi.number().integer().required(),
+  isOrganic: Joi.boolean().required(),
+  isFertiliser: Joi.boolean().required(),
 }).required();
 
 const ManagementPeriodsDto = Joi.array()
@@ -62,6 +72,7 @@ const ManagementPeriodsDto = Joi.array()
       Defoliation: Joi.number().integer().allow(null).required(),
       Utilisation1ID: Joi.number().integer().allow(null).optional(),
       Utilisation2ID: Joi.number().integer().allow(null).optional(),
+      Yield: Joi.number().allow(null).optional(),
       PloughedDown: Joi.date().iso().allow(null).required(),
       PreviousID: Joi.number().integer().allow(null).optional(),
       CreatedOn: Joi.date().iso().allow(null).optional(),
@@ -96,6 +107,5 @@ module.exports = {
   CropDto,
   CreatePlanDto,
   CreateCropWithManagementPeriodsDto,
-  CreatePlanDto,
-  CreateCropWithManagementPeriodsDto,
+  CopyPlanDto
 };

@@ -65,4 +65,30 @@ module.exports = [
       },
     },
   },
+   {
+    method: "GET",
+    path: "/crop-type-linkings",
+    handler: async (request, h) => {
+      return getController(request, h).getCropTypeLinking();
+    },
+    options: {
+      tags: ["api", "Crop Type Linkings"],
+      description: "Get CropTypeLinking",
+      validate: {
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+  },
 ];

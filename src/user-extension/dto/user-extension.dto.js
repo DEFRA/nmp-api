@@ -6,9 +6,13 @@ const updateIsTermsOfUseAcceptedDto = Joi.object({
 const updateDoNotShowAboutThisServiceDto = Joi.object({
   DoNotShowAboutThisService: Joi.boolean().required().default(false),
 });
+const doNotShowAboutMannerDto= Joi.object({
+  DoNotShowAboutManner: Joi.boolean().required().default(false),
+});
 
 
 module.exports = {
   updateIsTermsOfUseAcceptedDto,
-  updateDoNotShowAboutThisServiceDto
+  updateDoNotShowAboutThisServiceDto,
+  doNotShowAboutMannerDto
 };

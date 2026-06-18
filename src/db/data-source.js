@@ -5,7 +5,6 @@ const { FieldEntity } = require("./entity/field.entity.js");
 const { UserEntity } = require("./entity/user.entity.js");
 const { OrganisationEntity } = require("./entity/organisation.entity.js");
 const { MoistureTypeEntity } = require("./entity/moisture-type.entity.js");
-const { ClimateDatabaseEntity } = require("./entity/climate.entity.js");
 const { ManureTypeEntity } = require("./entity/manure-type.entity.js");
 const { CropEntity } = require("./entity/crop.entity.js");
 const {
@@ -70,6 +69,27 @@ const { CropInfoQuestionsEntity } = require("./entity/crop-info-questions.entity
 const { ExcessRainfallsEntity } = require("./entity/excess-rainfalls.entity.js");
 const { ExcessWinterRainfallOptionsEntity } = require("./entity/excess-winter-rainfall-options.js");
 const { UserExtensionsEntity } = require("./entity/user-extension.entity.js");
+const { PreviousGrassIdMappingEntity } = require("./entity/previous-grass-Id-mapping.entity.js");
+const { GrassHistoryIdMappingEntity } = require("./entity/grass-history-id-mapping-entity.js");
+const { CropGroupCategoriesEntity } = require("./entity/crop-group-categories.entity.js");
+const { SoilGroupCategoriesEntity } = require("./entity/soil-group-categories-entity.js");
+const { LivestockGroupEntity } = require("./entity/livestock-group-entity.js");
+const { LivestockTypeEntity } = require("./entity/livestock-type-entity.js");
+const { NutrientsLoadingFarmDetailsEntity } = require("./entity/nutrients-loading-farm-details-entity.js");
+const { NutrientsLoadingLiveStocksEntity } = require("./entity/nutrients-loading-live-stocks-entity.js");
+const { NutrientsLoadingManuresEntity } = require("./entity/nutrients-loading-manures-entity.js");
+const { StorageTypesEntity } = require("./entity/storage-types.Entity.js");
+const { StoreCapacitiesEntity } = require("./entity/store-capacities.entity.js");
+const { MaterialStatesEntity } = require("./entity/material-states.entity.js");
+const { SolidManureTypesEntity } = require("./entity/solid-manure-types.entity.js");
+const { BankSlopeAnglesEntity } = require("./entity/bank-slope-angles-entity.js");
+const { WarningMessagesEntity } = require("./entity/warning-message.entity.js");
+const { PreviousCroppingEntity } = require("./entity/previous-cropping.entity.js");
+const { WarningCodeEntity } = require("./entity/warning-code.entity.js");
+const { WarningsEntity } = require("./entity/warning.entity.js");
+const { FarmsNVZEntity } = require("./entity/farms-nvz.entity.js");
+const { entities } = require("./entity/register-entities.js");
+
 
 
 
@@ -83,54 +103,7 @@ const baseConfig = {
   host: EnvironmentService.DATABASE_HOST(),
   port: EnvironmentService.DATABASE_PORT(),
   database: EnvironmentService.DATABASE_NAME(),
-  entities: [
-    FarmEntity,
-    FieldEntity,
-    UserEntity,
-    OrganisationEntity,
-    MoistureTypeEntity,
-    ClimateDatabaseEntity,
-    ManureTypeEntity,
-    CropEntity,
-    ManagementPeriodEntity,
-    RainTypeEntity,
-    IncorporationMethodEntity,
-    ManureGroupEntity,
-    IncorporationDelayEntity,
-    WindspeedEntity,
-    SoilAnalysisEntity,
-    MannerCropTypeEntity,
-    CropTypeLinkingEntity,
-    ApplicationMethodEntity,
-    ApplicationMethodsIncorpMethodEntity,
-    IncorpMethodsIncorpDelayEntity,
-    SoilTypeSoilTextureEntity,
-    SubSoilEntity,
-    TopSoilEntity,
-    RecommendationEntity,
-    RecommendationCommentEntity,
-    OrganicManureEntity,
-    FarmManureTypeEntity,
-    FertiliserManuresEntity,
-    InOrganicManureDurationEntity,
-    CountryEntity,
-    ManureTypeCategoryEntity,
-    SnsAnalysesEntity,
-    SecondCropLinkingEntity,
-    PKBalanceEntity,
-    FarmManureTypeEntity,
-    GrassManagementOptionsEntity,
-    GrassTypicalCutsEntity,
-    SoilNitrogenSupplyItemsEntity,
-    PreviousGrassesEntity,
-    SNSCategoriesEntity,
-    InprogressCalculationsEntity,
-    CropInfoQuestionsEntity,
-    ExcessRainfallsEntity,
-    ExcessWinterRainfallOptionsEntity,
-    UserExtensionsEntity,
-
-  ],
+  entities: entities,
   migrations: [],
   subscribers: [],
 };

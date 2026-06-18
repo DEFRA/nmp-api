@@ -18,27 +18,27 @@ const FarmEntity = new EntitySchema({
     },
     Address1: {
       type: "nvarchar",
-      length: 50,
+      length: 250,
       nullable: true,
     },
     Address2: {
       type: "nvarchar",
-      length: 50,
+      length: 250,
       nullable: true,
     },
     Address3: {
       type: "nvarchar",
-      length: 50,
+      length: 250,
       nullable: true,
     },
     Address4: {
       type: "nvarchar",
-      length: 50,
+      length: 250,
       nullable: true,
     },
     Postcode: {
       type: "nvarchar",
-      length: 8,
+      length: 50,
     },
     CPH: {
       type: "nvarchar",
@@ -131,11 +131,7 @@ const FarmEntity = new EntitySchema({
     },
     STD: {
       type: "nvarchar",
-      length: 255,
-      nullable: true,
-    },
-    LastHarvestYear: {
-      type: "int",
+      length: 6,
       nullable: true,
     },
     CountryID: {
@@ -144,7 +140,7 @@ const FarmEntity = new EntitySchema({
     },
     ClimateDataPostCode: {
       type: "nvarchar",
-      length: 8,
+      length: 50,
     },
   },
   relations: {
@@ -166,19 +162,18 @@ const FarmEntity = new EntitySchema({
       joinColumn: { name: "ID" },
       inverseSide: "Farm",
     },
-    FarmManureTypes: {
-      type: "one-to-many",
-      target: "FarmManureType",
-      joinColumn: { name: "ID" },
-      inverseSide: "Farm",
-    },
     ExcessRainfalls: {
       type: "one-to-many",
       target: "ExcessRainfalls",
       joinColumn: { name: "ID" },
       inverseSide: "Farm",
     },
-
+    NutrientsLoadingLiveStocks: {
+      type: "one-to-many",
+      target: "NutrientsLoadingLiveStocks",
+      joinColumn: { name: "ID" },
+      inverseSide: "Farm",
+    },
     CreatedByUser: {
       target: "User",
       type: "many-to-one",
@@ -186,8 +181,8 @@ const FarmEntity = new EntitySchema({
       joinColumn: { name: "CreatedByID" },
     },
     ModifiedByUser: {
-      target: "User",
       type: "many-to-one",
+      target: "User",
       inverseSide: "ModifiedFarms",
       joinColumn: { name: "ModifiedByID" },
     },
@@ -197,12 +192,18 @@ const FarmEntity = new EntitySchema({
       joinColumn: { name: "CountryID" },
       inverseSide: "Farms",
     },
-    // InprogressCalculations: {
-    //   type: "one-to-many",
-    //   target: "InprogressCalculations",
-    //   joinColumn: { name: "ID" },
-    //   inverseSide: "Farm",
-    // },
+    StoreCapacity: {
+      type: "one-to-many",
+      target: "StoreCapacities",
+      joinColumn: { name: "ID" },
+      inverseSide: "Farms",
+    },
+    FarmsNVZ: {
+      type: "one-to-many",
+      target: "FarmsNVZ",
+      joinColumn: { name: "ID" },
+      inverseSide: "Farms",
+    },
   },
 });
 

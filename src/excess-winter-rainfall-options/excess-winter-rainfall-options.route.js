@@ -1,5 +1,6 @@
 const Joi = require("joi");
 const { ExcessRainFallOptionsController } = require("./excess-winter-rainfall-options.controller");
+const { formatErrorResponse } = require("../interceptor/responseFormatter");
 
 module.exports = [
   {

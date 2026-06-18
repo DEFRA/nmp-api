@@ -123,25 +123,25 @@ const UserEntity = new EntitySchema({
     CreatedSnsAnalyses: {
       type: "one-to-many",
       target: "SnsAnalyses",
-      inverseSide: "CreatedByUser", // Matches the relation in SnsAnalysesEntity
+      inverseSide: "CreatedByUser",
       joinColumn: { name: "ID" },
     },
     ModifiedSnsAnalyses: {
       type: "one-to-many",
       target: "SnsAnalyses",
-      inverseSide: "ModifiedByUser", // Matches the relation in SnsAnalysesEntity
+      inverseSide: "ModifiedByUser",
       joinColumn: { name: "ID" },
     },
     CreatedPreviousGrasses: {
       type: "one-to-many",
       target: "PreviousGrasses",
-      inverseSide: "CreatedByUser", // Matches the relation in SnsAnalysesEntity
+      inverseSide: "CreatedByUser",
       joinColumn: { name: "ID" },
     },
     ModifiedPreviousGrasses: {
       type: "one-to-many",
       target: "PreviousGrasses",
-      inverseSide: "ModifiedByUser", // Matches the relation in SnsAnalysesEntity
+      inverseSide: "ModifiedByUser",
       joinColumn: { name: "ID" },
     },
     CreatedExcessRainfalls: {
@@ -160,6 +160,67 @@ const UserEntity = new EntitySchema({
       target: "UserExtensions",
       type: "one-to-many",
       inverseSide: "User",
+      joinColumn: { name: "ID" },
+    },
+
+    CreatedNutrientsLoadingLiveStocks: {
+      type: "one-to-many",
+      target: "NutrientsLoadingLiveStocks",
+      JoinColumn: "ID",
+      inverseSide: "CreatedBy",
+    },
+    ModifiedNutrientsLoadingLiveStocks: {
+      type: "one-to-many",
+      target: "NutrientsLoadingLiveStocks",
+      JoinColumn: "ID",
+      inverseSide: "ModifiedBy",
+    },
+    CreatedStoreCapacitiesByUser: {
+      type: "one-to-many",
+      target: "StoreCapacities",
+      inverseSide: "CreatedBy",
+      joinColumn: { name: "ID" },
+    },
+    ModifiedStoreCapacitiesByUser: {
+      type: "one-to-many",
+      target: "StoreCapacities",
+      inverseSide: "ModifiedBy",
+      joinColumn: { name: "ID" },
+    },
+    CreatedWarningMessagesByUser: {
+      type: "one-to-many",
+      target: "WarningMessages",
+      inverseSide: "CreatedBy",
+      joinColumn: { name: "ID" },
+    },
+    ModifiedWarningMessagesByUser: {
+      type: "one-to-many",
+      target: "WarningMessages",
+      inverseSide: "ModifiedBy",
+      joinColumn: { name: "ID" },
+    },
+    CreatedPreviousCroppings: {
+      type: "one-to-many",
+      target: "PreviousCroppings",
+      inverseSide: "ModifiedByUser",
+      joinColumn: { name: "ID" },
+    },
+    ModifiedPreviousCroppings: {
+      type: "one-to-many",
+      target: "PreviousCroppings",
+      inverseSide: "ModifiedByUser",
+      joinColumn: { name: "ID" },
+    },
+    CreatedFarmsNvz: {
+      type: "one-to-many",
+      target: "FarmsNVZ",
+      inverseSide: "CreatedByUserFarmNvz",
+      joinColumn: { name: "ID" },
+    },
+    ModifiedFarmsNvz: {
+      type: "one-to-many",
+      target: "FarmsNVZ",
+      inverseSide: "ModifiedByUserFarmNvz",
       joinColumn: { name: "ID" },
     },
   },

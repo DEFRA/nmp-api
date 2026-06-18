@@ -1,4 +1,5 @@
 const { SnsAnalysisService } = require("./sns-analysis.service");
+const boom = require("@hapi/boom");
 
 class SNSAnalysesController {
   #request;
@@ -72,7 +73,7 @@ console.log("updatedSnsAnalysisData", updatedSnsAnalysisData);
       const data = await this.#snsAnalysisService.updateSnsAnalysis(
         updatedSnsAnalysisData,
         userId,
-        parseInt(snsAnalysisId),
+        Number.parseInt(snsAnalysisId),
         this.#request
       );
 

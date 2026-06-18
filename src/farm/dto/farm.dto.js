@@ -5,7 +5,7 @@ const FarmDto = Joi.object({
   FullAddress: Joi.string().allow(null, ""),
   OrganisationID: Joi.string().required(),
   Name: Joi.string().required(),
-  Address1: Joi.string().required(),
+  Address1: Joi.string().required().allow(null),
   Address2: Joi.string().optional().allow(null),
   Address3: Joi.string().optional().allow(null),
   Address4: Joi.string().optional().allow(null),
@@ -33,19 +33,31 @@ const FarmDto = Joi.object({
   CreatedByID: Joi.number().allow(null),
   ModifiedOn: Joi.date().allow(null),
   ModifiedByID: Joi.date().allow(null),
-  LastHarvestYear: Joi.number().required().allow(null),
+});
+
+const FarmNvzDto = Joi.object({
+  ID: Joi.number().integer().allow(null).default(null),
+  FarmID: Joi.number().integer().allow(null).optional(),
+  NVZProgrammeID: Joi.number().required(),
+  NVZProgrammeName: Joi.string().required(),
+  CreatedOn: Joi.date().allow(null),
+  CreatedByID: Joi.number().allow(null),
+  ModifiedOn: Joi.date().allow(null),
+  ModifiedByID: Joi.number().allow(null)
 });
 const FarmUpdateDto = FarmDto.keys({
     ID: Joi.number().required()  
 });
 const FarmPayloadDto = Joi.object({
-    Farm: FarmDto.required(),
-    UserID: Joi.number().optional().allow(null), 
-    RoleID: Joi.number().optional().allow(null) 
+  Farm: FarmDto.required(),
+  FarmsNvz: Joi.array().items(FarmNvzDto).optional(),
+  UserID: Joi.number().optional().allow(null),
+  RoleID: Joi.number().optional().allow(null)
 });
 
 const FarmUpdatePayloadDto = Joi.object({
-    Farm: FarmUpdateDto.required()
+  Farm: FarmUpdateDto.required(),
+  FarmsNvz: Joi.array().items(FarmNvzDto).optional()
 });
 
 module.exports = {

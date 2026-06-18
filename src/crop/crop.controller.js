@@ -57,13 +57,13 @@ class CropController {
   async getCropsPlansManagementPeriodIdsByHarvestYear() {
     try {
       const { harvestYear } = this.#request.params;
-      const { cropTypeId, fieldIds, cropOrder } = this.#request.query;
+      const { cropGroupName, fieldIds, cropOrder } = this.#request.query;
 
       const managementPeriodIds =
         await this.#planService.getCropsPlansManagementPeriodIds(
           fieldIds,
           harvestYear,
-          cropTypeId,
+          cropGroupName,
           cropOrder
         );
       if (managementPeriodIds.ManagementPeriods.length === 0) {
@@ -80,15 +80,15 @@ class CropController {
     }
   }
 
-  async getCropsPlansFieldsByHarvestYearAndCropTypeId() {
+  async getCropsPlansFieldsByHarvestYearAndCropGroupName() {
     try {
       const { harvestYear } = this.#request.params;
-      const { farmId, cropTypeId } = this.#request.query;
+      const { farmId, cropGroupName } = this.#request.query;
 
       const plans = await this.#planService.getCropsPlanFields(
         farmId,
         harvestYear,
-        cropTypeId
+        cropGroupName
       );
       if (plans.length === 0) {
         throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
@@ -124,7 +124,7 @@ class CropController {
       const confirm = !!type;
       const records = await this.#planService.getPlans(farmId, confirm);
       if (records.length === 0) {
-        throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
+      console.log(StaticStrings.HTTP_STATUS_NOT_FOUND);
       }
       return this.#h.response(records);
     } catch (error) {
@@ -154,13 +154,14 @@ class CropController {
   async createNutrientsRecommendationForFieldByFieldId() {
     const body = this.#request.payload;
     const userId = this.#request.userId;
-    this.#request;
+    const transaction=null
     try {
       const data =
         await this.#planService.createNutrientsRecommendationForField(
           body.Crops,
           userId,
-          this.#request
+          this.#request,
+          transaction
         );
       return this.#h.response(data);
     } catch (error) {
@@ -267,17 +268,17 @@ class CropController {
   }
   async deleteCropsByIds() {
     const { cropIds } = this.#request.payload;
- const userId = this.#request.userId;
+    const userId = this.#request.userId;
+      const transaction = null;
 
     try {
-     
-
       // Loop through each cropId and call the service method to delete it
-      for (let cropId of cropIds) {
-        const result = await this.#cropService.deleteCropById(
+      for (const cropId of cropIds) {
+        const result = await this.#cropService.deleteCrop(
           cropId,
           userId,
-          this.#request
+          this.#request,
+          transaction
         );
 
         if (result?.affectedRows === 0) {
@@ -292,16 +293,18 @@ class CropController {
   }
   async CropGroupNameExists() {
     const { cropIds } = this.#request.params;
-    const { newGroupName} = this.#request.query;
-    const { year} = this.#request.query;
+    const { newGroupName } = this.#request.query;
+    const { year } = this.#request.query;
+    const { farmId } = this.#request.query;
 
     try {
-      const cropIdsArray = cropIds.split(",").map((id) => parseInt(id));
+      const cropIdsArray = cropIds.split(",").map((id) => Number.parseInt(id));
       const cropGroupNameAlreadyExist =
         await this.#cropService.CropGroupNameExists(
           cropIdsArray,
           newGroupName,
-          year
+          year,
+          farmId
         );
       return this.#h.response(cropGroupNameAlreadyExist);
     } catch (error) {
@@ -311,13 +314,15 @@ class CropController {
   async updateCropGroupName() {
     try {
       const { cropIds } = this.#request.params;
-      const { cropGroupName} = this.#request.query;
-      const {variety} = this.#request.query;
-      const { year} = this.#request.query;
+      const { cropGroupName } = this.#request.query;
+      const { variety } = this.#request.query;
+      const { year } = this.#request.query;
       const userId = this.#request.userId;
-      const cropIdsArray = cropIds.split(",").map((id) => parseInt(id));
-      const updateCropGroupName =
-      await this.#cropService.updateCropGroupName(
+      const DECIMAL_RADIX = 10;
+      const cropIdsArray = cropIds
+        .split(",")
+        .map((id) => Number.parseInt(id, DECIMAL_RADIX));
+      const updateCropGroupName = await this.#cropService.updateCropGroupName(
         cropIdsArray,
         cropGroupName,
         variety,
@@ -326,11 +331,92 @@ class CropController {
       );
       return this.#h.response(updateCropGroupName); // Return the updated crop
     } catch (error) {
-      console.error(
-        "Error in updateCropGroupName controller:",
-        error
-      );
+      console.error("Error in updateCropGroupName controller:", error);
       return this.#h.response({ error }); // Return error response
+    }
+  }
+
+  async updateMultipleCrops() {
+    try {
+      const body = this.#request.payload;
+      const userId = this.#request.userId;
+      let transaction = null;
+
+      const updatedResults = await this.#cropService.updateCropData(
+        body,
+        userId,
+        this.#request,
+        transaction
+      );
+
+      return this.#h.response({
+        updatedCrops: updatedResults,
+      });
+    } catch (error) {
+      console.error("Error updating crops:", error);
+      return this.#h.response({
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  }
+
+  async copyPlanByHarvestYearAndFarmID() {
+    try {
+      const body = this.#request.payload;
+      const userId = this.#request.userId;
+
+      const results = await this.#cropService.copyPlan(
+        body,
+        userId,
+        this.#request
+      );
+
+      return this.#h.response(results);
+    } catch (error) {
+      console.error("Error copying crop:", error);
+      return this.#h.response({
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  }
+
+async MergeCrop(){
+ try {
+      const body = this.#request.payload;
+      const userId = this.#request.userId;
+
+      const results = await this.#cropService.MergeCrop(
+        // body,
+        userId,
+        body,
+        this.#request
+      );
+
+      return this.#h.response(results);
+    } catch (error) {
+      console.error("Error merging crop:", error);
+      return this.#h.response({
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  }
+
+   async getPlanByFieldIdAndYear() {
+    const { fieldId } = this.#request.params;
+    const { year } = this.#request.query;
+
+    try {
+      const cropData =
+        await this.#cropService.getPlanByFieldIdAndYear(
+          fieldId,
+          year
+        );
+      return this.#h.response(cropData);
+    } catch (error) {
+      return this.#h.response({ error });
     }
   }
 }

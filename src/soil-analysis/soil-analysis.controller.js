@@ -1,4 +1,5 @@
 const { SoilAnalysesService } = require("./soil-analysis.service");
+const boom = require("@hapi/boom");
 
 class SoilAnalysesController {
   #request;
@@ -67,7 +68,7 @@ const pKBalanceData=this.#request.payload.PKBalance;
       const data = await this.#soilAnalysisService.updateSoilAnalysis(
         updatedSoilAnalysisData,
         userId,
-        parseInt(soilAnalysisId),
+        Number.parseInt(soilAnalysisId),
         pKBalanceData,
         this.#request
       );

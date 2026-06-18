@@ -5,6 +5,7 @@ const {
   CreateCropWithManagementPeriodsDto,
   CreatePlanDto,
   CropDto,
+  CopyPlanDto,
 } = require("./dto/crops.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 
@@ -47,13 +48,13 @@ module.exports = [
     path: "/crops/plans/fields/{harvestYear}",
     options: {
       tags: ["api", "Crop"],
-      description: "Get crops plans field by harvest year and cropTypeID",
+      description: "Get crops plans field by harvest year and cropGroupName",
       validate: {
         params: Joi.object({
           harvestYear: Joi.number().integer().required(),
         }),
         query: Joi.object({
-          cropTypeId: Joi.number().integer().optional(),
+          cropGroupName: Joi.string().optional(),
           farmId: Joi.number().integer().required(),
         }),
         failAction: (request, h, err) => {
@@ -73,7 +74,7 @@ module.exports = [
     },
     handler: async (request, h) => {
       const controller = new CropController(request, h);
-      return controller.getCropsPlansFieldsByHarvestYearAndCropTypeId();
+      return controller.getCropsPlansFieldsByHarvestYearAndCropGroupName();
     },
   },
   {
@@ -120,7 +121,7 @@ module.exports = [
           harvestYear: Joi.number().integer().required(),
         }),
         query: Joi.object({
-          cropTypeId: Joi.number().integer().optional(),
+          cropGroupName: Joi.string().optional(),
           fieldIds: Joi.string()
             .required()
             .description("Comma separated Field Ids, e.g. 1,2,3"),
@@ -450,7 +451,8 @@ module.exports = [
         }),
         query: Joi.object({
           newGroupName: Joi.string().required(),
-          year:Joi.number().integer().required()
+          year: Joi.number().integer().required(),
+          farmId: Joi.number().integer().required(),
         }),
         failAction: (request, h, err) => {
           return h
@@ -484,8 +486,8 @@ module.exports = [
         }),
         query: Joi.object({
           cropGroupName: Joi.string(),
-          variety:Joi.string().allow(''),
-          year:Joi.number().integer().required()
+          variety: Joi.string().allow(""),
+          year: Joi.number().integer().required(),
         }),
         failAction: (request, h, err) => {
           return h
@@ -505,6 +507,126 @@ module.exports = [
     handler: async (request, h) => {
       const controller = new CropController(request, h);
       return controller.updateCropGroupName(); // Assuming this method exists in your controller
+    },
+  },
+
+  {
+    method: "PUT",
+    path: "/crops",
+    options: {
+      tags: ["api", "Crop"],
+      description: "Update multiple crops",
+      validate: {
+        payload: CreatePlanDto,
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new CropController(request, h);
+      return controller.updateMultipleCrops(); // You’ll need to define this method in your controller
+    },
+  },
+
+  {
+    method: "POST",
+    path: "/crops/copyplans",
+    handler: async (request, h) => {
+      const controller = new CropController(request, h);
+      return controller.copyPlanByHarvestYearAndFarmID();
+    },
+    options: {
+      tags: ["api", "Crop"],
+      description: "Create Crop Plan",
+      validate: {
+        payload: CopyPlanDto,
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+  },
+
+  {
+    method: "PUT",
+    path: "/crops/mergeCrop",
+    handler: async (request, h) => {
+      const controller = new CropController(request, h);
+      return controller.MergeCrop();
+    },
+    options: {
+      tags: ["api", "Crop"],
+      description: "Create Crop Plan",
+      validate: {
+        payload: CreatePlanDto,
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+  },
+    {
+    method: "GET",
+    path: "/crops/plan/{fieldId}",
+    options: {
+      tags: ["api", "Crop"],      
+      description: "Get Crop plans by fieldId and harvest year",
+      validate: {
+        params: Joi.object({
+          fieldId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          year: Joi.number().integer().required()
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              })
+            )
+            .code()
+            .takeover();
+        },
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new CropController(request, h);
+      return controller.getPlanByFieldIdAndYear();
     },
   },
 ];

@@ -131,6 +131,10 @@ const CropEntity = new EntitySchema({
       type: "int",
       default: 1,
     },
+    IsBasePlan: {
+      type: "bit",
+      default: 1,
+    },
     CreatedOn: {
       type: "datetime2",
       precision: 7,
@@ -158,6 +162,12 @@ const CropEntity = new EntitySchema({
       joinColumn: { name: "FieldID" },
       inverseSide: "Crops",
     },
+    CropType: {
+      type: "one-to-one",
+      target: "CropGroupCategories",
+      joinColumn: { name: "CropTypeID" },
+      inverseSide: "CropTypes",
+    },
     CropIDSnsAnalyses: {
       type: "many-to-one",
       target: "Field",
@@ -182,6 +192,12 @@ const CropEntity = new EntitySchema({
       joinColumn: { name: "CropID" },
       inverseSide: "Crop",
     },
+    WarningMessages: {
+      type: "one-to-many",
+      target: "WarningMessages",
+      joinColumn: { name: "ID" },
+      inverseSide: "Crop",
+    }
   },
 });
  
