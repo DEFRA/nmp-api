@@ -85,7 +85,7 @@ class MannerEstimationsService extends BaseService {
     const matchedEstimation = await this.repository.findOne({
       where: {
         OrganisationID: organisationId,
-        Name: name,
+        Name: name
       },
       select: {
         ID: true,
@@ -95,8 +95,7 @@ class MannerEstimationsService extends BaseService {
     });
 
     return {
-      exists: Boolean(matchedEstimation),
-      mannerEstimation: matchedEstimation,
+      exists: Boolean(matchedEstimation)
     };
   }
 }
