@@ -57,7 +57,7 @@ class HandleSoilAnalysisService {
 
         // Fetch data for each nutrient and country
         const getNutrientData = await this.RB209SoilService.getData(
-          `Soil/Methodologies/${nutrientId}/${countryId}`
+          `Soil/Methodologies/${nutrientId}/${rb209CountryId}`,
         );
        
      const methodologyIndex = rb209CountryId === CountryMapper.SCOTLAND && nutrientId === 1 ? 1 : 0;
