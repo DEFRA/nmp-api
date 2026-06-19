@@ -339,6 +339,7 @@ class GenerateRecommendations {
         harvestYear: crop.Year,
         rainfallAverage: field.Rainfall,
         excessWinterRainfall: excessRainfall === null ? 0 : excessRainfall?.WinterRainfall,
+        excessWinterRainfallManuallyEntered: excessRainfall != null,
         mannerManures: mannerOutputs.length > 0,
         organicMaterials: [],
         mannerOutputs: [],
