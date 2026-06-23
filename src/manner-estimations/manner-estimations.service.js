@@ -19,14 +19,13 @@ class MannerEstimationsService extends BaseService {
   async createMannerEstimation(payload, userId) {
     const {
       MannerEstimation,
-      MannerEstimationApplication,
-      MannerEstimationFinancialValues,
+      MannerEstimationApplication
     } = payload;
-    const financialValuesPayload = MannerEstimationFinancialValues;
+
 
     return AppDataSource.transaction(async (transactionalManager) => {
       // Create & save MannerEstimation
-      const mannerEstimation = transactionalManager.create(
+       transactionalManager.create(
         MannerEstimationsEntity,
         {
           ...MannerEstimation,
@@ -35,13 +34,12 @@ class MannerEstimationsService extends BaseService {
         },
       );
 
-      const savedMannerEstimation = await transactionalManager.save(
+      await transactionalManager.save(
         MannerEstimationsEntity,
-        mannerEstimation,
+        mannerEstimation
       );
 
-      // Create & save MannerEstimationApplication
-      const mannerEstimationApplication = transactionalManager.create(
+       transactionalManager.create(
         MannerEstimationApplicationsEntity,
         {
           ...MannerEstimationApplication,
@@ -51,33 +49,13 @@ class MannerEstimationsService extends BaseService {
         },
       );
 
-      const savedMannerEstimationApplication = await transactionalManager.save(
+       await transactionalManager.save(
         MannerEstimationApplicationsEntity,
-        mannerEstimationApplication,
+        mannerEstimationApplication
       );
 
-      // Create & save MannerFinancialValues
-      const mannerFinancialValues = transactionalManager.create(
-        MannerFinancialValuesEntity,
-        {
-          ...financialValuesPayload,
-          MannerEstimationApplicationID: savedMannerEstimationApplication.ID,
-          CreatedByID: userId,
-          CreatedOn: new Date(),
-        },
-      );
 
-      const savedMannerFinancialValues = await transactionalManager.save(
-        MannerFinancialValuesEntity,
-        mannerFinancialValues,
-      );
-
-      // Return combined result
-      return {
-        savedMannerEstimation,
-        savedMannerEstimationApplication,
-        savedMannerFinancialValues,
-      };
+      return "saved successfully";
     });
   }
 
