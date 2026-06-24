@@ -35,7 +35,7 @@ module.exports = [
       description: "Get Manner Estimations by Organisation ID",
       validate: {
         params: Joi.object({
-          organisationId: Joi.number().integer().required(),
+          organisationId: Joi.string().guid().required()
         }),
         failAction: validationFailAction,
       },
