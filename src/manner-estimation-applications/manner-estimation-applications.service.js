@@ -21,6 +21,14 @@ class MannerEstimationApplicationsService extends BaseService {
     const savedApplications = await this.repository.save(result);
     return savedApplications;
   }
+
+  async getEstimationApplicationsByEstimationId(mannerEstimationId) {
+    const mannerApplicationData = await this.repository.find({
+      where: { MannerEstimationID: mannerEstimationId }
+    });
+
+    return mannerApplicationData;
+  }
 }
 
 module.exports = { MannerEstimationApplicationsService };
