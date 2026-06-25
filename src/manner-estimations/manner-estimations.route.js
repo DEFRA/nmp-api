@@ -4,12 +4,13 @@ const {
 const {
   CreateMannerEstimationWithApplicationDto,
   CheckMannerEstimationExistsDto,
+  CopyMannerEstimationDto,
 } = require("./dto/create-manner-estimation.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 const { validationFailAction } = require("../shared/validateFailSafeAction");
 const Joi = require("joi");
-const mannerEstimations = "Manner Estimations"
+const mannerEstimations = "Manner Estimations";
 module.exports = [
   {
     method: "POST",
@@ -28,6 +29,22 @@ module.exports = [
     },
   },
   {
+    method: "POST",
+    path: "/manner-estimations/copyestimates",
+    handler: async (request, h) => {
+      const controller = new MannerEstimationsController(request, h);
+      return controller.copyMannerEstimation();
+    },
+    options: {
+      tags: ["api", mannerEstimations],
+      description: "Copy Manner Estimation and related applications",
+      validate: {
+        payload: CopyMannerEstimationDto,
+        failAction: validationFailAction,
+      },
+    },
+  },
+  {
     method: "GET",
     path: "/manner-estimations/{organisationId}",
     options: {
@@ -35,7 +52,7 @@ module.exports = [
       description: "Get Manner Estimations by Organisation ID",
       validate: {
         params: Joi.object({
-          organisationId: Joi.string().guid().required()
+          organisationId: Joi.string().guid().required(),
         }),
         failAction: validationFailAction,
       },

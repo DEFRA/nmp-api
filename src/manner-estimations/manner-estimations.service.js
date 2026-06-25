@@ -9,9 +9,6 @@ const {
 const {
   MannerFinancialValuesEntity,
 } = require("../db/entity/manner-financial-values.entity");
-// const MannerApiNutrientsProductService = require("../vendors/manner/nutrient-products/nutrients-product.service");
-
-//const MannerApiNutrientsProductController = require("../vendors/manner/nutrient-products/nutrients-product.controller");
 const MannerApiNutrientsProductService = require("../vendors/manner/nutrient-products/nutrients-product.service");
 const MannerApiNutrientsService = require("../vendors/manner/nutrients/nutrients.service");
 const NUTRIENT_ID = {
@@ -24,17 +21,127 @@ class MannerEstimationsService extends BaseService {
     super(MannerEstimationsEntity);
     this.repository = AppDataSource.getRepository(MannerEstimationsEntity);
     this.nutrientsService = new MannerApiNutrientsService();
-    this.nutrientsProductService =
-      new MannerApiNutrientsProductService();
+    this.nutrientsProductService = new MannerApiNutrientsProductService();
+  }
 
+  async copyMannerEstimation(payload, userId, request) {
+    const { ID, Name } = payload;
+
+    return AppDataSource.transaction(async (transactionalManager) => {
+      const sourceMannerEstimation = await transactionalManager.findOne(
+        MannerEstimationsEntity,
+        { where: { ID } },
+      );
+
+      if (!sourceMannerEstimation) {
+        throw new Error("Manner estimation not found");
+      }
+
+      const sourceApplications = await transactionalManager.find(
+        MannerEstimationApplicationsEntity,
+        {
+          where: { MannerEstimationID: ID },
+        },
+      );
+
+      const {
+        CreatedOn,
+        CreatedByID,
+        ModifiedOn,
+        ModifiedByID,
+        ...mannerEstimationDataToCopy
+      } = sourceMannerEstimation;
+
+      const copiedMannerEstimationEntity = transactionalManager.create(
+        MannerEstimationsEntity,
+        {
+          ...mannerEstimationDataToCopy,
+          Name,
+          CreatedByID: userId,
+          CreatedOn: new Date(),
+          ModifiedOn: null,
+          ModifiedByID: null,
+        },
+      );
+
+      const savedCopiedMannerEstimation = await transactionalManager.save(
+        MannerEstimationsEntity,
+        copiedMannerEstimationEntity,
+      );
+
+      const nutrientProductsData = await this.nutrientsProductService.getData(
+        "/nutrient-products",
+        request,
+      );
+      const nutrientProducts = nutrientProductsData.data.filter(
+        (product) => product.isNutrientDefaultProduct === true,
+      );
+      const nutrients = await this.nutrientsService.getData(
+        "/nutrients",
+        request,
+      );
+
+      for (const sourceApplication of sourceApplications) {
+        const {
+          MannerEstimationID,
+          CreatedOn,
+          CreatedByID,
+          ModifiedOn,
+          ModifiedByID,
+          ...applicationDataToCopy
+        } = sourceApplication;
+
+        const copiedApplicationEntity = transactionalManager.create(
+          MannerEstimationApplicationsEntity,
+          {
+            ...applicationDataToCopy,
+            MannerEstimationID: savedCopiedMannerEstimation.ID,
+            CreatedByID: userId,
+            CreatedOn: new Date(),
+            ModifiedOn: null,
+            ModifiedByID: null,
+          },
+        );
+
+        const savedCopiedApplication = await transactionalManager.save(
+          MannerEstimationApplicationsEntity,
+          copiedApplicationEntity,
+        );
+
+        const mannerEstimationFinancialValues =
+          await this.buildMannerEstimationFinancialValues(
+            nutrientProducts,
+            nutrients,
+            savedCopiedApplication,
+          );
+
+        const copiedFinancialEntity = transactionalManager.create(
+          MannerFinancialValuesEntity,
+          {
+            ...mannerEstimationFinancialValues,
+            MannerEstimationApplicationID: savedCopiedApplication.ID,
+            CreatedByID: userId,
+            CreatedOn: new Date(),
+            ModifiedOn: null,
+            ModifiedByID: null,
+          },
+        );
+
+        await transactionalManager.save(
+          MannerFinancialValuesEntity,
+          copiedFinancialEntity,
+        );
+      }
+
+      return {
+        message: "copied successfully",
+        mannerEstimationId: savedCopiedMannerEstimation.ID,
+      };
+    });
   }
 
   async createMannerEstimation(payload, userId, request) {
-    const {
-      MannerEstimation,
-      MannerEstimationApplication
-    } = payload;
-
+    const { MannerEstimation, MannerEstimationApplication } = payload;
 
     return AppDataSource.transaction(async (transactionalManager) => {
       // Create & save MannerEstimation
@@ -44,12 +151,12 @@ class MannerEstimationsService extends BaseService {
           ...MannerEstimation,
           CreatedByID: userId,
           CreatedOn: new Date(),
-        }
+        },
       );
 
       const savedMannerEstimation = await transactionalManager.save(
         MannerEstimationsEntity,
-        mannerEstimationEntity
+        mannerEstimationEntity,
       );
 
       const mannerEstimationApplicationEntity = transactionalManager.create(
@@ -64,18 +171,26 @@ class MannerEstimationsService extends BaseService {
 
       const savedMannerEstimationApplication = await transactionalManager.save(
         MannerEstimationApplicationsEntity,
-        mannerEstimationApplicationEntity
+        mannerEstimationApplicationEntity,
       );
       //financial data saving
-      const nutrientProductsData = await this.nutrientsProductService.getData("/nutrient-products", request);
-      const nutrientProducts = nutrientProductsData.data.filter(p => p.isNutrientDefaultProduct === true);
-      const nutrients = await this.nutrientsService.getData("/nutrients", request);
-      const MannerEstimationFinancialValues =await this.buildMannerEstimationFinancialValues(
-        nutrientProducts,
-        nutrients,
-        savedMannerEstimationApplication
+      const nutrientProductsData = await this.nutrientsProductService.getData(
+        "/nutrient-products",
+        request,
       );
-
+      const nutrientProducts = nutrientProductsData.data.filter(
+        (p) => p.isNutrientDefaultProduct === true,
+      );
+      const nutrients = await this.nutrientsService.getData(
+        "/nutrients",
+        request,
+      );
+      const MannerEstimationFinancialValues =
+        await this.buildMannerEstimationFinancialValues(
+          nutrientProducts,
+          nutrients,
+          savedMannerEstimationApplication,
+        );
 
       const mannerEstimationFinancialEntity = transactionalManager.create(
         MannerFinancialValuesEntity,
@@ -89,12 +204,8 @@ class MannerEstimationsService extends BaseService {
 
       await transactionalManager.save(
         MannerFinancialValuesEntity,
-        mannerEstimationFinancialEntity
-
+        mannerEstimationFinancialEntity,
       );
-
-
-
 
       return "saved successfully";
     });
@@ -103,16 +214,16 @@ class MannerEstimationsService extends BaseService {
   async buildMannerEstimationFinancialValues(
     nutrientProducts,
     nutrients,
-    savedMannerEstimationApplication
+    savedMannerEstimationApplication,
   ) {
     const MannerEstimationFinancialValues = {};
 
     for (const product of nutrientProducts) {
-      const nutrient = nutrients.data.find(
-        n => n.id === product.nutrientID
-      );
+      const nutrient = nutrients.data.find((n) => n.id === product.nutrientID);
 
-      if (!nutrient) { continue; }
+      if (!nutrient) {
+        continue;
+      }
 
       const nutrientPercentage = product.nutrientPercentage;
       const cal1 = nutrientPercentage / 100;
@@ -129,21 +240,17 @@ class MannerEstimationsService extends BaseService {
           break;
 
         case NUTRIENT_ID.PHOSPHATE:
-          totalNutrientValue =
-            savedMannerEstimationApplication.TotalP2O5;
+          totalNutrientValue = savedMannerEstimationApplication.TotalP2O5;
           break;
 
         case NUTRIENT_ID.POTASH:
-          totalNutrientValue =
-            savedMannerEstimationApplication.TotalK2O;
+          totalNutrientValue = savedMannerEstimationApplication.TotalK2O;
           break;
         default:
           break;
       }
 
-      const nutrientValue = Math.round(
-        totalNutrientValue * nutrient.unitRate
-      );
+      const nutrientValue = Math.round(totalNutrientValue * nutrient.unitRate);
 
       switch (nutrient.id) {
         case NUTRIENT_ID.NITROGEN:
@@ -151,7 +258,9 @@ class MannerEstimationsService extends BaseService {
           MannerEstimationFinancialValues.NitrogenProductId = product.id;
           MannerEstimationFinancialValues.NitrogenProductName = product.name;
           MannerEstimationFinancialValues.NitrogenProductPrice = nutrientPrice;
-          MannerEstimationFinancialValues.NitrogenPrice =Math.round(nutrient.unitRate * 100);
+          MannerEstimationFinancialValues.NitrogenPrice = Math.round(
+            nutrient.unitRate * 100,
+          );
           break;
 
         case NUTRIENT_ID.PHOSPHATE:
@@ -159,7 +268,9 @@ class MannerEstimationsService extends BaseService {
           MannerEstimationFinancialValues.PhosphateProductId = product.id;
           MannerEstimationFinancialValues.PhosphateProductName = product.name;
           MannerEstimationFinancialValues.PhosphateProductPrice = nutrientPrice;
-          MannerEstimationFinancialValues.PhosphatePrice = Math.round(nutrient.unitRate * 100);
+          MannerEstimationFinancialValues.PhosphatePrice = Math.round(
+            nutrient.unitRate * 100,
+          );
           break;
 
         case NUTRIENT_ID.POTASH:
@@ -167,10 +278,12 @@ class MannerEstimationsService extends BaseService {
           MannerEstimationFinancialValues.PotashProductId = product.id;
           MannerEstimationFinancialValues.PotashProductName = product.name;
           MannerEstimationFinancialValues.PotashProductPrice = nutrientPrice;
-          MannerEstimationFinancialValues.PotashPrice =Math.round(nutrient.unitRate * 100);
+          MannerEstimationFinancialValues.PotashPrice = Math.round(
+            nutrient.unitRate * 100,
+          );
           break;
-          default:
-          break;  
+        default:
+          break;
       }
     }
 
@@ -196,7 +309,7 @@ class MannerEstimationsService extends BaseService {
 
   async getByOrganisationId(organisationId) {
     const mannerEstimationData = await this.repository.find({
-      where: { OrganisationID: organisationId }
+      where: { OrganisationID: organisationId },
     });
 
     return mannerEstimationData;
