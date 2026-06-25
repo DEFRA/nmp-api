@@ -72,7 +72,7 @@ class MannerEstimationsService extends BaseService {
         savedMannerEstimationApplication
       );
 
-      console.log(MannerEstimationFinancialValues);
+      
   const mannerEstimationFinancialEntity = transactionalManager.create(
         MannerFinancialValuesEntity,
         {

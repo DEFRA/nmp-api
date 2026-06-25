@@ -1,5 +1,4 @@
 const { EntitySchema } = require("typeorm");
-const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const NutrientProductsEntity = new EntitySchema({
   name: "NutrientProduct",
