@@ -18,6 +18,9 @@ const CreateMannerEstimationApplicationDto = Joi.object({
   MgO: Joi.number().precision(precisionThree).required(),
 
   SO3: Joi.number().precision(precisionThree).required(),
+   NH4N: Joi.number().precision(precisionThree).required(),
+
+  NO3N: Joi.number().precision(precisionThree).required(),
 
   DryMatterPercent: Joi.number().precision(precisionTwo).required(),
 
@@ -28,6 +31,8 @@ const CreateMannerEstimationApplicationDto = Joi.object({
   AreaSpread: Joi.number().precision(precisionThree).allow(null),
 
   ManureQuantity: Joi.number().precision(precisionThree).allow(null),
+  
+  ApplicationMethodID: Joi.number().integer().required(),
 
   IncorporationMethodID: Joi.number().integer().required(),
 
