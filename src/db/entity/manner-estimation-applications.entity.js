@@ -68,6 +68,14 @@ const MannerEstimationApplicationsEntity = new EntitySchema({
       nullable: false,
     },
 
+    NO3N: {
+      ...nutrientDecimalColumn,
+    },
+
+    NH4N: {
+      ...nutrientDecimalColumn,
+    },
+
     ApplicationRate: {
       type: "decimal",
       precision: 18,
@@ -88,7 +96,10 @@ const MannerEstimationApplicationsEntity = new EntitySchema({
       scale: 3,
       nullable: true,
     },
-
+ApplicationMethodID: {
+      type: "int",
+      nullable: false,
+    },
     IncorporationMethodID: {
       type: "int",
       nullable: false,

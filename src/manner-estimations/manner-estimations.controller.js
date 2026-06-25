@@ -19,7 +19,7 @@ class MannerEstimationsController {
       const result =
         await this.#mannerEstimationsService.createMannerEstimation(
           payload,
-          userId,
+          userId,this.#request
         );
 
       return this.#h.response(result);
