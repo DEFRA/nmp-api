@@ -24,5 +24,17 @@ class SoilTypeSoilTextureController {
       return this.#h.response({ error });
     }
   }
+  async getSoilTypeByTopSoilSubSoilId() {
+    const { topSoilId, subSoilId } = this.#request.params;
+    try {
+      const records  =
+        await this.#soilTypeSoilTextureService.getSoilTypeIdByTopSoilAndSubSoil(
+          topSoilId,subSoilId
+        );
+      return this.#h.response({ SoilTypeId: records });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
 }
 module.exports = { SoilTypeSoilTextureController };

@@ -31,6 +31,17 @@ class MannerEstimationApplicationsController {
       return this.#h.response({ error })
     }
   }
+
+  async getEstimationApplicationsByEstimationId() {
+    try {
+      const { mannerEstimationId } = this.#request.params;
+      const records = await this.#mannerEstimationApplicationsService.getEstimationApplicationsByEstimationId(mannerEstimationId);
+      return this.#h.response({MannerEstimationApplications: records});
+    } catch (error) {
+      console.error("Error in getEstimationApplicationsByEstimationId:", error);
+      return this.#h.response(error);
+    }
+  }
 }
 
 module.exports = { MannerEstimationApplicationsController };
