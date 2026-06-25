@@ -14,7 +14,11 @@ const {
 //const MannerApiNutrientsProductController = require("../vendors/manner/nutrient-products/nutrients-product.controller");
 const MannerApiNutrientsProductService = require("../vendors/manner/nutrient-products/nutrients-product.service");
 const MannerApiNutrientsService = require("../vendors/manner/nutrients/nutrients.service");
-
+const NUTRIENT_ID = {
+  NITROGEN: 1,
+  PHOSPHATE: 2,
+  POTASH: 3,
+};
 class MannerEstimationsService extends BaseService {
   constructor() {
     super(MannerEstimationsEntity);
@@ -72,8 +76,8 @@ class MannerEstimationsService extends BaseService {
         savedMannerEstimationApplication
       );
 
-      
-  const mannerEstimationFinancialEntity = transactionalManager.create(
+
+      const mannerEstimationFinancialEntity = transactionalManager.create(
         MannerFinancialValuesEntity,
         {
           ...MannerEstimationFinancialValues,
@@ -83,9 +87,9 @@ class MannerEstimationsService extends BaseService {
         },
       );
 
-      const savedMannerEstimationFinancial = await transactionalManager.save(
+      await transactionalManager.save(
         MannerFinancialValuesEntity,
-         mannerEstimationFinancialEntity
+        mannerEstimationFinancialEntity
 
       );
 
@@ -101,14 +105,14 @@ class MannerEstimationsService extends BaseService {
     nutrients,
     savedMannerEstimationApplication
   ) {
-    const MannerEstimationFinancialValues = { };
+    const MannerEstimationFinancialValues = {};
 
     for (const product of nutrientProducts) {
       const nutrient = nutrients.data.find(
         n => n.id === product.nutrientID
       );
 
-      if (!nutrient) continue;
+      if (!nutrient) { continue; }
 
       const nutrientPercentage = product.nutrientPercentage;
       const cal1 = nutrientPercentage / 100;
@@ -118,20 +122,23 @@ class MannerEstimationsService extends BaseService {
       let totalNutrientValue = 0;
 
       switch (nutrient.id) {
-        case 1:
+        case NUTRIENT_ID.NITROGEN:
           totalNutrientValue =
             savedMannerEstimationApplication.CropAvailableNCurrentCrop +
             savedMannerEstimationApplication.CropAvailableNitrogenFollowingCropYearTwo;
           break;
 
-        case 2:
+        case NUTRIENT_ID.PHOSPHATE:
           totalNutrientValue =
             savedMannerEstimationApplication.TotalP2O5;
           break;
 
-        case 3:
+        case NUTRIENT_ID.POTASH:
           totalNutrientValue =
             savedMannerEstimationApplication.TotalK2O;
+          break;
+        default:
+          totalNutrientValue = 0;
           break;
       }
 
@@ -140,29 +147,31 @@ class MannerEstimationsService extends BaseService {
       );
 
       switch (nutrient.id) {
-        case 1:
+        case NUTRIENT_ID.NITROGEN:
           MannerEstimationFinancialValues.NitrogenValue = nutrientValue;
           MannerEstimationFinancialValues.NitrogenProductId = product.id;
           MannerEstimationFinancialValues.NitrogenProductName = product.name;
           MannerEstimationFinancialValues.NitrogenProductPrice = nutrientPrice;
-          MannerEstimationFinancialValues.NitrogenPrice = nutrient.unitRate * 100;
+          MannerEstimationFinancialValues.NitrogenPrice =Math.round(nutrient.unitRate * 100);
           break;
 
-        case 2:
+        case NUTRIENT_ID.PHOSPHATE:
           MannerEstimationFinancialValues.PhosphateValue = nutrientValue;
           MannerEstimationFinancialValues.PhosphateProductId = product.id;
           MannerEstimationFinancialValues.PhosphateProductName = product.name;
           MannerEstimationFinancialValues.PhosphateProductPrice = nutrientPrice;
-          MannerEstimationFinancialValues.PhosphatePrice = nutrient.unitRate * 100;
+          MannerEstimationFinancialValues.PhosphatePrice = Math.round(nutrient.unitRate * 100);
           break;
 
-        case 3:
+        case NUTRIENT_ID.POTASH:
           MannerEstimationFinancialValues.PotashValue = nutrientValue;
           MannerEstimationFinancialValues.PotashProductId = product.id;
           MannerEstimationFinancialValues.PotashProductName = product.name;
           MannerEstimationFinancialValues.PotashProductPrice = nutrientPrice;
-          MannerEstimationFinancialValues.PotashPrice = nutrient.unitRate * 100;
+          MannerEstimationFinancialValues.PotashPrice =Math.round(nutrient.unitRate * 100);
           break;
+          default:
+          break;  
       }
     }
 
