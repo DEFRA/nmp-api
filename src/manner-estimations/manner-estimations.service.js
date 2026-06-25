@@ -138,7 +138,6 @@ class MannerEstimationsService extends BaseService {
             savedMannerEstimationApplication.TotalK2O;
           break;
         default:
-          totalNutrientValue = 0;
           break;
       }
 
