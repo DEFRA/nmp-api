@@ -87,6 +87,75 @@ const MannerEstimationsEntity = new EntitySchema({
       nullable: true,
     },
 
+    NitrogenProductId: {
+      type: "int",
+      nullable: false,
+    },
+
+    PhosphateProductId: {
+      type: "int",
+      nullable: false,
+    },
+
+    PotashProductId: {
+      type: "int",
+      nullable: false,
+    },
+
+    NitrogenProductName: {
+      type: "nvarchar",
+      length: 100,
+      nullable: false,
+    },
+
+    PhosphateProductName: {
+      type: "nvarchar",
+      length: 100,
+      nullable: false,
+    },
+
+    PotashProductName: {
+      type: "nvarchar",
+      length: 100,
+      nullable: false,
+    },
+
+    NitrogenProductPrice: {
+      type: "int",
+      nullable: false,
+    },
+
+    PhosphateProductPrice: {
+      type: "int",
+      nullable: false,
+    },
+
+    PotashProductPrice: {
+      type: "int",
+      nullable: false,
+    },
+
+    NitrogenPrice: {
+      type: "int",
+      nullable: false,
+    },
+
+    PhosphatePrice: {
+      type: "int",
+      nullable: false,
+    },
+
+    PotashPrice: {
+      type: "int",
+      nullable: false,
+    },
+
+    CalculateBasedOnNutrientPrice: {
+      type: "bit",
+      nullable: false,
+      default: true,
+    },
+
     CreatedOn: {
       type: "datetime2",
       precision: 7,
@@ -121,12 +190,6 @@ const MannerEstimationsEntity = new EntitySchema({
       inverseSide: "MannerEstimations",
     },
 
-    MannerEstimationApplications: {
-      type: RELATION_TYPES.ONE_TO_MANY,
-      target: "MannerEstimationApplications",
-      inverseSide: "MannerEstimation",
-    },
-
     Organisation: {
       type: RELATION_TYPES.MANY_TO_ONE,
       target: "Organisations",
@@ -136,9 +199,18 @@ const MannerEstimationsEntity = new EntitySchema({
       inverseSide: "MannerEstimations",
     },
 
+    MannerEstimationApplications: {
+      type: RELATION_TYPES.ONE_TO_MANY,
+      target: "MannerEstimationApplications",
+      joinColumn: {
+        name: "ID",
+      },
+      inverseSide: "MannerEstimation",
+    },
+
     CreatedByUser: {
       type: RELATION_TYPES.MANY_TO_ONE,
-      target: "Users", // change to your actual Users entity
+      target: "Users",
       joinColumn: {
         name: "CreatedByID",
       },
@@ -148,7 +220,7 @@ const MannerEstimationsEntity = new EntitySchema({
 
     ModifiedByUser: {
       type: RELATION_TYPES.MANY_TO_ONE,
-      target: "Users", // change to your actual Users entity
+      target: "Users",
       joinColumn: {
         name: "ModifiedByID",
       },
