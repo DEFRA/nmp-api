@@ -62,6 +62,21 @@ class MannerEstimationsController {
     }
   }
 
+  async getMannerEstimationRelatedDataById() {
+    try {
+      const { id } = this.#request.params;
+      const records =
+        await this.#mannerEstimationsService.getMannerEstimationRelatedDataById(
+          id,
+          this.#request,
+        );
+      return this.#h.response(records);
+    } catch (error) {
+      console.error("Error in getMannerEstimationRelatedDataById:", error);
+      return this.#h.response(error);
+    }
+  }
+
   async checkMannerEstimationExists() {
     try {
       const { organisationId, name } = this.#request.query;

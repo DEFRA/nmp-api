@@ -36,6 +36,32 @@ const CreateMannerEstimationDto = Joi.object({
 
   SowingDate: Joi.date().iso().allow(null),
 
+  NitrogenProductId: Joi.number().integer().required(),
+
+  PhosphateProductId: Joi.number().integer().required(),
+
+  PotashProductId: Joi.number().integer().required(),
+
+  NitrogenProductName: Joi.string().max(100).required(),
+
+  PhosphateProductName: Joi.string().max(100).required(),
+
+  PotashProductName: Joi.string().max(100).required(),
+
+  NitrogenProductPrice: Joi.number().integer().required(),
+
+  PhosphateProductPrice: Joi.number().integer().required(),
+
+  PotashProductPrice: Joi.number().integer().required(),
+
+  NitrogenPrice: Joi.number().integer().required(),
+
+  PhosphatePrice: Joi.number().integer().required(),
+
+  PotashPrice: Joi.number().integer().required(),
+
+  CalculateBasedOnNutrientPrice: Joi.boolean().default(true),
+
   CreatedOn: Joi.date().iso().allow(null).default(null),
 
   CreatedByID: Joi.number().integer().allow(null).default(null),
@@ -47,17 +73,12 @@ const CreateMannerEstimationDto = Joi.object({
 
 const CreateMannerEstimationWithApplicationDto = Joi.object({
   MannerEstimation: CreateMannerEstimationDto.required(),
-  MannerEstimationApplication: CreateMannerEstimationApplicationDto.required(),
+  MannerEstimationApplication: CreateMannerEstimationApplicationDto.required()
 });
 
 const CheckMannerEstimationExistsDto = Joi.object({
   organisationId: Joi.string().guid().required(),
   name: Joi.string().max(maxTwoFifty).required(),
-});
-
-const CopyMannerEstimationDto = Joi.object({
-  ID: Joi.number().integer().required(),
-  Name: Joi.string().max(maxTwoFifty).required(),
 });
 
 module.exports = {

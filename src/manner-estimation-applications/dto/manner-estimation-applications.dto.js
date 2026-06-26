@@ -1,5 +1,6 @@
 const Joi = require("joi");
-const precisionThree = 3,precisionTwo = 2;
+const precisionThree = 3,
+  precisionTwo = 2;
 const CreateMannerEstimationApplicationDto = Joi.object({
   ID: Joi.number().integer().allow(null).default(null),
 
@@ -18,7 +19,7 @@ const CreateMannerEstimationApplicationDto = Joi.object({
   MgO: Joi.number().precision(precisionThree).required(),
 
   SO3: Joi.number().precision(precisionThree).required(),
-   NH4N: Joi.number().precision(precisionThree).required(),
+  NH4N: Joi.number().precision(precisionThree).required(),
 
   NO3N: Joi.number().precision(precisionThree).required(),
 
@@ -31,7 +32,7 @@ const CreateMannerEstimationApplicationDto = Joi.object({
   AreaSpread: Joi.number().precision(precisionThree).allow(null),
 
   ManureQuantity: Joi.number().precision(precisionThree).allow(null),
-  
+
   ApplicationMethodID: Joi.number().integer().required(),
 
   IncorporationMethodID: Joi.number().integer().required(),
@@ -78,6 +79,12 @@ const CreateMannerEstimationApplicationDto = Joi.object({
 
   LostDenitrified: Joi.number().integer().required(),
 
+  NitrogenValue: Joi.number().integer().required(),
+
+  PhosphateValue: Joi.number().integer().required(),
+
+  PotashValue: Joi.number().integer().required(),
+
   CreatedOn: Joi.date().iso().allow(null).default(null),
 
   CreatedByID: Joi.number().integer().allow(null).default(null),
@@ -88,5 +95,5 @@ const CreateMannerEstimationApplicationDto = Joi.object({
 });
 
 module.exports = {
-  CreateMannerEstimationApplicationDto
+  CreateMannerEstimationApplicationDto,
 };

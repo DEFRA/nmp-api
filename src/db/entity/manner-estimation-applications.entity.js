@@ -68,14 +68,6 @@ const MannerEstimationApplicationsEntity = new EntitySchema({
       nullable: false,
     },
 
-    NO3N: {
-      ...nutrientDecimalColumn,
-    },
-
-    NH4N: {
-      ...nutrientDecimalColumn,
-    },
-
     ApplicationRate: {
       type: "decimal",
       precision: 18,
@@ -96,10 +88,20 @@ const MannerEstimationApplicationsEntity = new EntitySchema({
       scale: 3,
       nullable: true,
     },
-ApplicationMethodID: {
+
+    ApplicationMethodID: {
       type: "int",
       nullable: false,
     },
+
+    NH4N: {
+      ...nutrientDecimalColumn,
+    },
+
+    NO3N: {
+      ...nutrientDecimalColumn,
+    },
+
     IncorporationMethodID: {
       type: "int",
       nullable: false,
@@ -142,37 +144,52 @@ ApplicationMethodID: {
 
     TotalN: {
       type: "int",
-      nullable: true,
-    },
-
-    TotalP2O5: {
-      type: "int",
-      nullable: true,
-    },
-
-    TotalSO3: {
-      type: "int",
-      nullable: true,
-    },
-
-    TotalMgO: {
-      type: "int",
-      nullable: true,
-    },
-
-    TotalK2O: {
-      type: "int",
-      nullable: true,
+      nullable: false,
     },
 
     CropAvailableNCurrentCrop: {
       type: "int",
-      nullable: true,
+      nullable: false,
     },
 
     CropAvailableNitrogenFollowingCropYearTwo: {
       type: "int",
-      nullable: true,
+      nullable: false,
+    },
+
+    TotalP2O5: {
+      type: "int",
+      nullable: false,
+    },
+
+    CropAvailableP2O5: {
+      type: "int",
+      nullable: false,
+    },
+
+    TotalSO3: {
+      type: "int",
+      nullable: false,
+    },
+
+    CropAvailableSO3: {
+      type: "int",
+      nullable: false,
+    },
+
+    TotalMgO: {
+      type: "int",
+      nullable: false,
+    },
+
+    TotalK2O: {
+      type: "int",
+      nullable: false,
+    },
+
+    CropAvailableK2O: {
+      type: "int",
+      nullable: false,
     },
 
     NitrogenUseEfficiency: {
@@ -182,29 +199,37 @@ ApplicationMethodID: {
 
     MineralisedNitrogenLosses: {
       type: "int",
-      nullable: true,
-    },
-    CropAvailableP2O5: {
-      type: "int",
       nullable: false,
     },
-    CropAvailableK2O: {
-      type: "int",
-      nullable: false,
-    },
+
     LostNitrateLosses: {
       type: "int",
-      nullable: true,
+      nullable: false,
     },
 
     LostAmmonia: {
       type: "int",
-      nullable: true,
+      nullable: false,
     },
 
     LostDenitrified: {
       type: "int",
-      nullable: true,
+      nullable: false,
+    },
+
+    NitrogenValue: {
+      type: "int",
+      nullable: false,
+    },
+
+    PhosphateValue: {
+      type: "int",
+      nullable: false,
+    },
+
+    PotashValue: {
+      type: "int",
+      nullable: false,
     },
 
     CreatedOn: {
@@ -241,18 +266,9 @@ ApplicationMethodID: {
       inverseSide: "MannerEstimationApplications",
     },
 
-    MannerFinancialValues: {
-      type: RELATION_TYPES.ONE_TO_MANY,
-      target: "MannerEstimationFinancialValues",
-      joinColumn: {
-        name: "ID",
-      },
-      inverseSide: "MannerEstimationApplication",
-    },
-
     CreatedByUser: {
       type: RELATION_TYPES.MANY_TO_ONE,
-      target: "User",
+      target: "User", // Change to "Users" if that's your registered entity name
       joinColumn: {
         name: "CreatedByID",
       },
@@ -262,7 +278,7 @@ ApplicationMethodID: {
 
     ModifiedByUser: {
       type: RELATION_TYPES.MANY_TO_ONE,
-      target: "User",
+      target: "User", // Change to "Users" if that's your registered entity name
       joinColumn: {
         name: "ModifiedByID",
       },
