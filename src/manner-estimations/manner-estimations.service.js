@@ -8,6 +8,7 @@ const {
 } = require("../db/entity/manner-estimation-applications.entity");
 const MannerApiNutrientsProductService = require("../vendors/manner/nutrient-products/nutrients-product.service");
 const MannerApiNutrientsService = require("../vendors/manner/nutrients/nutrients.service");
+const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
 
 const NUTRIENT_ID = {
   NITROGEN: 1,
@@ -19,8 +20,12 @@ class MannerEstimationsService extends BaseService {
   constructor() {
     super(MannerEstimationsEntity);
     this.repository = AppDataSource.getRepository(MannerEstimationsEntity);
+    this.mannerEstimationApplicationRepository = AppDataSource.getRepository(
+      MannerEstimationApplicationsEntity,
+    );
     this.nutrientsService = new MannerApiNutrientsService();
     this.nutrientsProductService = new MannerApiNutrientsProductService();
+    this.MannerManureTypesService = new MannerManureTypesService();
   }
 
   async createMannerEstimation(payload, userId, request) {
@@ -47,7 +52,7 @@ class MannerEstimationsService extends BaseService {
         );
       const mannerEstimationFinancialValues =
         this.buildMannerEstimationFinancialValues(nutrientFinancialValues);
-        
+
       const mannerEstimationApplicationFinancialValues =
         this.buildMannerEstimationApplicationFinancialValues(
           nutrientFinancialValues,
@@ -159,7 +164,8 @@ class MannerEstimationsService extends BaseService {
     if (phosphateValues) {
       mannerEstimationValues.PhosphateProductId = phosphateValues.productId;
       mannerEstimationValues.PhosphateProductName = phosphateValues.productName;
-      mannerEstimationValues.PhosphateProductPrice = phosphateValues.productPrice;
+      mannerEstimationValues.PhosphateProductPrice =
+        phosphateValues.productPrice;
       mannerEstimationValues.PhosphatePrice = phosphateValues.price;
     }
 
@@ -196,7 +202,8 @@ class MannerEstimationsService extends BaseService {
     }
 
     if (potashValues) {
-      mannerEstimationApplicationValues.PotashValue = potashValues.nutrientValue;
+      mannerEstimationApplicationValues.PotashValue =
+        potashValues.nutrientValue;
     }
 
     return mannerEstimationApplicationValues;
@@ -228,18 +235,85 @@ class MannerEstimationsService extends BaseService {
     return mannerEstimationData;
   }
 
-  async getByOrganisationIdAndName(organisationId, name) {
-    const mannerEstimationData = await this.repository.find({
+  async getMannerEstimationRelatedDataById(id, request) {
+    const mannerEstimationData = await this.repository.findOne({
       where: {
-        OrganisationID: organisationId,
-        Name: name,
-      },
-      relations: {
-        MannerEstimationApplications: true,
+        ID: id,
       },
     });
 
-    return mannerEstimationData;
+    if (!mannerEstimationData) {
+      return null;
+    }
+
+    const mannerEstimationApplications =
+      await this.mannerEstimationApplicationRepository.find({
+        where: {
+          MannerEstimationID: id,
+        },
+        order: {
+          ID: "ASC",
+        },
+      });
+
+    const manureTypeNameById = new Map();
+
+    for (const application of mannerEstimationApplications) {
+      const manureTypeId = Number(application.ManureTypeID);
+
+      if (!manureTypeId || manureTypeNameById.has(manureTypeId)) {
+        continue;
+      }
+
+      const manureTypeData = await this.MannerManureTypesService.getData(
+        `/manure-types/${manureTypeId}`,
+        request,
+      );
+
+      manureTypeNameById.set(manureTypeId, manureTypeData?.data?.name ?? null);
+    }
+
+    const mannerEstimationApplicationsWithManureTypeName =
+      mannerEstimationApplications.map((application) => ({
+        ...application,
+        ManureTypeName:
+          manureTypeNameById.get(Number(application.ManureTypeID)) ?? null,
+      }));
+
+    const lastUpdatedOn = this.getLastUpdatedOn(
+      mannerEstimationData,
+      mannerEstimationApplicationsWithManureTypeName,
+    );
+
+    return {
+      MannerEstimation: {
+        ...mannerEstimationData,
+        MannerEstimationApplication: mannerEstimationApplicationsWithManureTypeName,
+        MannerEstimationApplications:
+          mannerEstimationApplicationsWithManureTypeName,
+      },
+      LastUpdatedOn: lastUpdatedOn,
+    };
+  }
+
+  getLastUpdatedOn(mannerEstimationData, mannerEstimationApplications) {
+    const timestampCandidates = [
+      mannerEstimationData.ModifiedOn,
+      mannerEstimationData.CreatedOn,
+      ...mannerEstimationApplications.flatMap((application) => [
+        application.ModifiedOn,
+        application.CreatedOn,
+      ]),
+    ]
+      .filter(Boolean)
+      .map((value) => new Date(value).getTime())
+      .filter((value) => !Number.isNaN(value));
+
+    if (timestampCandidates.length === 0) {
+      return null;
+    }
+
+    return new Date(Math.max(...timestampCandidates));
   }
 }
 
