@@ -2,8 +2,7 @@ const Joi = require("joi");
 const {
   CreateMannerEstimationApplicationDto,
 } = require("../../manner-estimation-applications/dto/manner-estimation-applications.dto");
-const maxTwoFifty = 250;
-const maxFifty = 50;
+const maxTwoFifty = 250,maxFifty = 50,maxHundred=100;
 
 const CreateMannerEstimationDto = Joi.object({
   ID: Joi.number().integer().allow(null).default(null),
@@ -42,11 +41,11 @@ const CreateMannerEstimationDto = Joi.object({
 
   PotashProductId: Joi.number().integer().required(),
 
-  NitrogenProductName: Joi.string().max(100).allow("").required(),
+  NitrogenProductName: Joi.string().max(maxHundred).allow("").required(),
 
-  PhosphateProductName: Joi.string().max(100).allow("").required(),
+  PhosphateProductName: Joi.string().max(maxHundred).allow("").required(),
 
-  PotashProductName: Joi.string().max(100).allow("").required(),
+  PotashProductName: Joi.string().max(maxHundred).allow("").required(),
 
   NitrogenProductPrice: Joi.number().integer().required(),
 
