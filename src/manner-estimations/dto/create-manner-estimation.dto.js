@@ -42,11 +42,11 @@ const CreateMannerEstimationDto = Joi.object({
 
   PotashProductId: Joi.number().integer().required(),
 
-  NitrogenProductName: Joi.string().max(100).required(),
+  NitrogenProductName: Joi.string().max(100).allow("").required(),
 
-  PhosphateProductName: Joi.string().max(100).required(),
+  PhosphateProductName: Joi.string().max(100).allow("").required(),
 
-  PotashProductName: Joi.string().max(100).required(),
+  PotashProductName: Joi.string().max(100).allow("").required(),
 
   NitrogenProductPrice: Joi.number().integer().required(),
 
