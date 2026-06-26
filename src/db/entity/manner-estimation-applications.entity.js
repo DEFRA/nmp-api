@@ -172,6 +172,11 @@ const MannerEstimationApplicationsEntity = new EntitySchema({
       nullable: false,
     },
 
+    CropAvailableSO3: {
+      type: "int",
+      nullable: false,
+    },
+
     TotalMgO: {
       type: "int",
       nullable: false,
