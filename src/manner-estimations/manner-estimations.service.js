@@ -12,6 +12,7 @@ const MannerManureTypesService = require("../vendors/manner/manure-types/manure-
 const MannerTopSoilsService = require("../vendors/manner/top-soil/top-soil.service");
 const RB209ArableService = require("../vendors/rb209/arable/arable.service");
 const MannerCountriesService = require("../vendors/manner/countries/countries.service");
+const MannerManureTypesCategoriesService = require("../vendors/manner/manure-type-category/manure-types.service");
 
 const NUTRIENT_ID = {
   NITROGEN: 1,
@@ -28,7 +29,7 @@ class MannerEstimationsService extends BaseService {
     );
     this.nutrientsService = new MannerApiNutrientsService();
     this.nutrientsProductService = new MannerApiNutrientsProductService();
-    this.MannerManureTypesService = new MannerManureTypesService();
+    this.MannerManureTypesService = new MannerManureTypesCategoriesService();
     this.MannerTopSoilsService = new MannerTopSoilsService();
     this.rB209ArableService = new RB209ArableService();
     this.MannerCountriesService = new MannerCountriesService();
@@ -269,15 +270,12 @@ class MannerEstimationsService extends BaseService {
     mannerEstimationData.TopSoil = estimationNames.topSoil;
     mannerEstimationData.SubSoil = estimationNames.subSoil;
     mannerEstimationData.Country = estimationNames.country;
-    mannerEstimationData.MannerEstimationApplication =
-      mannerEstimationApplicationsWithManureTypeName;
     mannerEstimationData.MannerEstimationApplications =
       mannerEstimationApplicationsWithManureTypeName;
 
     return {
       MannerEstimation: mannerEstimationData,
-      MannerEstimationApplication: mannerEstimationApplicationsWithManureTypeName,
-      LastUpdatedOn: lastUpdatedOn,
+      LastUpdatedOn: lastUpdatedOn
     };
   }
 
