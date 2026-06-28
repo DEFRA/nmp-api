@@ -9,6 +9,9 @@ const {
 const MannerApiNutrientsProductService = require("../vendors/manner/nutrient-products/nutrients-product.service");
 const MannerApiNutrientsService = require("../vendors/manner/nutrients/nutrients.service");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
+const MannerTopSoilsService = require("../vendors/manner/top-soil/top-soil.service");
+const RB209ArableService = require("../vendors/rb209/arable/arable.service");
+const MannerCountriesService = require("../vendors/manner/countries/countries.service");
 
 const NUTRIENT_ID = {
   NITROGEN: 1,
@@ -26,6 +29,9 @@ class MannerEstimationsService extends BaseService {
     this.nutrientsService = new MannerApiNutrientsService();
     this.nutrientsProductService = new MannerApiNutrientsProductService();
     this.MannerManureTypesService = new MannerManureTypesService();
+    this.MannerTopSoilsService = new MannerTopSoilsService();
+    this.rB209ArableService = new RB209ArableService();
+    this.MannerCountriesService = new MannerCountriesService();
   }
 
   async createMannerEstimation(payload, userId, request) {
@@ -246,6 +252,46 @@ class MannerEstimationsService extends BaseService {
       return null;
     }
 
+    const cropTypeId = this.toNumericId(mannerEstimationData.CropTypeID);
+    const topSoilId = this.toNumericId(mannerEstimationData.TopSoilID);
+    const subSoilId = this.toNumericId(mannerEstimationData.SubSoilID);
+    const countryId = this.toNumericId(mannerEstimationData.CountryID);
+
+    let cropTypeName = null;
+    if (cropTypeId !== null) {
+      const cropTypeData = await this.rB209ArableService.getData(
+        `/Arable/CropType/${cropTypeId}`,
+      );
+      cropTypeName = cropTypeData?.cropTypeName ?? null;
+    }
+
+    let topSoil = null;
+    if (topSoilId !== null) {
+      const topSoilData = await this.MannerTopSoilsService.getData(
+        `/top-soils/${topSoilId}`,
+        request,
+      );
+      topSoil = topSoilData?.data?.name ?? null;
+    }
+
+    let subSoil = null;
+    if (subSoilId !== null) {
+      const subSoilData = await this.MannerTopSoilsService.getData(
+        `/sub-soils/${subSoilId}`,
+        request,
+      );
+      subSoil = subSoilData?.data?.name ?? null;
+    }
+
+    let country = null;
+    if (countryId !== null) {
+      const countryData = await this.MannerCountriesService.getData(
+        `/countries/${countryId}`,
+        request,
+      );
+      country = countryData?.data?.name ?? null;
+    }
+
     const mannerEstimationApplications =
       await this.mannerEstimationApplicationRepository.find({
         where: {
@@ -270,6 +316,8 @@ class MannerEstimationsService extends BaseService {
         request,
       );
 
+    
+
       manureTypeNameById.set(manureTypeId, manureTypeData?.data?.name ?? null);
     }
 
@@ -285,13 +333,18 @@ class MannerEstimationsService extends BaseService {
       mannerEstimationApplicationsWithManureTypeName,
     );
 
+    mannerEstimationData.cropTypeName = cropTypeName;
+    mannerEstimationData.TopSoil = topSoil;
+    mannerEstimationData.SubSoil = subSoil;
+    mannerEstimationData.Country = country;
+    mannerEstimationData.MannerEstimationApplication =
+      mannerEstimationApplicationsWithManureTypeName;
+    mannerEstimationData.MannerEstimationApplications =
+      mannerEstimationApplicationsWithManureTypeName;
+
     return {
-      MannerEstimation: {
-        ...mannerEstimationData,
-        MannerEstimationApplication: mannerEstimationApplicationsWithManureTypeName,
-        MannerEstimationApplications:
-          mannerEstimationApplicationsWithManureTypeName,
-      },
+      MannerEstimation: mannerEstimationData,
+      MannerEstimationApplication: mannerEstimationApplicationsWithManureTypeName,
       LastUpdatedOn: lastUpdatedOn,
     };
   }
@@ -314,6 +367,29 @@ class MannerEstimationsService extends BaseService {
     }
 
     return new Date(Math.max(...timestampCandidates));
+  }
+
+  toNumericId(value) {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === "string") {
+      const parsedValue = Number(value);
+      return Number.isFinite(parsedValue) ? parsedValue : null;
+    }
+
+    if (value && typeof value === "object") {
+      if (typeof value.id === "number") {
+        return value.id;
+      }
+
+      if (typeof value.ID === "number") {
+        return value.ID;
+      }
+    }
+
+    return null;
   }
 }
 
