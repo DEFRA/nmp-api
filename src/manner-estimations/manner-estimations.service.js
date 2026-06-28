@@ -252,46 +252,92 @@ class MannerEstimationsService extends BaseService {
       return null;
     }
 
-    const cropTypeId = this.toNumericId(mannerEstimationData.CropTypeID);
-    const topSoilId = this.toNumericId(mannerEstimationData.TopSoilID);
-    const subSoilId = this.toNumericId(mannerEstimationData.SubSoilID);
-    const countryId = this.toNumericId(mannerEstimationData.CountryID);
+    const estimationNames = await this.getMannerEstimationDisplayNames(
+      mannerEstimationData,
+      request,
+    );
 
-    let cropTypeName = null;
-    if (cropTypeId !== null) {
-      const cropTypeData = await this.rB209ArableService.getData(
-        `/Arable/CropType/${cropTypeId}`,
-      );
-      cropTypeName = cropTypeData?.cropTypeName ?? null;
+    const mannerEstimationApplicationsWithManureTypeName =
+      await this.getMannerEstimationApplicationsWithManureTypeName(id, request);
+
+    const lastUpdatedOn = this.getLastUpdatedOn(
+      mannerEstimationData,
+      mannerEstimationApplicationsWithManureTypeName,
+    );
+
+    mannerEstimationData.cropTypeName = estimationNames.cropTypeName;
+    mannerEstimationData.TopSoil = estimationNames.topSoil;
+    mannerEstimationData.SubSoil = estimationNames.subSoil;
+    mannerEstimationData.Country = estimationNames.country;
+    mannerEstimationData.MannerEstimationApplication =
+      mannerEstimationApplicationsWithManureTypeName;
+    mannerEstimationData.MannerEstimationApplications =
+      mannerEstimationApplicationsWithManureTypeName;
+
+    return {
+      MannerEstimation: mannerEstimationData,
+      MannerEstimationApplication: mannerEstimationApplicationsWithManureTypeName,
+      LastUpdatedOn: lastUpdatedOn,
+    };
+  }
+
+  async getMannerEstimationDisplayNames(mannerEstimationData, request) {
+    const cropTypeName = await this.getCropTypeNameById(
+      mannerEstimationData.CropTypeID,
+    );
+    const topSoil = await this.getMannerLookupNameById(
+      this.MannerTopSoilsService,
+      "/top-soils",
+      mannerEstimationData.TopSoilID,
+      request,
+    );
+    const subSoil = await this.getMannerLookupNameById(
+      this.MannerTopSoilsService,
+      "/sub-soils",
+      mannerEstimationData.SubSoilID,
+      request,
+    );
+    const country = await this.getMannerLookupNameById(
+      this.MannerCountriesService,
+      "/countries",
+      mannerEstimationData.CountryID,
+      request,
+    );
+
+    return {
+      cropTypeName,
+      topSoil,
+      subSoil,
+      country,
+    };
+  }
+
+  async getCropTypeNameById(cropTypeIdValue) {
+    const cropTypeId = this.toNumericId(cropTypeIdValue);
+
+    if (cropTypeId === null) {
+      return null;
     }
 
-    let topSoil = null;
-    if (topSoilId !== null) {
-      const topSoilData = await this.MannerTopSoilsService.getData(
-        `/top-soils/${topSoilId}`,
-        request,
-      );
-      topSoil = topSoilData?.data?.name ?? null;
+    const cropTypeData = await this.rB209ArableService.getData(
+      `/Arable/CropType/${cropTypeId}`,
+    );
+
+    return cropTypeData?.cropTypeName ?? null;
+  }
+
+  async getMannerLookupNameById(service, endpoint, idValue, request) {
+    const id = this.toNumericId(idValue);
+
+    if (id === null) {
+      return null;
     }
 
-    let subSoil = null;
-    if (subSoilId !== null) {
-      const subSoilData = await this.MannerTopSoilsService.getData(
-        `/sub-soils/${subSoilId}`,
-        request,
-      );
-      subSoil = subSoilData?.data?.name ?? null;
-    }
+    const lookupData = await service.getData(`${endpoint}/${id}`, request);
+    return lookupData?.data?.name ?? null;
+  }
 
-    let country = null;
-    if (countryId !== null) {
-      const countryData = await this.MannerCountriesService.getData(
-        `/countries/${countryId}`,
-        request,
-      );
-      country = countryData?.data?.name ?? null;
-    }
-
+  async getMannerEstimationApplicationsWithManureTypeName(id, request) {
     const mannerEstimationApplications =
       await this.mannerEstimationApplicationRepository.find({
         where: {
@@ -316,37 +362,13 @@ class MannerEstimationsService extends BaseService {
         request,
       );
 
-    
-
       manureTypeNameById.set(manureTypeId, manureTypeData?.data?.name ?? null);
     }
 
-    const mannerEstimationApplicationsWithManureTypeName =
-      mannerEstimationApplications.map((application) => ({
-        ...application,
-        ManureTypeName:
-          manureTypeNameById.get(Number(application.ManureTypeID)) ?? null,
-      }));
-
-    const lastUpdatedOn = this.getLastUpdatedOn(
-      mannerEstimationData,
-      mannerEstimationApplicationsWithManureTypeName,
-    );
-
-    mannerEstimationData.cropTypeName = cropTypeName;
-    mannerEstimationData.TopSoil = topSoil;
-    mannerEstimationData.SubSoil = subSoil;
-    mannerEstimationData.Country = country;
-    mannerEstimationData.MannerEstimationApplication =
-      mannerEstimationApplicationsWithManureTypeName;
-    mannerEstimationData.MannerEstimationApplications =
-      mannerEstimationApplicationsWithManureTypeName;
-
-    return {
-      MannerEstimation: mannerEstimationData,
-      MannerEstimationApplication: mannerEstimationApplicationsWithManureTypeName,
-      LastUpdatedOn: lastUpdatedOn,
-    };
+    return mannerEstimationApplications.map((application) => ({
+      ...application,
+      ManureTypeName: manureTypeNameById.get(Number(application.ManureTypeID)) ?? null,
+    }));
   }
 
   getLastUpdatedOn(mannerEstimationData, mannerEstimationApplications) {
