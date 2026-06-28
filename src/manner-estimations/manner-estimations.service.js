@@ -9,6 +9,9 @@ const {
 const MannerApiNutrientsProductService = require("../vendors/manner/nutrient-products/nutrients-product.service");
 const MannerApiNutrientsService = require("../vendors/manner/nutrients/nutrients.service");
 const MannerManureTypesService = require("../vendors/manner/manure-types/manure-types.service");
+const MannerTopSoilsService = require("../vendors/manner/top-soil/top-soil.service");
+const RB209ArableService = require("../vendors/rb209/arable/arable.service");
+const MannerCountriesService = require("../vendors/manner/countries/countries.service");
 
 const NUTRIENT_ID = {
   NITROGEN: 1,
@@ -25,9 +28,12 @@ class MannerEstimationsService extends BaseService {
     );
     this.nutrientsService = new MannerApiNutrientsService();
     this.nutrientsProductService = new MannerApiNutrientsProductService();
+    this.MannerTopSoilsService = new MannerTopSoilsService();
+    this.rB209ArableService = new RB209ArableService();
+    this.MannerCountriesService = new MannerCountriesService();
   }
 
-  async copyMannerEstimation(payload, userId, request) {
+  async copyMannerEstimation(payload, userId) {
     const sourceMannerEstimationId = payload?.ID;
     const copiedMannerEstimationName = payload?.Name ?? request?.payload?.Name;
 
@@ -117,9 +123,10 @@ class MannerEstimationsService extends BaseService {
         message: "copied successfully",
         mannerEstimationId: savedCopiedMannerEstimation.ID,
         copiedApplicationsCount: savedCopiedApplications.length,
-        savedCopiedApplications,
+        savedCopiedApplications
       };
     });
+
   }
 
   async createMannerEstimation(payload, userId, request) {
@@ -340,6 +347,92 @@ class MannerEstimationsService extends BaseService {
       return null;
     }
 
+    const estimationNames = await this.getMannerEstimationDisplayNames(
+      mannerEstimationData,
+      request,
+    );
+
+    const mannerEstimationApplicationsWithManureTypeName =
+      await this.getMannerEstimationApplicationsWithManureTypeName(id, request);
+
+    const lastUpdatedOn = this.getLastUpdatedOn(
+      mannerEstimationData,
+      mannerEstimationApplicationsWithManureTypeName,
+    );
+
+    mannerEstimationData.cropTypeName = estimationNames.cropTypeName;
+    mannerEstimationData.TopSoil = estimationNames.topSoil;
+    mannerEstimationData.SubSoil = estimationNames.subSoil;
+    mannerEstimationData.Country = estimationNames.country;
+    mannerEstimationData.MannerEstimationApplication =
+      mannerEstimationApplicationsWithManureTypeName;
+    mannerEstimationData.MannerEstimationApplications =
+      mannerEstimationApplicationsWithManureTypeName;
+
+    return {
+      MannerEstimation: mannerEstimationData,
+      MannerEstimationApplication: mannerEstimationApplicationsWithManureTypeName,
+      LastUpdatedOn: lastUpdatedOn,
+    };
+  }
+
+  async getMannerEstimationDisplayNames(mannerEstimationData, request) {
+    const cropTypeName = await this.getCropTypeNameById(
+      mannerEstimationData.CropTypeID,
+    );
+    const topSoil = await this.getMannerLookupNameById(
+      this.MannerTopSoilsService,
+      "/top-soils",
+      mannerEstimationData.TopSoilID,
+      request,
+    );
+    const subSoil = await this.getMannerLookupNameById(
+      this.MannerTopSoilsService,
+      "/sub-soils",
+      mannerEstimationData.SubSoilID,
+      request,
+    );
+    const country = await this.getMannerLookupNameById(
+      this.MannerCountriesService,
+      "/countries",
+      mannerEstimationData.CountryID,
+      request,
+    );
+
+    return {
+      cropTypeName,
+      topSoil,
+      subSoil,
+      country,
+    };
+  }
+
+  async getCropTypeNameById(cropTypeIdValue) {
+    const cropTypeId = this.toNumericId(cropTypeIdValue);
+
+    if (cropTypeId === null) {
+      return null;
+    }
+
+    const cropTypeData = await this.rB209ArableService.getData(
+      `/Arable/CropType/${cropTypeId}`,
+    );
+
+    return cropTypeData?.cropTypeName ?? null;
+  }
+
+  async getMannerLookupNameById(service, endpoint, idValue, request) {
+    const id = this.toNumericId(idValue);
+
+    if (id === null) {
+      return null;
+    }
+
+    const lookupData = await service.getData(`${endpoint}/${id}`, request);
+    return lookupData?.data?.name ?? null;
+  }
+
+  async getMannerEstimationApplicationsWithManureTypeName(id, request) {
     const mannerEstimationApplications =
       await this.mannerEstimationApplicationRepository.find({
         where: {
@@ -367,27 +460,10 @@ class MannerEstimationsService extends BaseService {
       manureTypeNameById.set(manureTypeId, manureTypeData?.data?.name ?? null);
     }
 
-    const mannerEstimationApplicationsWithManureTypeName =
-      mannerEstimationApplications.map((application) => ({
-        ...application,
-        ManureTypeName:
-          manureTypeNameById.get(Number(application.ManureTypeID)) ?? null,
-      }));
-
-    const lastUpdatedOn = this.getLastUpdatedOn(
-      mannerEstimationData,
-      mannerEstimationApplicationsWithManureTypeName,
-    );
-
-    return {
-      MannerEstimation: {
-        ...mannerEstimationData,
-        MannerEstimationApplication: mannerEstimationApplicationsWithManureTypeName,
-        MannerEstimationApplications:
-          mannerEstimationApplicationsWithManureTypeName,
-      },
-      LastUpdatedOn: lastUpdatedOn,
-    };
+    return mannerEstimationApplications.map((application) => ({
+      ...application,
+      ManureTypeName: manureTypeNameById.get(Number(application.ManureTypeID)) ?? null,
+    }));
   }
 
   getLastUpdatedOn(mannerEstimationData, mannerEstimationApplications) {
@@ -408,6 +484,29 @@ class MannerEstimationsService extends BaseService {
     }
 
     return new Date(Math.max(...timestampCandidates));
+  }
+
+  toNumericId(value) {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === "string") {
+      const parsedValue = Number(value);
+      return Number.isFinite(parsedValue) ? parsedValue : null;
+    }
+
+    if (value && typeof value === "object") {
+      if (typeof value.id === "number") {
+        return value.id;
+      }
+
+      if (typeof value.ID === "number") {
+        return value.ID;
+      }
+    }
+
+    return null;
   }
 }
 

@@ -62,9 +62,9 @@ const CreateMannerEstimationApplicationDto = Joi.object({
   CropAvailableP2O5: Joi.number().integer().required(),
 
   TotalSO3: Joi.number().integer().required(),
-
+  CropAvailableSO3: Joi.number().integer().required(),
   TotalMgO: Joi.number().integer().required(),
-
+ 
   TotalK2O: Joi.number().integer().required(),
 
   CropAvailableK2O: Joi.number().integer().required(),

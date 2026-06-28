@@ -37,8 +37,7 @@ class MannerEstimationsController {
 
       const result = await this.#mannerEstimationsService.copyMannerEstimation(
         payload,
-        userId,
-        this.#request,
+        userId
       );
 
       return this.#h.response(result);
