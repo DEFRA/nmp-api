@@ -434,11 +434,9 @@ class MannerEstimationsService extends BaseService {
     mannerEstimationData.TopSoil = estimationNames.topSoil;
     mannerEstimationData.SubSoil = estimationNames.subSoil;
     mannerEstimationData.Country = estimationNames.country;
-    mannerEstimationData.MannerEstimationApplications =
-      mannerEstimationApplicationsWithManureTypeName;
-
-    return {
+       return {
       MannerEstimation: mannerEstimationData,
+      MannerEstimationApplication:mannerEstimationApplicationsWithManureTypeName,
       LastUpdatedOn: lastUpdatedOn
     };
   }
