@@ -18,12 +18,11 @@ const CreateMannerEstimationDto = Joi.object({
   Postcode: Joi.string().max(maxFifty).required(),
 
   AverageAnuualRainfall: Joi.number().integer().required(),
+    RegisteredOrganicProducer: Joi.boolean().required(),
 
   FieldName: Joi.string().max(maxFifty).required(),
 
   IsWithinNVZ: Joi.boolean().required(),
-
-  NVZProgrammeID: Joi.number().integer().allow(null),
 
   TopSoilID: Joi.number().integer().required(),
 

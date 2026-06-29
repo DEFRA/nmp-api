@@ -432,10 +432,10 @@ class MannerEstimationsService extends BaseService {
       mannerEstimationApplicationsWithManureTypeName,
     );
 
-    mannerEstimationData.cropTypeName = estimationNames.cropTypeName;
+    mannerEstimationData.CropTypeName = estimationNames.cropTypeName;
     mannerEstimationData.TopSoil = estimationNames.topSoil;
     mannerEstimationData.SubSoil = estimationNames.subSoil;
-    mannerEstimationData.Country = estimationNames.country;
+    mannerEstimationData.Country = estimationNames.countryName;
        return {
       MannerEstimation: mannerEstimationData,
       MannerEstimationApplication:mannerEstimationApplicationsWithManureTypeName,
