@@ -72,16 +72,21 @@ const CreateMannerEstimationDto = Joi.object({
 
 const CreateMannerEstimationWithApplicationDto = Joi.object({
   MannerEstimation: CreateMannerEstimationDto.required(),
-  MannerEstimationApplication: CreateMannerEstimationApplicationDto.required(),
+  MannerEstimationApplication: CreateMannerEstimationApplicationDto.required()
 });
 
 const CheckMannerEstimationExistsDto = Joi.object({
   organisationId: Joi.string().guid().required(),
   name: Joi.string().max(maxTwoFifty).required(),
 });
+ const CopyMannerEstimationDto = Joi.object({
+  ID: Joi.number().integer().required(),
+  Name: Joi.string().max(maxTwoFifty).required(), 
+ })
 
 module.exports = {
   CreateMannerEstimationDto,
   CreateMannerEstimationWithApplicationDto,
   CheckMannerEstimationExistsDto,
+  CopyMannerEstimationDto
 };

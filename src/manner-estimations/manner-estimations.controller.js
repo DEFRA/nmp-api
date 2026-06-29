@@ -29,6 +29,24 @@ class MannerEstimationsController {
       return this.#h.response(error);
     }
   }
+
+  async copyMannerEstimation() {
+    try {
+      const payload = this.#request.payload;
+      const userId = this.#request.userId;
+
+      const result = await this.#mannerEstimationsService.copyMannerEstimation(
+        payload,
+        userId
+      );
+
+      return this.#h.response(result);
+    } catch (error) {
+      console.error("Error copying Manner Estimation:", error);
+      return this.#h.response(error);
+    }
+  }
+
   async getByOrganisationId() {
     try {
       const { organisationId } = this.#request.params;

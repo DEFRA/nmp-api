@@ -35,6 +35,170 @@ class MannerEstimationsService extends BaseService {
     this.MannerCountriesService = new MannerCountriesService();
   }
 
+  async copyMannerEstimation(payload, userId) {
+    const sourceMannerEstimationId = payload?.ID;
+    const copiedMannerEstimationName = payload?.Name;
+
+    this.validateCopyMannerEstimationPayload(
+      sourceMannerEstimationId,
+      copiedMannerEstimationName,
+    );
+
+    return AppDataSource.transaction(async (transactionalManager) => {
+      const sourceMannerEstimation = await this.getSourceMannerEstimation(
+        transactionalManager,
+        sourceMannerEstimationId,
+      );
+
+      const savedCopiedMannerEstimation = await this.createCopiedMannerEstimation(
+        transactionalManager,
+        sourceMannerEstimation,
+        copiedMannerEstimationName,
+        userId,
+      );
+
+      const savedCopiedApplications =
+        await this.copyMannerEstimationApplications(
+          transactionalManager,
+          sourceMannerEstimationId,
+          savedCopiedMannerEstimation.ID,
+          userId,
+        );
+
+      return this.buildCopyMannerEstimationResponse(
+        savedCopiedMannerEstimation.ID,
+        savedCopiedApplications,
+      );
+    });
+  }
+
+  validateCopyMannerEstimationPayload(sourceMannerEstimationId, copiedName) {
+    if (!sourceMannerEstimationId) {
+      throw new Error("ID is required");
+    }
+
+    if (!copiedName) {
+      throw new Error("Name is required");
+    }
+  }
+
+  async getSourceMannerEstimation(transactionalManager, sourceMannerEstimationId) {
+    const sourceMannerEstimation = await transactionalManager.findOne(
+      MannerEstimationsEntity,
+      { where: { ID: sourceMannerEstimationId } },
+    );
+
+    if (!sourceMannerEstimation) {
+      throw new Error("Manner estimation not found");
+    }
+
+    return sourceMannerEstimation;
+  }
+
+  async createCopiedMannerEstimation(
+    transactionalManager,
+    sourceMannerEstimation,
+    copiedMannerEstimationName,
+    userId,
+  ) {
+    const {
+      ID,
+      CreatedOn,
+      CreatedByID,
+      ModifiedOn,
+      ModifiedByID,
+      ...mannerEstimationDataToCopy
+    } = sourceMannerEstimation;
+
+    const copiedMannerEstimationEntity = transactionalManager.create(
+      MannerEstimationsEntity,
+      {
+        ...mannerEstimationDataToCopy,
+        ID: null,
+        Name: copiedMannerEstimationName,
+        CreatedByID: userId,
+        CreatedOn: new Date(),
+        ModifiedOn: null,
+        ModifiedByID: null,
+      },
+    );
+
+    return transactionalManager.save(
+      MannerEstimationsEntity,
+      copiedMannerEstimationEntity,
+    );
+  }
+
+  async copyMannerEstimationApplications(
+    transactionalManager,
+    sourceMannerEstimationId,
+    copiedMannerEstimationId,
+    userId,
+  ) {
+    const sourceApplications = await transactionalManager.find(
+      MannerEstimationApplicationsEntity,
+      {
+        where: { MannerEstimationID: sourceMannerEstimationId },
+      },
+    );
+
+    const savedCopiedApplications = [];
+
+    for (const sourceApplication of sourceApplications) {
+      const copiedApplicationEntity = this.buildCopiedApplicationEntity(
+        transactionalManager,
+        sourceApplication,
+        copiedMannerEstimationId,
+        userId,
+      );
+
+      savedCopiedApplications.push(
+        await transactionalManager.save(
+          MannerEstimationApplicationsEntity,
+          copiedApplicationEntity,
+        ),
+      );
+    }
+
+    return savedCopiedApplications;
+  }
+
+  buildCopiedApplicationEntity(
+    transactionalManager,
+    sourceApplication,
+    copiedMannerEstimationId,
+    userId,
+  ) {
+    const {
+      ID,
+      MannerEstimationID,
+      CreatedOn,
+      CreatedByID,
+      ModifiedOn,
+      ModifiedByID,
+      ...applicationDataToCopy
+    } = sourceApplication;
+
+    return transactionalManager.create(MannerEstimationApplicationsEntity, {
+      ...applicationDataToCopy,
+      ID: null,
+      MannerEstimationID: copiedMannerEstimationId,
+      CreatedByID: userId,
+      CreatedOn: new Date(),
+      ModifiedOn: null,
+      ModifiedByID: null,
+    });
+  }
+
+  buildCopyMannerEstimationResponse(mannerEstimationId, savedCopiedApplications) {
+    return {
+      message: "copied successfully",
+      mannerEstimationId,
+      copiedApplicationsCount: savedCopiedApplications.length,
+      savedCopiedApplications,
+    };
+  }
+
   async createMannerEstimation(payload, userId, request) {
     const { MannerEstimation, MannerEstimationApplication } = payload;
 
