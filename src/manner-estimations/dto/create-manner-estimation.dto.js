@@ -2,8 +2,7 @@ const Joi = require("joi");
 const {
   CreateMannerEstimationApplicationDto,
 } = require("../../manner-estimation-applications/dto/manner-estimation-applications.dto");
-const maxTwoFifty = 250;
-const maxFifty = 50;
+const maxTwoFifty = 250,maxFifty = 50,maxHundred=100;
 
 const CreateMannerEstimationDto = Joi.object({
   ID: Joi.number().integer().allow(null).default(null),
@@ -36,6 +35,32 @@ const CreateMannerEstimationDto = Joi.object({
 
   SowingDate: Joi.date().iso().allow(null),
 
+  NitrogenProductId: Joi.number().integer().required(),
+
+  PhosphateProductId: Joi.number().integer().required(),
+
+  PotashProductId: Joi.number().integer().required(),
+
+  NitrogenProductName: Joi.string().max(maxHundred).allow("").required(),
+
+  PhosphateProductName: Joi.string().max(maxHundred).allow("").required(),
+
+  PotashProductName: Joi.string().max(maxHundred).allow("").required(),
+
+  NitrogenProductPrice: Joi.number().integer().required(),
+
+  PhosphateProductPrice: Joi.number().integer().required(),
+
+  PotashProductPrice: Joi.number().integer().required(),
+
+  NitrogenPrice: Joi.number().integer().required(),
+
+  PhosphatePrice: Joi.number().integer().required(),
+
+  PotashPrice: Joi.number().integer().required(),
+
+  CalculateBasedOnNutrientPrice: Joi.boolean().default(true),
+
   CreatedOn: Joi.date().iso().allow(null).default(null),
 
   CreatedByID: Joi.number().integer().allow(null).default(null),
@@ -47,16 +72,16 @@ const CreateMannerEstimationDto = Joi.object({
 
 const CreateMannerEstimationWithApplicationDto = Joi.object({
   MannerEstimation: CreateMannerEstimationDto.required(),
-  MannerEstimationApplication: CreateMannerEstimationApplicationDto.required()
+  MannerEstimationApplication: CreateMannerEstimationApplicationDto.required(),
 });
 
 const CheckMannerEstimationExistsDto = Joi.object({
   organisationId: Joi.string().guid().required(),
-  name: Joi.string().max(maxTwoFifty).required()
+  name: Joi.string().max(maxTwoFifty).required(),
 });
 
 module.exports = {
   CreateMannerEstimationDto,
   CreateMannerEstimationWithApplicationDto,
-  CheckMannerEstimationExistsDto
+  CheckMannerEstimationExistsDto,
 };

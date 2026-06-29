@@ -19,7 +19,8 @@ class MannerEstimationsController {
       const result =
         await this.#mannerEstimationsService.createMannerEstimation(
           payload,
-          userId,this.#request
+          userId,
+          this.#request,
         );
 
       return this.#h.response(result);
@@ -31,10 +32,28 @@ class MannerEstimationsController {
   async getByOrganisationId() {
     try {
       const { organisationId } = this.#request.params;
-      const records = await this.#mannerEstimationsService.getByOrganisationId(organisationId);
+      const records =
+        await this.#mannerEstimationsService.getByOrganisationId(
+          organisationId,
+        );
       return this.#h.response(records);
     } catch (error) {
       console.error("Error in getByOrganisationId:", error);
+      return this.#h.response(error);
+    }
+  }
+
+  async getMannerEstimationRelatedDataById() {
+    try {
+      const { id } = this.#request.params;
+      const records =
+        await this.#mannerEstimationsService.getMannerEstimationRelatedDataById(
+          id,
+          this.#request,
+        );
+      return this.#h.response(records);
+    } catch (error) {
+      console.error("Error in getMannerEstimationRelatedDataById:", error);
       return this.#h.response(error);
     }
   }
@@ -43,7 +62,8 @@ class MannerEstimationsController {
     try {
       const { organisationId, name } = this.#request.query;
 
-      const result = await this.#mannerEstimationsService.checkMannerEstimationExists(
+      const result =
+        await this.#mannerEstimationsService.checkMannerEstimationExists(
           organisationId,
           name,
         );

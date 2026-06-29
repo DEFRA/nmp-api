@@ -35,7 +35,7 @@ module.exports = [
       description: "Get Manner Estimations by Organisation ID",
       validate: {
         params: Joi.object({
-          organisationId: Joi.string().guid().required()
+          organisationId: Joi.string().guid().required(),
         }),
         failAction: validationFailAction,
       },
@@ -43,6 +43,24 @@ module.exports = [
     handler: async (request, h) => {
       const controller = new MannerEstimationsController(request, h);
       return controller.getByOrganisationId();
+    },
+  },
+  {
+    method: "GET",
+    path: "/manner-estimations/manner-estimation-related-data/{id}",
+    options: {
+      tags: ["api", mannerEstimations],
+      description: "Get Manner Estimation Related Data by ID",
+      validate: {
+        params: Joi.object({
+          id: Joi.number().integer().required(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new MannerEstimationsController(request, h);
+      return controller.getMannerEstimationRelatedDataById();
     },
   },
   {

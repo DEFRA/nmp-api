@@ -54,6 +54,5 @@ module.exports = [
   ...require("./scotland-nmax-values/scotland-nmax-values.route"),
   ...require("./farm-average-yield/farm-average-yields.route"),
   ...require("./manner-estimations/manner-estimations.route"),
-  ...require("./manner-estimation-applications/manner-estimation-applications.route"),
-  ...require("./manner-financial-values/manner-financial-values.route"),
+  ...require("./manner-estimation-applications/manner-estimation-applications.route")
 ];

@@ -260,18 +260,6 @@ const UserEntity = new EntitySchema({
       inverseSide: "ModifiedByUser",
       joinColumn: { name: "ID" },
     },
-    CreatedMannerFinancialValues: {
-      type: RELATION_TYPES.ONE_TO_MANY,
-      target: "MannerEstimationFinancialValues",
-      inverseSide: "CreatedByUser",
-      joinColumn: { name: "ID" },
-    },
-    ModifiedMannerFinancialValues: {
-      type: RELATION_TYPES.ONE_TO_MANY,
-      target: "MannerEstimationFinancialValues",
-      inverseSide: "ModifiedByUser",
-      joinColumn: { name: "ID" },
-    },
   },
 });
 
