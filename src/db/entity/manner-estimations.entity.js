@@ -45,6 +45,11 @@ const MannerEstimationsEntity = new EntitySchema({
       nullable: false,
     },
 
+RegisteredOrganicProducer: {
+      type: "bit",
+      default: 0,
+    },
+    
     FieldName: {
       type: "nvarchar",
       length: 50,
@@ -56,10 +61,6 @@ const MannerEstimationsEntity = new EntitySchema({
       nullable: false,
     },
 
-    NVZProgrammeID: {
-      type: "int",
-      nullable: true,
-    },
 
     TopSoilID: {
       type: "int",

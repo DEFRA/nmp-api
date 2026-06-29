@@ -13,6 +13,7 @@ const MannerTopSoilsService = require("../vendors/manner/top-soil/top-soil.servi
 const RB209ArableService = require("../vendors/rb209/arable/arable.service");
 const MannerCountriesService = require("../vendors/manner/countries/countries.service");
 const MannerManureTypesCategoriesService = require("../vendors/manner/manure-type-category/manure-types.service");
+const { CountryEntity } = require("../db/entity/country.entity");
 
 const NUTRIENT_ID = {
   NITROGEN: 1,
@@ -27,6 +28,7 @@ class MannerEstimationsService extends BaseService {
     this.mannerEstimationApplicationRepository = AppDataSource.getRepository(
       MannerEstimationApplicationsEntity,
     );
+    this.countryRepository = AppDataSource.getRepository(CountryEntity);
     this.nutrientsService = new MannerApiNutrientsService();
     this.nutrientsProductService = new MannerApiNutrientsProductService();
     this.MannerManureTypesService = new MannerManureTypesCategoriesService();
@@ -430,10 +432,10 @@ class MannerEstimationsService extends BaseService {
       mannerEstimationApplicationsWithManureTypeName,
     );
 
-    mannerEstimationData.cropTypeName = estimationNames.cropTypeName;
+    mannerEstimationData.CropTypeName = estimationNames.cropTypeName;
     mannerEstimationData.TopSoil = estimationNames.topSoil;
     mannerEstimationData.SubSoil = estimationNames.subSoil;
-    mannerEstimationData.Country = estimationNames.country;
+    mannerEstimationData.Country = estimationNames.countryName;
        return {
       MannerEstimation: mannerEstimationData,
       MannerEstimationApplication:mannerEstimationApplicationsWithManureTypeName,
@@ -457,18 +459,19 @@ class MannerEstimationsService extends BaseService {
       mannerEstimationData.SubSoilID,
       request,
     );
-    const country = await this.getMannerLookupNameById(
-      this.MannerCountriesService,
-      "/countries",
-      mannerEstimationData.CountryID,
-      request,
-    );
+
+    const countries = await this.countryRepository.findOne({
+      where: {
+        ID: mannerEstimationData.CountryID,
+      },
+    });
+    const countryName = countries ? countries.Name : null;
 
     return {
       cropTypeName,
       topSoil,
       subSoil,
-      country,
+      countryName
     };
   }
 
