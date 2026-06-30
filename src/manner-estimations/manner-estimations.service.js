@@ -12,7 +12,12 @@ const MannerManureTypesService = require("../vendors/manner/manure-types/manure-
 const MannerTopSoilsService = require("../vendors/manner/top-soil/top-soil.service");
 const RB209ArableService = require("../vendors/rb209/arable/arable.service");
 const MannerCountriesService = require("../vendors/manner/countries/countries.service");
-const MannerManureTypesCategoriesService = require("../vendors/manner/manure-type-category/manure-types.service");
+const MannerApplicationMethodService = require("../vendors/manner/application-method/application-method.service");
+const MannerIncorporationMethodService = require("../vendors/manner/incorporation-method/incorporation-method.service");
+const MannerIncorporationDelayService = require("../vendors/manner/incorporation-delay/incorporation-delay.service");
+const MannerMoistureTypesService = require("../vendors/manner/moisture-types/moisture-types.service");
+const MannerWindspeedService = require("../vendors/manner/windspeed/windspeed.service");
+const MannerRainTypesService = require("../vendors/manner/rain-types/rain-types.service");
 const { CountryEntity } = require("../db/entity/country.entity");
 
 const NUTRIENT_ID = {
@@ -31,10 +36,18 @@ class MannerEstimationsService extends BaseService {
     this.countryRepository = AppDataSource.getRepository(CountryEntity);
     this.nutrientsService = new MannerApiNutrientsService();
     this.nutrientsProductService = new MannerApiNutrientsProductService();
-    this.MannerManureTypesService = new MannerManureTypesCategoriesService();
+    this.MannerManureTypesService = new MannerManureTypesService();
     this.MannerTopSoilsService = new MannerTopSoilsService();
     this.rB209ArableService = new RB209ArableService();
     this.MannerCountriesService = new MannerCountriesService();
+    this.MannerApplicationMethodService = new MannerApplicationMethodService();
+    this.MannerIncorporationMethodService =
+      new MannerIncorporationMethodService();
+    this.MannerIncorporationDelayService =
+      new MannerIncorporationDelayService();
+    this.MannerMoistureTypesService = new MannerMoistureTypesService();
+    this.MannerWindspeedService = new MannerWindspeedService();
+    this.MannerRainTypesService = new MannerRainTypesService();
   }
 
   async copyMannerEstimation(payload, userId) {
@@ -52,12 +65,13 @@ class MannerEstimationsService extends BaseService {
         sourceMannerEstimationId,
       );
 
-      const savedCopiedMannerEstimation = await this.createCopiedMannerEstimation(
-        transactionalManager,
-        sourceMannerEstimation,
-        copiedMannerEstimationName,
-        userId,
-      );
+      const savedCopiedMannerEstimation =
+        await this.createCopiedMannerEstimation(
+          transactionalManager,
+          sourceMannerEstimation,
+          copiedMannerEstimationName,
+          userId,
+        );
 
       const savedCopiedApplications =
         await this.copyMannerEstimationApplications(
@@ -84,7 +98,10 @@ class MannerEstimationsService extends BaseService {
     }
   }
 
-  async getSourceMannerEstimation(transactionalManager, sourceMannerEstimationId) {
+  async getSourceMannerEstimation(
+    transactionalManager,
+    sourceMannerEstimationId,
+  ) {
     const sourceMannerEstimation = await transactionalManager.findOne(
       MannerEstimationsEntity,
       { where: { ID: sourceMannerEstimationId } },
@@ -192,7 +209,10 @@ class MannerEstimationsService extends BaseService {
     });
   }
 
-  buildCopyMannerEstimationResponse(mannerEstimationId, savedCopiedApplications) {
+  buildCopyMannerEstimationResponse(
+    mannerEstimationId,
+    savedCopiedApplications,
+  ) {
     return {
       message: "copied successfully",
       mannerEstimationId,
@@ -436,10 +456,11 @@ class MannerEstimationsService extends BaseService {
     mannerEstimationData.TopSoil = estimationNames.topSoil;
     mannerEstimationData.SubSoil = estimationNames.subSoil;
     mannerEstimationData.Country = estimationNames.countryName;
-       return {
+    return {
       MannerEstimation: mannerEstimationData,
-      MannerEstimationApplication:mannerEstimationApplicationsWithManureTypeName,
-      LastUpdatedOn: lastUpdatedOn
+      MannerEstimationApplication:
+        mannerEstimationApplicationsWithManureTypeName,
+      LastUpdatedOn: lastUpdatedOn,
     };
   }
 
@@ -471,7 +492,7 @@ class MannerEstimationsService extends BaseService {
       cropTypeName,
       topSoil,
       subSoil,
-      countryName
+      countryName,
     };
   }
 
@@ -512,26 +533,100 @@ class MannerEstimationsService extends BaseService {
       });
 
     const manureTypeNameById = new Map();
+    const applicationMethodNameById = new Map();
+    const incorporationMethodNameById = new Map();
+    const incorporationDelayNameById = new Map();
+    const moistureTypeNameById = new Map();
+    const windspeedNameById = new Map();
+    const rainTypeNameById = new Map();
 
     for (const application of mannerEstimationApplications) {
-      const manureTypeId = Number(application.ManureTypeID);
-
-      if (!manureTypeId || manureTypeNameById.has(manureTypeId)) {
-        continue;
-      }
-
-      const manureTypeData = await this.MannerManureTypesService.getData(
-        `/manure-types/${manureTypeId}`,
+      await this.setLookupNameInCache(
+        manureTypeNameById,
+        application.ManureTypeID,
+        this.MannerManureTypesService,
+        "/manure-types",
         request,
       );
-
-      manureTypeNameById.set(manureTypeId, manureTypeData?.data?.name ?? null);
+      await this.setLookupNameInCache(
+        applicationMethodNameById,
+        application.ApplicationMethodID,
+        this.MannerApplicationMethodService,
+        "/application-methods",
+        request,
+      );
+      await this.setLookupNameInCache(
+        incorporationMethodNameById,
+        application.IncorporationMethodID,
+        this.MannerIncorporationMethodService,
+        "/incorporation-methods",
+        request,
+      );
+      await this.setLookupNameInCache(
+        incorporationDelayNameById,
+        application.IncorporationDelayID,
+        this.MannerIncorporationDelayService,
+        "/incorporation-delays",
+        request,
+      );
+      await this.setLookupNameInCache(
+        moistureTypeNameById,
+        application.MoistureID,
+        this.MannerMoistureTypesService,
+        "/moisture-types",
+        request,
+      );
+      await this.setLookupNameInCache(
+        windspeedNameById,
+        application.WindspeedID,
+        this.MannerWindspeedService,
+        "/windspeeds",
+        request,
+      );
+      await this.setLookupNameInCache(
+        rainTypeNameById,
+        application.RainfallWithinSixHoursID,
+        this.MannerRainTypesService,
+        "/rain-types",
+        request,
+      );
     }
 
     return mannerEstimationApplications.map((application) => ({
       ...application,
-      ManureTypeName: manureTypeNameById.get(Number(application.ManureTypeID)) ?? null,
+      ManureTypeName:
+        manureTypeNameById.get(Number(application.ManureTypeID)) ?? null,
+      ApplicationMethodName:
+        applicationMethodNameById.get(
+          Number(application.ApplicationMethodID),
+        ) ?? null,
+      IncorporationMethodName:
+        incorporationMethodNameById.get(
+          Number(application.IncorporationMethodID),
+        ) ?? null,
+      IncorporationDelayName:
+        incorporationDelayNameById.get(
+          Number(application.IncorporationDelayID),
+        ) ?? null,
+      MoistureTypeName:
+        moistureTypeNameById.get(Number(application.MoistureID)) ?? null,
+      WindspeedName:
+        windspeedNameById.get(Number(application.WindspeedID)) ?? null,
+      RainTypeName:
+        rainTypeNameById.get(Number(application.RainfallWithinSixHoursID)) ??
+        null,
     }));
+  }
+
+  async setLookupNameInCache(cache, idValue, service, endpoint, request) {
+    const id = this.toNumericId(idValue);
+
+    if (id === null || cache.has(id)) {
+      return;
+    }
+
+    const lookupData = await service.getData(`${endpoint}/${id}`, request);
+    cache.set(id, lookupData?.data?.name ?? null);
   }
 
   getLastUpdatedOn(mannerEstimationData, mannerEstimationApplications) {
