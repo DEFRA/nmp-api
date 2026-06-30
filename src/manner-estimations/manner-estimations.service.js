@@ -30,9 +30,7 @@ class MannerEstimationsService extends BaseService {
   constructor() {
     super(MannerEstimationsEntity);
     this.repository = AppDataSource.getRepository(MannerEstimationsEntity);
-    this.mannerEstimationApplicationRepository = AppDataSource.getRepository(
-      MannerEstimationApplicationsEntity,
-    );
+    this.mannerEstimationApplicationRepository = AppDataSource.getRepository(MannerEstimationApplicationsEntity);
     this.countryRepository = AppDataSource.getRepository(CountryEntity);
     this.nutrientsService = new MannerApiNutrientsService();
     this.nutrientsProductService = new MannerApiNutrientsProductService();
@@ -41,119 +39,54 @@ class MannerEstimationsService extends BaseService {
     this.rB209ArableService = new RB209ArableService();
     this.MannerCountriesService = new MannerCountriesService();
     this.MannerApplicationMethodService = new MannerApplicationMethodService();
-    this.MannerIncorporationMethodService =
-      new MannerIncorporationMethodService();
-    this.MannerIncorporationDelayService =
-      new MannerIncorporationDelayService();
+    this.MannerIncorporationMethodService =new MannerIncorporationMethodService();
+    this.MannerIncorporationDelayService =new MannerIncorporationDelayService();
     this.MannerMoistureTypesService = new MannerMoistureTypesService();
     this.MannerWindspeedService = new MannerWindspeedService();
     this.MannerRainTypesService = new MannerRainTypesService();
   }
 
   async copyMannerEstimation(payload, userId) {
-    const sourceMannerEstimationId = payload?.ID;
-    const copiedMannerEstimationName = payload?.Name;
-
-    this.validateCopyMannerEstimationPayload(
-      sourceMannerEstimationId,
-      copiedMannerEstimationName,
-    );
-
+    const sourceMannerEstimationId = payload?.ID,copiedMannerEstimationName = payload?.Name;
+    this.validateCopyMannerEstimationPayload(sourceMannerEstimationId,copiedMannerEstimationName);
     return AppDataSource.transaction(async (transactionalManager) => {
-      const sourceMannerEstimation = await this.getSourceMannerEstimation(
-        transactionalManager,
-        sourceMannerEstimationId,
-      );
-
-      const savedCopiedMannerEstimation =
-        await this.createCopiedMannerEstimation(
-          transactionalManager,
-          sourceMannerEstimation,
-          copiedMannerEstimationName,
-          userId,
-        );
-
-      const savedCopiedApplications =
-        await this.copyMannerEstimationApplications(
-          transactionalManager,
-          sourceMannerEstimationId,
-          savedCopiedMannerEstimation.ID,
-          userId,
-        );
-
-      return this.buildCopyMannerEstimationResponse(
-        savedCopiedMannerEstimation.ID,
-        savedCopiedApplications,
-      );
+      const sourceMannerEstimation = await this.getSourceMannerEstimation(transactionalManager,sourceMannerEstimationId);
+      const savedCopiedMannerEstimation =await this.createCopiedMannerEstimation(transactionalManager,sourceMannerEstimation,copiedMannerEstimationName,userId);
+      const savedCopiedApplications = await this.copyMannerEstimationApplications(transactionalManager,sourceMannerEstimationId,savedCopiedMannerEstimation.ID,userId);
+      return this.buildCopyMannerEstimationResponse(savedCopiedMannerEstimation.ID,savedCopiedApplications);
     });
   }
 
   validateCopyMannerEstimationPayload(sourceMannerEstimationId, copiedName) {
-    if (!sourceMannerEstimationId) {
-      throw new Error("ID is required");
-    }
-
-    if (!copiedName) {
-      throw new Error("Name is required");
-    }
+    if (!sourceMannerEstimationId) {throw new Error("ID is required")}
+    if (!copiedName) {throw new Error("Name is required")}
   }
 
-  async getSourceMannerEstimation(
-    transactionalManager,
-    sourceMannerEstimationId,
-  ) {
+  async getSourceMannerEstimation(transactionalManager,sourceMannerEstimationId) {
     const sourceMannerEstimation = await transactionalManager.findOne(
       MannerEstimationsEntity,
       { where: { ID: sourceMannerEstimationId } },
     );
-
-    if (!sourceMannerEstimation) {
-      throw new Error("Manner estimation not found");
-    }
-
+    if (!sourceMannerEstimation) {throw new Error("Manner estimation not found") }
     return sourceMannerEstimation;
   }
 
-  async createCopiedMannerEstimation(
-    transactionalManager,
-    sourceMannerEstimation,
-    copiedMannerEstimationName,
-    userId,
+  async createCopiedMannerEstimation(transactionalManager,sourceMannerEstimation,copiedMannerEstimationName,userId,
   ) {
-    const {
-      ID,
-      CreatedOn,
-      CreatedByID,
-      ModifiedOn,
-      ModifiedByID,
-      ...mannerEstimationDataToCopy
-    } = sourceMannerEstimation;
-
+    const {ID,CreatedOn,CreatedByID,ModifiedOn,ModifiedByID,...mannerEstimationDataToCopy} = sourceMannerEstimation;
     const copiedMannerEstimationEntity = transactionalManager.create(
       MannerEstimationsEntity,
-      {
-        ...mannerEstimationDataToCopy,
-        ID: null,
+      {...mannerEstimationDataToCopy,ID: null,
         Name: copiedMannerEstimationName,
-        CreatedByID: userId,
-        CreatedOn: new Date(),
-        ModifiedOn: null,
-        ModifiedByID: null,
+        CreatedByID: userId,CreatedOn: new Date(),
+        ModifiedOn: null,ModifiedByID: null
       },
     );
 
-    return transactionalManager.save(
-      MannerEstimationsEntity,
-      copiedMannerEstimationEntity,
-    );
+    return transactionalManager.save(MannerEstimationsEntity,copiedMannerEstimationEntity);
   }
 
-  async copyMannerEstimationApplications(
-    transactionalManager,
-    sourceMannerEstimationId,
-    copiedMannerEstimationId,
-    userId,
-  ) {
+  async copyMannerEstimationApplications(transactionalManager,sourceMannerEstimationId,copiedMannerEstimationId,userId) {
     const sourceApplications = await transactionalManager.find(
       MannerEstimationApplicationsEntity,
       {
@@ -165,39 +98,16 @@ class MannerEstimationsService extends BaseService {
 
     for (const sourceApplication of sourceApplications) {
       const copiedApplicationEntity = this.buildCopiedApplicationEntity(
-        transactionalManager,
-        sourceApplication,
-        copiedMannerEstimationId,
-        userId,
+        transactionalManager,sourceApplication,
+        copiedMannerEstimationId,userId
       );
-
-      savedCopiedApplications.push(
-        await transactionalManager.save(
-          MannerEstimationApplicationsEntity,
-          copiedApplicationEntity,
-        ),
-      );
+      savedCopiedApplications.push(await transactionalManager.save(MannerEstimationApplicationsEntity,copiedApplicationEntity));
     }
-
     return savedCopiedApplications;
   }
 
-  buildCopiedApplicationEntity(
-    transactionalManager,
-    sourceApplication,
-    copiedMannerEstimationId,
-    userId,
-  ) {
-    const {
-      ID,
-      MannerEstimationID,
-      CreatedOn,
-      CreatedByID,
-      ModifiedOn,
-      ModifiedByID,
-      ...applicationDataToCopy
-    } = sourceApplication;
-
+  buildCopiedApplicationEntity(transactionalManager,sourceApplication,copiedMannerEstimationId,userId) {
+    const {ID,MannerEstimationID,CreatedOn,CreatedByID,ModifiedOn,ModifiedByID,...applicationDataToCopy} = sourceApplication;
     return transactionalManager.create(MannerEstimationApplicationsEntity, {
       ...applicationDataToCopy,
       ID: null,
@@ -205,7 +115,7 @@ class MannerEstimationsService extends BaseService {
       CreatedByID: userId,
       CreatedOn: new Date(),
       ModifiedOn: null,
-      ModifiedByID: null,
+      ModifiedByID: null
     });
   }
 
