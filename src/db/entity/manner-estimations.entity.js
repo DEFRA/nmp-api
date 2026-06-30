@@ -137,17 +137,23 @@ const MannerEstimationsEntity = new EntitySchema({
     },
 
     NitrogenPrice: {
-      type: "int",
+    type: "decimal",
+      precision: 18,
+      scale: 2,
       nullable: false,
     },
 
     PhosphatePrice: {
-      type: "int",
+     type: "decimal",
+      precision: 18,
+      scale: 2,
       nullable: false,
     },
 
     PotashPrice: {
-      type: "int",
+   type: "decimal",
+      precision: 18,
+      scale: 2,
       nullable: false,
     },
 
