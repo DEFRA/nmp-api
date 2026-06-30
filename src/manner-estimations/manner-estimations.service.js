@@ -594,25 +594,25 @@ class MannerEstimationsService extends BaseService {
 
     return mannerEstimationApplications.map((application) => ({
       ...application,
-      ManureTypeName:
+      ManureType:
         manureTypeNameById.get(Number(application.ManureTypeID)) ?? null,
-      ApplicationMethodName:
+      ApplicationMethod:
         applicationMethodNameById.get(
           Number(application.ApplicationMethodID),
         ) ?? null,
-      IncorporationMethodName:
+      IncorporationMethod:
         incorporationMethodNameById.get(
           Number(application.IncorporationMethodID),
         ) ?? null,
-      IncorporationDelayName:
+      IncorporationDelay:
         incorporationDelayNameById.get(
           Number(application.IncorporationDelayID),
         ) ?? null,
-      MoistureTypeName:
+      MoistureType:
         moistureTypeNameById.get(Number(application.MoistureID)) ?? null,
-      WindspeedName:
+      Windspeed:
         windspeedNameById.get(Number(application.WindspeedID)) ?? null,
-      RainTypeName:
+      RainType:
         rainTypeNameById.get(Number(application.RainfallWithinSixHoursID)) ??
         null,
     }));
