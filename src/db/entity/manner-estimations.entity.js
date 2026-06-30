@@ -45,7 +45,7 @@ const MannerEstimationsEntity = new EntitySchema({
       nullable: false,
     },
 
-RegisteredOrganicProducer: {
+    RegisteredOrganicProducer: {
       type: "bit",
       default: 0,
     },

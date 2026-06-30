@@ -18,7 +18,7 @@ const CreateMannerEstimationDto = Joi.object({
   Postcode: Joi.string().max(maxFifty).required(),
 
   AverageAnuualRainfall: Joi.number().integer().required(),
-    RegisteredOrganicProducer: Joi.boolean().required(),
+  RegisteredOrganicProducer: Joi.boolean().required(),
 
   FieldName: Joi.string().max(maxFifty).required(),
 
