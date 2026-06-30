@@ -339,100 +339,117 @@ class MannerEstimationsService extends BaseService {
   }
 
   async getMannerEstimationApplicationsWithManureTypeName(id, request) {
-    const mannerEstimationApplications =
-      await this.mannerEstimationApplicationRepository.find({
-        where: {
-          MannerEstimationID: id,
-        },
-        order: {
-          ID: "ASC",
-        },
-      });
+    const mannerEstimationApplications = await this.getMannerEstimationApplications(
+      id,
+    );
+    const lookupConfigs = this.getApplicationLookupConfigs();
+    await this.populateApplicationLookupCaches(
+      mannerEstimationApplications,
+      lookupConfigs,
+      request,
+    );
 
-    const manureTypeNameById = new Map();
-    const applicationMethodNameById = new Map();
-    const incorporationMethodNameById = new Map();
-    const incorporationDelayNameById = new Map();
-    const moistureTypeNameById = new Map();
-    const windspeedNameById = new Map();
-    const rainTypeNameById = new Map();
+    return this.mapApplicationsWithLookupNames(
+      mannerEstimationApplications,
+      lookupConfigs,
+    );
+  }
 
+  async getMannerEstimationApplications(mannerEstimationId) {
+    return this.mannerEstimationApplicationRepository.find({
+      where: {
+        MannerEstimationID: mannerEstimationId,
+      },
+      order: {
+        ID: "ASC",
+      },
+    });
+  }
+
+  getApplicationLookupConfigs() {
+    return [
+      {
+        outputField: "ManureType",
+        sourceField: "ManureTypeID",
+        service: this.MannerManureTypesService,
+        endpoint: "/manure-types",
+        cache: new Map(),
+      },
+      {
+        outputField: "ApplicationMethod",
+        sourceField: "ApplicationMethodID",
+        service: this.MannerApplicationMethodService,
+        endpoint: "/application-methods",
+        cache: new Map(),
+      },
+      {
+        outputField: "IncorporationMethod",
+        sourceField: "IncorporationMethodID",
+        service: this.MannerIncorporationMethodService,
+        endpoint: "/incorporation-methods",
+        cache: new Map(),
+      },
+      {
+        outputField: "IncorporationDelay",
+        sourceField: "IncorporationDelayID",
+        service: this.MannerIncorporationDelayService,
+        endpoint: "/incorporation-delays",
+        cache: new Map(),
+      },
+      {
+        outputField: "MoistureType",
+        sourceField: "MoistureID",
+        service: this.MannerMoistureTypesService,
+        endpoint: "/moisture-types",
+        cache: new Map(),
+      },
+      {
+        outputField: "Windspeed",
+        sourceField: "WindspeedID",
+        service: this.MannerWindspeedService,
+        endpoint: "/windspeeds",
+        cache: new Map(),
+      },
+      {
+        outputField: "RainType",
+        sourceField: "RainfallWithinSixHoursID",
+        service: this.MannerRainTypesService,
+        endpoint: "/rain-types",
+        cache: new Map(),
+      },
+    ];
+  }
+
+  async populateApplicationLookupCaches(
+    mannerEstimationApplications,
+    lookupConfigs,
+    request,
+  ) {
     for (const application of mannerEstimationApplications) {
-      await this.setLookupNameInCache(
-        manureTypeNameById,
-        application.ManureTypeID,
-        this.MannerManureTypesService,
-        "/manure-types",
-        request,
-      );
-      await this.setLookupNameInCache(
-        applicationMethodNameById,
-        application.ApplicationMethodID,
-        this.MannerApplicationMethodService,
-        "/application-methods",
-        request,
-      );
-      await this.setLookupNameInCache(
-        incorporationMethodNameById,
-        application.IncorporationMethodID,
-        this.MannerIncorporationMethodService,
-        "/incorporation-methods",
-        request,
-      );
-      await this.setLookupNameInCache(
-        incorporationDelayNameById,
-        application.IncorporationDelayID,
-        this.MannerIncorporationDelayService,
-        "/incorporation-delays",
-        request,
-      );
-      await this.setLookupNameInCache(
-        moistureTypeNameById,
-        application.MoistureID,
-        this.MannerMoistureTypesService,
-        "/moisture-types",
-        request,
-      );
-      await this.setLookupNameInCache(
-        windspeedNameById,
-        application.WindspeedID,
-        this.MannerWindspeedService,
-        "/windspeeds",
-        request,
-      );
-      await this.setLookupNameInCache(
-        rainTypeNameById,
-        application.RainfallWithinSixHoursID,
-        this.MannerRainTypesService,
-        "/rain-types",
-        request,
-      );
+      for (const config of lookupConfigs) {
+        await this.setLookupNameInCache(
+          config.cache,
+          application[config.sourceField],
+          config.service,
+          config.endpoint,
+          request,
+        );
+      }
     }
+  }
 
-    return mannerEstimationApplications.map((application) => ({
-      ...application,
-      ManureType:
-        manureTypeNameById.get(Number(application.ManureTypeID)) ?? null,
-      ApplicationMethod:
-        applicationMethodNameById.get(
-          Number(application.ApplicationMethodID),
-        ) ?? null,
-      IncorporationMethod:
-        incorporationMethodNameById.get(
-          Number(application.IncorporationMethodID),
-        ) ?? null,
-      IncorporationDelay:
-        incorporationDelayNameById.get(
-          Number(application.IncorporationDelayID),
-        ) ?? null,
-      MoistureType:
-        moistureTypeNameById.get(Number(application.MoistureID)) ?? null,
-      Windspeed:
-        windspeedNameById.get(Number(application.WindspeedID)) ?? null,
-      RainType:
-        rainTypeNameById.get(Number(application.RainfallWithinSixHoursID)) ??
-        null,
-    }));
+  mapApplicationsWithLookupNames(mannerEstimationApplications, lookupConfigs) {
+    return mannerEstimationApplications.map((application) => {
+      const enrichedApplication = { ...application };
+
+      for (const config of lookupConfigs) {
+        const sourceId = Number(application[config.sourceField]);
+        enrichedApplication[config.outputField] =
+          config.cache.get(sourceId) ?? null;
+      }
+
+      return enrichedApplication;
+    });
   }
 
   async setLookupNameInCache(cache, idValue, service, endpoint, request) {
