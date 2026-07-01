@@ -3,6 +3,7 @@ const {
   CreateMannerEstimationApplicationDto,
 } = require("../../manner-estimation-applications/dto/manner-estimation-applications.dto");
 const maxTwoFifty = 250,maxFifty = 50,maxHundred=100;
+const precisionTwo = 2;
 
 const CreateMannerEstimationDto = Joi.object({
   ID: Joi.number().integer().allow(null).default(null),
@@ -52,11 +53,11 @@ const CreateMannerEstimationDto = Joi.object({
 
   PotashProductPrice: Joi.number().integer().required(),
 
-  NitrogenPrice: Joi.number().integer().required(),
+  NitrogenPrice: Joi.number().precision(precisionTwo).required(),
 
-  PhosphatePrice: Joi.number().integer().required(),
+  PhosphatePrice: Joi.number().precision(precisionTwo).required(),
 
-  PotashPrice: Joi.number().integer().required(),
+  PotashPrice: Joi.number().precision(precisionTwo).required(),
 
   CalculateBasedOnNutrientPrice: Joi.boolean().default(true),
 

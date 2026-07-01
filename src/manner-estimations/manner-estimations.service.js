@@ -195,7 +195,7 @@ class MannerEstimationsService extends BaseService {
         productId: product.id,
         productName: product.name,
         productPrice: nutrientPrice,
-        price: Math.round(nutrient.unitRate * 100),
+        price: nutrient.unitRate,
       };
     }
 
