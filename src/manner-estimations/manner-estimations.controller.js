@@ -37,7 +37,7 @@ class MannerEstimationsController {
 
       const result = await this.#mannerEstimationsService.copyMannerEstimation(
         payload,
-        userId
+        userId,
       );
 
       return this.#h.response(result);
@@ -72,6 +72,19 @@ class MannerEstimationsController {
       return this.#h.response(records);
     } catch (error) {
       console.error("Error in getMannerEstimationRelatedDataById:", error);
+      return this.#h.response(error);
+    }
+  }
+
+  async getById() {
+    try {
+      const { id } = this.#request.params;
+      const records = await this.#mannerEstimationsService.getById(
+          id
+        );
+      return this.#h.response(records);
+    } catch (error) {
+      console.error("Error in getById:", error);
       return this.#h.response(error);
     }
   }
