@@ -47,6 +47,25 @@ class MannerEstimationsController {
     }
   }
 
+  async updateMannerEstimationWithApplications() {
+    try {
+      const payload = this.#request.payload;
+      const userId = this.#request.userId;
+
+      const result =
+        await this.#mannerEstimationsService.updateMannerEstimationWithApplications(
+          payload,
+          userId,
+          this.#request,
+        );
+
+      return this.#h.response(result);
+    } catch (error) {
+      console.error("Error updating Manner Estimation:", error);
+      return this.#h.response(error);
+    }
+  }
+
   async getByOrganisationId() {
     try {
       const { organisationId } = this.#request.params;
@@ -79,9 +98,7 @@ class MannerEstimationsController {
   async getById() {
     try {
       const { id } = this.#request.params;
-      const records = await this.#mannerEstimationsService.getById(
-          id
-        );
+      const records = await this.#mannerEstimationsService.getById(id);
       return this.#h.response(records);
     } catch (error) {
       console.error("Error in getById:", error);

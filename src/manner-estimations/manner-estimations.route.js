@@ -3,6 +3,7 @@ const {
 } = require("./manner-estimations.controller");
 const {
   CreateMannerEstimationWithApplicationDto,
+  UpdateMannerEstimationWithApplicationsDto,
   CheckMannerEstimationExistsDto,
   CopyMannerEstimationDto,
 } = require("./dto/create-manner-estimation.dto");
@@ -40,6 +41,22 @@ module.exports = [
       description: "Copy Manner Estimation and related applications",
       validate: {
         payload: CopyMannerEstimationDto,
+        failAction: validationFailAction,
+      },
+    },
+  },
+  {
+    method: "PUT",
+    path: "/manner-estimations",
+    handler: async (request, h) => {
+      const controller = new MannerEstimationsController(request, h);
+      return controller.updateMannerEstimationWithApplications();
+    },
+    options: {
+      tags: ["api", mannerEstimations],
+      description: "Update Manner Estimation and related applications",
+      validate: {
+        payload: UpdateMannerEstimationWithApplicationsDto,
         failAction: validationFailAction,
       },
     },

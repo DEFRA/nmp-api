@@ -160,6 +160,197 @@ class MannerEstimationsService extends BaseService {
     });
   }
 
+  async updateMannerEstimationWithApplications(payload, userId, request) {
+    const { MannerEstimation, MannerEstimationApplications } = payload;
+    this.validateUpdateMannerEstimationPayload(
+      MannerEstimation,
+      MannerEstimationApplications,
+    );
+
+    return AppDataSource.transaction(async (transactionalManager) => {
+      const nutrientFinancialValues =
+        await this.calculateNutrientFinancialValuesByNutrientIdForUpdate(
+          MannerEstimation,
+          MannerEstimationApplications[0],
+          request,
+        );
+      const mannerEstimationFinancialValues =
+        this.buildMannerEstimationFinancialValues(nutrientFinancialValues);
+
+      const {
+        ID: mannerEstimationId,
+        CreatedByID,
+        CreatedOn,
+        ...mannerEstimationDataToUpdate
+      } = MannerEstimation;
+
+      const updatedMannerEstimationResult = await transactionalManager.update(
+        MannerEstimationsEntity,
+        { ID: mannerEstimationId },
+        {
+          ...mannerEstimationDataToUpdate,
+          ...mannerEstimationFinancialValues,
+          ModifiedByID: userId,
+          ModifiedOn: new Date(),
+        },
+      );
+
+      if (updatedMannerEstimationResult.affected !== 1) {
+        throw new Error("Manner estimation not found");
+      }
+
+      const updatedApplications = [];
+
+      for (const mannerEstimationApplication of MannerEstimationApplications) {
+        if (!mannerEstimationApplication.ID) {
+          throw new Error("Each MannerEstimationApplication must include ID");
+        }
+
+        const applicationNutrientFinancialValues =
+          await this.calculateNutrientFinancialValuesByNutrientIdForUpdate(
+            MannerEstimation,
+            mannerEstimationApplication,
+            request,
+          );
+        const mannerEstimationApplicationFinancialValues =
+          this.buildMannerEstimationApplicationFinancialValues(
+            applicationNutrientFinancialValues,
+          );
+
+        const {
+          ID: applicationId,
+          MannerEstimationID,
+          CreatedByID,
+          CreatedOn,
+          ...applicationDataToUpdate
+        } = mannerEstimationApplication;
+
+        const updatedApplicationResult = await transactionalManager.update(
+          MannerEstimationApplicationsEntity,
+          { ID: applicationId, MannerEstimationID: mannerEstimationId },
+          {
+            ...applicationDataToUpdate,
+            ...mannerEstimationApplicationFinancialValues,
+            ModifiedByID: userId,
+            ModifiedOn: new Date(),
+          },
+        );
+
+        if (updatedApplicationResult.affected !== 1) {
+          throw new Error(
+            `Manner estimation application not found for ID ${applicationId}`,
+          );
+        }
+
+        const updatedApplication = await transactionalManager.findOneBy(
+          MannerEstimationApplicationsEntity,
+          { ID: applicationId, MannerEstimationID: mannerEstimationId },
+        );
+
+        updatedApplications.push(updatedApplication);
+      }
+
+      const updatedMannerEstimation = await transactionalManager.findOneBy(
+        MannerEstimationsEntity,
+        { ID: mannerEstimationId },
+      );
+
+      return {
+        MannerEstimation: updatedMannerEstimation,
+        MannerEstimationApplications: updatedApplications,
+      };
+    });
+  }
+
+  validateUpdateMannerEstimationPayload(
+    mannerEstimation,
+    mannerEstimationApplications,
+  ) {
+    if (!mannerEstimation?.ID) {
+      throw new Error("MannerEstimation ID is required");
+    }
+
+    if (
+      !Array.isArray(mannerEstimationApplications) ||
+      mannerEstimationApplications.length === 0
+    ) {
+      throw new Error("MannerEstimationApplications is required");
+    }
+  }
+
+  async calculateNutrientFinancialValuesByNutrientIdForUpdate(
+    mannerEstimation,
+    mannerEstimationApplication,
+    request,
+  ) {
+    const nutrientConfigById = {
+      [NUTRIENT_ID.NITROGEN]: {
+        productId: mannerEstimation.NitrogenProductId,
+        price: mannerEstimation.NitrogenPrice,
+      },
+      [NUTRIENT_ID.PHOSPHATE]: {
+        productId: mannerEstimation.PhosphateProductId,
+        price: mannerEstimation.PhosphatePrice,
+      },
+      [NUTRIENT_ID.POTASH]: {
+        productId: mannerEstimation.PotashProductId,
+        price: mannerEstimation.PotashPrice,
+      },
+    };
+
+    const nutrientFinancialValuesByNutrientId = {};
+
+    for (const nutrientId of Object.values(NUTRIENT_ID)) {
+      const nutrientConfig = nutrientConfigById[nutrientId];
+
+      if (!nutrientConfig?.productId || nutrientConfig.price == null) {
+        continue;
+      }
+
+      const nutrientPercentageData = await this.nutrientsProductService.getData(
+        `/nutrient-products/${nutrientConfig.productId}`,
+        request,
+      );
+      const nutrientProduct = nutrientPercentageData?.data ?? nutrientPercentageData;
+      const nutrientPercentage = Number(nutrientProduct?.nutrientPercentage ?? 0);
+      const selectedPrice = Number(nutrientConfig.price);
+
+      const cal1 = nutrientPercentage / 100;
+      const cal2 = cal1 * 1000;
+      const nutrientPrice = Math.round(cal2 * selectedPrice);
+
+      let totalNutrientValue = 0;
+
+      switch (nutrientId) {
+        case NUTRIENT_ID.NITROGEN:
+          totalNutrientValue =
+            mannerEstimationApplication.CropAvailableNCurrentCrop +
+            mannerEstimationApplication.CropAvailableNitrogenFollowingCropYearTwo;
+          break;
+
+        case NUTRIENT_ID.PHOSPHATE:
+          totalNutrientValue = mannerEstimationApplication.TotalP2O5;
+          break;
+
+        case NUTRIENT_ID.POTASH:
+          totalNutrientValue = mannerEstimationApplication.TotalK2O;
+          break;
+        default:
+          break;
+      }
+
+      nutrientFinancialValuesByNutrientId[nutrientId] = {
+        nutrientValue: Math.round(totalNutrientValue * selectedPrice),
+        productId: nutrientConfig.productId,
+        productName: nutrientProduct?.name,
+        productPrice: nutrientPrice,
+        price: selectedPrice,
+      };
+    }
+
+    return nutrientFinancialValuesByNutrientId;
+  }
+
   calculateNutrientFinancialValuesByNutrientId(nutrientProducts,nutrients,mannerEstimationApplication) {
     const nutrientFinancialValuesByNutrientId = {};
     for (const product of nutrientProducts) {
