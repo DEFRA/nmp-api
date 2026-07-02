@@ -3,7 +3,7 @@ const {
 } = require("./manner-estimations.controller");
 const {
   CreateMannerEstimationWithApplicationDto,
-  UpdateMannerEstimationWithApplicationsDto,
+  UpdateMannerEstimationOnlyDto,
   CheckMannerEstimationExistsDto,
   CopyMannerEstimationDto,
 } = require("./dto/create-manner-estimation.dto");
@@ -56,7 +56,7 @@ module.exports = [
       tags: ["api", mannerEstimations],
       description: "Update Manner Estimation and related applications",
       validate: {
-        payload: UpdateMannerEstimationWithApplicationsDto,
+        payload: UpdateMannerEstimationOnlyDto,
         failAction: validationFailAction,
       },
     },

@@ -161,24 +161,34 @@ class MannerEstimationsService extends BaseService {
   }
 
   async updateMannerEstimationWithApplications(payload, userId, request) {
-    const { MannerEstimation, MannerEstimationApplications } = payload;
-    this.validateUpdateMannerEstimationPayload(
-      MannerEstimation,
-      MannerEstimationApplications,
-    );
+    const { MannerEstimation } = payload;
+    this.validateUpdateMannerEstimationPayload(MannerEstimation);
 
     return AppDataSource.transaction(async (transactionalManager) => {
+      const mannerEstimationId = MannerEstimation.ID;
+      const sourceMannerEstimationApplications = await transactionalManager.find(
+        MannerEstimationApplicationsEntity,
+        {
+          where: { MannerEstimationID: mannerEstimationId },
+          order: { ID: "ASC" },
+        },
+      );
+
+      if (sourceMannerEstimationApplications.length === 0) {
+        throw new Error("Manner estimation applications not found");
+      }
+
       const nutrientFinancialValues =
         await this.calculateNutrientFinancialValuesByNutrientIdForUpdate(
           MannerEstimation,
-          MannerEstimationApplications[0],
+          sourceMannerEstimationApplications[0],
           request,
         );
       const mannerEstimationFinancialValues =
         this.buildMannerEstimationFinancialValues(nutrientFinancialValues);
 
       const {
-        ID: mannerEstimationId,
+        ID,
         CreatedByID,
         CreatedOn,
         ...mannerEstimationDataToUpdate
@@ -201,11 +211,7 @@ class MannerEstimationsService extends BaseService {
 
       const updatedApplications = [];
 
-      for (const mannerEstimationApplication of MannerEstimationApplications) {
-        if (!mannerEstimationApplication.ID) {
-          throw new Error("Each MannerEstimationApplication must include ID");
-        }
-
+      for (const mannerEstimationApplication of sourceMannerEstimationApplications) {
         const applicationNutrientFinancialValues =
           await this.calculateNutrientFinancialValuesByNutrientIdForUpdate(
             MannerEstimation,
@@ -220,16 +226,12 @@ class MannerEstimationsService extends BaseService {
         const {
           ID: applicationId,
           MannerEstimationID,
-          CreatedByID,
-          CreatedOn,
-          ...applicationDataToUpdate
         } = mannerEstimationApplication;
 
         const updatedApplicationResult = await transactionalManager.update(
           MannerEstimationApplicationsEntity,
           { ID: applicationId, MannerEstimationID: mannerEstimationId },
           {
-            ...applicationDataToUpdate,
             ...mannerEstimationApplicationFinancialValues,
             ModifiedByID: userId,
             ModifiedOn: new Date(),
@@ -264,17 +266,9 @@ class MannerEstimationsService extends BaseService {
 
   validateUpdateMannerEstimationPayload(
     mannerEstimation,
-    mannerEstimationApplications,
   ) {
     if (!mannerEstimation?.ID) {
       throw new Error("MannerEstimation ID is required");
-    }
-
-    if (
-      !Array.isArray(mannerEstimationApplications) ||
-      mannerEstimationApplications.length === 0
-    ) {
-      throw new Error("MannerEstimationApplications is required");
     }
   }
 

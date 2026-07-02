@@ -81,18 +81,8 @@ const UpdateMannerEstimationDto = CreateMannerEstimationDto.keys({
   ID: Joi.number().integer().required(),
 });
 
-const UpdateMannerEstimationApplicationDto =
-  CreateMannerEstimationApplicationDto.keys({
-    ID: Joi.number().integer().required(),
-    MannerEstimationID: Joi.number().integer().allow(null),
-  });
-
-const UpdateMannerEstimationWithApplicationsDto = Joi.object({
+const UpdateMannerEstimationOnlyDto = Joi.object({
   MannerEstimation: UpdateMannerEstimationDto.required(),
-  MannerEstimationApplications: Joi.array()
-    .items(UpdateMannerEstimationApplicationDto)
-    .min(1)
-    .required(),
 });
 
 const CheckMannerEstimationExistsDto = Joi.object({
@@ -107,7 +97,7 @@ const CopyMannerEstimationDto = Joi.object({
 module.exports = {
   CreateMannerEstimationDto,
   CreateMannerEstimationWithApplicationDto,
-  UpdateMannerEstimationWithApplicationsDto,
+  UpdateMannerEstimationOnlyDto,
   CheckMannerEstimationExistsDto,
   CopyMannerEstimationDto,
 };
