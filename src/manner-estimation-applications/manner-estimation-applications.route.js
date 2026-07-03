@@ -5,7 +5,9 @@ const {
 
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
-const { CreateMannerEstimationApplicationDto } = require("./dto/manner-estimation-applications.dto");
+const {
+  CreateMannerEstimationApplicationDto,
+} = require("./dto/manner-estimation-applications.dto");
 const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 module.exports = [
@@ -21,7 +23,7 @@ module.exports = [
       description: "Create Manner Estimation Application",
       validate: {
         payload: CreateMannerEstimationApplicationDto,
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
   },
@@ -32,15 +34,88 @@ module.exports = [
       tags: ["api", "Manner Estimation Applications"],
       description: "Get Manner Estimation Applications by MannerEstimationID",
       validate: {
-              params: Joi.object({
-                mannerEstimationId: Joi.number().required(),
-              }),
-              failAction: validationFailAction
-            },
+        params: Joi.object({
+          mannerEstimationId: Joi.number().required(),
+        }),
+        failAction: validationFailAction,
+      },
     },
     handler: async (request, h) => {
       const controller = new MannerEstimationApplicationsController(request, h);
       return controller.getEstimationApplicationsByEstimationId();
+    },
+  },
+  {
+    method: "GET",
+    path: "/manner-estimation-applications/total-n/{mannerEstimationId}",
+    options: {
+      tags: ["api", "Manner Estimation Applications"],
+      description:
+        "Get Total N by Manner Estimation ID and application date range",
+      validate: {
+        params: Joi.object({
+          mannerEstimationId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          startDate: Joi.date().iso().required(),
+          endDate: Joi.date().iso().required(),
+          mannerApplicationId: Joi.number().integer().allow(null).optional(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new MannerEstimationApplicationsController(request, h);
+      return controller.fetchTotalNByMannerEstimationIdAppDate();
+    },
+  },
+  {
+    method: "GET",
+    path: "/manner-estimation-applications/total-n-if-green-food-compost/{mannerEstimationId}",
+    options: {
+      tags: ["api", "Manner Estimation Applications"],
+      description:
+        "Get Total N by Manner Estimation ID, date range and green food compost flag",
+      validate: {
+        params: Joi.object({
+          mannerEstimationId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          startDate: Joi.date().iso().required(),
+          endDate: Joi.date().iso().required(),
+          isGreenFoodCompost: Joi.boolean().required(),
+          mannerApplicationId: Joi.number().integer().allow(null).optional(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new MannerEstimationApplicationsController(request, h);
+      return controller.fetchTotalNBasedByMannerEstimationIdAppDateAndIsGreenCompost();
+    },
+  },
+  {
+    method: "GET",
+    path: "/manner-estimation-applications/check-green-compost/{mannerEstimationId}",
+    options: {
+      tags: ["api", "Manner Estimation Applications"],
+      description:
+        "Check if green compost exists by Manner Estimation ID and application date range",
+      validate: {
+        params: Joi.object({
+          mannerEstimationId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          dateFrom: Joi.date().iso().required(),
+          dateTo: Joi.date().iso().required(),
+          mannerApplicationId: Joi.number().integer().allow(null).optional(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new MannerEstimationApplicationsController(request, h);
+      return controller.checkMannerGreenCompostExistanceByDateRange();
     },
   },
 ];
