@@ -19,6 +19,8 @@ const MannerMoistureTypesService = require("../vendors/manner/moisture-types/moi
 const MannerWindspeedService = require("../vendors/manner/windspeed/windspeed.service");
 const MannerRainTypesService = require("../vendors/manner/rain-types/rain-types.service");
 const { CountryEntity } = require("../db/entity/country.entity");
+const { normalizeDateWithTime } = require("../shared/dataValidate");
+const { ManureTypeMapper } = require("../constants/manure-type-mapper");
 
 const NUTRIENT_ID = {
   NITROGEN: 1,
@@ -44,6 +46,96 @@ class MannerEstimationsService extends BaseService {
     this.MannerMoistureTypesService = new MannerMoistureTypesService();
     this.MannerWindspeedService = new MannerWindspeedService();
     this.MannerRainTypesService = new MannerRainTypesService();
+  }
+
+  async fetchTotalNByMannerEstimationIdAppDate(
+    mannerEstimationId,
+    startDate,
+    endDate,
+    mannerApplicationId,
+  ) {
+    const START_OF_DAY = {
+      HOUR: 0,
+      MINUTE: 0,
+      SECOND: 0,
+      MILLISECOND: 0,
+    };
+
+    const END_OF_DAY = {
+      HOUR: 23,
+      MINUTE: 59,
+      SECOND: 59,
+      MILLISECOND: 999,
+    };
+
+    const fromDateFormatted = normalizeDateWithTime(startDate, START_OF_DAY);
+    const toDateFormatted = normalizeDateWithTime(endDate, END_OF_DAY);
+
+    const query = this.mannerEstimationApplicationRepository
+      .createQueryBuilder("MEA")
+      .select("SUM(MEA.N * MEA.ApplicationRate)", "totalN")
+      .where("MEA.MannerEstimationID = :mannerEstimationId", {
+        mannerEstimationId,
+      })
+      .andWhere("MEA.ApplicationDate BETWEEN :startDate AND :endDate", {
+        startDate: fromDateFormatted,
+        endDate: toDateFormatted,
+      });
+
+    if (mannerApplicationId != null) {
+      query.andWhere("MEA.ID != :mannerApplicationId", { mannerApplicationId });
+    }
+
+    const result = await query.getRawOne();
+    return Number(result?.totalN ?? 0);
+  }
+
+  async checkMannerGreenCompostExistanceByDateRange(
+    mannerEstimationId,
+    dateFrom,
+    dateTo,
+    mannerApplicationId,
+  ) {
+    const START_OF_DAY = {
+      HOUR: 0,
+      MINUTE: 0,
+      SECOND: 0,
+      MILLISECOND: 0,
+    };
+
+    const END_OF_DAY = {
+      HOUR: 23,
+      MINUTE: 59,
+      SECOND: 59,
+      MILLISECOND: 999,
+    };
+
+    const fromDateFormatted = normalizeDateWithTime(dateFrom, START_OF_DAY);
+    const toDateFormatted = normalizeDateWithTime(dateTo, END_OF_DAY);
+
+    const query = this.mannerEstimationApplicationRepository
+      .createQueryBuilder("MEA")
+      .select("MEA.ID", "id")
+      .where("MEA.MannerEstimationID = :mannerEstimationId", {
+        mannerEstimationId,
+      })
+      .andWhere("MEA.ApplicationDate BETWEEN :fromDate AND :toDate", {
+        fromDate: fromDateFormatted,
+        toDate: toDateFormatted,
+      })
+      .andWhere("MEA.ManureTypeID IN (:...manureTypeIDs)", {
+        manureTypeIDs: [
+          ManureTypeMapper.GreenCompost,
+          ManureTypeMapper.GreenFoodCompost,
+        ],
+      });
+
+    if (mannerApplicationId != null) {
+      query.andWhere("MEA.ID != :mannerApplicationId", { mannerApplicationId });
+    }
+
+    const result = await query.limit(1).getRawOne();
+    return Boolean(result);
   }
 
   async copyMannerEstimation(payload, userId) {

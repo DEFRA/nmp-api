@@ -122,6 +122,49 @@ class MannerEstimationsController {
       return this.#h.response(error);
     }
   }
+
+  async fetchTotalNByMannerEstimationIdAppDate() {
+    try {
+      const { mannerEstimationId } = this.#request.params;
+      const { startDate, endDate, mannerApplicationId } = this.#request.query;
+
+      const totalN =
+        await this.#mannerEstimationsService.fetchTotalNByMannerEstimationIdAppDate(
+          mannerEstimationId,
+          startDate,
+          endDate,
+          mannerApplicationId,
+        );
+
+      return this.#h.response({ TotalN: totalN });
+    } catch (error) {
+      console.error("Error in fetchTotalNByMannerEstimationIdAppDate:", error);
+      return this.#h.response({ error });
+    }
+  }
+
+  async checkMannerGreenCompostExistanceByDateRange() {
+    try {
+      const { mannerEstimationId } = this.#request.params;
+      const { dateFrom, dateTo, mannerApplicationId } = this.#request.query;
+
+      const exists =
+        await this.#mannerEstimationsService.checkMannerGreenCompostExistanceByDateRange(
+          mannerEstimationId,
+          dateFrom,
+          dateTo,
+          mannerApplicationId,
+        );
+
+      return this.#h.response({ exists });
+    } catch (error) {
+      console.error(
+        "Error in checkMannerGreenCompostExistanceByDateRange:",
+        error,
+      );
+      return this.#h.response({ error });
+    }
+  }
 }
 
 module.exports = { MannerEstimationsController };

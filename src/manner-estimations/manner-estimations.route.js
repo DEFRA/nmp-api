@@ -132,4 +132,52 @@ module.exports = [
       return controller.checkMannerEstimationExists();
     },
   },
+  {
+    method: "GET",
+    path: "/manner-estimations/total-n/{mannerEstimationId}",
+    options: {
+      tags: ["api", mannerEstimations],
+      description:
+        "Get Total N by Manner Estimation ID and application date range",
+      validate: {
+        params: Joi.object({
+          mannerEstimationId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          startDate: Joi.date().iso().required(),
+          endDate: Joi.date().iso().required(),
+          mannerApplicationId: Joi.number().integer().allow(null).optional(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new MannerEstimationsController(request, h);
+      return controller.fetchTotalNByMannerEstimationIdAppDate();
+    },
+  },
+  {
+    method: "GET",
+    path: "/manner-estimations/check-green-compost/{mannerEstimationId}",
+    options: {
+      tags: ["api", mannerEstimations],
+      description:
+        "Check if green compost exists by Manner Estimation ID and application date range",
+      validate: {
+        params: Joi.object({
+          mannerEstimationId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          dateFrom: Joi.date().iso().required(),
+          dateTo: Joi.date().iso().required(),
+          mannerApplicationId: Joi.number().integer().allow(null).optional(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new MannerEstimationsController(request, h);
+      return controller.checkMannerGreenCompostExistanceByDateRange();
+    },
+  },
 ];
