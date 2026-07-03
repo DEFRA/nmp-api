@@ -165,6 +165,31 @@ class MannerEstimationsController {
       return this.#h.response({ error });
     }
   }
+
+  async fetchTotalNBasedByMannerEstimationIdAppDateAndIsGreenCompost() {
+    try {
+      const { mannerEstimationId } = this.#request.params;
+      const { startDate, endDate, isGreenFoodCompost, mannerApplicationId } =
+        this.#request.query;
+
+      const totalN =
+        await this.#mannerEstimationsService.fetchTotalNBasedByMannerEstimationIdAppDateAndIsGreenCompost(
+          mannerEstimationId,
+          startDate,
+          endDate,
+          isGreenFoodCompost,
+          mannerApplicationId,
+        );
+
+      return this.#h.response({ TotalN: totalN });
+    } catch (error) {
+      console.error(
+        "Error in fetchTotalNBasedByMannerEstimationIdAppDateAndIsGreenCompost:",
+        error,
+      );
+      return this.#h.response({ error });
+    }
+  }
 }
 
 module.exports = { MannerEstimationsController };

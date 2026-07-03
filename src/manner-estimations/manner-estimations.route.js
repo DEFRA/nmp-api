@@ -158,6 +158,31 @@ module.exports = [
   },
   {
     method: "GET",
+    path: "/manner-estimations/total-n-if-green-food-compost/{mannerEstimationId}",
+    options: {
+      tags: ["api", mannerEstimations],
+      description:
+        "Get Total N by Manner Estimation ID, date range and green food compost flag",
+      validate: {
+        params: Joi.object({
+          mannerEstimationId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          startDate: Joi.date().iso().required(),
+          endDate: Joi.date().iso().required(),
+          isGreenFoodCompost: Joi.boolean().required(),
+          mannerApplicationId: Joi.number().integer().allow(null).optional(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new MannerEstimationsController(request, h);
+      return controller.fetchTotalNBasedByMannerEstimationIdAppDateAndIsGreenCompost();
+    },
+  },
+  {
+    method: "GET",
     path: "/manner-estimations/check-green-compost/{mannerEstimationId}",
     options: {
       tags: ["api", mannerEstimations],
