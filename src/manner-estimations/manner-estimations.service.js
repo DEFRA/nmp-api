@@ -160,6 +160,120 @@ class MannerEstimationsService extends BaseService {
     });
   }
 
+  async updateMannerEstimationWithApplications(payload, userId, request) {
+    const { MannerEstimation } = payload;
+    this.validateUpdateMannerEstimationPayload(MannerEstimation);
+    return AppDataSource.transaction(async (transactionalManager) => {
+      const mannerEstimationId = MannerEstimation.ID;
+      const sourceMannerEstimationApplications = await transactionalManager.find(
+        MannerEstimationApplicationsEntity,
+        {
+          where: { MannerEstimationID: mannerEstimationId },
+          order: { ID: "ASC" },
+        },
+      );
+      if (sourceMannerEstimationApplications.length === 0) {throw new Error("Manner estimation applications not found")}
+      const nutrientFinancialValues = await this.calculateNutrientFinancialValuesByNutrientIdForUpdate(MannerEstimation,sourceMannerEstimationApplications[0],request);
+        this.buildMannerEstimationFinancialValues(nutrientFinancialValues);
+      const { ID, CreatedByID, CreatedOn, ...mannerEstimationDataToUpdate} = MannerEstimation;
+      const updatedMannerEstimationResult = await transactionalManager.update(
+        MannerEstimationsEntity,
+        { ID: mannerEstimationId },
+        {
+          ...mannerEstimationDataToUpdate,
+          ModifiedByID: userId,
+          ModifiedOn: new Date(),
+        },
+      );
+
+      if (updatedMannerEstimationResult.affected !== 1) {throw new Error("Manner estimation not found")}
+      const updatedApplications = [];
+      for (const mannerEstimationApplication of sourceMannerEstimationApplications) {
+        const applicationNutrientFinancialValues = await this.calculateNutrientFinancialValuesByNutrientIdForUpdate(MannerEstimation,mannerEstimationApplication,request);
+        const mannerEstimationApplicationFinancialValues = this.buildMannerEstimationApplicationFinancialValues(applicationNutrientFinancialValues);
+        const {ID: applicationId} = mannerEstimationApplication;
+        const updatedApplicationResult = await transactionalManager.update(
+          MannerEstimationApplicationsEntity,
+          { ID: applicationId, MannerEstimationID: mannerEstimationId },
+          {
+            ...mannerEstimationApplicationFinancialValues,
+            ModifiedByID: userId,
+            ModifiedOn: new Date(),
+          },
+        );
+        if (updatedApplicationResult.affected !== 1) {
+          throw new Error(`Manner estimation application not found for ID `);
+        }
+        const updatedApplication = await transactionalManager.findOneBy(
+          MannerEstimationApplicationsEntity,
+          { ID: applicationId, MannerEstimationID: mannerEstimationId },
+        );
+        updatedApplications.push(updatedApplication);
+      }
+      const updatedMannerEstimation = await transactionalManager.findOneBy(
+        MannerEstimationsEntity,
+        { ID: mannerEstimationId },
+      );
+      return {
+        MannerEstimation: updatedMannerEstimation,
+        MannerEstimationApplications: updatedApplications,
+      };
+    });
+  }
+
+  validateUpdateMannerEstimationPayload(mannerEstimation) {
+    if (!mannerEstimation?.ID) {throw new Error("MannerEstimation ID is required")}
+  }
+
+  async calculateNutrientFinancialValuesByNutrientIdForUpdate(mannerEstimation,mannerEstimationApplication,request) {
+    const nutrientConfigById = {
+      [NUTRIENT_ID.NITROGEN]: {
+        productId: mannerEstimation.NitrogenProductId,
+        price: mannerEstimation.NitrogenPrice
+      },
+      [NUTRIENT_ID.PHOSPHATE]: {
+        productId: mannerEstimation.PhosphateProductId,
+        price: mannerEstimation.PhosphatePrice,
+      },
+      [NUTRIENT_ID.POTASH]: {
+        productId: mannerEstimation.PotashProductId,
+        price: mannerEstimation.PotashPrice,
+      },
+    };
+    const nutrientFinancialValuesByNutrientId = {};
+    for (const nutrientId of Object.values(NUTRIENT_ID)) {
+      const nutrientConfig = nutrientConfigById[nutrientId];
+      if (!nutrientConfig?.productId || nutrientConfig.price == null) {continue}
+      const nutrientPercentageData = await this.nutrientsProductService.getData(`/nutrient-products/${nutrientConfig.productId}`,request);
+      const nutrientProduct = nutrientPercentageData?.data ?? nutrientPercentageData;
+      const nutrientPercentage = Number(nutrientProduct?.nutrientPercentage ?? 0);
+      const selectedPrice = Number(nutrientConfig.price);
+      const cal1 = nutrientPercentage / 100;
+      const cal2 = cal1 * 1000;
+      const nutrientPrice = Math.round(cal2 * selectedPrice);
+      let totalNutrientValue = 0;
+      switch (nutrientId) {
+        case NUTRIENT_ID.NITROGEN:
+          totalNutrientValue = mannerEstimationApplication.CropAvailableNCurrentCrop + mannerEstimationApplication.CropAvailableNitrogenFollowingCropYearTwo;
+          break;
+        case NUTRIENT_ID.PHOSPHATE:totalNutrientValue = mannerEstimationApplication.TotalP2O5;
+          break;
+        case NUTRIENT_ID.POTASH:totalNutrientValue = mannerEstimationApplication.TotalK2O;
+          break;
+        default:
+          break;
+      }
+      nutrientFinancialValuesByNutrientId[nutrientId] = {
+        nutrientValue: Math.round(totalNutrientValue * selectedPrice),
+        productId: nutrientConfig.productId,
+        productName: nutrientProduct?.name,
+        productPrice: nutrientPrice,
+        price: selectedPrice,
+      };
+    }
+    return nutrientFinancialValuesByNutrientId;
+  }
+
   calculateNutrientFinancialValuesByNutrientId(nutrientProducts,nutrients,mannerEstimationApplication) {
     const nutrientFinancialValuesByNutrientId = {};
     for (const product of nutrientProducts) {
@@ -169,27 +283,20 @@ class MannerEstimationsService extends BaseService {
       const cal1 = nutrientPercentage / 100;
       const cal2 = cal1 * 1000;
       const nutrientPrice = Math.round(cal2 * nutrient.unitRate);
-
       let totalNutrientValue = 0;
-
       switch (nutrient.id) {
         case NUTRIENT_ID.NITROGEN:
-          totalNutrientValue =
-            mannerEstimationApplication.CropAvailableNCurrentCrop +
-            mannerEstimationApplication.CropAvailableNitrogenFollowingCropYearTwo;
+          totalNutrientValue = mannerEstimationApplication.CropAvailableNCurrentCrop + mannerEstimationApplication.CropAvailableNitrogenFollowingCropYearTwo;
           break;
-
-        case NUTRIENT_ID.PHOSPHATE:
-          totalNutrientValue = mannerEstimationApplication.TotalP2O5;
+        case NUTRIENT_ID.PHOSPHATE: 
+         totalNutrientValue = mannerEstimationApplication.TotalP2O5;
           break;
-
         case NUTRIENT_ID.POTASH:
           totalNutrientValue = mannerEstimationApplication.TotalK2O;
           break;
         default:
           break;
       }
-
       nutrientFinancialValuesByNutrientId[nutrient.id] = {
         nutrientValue: Math.round(totalNutrientValue * nutrient.unitRate),
         productId: product.id,
@@ -198,72 +305,43 @@ class MannerEstimationsService extends BaseService {
         price: nutrient.unitRate,
       };
     }
-
     return nutrientFinancialValuesByNutrientId;
   }
 
   buildMannerEstimationFinancialValues(nutrientFinancialValuesByNutrientId) {
     const mannerEstimationValues = {};
-
-    const nitrogenValues =
-      nutrientFinancialValuesByNutrientId[NUTRIENT_ID.NITROGEN];
-    const phosphateValues =
-      nutrientFinancialValuesByNutrientId[NUTRIENT_ID.PHOSPHATE];
-    const potashValues =
-      nutrientFinancialValuesByNutrientId[NUTRIENT_ID.POTASH];
-
+    const nitrogenValues = nutrientFinancialValuesByNutrientId[NUTRIENT_ID.NITROGEN];
+    const phosphateValues = nutrientFinancialValuesByNutrientId[NUTRIENT_ID.PHOSPHATE];
+    const potashValues = nutrientFinancialValuesByNutrientId[NUTRIENT_ID.POTASH];
     if (nitrogenValues) {
       mannerEstimationValues.NitrogenProductId = nitrogenValues.productId;
       mannerEstimationValues.NitrogenProductName = nitrogenValues.productName;
       mannerEstimationValues.NitrogenProductPrice = nitrogenValues.productPrice;
       mannerEstimationValues.NitrogenPrice = nitrogenValues.price;
     }
-
     if (phosphateValues) {
       mannerEstimationValues.PhosphateProductId = phosphateValues.productId;
       mannerEstimationValues.PhosphateProductName = phosphateValues.productName;
-      mannerEstimationValues.PhosphateProductPrice =
-        phosphateValues.productPrice;
+      mannerEstimationValues.PhosphateProductPrice =phosphateValues.productPrice;
       mannerEstimationValues.PhosphatePrice = phosphateValues.price;
     }
-
     if (potashValues) {
       mannerEstimationValues.PotashProductId = potashValues.productId;
       mannerEstimationValues.PotashProductName = potashValues.productName;
       mannerEstimationValues.PotashProductPrice = potashValues.productPrice;
       mannerEstimationValues.PotashPrice = potashValues.price;
     }
-
     return mannerEstimationValues;
   }
 
-  buildMannerEstimationApplicationFinancialValues(
-    nutrientFinancialValuesByNutrientId,
-  ) {
+  buildMannerEstimationApplicationFinancialValues(nutrientFinancialValuesByNutrientId) {
     const mannerEstimationApplicationValues = {};
-
-    const nitrogenValues =
-      nutrientFinancialValuesByNutrientId[NUTRIENT_ID.NITROGEN];
-    const phosphateValues =
-      nutrientFinancialValuesByNutrientId[NUTRIENT_ID.PHOSPHATE];
-    const potashValues =
-      nutrientFinancialValuesByNutrientId[NUTRIENT_ID.POTASH];
-
-    if (nitrogenValues) {
-      mannerEstimationApplicationValues.NitrogenValue =
-        nitrogenValues.nutrientValue;
-    }
-
-    if (phosphateValues) {
-      mannerEstimationApplicationValues.PhosphateValue =
-        phosphateValues.nutrientValue;
-    }
-
-    if (potashValues) {
-      mannerEstimationApplicationValues.PotashValue =
-        potashValues.nutrientValue;
-    }
-
+    const nitrogenValues =nutrientFinancialValuesByNutrientId[NUTRIENT_ID.NITROGEN];
+    const phosphateValues =nutrientFinancialValuesByNutrientId[NUTRIENT_ID.PHOSPHATE];
+    const potashValues = nutrientFinancialValuesByNutrientId[NUTRIENT_ID.POTASH];
+    if (nitrogenValues) {mannerEstimationApplicationValues.NitrogenValue = nitrogenValues.nutrientValue}
+    if (phosphateValues) {mannerEstimationApplicationValues.PhosphateValue = phosphateValues.nutrientValue}
+    if (potashValues) {mannerEstimationApplicationValues.PotashValue = potashValues.nutrientValue}
     return mannerEstimationApplicationValues;
   }
 
@@ -296,73 +374,37 @@ class MannerEstimationsService extends BaseService {
   async getMannerEstimationDisplayNames(mannerEstimationData, request) {
     const cropTypeName = await this.getCropTypeNameById(mannerEstimationData.CropTypeID);
     const topSoil = await this.getMannerLookupNameById(this.MannerTopSoilsService,"/top-soils",mannerEstimationData.TopSoilID,request);
-    const subSoil = await this.getMannerLookupNameById(this.MannerTopSoilsService,"/sub-soils",mannerEstimationData.SubSoilID,request,);
-
-    const countries = await this.countryRepository.findOne({
-      where: {
-        ID: mannerEstimationData.CountryID,
-      },
-    });
+    const subSoil = await this.getMannerLookupNameById(this.MannerTopSoilsService,"/sub-soils",mannerEstimationData.SubSoilID,request);
+    const countries = await this.countryRepository.findOne({where: {ID: mannerEstimationData.CountryID}});
     const countryName = countries ? countries.Name : null;
-
-    return {
-      cropTypeName,
-      topSoil,
-      subSoil,
-      countryName,
-    };
+    return {cropTypeName,topSoil,subSoil,countryName};
   }
 
   async getCropTypeNameById(cropTypeIdValue) {
     const cropTypeId = this.toNumericId(cropTypeIdValue);
-
-    if (cropTypeId === null) {
-      return null;
-    }
-
-    const cropTypeData = await this.rB209ArableService.getData(
-      `/Arable/CropType/${cropTypeId}`,
-    );
-
+    if (cropTypeId === null) {return null}
+    const cropTypeData = await this.rB209ArableService.getData(`/Arable/CropType/${cropTypeId}`);
     return cropTypeData?.cropTypeName ?? null;
   }
 
   async getMannerLookupNameById(service, endpoint, idValue, request) {
     const id = this.toNumericId(idValue);
-
-    if (id === null) {
-      return null;
-    }
-
+    if (id === null) {return null}
     const lookupData = await service.getData(`${endpoint}/${id}`, request);
     return lookupData?.data?.name ?? null;
   }
 
   async getMannerEstimationApplicationsWithManureTypeName(id, request) {
-    const mannerEstimationApplications = await this.getMannerEstimationApplications(
-      id,
-    );
+    const mannerEstimationApplications = await this.getMannerEstimationApplications(id);
     const lookupConfigs = this.getApplicationLookupConfigs();
-    await this.populateApplicationLookupCaches(
-      mannerEstimationApplications,
-      lookupConfigs,
-      request,
-    );
-
-    return this.mapApplicationsWithLookupNames(
-      mannerEstimationApplications,
-      lookupConfigs,
-    );
+    await this.populateApplicationLookupCaches(mannerEstimationApplications,lookupConfigs,request);
+    return this.mapApplicationsWithLookupNames(mannerEstimationApplications,lookupConfigs);
   }
 
   async getMannerEstimationApplications(mannerEstimationId) {
     return this.mannerEstimationApplicationRepository.find({
-      where: {
-        MannerEstimationID: mannerEstimationId,
-      },
-      order: {
-        ID: "ASC",
-      },
+      where: {MannerEstimationID: mannerEstimationId},
+      order: {ID: "ASC"}
     });
   }
 
@@ -420,19 +462,12 @@ class MannerEstimationsService extends BaseService {
     ];
   }
 
-  async populateApplicationLookupCaches(
-    mannerEstimationApplications,
-    lookupConfigs,
-    request,
-  ) {
+  async populateApplicationLookupCaches(mannerEstimationApplications,lookupConfigs,request) {
     for (const application of mannerEstimationApplications) {
       for (const config of lookupConfigs) {
-        await this.setLookupNameInCache(
-          config.cache,
-          application[config.sourceField],
+        await this.setLookupNameInCache(config.cache,application[config.sourceField],
           config.service,
-          config.endpoint,
-          request,
+          config.endpoint,request
         );
       }
     }
@@ -441,24 +476,18 @@ class MannerEstimationsService extends BaseService {
   mapApplicationsWithLookupNames(mannerEstimationApplications, lookupConfigs) {
     return mannerEstimationApplications.map((application) => {
       const enrichedApplication = { ...application };
-
       for (const config of lookupConfigs) {
         const sourceId = Number(application[config.sourceField]);
         enrichedApplication[config.outputField] =
           config.cache.get(sourceId) ?? null;
       }
-
       return enrichedApplication;
     });
   }
 
   async setLookupNameInCache(cache, idValue, service, endpoint, request) {
     const id = this.toNumericId(idValue);
-
-    if (id === null || cache.has(id)) {
-      return;
-    }
-
+    if (id === null || cache.has(id)) {return}
     const lookupData = await service.getData(`${endpoint}/${id}`, request);
     cache.set(id, lookupData?.data?.name ?? null);
   }
@@ -469,40 +498,25 @@ class MannerEstimationsService extends BaseService {
       mannerEstimationData.CreatedOn,
       ...mannerEstimationApplications.flatMap((application) => [
         application.ModifiedOn,
-        application.CreatedOn,
+        application.CreatedOn
       ]),
-    ]
-      .filter(Boolean)
+    ].filter(Boolean)
       .map((value) => new Date(value).getTime())
       .filter((value) => !Number.isNaN(value));
-
-    if (timestampCandidates.length === 0) {
-      return null;
-    }
-
+    if (timestampCandidates.length === 0) {return null}
     return new Date(Math.max(...timestampCandidates));
   }
 
   toNumericId(value) {
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return value;
-    }
-
+    if (typeof value === "number" && Number.isFinite(value)) {return value}
     if (typeof value === "string") {
       const parsedValue = Number(value);
       return Number.isFinite(parsedValue) ? parsedValue : null;
     }
-
     if (value && typeof value === "object") {
-      if (typeof value.id === "number") {
-        return value.id;
-      }
-
-      if (typeof value.ID === "number") {
-        return value.ID;
-      }
+      if (typeof value.id === "number") {return value.id}
+      if (typeof value.ID === "number") {return value.ID}
     }
-
     return null;
   }
 }

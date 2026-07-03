@@ -157,7 +157,19 @@ const MannerEstimationsEntity = new EntitySchema({
       nullable: false,
     },
 
-    CalculateBasedOnNutrientPrice: {
+    IsNitrogenPriceBasedOnNutrientPrice: {
+      type: "bit",
+      nullable: false,
+      default: true,
+    },
+
+     IsPotashPriceBasedOnNutrientPrice: {
+      type: "bit",
+      nullable: false,
+      default: true,
+    },
+
+     IsPhosphatePriceBasedOnNutrientPrice: {
       type: "bit",
       nullable: false,
       default: true,
