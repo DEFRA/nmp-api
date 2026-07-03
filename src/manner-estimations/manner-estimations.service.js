@@ -199,7 +199,6 @@ class MannerEstimationsService extends BaseService {
         { ID: mannerEstimationId },
         {
           ...mannerEstimationDataToUpdate,
-          ...mannerEstimationFinancialValues,
           ModifiedByID: userId,
           ModifiedOn: new Date(),
         },

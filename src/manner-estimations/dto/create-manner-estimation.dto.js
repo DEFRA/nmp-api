@@ -61,7 +61,9 @@ const CreateMannerEstimationDto = Joi.object({
 
   PotashPrice: Joi.number().precision(precisionTwo).required(),
 
-  CalculateBasedOnNutrientPrice: Joi.boolean().default(true),
+  IsPotashPriceBasedOnNutrientPrice: Joi.boolean().default(true),
+  IsPhosphatePriceBasedOnNutrientPrice: Joi.boolean().default(true),
+  IsNitrogenPriceBasedOnNutrientPrice: Joi.boolean().default(true),
 
   CreatedOn: Joi.date().iso().allow(null).default(null),
 
