@@ -163,7 +163,6 @@ class MannerEstimationsService extends BaseService {
   async updateMannerEstimationWithApplications(payload, userId, request) {
     const { MannerEstimation } = payload;
     this.validateUpdateMannerEstimationPayload(MannerEstimation);
-
     return AppDataSource.transaction(async (transactionalManager) => {
       const mannerEstimationId = MannerEstimation.ID;
       const sourceMannerEstimationApplications = await transactionalManager.find(
@@ -173,27 +172,10 @@ class MannerEstimationsService extends BaseService {
           order: { ID: "ASC" },
         },
       );
-
-      if (sourceMannerEstimationApplications.length === 0) {
-        throw new Error("Manner estimation applications not found");
-      }
-
-      const nutrientFinancialValues =
-        await this.calculateNutrientFinancialValuesByNutrientIdForUpdate(
-          MannerEstimation,
-          sourceMannerEstimationApplications[0],
-          request,
-        );
-     
+      if (sourceMannerEstimationApplications.length === 0) {throw new Error("Manner estimation applications not found")}
+      const nutrientFinancialValues = await this.calculateNutrientFinancialValuesByNutrientIdForUpdate(MannerEstimation,sourceMannerEstimationApplications[0],request);
         this.buildMannerEstimationFinancialValues(nutrientFinancialValues);
-
-      const {
-        ID,
-        CreatedByID,
-        CreatedOn,
-        ...mannerEstimationDataToUpdate
-      } = MannerEstimation;
-
+      const { ID, CreatedByID, CreatedOn, ...mannerEstimationDataToUpdate} = MannerEstimation;
       const updatedMannerEstimationResult = await transactionalManager.update(
         MannerEstimationsEntity,
         { ID: mannerEstimationId },
@@ -204,28 +186,12 @@ class MannerEstimationsService extends BaseService {
         },
       );
 
-      if (updatedMannerEstimationResult.affected !== 1) {
-        throw new Error("Manner estimation not found");
-      }
-
+      if (updatedMannerEstimationResult.affected !== 1) {throw new Error("Manner estimation not found")}
       const updatedApplications = [];
-
       for (const mannerEstimationApplication of sourceMannerEstimationApplications) {
-        const applicationNutrientFinancialValues =
-          await this.calculateNutrientFinancialValuesByNutrientIdForUpdate(
-            MannerEstimation,
-            mannerEstimationApplication,
-            request,
-          );
-        const mannerEstimationApplicationFinancialValues =
-          this.buildMannerEstimationApplicationFinancialValues(
-            applicationNutrientFinancialValues,
-          );
-
-        const {
-          ID: applicationId
-        } = mannerEstimationApplication;
-
+        const applicationNutrientFinancialValues = await this.calculateNutrientFinancialValuesByNutrientIdForUpdate(MannerEstimation,mannerEstimationApplication,request);
+        const mannerEstimationApplicationFinancialValues = this.buildMannerEstimationApplicationFinancialValues(applicationNutrientFinancialValues);
+        const {ID: applicationId} = mannerEstimationApplication;
         const updatedApplicationResult = await transactionalManager.update(
           MannerEstimationApplicationsEntity,
           { ID: applicationId, MannerEstimationID: mannerEstimationId },
@@ -235,26 +201,19 @@ class MannerEstimationsService extends BaseService {
             ModifiedOn: new Date(),
           },
         );
-
         if (updatedApplicationResult.affected !== 1) {
-          throw new Error(
-            `Manner estimation application not found for ID `,
-          );
+          throw new Error(`Manner estimation application not found for ID `);
         }
-
         const updatedApplication = await transactionalManager.findOneBy(
           MannerEstimationApplicationsEntity,
           { ID: applicationId, MannerEstimationID: mannerEstimationId },
         );
-
         updatedApplications.push(updatedApplication);
       }
-
       const updatedMannerEstimation = await transactionalManager.findOneBy(
         MannerEstimationsEntity,
         { ID: mannerEstimationId },
       );
-
       return {
         MannerEstimation: updatedMannerEstimation,
         MannerEstimationApplications: updatedApplications,
@@ -329,8 +288,8 @@ class MannerEstimationsService extends BaseService {
         case NUTRIENT_ID.NITROGEN:
           totalNutrientValue = mannerEstimationApplication.CropAvailableNCurrentCrop + mannerEstimationApplication.CropAvailableNitrogenFollowingCropYearTwo;
           break;
-        case NUTRIENT_ID.PHOSPHATE:
-          totalNutrientValue = mannerEstimationApplication.TotalP2O5;
+        case NUTRIENT_ID.PHOSPHATE: 
+         totalNutrientValue = mannerEstimationApplication.TotalP2O5;
           break;
         case NUTRIENT_ID.POTASH:
           totalNutrientValue = mannerEstimationApplication.TotalK2O;
@@ -351,12 +310,9 @@ class MannerEstimationsService extends BaseService {
 
   buildMannerEstimationFinancialValues(nutrientFinancialValuesByNutrientId) {
     const mannerEstimationValues = {};
-    const nitrogenValues =
-      nutrientFinancialValuesByNutrientId[NUTRIENT_ID.NITROGEN];
-    const phosphateValues =
-      nutrientFinancialValuesByNutrientId[NUTRIENT_ID.PHOSPHATE];
-    const potashValues =
-      nutrientFinancialValuesByNutrientId[NUTRIENT_ID.POTASH];
+    const nitrogenValues = nutrientFinancialValuesByNutrientId[NUTRIENT_ID.NITROGEN];
+    const phosphateValues = nutrientFinancialValuesByNutrientId[NUTRIENT_ID.PHOSPHATE];
+    const potashValues = nutrientFinancialValuesByNutrientId[NUTRIENT_ID.POTASH];
     if (nitrogenValues) {
       mannerEstimationValues.NitrogenProductId = nitrogenValues.productId;
       mannerEstimationValues.NitrogenProductName = nitrogenValues.productName;
@@ -378,25 +334,14 @@ class MannerEstimationsService extends BaseService {
     return mannerEstimationValues;
   }
 
-  buildMannerEstimationApplicationFinancialValues(
-    nutrientFinancialValuesByNutrientId,
-  ) {
+  buildMannerEstimationApplicationFinancialValues(nutrientFinancialValuesByNutrientId) {
     const mannerEstimationApplicationValues = {};
-    const nitrogenValues =
-      nutrientFinancialValuesByNutrientId[NUTRIENT_ID.NITROGEN];
-    const phosphateValues =
-      nutrientFinancialValuesByNutrientId[NUTRIENT_ID.PHOSPHATE];
-    const potashValues =
-      nutrientFinancialValuesByNutrientId[NUTRIENT_ID.POTASH];
-    if (nitrogenValues) {
-      mannerEstimationApplicationValues.NitrogenValue = nitrogenValues.nutrientValue;
-    }
-    if (phosphateValues) {
-      mannerEstimationApplicationValues.PhosphateValue = phosphateValues.nutrientValue;
-    }
-    if (potashValues) {
-      mannerEstimationApplicationValues.PotashValue = potashValues.nutrientValue;
-    }
+    const nitrogenValues =nutrientFinancialValuesByNutrientId[NUTRIENT_ID.NITROGEN];
+    const phosphateValues =nutrientFinancialValuesByNutrientId[NUTRIENT_ID.PHOSPHATE];
+    const potashValues = nutrientFinancialValuesByNutrientId[NUTRIENT_ID.POTASH];
+    if (nitrogenValues) {mannerEstimationApplicationValues.NitrogenValue = nitrogenValues.nutrientValue}
+    if (phosphateValues) {mannerEstimationApplicationValues.PhosphateValue = phosphateValues.nutrientValue}
+    if (potashValues) {mannerEstimationApplicationValues.PotashValue = potashValues.nutrientValue}
     return mannerEstimationApplicationValues;
   }
 
