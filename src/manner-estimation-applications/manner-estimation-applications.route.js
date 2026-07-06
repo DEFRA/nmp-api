@@ -9,7 +9,7 @@ const {
   CreateMannerEstimationApplicationDto,
 } = require("./dto/manner-estimation-applications.dto");
 const { validationFailAction } = require("../shared/validateFailSafeAction");
-
+const mannerEstimationApplicationsTag = "Manner Estimation Applications"
 module.exports = [
   {
     method: "POST",
@@ -19,7 +19,7 @@ module.exports = [
       return controller.createMannerEstimationApplication();
     },
     options: {
-      tags: ["api", "Manner Estimation Applications"],
+      tags: ["api", "mannerEstimationApplicationsTag"],
       description: "Create Manner Estimation Application",
       validate: {
         payload: CreateMannerEstimationApplicationDto,
@@ -31,7 +31,7 @@ module.exports = [
     method: "GET",
     path: "/manner-estimation-applications/{mannerEstimationId}",
     options: {
-      tags: ["api", "Manner Estimation Applications"],
+      tags: ["api", mannerEstimationApplicationsTag],
       description: "Get Manner Estimation Applications by MannerEstimationID",
       validate: {
         params: Joi.object({
@@ -49,7 +49,7 @@ module.exports = [
     method: "GET",
     path: "/manner-estimation-applications/total-n/{mannerEstimationId}",
     options: {
-      tags: ["api", "Manner Estimation Applications"],
+      tags: ["api", mannerEstimationApplicationsTag],
       description:
         "Get Total N by Manner Estimation ID and application date range",
       validate: {
@@ -73,7 +73,7 @@ module.exports = [
     method: "GET",
     path: "/manner-estimation-applications/total-n-if-green-food-compost/{mannerEstimationId}",
     options: {
-      tags: ["api", "Manner Estimation Applications"],
+      tags: ["api", mannerEstimationApplicationsTag],
       description:
         "Get Total N by Manner Estimation ID, date range and green food compost flag",
       validate: {
@@ -98,7 +98,7 @@ module.exports = [
     method: "GET",
     path: "/manner-estimation-applications/check-green-compost/{mannerEstimationId}",
     options: {
-      tags: ["api", "Manner Estimation Applications"],
+      tags: ["api", mannerEstimationApplicationsTag],
       description:
         "Check if green compost exists by Manner Estimation ID and application date range",
       validate: {
