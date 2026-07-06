@@ -5,7 +5,8 @@ const {
 } = require("../db/entity/manner-estimation-applications.entity");
 const { normalizeDateWithTime } = require("../shared/dataValidate");
 const { ManureTypeMapper } = require("../constants/manure-type-mapper");
-
+const MANNER_ESTIMATION_ID_CONDITION = "MEA.MannerEstimationID = :mannerEstimationId";
+const MANNER_APPLICATION_ID_CONDITION = "MEA.ID != :mannerApplicationId";
 class MannerEstimationApplicationsService extends BaseService {
   constructor() {
     super(MannerEstimationApplicationsEntity);
@@ -58,16 +59,14 @@ class MannerEstimationApplicationsService extends BaseService {
     const query = this.repository
       .createQueryBuilder("MEA")
       .select("SUM(MEA.N * MEA.ApplicationRate)", "totalN")
-      .where("MEA.MannerEstimationID = :mannerEstimationId", {
-        mannerEstimationId,
-      })
+      .where(MANNER_ESTIMATION_ID_CONDITION, { mannerEstimationId })
       .andWhere("MEA.ApplicationDate BETWEEN :startDate AND :endDate", {
         startDate: fromDateFormatted,
         endDate: toDateFormatted,
       });
 
     if (mannerApplicationId != null) {
-      query.andWhere("MEA.ID != :mannerApplicationId", { mannerApplicationId });
+      query.andWhere(MANNER_APPLICATION_ID_CONDITION, { mannerApplicationId });
     }
 
     const result = await query.getRawOne();
@@ -105,9 +104,7 @@ class MannerEstimationApplicationsService extends BaseService {
     const query = this.repository
       .createQueryBuilder("MEA")
       .select("SUM(MEA.N * MEA.ApplicationRate)", "totalN")
-      .where("MEA.MannerEstimationID = :mannerEstimationId", {
-        mannerEstimationId,
-      })
+      .where(MANNER_ESTIMATION_ID_CONDITION, { mannerEstimationId })
       .andWhere("MEA.ApplicationDate BETWEEN :startDate AND :endDate", {
         startDate: fromDateFormatted,
         endDate: toDateFormatted,
@@ -124,7 +121,7 @@ class MannerEstimationApplicationsService extends BaseService {
     }
 
     if (mannerApplicationId != null) {
-      query.andWhere("MEA.ID != :mannerApplicationId", { mannerApplicationId });
+      query.andWhere(MANNER_APPLICATION_ID_CONDITION, { mannerApplicationId });
     }
 
     const result = await query.getRawOne();
@@ -157,9 +154,7 @@ class MannerEstimationApplicationsService extends BaseService {
     const query = this.repository
       .createQueryBuilder("MEA")
       .select("MEA.ID", "id")
-      .where("MEA.MannerEstimationID = :mannerEstimationId", {
-        mannerEstimationId,
-      })
+      .where(MANNER_ESTIMATION_ID_CONDITION, { mannerEstimationId })
       .andWhere("MEA.ApplicationDate BETWEEN :fromDate AND :toDate", {
         fromDate: fromDateFormatted,
         toDate: toDateFormatted,
@@ -172,7 +167,7 @@ class MannerEstimationApplicationsService extends BaseService {
       });
 
     if (mannerApplicationId != null) {
-      query.andWhere("MEA.ID != :mannerApplicationId", { mannerApplicationId });
+      query.andWhere(MANNER_APPLICATION_ID_CONDITION, { mannerApplicationId });
     }
 
     const result = await query.limit(1).getRawOne();
