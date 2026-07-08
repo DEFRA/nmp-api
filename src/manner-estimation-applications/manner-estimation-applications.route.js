@@ -47,6 +47,24 @@ module.exports = [
   },
   {
     method: "GET",
+    path: "/manner-estimation-applications/manner-estimations-applications-by-id/{id}",
+    options: {
+      tags: ["api", mannerEstimationApplicationsTag],
+      description: "Get Manner Estimations Applications by ID",
+      validate: {
+        params: Joi.object({
+          id: Joi.number().integer().required(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new MannerEstimationApplicationsController(request, h);
+      return controller.getById();
+    },
+  },
+  {
+    method: "GET",
     path: "/manner-estimation-applications/total-n/{mannerEstimationId}",
     options: {
       tags: ["api", mannerEstimationApplicationsTag],

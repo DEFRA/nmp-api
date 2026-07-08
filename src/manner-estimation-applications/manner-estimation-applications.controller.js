@@ -113,6 +113,18 @@ class MannerEstimationApplicationsController {
       return this.#h.response({ error });
     }
   }
+
+  async getById() {
+    try {
+      const { id } = this.#request.params;
+      const records =
+        await this.#mannerEstimationApplicationsService.getById(id);
+      return this.#h.response(records);
+    } catch (error) {
+      console.error("Error in getById:", error);
+      return this.#h.response(error);
+    }
+  }
 }
 
 module.exports = { MannerEstimationApplicationsController };
