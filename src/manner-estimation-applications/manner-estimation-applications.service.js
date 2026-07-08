@@ -3,9 +3,16 @@ const { BaseService } = require("../base/base.service");
 const {
   MannerEstimationApplicationsEntity,
 } = require("../db/entity/manner-estimation-applications.entity");
+const {
+  MannerEstimationsEntity,
+} = require("../db/entity/manner-estimations.entity");
+const {
+  MannerEstimationsService,
+} = require("../manner-estimations/manner-estimations.service");
 const { normalizeDateWithTime } = require("../shared/dataValidate");
 const { ManureTypeMapper } = require("../constants/manure-type-mapper");
-const MANNER_ESTIMATION_ID_CONDITION = "MEA.MannerEstimationID = :mannerEstimationId";
+const MANNER_ESTIMATION_ID_CONDITION =
+  "MEA.MannerEstimationID = :mannerEstimationId";
 const MANNER_APPLICATION_ID_CONDITION = "MEA.ID != :mannerApplicationId";
 class MannerEstimationApplicationsService extends BaseService {
   constructor() {
@@ -13,6 +20,10 @@ class MannerEstimationApplicationsService extends BaseService {
     this.repository = AppDataSource.getRepository(
       MannerEstimationApplicationsEntity,
     );
+    this.mannerEstimationRepository = AppDataSource.getRepository(
+      MannerEstimationsEntity,
+    );
+    this.mannerEstimationsService = new MannerEstimationsService();
   }
 
   async createMannerEstimationApplication(payload, userId) {
@@ -23,6 +34,75 @@ class MannerEstimationApplicationsService extends BaseService {
     });
     const savedApplications = await this.repository.save(result);
     return savedApplications;
+  }
+
+  async updateMannerEstimationApplication(id, payload, userId, request) {
+    return AppDataSource.transaction(async (transactionalManager) => {
+      const existingApplication = await transactionalManager.findOne(
+        MannerEstimationApplicationsEntity,
+        {
+          where: { ID: id },
+        },
+      );
+
+      if (!existingApplication) {
+        throw new Error("Manner estimation application not found");
+      }
+
+      const mergedApplication = {
+        ...existingApplication,
+        ...payload,
+      };
+
+      const mannerEstimation = await transactionalManager.findOne(
+        MannerEstimationsEntity,
+        {
+          where: { ID: mergedApplication.MannerEstimationID },
+        },
+      );
+
+      if (!mannerEstimation) {
+        throw new Error("Manner estimation not found");
+      }
+
+      const nutrientFinancialValues =
+        await this.mannerEstimationsService.calculateNutrientFinancialValuesByNutrientIdForUpdate(
+          mannerEstimation,
+          mergedApplication,
+          request,
+        );
+
+      const mannerEstimationApplicationFinancialValues =
+        this.mannerEstimationsService.buildMannerEstimationApplicationFinancialValues(
+          nutrientFinancialValues,
+        );
+
+      const {
+        ID,
+        CreatedByID,
+        CreatedOn,
+        ModifiedByID,
+        ModifiedOn,
+        ...applicationDataToUpdate
+      } = mergedApplication;
+
+      const updatePayload = {
+        ...applicationDataToUpdate,
+        ...mannerEstimationApplicationFinancialValues,
+        ModifiedByID: userId,
+        ModifiedOn: new Date(),
+      };
+
+      await transactionalManager.update(
+        MannerEstimationApplicationsEntity,
+        { ID: id },
+        updatePayload,
+      );
+
+      return transactionalManager.findOne(MannerEstimationApplicationsEntity, {
+        where: { ID: id },
+      });
+    });
   }
 
   async getEstimationApplicationsByEstimationId(mannerEstimationId) {

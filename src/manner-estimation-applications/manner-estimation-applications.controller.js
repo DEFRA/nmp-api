@@ -32,6 +32,27 @@ class MannerEstimationApplicationsController {
     }
   }
 
+  async updateMannerEstimationApplication() {
+    try {
+      const { id } = this.#request.params;
+      const payload = this.#request.payload;
+      const userId = this.#request.userId;
+
+      const result =
+        await this.#mannerEstimationApplicationsService.updateMannerEstimationApplication(
+          id,
+          payload,
+          userId,
+          this.#request,
+        );
+
+      return this.#h.response({ MannerEstimationApplication: result });
+    } catch (error) {
+      console.error("Error updating Manner Estimation Application:", error);
+      return this.#h.response({ error });
+    }
+  }
+
   async getEstimationApplicationsByEstimationId() {
     try {
       const { mannerEstimationId } = this.#request.params;
