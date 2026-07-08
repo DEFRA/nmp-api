@@ -127,7 +127,7 @@ class RB209BaseService {
     } catch (error) {
       return {
         request: error.config?.data ?? null,
-        status: error.response?.status ?? 500,
+        status: error.response?.status ?? StatusCodeMapper.INTERNAL_SERVER_ERROR,
         data: error.response?.data ?? error.message,
         statusText: error.response?.statusText ?? "Internal Server Error",
         message: error.message || "API call failed",

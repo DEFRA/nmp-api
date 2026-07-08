@@ -39,6 +39,7 @@ const {
   recommendationOtherCropHelpers,
 } = require("./generate-recommendations-other-crop-helpers");
 const { logRecordLogs } = require("./yearly-log-service");
+const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 
 const RECOMMENDATION_LOG_ENDPOINT = "Recommendation/Recommendations";
 const SERVICE_NAME = "generate-recomendations-service.js";
@@ -48,11 +49,9 @@ class GenerateRecommendations {
     this.rB209ArableService = new RB209ArableService();
     this.rB209RecommendationService = new RB209RecommendationService();
     this.CalculatePreviousCropService = new CalculatePreviousCropService();
-    this.organicManureRepository =
-      AppDataSource.getRepository(OrganicManureEntity);
+    this.organicManureRepository = AppDataSource.getRepository(OrganicManureEntity);
     this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
-    this.RecommendationRepository =
-      AppDataSource.getRepository(RecommendationEntity);
+    this.RecommendationRepository = AppDataSource.getRepository(RecommendationEntity);
     this.grassGrowthClass = new GrassGrowthService();
     this.calculateGrassId = new CalculateGrassHistoryAndPreviousGrass();
     this.savingRecommendationService = new SavingRecommendationService();
@@ -64,70 +63,36 @@ class GenerateRecommendations {
   }
 
   async getGenerateRecommendationsContext(fieldID, Year, transactionalManager) {
-    const cropTypesList =
-      await this.rB209ArableService.getData("/Arable/CropTypes");
-    const fieldRelatedData = await this.fieldRelated.getFieldAndCountryData(
-      fieldID,
-      transactionalManager,
-    );
+    const cropTypesList = await this.rB209ArableService.getData("/Arable/CropTypes");
+    const fieldRelatedData = await this.fieldRelated.getFieldAndCountryData(fieldID,transactionalManager);
     const crops = await transactionalManager.find(CropEntity, {
       where: { FieldID: fieldID, Year: Year },
     });
-    const fertiliserData =
-      await this.totalFertiliserByField.getTotalFertiliserByFieldAndYear(
-        transactionalManager,
-        fieldID,
-        Year,
-      );
-
+    const fertiliserData =await this.totalFertiliserByField.getTotalFertiliserByFieldAndYear(transactionalManager,fieldID,Year);
     return { cropTypesList, fieldRelatedData, crops, fertiliserData };
   }
 
   async processStandardCropRecommendation(cropContext) {
-    const {
-      crop,
-      crops,
-      soilAnalysisRecords,
-      snsAnalysesData,
-      mannerOutputs,
-      latestSoilAnalysis,
-      previousCrop,
-      fieldRelatedData,
-      request,
-      transactionalManager,
-      cropTypesList,
-      fertiliserData,
-      userId,
-      cropPOfftake,
+    const {crop,crops,soilAnalysisRecords,snsAnalysesData,mannerOutputs,
+      latestSoilAnalysis,previousCrop,fieldRelatedData,
+      request,transactionalManager,
+      cropTypesList,fertiliserData,
+      userId,cropPOfftake
     } = cropContext;
-
     const analysis = { soilAnalysisRecords, snsAnalysesData };
     const singleAndMultipleCrops = { crops, crop };
-    const nutrientRecommendationnReqBody =
-      await this.buildNutrientRecommendationReqBody(
-        fieldRelatedData,
-        analysis,
-        singleAndMultipleCrops,
-        mannerOutputs,
-        request,
-        transactionalManager,
-        cropTypesList,
+    const nutrientRecommendationnReqBody =await this.buildNutrientRecommendationReqBody(fieldRelatedData,analysis,
+        singleAndMultipleCrops,mannerOutputs,
+        request,transactionalManager,
+        cropTypesList
       );
-
     let nutrientRecommendationsData;
     try {
-      const response = await this.rB209RecommendationService.postData(
-        RECOMMENDATION_LOG_ENDPOINT,
-        nutrientRecommendationnReqBody,
-      );
-
-      if (response.status === 200) {
+      const response = await this.rB209RecommendationService.postData(RECOMMENDATION_LOG_ENDPOINT,nutrientRecommendationnReqBody);
+      if (response.status === StatusCodeMapper.SUCCESS) {
         nutrientRecommendationsData = response.data;
         logRecordLogs(response, { service: SERVICE_NAME });
-        console.log(
-          "RB209 recommendation API call successful. Received data:",
-          nutrientRecommendationsData,
-        );
+        console.log("RB209 recommendation API call successful. Received data:",nutrientRecommendationsData);
       } else {
         logRecordLogs(response, { service: SERVICE_NAME });
         console.error(
@@ -136,12 +101,9 @@ class GenerateRecommendations {
           response.data,
           response.statusText,
         );
-        throw response.data;
       }
-    } catch (error) {
-      logRecordLogs(error, { service: SERVICE_NAME });
+    } catch (error) {logRecordLogs(error, { service: SERVICE_NAME });
       console.error("RB209 recommendation API call failed:", error);
-      throw error;
     }
 
     const recommendation =

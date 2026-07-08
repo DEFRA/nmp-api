@@ -1,5 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 
 const getDefaultLogDir = () => {
   const mainFile = require.main?.filename || "";
@@ -24,7 +25,7 @@ const safeJsonStringify = (value) => {
   }
 };
 
-const writeYearlyLog = (filePrefix, logType, payload = null, context = {}) => {
+const writeYearlyLog = (_filePrefix, logType, payload = null, context = {}) => {
   try {
     const now = new Date();
     const year = now.getFullYear();
@@ -82,7 +83,11 @@ const getLogTypeFromEntry = (entry) => {
     return "error";
   }
 
-  if (entry && typeof entry === "object" && Number(entry.status) >= 400) {
+  if (
+    entry &&
+    typeof entry === "object" &&
+    Number(entry.status) >= StatusCodeMapper.BAD_REQUEST
+  ) {
     return "error";
   }
 
