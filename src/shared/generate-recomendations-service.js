@@ -38,6 +38,10 @@ const {
 const {
   recommendationOtherCropHelpers,
 } = require("./generate-recommendations-other-crop-helpers");
+const { logRecordLogs } = require("./yearly-log-service");
+
+const RECOMMENDATION_LOG_ENDPOINT = "Recommendation/Recommendations";
+const SERVICE_NAME = "generate-recomendations-service.js";
 
 class GenerateRecommendations {
   constructor() {
@@ -109,15 +113,36 @@ class GenerateRecommendations {
         transactionalManager,
         cropTypesList,
       );
-    const nutrientRecommendationsData =
-      await this.rB209RecommendationService.postData(
-        "Recommendation/Recommendations",
+
+    let nutrientRecommendationsData;
+    try {
+      const response = await this.rB209RecommendationService.postData(
+        RECOMMENDATION_LOG_ENDPOINT,
         nutrientRecommendationnReqBody,
       );
-    console.log(
-      "Received nutrient recommendations data from RB209:",
-      nutrientRecommendationsData,
-    );
+
+      if (response.status === 200) {
+        nutrientRecommendationsData = response.data;
+        logRecordLogs(response, { service: SERVICE_NAME });
+        console.log(
+          "RB209 recommendation API call successful. Received data:",
+          nutrientRecommendationsData,
+        );
+      } else {
+        logRecordLogs(response, { service: SERVICE_NAME });
+        console.error(
+          "RB209 recommendation API call failed:",
+          response.status,
+          response.data,
+          response.statusText,
+        );
+        throw response.data;
+      }
+    } catch (error) {
+      logRecordLogs(error, { service: SERVICE_NAME });
+      console.error("RB209 recommendation API call failed:", error);
+      throw error;
+    }
 
     const recommendation =
       await this.savingRecommendationService.processAndSaveRecommendations(
