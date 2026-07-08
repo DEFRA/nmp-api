@@ -34,13 +34,11 @@ class MannerEstimationApplicationsController {
 
   async updateMannerEstimationApplication() {
     try {
-      const { id } = this.#request.params;
       const payload = this.#request.payload;
       const userId = this.#request.userId;
 
       const result =
         await this.#mannerEstimationApplicationsService.updateMannerEstimationApplication(
-          id,
           payload,
           userId,
           this.#request,

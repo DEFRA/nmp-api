@@ -48,7 +48,7 @@ module.exports = [
   },
   {
     method: "PUT",
-    path: "/manner-estimation-applications/{id}",
+    path: "/manner-estimation-applications",
     handler: async (request, h) => {
       const controller = new MannerEstimationApplicationsController(request, h);
       return controller.updateMannerEstimationApplication();
@@ -57,9 +57,6 @@ module.exports = [
       tags: ["api", mannerEstimationApplicationsTag],
       description: "Update Manner Estimation Application",
       validate: {
-        params: Joi.object({
-          id: Joi.number().integer().required(),
-        }),
         payload: UpdateMannerEstimationApplicationDto,
         failAction: validationFailAction,
       },

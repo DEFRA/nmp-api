@@ -101,7 +101,9 @@ const updateKeys = Object.keys(
 const UpdateMannerEstimationApplicationDto =
   CreateMannerEstimationApplicationDto.fork(updateKeys, (schema) =>
     schema.optional(),
-  );
+  ).keys({
+    ID: Joi.number().integer().required(),
+  });
 
 module.exports = {
   CreateMannerEstimationApplicationDto,

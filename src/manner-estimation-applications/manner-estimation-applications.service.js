@@ -36,12 +36,18 @@ class MannerEstimationApplicationsService extends BaseService {
     return savedApplications;
   }
 
-  async updateMannerEstimationApplication(id, payload, userId, request) {
+  async updateMannerEstimationApplication(payload, userId, request) {
     return AppDataSource.transaction(async (transactionalManager) => {
+      const applicationId = payload?.ID;
+
+      if (!applicationId) {
+        throw new Error("Manner estimation application ID is required");
+      }
+
       const existingApplication = await transactionalManager.findOne(
         MannerEstimationApplicationsEntity,
         {
-          where: { ID: id },
+          where: { ID: applicationId },
         },
       );
 
@@ -72,9 +78,18 @@ class MannerEstimationApplicationsService extends BaseService {
           request,
         );
 
+      const nutrientValuesOnlyByNutrientId = Object.fromEntries(
+        Object.entries(nutrientFinancialValues).map(([nutrientId, value]) => [
+          nutrientId,
+          {
+            nutrientValue: value?.nutrientValue,
+          },
+        ]),
+      );
+
       const mannerEstimationApplicationFinancialValues =
         this.mannerEstimationsService.buildMannerEstimationApplicationFinancialValues(
-          nutrientFinancialValues,
+          nutrientValuesOnlyByNutrientId,
         );
 
       const {
@@ -95,12 +110,12 @@ class MannerEstimationApplicationsService extends BaseService {
 
       await transactionalManager.update(
         MannerEstimationApplicationsEntity,
-        { ID: id },
+        { ID: applicationId },
         updatePayload,
       );
 
       return transactionalManager.findOne(MannerEstimationApplicationsEntity, {
-        where: { ID: id },
+        where: { ID: applicationId },
       });
     });
   }
