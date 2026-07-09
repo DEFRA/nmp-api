@@ -32,6 +32,25 @@ class MannerEstimationApplicationsController {
     }
   }
 
+  async updateMannerEstimationApplication() {
+    try {
+      const payload = this.#request.payload;
+      const userId = this.#request.userId;
+
+      const result =
+        await this.#mannerEstimationApplicationsService.updateMannerEstimationApplication(
+          payload,
+          userId,
+          this.#request,
+        );
+
+      return this.#h.response({ MannerEstimationApplication: result });
+    } catch (error) {
+      console.error("Error updating Manner Estimation Application:", error);
+      return this.#h.response({ error });
+    }
+  }
+
   async getEstimationApplicationsByEstimationId() {
     try {
       const { mannerEstimationId } = this.#request.params;
@@ -111,6 +130,18 @@ class MannerEstimationApplicationsController {
         error,
       );
       return this.#h.response({ error });
+    }
+  }
+
+  async getById() {
+    try {
+      const { id } = this.#request.params;
+      const records =
+        await this.#mannerEstimationApplicationsService.getById(id);
+      return this.#h.response(records);
+    } catch (error) {
+      console.error("Error in getById:", error);
+      return this.#h.response(error);
     }
   }
 }

@@ -65,7 +65,7 @@ const CreateMannerEstimationApplicationDto = Joi.object({
 
   CropAvailableSO3: Joi.number().integer().allow(null),
   TotalMgO: Joi.number().integer().required(),
- 
+
   TotalK2O: Joi.number().integer().required(),
 
   CropAvailableK2O: Joi.number().integer().required(),
@@ -95,6 +95,17 @@ const CreateMannerEstimationApplicationDto = Joi.object({
   ModifiedByID: Joi.number().integer().allow(null).default(null),
 });
 
+const updateKeys = Object.keys(
+  CreateMannerEstimationApplicationDto.describe().keys,
+);
+const UpdateMannerEstimationApplicationDto =
+  CreateMannerEstimationApplicationDto.fork(updateKeys, (schema) =>
+    schema.optional(),
+  ).keys({
+    ID: Joi.number().integer().required(),
+  });
+
 module.exports = {
   CreateMannerEstimationApplicationDto,
+  UpdateMannerEstimationApplicationDto,
 };

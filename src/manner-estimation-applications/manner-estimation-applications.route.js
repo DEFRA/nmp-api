@@ -7,9 +7,10 @@ const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 const {
   CreateMannerEstimationApplicationDto,
+  UpdateMannerEstimationApplicationDto,
 } = require("./dto/manner-estimation-applications.dto");
 const { validationFailAction } = require("../shared/validateFailSafeAction");
-const mannerEstimationApplicationsTag = "Manner Estimation Applications"
+const mannerEstimationApplicationsTag = "Manner Estimation Applications";
 module.exports = [
   {
     method: "POST",
@@ -43,6 +44,40 @@ module.exports = [
     handler: async (request, h) => {
       const controller = new MannerEstimationApplicationsController(request, h);
       return controller.getEstimationApplicationsByEstimationId();
+    },
+  },
+  {
+    method: "PUT",
+    path: "/manner-estimation-applications",
+    handler: async (request, h) => {
+      const controller = new MannerEstimationApplicationsController(request, h);
+      return controller.updateMannerEstimationApplication();
+    },
+    options: {
+      tags: ["api", mannerEstimationApplicationsTag],
+      description: "Update Manner Estimation Application",
+      validate: {
+        payload: UpdateMannerEstimationApplicationDto,
+        failAction: validationFailAction,
+      },
+    },
+  },
+  {
+    method: "GET",
+    path: "/manner-estimation-applications/manner-estimations-applications-by-id/{id}",
+    options: {
+      tags: ["api", mannerEstimationApplicationsTag],
+      description: "Get Manner Estimations Applications by ID",
+      validate: {
+        params: Joi.object({
+          id: Joi.number().integer().required(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new MannerEstimationApplicationsController(request, h);
+      return controller.getById();
     },
   },
   {
