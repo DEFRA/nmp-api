@@ -14,14 +14,19 @@ const getDefaultLogDir = () => {
 };
 
 const DEFAULT_LOG_DIR = getDefaultLogDir();
+const LOG_JSON_INDENT = 2;
 
-const safeJsonStringify = (value) => {
+const safeJsonStringify = (value, space = 0) => {
   try {
-    return JSON.stringify(value);
+    return JSON.stringify(value, null, space);
   } catch (error) {
-    return JSON.stringify({
-      stringifyError: error?.message || "Unable to stringify payload",
-    });
+    return JSON.stringify(
+      {
+        stringifyError: error?.message || "Unable to stringify payload",
+      },
+      null,
+      space,
+    );
   }
 };
 
@@ -34,6 +39,12 @@ const writeYearlyLog = (_filePrefix, logType, payload = null, context = {}) => {
     fs.mkdirSync(DEFAULT_LOG_DIR, { recursive: true });
 
     const isErrorLog = (logType || "success") === "error";
+    const errorDetails = payload?.response;
+    const normalizedErrorBody =
+      errorDetails && typeof errorDetails === "object"
+        ? { ...errorDetails }
+        : { message: errorDetails ?? null };
+
     const entry = {
       timestamp: now.toISOString(),
       level: logType || "success",
@@ -41,13 +52,17 @@ const writeYearlyLog = (_filePrefix, logType, payload = null, context = {}) => {
       payload: payload?.request ?? null,
       error: isErrorLog
         ? {
-            response: payload?.response ?? null,
+            ...normalizedErrorBody,
             stack: payload?.stack ?? null,
           }
         : null,
     };
 
-    fs.appendFileSync(logFilePath, `${safeJsonStringify(entry)}\n`, "utf8");
+    fs.appendFileSync(
+      logFilePath,
+      `${safeJsonStringify(entry, LOG_JSON_INDENT)}\n`,
+      "utf8",
+    );
   } catch (loggingError) {
     console.error("Failed to write yearly log:", loggingError);
   }
