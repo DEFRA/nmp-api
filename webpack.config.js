@@ -31,7 +31,6 @@ module.exports = {
       patterns: [
         { from: "./package.json", to: "." }, // Copy package.json to dist
         { from: "./web.config", to: "." }, // Copy .env to dist
-        { from: "./logs", to: "./logs", noErrorOnMissing: true },
         //{ from: "./deploy.bat", to: "." }, // Copy .env to dist
         //{ from: "./.deployment", to: "." }, // Copy .env to dist
       ],
