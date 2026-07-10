@@ -9,18 +9,18 @@ const {
   CreateMannerEstimationApplicationDto,
   UpdateMannerEstimationApplicationDto,
 } = require("./dto/manner-estimation-applications.dto");
-const { validationFailAction } = require("../shared/validateFailSafeAction");
 const mannerEstimationApplicationsTag = "Manner Estimation Applications";
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 module.exports = [
   {
     method: "POST",
-    path: "/manner-estimation-applications",
+    path: "/manner-estimation-applications/klkkggkn",
     handler: async (request, h) => {
       const controller = new MannerEstimationApplicationsController(request, h);
       return controller.createMannerEstimationApplication();
     },
     options: {
-      tags: ["api", "mannerEstimationApplicationsTag"],
+      tags: ["api", mannerEstimationApplicationsTag],
       description: "Create Manner Estimation Application",
       validate: {
         payload: CreateMannerEstimationApplicationDto,
