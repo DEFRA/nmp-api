@@ -91,7 +91,6 @@ class GenerateRecommendations {
       const response = await this.rB209RecommendationService.postData(RECOMMENDATION_LOG_ENDPOINT,nutrientRecommendationnReqBody);
       if (response.status === StatusCodeMapper.SUCCESS) {
         nutrientRecommendationsData = response.data;
-        logRecordLogs(response, { service: SERVICE_NAME });
         console.log("RB209 recommendation API call successful. Received data:",nutrientRecommendationsData);
       } else {
         logRecordLogs(response, { service: SERVICE_NAME });
