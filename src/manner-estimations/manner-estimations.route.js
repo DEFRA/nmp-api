@@ -135,7 +135,8 @@ module.exports = [
       },
     },
     handler: async (request, h) => {
-      return getController(request, h).deleteMannerEstimationByIds();
+      const controller = new MannerEstimationsController(request, h);
+      return controller.deleteMannerEstimationsByIds();
     },
   },
   {
