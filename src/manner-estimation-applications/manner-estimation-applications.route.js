@@ -136,17 +136,15 @@ module.exports = [
       tags: ["api", mannerEstimationApplicationsTag],
       description: "Delete Manner Estimation Application by ID",
       validate: {
-       params: Joi.object({
+        params: Joi.object({
           id: Joi.number().integer().required(),
         }),
         failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
-      return getController(
-        request,
-        h,
-      ).deleteMannerEstimationApplicationById();
+      const controller = new MannerEstimationApplicationsController(request, h);
+      return controller.deleteMannerEstimationApplicationById();
     },
   },
   {

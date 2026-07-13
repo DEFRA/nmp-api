@@ -136,7 +136,9 @@ class MannerEstimationApplicationsController {
   async deleteMannerEstimationApplicationById() {
     const { id } = this.#request.params;
     try {
-      await this.#mannerEstimationApplicationsService.deleteMannerEstimationApplicationById(id);
+      await this.#mannerEstimationApplicationsService.deleteMannerEstimationApplication(
+        id
+      );
       return this.#h.response({
         message: "Manner estimation application deleted successfully.",
       });
