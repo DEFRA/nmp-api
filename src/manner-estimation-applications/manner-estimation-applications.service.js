@@ -223,6 +223,17 @@ class MannerEstimationApplicationsService extends BaseService {
     return Number(result?.totalN ?? 0);
   }
 
+  async deleteMannerEstimationApplication(
+    mannerEstimationApplicationId
+  ) {
+    return await AppDataSource.transaction(async (manager) => {
+      return await manager.query(
+        "EXEC dbo.spMannerEstimationApplications_Delete @MannerEstimationApplicationID = @0",
+        [mannerEstimationApplicationId],
+      );
+    });
+  }
+
   async checkMannerGreenCompostExistanceByDateRange(
     mannerEstimationId,
     dateFrom,

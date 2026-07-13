@@ -14,7 +14,7 @@ const { validationFailAction } = require("../shared/validateFailSafeAction");
 module.exports = [
   {
     method: "POST",
-    path: "/manner-estimation-applications/klkkggkn",
+    path: "/manner-estimation-applications",
     handler: async (request, h) => {
       const controller = new MannerEstimationApplicationsController(request, h);
       return controller.createMannerEstimationApplication();
@@ -127,6 +127,26 @@ module.exports = [
     handler: async (request, h) => {
       const controller = new MannerEstimationApplicationsController(request, h);
       return controller.fetchTotalNBasedByMannerEstimationIdAppDateAndIsGreenCompost();
+    },
+  },
+  {
+    method: "DELETE",
+    path: "/manner-estimation-applications/{id}",
+    options: {
+      tags: ["api", mannerEstimationApplicationsTag],
+      description: "Delete Manner Estimation Application by ID",
+      validate: {
+       params: Joi.object({
+          id: Joi.number().integer().required(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      return getController(
+        request,
+        h,
+      ).deleteMannerEstimationApplicationById();
     },
   },
   {

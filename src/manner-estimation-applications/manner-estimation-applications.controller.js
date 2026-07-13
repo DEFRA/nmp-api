@@ -133,6 +133,21 @@ class MannerEstimationApplicationsController {
     }
   }
 
+  async deleteMannerEstimationApplicationById() {
+    const { id } = this.#request.params;
+    try {
+      await this.#mannerEstimationApplicationsService.deleteMannerEstimationApplicationById(id);
+      return this.#h.response({
+        message: "Manner estimation application deleted successfully.",
+      });
+    } catch (error) {
+      console.error("Error in deleting manner estimation application:", error);
+      return this.#h.response({
+        error: error.message,
+      });
+    }
+  }
+
   async getById() {
     try {
       const { id } = this.#request.params;
