@@ -48,7 +48,7 @@ module.exports = [
       const controller = new RB209GrassController(request, h);
       return controller.getGrassDefoliationSequenceByDefoliationSequenceId(
         request,
-        h
+        h,
       );
     },
     options: {
@@ -70,7 +70,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -116,7 +116,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -147,7 +147,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -179,7 +179,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -211,7 +211,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -241,7 +241,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -271,7 +271,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -305,7 +305,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -322,7 +322,7 @@ module.exports = [
       const controller = new RB209GrassController(request, h);
       return controller.getGrassGrowthClassBySoilTypeIdAndRainfallAndAltitudeAndChalk(
         request,
-        h
+        h,
       );
     },
     options: {
@@ -344,7 +344,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -416,7 +416,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -450,7 +450,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -478,7 +478,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -512,7 +512,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -546,7 +546,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
@@ -574,7 +574,42 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
+            )
+            .code(400)
+            .takeover();
+        },
+      },
+    },
+  },
+
+  {
+    method: "GET",
+    path: "/vendors/rb209/Grass/SwardTypesByCountryId/{countryId}",
+    handler: async (request, h) => {
+      const controller = new RB209GrassController(request, h);
+      return controller.getSwardTypesFilterByCountryId(request, h);
+    },
+    options: {
+      tags: ["api", "RB209 Grass"],
+      description:
+        "The list of different sward types available for grass fields By CountryId.",
+      validate: {
+        params: Joi.object({
+          countryId: Joi.number()
+            .integer()
+            .required()
+            .description("The id of the country to filter on."),
+        }),
+        failAction: (request, h, err) => {
+          return h
+            .response(
+              formatErrorResponse({
+                source: {
+                  error: err,
+                },
+                request,
+              }),
             )
             .code(400)
             .takeover();
@@ -646,7 +681,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(400)
             .takeover();
