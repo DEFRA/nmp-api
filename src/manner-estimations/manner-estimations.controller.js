@@ -106,6 +106,26 @@ class MannerEstimationsController {
     }
   }
 
+  async deleteMannerEstimationsByIds() {
+    const { mannerEstimationIds } = this.#request.payload;
+    const userId = this.#request.userId;
+    try {
+      await this.#mannerEstimationsService.deleteMannerEstimations(
+        mannerEstimationIds,
+        userId
+      );
+      return this.#h.response({
+        message: "Manner estimations deleted successfully.",
+      });
+    } catch (error) {
+      console.error("Error in deleting manner estimations:", error);
+      return this.#h
+        .response({
+          error: error.message,
+        })
+    }
+  }
+
   async checkMannerEstimationExists() {
     try {
       const { organisationId, name } = this.#request.query;

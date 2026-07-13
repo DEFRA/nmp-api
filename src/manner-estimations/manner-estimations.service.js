@@ -30,7 +30,9 @@ class MannerEstimationsService extends BaseService {
   constructor() {
     super(MannerEstimationsEntity);
     this.repository = AppDataSource.getRepository(MannerEstimationsEntity);
-    this.mannerEstimationApplicationRepository = AppDataSource.getRepository(MannerEstimationApplicationsEntity);
+    this.mannerEstimationApplicationRepository = AppDataSource.getRepository(
+      MannerEstimationApplicationsEntity,
+    );
     this.countryRepository = AppDataSource.getRepository(CountryEntity);
     this.nutrientsService = new MannerApiNutrientsService();
     this.nutrientsProductService = new MannerApiNutrientsProductService();
@@ -39,54 +41,110 @@ class MannerEstimationsService extends BaseService {
     this.rB209ArableService = new RB209ArableService();
     this.MannerCountriesService = new MannerCountriesService();
     this.MannerApplicationMethodService = new MannerApplicationMethodService();
-    this.MannerIncorporationMethodService =new MannerIncorporationMethodService();
-    this.MannerIncorporationDelayService =new MannerIncorporationDelayService();
+    this.MannerIncorporationMethodService =
+      new MannerIncorporationMethodService();
+    this.MannerIncorporationDelayService =
+      new MannerIncorporationDelayService();
     this.MannerMoistureTypesService = new MannerMoistureTypesService();
     this.MannerWindspeedService = new MannerWindspeedService();
     this.MannerRainTypesService = new MannerRainTypesService();
   }
 
   async copyMannerEstimation(payload, userId) {
-    const sourceMannerEstimationId = payload?.ID,copiedMannerEstimationName = payload?.Name;
-    this.validateCopyMannerEstimationPayload(sourceMannerEstimationId,copiedMannerEstimationName);
+    const sourceMannerEstimationId = payload?.ID,
+      copiedMannerEstimationName = payload?.Name;
+    this.validateCopyMannerEstimationPayload(
+      sourceMannerEstimationId,
+      copiedMannerEstimationName,
+    );
     return AppDataSource.transaction(async (transactionalManager) => {
-      const sourceMannerEstimation = await this.getSourceMannerEstimation(transactionalManager,sourceMannerEstimationId);
-      const savedCopiedMannerEstimation =await this.createCopiedMannerEstimation(transactionalManager,sourceMannerEstimation,copiedMannerEstimationName,userId);
-      const savedCopiedApplications = await this.copyMannerEstimationApplications(transactionalManager,sourceMannerEstimationId,savedCopiedMannerEstimation.ID,userId);
-      return this.buildCopyMannerEstimationResponse(savedCopiedMannerEstimation.ID,savedCopiedApplications);
+      const sourceMannerEstimation = await this.getSourceMannerEstimation(
+        transactionalManager,
+        sourceMannerEstimationId,
+      );
+      const savedCopiedMannerEstimation =
+        await this.createCopiedMannerEstimation(
+          transactionalManager,
+          sourceMannerEstimation,
+          copiedMannerEstimationName,
+          userId,
+        );
+      const savedCopiedApplications =
+        await this.copyMannerEstimationApplications(
+          transactionalManager,
+          sourceMannerEstimationId,
+          savedCopiedMannerEstimation.ID,
+          userId,
+        );
+      return this.buildCopyMannerEstimationResponse(
+        savedCopiedMannerEstimation.ID,
+        savedCopiedApplications,
+      );
     });
   }
 
   validateCopyMannerEstimationPayload(sourceMannerEstimationId, copiedName) {
-    if (!sourceMannerEstimationId) {throw new Error("ID is required")}
-    if (!copiedName) {throw new Error("Name is required")}
+    if (!sourceMannerEstimationId) {
+      throw new Error("ID is required");
+    }
+    if (!copiedName) {
+      throw new Error("Name is required");
+    }
   }
 
-  async getSourceMannerEstimation(transactionalManager,sourceMannerEstimationId) {
+  async getSourceMannerEstimation(
+    transactionalManager,
+    sourceMannerEstimationId,
+  ) {
     const sourceMannerEstimation = await transactionalManager.findOne(
       MannerEstimationsEntity,
       { where: { ID: sourceMannerEstimationId } },
     );
-    if (!sourceMannerEstimation) {throw new Error("Manner estimation not found") }
+    if (!sourceMannerEstimation) {
+      throw new Error("Manner estimation not found");
+    }
     return sourceMannerEstimation;
   }
 
-  async createCopiedMannerEstimation(transactionalManager,sourceMannerEstimation,copiedMannerEstimationName,userId,
+  async createCopiedMannerEstimation(
+    transactionalManager,
+    sourceMannerEstimation,
+    copiedMannerEstimationName,
+    userId,
   ) {
-    const {ID,CreatedOn,CreatedByID,ModifiedOn,ModifiedByID,...mannerEstimationDataToCopy} = sourceMannerEstimation;
+    const {
+      ID,
+      CreatedOn,
+      CreatedByID,
+      ModifiedOn,
+      ModifiedByID,
+      ...mannerEstimationDataToCopy
+    } = sourceMannerEstimation;
     const copiedMannerEstimationEntity = transactionalManager.create(
       MannerEstimationsEntity,
-      {...mannerEstimationDataToCopy,ID: null,
+      {
+        ...mannerEstimationDataToCopy,
+        ID: null,
         Name: copiedMannerEstimationName,
-        CreatedByID: userId,CreatedOn: new Date(),
-        ModifiedOn: null,ModifiedByID: null
+        CreatedByID: userId,
+        CreatedOn: new Date(),
+        ModifiedOn: null,
+        ModifiedByID: null,
       },
     );
 
-    return transactionalManager.save(MannerEstimationsEntity,copiedMannerEstimationEntity);
+    return transactionalManager.save(
+      MannerEstimationsEntity,
+      copiedMannerEstimationEntity,
+    );
   }
 
-  async copyMannerEstimationApplications(transactionalManager,sourceMannerEstimationId,copiedMannerEstimationId,userId) {
+  async copyMannerEstimationApplications(
+    transactionalManager,
+    sourceMannerEstimationId,
+    copiedMannerEstimationId,
+    userId,
+  ) {
     const sourceApplications = await transactionalManager.find(
       MannerEstimationApplicationsEntity,
       {
@@ -98,16 +156,36 @@ class MannerEstimationsService extends BaseService {
 
     for (const sourceApplication of sourceApplications) {
       const copiedApplicationEntity = this.buildCopiedApplicationEntity(
-        transactionalManager,sourceApplication,
-        copiedMannerEstimationId,userId
+        transactionalManager,
+        sourceApplication,
+        copiedMannerEstimationId,
+        userId,
       );
-      savedCopiedApplications.push(await transactionalManager.save(MannerEstimationApplicationsEntity,copiedApplicationEntity));
+      savedCopiedApplications.push(
+        await transactionalManager.save(
+          MannerEstimationApplicationsEntity,
+          copiedApplicationEntity,
+        ),
+      );
     }
     return savedCopiedApplications;
   }
 
-  buildCopiedApplicationEntity(transactionalManager,sourceApplication,copiedMannerEstimationId,userId) {
-    const {ID,MannerEstimationID,CreatedOn,CreatedByID,ModifiedOn,ModifiedByID,...applicationDataToCopy} = sourceApplication;
+  buildCopiedApplicationEntity(
+    transactionalManager,
+    sourceApplication,
+    copiedMannerEstimationId,
+    userId,
+  ) {
+    const {
+      ID,
+      MannerEstimationID,
+      CreatedOn,
+      CreatedByID,
+      ModifiedOn,
+      ModifiedByID,
+      ...applicationDataToCopy
+    } = sourceApplication;
     return transactionalManager.create(MannerEstimationApplicationsEntity, {
       ...applicationDataToCopy,
       ID: null,
@@ -115,26 +193,48 @@ class MannerEstimationsService extends BaseService {
       CreatedByID: userId,
       CreatedOn: new Date(),
       ModifiedOn: null,
-      ModifiedByID: null
+      ModifiedByID: null,
     });
   }
 
-  buildCopyMannerEstimationResponse(mannerEstimationId,savedCopiedApplications) {
+  buildCopyMannerEstimationResponse(
+    mannerEstimationId,
+    savedCopiedApplications,
+  ) {
     return {
-      message: "copied successfully",mannerEstimationId,
-      copiedApplicationsCount: savedCopiedApplications.length,savedCopiedApplications
+      message: "copied successfully",
+      mannerEstimationId,
+      copiedApplicationsCount: savedCopiedApplications.length,
+      savedCopiedApplications,
     };
   }
 
   async createMannerEstimation(payload, userId, request) {
     const { MannerEstimation, MannerEstimationApplication } = payload;
     return AppDataSource.transaction(async (transactionalManager) => {
-      const nutrientProductsData = await this.nutrientsProductService.getData("/nutrient-products",request);
-      const nutrientProducts = nutrientProductsData.data.filter((p) => p.isNutrientDefaultProduct === true);
-      const nutrients = await this.nutrientsService.getData("/nutrients",request);
-      const nutrientFinancialValues =this.calculateNutrientFinancialValuesByNutrientId(nutrientProducts,nutrients,MannerEstimationApplication);
-      const mannerEstimationFinancialValues = this.buildMannerEstimationFinancialValues(nutrientFinancialValues);
-      const mannerEstimationApplicationFinancialValues = this.buildMannerEstimationApplicationFinancialValues(nutrientFinancialValues);
+      const nutrientProductsData = await this.nutrientsProductService.getData(
+        "/nutrient-products",
+        request,
+      );
+      const nutrientProducts = nutrientProductsData.data.filter(
+        (p) => p.isNutrientDefaultProduct === true,
+      );
+      const nutrients = await this.nutrientsService.getData(
+        "/nutrients",
+        request,
+      );
+      const nutrientFinancialValues =
+        this.calculateNutrientFinancialValuesByNutrientId(
+          nutrientProducts,
+          nutrients,
+          MannerEstimationApplication,
+        );
+      const mannerEstimationFinancialValues =
+        this.buildMannerEstimationFinancialValues(nutrientFinancialValues);
+      const mannerEstimationApplicationFinancialValues =
+        this.buildMannerEstimationApplicationFinancialValues(
+          nutrientFinancialValues,
+        );
       const mannerEstimationEntity = transactionalManager.create(
         MannerEstimationsEntity,
         {
@@ -144,7 +244,10 @@ class MannerEstimationsService extends BaseService {
           CreatedOn: new Date(),
         },
       );
-      const savedMannerEstimation = await transactionalManager.save(MannerEstimationsEntity,mannerEstimationEntity);
+      const savedMannerEstimation = await transactionalManager.save(
+        MannerEstimationsEntity,
+        mannerEstimationEntity,
+      );
       const mannerEstimationApplicationEntity = transactionalManager.create(
         MannerEstimationApplicationsEntity,
         {
@@ -155,7 +258,10 @@ class MannerEstimationsService extends BaseService {
           CreatedOn: new Date(),
         },
       );
-      const savedMannerEstimationApplication = await transactionalManager.save(MannerEstimationApplicationsEntity,mannerEstimationApplicationEntity);
+      const savedMannerEstimationApplication = await transactionalManager.save(
+        MannerEstimationApplicationsEntity,
+        mannerEstimationApplicationEntity,
+      );
       return savedMannerEstimationApplication;
     });
   }
@@ -165,17 +271,23 @@ class MannerEstimationsService extends BaseService {
     this.validateUpdateMannerEstimationPayload(MannerEstimation);
     return AppDataSource.transaction(async (transactionalManager) => {
       const mannerEstimationId = MannerEstimation.ID;
-      const sourceMannerEstimationApplications = await transactionalManager.find(
-        MannerEstimationApplicationsEntity,
-        {
+      const sourceMannerEstimationApplications =
+        await transactionalManager.find(MannerEstimationApplicationsEntity, {
           where: { MannerEstimationID: mannerEstimationId },
           order: { ID: "ASC" },
-        },
-      );
-      if (sourceMannerEstimationApplications.length === 0) {throw new Error("Manner estimation applications not found")}
-      const nutrientFinancialValues = await this.calculateNutrientFinancialValuesByNutrientIdForUpdate(MannerEstimation,sourceMannerEstimationApplications[0],request);
-        this.buildMannerEstimationFinancialValues(nutrientFinancialValues);
-      const { ID, CreatedByID, CreatedOn, ...mannerEstimationDataToUpdate} = MannerEstimation;
+        });
+      if (sourceMannerEstimationApplications.length === 0) {
+        throw new Error("Manner estimation applications not found");
+      }
+      const nutrientFinancialValues =
+        await this.calculateNutrientFinancialValuesByNutrientIdForUpdate(
+          MannerEstimation,
+          sourceMannerEstimationApplications[0],
+          request,
+        );
+      this.buildMannerEstimationFinancialValues(nutrientFinancialValues);
+      const { ID, CreatedByID, CreatedOn, ...mannerEstimationDataToUpdate } =
+        MannerEstimation;
       const updatedMannerEstimationResult = await transactionalManager.update(
         MannerEstimationsEntity,
         { ID: mannerEstimationId },
@@ -186,12 +298,22 @@ class MannerEstimationsService extends BaseService {
         },
       );
 
-      if (updatedMannerEstimationResult.affected !== 1) {throw new Error("Manner estimation not found")}
+      if (updatedMannerEstimationResult.affected !== 1) {
+        throw new Error("Manner estimation not found");
+      }
       const updatedApplications = [];
       for (const mannerEstimationApplication of sourceMannerEstimationApplications) {
-        const applicationNutrientFinancialValues = await this.calculateNutrientFinancialValuesByNutrientIdForUpdate(MannerEstimation,mannerEstimationApplication,request);
-        const mannerEstimationApplicationFinancialValues = this.buildMannerEstimationApplicationFinancialValues(applicationNutrientFinancialValues);
-        const {ID: applicationId} = mannerEstimationApplication;
+        const applicationNutrientFinancialValues =
+          await this.calculateNutrientFinancialValuesByNutrientIdForUpdate(
+            MannerEstimation,
+            mannerEstimationApplication,
+            request,
+          );
+        const mannerEstimationApplicationFinancialValues =
+          this.buildMannerEstimationApplicationFinancialValues(
+            applicationNutrientFinancialValues,
+          );
+        const { ID: applicationId } = mannerEstimationApplication;
         const updatedApplicationResult = await transactionalManager.update(
           MannerEstimationApplicationsEntity,
           { ID: applicationId, MannerEstimationID: mannerEstimationId },
@@ -222,14 +344,20 @@ class MannerEstimationsService extends BaseService {
   }
 
   validateUpdateMannerEstimationPayload(mannerEstimation) {
-    if (!mannerEstimation?.ID) {throw new Error("MannerEstimation ID is required")}
+    if (!mannerEstimation?.ID) {
+      throw new Error("MannerEstimation ID is required");
+    }
   }
 
-  async calculateNutrientFinancialValuesByNutrientIdForUpdate(mannerEstimation,mannerEstimationApplication,request) {
+  async calculateNutrientFinancialValuesByNutrientIdForUpdate(
+    mannerEstimation,
+    mannerEstimationApplication,
+    request,
+  ) {
     const nutrientConfigById = {
       [NUTRIENT_ID.NITROGEN]: {
         productId: mannerEstimation.NitrogenProductId,
-        price: mannerEstimation.NitrogenPrice
+        price: mannerEstimation.NitrogenPrice,
       },
       [NUTRIENT_ID.PHOSPHATE]: {
         productId: mannerEstimation.PhosphateProductId,
@@ -243,10 +371,18 @@ class MannerEstimationsService extends BaseService {
     const nutrientFinancialValuesByNutrientId = {};
     for (const nutrientId of Object.values(NUTRIENT_ID)) {
       const nutrientConfig = nutrientConfigById[nutrientId];
-      if (!nutrientConfig?.productId || nutrientConfig.price == null) {continue}
-      const nutrientPercentageData = await this.nutrientsProductService.getData(`/nutrient-products/${nutrientConfig.productId}`,request);
-      const nutrientProduct = nutrientPercentageData?.data ?? nutrientPercentageData;
-      const nutrientPercentage = Number(nutrientProduct?.nutrientPercentage ?? 0);
+      if (!nutrientConfig?.productId || nutrientConfig.price == null) {
+        continue;
+      }
+      const nutrientPercentageData = await this.nutrientsProductService.getData(
+        `/nutrient-products/${nutrientConfig.productId}`,
+        request,
+      );
+      const nutrientProduct =
+        nutrientPercentageData?.data ?? nutrientPercentageData;
+      const nutrientPercentage = Number(
+        nutrientProduct?.nutrientPercentage ?? 0,
+      );
       const selectedPrice = Number(nutrientConfig.price);
       const cal1 = nutrientPercentage / 100;
       const cal2 = cal1 * 1000;
@@ -254,11 +390,15 @@ class MannerEstimationsService extends BaseService {
       let totalNutrientValue = 0;
       switch (nutrientId) {
         case NUTRIENT_ID.NITROGEN:
-          totalNutrientValue = mannerEstimationApplication.CropAvailableNCurrentCrop + mannerEstimationApplication.CropAvailableNitrogenFollowingCropYearTwo;
+          totalNutrientValue =
+            mannerEstimationApplication.CropAvailableNCurrentCrop +
+            mannerEstimationApplication.CropAvailableNitrogenFollowingCropYearTwo;
           break;
-        case NUTRIENT_ID.PHOSPHATE:totalNutrientValue = mannerEstimationApplication.TotalP2O5;
+        case NUTRIENT_ID.PHOSPHATE:
+          totalNutrientValue = mannerEstimationApplication.TotalP2O5;
           break;
-        case NUTRIENT_ID.POTASH:totalNutrientValue = mannerEstimationApplication.TotalK2O;
+        case NUTRIENT_ID.POTASH:
+          totalNutrientValue = mannerEstimationApplication.TotalK2O;
           break;
         default:
           break;
@@ -274,11 +414,17 @@ class MannerEstimationsService extends BaseService {
     return nutrientFinancialValuesByNutrientId;
   }
 
-  calculateNutrientFinancialValuesByNutrientId(nutrientProducts,nutrients,mannerEstimationApplication) {
+  calculateNutrientFinancialValuesByNutrientId(
+    nutrientProducts,
+    nutrients,
+    mannerEstimationApplication,
+  ) {
     const nutrientFinancialValuesByNutrientId = {};
     for (const product of nutrientProducts) {
       const nutrient = nutrients.data.find((n) => n.id === product.nutrientID);
-      if (!nutrient) {continue}
+      if (!nutrient) {
+        continue;
+      }
       const nutrientPercentage = product.nutrientPercentage;
       const cal1 = nutrientPercentage / 100;
       const cal2 = cal1 * 1000;
@@ -286,10 +432,12 @@ class MannerEstimationsService extends BaseService {
       let totalNutrientValue = 0;
       switch (nutrient.id) {
         case NUTRIENT_ID.NITROGEN:
-          totalNutrientValue = mannerEstimationApplication.CropAvailableNCurrentCrop + mannerEstimationApplication.CropAvailableNitrogenFollowingCropYearTwo;
+          totalNutrientValue =
+            mannerEstimationApplication.CropAvailableNCurrentCrop +
+            mannerEstimationApplication.CropAvailableNitrogenFollowingCropYearTwo;
           break;
-        case NUTRIENT_ID.PHOSPHATE: 
-         totalNutrientValue = mannerEstimationApplication.TotalP2O5;
+        case NUTRIENT_ID.PHOSPHATE:
+          totalNutrientValue = mannerEstimationApplication.TotalP2O5;
           break;
         case NUTRIENT_ID.POTASH:
           totalNutrientValue = mannerEstimationApplication.TotalK2O;
@@ -310,9 +458,12 @@ class MannerEstimationsService extends BaseService {
 
   buildMannerEstimationFinancialValues(nutrientFinancialValuesByNutrientId) {
     const mannerEstimationValues = {};
-    const nitrogenValues = nutrientFinancialValuesByNutrientId[NUTRIENT_ID.NITROGEN];
-    const phosphateValues = nutrientFinancialValuesByNutrientId[NUTRIENT_ID.PHOSPHATE];
-    const potashValues = nutrientFinancialValuesByNutrientId[NUTRIENT_ID.POTASH];
+    const nitrogenValues =
+      nutrientFinancialValuesByNutrientId[NUTRIENT_ID.NITROGEN];
+    const phosphateValues =
+      nutrientFinancialValuesByNutrientId[NUTRIENT_ID.PHOSPHATE];
+    const potashValues =
+      nutrientFinancialValuesByNutrientId[NUTRIENT_ID.POTASH];
     if (nitrogenValues) {
       mannerEstimationValues.NitrogenProductId = nitrogenValues.productId;
       mannerEstimationValues.NitrogenProductName = nitrogenValues.productName;
@@ -322,7 +473,8 @@ class MannerEstimationsService extends BaseService {
     if (phosphateValues) {
       mannerEstimationValues.PhosphateProductId = phosphateValues.productId;
       mannerEstimationValues.PhosphateProductName = phosphateValues.productName;
-      mannerEstimationValues.PhosphateProductPrice =phosphateValues.productPrice;
+      mannerEstimationValues.PhosphateProductPrice =
+        phosphateValues.productPrice;
       mannerEstimationValues.PhosphatePrice = phosphateValues.price;
     }
     if (potashValues) {
@@ -334,77 +486,137 @@ class MannerEstimationsService extends BaseService {
     return mannerEstimationValues;
   }
 
-  buildMannerEstimationApplicationFinancialValues(nutrientFinancialValuesByNutrientId) {
+  buildMannerEstimationApplicationFinancialValues(
+    nutrientFinancialValuesByNutrientId,
+  ) {
     const mannerEstimationApplicationValues = {};
-    const nitrogenValues =nutrientFinancialValuesByNutrientId[NUTRIENT_ID.NITROGEN];
-    const phosphateValues =nutrientFinancialValuesByNutrientId[NUTRIENT_ID.PHOSPHATE];
-    const potashValues = nutrientFinancialValuesByNutrientId[NUTRIENT_ID.POTASH];
-    if (nitrogenValues) {mannerEstimationApplicationValues.NitrogenValue = nitrogenValues.nutrientValue}
-    if (phosphateValues) {mannerEstimationApplicationValues.PhosphateValue = phosphateValues.nutrientValue}
-    if (potashValues) {mannerEstimationApplicationValues.PotashValue = potashValues.nutrientValue}
+    const nitrogenValues =
+      nutrientFinancialValuesByNutrientId[NUTRIENT_ID.NITROGEN];
+    const phosphateValues =
+      nutrientFinancialValuesByNutrientId[NUTRIENT_ID.PHOSPHATE];
+    const potashValues =
+      nutrientFinancialValuesByNutrientId[NUTRIENT_ID.POTASH];
+    if (nitrogenValues) {
+      mannerEstimationApplicationValues.NitrogenValue =
+        nitrogenValues.nutrientValue;
+    }
+    if (phosphateValues) {
+      mannerEstimationApplicationValues.PhosphateValue =
+        phosphateValues.nutrientValue;
+    }
+    if (potashValues) {
+      mannerEstimationApplicationValues.PotashValue =
+        potashValues.nutrientValue;
+    }
     return mannerEstimationApplicationValues;
   }
 
   async checkMannerEstimationExists(organisationId, name) {
     const matchedEstimation = await this.repository.findOne({
-      where: {OrganisationID: organisationId,Name: name},
-      select: {ID: true,Name: true,OrganisationID: true},
+      where: { OrganisationID: organisationId, Name: name },
+      select: { ID: true, Name: true, OrganisationID: true },
     });
-    return {exists: Boolean(matchedEstimation)};
+    return { exists: Boolean(matchedEstimation) };
   }
 
   async getByOrganisationId(organisationId) {
-    const mannerEstimationData = await this.repository.find({where: { OrganisationID: organisationId }});
+    const mannerEstimationData = await this.repository.find({
+      where: { OrganisationID: organisationId },
+    });
     return mannerEstimationData;
   }
 
   async getMannerEstimationRelatedDataById(id, request) {
-    const mannerEstimationData = await this.repository.findOne({where: {ID: id}});
-    if (!mannerEstimationData) {return null}
-    const estimationNames = await this.getMannerEstimationDisplayNames(mannerEstimationData,request);
-    const mannerEstimationApplicationsWithManureTypeName = await this.getMannerEstimationApplicationsWithManureTypeName(id, request);
-    const lastUpdatedOn = this.getLastUpdatedOn(mannerEstimationData,mannerEstimationApplicationsWithManureTypeName);
+    const mannerEstimationData = await this.repository.findOne({
+      where: { ID: id },
+    });
+    if (!mannerEstimationData) {
+      return null;
+    }
+    const estimationNames = await this.getMannerEstimationDisplayNames(
+      mannerEstimationData,
+      request,
+    );
+    const mannerEstimationApplicationsWithManureTypeName =
+      await this.getMannerEstimationApplicationsWithManureTypeName(id, request);
+    const lastUpdatedOn = this.getLastUpdatedOn(
+      mannerEstimationData,
+      mannerEstimationApplicationsWithManureTypeName,
+    );
     mannerEstimationData.CropTypeName = estimationNames.cropTypeName;
     mannerEstimationData.TopSoil = estimationNames.topSoil;
     mannerEstimationData.SubSoil = estimationNames.subSoil;
     mannerEstimationData.Country = estimationNames.countryName;
-    return {MannerEstimation: mannerEstimationData,MannerEstimationApplication:mannerEstimationApplicationsWithManureTypeName,LastUpdatedOn: lastUpdatedOn};
+    return {
+      MannerEstimation: mannerEstimationData,
+      MannerEstimationApplication:
+        mannerEstimationApplicationsWithManureTypeName,
+      LastUpdatedOn: lastUpdatedOn,
+    };
   }
 
   async getMannerEstimationDisplayNames(mannerEstimationData, request) {
-    const cropTypeName = await this.getCropTypeNameById(mannerEstimationData.CropTypeID);
-    const topSoil = await this.getMannerLookupNameById(this.MannerTopSoilsService,"/top-soils",mannerEstimationData.TopSoilID,request);
-    const subSoil = await this.getMannerLookupNameById(this.MannerTopSoilsService,"/sub-soils",mannerEstimationData.SubSoilID,request);
-    const countries = await this.countryRepository.findOne({where: {ID: mannerEstimationData.CountryID}});
+    const cropTypeName = await this.getCropTypeNameById(
+      mannerEstimationData.CropTypeID,
+    );
+    const topSoil = await this.getMannerLookupNameById(
+      this.MannerTopSoilsService,
+      "/top-soils",
+      mannerEstimationData.TopSoilID,
+      request,
+    );
+    const subSoil = await this.getMannerLookupNameById(
+      this.MannerTopSoilsService,
+      "/sub-soils",
+      mannerEstimationData.SubSoilID,
+      request,
+    );
+    const countries = await this.countryRepository.findOne({
+      where: { ID: mannerEstimationData.CountryID },
+    });
     const countryName = countries ? countries.Name : null;
-    return {cropTypeName,topSoil,subSoil,countryName};
+    return { cropTypeName, topSoil, subSoil, countryName };
   }
 
   async getCropTypeNameById(cropTypeIdValue) {
     const cropTypeId = this.toNumericId(cropTypeIdValue);
-    if (cropTypeId === null) {return null}
-    const cropTypeData = await this.rB209ArableService.getData(`/Arable/CropType/${cropTypeId}`);
+    if (cropTypeId === null) {
+      return null;
+    }
+    const cropTypeData = await this.rB209ArableService.getData(
+      `/Arable/CropType/${cropTypeId}`,
+    );
     return cropTypeData?.cropTypeName ?? null;
   }
 
   async getMannerLookupNameById(service, endpoint, idValue, request) {
     const id = this.toNumericId(idValue);
-    if (id === null) {return null}
+    if (id === null) {
+      return null;
+    }
     const lookupData = await service.getData(`${endpoint}/${id}`, request);
     return lookupData?.data?.name ?? null;
   }
 
   async getMannerEstimationApplicationsWithManureTypeName(id, request) {
-    const mannerEstimationApplications = await this.getMannerEstimationApplications(id);
+    const mannerEstimationApplications =
+      await this.getMannerEstimationApplications(id);
     const lookupConfigs = this.getApplicationLookupConfigs();
-    await this.populateApplicationLookupCaches(mannerEstimationApplications,lookupConfigs,request);
-    return this.mapApplicationsWithLookupNames(mannerEstimationApplications,lookupConfigs);
+    await this.populateApplicationLookupCaches(
+      mannerEstimationApplications,
+      lookupConfigs,
+      request,
+    );
+    return this.mapApplicationsWithLookupNames(
+      mannerEstimationApplications,
+      lookupConfigs,
+    );
   }
 
   async getMannerEstimationApplications(mannerEstimationId) {
     return this.mannerEstimationApplicationRepository.find({
-      where: {MannerEstimationID: mannerEstimationId},
-      order: {ID: "ASC"}
+      where: { MannerEstimationID: mannerEstimationId },
+      order: { ID: "ASC" },
     });
   }
 
@@ -462,12 +674,19 @@ class MannerEstimationsService extends BaseService {
     ];
   }
 
-  async populateApplicationLookupCaches(mannerEstimationApplications,lookupConfigs,request) {
+  async populateApplicationLookupCaches(
+    mannerEstimationApplications,
+    lookupConfigs,
+    request,
+  ) {
     for (const application of mannerEstimationApplications) {
       for (const config of lookupConfigs) {
-        await this.setLookupNameInCache(config.cache,application[config.sourceField],
+        await this.setLookupNameInCache(
+          config.cache,
+          application[config.sourceField],
           config.service,
-          config.endpoint,request
+          config.endpoint,
+          request,
         );
       }
     }
@@ -487,7 +706,9 @@ class MannerEstimationsService extends BaseService {
 
   async setLookupNameInCache(cache, idValue, service, endpoint, request) {
     const id = this.toNumericId(idValue);
-    if (id === null || cache.has(id)) {return}
+    if (id === null || cache.has(id)) {
+      return;
+    }
     const lookupData = await service.getData(`${endpoint}/${id}`, request);
     cache.set(id, lookupData?.data?.name ?? null);
   }
@@ -498,26 +719,43 @@ class MannerEstimationsService extends BaseService {
       mannerEstimationData.CreatedOn,
       ...mannerEstimationApplications.flatMap((application) => [
         application.ModifiedOn,
-        application.CreatedOn
+        application.CreatedOn,
       ]),
-    ].filter(Boolean)
+    ]
+      .filter(Boolean)
       .map((value) => new Date(value).getTime())
       .filter((value) => !Number.isNaN(value));
-    if (timestampCandidates.length === 0) {return null}
+    if (timestampCandidates.length === 0) {
+      return null;
+    }
     return new Date(Math.max(...timestampCandidates));
   }
 
   toNumericId(value) {
-    if (typeof value === "number" && Number.isFinite(value)) {return value}
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
     if (typeof value === "string") {
       const parsedValue = Number(value);
       return Number.isFinite(parsedValue) ? parsedValue : null;
     }
     if (value && typeof value === "object") {
-      if (typeof value.id === "number") {return value.id}
-      if (typeof value.ID === "number") {return value.ID}
+      if (typeof value.id === "number") {
+        return value.id;
+      }
+      if (typeof value.ID === "number") {
+        return value.ID;
+      }
     }
     return null;
+  }
+
+  async deleteMannerEstimations(mannerEstimationIds, userId, request) {
+    return await AppDataSource.transaction(async (manager) => {
+      await manager.query("EXEC spMannerEstimations_Delete @0", [
+        mannerEstimationIds.join(","),
+      ]);
+    });
   }
 }
 

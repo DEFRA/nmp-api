@@ -116,6 +116,29 @@ module.exports = [
     },
   },
   {
+    method: "DELETE",
+    path: "/manner-estimations/",
+    options: {
+      tags: ["api", mannerEstimations],
+      description: "Delete Manner Estimations by MannerEstimation Ids",
+      validate: {
+        payload: Joi.object({
+          mannerEstimationIds: Joi.array()
+            .items(Joi.number().integer().required())
+            .min(1)
+            .required()
+            .description(
+              "Array of mannerEstimation IDs to delete, e.g., [1, 2, 3]",
+            ),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      return getController(request, h).deleteMannerEstimationByIds();
+    },
+  },
+  {
     method: "GET",
     path: "/manner-estimations/exists",
     options: {
