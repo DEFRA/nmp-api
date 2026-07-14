@@ -19,13 +19,7 @@ const MannerMoistureTypesService = require("../vendors/manner/moisture-types/moi
 const MannerWindspeedService = require("../vendors/manner/windspeed/windspeed.service");
 const MannerRainTypesService = require("../vendors/manner/rain-types/rain-types.service");
 const { CountryEntity } = require("../db/entity/country.entity");
-
-const NUTRIENT_ID = {
-  NITROGEN: 1,
-  PHOSPHATE: 2,
-  POTASH: 3,
-};
-
+const NUTRIENT_ID = {NITROGEN: 1,PHOSPHATE: 2,POTASH: 3};
 class MannerEstimationsService extends BaseService {
   constructor() {
     super(MannerEstimationsEntity);
