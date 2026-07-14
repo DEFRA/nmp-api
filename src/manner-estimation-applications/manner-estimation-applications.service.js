@@ -226,8 +226,8 @@ class MannerEstimationApplicationsService extends BaseService {
   async deleteMannerEstimationApplication(
     mannerEstimationApplicationId
   ) {
-    return await AppDataSource.transaction(async (manager) => {
-      return await manager.query(
+    return AppDataSource.transaction(async (manager) => {
+      return manager.query(
         "EXEC dbo.spMannerEstimationApplications_Delete @MannerEstimationApplicationID = @0",
         [mannerEstimationApplicationId],
       );
