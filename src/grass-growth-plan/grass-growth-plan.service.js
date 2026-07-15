@@ -59,10 +59,10 @@ class GrassGrowthService extends BaseService {
 
       // Ensure SoilOverChalk is false if it's null
       const soilOverChalk = field.SoilOverChalk ?? false;
-
+      const postcode = farm.ClimateDataPostCode;
       // Fetch rainfall data
       const rainfall = await this.MannerRainfallPostApplicationService.getData(
-        `rainfall-april-to-september/${farm.ClimateDataPostCode}`,
+        `climates/rainfall-april-to-september/${postcode}`,
         request
       );
 
