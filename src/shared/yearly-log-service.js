@@ -110,16 +110,18 @@ const getLogTypeFromEntry = (entry) => {
     return "error";
   }
 
-  return "success";
+  return null;
 };
 
 const logRecordLogs = (entry, options = {}) => {
-  writeYearlyLog(
-    "record-api-logs",
-    getLogTypeFromEntry(entry),
-    buildStructuredApiPayload(entry),
-    { service: options.service || null },
-  );
+  const logType = getLogTypeFromEntry(entry);
+  if (logType !== "error") {
+    return;
+  }
+
+  writeYearlyLog("record-api-logs", logType, buildStructuredApiPayload(entry), {
+    service: options.service || null,
+  });
 };
 
 const appendYearlyLog = ({
