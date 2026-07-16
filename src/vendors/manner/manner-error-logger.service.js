@@ -1,3 +1,4 @@
+const { StatusCodeMapper } = require("../../constants/http-status-codes-mapper");
 const { appendYearlyLog } = require("../../shared/yearly-log-service");
 
 const logMannerApiError = ({
@@ -24,7 +25,7 @@ const logMannerApiError = ({
     context: {
       endpoint,
       method,
-      statusCode: error?.response?.status ?? 500,
+      statusCode: error?.response?.status ?? StatusCodeMapper.INTERNAL_SERVER_ERROR,
       durationMs: Date.now() - startedAt,
     },
   });

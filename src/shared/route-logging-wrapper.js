@@ -1,3 +1,4 @@
+const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 const { appendYearlyLog } = require("./yearly-log-service");
 
 const toErrorResponse = (error) => ({
@@ -6,7 +7,7 @@ const toErrorResponse = (error) => ({
     error?.output?.payload?.message ||
     error?.error ||
     "Unknown error",
-  statusCode: error?.output?.statusCode || error?.statusCode || 500,
+  statusCode: error?.output?.statusCode || error?.statusCode || StatusCodeMapper.INTERNAL_SERVER_ERROR,
 });
 
 const isErrorLike = (value) => {
@@ -22,7 +23,7 @@ const isErrorLike = (value) => {
     return true;
   }
 
-  return Number(value.statusCode) >= 400;
+  return Number(value.statusCode) >= StatusCodeMapper.BAD_REQUEST || Boolean(value.error);
 };
 
 const getErrorFromHandlerResult = (result) => {
@@ -48,7 +49,7 @@ const getStatusCodeFromHandlerResult = (result, fallbackError = null) => {
     result?.statusCode ||
     fallbackError?.output?.statusCode ||
     fallbackError?.statusCode ||
-    500
+    StatusCodeMapper.INTERNAL_SERVER_ERROR
   );
 };
 
@@ -115,7 +116,7 @@ const wrapRouteWithLogging = (route) => {
         },
         context: {
           endpoint: `${requestPayload.method} ${requestPayload.path}`,
-          statusCode: error?.output?.statusCode || error?.statusCode || 500,
+          statusCode: error?.output?.statusCode || error?.statusCode || StatusCodeMapper.INTERNAL_SERVER_ERROR,
           durationMs: Date.now() - startedAt,
         },
       });
