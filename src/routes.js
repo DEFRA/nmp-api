@@ -1,3 +1,5 @@
+const { wrapRouteWithLogging } = require("./shared/route-logging-wrapper");
+
 module.exports = [
   ...require("./health-check/health-check.route"),
   ...require("./vendors/rb209/rb209.routes"),
@@ -54,5 +56,5 @@ module.exports = [
   ...require("./scotland-nmax-values/scotland-nmax-values.route"),
   ...require("./farm-average-yield/farm-average-yields.route"),
   ...require("./manner-estimations/manner-estimations.route"),
-  ...require("./manner-estimation-applications/manner-estimation-applications.route")
-];
+  ...require("./manner-estimation-applications/manner-estimation-applications.route"),
+].map((route) => wrapRouteWithLogging(route));

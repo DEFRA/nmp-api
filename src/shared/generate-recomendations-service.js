@@ -87,13 +87,12 @@ class GenerateRecommendations {
         cropTypesList
       );
     let nutrientRecommendationsData;
-    try {
+  
       const response = await this.rB209RecommendationService.postData(RECOMMENDATION_LOG_ENDPOINT,nutrientRecommendationnReqBody);
       if (response.status === StatusCodeMapper.SUCCESS) {
         nutrientRecommendationsData = response.data;
         console.log("RB209 recommendation API call successful. Received data:",nutrientRecommendationsData);
       } else {
-        logRecordLogs(response, { service: SERVICE_NAME });
         console.error(
           "RB209 recommendation API call failed:",
           response.status,
@@ -101,9 +100,7 @@ class GenerateRecommendations {
           response.statusText,
         );
       }
-    } catch (error) {logRecordLogs(error, { service: SERVICE_NAME });
-      console.error("RB209 recommendation API call failed:", error);
-    }
+    
 
     const recommendation =
       await this.savingRecommendationService.processAndSaveRecommendations(
