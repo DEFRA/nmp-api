@@ -223,12 +223,12 @@ const mannerEstimationApplicationValues = {};
         const endOfDrainageDate = new Date(mannerEstimationApplication.EndOfDrainageDate);
 
         // Harvest year calculation
-        const harvestStartYear = sowingDate.getMonth()  >= 8
-            ? sowingDate.getFullYear()
-            : sowingDate.getFullYear() - 1;
+    const harvestStartYear = sowingDate.getMonth() >= 7
+    ? sowingDate.getFullYear()
+    : sowingDate.getFullYear() - 1;
 
         // Application date year calculation
-        const updatedYear = applicationDate.getMonth()  >= 8
+        const updatedYear = applicationDate.getMonth()  >= 7
             ? harvestStartYear
             : harvestStartYear + 1;
             
@@ -240,7 +240,7 @@ const mannerEstimationApplicationValues = {};
             applicationDate.getMonth(),
             applicationDate.getDate()
         );
-        const marchYear =  applicationDate.getMonth() >= 1 &&  applicationDate.getMonth() <= 7
+        const marchYear =  applicationDate.getMonth() >= 0 &&  applicationDate.getMonth() <= 6
             ? mannerEstimationApplicationValues.ApplicationDate.getFullYear()
             : mannerEstimationApplicationValues.ApplicationDate.getFullYear() + 1;
             mannerEstimationApplicationValues.EndOfDrainageDate = new Date(
