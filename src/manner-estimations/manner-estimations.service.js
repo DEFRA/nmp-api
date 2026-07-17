@@ -20,6 +20,8 @@ const MannerWindspeedService = require("../vendors/manner/windspeed/windspeed.se
 const MannerRainTypesService = require("../vendors/manner/rain-types/rain-types.service");
 const { CountryEntity } = require("../db/entity/country.entity");
 const NUTRIENT_ID = {NITROGEN: 1,PHOSPHATE: 2,POTASH: 3};
+const AUGUST_MONTH = 7;
+const JULY_MONTH = 6;
 class MannerEstimationsService extends BaseService {
   constructor() {
     super(MannerEstimationsEntity);
@@ -223,12 +225,12 @@ const mannerEstimationApplicationValues = {};
         const endOfDrainageDate = new Date(mannerEstimationApplication.EndOfDrainageDate);
 
         // Harvest year calculation
-    const harvestStartYear = sowingDate.getMonth() >= 7
+    const harvestStartYear = sowingDate.getMonth() >= AUGUST_MONTH
     ? sowingDate.getFullYear()
     : sowingDate.getFullYear() - 1;
 
         // Application date year calculation
-        const updatedYear = applicationDate.getMonth()  >= 7
+        const updatedYear = applicationDate.getMonth()  >= AUGUST_MONTH
             ? harvestStartYear
             : harvestStartYear + 1;
             
@@ -240,7 +242,7 @@ const mannerEstimationApplicationValues = {};
             applicationDate.getMonth(),
             applicationDate.getDate()
         );
-        const marchYear =  applicationDate.getMonth() >= 0 &&  applicationDate.getMonth() <= 6
+        const marchYear =  applicationDate.getMonth() >= 0 &&  applicationDate.getMonth() <= JULY_MONTH
             ? mannerEstimationApplicationValues.ApplicationDate.getFullYear()
             : mannerEstimationApplicationValues.ApplicationDate.getFullYear() + 1;
             mannerEstimationApplicationValues.EndOfDrainageDate = new Date(
