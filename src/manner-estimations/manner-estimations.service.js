@@ -179,7 +179,8 @@ class MannerEstimationsService extends BaseService {
       );
       if (updatedMannerEstimationResult.affected !== 1) {throw new Error("Manner estimation not found")}
       const updatedApplications = [];
-      for (const mannerEstimationApplication of sourceMannerEstimationApplications) {
+      for (const mannerEstimationApplication of sourceMannerEstimationApplications) {      
+        const mannerEstimationApplicationValues=this.setApplicationDateBasedOnSowingDate(MannerEstimation,mannerEstimationApplication);
         const applicationNutrientFinancialValues = await this.calculateNutrientFinancialValuesByNutrientIdForUpdate(MannerEstimation,mannerEstimationApplication,request);
         const mannerEstimationApplicationFinancialValues = this.buildMannerEstimationApplicationFinancialValues(applicationNutrientFinancialValues);
         const { ID: applicationId } = mannerEstimationApplication;
@@ -188,6 +189,7 @@ class MannerEstimationsService extends BaseService {
           { ID: applicationId, MannerEstimationID: mannerEstimationId },
           {
             ...mannerEstimationApplicationFinancialValues,
+            ...mannerEstimationApplicationValues,
             ModifiedByID: userId,
             ModifiedOn: new Date(),
           },
@@ -211,6 +213,45 @@ class MannerEstimationsService extends BaseService {
       };
     });
   }
+
+ setApplicationDateBasedOnSowingDate(mannerEstimation, mannerEstimationApplication) {
+const mannerEstimationApplicationValues = {};
+    if (mannerEstimation?.SowingDate && mannerEstimationApplication?.ApplicationDate) {
+
+        const sowingDate = new Date(mannerEstimation.SowingDate);
+        const applicationDate = new Date(mannerEstimationApplication.ApplicationDate);
+        const endOfDrainageDate = new Date(mannerEstimationApplication.EndOfDrainageDate);
+
+        // Harvest year calculation
+        const harvestStartYear = sowingDate.getMonth()  >= 8
+            ? sowingDate.getFullYear()
+            : sowingDate.getFullYear() - 1;
+
+        // Application date year calculation
+        const updatedYear = applicationDate.getMonth()  >= 8
+            ? harvestStartYear
+            : harvestStartYear + 1;
+            
+        
+
+        // Keep month and date same, only update year
+        mannerEstimationApplicationValues.ApplicationDate = new Date(
+            updatedYear,
+            applicationDate.getMonth(),
+            applicationDate.getDate()
+        );
+        const marchYear =  applicationDate.getMonth() >= 1 &&  applicationDate.getMonth() <= 7
+            ? mannerEstimationApplicationValues.ApplicationDate.getFullYear()
+            : mannerEstimationApplicationValues.ApplicationDate.getFullYear() + 1;
+            mannerEstimationApplicationValues.EndOfDrainageDate = new Date(
+            marchYear,
+            endOfDrainageDate.getMonth(),
+            endOfDrainageDate.getDate()
+        );
+    }
+
+     return mannerEstimationApplicationValues;
+}
 
   validateUpdateMannerEstimationPayload(mannerEstimation) {
     if (!mannerEstimation?.ID) {
