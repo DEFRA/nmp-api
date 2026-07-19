@@ -14,99 +14,194 @@ const mannerEstimationsFinancialHelpers = {
   async updateMannerEstimationWithApplications(payload, userId, request) {
     const { MannerEstimation } = payload;
     this.validateUpdateMannerEstimationPayload(MannerEstimation);
+
     return AppDataSource.transaction(async (transactionalManager) => {
       const mannerEstimationId = MannerEstimation.ID;
       const sourceMannerEstimationApplications =
-        await transactionalManager.find(MannerEstimationApplicationsEntity, {
-          where: { MannerEstimationID: mannerEstimationId },
-          order: { ID: "ASC" },
-        });
-      if (sourceMannerEstimationApplications.length === 0) {
-        throw new Error("Manner estimation applications not found");
-      }
-      const mappedSourceApplication =
-        await this.getMappedMannerEstimationApplication(
+        await this.getSourceMannerEstimationApplicationsForUpdate(
+          transactionalManager,
+          mannerEstimationId,
+        );
+      const mannerEstimationFinancialValues =
+        await this.getMannerEstimationFinancialValuesForUpdate(
           MannerEstimation,
           sourceMannerEstimationApplications[0],
           request,
         );
-      const nutrientFinancialValues =
-        await this.calculateNutrientFinancialValuesByNutrientIdForUpdate(
-          MannerEstimation,
-          mappedSourceApplication,
-          request,
-        );
-      const mannerEstimationFinancialValues =
-        this.buildMannerEstimationFinancialValues(nutrientFinancialValues);
-      const { ID, CreatedByID, CreatedOn, ...mannerEstimationDataToUpdate } =
-        MannerEstimation;
-      const updatedMannerEstimationResult = await transactionalManager.update(
-        MannerEstimationsEntity,
-        { ID: mannerEstimationId },
-        {
-          ...mannerEstimationDataToUpdate,
-          ...mannerEstimationFinancialValues,
-          ModifiedByID: userId,
-          ModifiedOn: new Date(),
-        },
+
+      await this.updateMannerEstimationEntityForUpdate(
+        transactionalManager,
+        mannerEstimation,
+        mannerEstimationId,
+        mannerEstimationFinancialValues,
+        userId,
       );
-      if (updatedMannerEstimationResult.affected !== 1) {
-        throw new Error("Manner estimation not found");
-      }
-      const updatedApplications = [];
-      for (const mannerEstimationApplication of sourceMannerEstimationApplications) {
-        const mannerEstimationApplicationValues =
-          this.setApplicationDateBasedOnSowingDate(
-            MannerEstimation,
-            mannerEstimationApplication,
-          );
-        const mappedMannerEstimationApplication =
-          await this.getMappedMannerEstimationApplication(
-            MannerEstimation,
-            mannerEstimationApplication,
-            request,
-          );
-        const applicationNutrientFinancialValues =
-          await this.calculateNutrientFinancialValuesByNutrientIdForUpdate(
-            MannerEstimation,
-            mappedMannerEstimationApplication,
-            request,
-          );
-        const mannerEstimationApplicationFinancialValues =
-          this.buildMannerEstimationApplicationFinancialValues(
-            applicationNutrientFinancialValues,
-          );
-        const { ID: applicationId, ...applicationDataToUpdate } =
-          mappedMannerEstimationApplication;
-        const updatedApplicationResult = await transactionalManager.update(
-          MannerEstimationApplicationsEntity,
-          { ID: applicationId, MannerEstimationID: mannerEstimationId },
-          {
-            ...applicationDataToUpdate,
-            ...mannerEstimationApplicationFinancialValues,
-            ...mannerEstimationApplicationValues,
-            ModifiedByID: userId,
-            ModifiedOn: new Date(),
-          },
-        );
-        if (updatedApplicationResult.affected !== 1) {
-          throw new Error(`Manner estimation application not found for ID `);
-        }
-        const updatedApplication = await transactionalManager.findOneBy(
-          MannerEstimationApplicationsEntity,
-          { ID: applicationId, MannerEstimationID: mannerEstimationId },
-        );
-        updatedApplications.push(updatedApplication);
-      }
-      const updatedMannerEstimation = await transactionalManager.findOneBy(
-        MannerEstimationsEntity,
-        { ID: mannerEstimationId },
+
+      const updatedApplications = await this.updateApplicationsForUpdate(
+        transactionalManager,
+        sourceMannerEstimationApplications,
+        mannerEstimation,
+        mannerEstimationId,
+        userId,
+        request,
       );
-      return {
-        MannerEstimation: updatedMannerEstimation,
-        MannerEstimationApplications: updatedApplications,
-      };
+
+      return this.buildUpdatedMannerEstimationPayload(
+        transactionalManager,
+        mannerEstimationId,
+        updatedApplications,
+      );
     });
+  },
+
+  async getSourceMannerEstimationApplicationsForUpdate(
+    transactionalManager,
+    mannerEstimationId,
+  ) {
+    const sourceMannerEstimationApplications = await transactionalManager.find(
+      MannerEstimationApplicationsEntity,
+      {
+        where: { MannerEstimationID: mannerEstimationId },
+        order: { ID: "ASC" },
+      },
+    );
+    if (sourceMannerEstimationApplications.length === 0) {
+      throw new Error("Manner estimation applications not found");
+    }
+    return sourceMannerEstimationApplications;
+  },
+
+  async getMannerEstimationFinancialValuesForUpdate(
+    mannerEstimation,
+    sourceApplication,
+    request,
+  ) {
+    const mappedSourceApplication =
+      await this.getMappedMannerEstimationApplication(
+        mannerEstimation,
+        sourceApplication,
+        request,
+      );
+    const nutrientFinancialValues =
+      await this.calculateNutrientFinancialValuesByNutrientIdForUpdate(
+        mannerEstimation,
+        mappedSourceApplication,
+        request,
+      );
+    return this.buildMannerEstimationFinancialValues(nutrientFinancialValues);
+  },
+
+  async updateMannerEstimationEntityForUpdate(
+    transactionalManager,
+    mannerEstimation,
+    mannerEstimationId,
+    mannerEstimationFinancialValues,
+    userId,
+  ) {
+    const { ID, CreatedByID, CreatedOn, ...mannerEstimationDataToUpdate } =
+      mannerEstimation;
+    const updatedMannerEstimationResult = await transactionalManager.update(
+      MannerEstimationsEntity,
+      { ID: mannerEstimationId },
+      {
+        ...mannerEstimationDataToUpdate,
+        ...mannerEstimationFinancialValues,
+        ModifiedByID: userId,
+        ModifiedOn: new Date(),
+      },
+    );
+    if (updatedMannerEstimationResult.affected !== 1) {
+      throw new Error("Manner estimation not found");
+    }
+  },
+
+  async updateApplicationsForUpdate(
+    transactionalManager,
+    sourceMannerEstimationApplications,
+    mannerEstimation,
+    mannerEstimationId,
+    userId,
+    request,
+  ) {
+    const updatedApplications = [];
+    for (const mannerEstimationApplication of sourceMannerEstimationApplications) {
+      const updatedApplication = await this.updateSingleApplicationForUpdate(
+        transactionalManager,
+        mannerEstimation,
+        mannerEstimationApplication,
+        mannerEstimationId,
+        userId,
+        request,
+      );
+      updatedApplications.push(updatedApplication);
+    }
+    return updatedApplications;
+  },
+
+  async updateSingleApplicationForUpdate(
+    transactionalManager,
+    mannerEstimation,
+    mannerEstimationApplication,
+    mannerEstimationId,
+    userId,
+    request,
+  ) {
+    const mannerEstimationApplicationValues =
+      this.setApplicationDateBasedOnSowingDate(
+        mannerEstimation,
+        mannerEstimationApplication,
+      );
+    const mappedMannerEstimationApplication =
+      await this.getMappedMannerEstimationApplication(
+        mannerEstimation,
+        mannerEstimationApplication,
+        request,
+      );
+    const applicationNutrientFinancialValues =
+      await this.calculateNutrientFinancialValuesByNutrientIdForUpdate(
+        mannerEstimation,
+        mappedMannerEstimationApplication,
+        request,
+      );
+    const mannerEstimationApplicationFinancialValues =
+      this.buildMannerEstimationApplicationFinancialValues(
+        applicationNutrientFinancialValues,
+      );
+    const { ID: applicationId, ...applicationDataToUpdate } =
+      mappedMannerEstimationApplication;
+    const updatedApplicationResult = await transactionalManager.update(
+      MannerEstimationApplicationsEntity,
+      { ID: applicationId, MannerEstimationID: mannerEstimationId },
+      {
+        ...applicationDataToUpdate,
+        ...mannerEstimationApplicationFinancialValues,
+        ...mannerEstimationApplicationValues,
+        ModifiedByID: userId,
+        ModifiedOn: new Date(),
+      },
+    );
+    if (updatedApplicationResult.affected !== 1) {
+      throw new Error(`Manner estimation application not found for ID `);
+    }
+    return transactionalManager.findOneBy(MannerEstimationApplicationsEntity, {
+      ID: applicationId,
+      MannerEstimationID: mannerEstimationId,
+    });
+  },
+
+  async buildUpdatedMannerEstimationPayload(
+    transactionalManager,
+    mannerEstimationId,
+    updatedApplications,
+  ) {
+    const updatedMannerEstimation = await transactionalManager.findOneBy(
+      MannerEstimationsEntity,
+      { ID: mannerEstimationId },
+    );
+    return {
+      MannerEstimation: updatedMannerEstimation,
+      MannerEstimationApplications: updatedApplications,
+    };
   },
 
   setApplicationDateBasedOnSowingDate(

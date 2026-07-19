@@ -81,22 +81,18 @@ class MannerEstimationApplicationsService extends BaseService {
   async updateMannerEstimationApplication(payload, userId, request) {
     return AppDataSource.transaction(async (transactionalManager) => {
       const applicationId = payload?.ID;
-
       if (!applicationId) {
-        throw new Error("Manner estimation application ID is required");
+        console.log("Manner estimation application ID is required");
       }
-
       const existingApplication = await transactionalManager.findOne(
         MannerEstimationApplicationsEntity,
         {
           where: { ID: applicationId },
         },
       );
-
       if (!existingApplication) {
         throw new Error("Manner estimation application not found");
       }
-
       const mergedApplication = {
         ...existingApplication,
         ...payload,
@@ -112,14 +108,12 @@ class MannerEstimationApplicationsService extends BaseService {
       if (!mannerEstimation) {
         throw new Error("Manner estimation not found");
       }
-
       const mappedMannerEstimationApplication =
         await this.mannerEstimationsService.getMappedMannerEstimationApplication(
           mannerEstimation,
           mergedApplication,
           request,
         );
-
       const nutrientFinancialValues =
         await this.mannerEstimationsService.calculateNutrientFinancialValuesByNutrientIdForUpdate(
           mannerEstimation,

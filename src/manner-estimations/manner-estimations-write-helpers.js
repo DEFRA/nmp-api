@@ -167,7 +167,7 @@ const mannerEstimationsWriteHelpers = {
     return {
       runType:
         mannerEstimation.CountryID === CountryMapper.ENGLAND ||
-        mannerEstimation.CountryID == CountryMapper.WELSH
+        mannerEstimation.CountryID === CountryMapper.WELSH
           ? RunTypeMapper.MANNERENGLAND
           : RunTypeMapper.MANNERSCOTLAND,
       postcode: mannerEstimation.Postcode.split(" ")[0],
