@@ -111,6 +111,12 @@ class CalculateMannerOutputService {
   }
 
   async buildManureApplicationObject(manure, manureTypeData) {
+    const applicationDate =
+      this.formatDateOnly(manure.ApplicationDate) ??
+      this.formatDateOnly(new Date());
+    const endOfDrainageDate =
+      this.formatDateOnly(manure.EndOfDrain) ?? applicationDate;
+
     return {
       manureDetails: {
         manureID: manure.ManureTypeID,
@@ -126,9 +132,7 @@ class CalculateMannerOutputService {
         k2O: manure.K2O,
         mgO: manure.MgO,
       },
-      applicationDate: new Date(manure.ApplicationDate)
-        .toISOString()
-        .split("T")[0],
+      applicationDate,
       applicationRate: {
         value: manure.ApplicationRate,
         unit: "kg/hectare",
@@ -140,15 +144,26 @@ class CalculateMannerOutputService {
         value: manure.AutumnCropNitrogenUptake,
         unit: "string",
       },
-      endOfDrainageDate: new Date(manure.EndOfDrain)
-        .toISOString()
-        .split("T")[0],
+      endOfDrainageDate,
       rainfallPostApplication: manure.Rainfall,
       cropNUptake: manure.AutumnCropNitrogenUptake,
       windspeedID: manure.WindspeedID,
       rainTypeID: manure.RainfallWithinSixHoursID,
       topsoilMoistureID: manure.MoistureID,
     };
+  }
+
+  formatDateOnly(value) {
+    if (value === null || value === undefined || value === "") {
+      return null;
+    }
+
+    const parsedDate = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(parsedDate.getTime())) {
+      return null;
+    }
+
+    return parsedDate.toISOString().split("T")[0];
   }
 
   async processMultipleManures(
@@ -369,7 +384,6 @@ class CalculateMannerOutputService {
     if (!mannerOutput) {
       return [];
     }
-
 
     const buildManureOutputs = await this.buildMannerOutputs(
       crop,

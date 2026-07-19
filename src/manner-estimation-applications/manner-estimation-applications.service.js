@@ -26,14 +26,56 @@ class MannerEstimationApplicationsService extends BaseService {
     this.mannerEstimationsService = new MannerEstimationsService();
   }
 
-  async createMannerEstimationApplication(payload, userId) {
-    const result = this.repository.create({
-      ...payload,
-      CreatedByID: userId,
-      CreatedOn: new Date(),
+  async createMannerEstimationApplication(payload, userId, request) {
+    return AppDataSource.transaction(async (transactionalManager) => {
+      const mannerEstimation = await transactionalManager.findOne(
+        MannerEstimationsEntity,
+        {
+          where: { ID: payload.MannerEstimationID },
+        },
+      );
+
+      if (!mannerEstimation) {
+        throw new Error("Manner estimation not found");
+      }
+
+      const mappedMannerEstimationApplication =
+        await this.mannerEstimationsService.getMappedMannerEstimationApplication(
+          mannerEstimation,
+          payload,
+          request,
+        );
+
+      const nutrientFinancialValues =
+        await this.mannerEstimationsService.calculateNutrientFinancialValuesByNutrientIdForUpdate(
+          mannerEstimation,
+          mappedMannerEstimationApplication,
+          request,
+        );
+
+      const nutrientValuesOnlyByNutrientId = Object.fromEntries(
+        Object.entries(nutrientFinancialValues).map(([nutrientId, value]) => [
+          nutrientId,
+          {
+            nutrientValue: value?.nutrientValue,
+          },
+        ]),
+      );
+
+      const mannerEstimationApplicationFinancialValues =
+        this.mannerEstimationsService.buildMannerEstimationApplicationFinancialValues(
+          nutrientValuesOnlyByNutrientId,
+        );
+
+      const result = this.repository.create({
+        ...mappedMannerEstimationApplication,
+        ...mannerEstimationApplicationFinancialValues,
+        CreatedByID: userId,
+        CreatedOn: new Date(),
+      });
+
+      return this.repository.save(result);
     });
-    const savedApplications = await this.repository.save(result);
-    return savedApplications;
   }
 
   async updateMannerEstimationApplication(payload, userId, request) {
@@ -71,10 +113,17 @@ class MannerEstimationApplicationsService extends BaseService {
         throw new Error("Manner estimation not found");
       }
 
+      const mappedMannerEstimationApplication =
+        await this.mannerEstimationsService.getMappedMannerEstimationApplication(
+          mannerEstimation,
+          mergedApplication,
+          request,
+        );
+
       const nutrientFinancialValues =
         await this.mannerEstimationsService.calculateNutrientFinancialValuesByNutrientIdForUpdate(
           mannerEstimation,
-          mergedApplication,
+          mappedMannerEstimationApplication,
           request,
         );
 
@@ -99,7 +148,7 @@ class MannerEstimationApplicationsService extends BaseService {
         ModifiedByID,
         ModifiedOn,
         ...applicationDataToUpdate
-      } = mergedApplication;
+      } = mappedMannerEstimationApplication;
 
       const updatePayload = {
         ...applicationDataToUpdate,
@@ -223,9 +272,7 @@ class MannerEstimationApplicationsService extends BaseService {
     return Number(result?.totalN ?? 0);
   }
 
-  async deleteMannerEstimationApplication(
-    mannerEstimationApplicationId
-  ) {
+  async deleteMannerEstimationApplication(mannerEstimationApplicationId) {
     return AppDataSource.transaction(async (manager) => {
       return manager.query(
         "EXEC dbo.spMannerEstimationApplications_Delete @MannerEstimationApplicationID = @0",

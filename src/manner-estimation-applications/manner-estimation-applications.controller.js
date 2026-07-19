@@ -23,6 +23,7 @@ class MannerEstimationApplicationsController {
         await this.#mannerEstimationApplicationsService.createMannerEstimationApplication(
           payload,
           userId,
+          this.#request,
         );
 
       return this.#h.response({ MannerEstimationApplication: result });
@@ -137,7 +138,7 @@ class MannerEstimationApplicationsController {
     const { id } = this.#request.params;
     try {
       await this.#mannerEstimationApplicationsService.deleteMannerEstimationApplication(
-        id
+        id,
       );
       return this.#h.response({
         message: "Manner estimation application deleted successfully.",
