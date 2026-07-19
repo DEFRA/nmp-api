@@ -31,7 +31,7 @@ const mannerEstimationsFinancialHelpers = {
 
       await this.updateMannerEstimationEntityForUpdate(
         transactionalManager,
-        mannerEstimation,
+        MannerEstimation,
         mannerEstimationId,
         mannerEstimationFinancialValues,
         userId,
@@ -40,10 +40,10 @@ const mannerEstimationsFinancialHelpers = {
       const updatedApplications = await this.updateApplicationsForUpdate(
         transactionalManager,
         sourceMannerEstimationApplications,
-        mannerEstimation,
+        MannerEstimation,
         mannerEstimationId,
         userId,
-        request,
+        request
       );
 
       return this.buildUpdatedMannerEstimationPayload(
