@@ -49,9 +49,11 @@ class GenerateRecommendations {
     this.rB209ArableService = new RB209ArableService();
     this.rB209RecommendationService = new RB209RecommendationService();
     this.CalculatePreviousCropService = new CalculatePreviousCropService();
-    this.organicManureRepository = AppDataSource.getRepository(OrganicManureEntity);
+    this.organicManureRepository =
+      AppDataSource.getRepository(OrganicManureEntity);
     this.CalculatePKBalanceOther = new CalculatePKBalanceOther();
-    this.RecommendationRepository = AppDataSource.getRepository(RecommendationEntity);
+    this.RecommendationRepository =
+      AppDataSource.getRepository(RecommendationEntity);
     this.grassGrowthClass = new GrassGrowthService();
     this.calculateGrassId = new CalculateGrassHistoryAndPreviousGrass();
     this.savingRecommendationService = new SavingRecommendationService();
