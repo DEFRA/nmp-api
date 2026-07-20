@@ -24,6 +24,20 @@ class BaseService {
     }
     return { records };
   }
+  async getAllWithLastUpdatedDate(organisationId) {
+  const records = await this.#entity.query(
+    "EXEC dbo.spFarms_GetAllFarmsWithLastUpdatedDate @OrganisationID = @0",
+    [organisationId]
+  );
+
+  if (!records?.length) {
+    throw boom.notFound(
+      StaticStrings.HTTP_STATUS_NOT_FOUND
+    );
+  }
+
+  return { records };
+}
 
   async getBy(column, value, selectOptions) {
     const records = await this.#entity.find({

@@ -3,7 +3,7 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 const nodeExternals = require("webpack-node-externals");
 
 module.exports = {
-  mode: "development", 
+  mode: "development",
   entry: "./server.js", // Entry point for your project
   output: {
     filename: "index.js",
@@ -19,7 +19,7 @@ module.exports = {
         use: {
           loader: "babel-loader",
           options: {
-            compact:true,
+            compact: true,
             presets: ["@babel/preset-env"],
           },
         },
@@ -30,7 +30,7 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: [
         { from: "./package.json", to: "." }, // Copy package.json to dist
-        { from: "./web.config", to: "." }, // Copy .env to dist        
+        { from: "./web.config", to: "." }, // Copy .env to dist
         //{ from: "./deploy.bat", to: "." }, // Copy .env to dist
         //{ from: "./.deployment", to: "." }, // Copy .env to dist
       ],

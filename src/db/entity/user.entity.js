@@ -236,6 +236,30 @@ const UserEntity = new EntitySchema({
       inverseSide: "ModifiedByUser",
       joinColumn: { name: "ID" },
     },
+    CreatedMannerEstimations: {
+      type: RELATION_TYPES.ONE_TO_MANY,
+      target: "MannerEstimations",
+      inverseSide: "CreatedByUser",
+      joinColumn: { name: "ID" },
+    },
+    ModifiedMannerEstimations: {
+      type: RELATION_TYPES.ONE_TO_MANY,
+      target: "MannerEstimations",
+      inverseSide: "ModifiedByUser",
+      joinColumn: { name: "ID" },
+    },
+    CreatedMannerEstimationApplications: {
+      type: RELATION_TYPES.ONE_TO_MANY,
+      target: "MannerEstimationApplications",
+      inverseSide: "CreatedByUser",
+      joinColumn: { name: "ID" },
+    },
+    ModifiedMannerEstimationApplications: {
+      type: RELATION_TYPES.ONE_TO_MANY,
+      target: "MannerEstimationApplications",
+      inverseSide: "ModifiedByUser",
+      joinColumn: { name: "ID" },
+    },
   },
 });
 

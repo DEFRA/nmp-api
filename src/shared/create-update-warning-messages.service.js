@@ -81,55 +81,21 @@ class CreateOrUpdateWarningMessage {
     transactionalManager,
     userId
   ) {
-    const { cropID, fieldID } = await this.getCropAndField(
-      transactionalManager,
-      managementPeriodID
-    );
-
-    const existingMessages = await this.getExistingMessages(
-      transactionalManager,
-      fieldID,
-      cropID,
-      manure.ID
-    );
-
-    const deleteWarningMessages =await this.deleteWarningIfNoIncomingWarning(
-      transactionalManager,
-      warningMessagesArray,
-      existingMessages,
-      fieldID,
-      cropID
-    );
-     if(deleteWarningMessages.length ===0){
-      return
-     }
-
+    const { cropID, fieldID } = await this.getCropAndField(transactionalManager,managementPeriodID);
+    const existingMessages = await this.getExistingMessages(transactionalManager,fieldID,cropID,manure.ID);
+    const deleteWarningMessages =await this.deleteWarningIfNoIncomingWarning(transactionalManager,warningMessagesArray,existingMessages,fieldID,cropID);
+     if(deleteWarningMessages.length ===0){return}
     // Helper for equality check (ignores IDs/timestamps)
     const areMessagesEqual = (a, b) => {
-      const keysToCompare = [
-        "Header",
-        "Para1",
-        "Para2",
-        "Para3",
-        "WarningCodeID",
-        "WarningLevelID"
-      ];
+      const keysToCompare = ["Header","Para1","Para2","Para3","WarningCodeID","WarningLevelID"];
       return keysToCompare.every((key) => a[key] === b[key]);
     };
-
     const processedIDs = new Set();
-    
-    // 2️⃣ Update existing or insert new
+    // Update existing or insert new
     for (const newMsg of warningMessagesArray) {
-      const match = existingMessages.find((dbMsg) =>
-        areMessagesEqual(dbMsg, newMsg)
-      );
-
+      const match = existingMessages.find((dbMsg) => areMessagesEqual(dbMsg, newMsg));
       if (match) {
-        //Update only if something has changed
-        const hasChanged = Object.keys(newMsg).some(
-          (key) => newMsg[key] !== match[key]
-        );
+        const hasChanged = Object.keys(newMsg).some((key) => newMsg[key] !== match[key]);
         if (hasChanged) {
           const { ID, CreatedOn, CreatedByID, ...updateData } = newMsg;
           await transactionalManager.update(

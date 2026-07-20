@@ -1,8 +1,12 @@
 const axios = require("axios");
 const EnvironmentService = require("../../shared/environment.service");
-const { StatusCodeMapper } = require("../../constants/http-status-codes-mapper");
+const {
+  StatusCodeMapper,
+} = require("../../constants/http-status-codes-mapper");
+const { logRb209ApiError } = require("./rb209-error-logger.service");
 const userLoginUrl = "/Users/Login";
 const refreshAccessTokenUrl = "/Users/Refresh_Token";
+
 class RB209BaseService {
   #cacheManager;
   #accessTokenKey;
@@ -27,7 +31,7 @@ class RB209BaseService {
         }
         let accessToken = await this.#cacheManager.get(this.#accessTokenKey);
         const refreshToken = await this.#cacheManager.get(
-          this.#refreshTokenKey
+          this.#refreshTokenKey,
         );
         let tokens;
         if (!accessToken) {
@@ -42,7 +46,7 @@ class RB209BaseService {
         config.headers["Authorization"] = `Bearer ${accessToken}`;
         return config;
       },
-      (error) => Promise.reject(error)
+      (error) => Promise.reject(error),
     );
 
     this.#request.interceptors.response.use(
@@ -68,7 +72,7 @@ class RB209BaseService {
           console.log("Request not matching");
         }
         throw error;
-      }
+      },
     );
   }
 
@@ -103,21 +107,49 @@ class RB209BaseService {
   }
 
   async getData(url) {
+    const startedAt = Date.now();
     try {
       const response = await this.#request.get(url);
-
       return response.data;
     } catch (error) {
+      logRb209ApiError({
+        method: "GET",
+        endpoint: url,
+        startedAt,
+        error,
+      });
       return error.response;
     }
   }
 
   async postData(url, body) {
+    const startedAt = Date.now();
     try {
       const response = await this.#request.post(url, body);
-      return response.data;
+      return {
+        request: response.config.data,
+        status: response.status,
+        data: response.data,
+        statusText: response.statusText,
+        message: response.message || "API call successful",
+      };
     } catch (error) {
-      return error.response;
+      logRb209ApiError({
+        method: "POST",
+        endpoint: url,
+        requestPayload: body,
+        startedAt,
+        error,
+      });
+      return {
+        request: error.config?.data ?? null,
+        status:
+          error.response?.status ?? StatusCodeMapper.INTERNAL_SERVER_ERROR,
+        data: error.response?.data ?? error.message,
+        statusText: error.response?.statusText ?? "Internal Server Error",
+        message: error.message || "API call failed",
+        stack: error.stack || "N/A",
+      };
     }
   }
 }
