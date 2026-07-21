@@ -242,7 +242,7 @@ const mannerEstimationsReadHelpers = {
 
   async deleteMannerEstimations(mannerEstimationIds) {
     return AppDataSource.transaction(async (manager) => {
-      manager.query("EXEC spMannerEstimations_Delete @0", [
+      await manager.query("EXEC spMannerEstimations_Delete @0", [
         mannerEstimationIds.join(","),
       ]);
     });
