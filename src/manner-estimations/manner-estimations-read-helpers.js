@@ -52,19 +52,13 @@ const mannerEstimationsReadHelpers = {
   },
 
   async addCombinedApplicationResult(mannerEstimation, applications, request) {
-    const applicationsWithCombinedResult = [];
-    // for (const application of applications) {
       const mannerOutput = await this.getMappedMannerEstimationApplication(
         mannerEstimation,
         applications,
         request,
         { bindOutput: false },
       );
-      // applicationsWithCombinedResult.push({
-      //   ...application,
-      //   CombinedApplicationResult: mannerOutput,
-      // });
-    // }
+     
     return mannerOutput;
   },
 
