@@ -251,23 +251,28 @@ const mannerEstimationsWriteHelpers = {
 
   async getMappedMannerEstimationApplication(
     mannerEstimation,
-    mannerEstimationApplication,
+    applications,
     request,
     options = {},
   ) {
+    
+    const manureApplications = [];
     const { bindOutput = true } = options;
+     for (const application of applications) {
     const manureTypeData = await this.MannerManureTypesService.getData(
-      `/manure-types/${mannerEstimationApplication.ManureTypeID}`,
+      `/manure-types/${application.ManureTypeID}`,
       request,
     );
     const manureApplication =
       await this.CalculateMannerOutputService.buildManureApplicationObject(
-        mannerEstimationApplication,
+        application,
         manureTypeData,
       );
-    const manureApplications = [];
+    
+    
     manureApplications.push(manureApplication);
-    const mannerEstimationApplicationsRequest = this.buildMannerOutputReq(
+  }
+  const mannerEstimationApplicationsRequest = this.buildMannerOutputReq(
       mannerEstimation,
       manureApplications,
     );
@@ -284,7 +289,6 @@ const mannerEstimationsWriteHelpers = {
     }
 
     return this.bindMannerOutputToApplication(
-      mannerEstimationApplication,
       mannerOutput,
     );
   },
