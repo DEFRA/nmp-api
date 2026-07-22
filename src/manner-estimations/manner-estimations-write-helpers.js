@@ -253,7 +253,9 @@ const mannerEstimationsWriteHelpers = {
     mannerEstimation,
     mannerEstimationApplication,
     request,
+    options = {},
   ) {
+    const { bindOutput = true } = options;
     const manureTypeData = await this.MannerManureTypesService.getData(
       `/manure-types/${mannerEstimationApplication.ManureTypeID}`,
       request,
@@ -277,6 +279,10 @@ const mannerEstimationsWriteHelpers = {
       );
 
     const mannerOutput = mannerEstimationApplicationsOutput?.data ?? {};
+    if (!bindOutput) {
+      return mannerOutput;
+    }
+
     return this.bindMannerOutputToApplication(
       mannerEstimationApplication,
       mannerOutput,

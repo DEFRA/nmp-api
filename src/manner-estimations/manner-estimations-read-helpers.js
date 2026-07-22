@@ -29,9 +29,15 @@ const mannerEstimationsReadHelpers = {
     );
     const mannerEstimationApplicationsWithManureTypeName =
       await this.getMannerEstimationApplicationsWithManureTypeName(id, request);
+    const mannerEstimationApplicationsWithCombinedResult =
+      await this.addCombinedApplicationResult(
+        mannerEstimationData,
+        mannerEstimationApplicationsWithManureTypeName,
+        request,
+      );
     const lastUpdatedOn = this.getLastUpdatedOn(
       mannerEstimationData,
-      mannerEstimationApplicationsWithManureTypeName,
+      mannerEstimationApplicationsWithCombinedResult,
     );
     mannerEstimationData.CropTypeName = estimationNames.cropTypeName;
     mannerEstimationData.TopSoil = estimationNames.topSoil;
@@ -40,9 +46,26 @@ const mannerEstimationsReadHelpers = {
     return {
       MannerEstimation: mannerEstimationData,
       MannerEstimationApplication:
-        mannerEstimationApplicationsWithManureTypeName,
+        mannerEstimationApplicationsWithCombinedResult,
       LastUpdatedOn: lastUpdatedOn,
     };
+  },
+
+  async addCombinedApplicationResult(mannerEstimation, applications, request) {
+    const applicationsWithCombinedResult = [];
+    for (const application of applications) {
+      const mannerOutput = await this.getMappedMannerEstimationApplication(
+        mannerEstimation,
+        application,
+        request,
+        { bindOutput: false },
+      );
+      applicationsWithCombinedResult.push({
+        ...application,
+        CombinedApplicationResult: mannerOutput,
+      });
+    }
+    return applicationsWithCombinedResult;
   },
 
   async getMannerEstimationDisplayNames(mannerEstimationData, request) {
