@@ -290,6 +290,7 @@ const mannerEstimationsWriteHelpers = {
       CropAvailableNCurrentCrop: mannerOutput.currentCropAvailableN,
       CropAvailableNitrogenFollowingCropYearTwo:
         mannerOutput.followingCropYear2AvailableN,
+      NextGrassNitrogenCropCurrentYear:mannerOutput.nextGrassNCropCurrentYear,
       TotalP2O5: mannerOutput.totalP2O5,
       CropAvailableP2O5: mannerOutput.cropAvailableP2O5,
       TotalSO3: mannerOutput.totalSO3,
