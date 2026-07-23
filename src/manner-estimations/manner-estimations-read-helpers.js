@@ -29,6 +29,12 @@ const mannerEstimationsReadHelpers = {
     );
     const mannerEstimationApplicationsWithManureTypeName =
       await this.getMannerEstimationApplicationsWithManureTypeName(id, request);
+    const mannerEstimationApplicationsWithCombinedResult =
+      await this.addCombinedApplicationResult(
+        mannerEstimationData,
+        mannerEstimationApplicationsWithManureTypeName,
+        request,
+      );
     const lastUpdatedOn = this.getLastUpdatedOn(
       mannerEstimationData,
       mannerEstimationApplicationsWithManureTypeName,
@@ -39,10 +45,35 @@ const mannerEstimationsReadHelpers = {
     mannerEstimationData.Country = estimationNames.countryName;
     return {
       MannerEstimation: mannerEstimationData,
-      MannerEstimationApplication:
-        mannerEstimationApplicationsWithManureTypeName,
+      MannerEstimationApplication:mannerEstimationApplicationsWithManureTypeName,
+      TotalMannerCalculateNutrient:  mannerEstimationApplicationsWithCombinedResult,
       LastUpdatedOn: lastUpdatedOn,
     };
+  },
+
+  async addCombinedApplicationResult(mannerEstimation, applications, request) {
+      const allManureData = await this.MannerManureTypesService.getData(
+           "/manure-types",
+           request,
+         );
+    const manureApplications = [];
+     await this.CalculateMannerOutputService.processMultipleManures(
+       applications,
+       allManureData,
+       manureApplications
+     );
+     const mannerEstimationApplicationsRequest = this.buildMannerOutputReq(
+       mannerEstimation,
+       manureApplications
+     );
+      const mannerEstimationApplicationsOutput =
+      await this.MannerCalculateNutrientsService.postData(
+        "/calculate-nutrients",
+        mannerEstimationApplicationsRequest,
+        request,
+      );
+     
+    return mannerEstimationApplicationsOutput.data;
   },
 
   async getMannerEstimationDisplayNames(mannerEstimationData, request) {
