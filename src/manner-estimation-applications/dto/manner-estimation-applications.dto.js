@@ -56,6 +56,7 @@ const CreateMannerEstimationApplicationDto = Joi.object({
   CropAvailableNCurrentCrop: Joi.number().integer().required(),
 
   CropAvailableNitrogenFollowingCropYearTwo: Joi.number().integer().required(),
+  
   NextGrassNitrogenCropCurrentYear: Joi.number().integer().required(),
 
   TotalP2O5: Joi.number().integer().required(),
