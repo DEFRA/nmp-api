@@ -251,21 +251,26 @@ const mannerEstimationsWriteHelpers = {
 
   async getMappedMannerEstimationApplication(
     mannerEstimation,
-    mannerEstimationApplication,
+    applications,
     request,
+    options = {},
   ) {
+    
+    const manureApplications = [];
+    const { bindOutput = true } = options;
+
     const manureTypeData = await this.MannerManureTypesService.getData(
-      `/manure-types/${mannerEstimationApplication.ManureTypeID}`,
+      `/manure-types/${applications.ManureTypeID}`,
       request,
     );
     const manureApplication =
       await this.CalculateMannerOutputService.buildManureApplicationObject(
-        mannerEstimationApplication,
+        applications,
         manureTypeData,
       );
-    const manureApplications = [];
+  
     manureApplications.push(manureApplication);
-    const mannerEstimationApplicationsRequest = this.buildMannerOutputReq(
+  const mannerEstimationApplicationsRequest = this.buildMannerOutputReq(
       mannerEstimation,
       manureApplications,
     );
@@ -277,9 +282,13 @@ const mannerEstimationsWriteHelpers = {
       );
 
     const mannerOutput = mannerEstimationApplicationsOutput?.data ?? {};
+    if (!bindOutput) {
+      return mannerOutput;
+    }
+
     return this.bindMannerOutputToApplication(
-      mannerEstimationApplication,
-      mannerOutput,
+      applications,
+      mannerOutput
     );
   },
 
@@ -290,6 +299,7 @@ const mannerEstimationsWriteHelpers = {
       CropAvailableNCurrentCrop: mannerOutput.currentCropAvailableN,
       CropAvailableNitrogenFollowingCropYearTwo:
         mannerOutput.followingCropYear2AvailableN,
+      NextGrassNitrogenCropCurrentYear:mannerOutput.nextGrassNCropCurrentYear,
       TotalP2O5: mannerOutput.totalP2O5,
       CropAvailableP2O5: mannerOutput.cropAvailableP2O5,
       TotalSO3: mannerOutput.totalSO3,
