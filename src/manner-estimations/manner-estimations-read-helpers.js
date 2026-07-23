@@ -52,14 +52,28 @@ const mannerEstimationsReadHelpers = {
   },
 
   async addCombinedApplicationResult(mannerEstimation, applications, request) {
-      const mannerOutput = await this.getMappedMannerEstimationApplication(
-        mannerEstimation,
-        applications,
+      const allManureData = await this.MannerManureTypesService.getData(
+           "/manure-types",
+           request,
+         );
+    const manureApplications = [];
+     await this.CalculateMannerOutputService.processMultipleManures(
+       applications,
+       allManureData,
+       manureApplications
+     );
+     const mannerEstimationApplicationsRequest = this.buildMannerOutputReq(
+       mannerEstimation,
+       manureApplications
+     );
+      const mannerEstimationApplicationsOutput =
+      await this.MannerCalculateNutrientsService.postData(
+        "/calculate-nutrients",
+        mannerEstimationApplicationsRequest,
         request,
-        { bindOutput: false },
       );
      
-    return mannerOutput;
+    return mannerEstimationApplicationsOutput.data;
   },
 
   async getMannerEstimationDisplayNames(mannerEstimationData, request) {
