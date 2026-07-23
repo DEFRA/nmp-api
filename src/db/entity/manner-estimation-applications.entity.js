@@ -157,6 +157,11 @@ const MannerEstimationApplicationsEntity = new EntitySchema({
       nullable: false,
     },
 
+    NextGrassNitrogenCropCurrentYear: {
+      type: "int",
+      nullable: false,
+    },
+
     TotalP2O5: {
       type: "int",
       nullable: false,
