@@ -6,8 +6,12 @@ const {
   RecommendationCommentEntity,
 } = require("../db/entity/recommendation-comment.entity");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
-const { CalculateNextDefoliationService } = require("./calculate-next-defoliation-totalN");
-const { CalculateTotalAvailableNForNextYear } = require("./calculate-next-year-available-n");
+const {
+  CalculateNextDefoliationService,
+} = require("./calculate-next-defoliation-totalN");
+const {
+  CalculateTotalAvailableNForNextYear,
+} = require("./calculate-next-year-available-n");
 
 class SavingRecommendationService {
   constructor() {
@@ -65,7 +69,7 @@ class SavingRecommendationService {
         defoliationId,
         filteredData,
         latestSoilAnalysis,
-        {transactionalManager,userId},
+        { transactionalManager, userId },
         mannerOutputs,
         defoliationIds,
       );
@@ -93,13 +97,22 @@ class SavingRecommendationService {
     latestSoilAnalysis,
     userIdTransactionManager,
     mannerOutputs,
-    defoliationIds
+    defoliationIds,
   ) {
     const { transactionalManager, userId } = userIdTransactionManager;
-    const defoliationData = await this.extractNutrientData(filteredData.calculations,defoliationId);
-    if (!defoliationData?.length) {return null}
+    const defoliationData = await this.extractNutrientData(
+      filteredData.calculations,
+      defoliationId,
+    );
+    if (!defoliationData?.length) {
+      return null;
+    }
     const cropRecData = this.initializeRecommendationData(latestSoilAnalysis);
-    const managementPeriod = await this.getManagementPeriod(transactionalManager,cropData.ID,defoliationId);
+    const managementPeriod = await this.getManagementPeriod(
+      transactionalManager,
+      cropData.ID,
+      defoliationId,
+    );
     await this.applyNutrientCalculations(
       cropRecData,
       defoliationData,
@@ -107,16 +120,18 @@ class SavingRecommendationService {
       managementPeriod,
       cropData,
       transactionalManager,
-      {defoliationId,
-      defoliationIds}
+      { defoliationId, defoliationIds },
     );
-    if (!managementPeriod) {return null}
+    if (!managementPeriod) {
+      return null;
+    }
     return this.saveOrUpdateRecommendation(
       transactionalManager,
       managementPeriod,
       cropRecData,
       filteredData,
       userId,
+      latestSoilAnalysis
     );
   }
 
@@ -160,17 +175,30 @@ class SavingRecommendationService {
     managementPeriod,
     cropData,
     transactionalManager,
-    defoliations
+    defoliations,
   ) {
-    const { defoliationId, defoliationIds } = defoliations ;
-    const mannerOutputs = allMannerOutputs.filter((item) => item.defoliationId === defoliationId);
-    let availableNForNextDefoliation = null,nextCropAvailableN = null;
+    const { defoliationId, defoliationIds } = defoliations;
+    const mannerOutputs = allMannerOutputs.filter(
+      (item) => item.defoliationId === defoliationId,
+    );
+    let availableNForNextDefoliation = null,
+      nextCropAvailableN = null;
     if (!mannerOutputs || mannerOutputs.length === 0) {
-      if(defoliationIds.length > 1){
-        availableNForNextDefoliation =await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(transactionalManager,managementPeriod,cropData);
-         }
+      if (defoliationIds.length > 1) {
+        availableNForNextDefoliation =
+          await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
+            transactionalManager,
+            managementPeriod,
+            cropData,
+          );
+      }
       if (defoliationId === 1) {
-        nextCropAvailableN = await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(cropData.FieldID,cropData.Year,transactionalManager);
+        nextCropAvailableN =
+          await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
+            cropData.FieldID,
+            cropData.Year,
+            transactionalManager,
+          );
       }
     }
     const normalizeManure = (value) => (value === 0 ? null : value);
@@ -180,7 +208,8 @@ class SavingRecommendationService {
         cropRecData.FertilizerN = c.cropNeed;
         cropRecData.ManureN = c.manures;
         if (!mannerOutputs || mannerOutputs.length === 0) {
-          cropRecData.ManureN =(availableNForNextDefoliation || 0) + (nextCropAvailableN || 0);
+          cropRecData.ManureN =
+            (availableNForNextDefoliation || 0) + (nextCropAvailableN || 0);
         }
         cropRecData.NBalance = c.pkBalance;
         cropRecData.NIndex = c.indexpH;
@@ -198,7 +227,6 @@ class SavingRecommendationService {
         cropRecData.KBalance = c.pkBalance;
         cropRecData.FertilizerK2O = c.cropNeed;
         cropRecData.KIndex = c.indexpH;
-
       },
       3: (c) => {
         cropRecData.CropMgO = c.recommendation;
@@ -225,13 +253,15 @@ class SavingRecommendationService {
     };
     for (const calc of calculations) {
       const handler = nutrientHandlers[calc.nutrientId];
-      if (handler) {handler(calc)}
+      if (handler) {
+        handler(calc);
+      }
     }
   }
 
   async getManagementPeriod(transactionalManager, cropID, defoliationId) {
     const record = await transactionalManager.findOne(ManagementPeriodEntity, {
-      where: { CropID: cropID, Defoliation: defoliationId }
+      where: { CropID: cropID, Defoliation: defoliationId },
     });
     return record ?? null;
   }
@@ -242,6 +272,7 @@ class SavingRecommendationService {
     cropRecData,
     filteredData,
     userId,
+    latestSoilAnalysis,
   ) {
     const existing = await transactionalManager.findOne(RecommendationEntity, {
       where: { ManagementPeriodID: managementPeriod.ID },
@@ -250,6 +281,7 @@ class SavingRecommendationService {
     const baseData = {
       ...cropRecData,
       Comments: `Reference Value: ${filteredData.referenceValue}\nVersion: ${filteredData.versionNumber}`,
+      IsSacMethodology: latestSoilAnalysis?.PotassiumMethodologyID === 2,
     };
 
     if (existing) {
@@ -377,7 +409,7 @@ class SavingRecommendationService {
             Comment: commentText,
             RecommendationID: savedCrop?.ID,
             CreatedOn: new Date(),
-            CreatedByID: userId
+            CreatedByID: userId,
           }),
         );
       }
