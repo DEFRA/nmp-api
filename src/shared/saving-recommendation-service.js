@@ -168,38 +168,13 @@ class SavingRecommendationService {
     };
   }
 
-  async applyNutrientCalculations(
-    cropRecData,
-    calculations,
-    allMannerOutputs,
-    managementPeriod,
-    cropData,
-    transactionalManager,
-    defoliations,
-  ) {
+  async applyNutrientCalculations(cropRecData,calculations,allMannerOutputs,managementPeriod,cropData,transactionalManager,defoliations) {
     const { defoliationId, defoliationIds } = defoliations;
-    const mannerOutputs = allMannerOutputs.filter(
-      (item) => item.defoliationId === defoliationId,
-    );
-    let availableNForNextDefoliation = null,
-      nextCropAvailableN = null;
+    const mannerOutputs = allMannerOutputs.filter((item) => item.defoliationId === defoliationId);
+    let availableNForNextDefoliation = null,nextCropAvailableN = null;
     if (!mannerOutputs || mannerOutputs.length === 0) {
-      if (defoliationIds.length > 1) {
-        availableNForNextDefoliation =
-          await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
-            transactionalManager,
-            managementPeriod,
-            cropData,
-          );
-      }
-      if (defoliationId === 1) {
-        nextCropAvailableN =
-          await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
-            cropData.FieldID,
-            cropData.Year,
-            transactionalManager,
-          );
-      }
+      if (defoliationIds.length > 1) {availableNForNextDefoliation = await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(transactionalManager,managementPeriod,cropData)}
+      if (defoliationId === 1) {nextCropAvailableN = await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(cropData.FieldID,cropData.Year,transactionalManager)}
     }
     const normalizeManure = (value) => (value === 0 ? null : value);
     const nutrientHandlers = {
@@ -207,10 +182,7 @@ class SavingRecommendationService {
         cropRecData.CropN = c.recommendation;
         cropRecData.FertilizerN = c.cropNeed;
         cropRecData.ManureN = c.manures;
-        if (!mannerOutputs || mannerOutputs.length === 0) {
-          cropRecData.ManureN =
-            (availableNForNextDefoliation || 0) + (nextCropAvailableN || 0);
-        }
+        if (!mannerOutputs || mannerOutputs.length === 0) {cropRecData.ManureN =(availableNForNextDefoliation || 0) + (nextCropAvailableN || 0)}
         cropRecData.NBalance = c.pkBalance;
         cropRecData.NIndex = c.indexpH;
       },
@@ -253,9 +225,7 @@ class SavingRecommendationService {
     };
     for (const calc of calculations) {
       const handler = nutrientHandlers[calc.nutrientId];
-      if (handler) {
-        handler(calc);
-      }
+      if (handler) {handler(calc)}
     }
   }
 
