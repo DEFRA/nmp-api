@@ -235,6 +235,10 @@ const RecommendationEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
+    IsSacMethodology: {
+      type: "bit",
+      default: 0,
+    },
   },
   relations: {
     ManagementPeriod: {
