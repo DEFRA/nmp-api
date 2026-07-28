@@ -20,7 +20,23 @@ const RecommendationPreviousCroppingDto = Joi.object({
   measuredSmn: Joi.number().allow(null)
 });
 
+const RecommendationMannerOutputDto = Joi.object({
+  id: Joi.number().allow(null),
+  defoliationId: Joi.number().allow(null),
+  totalN: Joi.number().required(),
+  availableN: Joi.number().required(),
+  totalP: Joi.number().required(),
+  availableP: Joi.number().required(),
+  totalK: Joi.number().required(),
+  availableK: Joi.number().required(),
+  totalS: Joi.number().required(),
+  availableS: Joi.number().required(),
+  totalM: Joi.number().required(),
+});
+
 const RecommendationOrganicMaterialDto = Joi.object({
+  id: Joi.number().allow(null),
+  defoliationId: Joi.number().allow(null),
   materialId: Joi.number().required(),
   incorporationMethodId: Joi.number().required(),
   applicationDate: Joi.date().iso().required(),
@@ -34,23 +50,20 @@ const RecommendationOrganicMaterialDto = Joi.object({
 
 const RecommendationSoilAnalysisDto = Joi.object({
   soilAnalysisDate: Joi.date().iso().required(),
-  soilpH: Joi.number().required().allow(null),
-  sulphurDeficient: Joi.boolean().required(),
-  snsIndexId: Joi.number().required().allow(null),
-  pIndexId: Joi.number().required().allow(null),
-  kIndexId: Joi.number().required().allow(null),
-  mgIndexId: Joi.number().required().allow(null),
-  snsMethodologyId: Joi.number().required().allow(null),
-  pMethodologyId: Joi.number().required().allow(null),
-  kMethodologyId: Joi.number().required().allow(null),
-  mgMethodologyId: Joi.number().required().allow(null),
+  soilpH: Joi.number().optional().allow(null),
+  sulphurDeficient: Joi.boolean().optional(),
+  snsIndexId: Joi.number().optional().allow(null),
+  pIndexId: Joi.number().optional().allow(null),
+  kIndexId: Joi.number().optional().allow(null),
+  mgIndexId: Joi.number().optional().allow(null),
+  snsMethodologyId: Joi.number().optional().allow(null),
+  snsCropOrder: Joi.number().allow(null),
+  pMethodologyId: Joi.number().optional().allow(null),
+  kMethodologyId: Joi.number().optional().allow(null),
+  mgMethodologyId: Joi.number().optional().allow(null),
 });
 
-const RecommendationGrasslandSequenceDto = Joi.object({
-  position: Joi.number(),
-  cropMaterialId: Joi.number(),
-  yield: Joi.number(),
-});
+
 const PKBalanceDto = Joi.object({
   phosphate: Joi.number().required().allow(null),
   potash: Joi.number().required().allow(null),
@@ -64,17 +77,26 @@ const RecommendationSoilDto = Joi.object({
   soilAnalyses: Joi.array().items(RecommendationSoilAnalysisDto).required(),
 });
 
-const RecommendationGrasslandDto = Joi.object({
-  cropOrder: Joi.number(),
-  snsId: Joi.number(),
-  grassGrowthClassId: Joi.number(),
-  yieldTypeId: Joi.number(),
-  sequenceId: Joi.number(),
-  grasslandSequence: Joi.array()
-    .items(RecommendationGrasslandSequenceDto),    
-  establishedDate: Joi.date().iso(),
-  seasonId: Joi.number(),
-  siteClassId: Joi.number(),
+
+
+const RecommendationGrassFreshWeightYieldDto = Joi.object({
+  position: Joi.number().required(),
+  freshWeightYield: Joi.number().required(),
+});
+
+const RecommendationGrassDto = Joi.object({
+  cropOrder: Joi.number().required(),
+  swardTypeId: Joi.number().required(),
+  swardManagementId: Joi.number().required(),
+  defoliationSequenceId: Joi.number().required(),
+  grassGrowthClassId: Joi.number().required(),
+  siteClassId: Joi.number().allow(null),
+  rotationalGrass: Joi.boolean().optional(),
+  yield: Joi.number().allow(null),
+  freshWeightYields: Joi.array()
+    .items(RecommendationGrassFreshWeightYieldDto)
+    .optional(),
+  seasonId: Joi.number().required().allow(null)
 });
 
 const RecommendationArableDto = Joi.object({
@@ -87,20 +109,25 @@ const RecommendationArableDto = Joi.object({
   expectedYield: Joi.number().required(),
 });
 
+
 const RecommendationFieldDto = Joi.object({
   fieldType: Joi.number().required(),
   multipleCrops: Joi.boolean().required(),
   arable: Joi.array().items(RecommendationArableDto),
-  grassland: RecommendationGrasslandDto.optional(),
+  grass: RecommendationGrassDto.optional(),
   soil: RecommendationSoilDto,
   harvestYear: Joi.number().required(),
   rainfallAverage: Joi.number().required(),
   excessWinterRainfall: Joi.number().required(),
+  excessWinterRainfallManuallyEntered: Joi.boolean(),
   mannerManures: Joi.boolean().optional().allow(null),
   organicMaterials: Joi.array()
     .items(RecommendationOrganicMaterialDto)
-    .required(),
-  previousCropping: RecommendationPreviousCroppingDto.optional(),
+    .optional(),
+  mannerOutputs: Joi.array() 
+    .items(RecommendationMannerOutputDto)
+    .optional(),
+  previousCropping: RecommendationPreviousCroppingDto.required(),
   countryId: Joi.number().required(),
 });
 
