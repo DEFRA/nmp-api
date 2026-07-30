@@ -28,13 +28,7 @@ class BaseService {
   const records = await this.#entity.query(
     "EXEC dbo.spFarms_GetAllFarmsWithLastUpdatedDate @OrganisationID = @0",
     [organisationId]
-  );
-
-  if (!records?.length) {
-    throw boom.notFound(
-      StaticStrings.HTTP_STATUS_NOT_FOUND
-    );
-  }
+  ); 
 
   return { records };
 }
