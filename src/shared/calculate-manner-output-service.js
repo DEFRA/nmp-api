@@ -112,6 +112,20 @@ class CalculateMannerOutputService {
     };
   }
 
+  normalizeMannerNutrients(mannerData) {
+    return {
+      totalN: mannerData?.totalN || 0,
+      currentCropAvailableN: mannerData?.currentCropAvailableN || 0,
+      totalP: mannerData?.totalP2O5 || 0,
+      availableP: mannerData?.cropAvailableP2O5 || 0,
+      totalK: mannerData?.totalK2O || 0,
+      availableK: mannerData?.cropAvailableK2O || 0,
+      totalS: mannerData?.totalSO3 || 0,
+      availableS: mannerData?.cropAvailableSO3 || 0,
+      totalM: mannerData?.totalMgO || 0,
+    };
+  }
+
   async buildMannerOutputs(
     CropData,
     MannerOutput,
@@ -133,22 +147,24 @@ class CalculateMannerOutputService {
       return [];
     }
 
+    const nutrients = this.normalizeMannerNutrients(mannerData);
+
     return [
       {
         id: CropData.CropOrder,
         defoliationId: managementPeriod.Defoliation,
-        totalN: mannerData?.totalN || 0,
+        totalN: nutrients.totalN,
         availableN:
-          (mannerData?.currentCropAvailableN || 0) +
+          nutrients.currentCropAvailableN +
           nextCropAvailableN +
           availableNForNextDefoliation,
-        totalP: mannerData?.totalP2O5 || 0,
-        availableP: mannerData?.cropAvailableP2O5 || 0,
-        totalK: mannerData?.totalK2O || 0,
-        availableK: mannerData?.cropAvailableK2O || 0,
-        totalS: mannerData?.totalSO3 || 0,
-        availableS: mannerData?.cropAvailableSO3 || 0,
-        totalM: mannerData?.totalMgO || 0,
+        totalP: nutrients.totalP,
+        availableP: nutrients.availableP,
+        totalK: nutrients.totalK,
+        availableK: nutrients.availableK,
+        totalS: nutrients.totalS,
+        availableS: nutrients.availableS,
+        totalM: nutrients.totalM,
       },
     ];
   }
