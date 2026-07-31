@@ -28,57 +28,102 @@ class CalculateMannerOutputService {
       new CalculateTotalAvailableNForNextYear();
   }
 
+  async getNextCropAvailableN(
+    CropData,
+    managementPeriod,
+    transactionalManager,
+  ) {
+    if (managementPeriod.Defoliation !== 1) {
+      return 0;
+    }
+
+    return this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
+      CropData.FieldID,
+      CropData.Year,
+      transactionalManager,
+    );
+  }
+
+  async getAvailableNForNextDefoliation(
+    CropData,
+    managementPeriod,
+    transactionalManager,
+  ) {
+    if (managementPeriod.Defoliation <= 1) {
+      return 0;
+    }
+
+    const previousDefoliationManagementPeriods =
+      await transactionalManager.find(ManagementPeriodEntity, {
+        where: {
+          CropID: CropData.ID,
+          Defoliation: managementPeriod.Defoliation - 1,
+        },
+      });
+
+    const prevManagementPeriodIDs = previousDefoliationManagementPeriods.map(
+      (mp) => mp.ID,
+    );
+
+    if (prevManagementPeriodIDs.length === 0) {
+      return 0;
+    }
+
+    const organicManures = await transactionalManager.find(
+      OrganicManureEntity,
+      {
+        where: {
+          ManagementPeriodID: In(prevManagementPeriodIDs),
+        },
+      },
+    );
+
+    return organicManures.reduce(
+      (sum, manure) => sum + (manure.AvailableNForNextDefoliation || 0),
+      0,
+    );
+  }
+
+  async getCarryOverN(CropData, managementPeriod, transactionalManager) {
+    if (CropData.CropOrder === CropOrderMapper.SECONDCROP) {
+      return {
+        nextCropAvailableN: 0,
+        availableNForNextDefoliation: 0,
+      };
+    }
+
+    const [nextCropAvailableN, availableNForNextDefoliation] =
+      await Promise.all([
+        this.getNextCropAvailableN(
+          CropData,
+          managementPeriod,
+          transactionalManager,
+        ),
+        this.getAvailableNForNextDefoliation(
+          CropData,
+          managementPeriod,
+          transactionalManager,
+        ),
+      ]);
+
+    return {
+      nextCropAvailableN,
+      availableNForNextDefoliation,
+    };
+  }
+
   async buildMannerOutputs(
     CropData,
     MannerOutput,
     managementPeriod,
     transactionalManager,
   ) {
-    let availableNForNextDefoliation = 0;
-    let nextCropAvailableN = 0;
-
-    if (managementPeriod.Defoliation === 1) {
-      nextCropAvailableN =
-        await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
-          CropData.FieldID,
-          CropData.Year,
-          transactionalManager,
-        );
-    }
-
-    if (managementPeriod.Defoliation > 1) {
-      const previousDefoliationManagementPeriods =
-        await transactionalManager.find(ManagementPeriodEntity, {
-          where: {
-            CropID: CropData.ID,
-            Defoliation: managementPeriod.Defoliation - 1,
-          },
-        });
-
-      const prevManagementPeriodIDs = previousDefoliationManagementPeriods.map(
-        (mp) => mp.ID,
+    const { nextCropAvailableN, availableNForNextDefoliation } =
+      await this.getCarryOverN(
+        CropData,
+        managementPeriod,
+        transactionalManager,
       );
-
-      if (prevManagementPeriodIDs.length > 0) {
-        const organicManures = await transactionalManager.find(
-          OrganicManureEntity,
-          {
-            where: {
-              ManagementPeriodID: In(prevManagementPeriodIDs),
-            },
-          },
-        );
-
-        availableNForNextDefoliation = organicManures.reduce(
-          (sum, manure) => sum + (manure.AvailableNForNextDefoliation || 0),
-          0,
-        );
-      }
-    }
-    if (CropData.CropOrder === CropOrderMapper.SECONDCROP) {
-      nextCropAvailableN = 0;
-      availableNForNextDefoliation = 0;
-    }
 
     const mannerData = MannerOutput?.data;
     const hasCarryOverN =
@@ -369,24 +414,25 @@ class CalculateMannerOutputService {
       allManureData,
       transactionalManager,
     );
-    let mannerOutputReq = null,mannerOutput = null;
+    let mannerOutputReq = null,
+      mannerOutput = null;
     if (manureApplications.length > 0) {
-    mannerOutputReq = await this.buildMannerOutputReq(
-      farmData,
-      fieldData,
-      mannerCropTypeID,
-      manureApplications,
-      soilTypeTextureData,
-      transactionalManager,
-    );
-  }
+      mannerOutputReq = await this.buildMannerOutputReq(
+        farmData,
+        fieldData,
+        mannerCropTypeID,
+        manureApplications,
+        soilTypeTextureData,
+        transactionalManager,
+      );
+    }
     if (mannerOutputReq) {
       mannerOutput = await this.MannerCalculateNutrientsService.postData(
-      "/calculate-nutrients",
-      mannerOutputReq,
-      request,
-    );
-  }
+        "/calculate-nutrients",
+        mannerOutputReq,
+        request,
+      );
+    }
     const buildManureOutputs = await this.buildMannerOutputs(
       crop,
       mannerOutput,
