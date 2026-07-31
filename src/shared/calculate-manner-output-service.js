@@ -35,12 +35,16 @@ class CalculateMannerOutputService {
     transactionalManager,
   ) {
     let availableNForNextDefoliation = 0;
-    let nextCropAvailableN =
-      await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
-        CropData.FieldID,
-        CropData.Year,
-        transactionalManager,
-      );
+    let nextCropAvailableN = 0;
+
+    if (managementPeriod.Defoliation === 1) {
+      nextCropAvailableN =
+        await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
+          CropData.FieldID,
+          CropData.Year,
+          transactionalManager,
+        );
+    }
 
     if (managementPeriod.Defoliation > 1) {
       const previousDefoliationManagementPeriods =
@@ -75,22 +79,31 @@ class CalculateMannerOutputService {
       nextCropAvailableN = 0;
       availableNForNextDefoliation = 0;
     }
+
+    const mannerData = MannerOutput?.data;
+    const hasCarryOverN =
+      nextCropAvailableN !== 0 || availableNForNextDefoliation !== 0;
+
+    if (!mannerData && !hasCarryOverN) {
+      return [];
+    }
+
     return [
       {
         id: CropData.CropOrder,
         defoliationId: managementPeriod.Defoliation,
-        totalN: MannerOutput.data.totalN,
+        totalN: mannerData?.totalN || 0,
         availableN:
-          MannerOutput.data.currentCropAvailableN +
+          (mannerData?.currentCropAvailableN || 0) +
           nextCropAvailableN +
           availableNForNextDefoliation,
-        totalP: MannerOutput.data.totalP2O5,
-        availableP: MannerOutput.data.cropAvailableP2O5,
-        totalK: MannerOutput.data.totalK2O,
-        availableK: MannerOutput.data.cropAvailableK2O,
-        totalS: MannerOutput.data.totalSO3,
-        availableS: MannerOutput?.data?.cropAvailableSO3,
-        totalM: MannerOutput.data.totalMgO,
+        totalP: mannerData?.totalP2O5 || 0,
+        availableP: mannerData?.cropAvailableP2O5 || 0,
+        totalK: mannerData?.totalK2O || 0,
+        availableK: mannerData?.cropAvailableK2O || 0,
+        totalS: mannerData?.totalSO3 || 0,
+        availableS: mannerData?.cropAvailableSO3 || 0,
+        totalM: mannerData?.totalMgO || 0,
       },
     ];
   }
@@ -252,8 +265,8 @@ class CalculateMannerOutputService {
     });
     return {
       runType: farmData.EnglishRules
-        ? RunTypeMapper.MANNERENGLAND
-        : RunTypeMapper.MANNERSCOTLAND,
+        ? RunTypeMapper.PLANETENGLAND
+        : RunTypeMapper.PLANETSCOTLAND,
       postcode: farmData.ClimateDataPostCode.split(" ")[0],
       countryID: rb209CountryData.RB209CountryID,
       field: {
@@ -356,13 +369,9 @@ class CalculateMannerOutputService {
       allManureData,
       transactionalManager,
     );
-
-    if (manureApplications.length === 0) {
-      console.log("there is no manure for the crop");
-      return [];
-    }
-
-    const mannerOutputReq = await this.buildMannerOutputReq(
+    let mannerOutputReq = null,mannerOutput = null;
+    if (manureApplications.length > 0) {
+    mannerOutputReq = await this.buildMannerOutputReq(
       farmData,
       fieldData,
       mannerCropTypeID,
@@ -370,21 +379,14 @@ class CalculateMannerOutputService {
       soilTypeTextureData,
       transactionalManager,
     );
-
-    if (!mannerOutputReq) {
-      return [];
-    }
-
-    const mannerOutput = await this.MannerCalculateNutrientsService.postData(
+  }
+    if (mannerOutputReq) {
+      mannerOutput = await this.MannerCalculateNutrientsService.postData(
       "/calculate-nutrients",
       mannerOutputReq,
       request,
     );
-
-    if (!mannerOutput) {
-      return [];
-    }
-
+  }
     const buildManureOutputs = await this.buildMannerOutputs(
       crop,
       mannerOutput,
