@@ -58,38 +58,83 @@ const {
   SecondCropLinkingEntity,
 } = require("./entity/second-crop-linking.entity.js");
 const { PKBalanceEntity } = require("./entity/pk-balance.entity.js");
-const { GrassManagementOptionsEntity } = require("./entity/grassManagementOptionsEntity.js");
-const { GrassTypicalCutsEntity } = require("./entity/grassTypicalCutsEntity.js");
-const { SoilNitrogenSupplyItemsEntity } = require("./entity/soil-nitrogen-supply-items.entity.js");
-const { PreviousGrassesEntity } = require("./entity/previous-grasses-entity.js");
+const {
+  GrassManagementOptionsEntity,
+} = require("./entity/grassManagementOptionsEntity.js");
+const {
+  GrassTypicalCutsEntity,
+} = require("./entity/grassTypicalCutsEntity.js");
+const {
+  SoilNitrogenSupplyItemsEntity,
+} = require("./entity/soil-nitrogen-supply-items.entity.js");
+const {
+  PreviousGrassesEntity,
+} = require("./entity/previous-grasses-entity.js");
 const { SNSCategoriesEntity } = require("./entity/snsCategories.entity.js");
-const { InprogressCalculationsEntity } = require("./entity/inprogress-calculations-entity.js");
-const { CropInfoQuestionsEntity } = require("./entity/crop-info-questions.entity.js");
-const { ExcessRainfallsEntity } = require("./entity/excess-rainfalls.entity.js");
-const { ExcessWinterRainfallOptionsEntity } = require("./entity/excess-winter-rainfall-options.js");
+const {
+  InprogressCalculationsEntity,
+} = require("./entity/inprogress-calculations-entity.js");
+const {
+  CropInfoQuestionsEntity,
+} = require("./entity/crop-info-questions.entity.js");
+const {
+  ExcessRainfallsEntity,
+} = require("./entity/excess-rainfalls.entity.js");
+const {
+  ExcessWinterRainfallOptionsEntity,
+} = require("./entity/excess-winter-rainfall-options.js");
 const { UserExtensionsEntity } = require("./entity/user-extension.entity.js");
-const { PreviousGrassIdMappingEntity } = require("./entity/previous-grass-Id-mapping.entity.js");
-const { GrassHistoryIdMappingEntity } = require("./entity/grass-history-id-mapping-entity.js");
-const { CropGroupCategoriesEntity } = require("./entity/crop-group-categories.entity.js");
-const { SoilGroupCategoriesEntity } = require("./entity/soil-group-categories-entity.js");
+const {
+  PreviousGrassIdMappingEntity,
+} = require("./entity/previous-grass-Id-mapping.entity.js");
+const {
+  GrassHistoryIdMappingEntity,
+} = require("./entity/grass-history-id-mapping-entity.js");
+const {
+  CropGroupCategoriesEntity,
+} = require("./entity/crop-group-categories.entity.js");
+const {
+  SoilGroupCategoriesEntity,
+} = require("./entity/soil-group-categories-entity.js");
 const { LivestockGroupEntity } = require("./entity/livestock-group-entity.js");
 const { LivestockTypeEntity } = require("./entity/livestock-type-entity.js");
-const { NutrientsLoadingFarmDetailsEntity } = require("./entity/nutrients-loading-farm-details-entity.js");
-const { NutrientsLoadingLiveStocksEntity } = require("./entity/nutrients-loading-live-stocks-entity.js");
-const { NutrientsLoadingManuresEntity } = require("./entity/nutrients-loading-manures-entity.js");
+const {
+  NutrientsLoadingFarmDetailsEntity,
+} = require("./entity/nutrients-loading-farm-details-entity.js");
+const {
+  NutrientsLoadingLiveStocksEntity,
+} = require("./entity/nutrients-loading-live-stocks-entity.js");
+const {
+  NutrientsLoadingManuresEntity,
+} = require("./entity/nutrients-loading-manures-entity.js");
 const { StorageTypesEntity } = require("./entity/storage-types.Entity.js");
-const { StoreCapacitiesEntity } = require("./entity/store-capacities.entity.js");
+const {
+  StoreCapacitiesEntity,
+} = require("./entity/store-capacities.entity.js");
 const { MaterialStatesEntity } = require("./entity/material-states.entity.js");
-const { SolidManureTypesEntity } = require("./entity/solid-manure-types.entity.js");
-const { BankSlopeAnglesEntity } = require("./entity/bank-slope-angles-entity.js");
+const {
+  SolidManureTypesEntity,
+} = require("./entity/solid-manure-types.entity.js");
+const {
+  BankSlopeAnglesEntity,
+} = require("./entity/bank-slope-angles-entity.js");
 const { WarningMessagesEntity } = require("./entity/warning-message.entity.js");
-const { PreviousCroppingEntity } = require("./entity/previous-cropping.entity.js");
+const {
+  PreviousCroppingEntity,
+} = require("./entity/previous-cropping.entity.js");
 const { WarningCodeEntity } = require("./entity/warning-code.entity.js");
 const { WarningsEntity } = require("./entity/warning.entity.js");
 const { entities } = require("./entity/register-entities.js");
 
-
 const isProduction = EnvironmentService.nodeEnv() === "production";
+const dbRequestTimeout = Number.parseInt(process.env.DB_REQUEST_TIMEOUT_MS, 10);
+const dbConnectTimeout = Number.parseInt(process.env.DB_CONNECT_TIMEOUT_MS, 10);
+const requestTimeout = Number.isFinite(dbRequestTimeout)
+  ? dbRequestTimeout
+  : 120000;
+const connectTimeout = Number.isFinite(dbConnectTimeout)
+  ? dbConnectTimeout
+  : 30000;
 const baseConfig = {
   type: "mssql",
   host: EnvironmentService.databaseHost(),
@@ -107,6 +152,8 @@ if (isProduction) {
     ...baseConfig,
     options: {
       encrypt: true,
+      requestTimeout,
+      connectTimeout,
     },
     extra: {
       authentication: {
@@ -121,6 +168,8 @@ if (isProduction) {
     password: EnvironmentService.databasePassword(),
     options: {
       trustServerCertificate: true,
+      requestTimeout,
+      connectTimeout,
     },
   };
 }

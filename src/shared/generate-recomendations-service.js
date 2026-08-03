@@ -44,6 +44,27 @@ const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 const RECOMMENDATION_LOG_ENDPOINT = "Recommendation/Recommendations";
 const SERVICE_NAME = "generate-recomendations-service.js";
 
+const buildRb209FailureError = (response, cropId) => {
+  const error = new Error("RB209 recommendation request failed");
+  error.statusCode = response?.status ?? StatusCodeMapper.INTERNAL_SERVER_ERROR;
+  error.response = response;
+  error.cropId = cropId;
+  return error;
+};
+
+const buildRecommendationRequestFingerprint = (requestBody) => {
+  if (!requestBody || typeof requestBody !== "object") {
+    return "invalid-request-body";
+  }
+
+  const normalizedBody = {
+    ...requestBody,
+    referenceValue: "fingerprint",
+  };
+
+  return JSON.stringify(normalizedBody);
+};
+
 class GenerateRecommendations {
   constructor() {
     this.rB209ArableService = new RB209ArableService();
@@ -65,44 +86,96 @@ class GenerateRecommendations {
   }
 
   async getGenerateRecommendationsContext(fieldID, Year, transactionalManager) {
-    const cropTypesList = await this.rB209ArableService.getData("/Arable/CropTypes");
-    const fieldRelatedData = await this.fieldRelated.getFieldAndCountryData(fieldID,transactionalManager);
+    const cropTypesList =
+      await this.rB209ArableService.getData("/Arable/CropTypes");
+    const fieldRelatedData = await this.fieldRelated.getFieldAndCountryData(
+      fieldID,
+      transactionalManager,
+    );
     const crops = await transactionalManager.find(CropEntity, {
       where: { FieldID: fieldID, Year: Year },
     });
-    const fertiliserData =await this.totalFertiliserByField.getTotalFertiliserByFieldAndYear(transactionalManager,fieldID,Year);
+    const fertiliserData =
+      await this.totalFertiliserByField.getTotalFertiliserByFieldAndYear(
+        transactionalManager,
+        fieldID,
+        Year,
+      );
     return { cropTypesList, fieldRelatedData, crops, fertiliserData };
   }
 
   async processStandardCropRecommendation(cropContext) {
-    const {crop,crops,soilAnalysisRecords,snsAnalysesData,mannerOutputs,
-      latestSoilAnalysis,previousCrop,fieldRelatedData,
-      request,transactionalManager,
-      cropTypesList,fertiliserData,
-      userId,cropPOfftake
+    const {
+      crop,
+      crops,
+      soilAnalysisRecords,
+      snsAnalysesData,
+      mannerOutputs,
+      latestSoilAnalysis,
+      previousCrop,
+      fieldRelatedData,
+      summerainfall,
+      request,
+      transactionalManager,
+      cropTypesList,
+      fertiliserData,
+      userId,
+      cropPOfftake,
+      recommendationApiResponseCache,
     } = cropContext;
     const analysis = { soilAnalysisRecords, snsAnalysesData };
     const singleAndMultipleCrops = { crops, crop };
-    const nutrientRecommendationnReqBody =await this.buildNutrientRecommendationReqBody(fieldRelatedData,analysis,
-        singleAndMultipleCrops,mannerOutputs,
-        request,transactionalManager,
-        cropTypesList
+    const nutrientRecommendationnReqBody =
+      await this.buildNutrientRecommendationReqBody(
+        fieldRelatedData,
+        analysis,
+        singleAndMultipleCrops,
+        mannerOutputs,
+        request,
+        transactionalManager,
+        cropTypesList,
       );
     let nutrientRecommendationsData;
-  
-      const response = await this.rB209RecommendationService.postData(RECOMMENDATION_LOG_ENDPOINT,nutrientRecommendationnReqBody);
-      if (response.status === StatusCodeMapper.SUCCESS) {
-        nutrientRecommendationsData = response.data;
-        console.log("RB209 recommendation API call successful. Received data:",nutrientRecommendationsData);
-      } else {
-        console.error(
-          "RB209 recommendation API call failed:",
-          response.status,
-          response.data,
-          response.statusText,
-        );
+
+    const requestFingerprint = buildRecommendationRequestFingerprint(
+      nutrientRecommendationnReqBody,
+    );
+
+    let response = recommendationApiResponseCache.get(requestFingerprint);
+    if (!response) {
+      response = await this.rB209RecommendationService.postData(
+        RECOMMENDATION_LOG_ENDPOINT,
+        nutrientRecommendationnReqBody,
+      );
+      recommendationApiResponseCache.set(requestFingerprint, response);
+    }
+
+    const hasValidCalculations =
+      Array.isArray(response?.data?.calculations) &&
+      response.data.calculations.length > 0;
+
+    if (response.status === StatusCodeMapper.SUCCESS && hasValidCalculations) {
+      nutrientRecommendationsData = response.data;
+      console.log(
+        "RB209 recommendation API call successful. Received data:",
+        nutrientRecommendationsData,
+      );
+    } else {
+      console.error(
+        "RB209 recommendation API call failed or returned invalid payload:",
+        response.status,
+        response.data,
+        response.statusText,
+      );
+
+      const isClientOrPayloadError =
+        response?.status === StatusCodeMapper.BAD_REQUEST ||
+        response?.status === 413;
+
+      if (isClientOrPayloadError) {
+        throw buildRb209FailureError(response, crop.ID);
       }
-    
+    }
 
     const recommendation =
       await this.savingRecommendationService.processAndSaveRecommendations(
@@ -147,7 +220,7 @@ class GenerateRecommendations {
       newOrganicManure,
       transactionalManager,
       userId,
-      fertiliserData,
+      fertiliserData
     } = cropContext;
 
     const cropPOfftake = await this.calculateCropPOfftake(
@@ -201,8 +274,13 @@ class GenerateRecommendations {
         Year,
         transactionalManager,
       );
+      
     const results = [];
-
+    const recommendationApiResponseCache = new Map();
+     const summerainfall = await this.MannerRainfallPostApplicationService.getData(
+       `climates/rainfall-april-to-september/${fieldRelatedData.ClimateDataPostCode}`,
+       request,
+     );
     for (const crop of crops) {
       const {
         snsAnalysesData,
@@ -228,12 +306,14 @@ class GenerateRecommendations {
         mannerOutputs,
         previousCrop,
         fieldRelatedData,
+        summerainfall,
         request,
         transactionalManager,
         cropTypesList,
         newOrganicManure,
         userId,
         fertiliserData,
+        recommendationApiResponseCache,
       });
       results.push(result);
     }

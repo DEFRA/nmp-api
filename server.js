@@ -11,9 +11,16 @@ const pack = require("./package");
 const routes = require("./src/routes");
 const ormConfig = require("./src/db/ormConfig");
 
-const { AzureAuthMiddleware } = require("./src/middleware/azureAuth.middleware");
+const {
+  AzureAuthMiddleware,
+} = require("./src/middleware/azureAuth.middleware");
 const responseHandlerPlugin = require("./src/interceptor/response.interceptor");
 const EnvironmentService = require("./src/shared/environment.service");
+
+const parseTimeout = (value, fallback) => {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
 
 const init = async () => {
   const swaggerOptions = {
@@ -43,8 +50,23 @@ const init = async () => {
   await createConnection(ormConfig);
   const azureAuthMiddleware = new AzureAuthMiddleware();
 
+  const serverTimeoutMs = parseTimeout(
+    process.env.SERVER_ROUTE_TIMEOUT_MS,
+    300000,
+  );
+  const socketTimeoutMs = parseTimeout(
+    process.env.SERVER_SOCKET_TIMEOUT_MS,
+    300000,
+  );
+
   const server = hapi.server({
     port: process.env.PORT ?? EnvironmentService.applicationPort(),
+    routes: {
+      timeout: {
+        server: serverTimeoutMs,
+        socket: socketTimeoutMs,
+      },
+    },
     // Use the port provided by IIS,
     // host: "localhost",
   });
@@ -66,9 +88,9 @@ const init = async () => {
   server.route(routes);
 
   server.events.on("response", function (request) {
-     console.log(
-       `${request.info.remoteAddress}: ${request.method.toUpperCase()} ${request.path} --> ${request.response.statusCode}`
-     );
+    console.log(
+      `${request.info.remoteAddress}: ${request.method.toUpperCase()} ${request.path} --> ${request.response.statusCode}`,
+    );
   });
 
   await server.start();

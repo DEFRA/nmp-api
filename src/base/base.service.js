@@ -7,6 +7,10 @@ class BaseService {
   #entity;
   #entityManager;
 
+  static #defaultGetByLimit = 200;
+  static #defaultGetByRetries = 2;
+  static #defaultGetByRetryDelayMs = 200;
+
   constructor(entity) {
     this.#entity = getRepository(entity);
     this.#entityManager = AppDataSource.manager;
@@ -25,19 +29,108 @@ class BaseService {
     return { records };
   }
   async getAllWithLastUpdatedDate(organisationId) {
-  const records = await this.#entity.query(
-    "EXEC dbo.spFarms_GetAllFarmsWithLastUpdatedDate @OrganisationID = @0",
-    [organisationId]
-  ); 
+    const records = await this.#entity.query(
+      "EXEC dbo.spFarms_GetAllFarmsWithLastUpdatedDate @OrganisationID = @0",
+      [organisationId],
+    );
 
-  return { records };
-}
+    return { records };
+  }
 
-  async getBy(column, value, selectOptions) {
-    const records = await this.#entity.find({
-      where: { [column]: value },
-      select: selectOptions,
-    });
+  #resolveGetByOptions(selectOptionsOrQueryOptions, queryOptions) {
+    const optionsCandidate = selectOptionsOrQueryOptions;
+    const isSelectOptions =
+      Array.isArray(optionsCandidate) || optionsCandidate === undefined;
+
+    return {
+      selectOptions: isSelectOptions ? optionsCandidate : undefined,
+      queryOptions: isSelectOptions
+        ? queryOptions
+        : (optionsCandidate ?? queryOptions),
+    };
+  }
+
+  #buildGetByWhere(column, value) {
+    if (column && typeof column === "object" && !Array.isArray(column)) {
+      return column;
+    }
+
+    return { [column]: value };
+  }
+
+  #resolveSafeTake(take) {
+    if (!Number.isFinite(take)) {
+      return BaseService.#defaultGetByLimit;
+    }
+
+    const normalizedTake = Math.floor(take);
+    if (normalizedTake <= 0) {
+      return BaseService.#defaultGetByLimit;
+    }
+
+    return Math.min(normalizedTake, 1000);
+  }
+
+  #isRetryableReadError(error) {
+    const driverCode = error?.driverError?.code ?? error?.code;
+    const driverNumber = error?.driverError?.number ?? error?.number;
+
+    return (
+      driverCode === "ETIMEOUT" ||
+      driverCode === "ESOCKET" ||
+      driverNumber === 1205
+    );
+  }
+
+  async #waitBeforeRetry(delayMs) {
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+
+  async #runReadWithRetry(readOperation) {
+    let retryDelayMs = BaseService.#defaultGetByRetryDelayMs;
+    let lastError;
+
+    for (
+      let attempt = 0;
+      attempt <= BaseService.#defaultGetByRetries;
+      attempt += 1
+    ) {
+      try {
+        return await readOperation();
+      } catch (error) {
+        lastError = error;
+        const shouldRetry =
+          attempt < BaseService.#defaultGetByRetries &&
+          this.#isRetryableReadError(error);
+
+        if (!shouldRetry) {
+          throw error;
+        }
+
+        await this.#waitBeforeRetry(retryDelayMs);
+        retryDelayMs *= 2;
+      }
+    }
+
+    throw lastError;
+  }
+
+  async getBy(column, value, selectOptionsOrQueryOptions, queryOptions) {
+    const { selectOptions, queryOptions: resolvedQueryOptions } =
+      this.#resolveGetByOptions(selectOptionsOrQueryOptions, queryOptions);
+
+    const where = this.#buildGetByWhere(column, value);
+    const take = this.#resolveSafeTake(resolvedQueryOptions?.take);
+
+    const records = await this.#runReadWithRetry(async () =>
+      this.#entity.find({
+        where,
+        select: selectOptions,
+        order: resolvedQueryOptions?.order,
+        skip: resolvedQueryOptions?.skip,
+        take,
+      }),
+    );
     return { records };
   }
 
@@ -94,12 +187,12 @@ class BaseService {
         const savedEntities = [];
         for (const entity of entities) {
           const savedEntity = await transactionalEntityManager.save(
-            this.#entity.create(entity)
+            this.#entity.create(entity),
           );
           savedEntities.push(savedEntity);
         }
         return savedEntities;
-      }
+      },
     );
   }
 
@@ -124,7 +217,7 @@ class BaseService {
         boom.HttpStatus.FORBIDDEN,
         {
           cause: "Unauthorized",
-        }
+        },
       );
     }
     return this.#entityManager.query(query, parameters);
