@@ -1,3 +1,5 @@
+const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
+
 const circuitStateByKey = new Map();
 const concurrencyStateByKey = new Map();
 
@@ -133,10 +135,10 @@ const isRetryableHttpError = (error) => {
 
   const statusCode = error.response?.status;
   return (
-    statusCode === 408 ||
-    statusCode === 425 ||
-    statusCode === 429 ||
-    statusCode >= 500
+    statusCode === StatusCodeMapper.REQUEST_TIMEOUT ||
+    statusCode === StatusCodeMapper.TOO_EARLY ||
+    statusCode === StatusCodeMapper.TOO_MANY_REQUEST ||
+    statusCode >= StatusCodeMapper.INTERNAL_SERVER_ERROR
   );
 };
 

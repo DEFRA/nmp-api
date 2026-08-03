@@ -30,11 +30,12 @@ const summarizePayload = (payload) => {
   }
 
   if (typeof payload === "object") {
+    const maxKeys = 40;
     const keys = Object.keys(payload);
     return {
       type: "object",
       keyCount: keys.length,
-      keys: keys.slice(0, 40),
+      keys: keys.slice(0, maxKeys),
     };
   }
 

@@ -2,6 +2,7 @@ const { StaticStrings } = require("../shared/static.string");
 const PlanService = require("../plan/plan.service");
 const { CropService } = require("./crop.service");
 const boom = require("@hapi/boom");
+const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 
 class CropController {
   #request;
@@ -114,10 +115,10 @@ class CropController {
       if (Number.isFinite(parsedYear)) {
         where.Year = parsedYear;
       }
-
+      const defaultLimit = 200;
       const safeLimit = Number.isFinite(parsedLimit)
         ? Math.min(Math.max(parsedLimit, 1), 1000)
-        : 200;
+        : defaultLimit;
 
       const Crops = await this.#cropService.getBy(where, null, {
         take: safeLimit,
@@ -198,7 +199,6 @@ class CropController {
           message: "Recommendation processing started",
           status: "accepted",
         })
-        .code(202);
     }
 
     try {
@@ -400,7 +400,7 @@ class CropController {
       });
     } catch (error) {
       console.error("Error updating crops:", error);
-      const statusCode = error?.statusCode || error?.response?.status || 500;
+      const statusCode = error?.statusCode || error?.response?.status || StatusCodeMapper.INTERNAL_SERVER_ERROR;
       return this.#h
         .response({
           message: StaticStrings.ERR_INTERNAL_SERVER_ERROR,
@@ -445,10 +445,10 @@ class CropController {
       return this.#h.response(results);
     } catch (error) {
       console.error("Error merging crop:", error);
-      const statusCode = error?.statusCode || error?.response?.status || 500;
+      const statusCode = error?.statusCode || error?.response?.status || StatusCodeMapper.INTERNAL_SERVER_ERROR;
       return this.#h
         .response({
-          message: "Internal Server Error",
+          message: StaticStrings.ERR_INTERNAL_SERVER_ERROR,
           error: error.message,
         })
         .code(statusCode);
