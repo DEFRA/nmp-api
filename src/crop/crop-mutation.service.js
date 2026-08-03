@@ -315,50 +315,25 @@ const cropMutationMethods = {
 
   async updateCropData(body, userId, request, transactionalManager) {
     // If a global transaction manager is provided, use it.
-    if (transactionalManager) {
-      return this.updateCrop(body, userId, request, transactionalManager);
-    }
-
+    if (transactionalManager) {return this.updateCrop(body, userId, request, transactionalManager)}
     //  Otherwise, start a new local transaction.
-    return AppDataSource.transaction(async (localManager) => {
-      return this.updateCrop(body, userId, request, localManager);
-    });
+    return AppDataSource.transaction(async (localManager) => {return this.updateCrop(body, userId, request, localManager)});
   },
 
   async updateCrop(body, userId, request, transactionalManager) {
-    const updatedResults = [],
-      cropData = body.Crops;
+    const updatedResults = [],cropData = body.Crops;
     for (const cropEntry of cropData) {
       const crop = cropEntry?.Crop;
-      const {
-        ID,
-        CreatedByID,
-        CreatedOn,
-        ModifiedOn,
-        ModifiedByID,
-        EncryptedCounter,
-        FieldName,
-        IsDeleted,
-        ...updatedCropData
-      } = crop;
-      const cropUpdateResult = await transactionalManager.update(
-        CropEntity,
-        ID,
+      const {ID,CreatedByID,CreatedOn,ModifiedOn,ModifiedByID,EncryptedCounter,FieldName,IsDeleted,...updatedCropData} = crop;
+      const cropUpdateResult = await transactionalManager.update(CropEntity,ID,
         { ...updatedCropData, ModifiedByID: userId, ModifiedOn: new Date() },
       );
-
-      if (cropUpdateResult.affected === 0) {
-        console.warn(`Crop with ID ${ID} not found`);
-        continue;
+      if (cropUpdateResult.affected === 0) {console.warn(`Crop with ID ${ID} not found`);
+       continue;
       }
-      const updatedCrop = await transactionalManager.findOne(CropEntity, {
-        where: { ID: ID },
-      });
+      const updatedCrop = await transactionalManager.findOne(CropEntity, {where: { ID: ID }});
       // Get the rb209CountryID of the farm
-      const rb209CountryID = await this.fetchRb209CountryId(
-        crop.FieldID,
-        transactionalManager,
-      );
+      const rb209CountryID = await this.fetchRb209CountryId(crop.FieldID,transactionalManager);
       await this.validateAndHandleSecondCrop(
         transactionalManager,
         updatedCrop,
@@ -366,15 +341,13 @@ const cropMutationMethods = {
         updatedCrop.Year,
         rb209CountryID,
       );
-      const updatedManagementPeriods =
-        await this.syncManagementPeriodsBySequence(
+      const updatedManagementPeriods = await this.syncManagementPeriodsBySequence(
           transactionalManager,
           crop.ID,
           userId,
-          cropEntry.ManagementPeriods,
+          cropEntry.ManagementPeriods
         );
       const organicManure = null;
-      // Recommendation update
       await this.generateRecommendations.generateRecommendations(
         updatedCrop.FieldID,
         updatedCrop.Year,
@@ -393,30 +366,18 @@ const cropMutationMethods = {
       });
       console.log("nextAvailableCrop", nextAvailableCrop);
 
-      if (nextAvailableCrop) {
-        this.updatingFutureRecommendations
-          .updateRecommendationsForField(
+      if (nextAvailableCrop) { 
+        this.updatingFutureRecommendations.updateRecommendationsForField(
             updatedCrop.FieldID,
             nextAvailableCrop.Year,
             request,
-            userId,
+            userId
           )
-          .catch((error) => {
-            console.error("Error updating next crop's recommendations:", error);
-          });
+          .catch((error) => {console.error("Error updating next crop's recommendations:", error)});
       }
-      this.ProcessFutureManuresForWarnings.processWarningsByCrop(
-        updatedCrop.ID,
-        userId,
-      );
+      this.ProcessFutureManuresForWarnings.processWarningsByCrop(updatedCrop.ID, userId);
 
-      // Final result: pair crop with its periods
-      if (updatedCrop) {
-        updatedResults.push({
-          crop: updatedCrop,
-          ManagementPeriods: updatedManagementPeriods,
-        });
-      }
+      if (updatedCrop) {updatedResults.push({crop: updatedCrop,ManagementPeriods: updatedManagementPeriods})}
     }
 
     return updatedResults;

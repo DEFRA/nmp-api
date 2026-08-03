@@ -18,7 +18,7 @@ class GrassGrowthService extends BaseService {
   }
 
   async getGrassGrowthClassByFieldId(fieldIds, request) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const results = [];
 
       for (const fieldId of fieldIds) {

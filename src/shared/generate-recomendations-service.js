@@ -109,60 +109,31 @@ class GenerateRecommendations {
   }
 
   async processStandardCropRecommendation(cropContext) {
-    const {
-      crop,
-      crops,
-      soilAnalysisRecords,
-      snsAnalysesData,
-      mannerOutputs,
-      latestSoilAnalysis,
-      previousCrop,
+    const {crop,crops,soilAnalysisRecords,snsAnalysesData,mannerOutputs,latestSoilAnalysis,previousCrop,
       fieldRelatedData,
-      request,
-      transactionalManager,
-      cropTypesList,
-      fertiliserData,
-      userId,
-      cropPOfftake,
+      request,transactionalManager,
+      cropTypesList,fertiliserData,
+      userId,cropPOfftake,
       recommendationApiResponseCache,
     } = cropContext;
     const analysis = { soilAnalysisRecords, snsAnalysesData };
     const singleAndMultipleCrops = { crops, crop };
-    const nutrientRecommendationnReqBody =
-      await this.buildNutrientRecommendationReqBody(
-        fieldRelatedData,
-        analysis,
-        singleAndMultipleCrops,
-        mannerOutputs,
-        request,
-        transactionalManager,
-        cropTypesList,
+    const nutrientRecommendationnReqBody =await this.buildNutrientRecommendationReqBody(fieldRelatedData,
+        analysis,singleAndMultipleCrops,
+        mannerOutputs,request,
+        transactionalManager,cropTypesList
       );
     let nutrientRecommendationsData;
-
-    const requestFingerprint = buildRecommendationRequestFingerprint(
-      nutrientRecommendationnReqBody,
-    );
-
+    const requestFingerprint = buildRecommendationRequestFingerprint(nutrientRecommendationnReqBody);
     let response = recommendationApiResponseCache.get(requestFingerprint);
     if (!response) {
-      response = await this.rB209RecommendationService.postData(
-        RECOMMENDATION_LOG_ENDPOINT,
-        nutrientRecommendationnReqBody,
-      );
+      response = await this.rB209RecommendationService.postData(RECOMMENDATION_LOG_ENDPOINT,nutrientRecommendationnReqBody);
       recommendationApiResponseCache.set(requestFingerprint, response);
     }
-
-    const hasValidCalculations =
-      Array.isArray(response?.data?.calculations) &&
-      response.data.calculations.length > 0;
-
+    const hasValidCalculations =Array.isArray(response?.data?.calculations) && response.data.calculations.length > 0;
     if (response.status === StatusCodeMapper.SUCCESS && hasValidCalculations) {
       nutrientRecommendationsData = response.data;
-      console.log(
-        "RB209 recommendation API call successful. Received data:",
-        nutrientRecommendationsData,
-      );
+      console.log("RB209 recommendation API call successful. Received data:",nutrientRecommendationsData);
     } else {
       console.error(
         "RB209 recommendation API call failed or returned invalid payload:",
@@ -171,46 +142,29 @@ class GenerateRecommendations {
         response.statusText,
       );
 
-      const isClientOrPayloadError =
-        response?.status === StatusCodeMapper.BAD_REQUEST ||
-        response?.status === 413;
-
-      if (isClientOrPayloadError) {
-        throw buildRb209FailureError(response, crop.ID);
-      }
+      const isClientOrPayloadError = response?.status === StatusCodeMapper.BAD_REQUEST || response?.status === StatusCodeMapper.CONTENT_TOO_LARGE;
+      if (isClientOrPayloadError) {throw buildRb209FailureError(response, crop.ID)}
     }
-
-    const recommendation =
-      await this.savingRecommendationService.processAndSaveRecommendations(
-        crops,
-        latestSoilAnalysis,
-        nutrientRecommendationsData,
-        transactionalManager,
-        userId,
-        mannerOutputs,
+    const recommendation = await this.savingRecommendationService.processAndSaveRecommendations(
+        crops, latestSoilAnalysis,
+        nutrientRecommendationsData,transactionalManager,
+        userId,mannerOutputs
       );
 
-    const saveAndUpdatePKBalance =
-      await this.CalculatePKBalance.createOrUpdatePKBalance(
-        crop,
-        nutrientRecommendationsData,
-        userId,
-        fertiliserData,
+    const saveAndUpdatePKBalance =await this.CalculatePKBalance.createOrUpdatePKBalance(
+        crop, nutrientRecommendationsData,
+        userId,fertiliserData,
         transactionalManager,
         { cropPOfftake, latestSoilAnalysis },
-        previousCrop,
+        previousCrop
       );
     if (saveAndUpdatePKBalance) {
-      await transactionalManager.save(
-        PKBalanceEntity,
+      await transactionalManager.save(PKBalanceEntity,
         saveAndUpdatePKBalance.saveAndUpdatePKBalance,
       );
     }
-
-    return {
-      cropId: crop.ID,
-      recommendations: recommendation,
-      pkBalance: saveAndUpdatePKBalance ?? null,
+    return { cropId: crop.ID, recommendations: recommendation,
+      pkBalance: saveAndUpdatePKBalance ?? null
     };
   }
 
