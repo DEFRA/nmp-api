@@ -75,11 +75,11 @@ class BaseService {
   #isRetryableReadError(error) {
     const driverCode = error?.driverError?.code ?? error?.code;
     const driverNumber = error?.driverError?.number ?? error?.number;
-
+    const deadlockErrorNumber = 1205;
     return (
       driverCode === "ETIMEOUT" ||
       driverCode === "ESOCKET" ||
-      driverNumber === 1205
+      driverNumber === deadlockErrorNumber
     );
   }
 

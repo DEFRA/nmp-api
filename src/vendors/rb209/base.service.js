@@ -84,8 +84,7 @@ class RB209BaseService {
         const requestUrl = error?.config?.url;
         if (!requestUrl) {
           throw error;
-        }
-        if (requestUrl === userLoginUrl) {
+        } else if (requestUrl === userLoginUrl) {
           throw error;
         } else if (requestUrl === refreshAccessTokenUrl) {
           const loginResponse = await this.login();
@@ -101,8 +100,9 @@ class RB209BaseService {
             _retryRequest: true,
           });
           return retryRequest;
+        } else {
+          throw error;
         }
-        throw error;
       },
     );
   }

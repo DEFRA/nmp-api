@@ -49,14 +49,14 @@ const init = async () => {
 
   await createConnection(ormConfig);
   const azureAuthMiddleware = new AzureAuthMiddleware();
-
+  const defaultServerTimeoutMs = 300000;
   const serverTimeoutMs = parseTimeout(
     process.env.SERVER_ROUTE_TIMEOUT_MS,
-    300000,
+    defaultServerTimeoutMs,
   );
   const socketTimeoutMs = parseTimeout(
     process.env.SERVER_SOCKET_TIMEOUT_MS,
-    300000,
+    defaultServerTimeoutMs,
   );
 
   const server = hapi.server({
