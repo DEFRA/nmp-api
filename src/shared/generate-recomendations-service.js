@@ -40,6 +40,7 @@ const {
 } = require("./generate-recommendations-other-crop-helpers");
 const { logRecordLogs } = require("./yearly-log-service");
 const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
+const MannerRainfallPostApplicationService = require("../vendors/manner/rainfall-post-application/rainfall-post-application.service");
 
 const RECOMMENDATION_LOG_ENDPOINT = "Recommendation/Recommendations";
 const SERVICE_NAME = "generate-recomendations-service.js";
@@ -83,14 +84,17 @@ class GenerateRecommendations {
     this.savingOtherCropRecommendations = new SavingOtherCropRecommendations();
     this.fieldRelated = new FieldRelated();
     this.HanldeMannerAndAnalysis = new HanldeMannerAndAnalysis();
+    this.MannerRainfallPostApplicationService =
+      new MannerRainfallPostApplicationService();
   }
 
   async getGenerateRecommendationsContext(fieldID, Year, transactionalManager) {
+  
     const cropTypesList =
       await this.rB209ArableService.getData("/Arable/CropTypes");
     const fieldRelatedData = await this.fieldRelated.getFieldAndCountryData(
       fieldID,
-      transactionalManager,
+      transactionalManager
     );
     const crops = await transactionalManager.find(CropEntity, {
       where: { FieldID: fieldID, Year: Year },
@@ -114,7 +118,6 @@ class GenerateRecommendations {
       latestSoilAnalysis,
       previousCrop,
       fieldRelatedData,
-      summerainfall,
       request,
       transactionalManager,
       cropTypesList,
@@ -277,10 +280,11 @@ class GenerateRecommendations {
       
     const results = [];
     const recommendationApiResponseCache = new Map();
-     const summerainfall = await this.MannerRainfallPostApplicationService.getData(
+     const rainfall = await this.MannerRainfallPostApplicationService.getData(
        `climates/rainfall-april-to-september/${fieldRelatedData.ClimateDataPostCode}`,
        request,
      );
+     fieldRelatedData.summerRainfall = rainfall.data.value;
     for (const crop of crops) {
       const {
         snsAnalysesData,
@@ -306,7 +310,6 @@ class GenerateRecommendations {
         mannerOutputs,
         previousCrop,
         fieldRelatedData,
-        summerainfall,
         request,
         transactionalManager,
         cropTypesList,

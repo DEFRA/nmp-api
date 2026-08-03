@@ -2,6 +2,7 @@ const { AppDataSource } = require("../db/data-source");
 const { Like, getRepository } = require("typeorm");
 const boom = require("@hapi/boom");
 const { StaticStrings } = require("../shared/static.string");
+const { runWithRetry } = require("../shared/resilience-guard.service");
 
 class BaseService {
   #entity;
@@ -82,39 +83,6 @@ class BaseService {
     );
   }
 
-  async #waitBeforeRetry(delayMs) {
-    await new Promise((resolve) => setTimeout(resolve, delayMs));
-  }
-
-  async #runReadWithRetry(readOperation) {
-    let retryDelayMs = BaseService.#defaultGetByRetryDelayMs;
-    let lastError;
-
-    for (
-      let attempt = 0;
-      attempt <= BaseService.#defaultGetByRetries;
-      attempt += 1
-    ) {
-      try {
-        return await readOperation();
-      } catch (error) {
-        lastError = error;
-        const shouldRetry =
-          attempt < BaseService.#defaultGetByRetries &&
-          this.#isRetryableReadError(error);
-
-        if (!shouldRetry) {
-          throw error;
-        }
-
-        await this.#waitBeforeRetry(retryDelayMs);
-        retryDelayMs *= 2;
-      }
-    }
-
-    throw lastError;
-  }
-
   async getBy(column, value, selectOptionsOrQueryOptions, queryOptions) {
     const { selectOptions, queryOptions: resolvedQueryOptions } =
       this.#resolveGetByOptions(selectOptionsOrQueryOptions, queryOptions);
@@ -122,14 +90,20 @@ class BaseService {
     const where = this.#buildGetByWhere(column, value);
     const take = this.#resolveSafeTake(resolvedQueryOptions?.take);
 
-    const records = await this.#runReadWithRetry(async () =>
-      this.#entity.find({
-        where,
-        select: selectOptions,
-        order: resolvedQueryOptions?.order,
-        skip: resolvedQueryOptions?.skip,
-        take,
-      }),
+    const records = await runWithRetry(
+      async () =>
+        this.#entity.find({
+          where,
+          select: selectOptions,
+          order: resolvedQueryOptions?.order,
+          skip: resolvedQueryOptions?.skip,
+          take,
+        }),
+      {
+        retries: BaseService.#defaultGetByRetries,
+        baseDelayMs: BaseService.#defaultGetByRetryDelayMs,
+        shouldRetry: this.#isRetryableReadError.bind(this),
+      },
     );
     return { records };
   }

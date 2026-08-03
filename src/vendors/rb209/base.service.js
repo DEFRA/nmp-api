@@ -5,6 +5,11 @@ const EnvironmentService = require("../../shared/environment.service");
 const {
   StatusCodeMapper,
 } = require("../../constants/http-status-codes-mapper");
+const {
+  getPositiveIntFromEnv,
+  runResilientOperation,
+  isRetryableHttpError,
+} = require("../../shared/resilience-guard.service");
 const { logRb209ApiError } = require("./rb209-error-logger.service");
 const userLoginUrl = "/Users/Login";
 const refreshAccessTokenUrl = "/Users/Refresh_Token";
@@ -20,11 +25,6 @@ const MAX_ERROR_REQUEST_LOG_CHARS = 4000;
 const DEFAULT_MAX_REQUEST_BYTES = 2 * 1024 * 1024;
 
 class RB209BaseService {
-  static #activeRequests = 0;
-  static #pendingResolvers = [];
-  static #consecutiveFailures = 0;
-  static #circuitOpenUntil = 0;
-
   #cacheManager;
   #accessTokenKey;
   #refreshTokenKey;
@@ -37,7 +37,7 @@ class RB209BaseService {
 
     this.#request = axios.create({
       baseURL: EnvironmentService.rb209BaseUrl(),
-      timeout: this.#getNumericEnv(
+      timeout: getPositiveIntFromEnv(
         "RB209_REQUEST_TIMEOUT_MS",
         DEFAULT_TIMEOUT_MS,
       ),
@@ -107,27 +107,12 @@ class RB209BaseService {
     );
   }
 
-  #getNumericEnv(envName, fallbackValue) {
-    const rawValue = process.env[envName];
-    const parsedValue = Number.parseInt(rawValue, 10);
-
-    if (Number.isFinite(parsedValue) && parsedValue > 0) {
-      return parsedValue;
-    }
-
-    return fallbackValue;
-  }
-
-  #getRetryAttemptLimit() {
-    return this.#getNumericEnv("RB209_RETRY_ATTEMPTS", DEFAULT_MAX_RETRIES);
-  }
-
   #resolveTimeoutMs(url) {
-    const recommendationTimeoutMs = this.#getNumericEnv(
+    const recommendationTimeoutMs = getPositiveIntFromEnv(
       "RB209_RECOMMENDATION_TIMEOUT_MS",
       DEFAULT_RECOMMENDATION_TIMEOUT_MS,
     );
-    const defaultTimeoutMs = this.#getNumericEnv(
+    const defaultTimeoutMs = getPositiveIntFromEnv(
       "RB209_REQUEST_TIMEOUT_MS",
       DEFAULT_TIMEOUT_MS,
     );
@@ -139,122 +124,7 @@ class RB209BaseService {
     return defaultTimeoutMs;
   }
 
-  #isRetryableStatus(statusCode) {
-    return (
-      statusCode === 408 ||
-      statusCode === 425 ||
-      statusCode === 429 ||
-      statusCode >= 500
-    );
-  }
-
-  #isRetryableError(error) {
-    if (!error) {
-      return false;
-    }
-
-    const errorCode = error.code;
-    const retryableCodes = [
-      "ECONNABORTED",
-      "ETIMEDOUT",
-      "ECONNRESET",
-      "EPIPE",
-      "ENOTFOUND",
-      "EAI_AGAIN",
-      "ECONNREFUSED",
-    ];
-
-    if (retryableCodes.includes(errorCode)) {
-      return true;
-    }
-
-    const statusCode = error.response?.status;
-    return this.#isRetryableStatus(statusCode);
-  }
-
-  #getRetryDelay(attemptNumber) {
-    const baseDelayMs = this.#getNumericEnv(
-      "RB209_RETRY_BASE_DELAY_MS",
-      DEFAULT_RETRY_BASE_DELAY_MS,
-    );
-    return baseDelayMs * Math.pow(2, attemptNumber);
-  }
-
-  async #waitForRetry(delayMs) {
-    await new Promise((resolve) => setTimeout(resolve, delayMs));
-  }
-
-  #isCircuitOpen() {
-    return Date.now() < RB209BaseService.#circuitOpenUntil;
-  }
-
-  #openCircuit() {
-    RB209BaseService.#circuitOpenUntil =
-      Date.now() +
-      this.#getNumericEnv(
-        "RB209_CIRCUIT_COOLDOWN_MS",
-        DEFAULT_CIRCUIT_COOLDOWN_MS,
-      );
-    RB209BaseService.#consecutiveFailures = 0;
-  }
-
-  #recordRequestSuccess() {
-    RB209BaseService.#consecutiveFailures = 0;
-    RB209BaseService.#circuitOpenUntil = 0;
-  }
-
-  #recordRequestFailure(error) {
-    if (!this.#isRetryableError(error)) {
-      return;
-    }
-
-    RB209BaseService.#consecutiveFailures += 1;
-    const failureThreshold = this.#getNumericEnv(
-      "RB209_CIRCUIT_FAILURE_THRESHOLD",
-      DEFAULT_CIRCUIT_FAILURE_THRESHOLD,
-    );
-
-    if (RB209BaseService.#consecutiveFailures >= failureThreshold) {
-      this.#openCircuit();
-    }
-  }
-
-  async #acquireRequestSlot() {
-    const maxConcurrentRequests = this.#getNumericEnv(
-      "RB209_MAX_CONCURRENT_REQUESTS",
-      DEFAULT_MAX_CONCURRENT_REQUESTS,
-    );
-
-    if (maxConcurrentRequests <= 0) {
-      return () => {};
-    }
-
-    if (RB209BaseService.#activeRequests < maxConcurrentRequests) {
-      RB209BaseService.#activeRequests += 1;
-      return this.#releaseRequestSlot.bind(this);
-    }
-
-    return new Promise((resolve) => {
-      RB209BaseService.#pendingResolvers.push(() => {
-        RB209BaseService.#activeRequests += 1;
-        resolve(this.#releaseRequestSlot.bind(this));
-      });
-    });
-  }
-
-  #releaseRequestSlot() {
-    RB209BaseService.#activeRequests = Math.max(
-      0,
-      RB209BaseService.#activeRequests - 1,
-    );
-    const nextResolver = RB209BaseService.#pendingResolvers.shift();
-    if (nextResolver) {
-      nextResolver();
-    }
-  }
-
-  #buildCircuitOpenErrorResponse() {
-    const waitMs = Math.max(0, RB209BaseService.#circuitOpenUntil - Date.now());
+  #buildCircuitOpenErrorResponse(waitMs = 0) {
     return {
       request: null,
       status: StatusCodeMapper.INTERNAL_SERVER_ERROR,
@@ -304,28 +174,32 @@ class RB209BaseService {
     return `${value.slice(0, MAX_ERROR_REQUEST_LOG_CHARS)}...[truncated]`;
   }
 
-  async #executeWithRetry(requestFactory) {
-    const retryLimit = this.#getRetryAttemptLimit();
-    let lastError;
-
-    for (let attempt = 0; attempt <= retryLimit; attempt += 1) {
-      try {
-        return await requestFactory();
-      } catch (error) {
-        lastError = error;
-        const shouldRetry =
-          attempt < retryLimit && this.#isRetryableError(error);
-
-        if (!shouldRetry) {
-          throw error;
-        }
-
-        const retryDelay = this.#getRetryDelay(attempt);
-        await this.#waitForRetry(retryDelay);
-      }
-    }
-
-    throw lastError;
+  async #runRb209Request(requestFactory) {
+    return runResilientOperation({
+      key: "rb209-http",
+      operation: requestFactory,
+      retries: getPositiveIntFromEnv(
+        "RB209_RETRY_ATTEMPTS",
+        DEFAULT_MAX_RETRIES,
+      ),
+      retryBaseDelayMs: getPositiveIntFromEnv(
+        "RB209_RETRY_BASE_DELAY_MS",
+        DEFAULT_RETRY_BASE_DELAY_MS,
+      ),
+      shouldRetry: isRetryableHttpError,
+      maxConcurrency: getPositiveIntFromEnv(
+        "RB209_MAX_CONCURRENT_REQUESTS",
+        DEFAULT_MAX_CONCURRENT_REQUESTS,
+      ),
+      failureThreshold: getPositiveIntFromEnv(
+        "RB209_CIRCUIT_FAILURE_THRESHOLD",
+        DEFAULT_CIRCUIT_FAILURE_THRESHOLD,
+      ),
+      cooldownMs: getPositiveIntFromEnv(
+        "RB209_CIRCUIT_COOLDOWN_MS",
+        DEFAULT_CIRCUIT_COOLDOWN_MS,
+      ),
+    });
   }
 
   async updateTokens(tokens) {
@@ -360,20 +234,17 @@ class RB209BaseService {
 
   async getData(url) {
     const startedAt = Date.now();
-    const releaseSlot = await this.#acquireRequestSlot();
     try {
-      if (this.#isCircuitOpen()) {
-        return this.#buildCircuitOpenErrorResponse();
-      }
-
       const timeoutMs = this.#resolveTimeoutMs(url);
-      const response = await this.#executeWithRetry(() =>
+      const response = await this.#runRb209Request(() =>
         this.#request.get(url, { timeout: timeoutMs }),
       );
-      this.#recordRequestSuccess();
       return response.data;
     } catch (error) {
-      this.#recordRequestFailure(error);
+      if (error?.code === "CIRCUIT_OPEN") {
+        return this.#buildCircuitOpenErrorResponse(error.retryAfterMs);
+      }
+
       logRb209ApiError({
         method: "GET",
         endpoint: url,
@@ -381,20 +252,13 @@ class RB209BaseService {
         error,
       });
       return error.response;
-    } finally {
-      releaseSlot();
     }
   }
 
   async postData(url, body) {
     const startedAt = Date.now();
-    const releaseSlot = await this.#acquireRequestSlot();
     try {
-      if (this.#isCircuitOpen()) {
-        return this.#buildCircuitOpenErrorResponse();
-      }
-
-      const maxRequestBytes = this.#getNumericEnv(
+      const maxRequestBytes = getPositiveIntFromEnv(
         "RB209_MAX_REQUEST_BYTES",
         DEFAULT_MAX_REQUEST_BYTES,
       );
@@ -408,11 +272,10 @@ class RB209BaseService {
       }
 
       const timeoutMs = this.#resolveTimeoutMs(url);
-      const response = await this.#executeWithRetry(() =>
+      const response = await this.#runRb209Request(() =>
         this.#request.post(url, body, { timeout: timeoutMs }),
       );
 
-      this.#recordRequestSuccess();
       return {
         request: this.#truncateValueForLog(response.config.data),
         status: response.status,
@@ -421,7 +284,10 @@ class RB209BaseService {
         message: response.message || "API call successful",
       };
     } catch (error) {
-      this.#recordRequestFailure(error);
+      if (error?.code === "CIRCUIT_OPEN") {
+        return this.#buildCircuitOpenErrorResponse(error.retryAfterMs);
+      }
+
       logRb209ApiError({
         method: "POST",
         endpoint: url,
@@ -438,8 +304,6 @@ class RB209BaseService {
         message: error.message || "API call failed",
         stack: error.stack || "N/A",
       };
-    } finally {
-      releaseSlot();
     }
   }
 }
