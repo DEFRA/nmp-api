@@ -16,9 +16,9 @@ const cropPlanValidation = {
     farmId: Joi.number().required(),
   }),
   failAction: validationFailAction,
-}; 
-const cropListPath="/crops/fields/{fieldId}";
-const createCropDescription="Create Crop Plan";
+};
+const cropListPath = "/crops/fields/{fieldId}";
+const createCropDescription = "Create Crop Plan";
 module.exports = [
   {
     method: "GET",
@@ -111,6 +111,10 @@ module.exports = [
         params: Joi.object({
           fieldId: Joi.number().integer().required(),
         }),
+        query: Joi.object({
+          year: Joi.number().integer().optional(),
+          limit: Joi.number().integer().min(1).max(1000).optional(),
+        }),
         failAction: validationFailAction,
       },
     },
@@ -172,6 +176,9 @@ module.exports = [
       tags: ["api", "Crop"],
       description: createCropDescription,
       validate: {
+        query: Joi.object({
+          async: Joi.boolean().optional(),
+        }),
         payload: CreatePlanDto,
         failAction: validationFailAction,
       },
