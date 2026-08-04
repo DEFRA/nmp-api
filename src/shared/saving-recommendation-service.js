@@ -158,7 +158,7 @@ class SavingRecommendationService {
       FertilizerSO3: null,
       FertilizerNa2O: null,
       FertilizerLime: null,
-      PH: latestSoilAnalysis?.PH?.toString() ?? null,
+      PH: null,
       SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() ?? null,
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() ?? null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() ?? null,
@@ -222,17 +222,20 @@ class SavingRecommendationService {
         cropRecData.CropNa2O = c.recommendation;
         cropRecData.NaBalance = c.pkBalance;
         cropRecData.FertilizerNa2O = c.cropNeed;
+        cropRecData.NaIndex = c.indexpH;
       },
       5: (c) => {
         cropRecData.CropSO3 = c.recommendation;
         cropRecData.ManureSO3 = normalizeManure(c.manures);
         cropRecData.SBalance = c.pkBalance;
         cropRecData.FertilizerSO3 = c.cropNeed;
+        cropRecData.SIndex = c.indexpH;
       },
       6: (c) => {
         cropRecData.CropLime = c.recommendation;
         cropRecData.LimeBalance = c.pkBalance;
         cropRecData.FertilizerLime = c.cropNeed;
+        cropRecData.PH = c.indexpH;
       },
     };
     for (const calc of calculations) {
