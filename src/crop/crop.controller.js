@@ -2,6 +2,7 @@ const { StaticStrings } = require("../shared/static.string");
 const PlanService = require("../plan/plan.service");
 const { CropService } = require("./crop.service");
 const boom = require("@hapi/boom");
+const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 
 class CropController {
   #request;
@@ -106,8 +107,27 @@ class CropController {
   async getCropsByFieldId() {
     try {
       const { fieldId } = this.#request.params;
+      const { year, limit } = this.#request.query;
+      const parsedYear = Number.parseInt(year, 10);
+      const parsedLimit = Number.parseInt(limit, 10);
 
-      const Crops = await this.#cropService.getBy("FieldID", fieldId);
+      const where = { FieldID: fieldId };
+      if (Number.isFinite(parsedYear)) {
+        where.Year = parsedYear;
+      }
+      const defaultLimit = 200;
+      const safeLimit = Number.isFinite(parsedLimit)
+        ? Math.min(Math.max(parsedLimit, 1), 1000)
+        : defaultLimit;
+
+      const Crops = await this.#cropService.getBy(where, null, {
+        take: safeLimit,
+        order: {
+          Year: "DESC",
+          CropOrder: "ASC",
+          ID: "ASC",
+        },
+      });
 
       return this.#h.response({ Crops });
     } catch (error) {
@@ -155,6 +175,32 @@ class CropController {
     const body = this.#request.payload;
     const userId = this.#request.userId;
     const transaction = null;
+    const runAsync = this.#request.query?.async === true;
+
+    if (runAsync) {
+      setImmediate(async () => {
+        try {
+          await this.#planService.createNutrientsRecommendationForField(
+            body.Crops,
+            userId,
+            this.#request,
+            transaction,
+          );
+        } catch (error) {
+          console.error(
+            "Background createNutrientsRecommendationForField failed:",
+            error,
+          );
+        }
+      });
+
+      return this.#h
+        .response({
+          message: "Recommendation processing started",
+          status: "accepted",
+        })
+    }
+
     try {
       const data =
         await this.#planService.createNutrientsRecommendationForField(
@@ -354,10 +400,13 @@ class CropController {
       });
     } catch (error) {
       console.error("Error updating crops:", error);
-      return this.#h.response({
-        message: StaticStrings.ERR_INTERNAL_SERVER_ERROR,
-        error: error.message,
-      });
+      const statusCode = error?.statusCode || error?.response?.status || StatusCodeMapper.INTERNAL_SERVER_ERROR;
+      return this.#h
+        .response({
+          message: StaticStrings.ERR_INTERNAL_SERVER_ERROR,
+          error: error.message,
+        })
+        .code(statusCode);
     }
   }
 
@@ -396,10 +445,13 @@ class CropController {
       return this.#h.response(results);
     } catch (error) {
       console.error("Error merging crop:", error);
-      return this.#h.response({
-        message: "Internal Server Error",
-        error: error.message,
-      });
+      const statusCode = error?.statusCode || error?.response?.status || StatusCodeMapper.INTERNAL_SERVER_ERROR;
+      return this.#h
+        .response({
+          message: StaticStrings.ERR_INTERNAL_SERVER_ERROR,
+          error: error.message,
+        })
+        .code(statusCode);
     }
   }
 

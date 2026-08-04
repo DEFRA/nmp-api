@@ -91,20 +91,17 @@ class CalculateMannerOutputService {
         availableNForNextDefoliation: 0,
       };
     }
-
-    const [nextCropAvailableN, availableNForNextDefoliation] =
-      await Promise.all([
-        this.getNextCropAvailableN(
-          CropData,
-          managementPeriod,
-          transactionalManager,
-        ),
-        this.getAvailableNForNextDefoliation(
-          CropData,
-          managementPeriod,
-          transactionalManager,
-        ),
-      ]);
+    const nextCropAvailableN = await this.getNextCropAvailableN(
+      CropData,
+      managementPeriod,
+      transactionalManager,
+    );
+    const availableNForNextDefoliation =
+      await this.getAvailableNForNextDefoliation(
+        CropData,
+        managementPeriod,
+        transactionalManager,
+      );
 
     return {
       nextCropAvailableN,

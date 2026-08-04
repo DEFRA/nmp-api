@@ -3,6 +3,45 @@ const {
   StatusCodeMapper,
 } = require("../../constants/http-status-codes-mapper");
 
+const MAX_LOG_STRING_LENGTH = 4000;
+
+const truncateString = (value) => {
+  if (value.length <= MAX_LOG_STRING_LENGTH) {
+    return value;
+  }
+
+  return `${value.slice(0, MAX_LOG_STRING_LENGTH)}...[truncated]`;
+};
+
+const summarizePayload = (payload) => {
+  if (payload === null || payload === undefined) {
+    return null;
+  }
+
+  if (typeof payload === "string") {
+    return truncateString(payload);
+  }
+
+  if (Array.isArray(payload)) {
+    return {
+      type: "array",
+      length: payload.length,
+    };
+  }
+
+  if (typeof payload === "object") {
+    const maxKeys = 40;
+    const keys = Object.keys(payload);
+    return {
+      type: "object",
+      keyCount: keys.length,
+      keys: keys.slice(0, maxKeys),
+    };
+  }
+
+  return payload;
+};
+
 const logRb209ApiError = ({
   method,
   endpoint,
@@ -19,9 +58,11 @@ const logRb209ApiError = ({
       request: {
         method,
         endpoint,
-        body: requestPayload ?? null,
+        body: summarizePayload(requestPayload),
       },
-      response: error?.response?.data ?? error?.message ?? null,
+      response: summarizePayload(
+        error?.response?.data ?? error?.message ?? null,
+      ),
       stack: error?.stack || null,
     },
     context: {
