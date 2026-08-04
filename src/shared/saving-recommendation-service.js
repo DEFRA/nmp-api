@@ -131,7 +131,7 @@ class SavingRecommendationService {
       cropRecData,
       filteredData,
       userId,
-      latestSoilAnalysis
+      latestSoilAnalysis,
     );
   }
 
@@ -168,13 +168,25 @@ class SavingRecommendationService {
     };
   }
 
-  async applyNutrientCalculations(cropRecData,calculations,allMannerOutputs,managementPeriod,cropData,transactionalManager,defoliations) {
+  async applyNutrientCalculations(cropRecData, calculations,
+    allMannerOutputs,managementPeriod,
+    cropData,transactionalManager,
+    defoliations
+  ) {
     const { defoliationId, defoliationIds } = defoliations;
     const mannerOutputs = allMannerOutputs.filter((item) => item.defoliationId === defoliationId);
     let availableNForNextDefoliation = null,nextCropAvailableN = null;
     if (!mannerOutputs || mannerOutputs.length === 0) {
-      if (defoliationIds.length > 1) {availableNForNextDefoliation = await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(transactionalManager,managementPeriod,cropData)}
-      if (defoliationId === 1) {nextCropAvailableN = await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(cropData.FieldID,cropData.Year,transactionalManager)}
+      if (defoliationIds.length > 1) {
+        availableNForNextDefoliation = await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
+            transactionalManager,managementPeriod, cropData,
+          );
+      }
+      if (defoliationId === 1) {
+        nextCropAvailableN =await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
+            cropData.FieldID,cropData.Year,transactionalManager
+          );
+      }
     }
     const normalizeManure = (value) => (value === 0 ? null : value);
     const nutrientHandlers = {
@@ -410,8 +422,16 @@ class SavingRecommendationService {
       savedRecommendations,
       context.hasDefoliationNotes,
     );
+    if (!recommendationsToSave.length) {
+      return [];
+    }
+
     const recomendationsAndComments = [];
     for (const recommendation of recommendationsToSave) {
+      if (!recommendation) {
+        continue;
+      }
+
       const recommendationsNotes = await this.saveMultipleRecommendation(
         Recommendations,
         cropData,
@@ -451,6 +471,10 @@ class SavingRecommendationService {
       return recommendations;
     }
 
+    if (!Array.isArray(nutrientRecommendationsData?.calculations)) {
+      return finalRecommendations;
+    }
+
     const hasDefoliationNotes = this.hasDefoliationAdviceNotes(
       nutrientRecommendationsData,
     );
@@ -479,6 +503,10 @@ class SavingRecommendationService {
     savedRecommendations,
     hasDefoliationNotes,
   ) {
+    if (!savedRecommendations?.length) {
+      return [];
+    }
+
     const isGrass = this.isGrassCrop(cropData);
 
     if (isGrass && hasDefoliationNotes) {
