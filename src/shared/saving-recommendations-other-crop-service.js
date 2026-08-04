@@ -43,7 +43,7 @@ class SavingOtherCropRecommendations {
       LimeBalance: null,
       ManureLime: null,
       FertilizerLime: null,
-      PH: latestSoilAnalysis?.PH?.toString() || null,
+      PH: null,
       SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
