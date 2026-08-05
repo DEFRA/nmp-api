@@ -122,6 +122,7 @@ const { MannerEstimationsEntity } = require("./manner-estimations.entity");
 const {
   MannerEstimationApplicationsEntity,
 } = require("./manner-estimation-applications.entity");
+const { MannerFarmsEntity } = require("./manner-farms.entity");
 // Export as a single array
 
 const entities = [
@@ -191,6 +192,7 @@ const entities = [
   FarmAverageYieldsEntity,
   MannerEstimationsEntity,
   MannerEstimationApplicationsEntity,
+  MannerFarmsEntity,
 ];
 
 module.exports = { entities };

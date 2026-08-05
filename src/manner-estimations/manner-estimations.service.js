@@ -35,6 +35,7 @@ const {
   mannerEstimationsReadHelpers,
 } = require("./manner-estimations-read-helpers");
 
+const {  MannerFarmsEntity } = require("../db/entity/manner-farms.entity");
 class MannerEstimationsService extends BaseService {
   constructor() {
     super(MannerEstimationsEntity);
@@ -60,6 +61,9 @@ class MannerEstimationsService extends BaseService {
     this.CalculateMannerOutputService = new CalculateMannerOutputService();
     this.MannerCalculateNutrientsService =
       new MannerCalculateNutrientsService();
+          this.mannerFarmsRepository = AppDataSource.getRepository(
+      MannerFarmsEntity,
+    );
   }
 }
 

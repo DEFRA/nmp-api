@@ -137,6 +137,9 @@ const { isProduction, requestTimeout, connectTimeout, baseConfig } =
       subscribers: [],
     },
   });
+  const {
+  MannerFarmsEntity,
+} = require("./entity/manner-farms.entity.js");
 
 let dataSourceConfig;
 
