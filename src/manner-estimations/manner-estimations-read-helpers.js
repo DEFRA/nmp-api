@@ -20,6 +20,11 @@ const mannerEstimationsReadHelpers = {
     const mannerEstimationData = await this.repository.findOne({
       where: { ID: id },
     });
+
+    const mannerFarm = await this.mannerFarmsRepository.findOne({
+        where: { ID: mannerEstimationData.FarmID }
+    });
+
     if (!mannerEstimationData) {
       return null;
     }
@@ -27,24 +32,29 @@ const mannerEstimationsReadHelpers = {
       mannerEstimationData,
       request,
     );
+      const mannerEstimationDetail = {
+    ...mannerEstimationData,
+    ...mannerFarm
+};
     const mannerEstimationApplicationsWithManureTypeName =
       await this.getMannerEstimationApplicationsWithManureTypeName(id, request);
     const mannerEstimationApplicationsWithCombinedResult =
       await this.addCombinedApplicationResult(
-        mannerEstimationData,
+        mannerEstimationDetail,
         mannerEstimationApplicationsWithManureTypeName,
         request,
       );
     const lastUpdatedOn = this.getLastUpdatedOn(
-      mannerEstimationData,
+      mannerEstimationDetail,
       mannerEstimationApplicationsWithManureTypeName,
     );
-    mannerEstimationData.CropTypeName = estimationNames.cropTypeName;
-    mannerEstimationData.TopSoil = estimationNames.topSoil;
-    mannerEstimationData.SubSoil = estimationNames.subSoil;
-    mannerEstimationData.Country = estimationNames.countryName;
+    mannerEstimationDetail.CropTypeName = estimationNames.cropTypeName;
+    mannerEstimationDetail.TopSoil = estimationNames.topSoil;
+    mannerEstimationDetail.SubSoil = estimationNames.subSoil;
+    mannerEstimationDetail.Country = estimationNames.countryName;
+ 
     return {
-      MannerEstimation: mannerEstimationData,
+      MannerEstimation: mannerEstimationDetail,
       MannerEstimationApplication:mannerEstimationApplicationsWithManureTypeName,
       TotalMannerCalculateNutrient:  mannerEstimationApplicationsWithCombinedResult,
       LastUpdatedOn: lastUpdatedOn,
@@ -278,6 +288,22 @@ const mannerEstimationsReadHelpers = {
       ]);
     });
   },
+
+ async getMannerEstimationByFarmId(farmId) {
+    const mannerFarm = await this.mannerFarmsRepository.findOne({
+        where: { ID: farmId }
+    });
+
+    const mannerEstimate = await this.repository.find({
+        where: { FarmID: farmId },
+        order: { ID: "ASC" },
+    });
+
+    return mannerEstimate.map(item => ({
+        ...item,
+        FarmName: mannerFarm.Name
+    }));
+},
 };
 
 module.exports = { mannerEstimationsReadHelpers };
