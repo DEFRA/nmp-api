@@ -40,7 +40,8 @@ const mannerEstimationsReadHelpers = {
       await this.getMannerEstimationApplicationsWithManureTypeName(id, request);
     const mannerEstimationApplicationsWithCombinedResult =
       await this.addCombinedApplicationResult(
-        mannerEstimationDetail,
+        mannerFarm,
+        mannerEstimationData,
         mannerEstimationApplicationsWithManureTypeName,
         request,
       );
@@ -54,6 +55,7 @@ const mannerEstimationsReadHelpers = {
     mannerEstimationDetail.Country = estimationNames.countryName;
  
     return {
+      MannerFarm:mannerFarm,
       MannerEstimation: mannerEstimationDetail,
       MannerEstimationApplication:mannerEstimationApplicationsWithManureTypeName,
       TotalMannerCalculateNutrient:  mannerEstimationApplicationsWithCombinedResult,
@@ -61,7 +63,7 @@ const mannerEstimationsReadHelpers = {
     };
   },
 
-  async addCombinedApplicationResult(mannerEstimation, applications, request) {
+  async addCombinedApplicationResult(mannerFarm,mannerEstimation, applications, request) {
       const allManureData = await this.MannerManureTypesService.getData(
            "/manure-types",
            request,
@@ -72,7 +74,7 @@ const mannerEstimationsReadHelpers = {
        allManureData,
        manureApplications
      );
-     const mannerEstimationApplicationsRequest = this.buildMannerOutputReq(
+     const mannerEstimationApplicationsRequest = this.buildMannerOutputReq(mannerFarm,
        mannerEstimation,
        manureApplications
      );
