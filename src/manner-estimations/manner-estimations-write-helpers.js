@@ -7,6 +7,9 @@ const {
 } = require("../db/entity/manner-estimation-applications.entity");
 const { CountryMapper } = require("../constants/country-mapper");
 const { RunTypeMapper } = require("../constants/run-type-mapper");
+const {
+  MannerFarmsEntity,
+} = require("../db/entity/manner-farms.entity");
 
 const mannerEstimationsWriteHelpers = {
   async copyMannerEstimation(payload, userId) {
@@ -163,15 +166,15 @@ const mannerEstimationsWriteHelpers = {
     };
   },
 
-  buildMannerOutputReq(mannerEstimation, manureApplications) {
+  buildMannerOutputReq(mannerFarm,mannerEstimation, manureApplications) {
     return {
       runType:
-        mannerEstimation.CountryID === CountryMapper.ENGLAND ||
-        mannerEstimation.CountryID === CountryMapper.WELSH
+        mannerFarm.CountryID === CountryMapper.ENGLAND ||
+        mannerFarm.CountryID === CountryMapper.WELSH
           ? RunTypeMapper.MANNERENGLAND
           : RunTypeMapper.MANNERSCOTLAND,
-      postcode: mannerEstimation.Postcode.split(" ")[0],
-      countryID: mannerEstimation.CountryID,
+      postcode: mannerFarm.Postcode.split(" ")[0],
+      countryID: mannerFarm.CountryID,
       field: {
         fieldID: 0,
         fieldName: mannerEstimation.Name,
@@ -192,6 +195,12 @@ const mannerEstimationsWriteHelpers = {
         "/nutrient-products",
         request,
       );
+
+    const mannerFarm = await transactionalManager.findOne(
+      MannerFarmsEntity,
+      { where: { ID: MannerEstimation.FarmID } },
+    );
+
       const nutrientProducts = nutrientProductsData.data.filter(
         (p) => p.isNutrientDefaultProduct === true,
       );
@@ -199,8 +208,10 @@ const mannerEstimationsWriteHelpers = {
         "/nutrients",
         request,
       );
+
       const mappedMannerEstimationApplication =
         await this.getMappedMannerEstimationApplication(
+          mannerFarm,
           MannerEstimation,
           MannerEstimationApplication,
           request,
@@ -250,6 +261,7 @@ const mannerEstimationsWriteHelpers = {
   },
 
   async getMappedMannerEstimationApplication(
+    mannerFarm,
     mannerEstimation,
     applications,
     request,
@@ -270,10 +282,13 @@ const mannerEstimationsWriteHelpers = {
       );
   
     manureApplications.push(manureApplication);
-  const mannerEstimationApplicationsRequest = this.buildMannerOutputReq(
+
+   const mannerEstimationApplicationsRequest = this.buildMannerOutputReq(
+      mannerFarm,
       mannerEstimation,
       manureApplications,
     );
+
     const mannerEstimationApplicationsOutput =
       await this.MannerCalculateNutrientsService.postData(
         "/calculate-nutrients",
