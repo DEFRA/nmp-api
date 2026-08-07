@@ -14,6 +14,9 @@ const { ManureTypeMapper } = require("../constants/manure-type-mapper");
 const MANNER_ESTIMATION_ID_CONDITION =
   "MEA.MannerEstimationID = :mannerEstimationId";
 const MANNER_APPLICATION_ID_CONDITION = "MEA.ID != :mannerApplicationId";
+const {
+  MannerFarmsEntity,
+} = require("../db/entity/manner-farms.entity");
 class MannerEstimationApplicationsService extends BaseService {
   constructor() {
     super(MannerEstimationApplicationsEntity);
@@ -38,9 +41,15 @@ class MannerEstimationApplicationsService extends BaseService {
       if (!mannerEstimation) {
         throw new Error("Manner estimation not found");
       }
-
+ const mannerFarm = await transactionalManager.findOne(
+        MannerFarmsEntity,
+        {
+          where: { ID: mannerEstimation.FarmID },
+        },
+      );
       const mappedMannerEstimationApplication =
         await this.mannerEstimationsService.getMappedMannerEstimationApplication(
+          mannerFarm,
           mannerEstimation,
           payload,
           request,
@@ -98,8 +107,17 @@ class MannerEstimationApplicationsService extends BaseService {
       );
 
       if (!mannerEstimation) {console.log("Manner estimation not found")}
+
+        const mannerFarm = await transactionalManager.findOne(
+        MannerFarmsEntity,
+        {
+          where: { ID: mannerEstimation.FarmID },
+        },
+      );
+
       const mappedMannerEstimationApplication =
         await this.mannerEstimationsService.getMappedMannerEstimationApplication(
+          mannerFarm,
           mannerEstimation,
           mergedApplication,
           request,
