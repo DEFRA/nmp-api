@@ -13,7 +13,7 @@ const CreateMannerEstimationDto = Joi.object({
 
   Name: Joi.string().max(maxTwoFifty).required(),
 
-  FarmID: Joi.number().integer(),
+  FarmID: Joi.number().integer().allow(null).default(null),
 
   FieldName: Joi.string().max(maxFifty).required(),
 
