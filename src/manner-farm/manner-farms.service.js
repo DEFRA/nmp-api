@@ -75,46 +75,30 @@ class MannerFarmsService extends BaseService {
           nutrientFinancialValues,
         );
 
-      const mannerEstimationApplicationFinancialValues =
-        this.mannerEstimationsService.buildMannerEstimationApplicationFinancialValues(
-          nutrientFinancialValues,
-        );
+      const mannerEstimationApplicationFinancialValues = this.mannerEstimationsService.buildMannerEstimationApplicationFinancialValues(nutrientFinancialValues,);
 
       const mannerEstimationEntity = transactionalManager.create(
         MannerEstimationsEntity,
         {
           ...mappedMannerEstimation,
-          ...mannerEstimationFinancialValues,
-          CreatedByID: userId,
-          CreatedOn: new Date(),
+          ...mannerEstimationFinancialValues, CreatedByID: userId, CreatedOn: new Date(),
         },
       );
 
-      const savedMannerEstimation = await transactionalManager.save(
-        MannerEstimationsEntity,
-        mannerEstimationEntity,
-      );
+      const savedMannerEstimation = await transactionalManager.save(MannerEstimationsEntity, mannerEstimationEntity,);
 
       const mannerEstimationApplicationEntity = transactionalManager.create(
         MannerEstimationApplicationsEntity,
         {
           ...mappedMannerEstimationApplication,
-          ...mannerEstimationApplicationFinancialValues,
-          MannerEstimationID: savedMannerEstimation.ID,
-          CreatedByID: userId,
-          CreatedOn: new Date(),
+          ...mannerEstimationApplicationFinancialValues, MannerEstimationID: savedMannerEstimation.ID, CreatedByID: userId, CreatedOn: new Date(),
         },
       );
 
-      const savedMannerEstimationApplication = await transactionalManager.save(
-        MannerEstimationApplicationsEntity,
-        mannerEstimationApplicationEntity,
-      );
+      const savedMannerEstimationApplication = await transactionalManager.save(MannerEstimationApplicationsEntity, mannerEstimationApplicationEntity,);
 
       return {
-        MannerFarm: savedMannerFarm,
-        MannerEstimation: savedMannerEstimation,
-        MannerEstimationApplication: savedMannerEstimationApplication,
+        MannerFarm: savedMannerFarm, MannerEstimation: savedMannerEstimation, MannerEstimationApplication: savedMannerEstimationApplication,
       };
     });
   }
