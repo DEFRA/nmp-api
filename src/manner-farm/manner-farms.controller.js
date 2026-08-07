@@ -11,10 +11,27 @@ class MannerFarmsController {
     this.#mannerFarmsService = new MannerFarmsService();
   }
 
+  async createWithMannerEstimation() {
+    try {
+      const payload = this.#request.payload;
+      const userId = this.#request.userId;
+      const result = await this.#mannerFarmsService.createWithMannerEstimation(
+        payload,
+        userId,
+        this.#request,
+      );
+      return this.#h.response(result);
+    } catch (error) {
+      console.error("Error in createWithMannerEstimation:", error);
+      return this.#h.response(error);
+    }
+  }
+
   async getByOrganisationId() {
     try {
       const { organisationId } = this.#request.params;
-      const records =await this.#mannerFarmsService.getByOrganisationId(organisationId);
+      const records =
+        await this.#mannerFarmsService.getByOrganisationId(organisationId);
       return this.#h.response(records);
     } catch (error) {
       console.error("Error in getByOrganisationId:", error);
@@ -25,7 +42,7 @@ class MannerFarmsController {
   async getById() {
     try {
       const { Id } = this.#request.params;
-      const records =await this.#mannerFarmsService.getById(Id);
+      const records = await this.#mannerFarmsService.getById(Id);
       return this.#h.response(records);
     } catch (error) {
       console.error("Error in getById:", error);
