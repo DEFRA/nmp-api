@@ -32,10 +32,8 @@ const mannerEstimationsReadHelpers = {
       mannerEstimationData,
       request,
     );
-      const mannerEstimationDetail = {
-    ...mannerEstimationData,
-    ...mannerFarm
-};
+
+
     const mannerEstimationApplicationsWithManureTypeName =
       await this.getMannerEstimationApplicationsWithManureTypeName(id, request);
     const mannerEstimationApplicationsWithCombinedResult =
@@ -46,17 +44,17 @@ const mannerEstimationsReadHelpers = {
         request,
       );
     const lastUpdatedOn = this.getLastUpdatedOn(
-      mannerEstimationDetail,
+      mannerEstimationData,
       mannerEstimationApplicationsWithManureTypeName,
     );
-    mannerEstimationDetail.CropTypeName = estimationNames.cropTypeName;
-    mannerEstimationDetail.TopSoil = estimationNames.topSoil;
-    mannerEstimationDetail.SubSoil = estimationNames.subSoil;
-    mannerEstimationDetail.Country = estimationNames.countryName;
+    mannerEstimationData.CropTypeName = estimationNames.cropTypeName;
+    mannerEstimationData.TopSoil = estimationNames.topSoil;
+    mannerEstimationData.SubSoil = estimationNames.subSoil;
+    mannerEstimationData.Country = estimationNames.countryName;
  
     return {
       MannerFarm:mannerFarm,
-      MannerEstimation: mannerEstimationDetail,
+      MannerEstimation: mannerEstimationData,
       MannerEstimationApplication:mannerEstimationApplicationsWithManureTypeName,
       TotalMannerCalculateNutrient:  mannerEstimationApplicationsWithCombinedResult,
       LastUpdatedOn: lastUpdatedOn,
