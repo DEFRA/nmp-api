@@ -20,14 +20,14 @@ const mannerEstimationsReadHelpers = {
     const mannerEstimationData = await this.repository.findOne({
       where: { ID: id },
     });
-
+ if (!mannerEstimationData) {
+      return null;
+    }
     const mannerFarm = await this.mannerFarmsRepository.findOne({
         where: { ID: mannerEstimationData.FarmID }
     });
 
-    if (!mannerEstimationData) {
-      return null;
-    }
+   
     const estimationNames = await this.getMannerEstimationDisplayNames(
       mannerEstimationData,
       request,
@@ -46,17 +46,18 @@ const mannerEstimationsReadHelpers = {
         request,
       );
     const lastUpdatedOn = this.getLastUpdatedOn(
+      mannerFarm,
       mannerEstimationDetail,
       mannerEstimationApplicationsWithManureTypeName,
     );
-    mannerEstimationDetail.CropTypeName = estimationNames.cropTypeName;
-    mannerEstimationDetail.TopSoil = estimationNames.topSoil;
-    mannerEstimationDetail.SubSoil = estimationNames.subSoil;
-    mannerEstimationDetail.Country = estimationNames.countryName;
+    mannerEstimationData.CropTypeName = estimationNames.cropTypeName;
+    mannerEstimationData.TopSoil = estimationNames.topSoil;
+    mannerEstimationData.SubSoil = estimationNames.subSoil;
+    mannerEstimationData.Country = estimationNames.countryName;
  
     return {
       MannerFarm:mannerFarm,
-      MannerEstimation: mannerEstimationDetail,
+      MannerEstimation: mannerEstimationData,
       MannerEstimationApplication:mannerEstimationApplicationsWithManureTypeName,
       TotalMannerCalculateNutrient:  mannerEstimationApplicationsWithCombinedResult,
       LastUpdatedOn: lastUpdatedOn,
@@ -246,23 +247,28 @@ const mannerEstimationsReadHelpers = {
     cache.set(id, lookupData?.data?.name ?? null);
   },
 
-  getLastUpdatedOn(mannerEstimationData, mannerEstimationApplications) {
-    const timestampCandidates = [
-      mannerEstimationData.ModifiedOn,
-      mannerEstimationData.CreatedOn,
-      ...mannerEstimationApplications.flatMap((application) => [
-        application.ModifiedOn,
-        application.CreatedOn,
-      ]),
-    ]
-      .filter(Boolean)
-      .map((value) => new Date(value).getTime())
-      .filter((value) => !Number.isNaN(value));
-    if (timestampCandidates.length === 0) {
-      return null;
-    }
-    return new Date(Math.max(...timestampCandidates));
-  },
+getLastUpdatedOn(mannerFarm, mannerEstimationData = [], mannerEstimationApplications = []) {
+  const dates = [
+    mannerFarm?.ModifiedOn || mannerFarm?.CreatedOn,
+
+   
+      mannerEstimationData.ModifiedOn || mannerEstimationData.CreatedOn,
+    
+
+    ...mannerEstimationApplications.map(application =>
+      application.ModifiedOn || application.CreatedOn
+    ),
+  ]
+    .filter(Boolean)
+    .map(date => new Date(date).getTime())
+    .filter(timestamp => !Number.isNaN(timestamp));
+
+  if (dates.length === 0) {
+    return null;
+  }
+
+  return new Date(Math.max(...dates));
+},
 
   toNumericId(value) {
     if (typeof value === "number" && Number.isFinite(value)) {
