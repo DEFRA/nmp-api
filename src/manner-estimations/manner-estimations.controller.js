@@ -47,8 +47,8 @@ class MannerEstimationsController {
 
   async getMannerEstimationByFarmId() {
     try {
-      const { farmId } = this.#request.params;
-      const records =await this.#mannerEstimationsService.getMannerEstimationByFarmId(farmId);
+      const { mannerFarmID } = this.#request.params;
+      const records =await this.#mannerEstimationsService.getMannerEstimationByFarmId(mannerFarmID);
       return this.#h.response(records);
     } catch (error) {
       console.error("Error in getByFarmId:", error);

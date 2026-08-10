@@ -198,7 +198,7 @@ const mannerEstimationsWriteHelpers = {
 
     const mannerFarm = await transactionalManager.findOne(
       MannerFarmsEntity,
-      { where: { ID: MannerEstimation.FarmID } },
+      { where: { ID: MannerEstimation.MannerFarmID } },
     );
 
       const nutrientProducts = nutrientProductsData.data.filter(

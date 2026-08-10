@@ -63,13 +63,13 @@ module.exports = [
   },
   {
     method: "GET",
-    path: "/manner-estimations/by-farmId/{farmId}",
+    path: "/manner-estimations/by-mannerFarmID/{mannerFarmID}",
     options: {
       tags: ["api", mannerEstimations],
       description: "Get Manner Estimations by Farm ID",
       validate: {
         params: Joi.object({
-          farmId: Joi.number().integer().required(),
+          mannerFarmID: Joi.number().integer().required(),
         }),
         failAction: validationFailAction,
       },

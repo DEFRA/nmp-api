@@ -24,7 +24,7 @@ const mannerEstimationsReadHelpers = {
       return null;
     }
     const mannerFarm = await this.mannerFarmsRepository.findOne({
-        where: { ID: mannerEstimationData.FarmID }
+        where: { ID: mannerEstimationData.MannerFarmID }
     });
 
    
@@ -295,13 +295,13 @@ getLastUpdatedOn(mannerFarm, mannerEstimationData = [], mannerEstimationApplicat
     });
   },
 
- async getMannerEstimationByFarmId(farmId) {
+ async getMannerEstimationByFarmId(mannerFarmID) {
     const mannerFarm = await this.mannerFarmsRepository.findOne({
-        where: { ID: farmId }
+        where: { ID: mannerFarmID }
     });
 
     const mannerEstimate = await this.repository.find({
-        where: { FarmID: farmId },
+        where: { MannerFarmID: mannerFarmID },
         order: { ID: "ASC" },
     });
 
