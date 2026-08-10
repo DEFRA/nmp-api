@@ -32,10 +32,8 @@ const mannerEstimationsReadHelpers = {
       mannerEstimationData,
       request,
     );
-      const mannerEstimationDetail = {
-    ...mannerEstimationData,
-    ...mannerFarm
-};
+      
+
     const mannerEstimationApplicationsWithManureTypeName =
       await this.getMannerEstimationApplicationsWithManureTypeName(id, request);
     const mannerEstimationApplicationsWithCombinedResult =
@@ -47,7 +45,7 @@ const mannerEstimationsReadHelpers = {
       );
     const lastUpdatedOn = this.getLastUpdatedOn(
       mannerFarm,
-      mannerEstimationDetail,
+      mannerEstimationData,
       mannerEstimationApplicationsWithManureTypeName,
     );
     mannerEstimationData.CropTypeName = estimationNames.cropTypeName;

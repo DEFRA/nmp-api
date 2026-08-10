@@ -173,8 +173,6 @@ const MannerEstimationsEntity = new EntitySchema({
   },
 
   relations: {
-    
-
     MannerEstimationApplications: {
       type: RELATION_TYPES.ONE_TO_MANY,
       target: "MannerEstimationApplications",
