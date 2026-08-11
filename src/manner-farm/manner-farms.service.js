@@ -37,32 +37,17 @@ class MannerFarmsService extends BaseService {
       const nutrientProducts = nutrientProductsData.data.filter((product) => product.isNutrientDefaultProduct === true);
       const nutrients =await this.mannerEstimationsService.nutrientsService.getData("/nutrients",request);
       const mappedMannerEstimationApplication =await this.mannerEstimationsService.getMappedMannerEstimationApplication(
-          savedMannerFarm,
-          mappedMannerEstimation,
-          MannerEstimationApplication,
-          request,
+          savedMannerFarm,mappedMannerEstimation,
+          MannerEstimationApplication,request
         );
-      const nutrientFinancialValues =
-        this.mannerEstimationsService.calculateNutrientFinancialValuesByNutrientId(
-          nutrientProducts,
-          nutrients,
-          mappedMannerEstimationApplication,
-        );
-      const mannerEstimationFinancialValues =
-        this.mannerEstimationsService.buildMannerEstimationFinancialValues(
-          nutrientFinancialValues,
-        );
-      const mannerEstimationApplicationFinancialValues =
-        this.mannerEstimationsService.buildMannerEstimationApplicationFinancialValues(
-          nutrientFinancialValues,
-        );
+      const nutrientFinancialValues = this.mannerEstimationsService.calculateNutrientFinancialValuesByNutrientId(nutrientProducts,nutrients,mappedMannerEstimationApplication);
+      const mannerEstimationFinancialValues = this.mannerEstimationsService.buildMannerEstimationFinancialValues(nutrientFinancialValues);
+      const mannerEstimationApplicationFinancialValues = this.mannerEstimationsService.buildMannerEstimationApplicationFinancialValues(nutrientFinancialValues);
       const mannerEstimationEntity = transactionalManager.create(
         MannerEstimationsEntity,
         {
-          ...mappedMannerEstimation,
-          ...mannerEstimationFinancialValues,
-          CreatedByID: userId,
-          CreatedOn: new Date(),
+          ...mappedMannerEstimation,...mannerEstimationFinancialValues,
+          CreatedByID: userId,CreatedOn: new Date()
         },
       );
       const savedMannerEstimation = await transactionalManager.save(MannerEstimationsEntity,mannerEstimationEntity);
@@ -72,15 +57,12 @@ class MannerFarmsService extends BaseService {
           ...mappedMannerEstimationApplication,
           ...mannerEstimationApplicationFinancialValues,
           MannerEstimationID: savedMannerEstimation.ID,
-          CreatedByID: userId,
-          CreatedOn: new Date(),
+          CreatedByID: userId,CreatedOn: new Date()
         },
       );
       const savedMannerEstimationApplication = await transactionalManager.save(MannerEstimationApplicationsEntity,mannerEstimationApplicationEntity);
       return {
-        MannerFarm: savedMannerFarm,
-        MannerEstimation: savedMannerEstimation,
-        MannerEstimationApplication: savedMannerEstimationApplication,
+        MannerFarm: savedMannerFarm,MannerEstimation: savedMannerEstimation,MannerEstimationApplication: savedMannerEstimationApplication
       };
     });
   }
