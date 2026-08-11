@@ -45,13 +45,13 @@ class MannerEstimationsController {
     }
   }
 
-  async getByOrganisationId() {
+  async getMannerEstimationByFarmId() {
     try {
-      const { organisationId } = this.#request.params;
-      const records =await this.#mannerEstimationsService.getByOrganisationId(organisationId);
+      const { mannerFarmID } = this.#request.params;
+      const records =await this.#mannerEstimationsService.getMannerEstimationByFarmId(mannerFarmID);
       return this.#h.response(records);
     } catch (error) {
-      console.error("Error in getByOrganisationId:", error);
+      console.error("Error in getByFarmId:", error);
       return this.#h.response(error);
     }
   }

@@ -17,11 +17,6 @@ const {
 const responseHandlerPlugin = require("./src/interceptor/response.interceptor");
 const EnvironmentService = require("./src/shared/environment.service");
 
-const parseTimeout = (value, fallback) => {
-  const parsed = Number.parseInt(value, 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
-};
-
 const init = async () => {
   const swaggerOptions = {
     info: {
@@ -49,24 +44,9 @@ const init = async () => {
 
   await createConnection(ormConfig);
   const azureAuthMiddleware = new AzureAuthMiddleware();
-  const defaultServerTimeoutMs = 300000;
-  const serverTimeoutMs = parseTimeout(
-    process.env.SERVER_ROUTE_TIMEOUT_MS,
-    defaultServerTimeoutMs,
-  );
-  const socketTimeoutMs = parseTimeout(
-    process.env.SERVER_SOCKET_TIMEOUT_MS,
-    defaultServerTimeoutMs,
-  );
 
   const server = hapi.server({
     port: process.env.PORT ?? EnvironmentService.applicationPort(),
-    routes: {
-      timeout: {
-        server: serverTimeoutMs,
-        socket: socketTimeoutMs,
-      },
-    },
     // Use the port provided by IIS,
     // host: "localhost",
   });

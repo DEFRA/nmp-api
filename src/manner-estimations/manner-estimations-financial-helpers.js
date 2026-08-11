@@ -10,6 +10,10 @@ const NUTRIENT_ID = { NITROGEN: 1, PHOSPHATE: 2, POTASH: 3 };
 const AUGUST_MONTH = 7;
 const JULY_MONTH = 6;
 
+const {
+  MannerFarmsEntity,
+} = require("../db/entity/manner-farms.entity");
+
 const mannerEstimationsFinancialHelpers = {
   async updateMannerEstimationWithApplications(payload, userId, request) {
     const { MannerEstimation } = payload;
@@ -22,9 +26,21 @@ const mannerEstimationsFinancialHelpers = {
           transactionalManager,
           mannerEstimationId,
         );
+
+        const mannerFarm = await transactionalManager.findOne(
+        MannerFarmsEntity,
+        {
+          where: { ID: MannerEstimation.MannerFarmID },
+        },
+      );
+        const mannerEstimationDetail = {
+    ...MannerEstimation,
+    ...mannerFarm
+};
       const mannerEstimationFinancialValues =
         await this.getMannerEstimationFinancialValuesForUpdate(
-          MannerEstimation,
+          mannerFarm,
+          mannerEstimationDetail,
           sourceMannerEstimationApplications[0],
           request,
         );
@@ -42,6 +58,7 @@ const mannerEstimationsFinancialHelpers = {
         sourceMannerEstimationApplications,
         MannerEstimation,
         mannerEstimationId,
+        mannerFarm,
         userId,
         request
       );
@@ -72,12 +89,14 @@ const mannerEstimationsFinancialHelpers = {
   },
 
   async getMannerEstimationFinancialValuesForUpdate(
+    mannerFarm,
     mannerEstimation,
     sourceApplication,
     request,
   ) {
     const mappedSourceApplication =
       await this.getMappedMannerEstimationApplication(
+        mannerFarm,
         mannerEstimation,
         sourceApplication,
         request,
@@ -120,6 +139,7 @@ const mannerEstimationsFinancialHelpers = {
     sourceMannerEstimationApplications,
     mannerEstimation,
     mannerEstimationId,
+    mannerFarm,
     userId,
     request,
   ) {
@@ -130,6 +150,7 @@ const mannerEstimationsFinancialHelpers = {
         mannerEstimation,
         mannerEstimationApplication,
         mannerEstimationId,
+        mannerFarm,
         userId,
         request,
       );
@@ -143,6 +164,7 @@ const mannerEstimationsFinancialHelpers = {
     mannerEstimation,
     mannerEstimationApplication,
     mannerEstimationId,
+    mannerFarm,
     userId,
     request,
   ) {
@@ -153,6 +175,7 @@ const mannerEstimationsFinancialHelpers = {
       );
     const mappedMannerEstimationApplication =
       await this.getMappedMannerEstimationApplication(
+        mannerFarm,
         mannerEstimation,
         mannerEstimationApplication,
         request,

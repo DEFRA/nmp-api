@@ -17,39 +17,12 @@ const MannerEstimationsEntity = new EntitySchema({
       length: 250,
       nullable: false,
     },
-
-    OrganisationID: {
-      type: "uniqueidentifier",
-      nullable: false,
-    },
-
-    FarmName: {
-      type: "nvarchar",
-      length: 250,
-      nullable: false,
-    },
-
-    CountryID: {
+   
+     MannerFarmID: {
       type: "int",
       nullable: false,
     },
 
-    Postcode: {
-      type: "nvarchar",
-      length: 50,
-      nullable: false,
-    },
-
-    AverageAnuualRainfall: {
-      type: "int",
-      nullable: false,
-    },
-
-    RegisteredOrganicProducer: {
-      type: "bit",
-      default: 0,
-    },
-    
     FieldName: {
       type: "nvarchar",
       length: 50,
@@ -200,24 +173,6 @@ const MannerEstimationsEntity = new EntitySchema({
   },
 
   relations: {
-    Country: {
-      type: RELATION_TYPES.MANY_TO_ONE,
-      target: "Countries",
-      joinColumn: {
-        name: "CountryID",
-      },
-      inverseSide: "MannerEstimations",
-    },
-
-    Organisation: {
-      type: RELATION_TYPES.MANY_TO_ONE,
-      target: "Organisations",
-      joinColumn: {
-        name: "OrganisationID",
-      },
-      inverseSide: "MannerEstimations",
-    },
-
     MannerEstimationApplications: {
       type: RELATION_TYPES.ONE_TO_MANY,
       target: "MannerEstimationApplications",

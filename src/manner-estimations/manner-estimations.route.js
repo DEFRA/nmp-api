@@ -63,20 +63,20 @@ module.exports = [
   },
   {
     method: "GET",
-    path: "/manner-estimations/{organisationId}",
+    path: "/manner-estimations/by-mannerFarmID/{mannerFarmID}",
     options: {
       tags: ["api", mannerEstimations],
-      description: "Get Manner Estimations by Organisation ID",
+      description: "Get Manner Estimations by Farm ID",
       validate: {
         params: Joi.object({
-          organisationId: Joi.string().guid().required(),
+          mannerFarmID: Joi.number().integer().required(),
         }),
         failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
       const controller = new MannerEstimationsController(request, h);
-      return controller.getByOrganisationId();
+      return controller.getMannerEstimationByFarmId();
     },
   },
   {
