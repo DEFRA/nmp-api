@@ -1,4 +1,5 @@
 const { AppDataSource } = require("../db/data-source");
+const { In } = require("typeorm");
 
 const { BaseService } = require("../base/base.service");
 const { MannerFarmsEntity } = require("../db/entity/manner-farms.entity");
@@ -15,6 +16,12 @@ class MannerFarmsService extends BaseService {
   constructor() {
     super(MannerFarmsEntity);
     this.repository = AppDataSource.getRepository(MannerFarmsEntity);
+    this.mannerEstimationsRepository = AppDataSource.getRepository(
+      MannerEstimationsEntity,
+    );
+    this.mannerEstimationApplicationsRepository = AppDataSource.getRepository(
+      MannerEstimationApplicationsEntity,
+    );
     this.mannerEstimationsService = new MannerEstimationsService();
   }
 
@@ -104,10 +111,137 @@ class MannerFarmsService extends BaseService {
   }
 
   async getByOrganisationId(organisationId) {
-    const mannerEstimationData = await this.repository.find({
+    const mannerFarms = await this.repository.find({
       where: { OrganisationID: organisationId },
     });
-    return mannerEstimationData;
+
+    if (!mannerFarms.length) {
+      return mannerFarms;
+    }
+
+    const farmIds = mannerFarms.map((mannerFarm) => mannerFarm.ID);
+    const mannerEstimations = await this.mannerEstimationsRepository.find({
+      where: { MannerFarmID: In(farmIds) },
+      select: ["ID", "MannerFarmID", "CreatedOn", "ModifiedOn"],
+    });
+
+    const estimationIds = mannerEstimations.map((mannerEstimation) => {
+      return mannerEstimation.ID;
+    });
+
+    const mannerEstimationApplications = estimationIds.length
+      ? await this.mannerEstimationApplicationsRepository.find({
+          where: { MannerEstimationID: In(estimationIds) },
+          select: ["MannerEstimationID", "CreatedOn", "ModifiedOn"],
+        })
+      : [];
+
+    const getLatestTimestamp = (...dates) => {
+      const validTimestamps = dates
+        .filter(Boolean)
+        .map((date) => new Date(date).getTime())
+        .filter((timestamp) => !Number.isNaN(timestamp));
+
+      if (!validTimestamps.length) {
+        return null;
+      }
+
+      return Math.max(...validTimestamps);
+    };
+
+    const latestEstimationTimestampByFarmId = new Map();
+    const farmIdByEstimationId = new Map();
+
+    for (const mannerEstimation of mannerEstimations) {
+      farmIdByEstimationId.set(
+        mannerEstimation.ID,
+        mannerEstimation.MannerFarmID,
+      );
+
+      const latestEstimationTimestamp = getLatestTimestamp(
+        mannerEstimation.ModifiedOn,
+        mannerEstimation.CreatedOn,
+      );
+
+      if (latestEstimationTimestamp == null) {
+        continue;
+      }
+
+      const existingTimestamp = latestEstimationTimestampByFarmId.get(
+        mannerEstimation.MannerFarmID,
+      );
+
+      if (
+        existingTimestamp == null ||
+        latestEstimationTimestamp > existingTimestamp
+      ) {
+        latestEstimationTimestampByFarmId.set(
+          mannerEstimation.MannerFarmID,
+          latestEstimationTimestamp,
+        );
+      }
+    }
+
+    const latestApplicationTimestampByFarmId = new Map();
+
+    for (const mannerEstimationApplication of mannerEstimationApplications) {
+      const mannerFarmId = farmIdByEstimationId.get(
+        mannerEstimationApplication.MannerEstimationID,
+      );
+
+      if (!mannerFarmId) {
+        continue;
+      }
+
+      const latestApplicationTimestamp = getLatestTimestamp(
+        mannerEstimationApplication.ModifiedOn,
+        mannerEstimationApplication.CreatedOn,
+      );
+
+      if (latestApplicationTimestamp == null) {
+        continue;
+      }
+
+      const existingTimestamp =
+        latestApplicationTimestampByFarmId.get(mannerFarmId);
+
+      if (
+        existingTimestamp == null ||
+        latestApplicationTimestamp > existingTimestamp
+      ) {
+        latestApplicationTimestampByFarmId.set(
+          mannerFarmId,
+          latestApplicationTimestamp,
+        );
+      }
+    }
+
+    return mannerFarms.map((mannerFarm) => {
+      const latestFarmTimestamp = getLatestTimestamp(
+        mannerFarm.ModifiedOn,
+        mannerFarm.CreatedOn,
+      );
+      const latestEstimationTimestamp = latestEstimationTimestampByFarmId.get(
+        mannerFarm.ID,
+      );
+      const latestApplicationTimestamp = latestApplicationTimestampByFarmId.get(
+        mannerFarm.ID,
+      );
+
+      const latestModifiedTimestamp = getLatestTimestamp(
+        latestFarmTimestamp,
+        latestEstimationTimestamp,
+        latestApplicationTimestamp,
+      );
+
+      return {
+        ...mannerFarm,
+        LastUpdatedDate:
+          latestModifiedTimestamp == null
+            ? null
+            : new Date(latestModifiedTimestamp),
+      };
+    });
   }
 }
 
