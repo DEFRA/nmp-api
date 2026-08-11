@@ -82,30 +82,46 @@ class MannerFarmsService extends BaseService {
           nutrientFinancialValues,
         );
 
-      const mannerEstimationApplicationFinancialValues = this.mannerEstimationsService.buildMannerEstimationApplicationFinancialValues(nutrientFinancialValues,);
+      const mannerEstimationApplicationFinancialValues =
+        this.mannerEstimationsService.buildMannerEstimationApplicationFinancialValues(
+          nutrientFinancialValues,
+        );
 
       const mannerEstimationEntity = transactionalManager.create(
         MannerEstimationsEntity,
         {
           ...mappedMannerEstimation,
-          ...mannerEstimationFinancialValues, CreatedByID: userId, CreatedOn: new Date(),
+          ...mannerEstimationFinancialValues,
+          CreatedByID: userId,
+          CreatedOn: new Date(),
         },
       );
 
-      const savedMannerEstimation = await transactionalManager.save(MannerEstimationsEntity, mannerEstimationEntity,);
+      const savedMannerEstimation = await transactionalManager.save(
+        MannerEstimationsEntity,
+        mannerEstimationEntity,
+      );
 
       const mannerEstimationApplicationEntity = transactionalManager.create(
         MannerEstimationApplicationsEntity,
         {
           ...mappedMannerEstimationApplication,
-          ...mannerEstimationApplicationFinancialValues, MannerEstimationID: savedMannerEstimation.ID, CreatedByID: userId, CreatedOn: new Date(),
+          ...mannerEstimationApplicationFinancialValues,
+          MannerEstimationID: savedMannerEstimation.ID,
+          CreatedByID: userId,
+          CreatedOn: new Date(),
         },
       );
 
-      const savedMannerEstimationApplication = await transactionalManager.save(MannerEstimationApplicationsEntity, mannerEstimationApplicationEntity,);
+      const savedMannerEstimationApplication = await transactionalManager.save(
+        MannerEstimationApplicationsEntity,
+        mannerEstimationApplicationEntity,
+      );
 
       return {
-        MannerFarm: savedMannerFarm, MannerEstimation: savedMannerEstimation, MannerEstimationApplication: savedMannerEstimationApplication,
+        MannerFarm: savedMannerFarm,
+        MannerEstimation: savedMannerEstimation,
+        MannerEstimationApplication: savedMannerEstimationApplication,
       };
     });
   }
@@ -120,35 +136,60 @@ class MannerFarmsService extends BaseService {
     }
 
     const farmIds = mannerFarms.map((mannerFarm) => mannerFarm.ID);
-    const mannerEstimations = await this.mannerEstimationsRepository.find({
+    const mannerEstimations = await this.getMannerEstimationsByFarmIds(farmIds);
+    const estimationIds = mannerEstimations.map(
+      (mannerEstimation) => mannerEstimation.ID,
+    );
+    const mannerEstimationApplications =
+      await this.getMannerEstimationApplicationsByEstimationIds(estimationIds);
+
+    const { latestEstimationTimestampByFarmId, farmIdByEstimationId } =
+      this.buildLatestEstimationTimestampByFarmId(mannerEstimations);
+    const latestApplicationTimestampByFarmId =
+      this.buildLatestApplicationTimestampByFarmId(
+        mannerEstimationApplications,
+        farmIdByEstimationId,
+      );
+
+    return this.mapFarmsWithLastUpdatedDate(
+      mannerFarms,
+      latestEstimationTimestampByFarmId,
+      latestApplicationTimestampByFarmId,
+    );
+  }
+
+  async getMannerEstimationsByFarmIds(farmIds) {
+    return this.mannerEstimationsRepository.find({
       where: { MannerFarmID: In(farmIds) },
       select: ["ID", "MannerFarmID", "CreatedOn", "ModifiedOn"],
     });
+  }
 
-    const estimationIds = mannerEstimations.map((mannerEstimation) => {
-      return mannerEstimation.ID;
+  async getMannerEstimationApplicationsByEstimationIds(estimationIds) {
+    if (!estimationIds.length) {
+      return [];
+    }
+
+    return this.mannerEstimationApplicationsRepository.find({
+      where: { MannerEstimationID: In(estimationIds) },
+      select: ["MannerEstimationID", "CreatedOn", "ModifiedOn"],
     });
+  }
 
-    const mannerEstimationApplications = estimationIds.length
-      ? await this.mannerEstimationApplicationsRepository.find({
-          where: { MannerEstimationID: In(estimationIds) },
-          select: ["MannerEstimationID", "CreatedOn", "ModifiedOn"],
-        })
-      : [];
+  getLatestTimestamp(...dates) {
+    const validTimestamps = dates
+      .filter(Boolean)
+      .map((date) => new Date(date).getTime())
+      .filter((timestamp) => !Number.isNaN(timestamp));
 
-    const getLatestTimestamp = (...dates) => {
-      const validTimestamps = dates
-        .filter(Boolean)
-        .map((date) => new Date(date).getTime())
-        .filter((timestamp) => !Number.isNaN(timestamp));
+    if (!validTimestamps.length) {
+      return null;
+    }
 
-      if (!validTimestamps.length) {
-        return null;
-      }
+    return Math.max(...validTimestamps);
+  }
 
-      return Math.max(...validTimestamps);
-    };
-
+  buildLatestEstimationTimestampByFarmId(mannerEstimations) {
     const latestEstimationTimestampByFarmId = new Map();
     const farmIdByEstimationId = new Map();
 
@@ -158,7 +199,7 @@ class MannerFarmsService extends BaseService {
         mannerEstimation.MannerFarmID,
       );
 
-      const latestEstimationTimestamp = getLatestTimestamp(
+      const latestEstimationTimestamp = this.getLatestTimestamp(
         mannerEstimation.ModifiedOn,
         mannerEstimation.CreatedOn,
       );
@@ -182,6 +223,13 @@ class MannerFarmsService extends BaseService {
       }
     }
 
+    return { latestEstimationTimestampByFarmId, farmIdByEstimationId };
+  }
+
+  buildLatestApplicationTimestampByFarmId(
+    mannerEstimationApplications,
+    farmIdByEstimationId,
+  ) {
     const latestApplicationTimestampByFarmId = new Map();
 
     for (const mannerEstimationApplication of mannerEstimationApplications) {
@@ -193,7 +241,7 @@ class MannerFarmsService extends BaseService {
         continue;
       }
 
-      const latestApplicationTimestamp = getLatestTimestamp(
+      const latestApplicationTimestamp = this.getLatestTimestamp(
         mannerEstimationApplication.ModifiedOn,
         mannerEstimationApplication.CreatedOn,
       );
@@ -216,8 +264,16 @@ class MannerFarmsService extends BaseService {
       }
     }
 
+    return latestApplicationTimestampByFarmId;
+  }
+
+  mapFarmsWithLastUpdatedDate(
+    mannerFarms,
+    latestEstimationTimestampByFarmId,
+    latestApplicationTimestampByFarmId,
+  ) {
     return mannerFarms.map((mannerFarm) => {
-      const latestFarmTimestamp = getLatestTimestamp(
+      const latestFarmTimestamp = this.getLatestTimestamp(
         mannerFarm.ModifiedOn,
         mannerFarm.CreatedOn,
       );
@@ -228,7 +284,7 @@ class MannerFarmsService extends BaseService {
         mannerFarm.ID,
       );
 
-      const latestModifiedTimestamp = getLatestTimestamp(
+      const latestModifiedTimestamp = this.getLatestTimestamp(
         latestFarmTimestamp,
         latestEstimationTimestamp,
         latestApplicationTimestamp,
