@@ -26,28 +26,56 @@ class MannerFarmsService extends BaseService {
   }
 
   async createWithMannerEstimation(payload, userId, request) {
-    const { MannerFarm, MannerEstimation, MannerEstimationApplication } =payload;
+    const { MannerFarm, MannerEstimation, MannerEstimationApplication } =
+      payload;
     return AppDataSource.transaction(async (transactionalManager) => {
       const mannerFarmEntity = transactionalManager.create(MannerFarmsEntity, {
         ...MannerFarm,
         CreatedByID: userId,
         CreatedOn: new Date(),
       });
-      const savedMannerFarm = await transactionalManager.save(MannerFarmsEntity,mannerFarmEntity);
-      const mappedMannerEstimation = { ...MannerEstimation, MannerFarmID: savedMannerFarm.ID};
-      const nutrientProductsData = await this.mannerEstimationsService.nutrientsProductService.getData("/nutrient-products", request);
-      const nutrientProducts = nutrientProductsData.data.filter((product) => product.isNutrientDefaultProduct === true);
-      const nutrients = await this.mannerEstimationsService.nutrientsService.getData("/nutrients",request);
-      const mappedMannerEstimationApplication = await this.mannerEstimationsService.getMappedMannerEstimationApplication(
-          savedMannerFarm,mappedMannerEstimation,
-          MannerEstimationApplication,request
+      const savedMannerFarm = await transactionalManager.save(
+        MannerFarmsEntity,
+        mannerFarmEntity,
+      );
+      const mappedMannerEstimation = {
+        ...MannerEstimation,
+        MannerFarmID: savedMannerFarm.ID,
+      };
+      const nutrientProductsData =
+        await this.mannerEstimationsService.nutrientsProductService.getData(
+          "/nutrient-products",
+          request,
         );
-      const nutrientFinancialValues = this.mannerEstimationsService.calculateNutrientFinancialValuesByNutrientId(
-          nutrientProducts,nutrients,
-          mappedMannerEstimationApplication
+      const nutrientProducts = nutrientProductsData.data.filter(
+        (product) => product.isNutrientDefaultProduct === true,
+      );
+      const nutrients =
+        await this.mannerEstimationsService.nutrientsService.getData(
+          "/nutrients",
+          request,
         );
-      const mannerEstimationFinancialValues = this.mannerEstimationsService.buildMannerEstimationFinancialValues(nutrientFinancialValues);
-      const mannerEstimationApplicationFinancialValues = this.mannerEstimationsService.buildMannerEstimationApplicationFinancialValues(nutrientFinancialValues);
+      const mappedMannerEstimationApplication =
+        await this.mannerEstimationsService.getMappedMannerEstimationApplication(
+          savedMannerFarm,
+          mappedMannerEstimation,
+          MannerEstimationApplication,
+          request,
+        );
+      const nutrientFinancialValues =
+        this.mannerEstimationsService.calculateNutrientFinancialValuesByNutrientId(
+          nutrientProducts,
+          nutrients,
+          mappedMannerEstimationApplication,
+        );
+      const mannerEstimationFinancialValues =
+        this.mannerEstimationsService.buildMannerEstimationFinancialValues(
+          nutrientFinancialValues,
+        );
+      const mannerEstimationApplicationFinancialValues =
+        this.mannerEstimationsService.buildMannerEstimationApplicationFinancialValues(
+          nutrientFinancialValues,
+        );
       const mannerEstimationEntity = transactionalManager.create(
         MannerEstimationsEntity,
         {
@@ -57,7 +85,10 @@ class MannerFarmsService extends BaseService {
           CreatedOn: new Date(),
         },
       );
-      const savedMannerEstimation = await transactionalManager.save(MannerEstimationsEntity,mannerEstimationEntity);
+      const savedMannerEstimation = await transactionalManager.save(
+        MannerEstimationsEntity,
+        mannerEstimationEntity,
+      );
       const mannerEstimationApplicationEntity = transactionalManager.create(
         MannerEstimationApplicationsEntity,
         {
@@ -68,9 +99,14 @@ class MannerFarmsService extends BaseService {
           CreatedOn: new Date(),
         },
       );
-      const savedMannerEstimationApplication = await transactionalManager.save(MannerEstimationApplicationsEntity,mannerEstimationApplicationEntity);
+      const savedMannerEstimationApplication = await transactionalManager.save(
+        MannerEstimationApplicationsEntity,
+        mannerEstimationApplicationEntity,
+      );
       return {
-        MannerFarm: savedMannerFarm,MannerEstimation: savedMannerEstimation,MannerEstimationApplication: savedMannerEstimationApplication
+        MannerFarm: savedMannerFarm,
+        MannerEstimation: savedMannerEstimation,
+        MannerEstimationApplication: savedMannerEstimationApplication,
       };
     });
   }
@@ -186,30 +222,26 @@ class MannerFarmsService extends BaseService {
         mannerEstimationApplication.MannerEstimationID,
       );
 
-      if (!mannerFarmId) {
-        continue;
-      }
+      const latestApplicationTimestamp = mannerFarmId
+        ? this.getLatestTimestamp(
+            mannerEstimationApplication.ModifiedOn,
+            mannerEstimationApplication.CreatedOn,
+          )
+        : null;
 
-      const latestApplicationTimestamp = this.getLatestTimestamp(
-        mannerEstimationApplication.ModifiedOn,
-        mannerEstimationApplication.CreatedOn,
-      );
+      if (mannerFarmId && latestApplicationTimestamp != null) {
+        const existingTimestamp =
+          latestApplicationTimestampByFarmId.get(mannerFarmId);
 
-      if (latestApplicationTimestamp == null) {
-        continue;
-      }
-
-      const existingTimestamp =
-        latestApplicationTimestampByFarmId.get(mannerFarmId);
-
-      if (
-        existingTimestamp == null ||
-        latestApplicationTimestamp > existingTimestamp
-      ) {
-        latestApplicationTimestampByFarmId.set(
-          mannerFarmId,
-          latestApplicationTimestamp,
-        );
+        if (
+          existingTimestamp == null ||
+          latestApplicationTimestamp > existingTimestamp
+        ) {
+          latestApplicationTimestampByFarmId.set(
+            mannerFarmId,
+            latestApplicationTimestamp,
+          );
+        }
       }
     }
 
