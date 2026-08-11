@@ -1,6 +1,9 @@
 const { validationFailAction } = require("../shared/validateFailSafeAction");
 const { MannerFarmsController } = require("./manner-farms.controller");
-const { CreateMannerFarmWithEstimationDto } = require("./dto/manner-farm.dto");
+const {
+  CreateMannerFarmWithEstimationDto,
+  UpdateMannerFarmWithEstimationsDto,
+} = require("./dto/manner-farm.dto");
 const Joi = require("joi");
 const mannerFarms = "Manner Farms";
 module.exports = [
@@ -19,6 +22,23 @@ module.exports = [
     handler: async (request, h) => {
       const controller = new MannerFarmsController(request, h);
       return controller.createWithMannerEstimation();
+    },
+  },
+  {
+    method: "PUT",
+    path: "/manner-farms",
+    options: {
+      tags: ["api", mannerFarms],
+      description:
+        "Update Manner Farm and refresh linked Manner Estimations and applications",
+      validate: {
+        payload: UpdateMannerFarmWithEstimationsDto,
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new MannerFarmsController(request, h);
+      return controller.updateWithAssociatedEstimations();
     },
   },
   {

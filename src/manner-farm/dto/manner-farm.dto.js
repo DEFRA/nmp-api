@@ -31,7 +31,19 @@ const CreateMannerFarmWithEstimationDto = Joi.object({
   MannerEstimationApplication: CreateMannerEstimationApplicationDto.required(),
 });
 
+const UpdateMannerFarmDto = CreateMannerFarmDto.keys({
+  ID: Joi.number().integer().required(),
+});
+
+const UpdateMannerFarmWithEstimationsDto = Joi.object({
+  MannerFarm: UpdateMannerFarmDto.required(),
+  MannerEstimationID: Joi.number().integer().allow(null).default(null).optional()
+})
+
+
 module.exports = {
   CreateMannerFarmDto,
   CreateMannerFarmWithEstimationDto,
+  UpdateMannerFarmDto,
+  UpdateMannerFarmWithEstimationsDto,
 };

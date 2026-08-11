@@ -49,6 +49,23 @@ class MannerFarmsController {
       return this.#h.response(error);
     }
   }
+
+  async updateWithAssociatedEstimations() {
+    try {
+      const payload = this.#request.payload;
+      const userId = this.#request.userId;
+      const result =
+        await this.#mannerFarmsService.updateWithAssociatedEstimations(
+          payload,
+          userId,
+          this.#request,
+        );
+      return this.#h.response(result);
+    } catch (error) {
+      console.error("Error in updateWithAssociatedEstimations:", error);
+      return this.#h.response(error);
+    }
+  }
 }
 
 module.exports = { MannerFarmsController };
