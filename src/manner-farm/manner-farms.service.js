@@ -222,26 +222,30 @@ class MannerFarmsService extends BaseService {
         mannerEstimationApplication.MannerEstimationID,
       );
 
-      if (mannerFarmId) {
-        const latestApplicationTimestamp = this.getLatestTimestamp(
-          mannerEstimationApplication.ModifiedOn,
-          mannerEstimationApplication.CreatedOn,
+      if (!mannerFarmId) {
+        continue;
+      }
+
+      const latestApplicationTimestamp = this.getLatestTimestamp(
+        mannerEstimationApplication.ModifiedOn,
+        mannerEstimationApplication.CreatedOn,
+      );
+
+      if (latestApplicationTimestamp == null) {
+        continue;
+      }
+
+      const existingTimestamp =
+        latestApplicationTimestampByFarmId.get(mannerFarmId);
+
+      if (
+        existingTimestamp == null ||
+        latestApplicationTimestamp > existingTimestamp
+      ) {
+        latestApplicationTimestampByFarmId.set(
+          mannerFarmId,
+          latestApplicationTimestamp,
         );
-
-        if (latestApplicationTimestamp != null) {
-          const existingTimestamp =
-            latestApplicationTimestampByFarmId.get(mannerFarmId);
-
-          if (
-            existingTimestamp == null ||
-            latestApplicationTimestamp > existingTimestamp
-          ) {
-            latestApplicationTimestampByFarmId.set(
-              mannerFarmId,
-              latestApplicationTimestamp,
-            );
-          }
-        }
       }
     }
 
