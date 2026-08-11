@@ -26,56 +26,28 @@ class MannerFarmsService extends BaseService {
   }
 
   async createWithMannerEstimation(payload, userId, request) {
-    const { MannerFarm, MannerEstimation, MannerEstimationApplication } =
-      payload;
+    const { MannerFarm, MannerEstimation, MannerEstimationApplication } =payload;
     return AppDataSource.transaction(async (transactionalManager) => {
       const mannerFarmEntity = transactionalManager.create(MannerFarmsEntity, {
         ...MannerFarm,
         CreatedByID: userId,
         CreatedOn: new Date(),
       });
-      const savedMannerFarm = await transactionalManager.save(
-        MannerFarmsEntity,
-        mannerFarmEntity,
-      );
-      const mappedMannerEstimation = {
-        ...MannerEstimation,
-        MannerFarmID: savedMannerFarm.ID,
-      };
-      const nutrientProductsData =
-        await this.mannerEstimationsService.nutrientsProductService.getData(
-          "/nutrient-products",
-          request,
+      const savedMannerFarm = await transactionalManager.save(MannerFarmsEntity,mannerFarmEntity);
+      const mappedMannerEstimation = { ...MannerEstimation, MannerFarmID: savedMannerFarm.ID};
+      const nutrientProductsData = await this.mannerEstimationsService.nutrientsProductService.getData("/nutrient-products", request);
+      const nutrientProducts = nutrientProductsData.data.filter((product) => product.isNutrientDefaultProduct === true);
+      const nutrients = await this.mannerEstimationsService.nutrientsService.getData("/nutrients",request);
+      const mappedMannerEstimationApplication = await this.mannerEstimationsService.getMappedMannerEstimationApplication(
+          savedMannerFarm,mappedMannerEstimation,
+          MannerEstimationApplication,request
         );
-      const nutrientProducts = nutrientProductsData.data.filter(
-        (product) => product.isNutrientDefaultProduct === true,
-      );
-      const nutrients =
-        await this.mannerEstimationsService.nutrientsService.getData(
-          "/nutrients",
-          request,
+      const nutrientFinancialValues = this.mannerEstimationsService.calculateNutrientFinancialValuesByNutrientId(
+          nutrientProducts,nutrients,
+          mappedMannerEstimationApplication
         );
-      const mappedMannerEstimationApplication =
-        await this.mannerEstimationsService.getMappedMannerEstimationApplication(
-          savedMannerFarm,
-          mappedMannerEstimation,
-          MannerEstimationApplication,
-          request,
-        );
-      const nutrientFinancialValues =
-        this.mannerEstimationsService.calculateNutrientFinancialValuesByNutrientId(
-          nutrientProducts,
-          nutrients,
-          mappedMannerEstimationApplication,
-        );
-      const mannerEstimationFinancialValues =
-        this.mannerEstimationsService.buildMannerEstimationFinancialValues(
-          nutrientFinancialValues,
-        );
-      const mannerEstimationApplicationFinancialValues =
-        this.mannerEstimationsService.buildMannerEstimationApplicationFinancialValues(
-          nutrientFinancialValues,
-        );
+      const mannerEstimationFinancialValues = this.mannerEstimationsService.buildMannerEstimationFinancialValues(nutrientFinancialValues);
+      const mannerEstimationApplicationFinancialValues = this.mannerEstimationsService.buildMannerEstimationApplicationFinancialValues(nutrientFinancialValues);
       const mannerEstimationEntity = transactionalManager.create(
         MannerEstimationsEntity,
         {
@@ -85,10 +57,7 @@ class MannerFarmsService extends BaseService {
           CreatedOn: new Date(),
         },
       );
-      const savedMannerEstimation = await transactionalManager.save(
-        MannerEstimationsEntity,
-        mannerEstimationEntity,
-      );
+      const savedMannerEstimation = await transactionalManager.save(MannerEstimationsEntity,mannerEstimationEntity);
       const mannerEstimationApplicationEntity = transactionalManager.create(
         MannerEstimationApplicationsEntity,
         {
@@ -99,14 +68,9 @@ class MannerFarmsService extends BaseService {
           CreatedOn: new Date(),
         },
       );
-      const savedMannerEstimationApplication = await transactionalManager.save(
-        MannerEstimationApplicationsEntity,
-        mannerEstimationApplicationEntity,
-      );
+      const savedMannerEstimationApplication = await transactionalManager.save(MannerEstimationApplicationsEntity,mannerEstimationApplicationEntity);
       return {
-        MannerFarm: savedMannerFarm,
-        MannerEstimation: savedMannerEstimation,
-        MannerEstimationApplication: savedMannerEstimationApplication,
+        MannerFarm: savedMannerFarm,MannerEstimation: savedMannerEstimation,MannerEstimationApplication: savedMannerEstimationApplication
       };
     });
   }
