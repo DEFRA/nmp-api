@@ -115,11 +115,11 @@ const MannerFarmsEntity = new EntitySchema({
       inverseSide: "MannerFarm",
       nullable: true,
     },
-    //  FarmID: {
+    //  MannerFarmID: {
     //   type: RELATION_TYPES.MANY_TO_ONE,
     //   target: "MannerEstimations",
     //   joinColumn: {
-    //     name: "FarmID",
+    //     name: "MannerFarmID",
     //   },
     //   inverseSide: "MannerFarm",
     // },

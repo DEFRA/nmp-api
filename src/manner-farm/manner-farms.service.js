@@ -36,7 +36,7 @@ class MannerFarmsService extends BaseService {
 
       const mappedMannerEstimation = {
         ...MannerEstimation,
-        FarmID: savedMannerFarm.ID,
+        MannerFarmID: savedMannerFarm.ID,
       };
 
       const nutrientProductsData =

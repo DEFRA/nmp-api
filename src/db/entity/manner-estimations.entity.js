@@ -18,7 +18,7 @@ const MannerEstimationsEntity = new EntitySchema({
       nullable: false,
     },
    
-     FarmID: {
+     MannerFarmID: {
       type: "int",
       nullable: false,
     },

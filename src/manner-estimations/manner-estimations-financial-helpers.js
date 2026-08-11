@@ -30,7 +30,7 @@ const mannerEstimationsFinancialHelpers = {
         const mannerFarm = await transactionalManager.findOne(
         MannerFarmsEntity,
         {
-          where: { ID: MannerEstimation.FarmID },
+          where: { ID: MannerEstimation.MannerFarmID },
         },
       );
         const mannerEstimationDetail = {
