@@ -52,13 +52,9 @@ class MannerFarmsController {
 
   async deleteMannerFarmsByIds() {
     const { mannerFarmsIds } = this.#request.payload;
-    const userId = this.#request.userId;
-
     try {
       await this.#mannerFarmsService.deleteMannerFarmsByIds(
-        mannerFarmsIds,
-        userId,
-        this.#request,
+        mannerFarmsIds
       );
 
       return this.#h.response({

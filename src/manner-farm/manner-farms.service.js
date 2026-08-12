@@ -243,7 +243,7 @@ class MannerFarmsService extends BaseService {
     });
   }
 
-  async deleteMannerFarmsByIds(mannerFarmsIds, userId, request) {
+  async deleteMannerFarmsByIds(mannerFarmsIds) {
   return AppDataSource.transaction(async (transactionalManager) => {
     await transactionalManager.query("EXEC dbo.spMannerFarms_DeleteByIDs @0", [
       mannerFarmsIds.join(","),
