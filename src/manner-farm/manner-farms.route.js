@@ -57,4 +57,28 @@ module.exports = [
       return controller.getByOrganisationId();
     },
   },
+
+  {
+    method: "DELETE",
+    path: "/manner-farms/",
+    options: {
+      tags: ["api", mannerFarms],
+      description:
+        "Delete Manner Farms and associated Manner Estimations and Manner Estimation Applications by MannerFarm Ids",
+      validate: {
+        payload: Joi.object({
+          mannerFarmsIds: Joi.array()
+            .items(Joi.number().integer().required())
+            .min(1)
+            .required()
+            .description("Array of MannerFarm IDs to delete, e.g., [1, 2, 3]"),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new MannerFarmsController(request, h);
+      return controller.deleteMannerFarmsByIds();
+    },
+  },
 ];

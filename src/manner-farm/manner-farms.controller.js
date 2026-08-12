@@ -41,12 +41,30 @@ class MannerFarmsController {
 
   async getById() {
     try {
-      const { Id } = this.#request.params;
-      const records = await this.#mannerFarmsService.getById(Id);
+      const { id } = this.#request.params;
+      const records = await this.#mannerFarmsService.getById(id);
       return this.#h.response(records);
     } catch (error) {
       console.error("Error in getById:", error);
       return this.#h.response(error);
+    }
+  }
+
+  async deleteMannerFarmsByIds() {
+    const { mannerFarmsIds } = this.#request.payload;
+    try {
+      await this.#mannerFarmsService.deleteMannerFarmsByIds(
+        mannerFarmsIds
+      );
+
+      return this.#h.response({
+        message: "Manner farms deleted successfully.",
+      });
+    } catch (error) {
+      return this.#h
+        .response({
+          error: error.message,
+        })
     }
   }
 }
