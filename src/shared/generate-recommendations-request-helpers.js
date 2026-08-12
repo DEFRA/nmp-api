@@ -367,13 +367,16 @@ const recommendationRequestHelpers = {
     transactionalManager,
     cropTypesList,
   ) {
-    const grassGrowthClass =
+    let grassGrowthClass = null;
+    if(crop.CropTypeID === CropTypeMapper.GRASS) {
+     grassGrowthClass =
       await this.grassGrowthClass.calculateGrassGrowthClassByFieldId(
         field.ID,
         request,
         transactionalManager,
         field
       );
+    }
     const cropType = cropTypesList.find(
       (cropTp) => cropTp.cropTypeId === crop.CropTypeID,
     );
