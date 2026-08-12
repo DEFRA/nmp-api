@@ -242,6 +242,14 @@ class MannerFarmsService extends BaseService {
       };
     });
   }
+
+  async deleteMannerFarmsByIds(mannerFarmsIds, userId, request) {
+  return AppDataSource.transaction(async (transactionalManager) => {
+    await transactionalManager.query("EXEC dbo.spMannerFarms_DeleteByIDs @0", [
+      mannerFarmsIds.join(","),
+    ]);
+  });
+}
 }
 
 module.exports = { MannerFarmsService };
