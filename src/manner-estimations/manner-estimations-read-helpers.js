@@ -1,10 +1,10 @@
 const { AppDataSource } = require("../db/data-source");
 
 const mannerEstimationsReadHelpers = {
-  async checkMannerEstimationExists(organisationId, name) {
+  async checkMannerEstimationExists(mannerFarmId, name) {
     const matchedEstimation = await this.repository.findOne({
-      where: { OrganisationID: organisationId, Name: name },
-      select: { ID: true, Name: true, OrganisationID: true },
+      where: { MannerFarmID: mannerFarmId, Name: name },
+      select: { ID: true, Name: true, MannerFarmID: true },
     });
     return { exists: Boolean(matchedEstimation) };
   },

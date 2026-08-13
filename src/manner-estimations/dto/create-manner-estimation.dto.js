@@ -81,7 +81,7 @@ const UpdateMannerEstimationOnlyDto = Joi.object({
 });
 
 const CheckMannerEstimationExistsDto = Joi.object({
-  organisationId: Joi.string().guid().required(),
+  mannerFarmID: Joi.number().integer().required(),
   name: Joi.string().max(maxTwoFifty).required(),
 });
 const CopyMannerEstimationDto = Joi.object({

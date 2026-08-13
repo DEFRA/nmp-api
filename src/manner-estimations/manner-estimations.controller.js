@@ -91,8 +91,8 @@ class MannerEstimationsController {
 
   async checkMannerEstimationExists() {
     try {
-      const { organisationId, name } = this.#request.query;
-      const result =await this.#mannerEstimationsService.checkMannerEstimationExists(organisationId,name);
+      const { mannerFarmID, name } = this.#request.query;
+      const result =await this.#mannerEstimationsService.checkMannerEstimationExists(mannerFarmID,name);
       return this.#h.response(result);
     } catch (error) {
       console.error("Error checking Manner Estimation existence:", error);
