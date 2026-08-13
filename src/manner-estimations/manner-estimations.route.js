@@ -145,7 +145,7 @@ module.exports = [
     options: {
       tags: ["api", mannerEstimations],
       description:
-        "Check whether a Manner Estimation exists by organisation id and name",
+        "Check whether a Manner Estimation exists by manner farm id and name",
       validate: {
         query: CheckMannerEstimationExistsDto,
         failAction: validationFailAction,

@@ -67,6 +67,16 @@ class MannerFarmsController {
         })
     }
   }
+    async checkMannerFarmExists() {
+    try {
+      const { organisationId, name } = this.#request.query;
+      const result = await this.#mannerFarmsService.checkMannerFarmExists(organisationId,name);
+      return this.#h.response(result);
+    } catch (error) {
+      console.error("Error checking Manner Farms existence:", error);
+      return this.#h.response(error);
+    }
+  }
 }
 
 module.exports = { MannerFarmsController };
