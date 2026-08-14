@@ -8,19 +8,15 @@ function isDeadlockError(error) {
   const driverErrorNumber = driverError?.number;
   const errorCode = String(error?.code ?? "").toUpperCase();
   const driverErrorCode = String(driverError?.code ?? "").toUpperCase();
-  const message = String(
-    error?.message ?? driverError?.message ?? "",
-  ).toLowerCase();
-
+  const message = String( error?.message ?? driverError?.message ?? "").toLowerCase();
+  const hasDeadlockCode = errorCode === "EREQUEST" || driverErrorCode === "EREQUEST";
   return (
     errorNumber === DEADLOCK_ERROR_NUMBER ||
     driverErrorNumber === DEADLOCK_ERROR_NUMBER ||
-    (errorCode === "EREQUEST" && message.includes("deadlock")) ||
-    (driverErrorCode === "EREQUEST" && message.includes("deadlock")) ||
+    (hasDeadlockCode && message.includes("deadlock")) ||
     message.includes("deadlock victim")
   );
 }
-
 async function runWithDeadlockRetry(fn, options = {}) {
   const {
     retries = 3,
