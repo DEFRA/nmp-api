@@ -1,5 +1,5 @@
 const { AppDataSource } = require("../db/data-source");
-const { Like, getRepository } = require("typeorm");
+const { Like } = require("typeorm");
 const boom = require("@hapi/boom");
 const { StaticStrings } = require("../shared/static.string");
 const { runWithRetry } = require("../shared/resilience-guard.service");
@@ -13,7 +13,7 @@ class BaseService {
   static #defaultGetByRetryDelayMs = 200;
 
   constructor(entity) {
-    this.#entity = getRepository(entity);
+    this.#entity = AppDataSource.getRepository(entity);
     this.#entityManager = AppDataSource.manager;
   }
 

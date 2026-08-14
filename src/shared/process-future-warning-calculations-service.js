@@ -1,13 +1,133 @@
 const { AppDataSource } = require("../db/data-source");
-const { runWithDeadlockRetry } = require("../db/transactionRetry");
-const { CalculateFutureWarningMessageService } = require("./calculate-warning-messages-future-years");
-const { CreateOrUpdateWarningMessage } = require("./create-update-warning-messages.service");
+const {
+  runWithDeadlockRetry,
+  isDeadlockError,
+} = require("../db/transactionRetry");
+const {
+  CalculateFutureWarningMessageService,
+} = require("./calculate-warning-messages-future-years");
+const {
+  CreateOrUpdateWarningMessage,
+} = require("./create-update-warning-messages.service");
+const { BackgroundJobQueue } = require("./background-job-queue");
+
+const parsedWarningDeadlockRetries = Number.parseInt(
+  process.env.WARNING_DEADLOCK_RETRIES,
+  10,
+);
+const WARNING_DEADLOCK_RETRIES = Number.isFinite(parsedWarningDeadlockRetries)
+  ? Math.max(0, parsedWarningDeadlockRetries)
+  : 4;
+
+const parsedWarningDeadlockDelayMs = Number.parseInt(
+  process.env.WARNING_DEADLOCK_DELAY_MS,
+  10,
+);
+const WARNING_DEADLOCK_DELAY_MS = Number.isFinite(parsedWarningDeadlockDelayMs)
+  ? Math.max(50, parsedWarningDeadlockDelayMs)
+  : 150;
+
+const parsedWarningDeadlockJitterMs = Number.parseInt(
+  process.env.WARNING_DEADLOCK_JITTER_MS,
+  10,
+);
+const WARNING_DEADLOCK_JITTER_MS = Number.isFinite(
+  parsedWarningDeadlockJitterMs,
+)
+  ? Math.max(0, parsedWarningDeadlockJitterMs)
+  : 100;
+
+const parsedWarningQueueConcurrency = Number.parseInt(
+  process.env.WARNING_BACKGROUND_MAX_CONCURRENCY,
+  10,
+);
+const WARNING_BACKGROUND_MAX_CONCURRENCY = Number.isFinite(
+  parsedWarningQueueConcurrency,
+)
+  ? Math.max(1, parsedWarningQueueConcurrency)
+  : 1;
 
 class ProcessFutureManuresForWarnings {
+  static sharedQueue;
+
   constructor() {
     this.CreateOrUpdateWarningMessage = new CreateOrUpdateWarningMessage();
     this.CalculateFutureWarningMessageService =
       new CalculateFutureWarningMessageService();
+
+    if (!ProcessFutureManuresForWarnings.sharedQueue) {
+      ProcessFutureManuresForWarnings.sharedQueue =
+        ProcessFutureManuresForWarnings.createSharedQueue(this);
+    }
+  }
+
+  static createSharedQueue(instance) {
+    console.log(
+      "Warning background queue config:",
+      JSON.stringify({
+        concurrency: WARNING_BACKGROUND_MAX_CONCURRENCY,
+        deadlockRetries: WARNING_DEADLOCK_RETRIES,
+        deadlockDelayMs: WARNING_DEADLOCK_DELAY_MS,
+        deadlockJitterMs: WARNING_DEADLOCK_JITTER_MS,
+      }),
+    );
+
+    return new BackgroundJobQueue({
+      concurrency: WARNING_BACKGROUND_MAX_CONCURRENCY,
+      getJobKey: (job) => job.jobKey,
+      runJob: (job) => instance.executeQueuedWarningJob(job),
+      onDuplicate: (job) => {
+        console.log(`Warning job already queued or running: ${job.jobKey}`);
+      },
+      onError: (job, error) => {
+        console.error(`Warning job failed: ${job.jobKey}`, error);
+      },
+    });
+  }
+
+  enqueueWarningJob(job) {
+    ProcessFutureManuresForWarnings.sharedQueue.enqueue(job);
+    return true;
+  }
+
+  async executeQueuedWarningJob(job) {
+    const { operationName, payload } = job;
+
+    switch (operationName) {
+      case "warnings-future-manures":
+        return this.executeProcessFutureManures(payload);
+      case "warnings-by-field":
+        return this.executeProcessWarningsByField(payload);
+      case "warnings-by-farm":
+        return this.executeProcessWarningsByFarm(payload);
+      case "warnings-by-crop":
+        return this.executeProcessWarningsByCrop(payload);
+      default:
+        console.warn(`Unsupported warning job: ${operationName}`);
+        return null;
+    }
+  }
+
+  async executeWarningWithDeadlockHandling(operationName, fn) {
+    try {
+      return await runWithDeadlockRetry(fn, {
+        retries: WARNING_DEADLOCK_RETRIES,
+        delayMs: WARNING_DEADLOCK_DELAY_MS,
+        backoffMultiplier: 2,
+        jitterMs: WARNING_DEADLOCK_JITTER_MS,
+        operationName,
+      });
+    } catch (error) {
+      if (isDeadlockError(error)) {
+        console.error(
+          `Deadlock persisted in ${operationName}. Skipping this warning recalculation cycle to keep service healthy.`,
+          error,
+        );
+        return null;
+      }
+
+      throw error;
+    }
   }
 
   async processCombinedManures(combinedManures, transactionalManager, userId) {
@@ -64,7 +184,7 @@ class ProcessFutureManuresForWarnings {
       warnings =
         await this.CalculateFutureWarningMessageService.calculateOnlyNMaxMessage(
           transactionalManager,
-          manure
+          manure,
         );
 
       if (Array.isArray(warnings)) {
@@ -89,36 +209,68 @@ class ProcessFutureManuresForWarnings {
     excludeId,
     userId,
   ) {
-    return runWithDeadlockRetry(() =>
-      AppDataSource.transaction(async (transactionalManager) => {
-        const combinedManures = await transactionalManager.query(
-          `EXEC spWarning_GetAllManuresByField
+    return this.enqueueWarningJob({
+      operationName: "warnings-future-manures",
+      jobKey: `warnings-future-manures:${fieldId}:${applicationDate}:${excludeId}`,
+      payload: {
+        fieldId,
+        applicationDate,
+        isCurrentOrganicManure,
+        isCurrentFertiliser,
+        excludeId,
+        userId,
+      },
+    });
+  }
+
+  async executeProcessFutureManures({
+    fieldId,
+    applicationDate,
+    isCurrentOrganicManure,
+    isCurrentFertiliser,
+    excludeId,
+    userId,
+  }) {
+    return this.executeWarningWithDeadlockHandling(
+      "warnings-future-manures",
+      () =>
+        AppDataSource.transaction(async (transactionalManager) => {
+          const combinedManures = await transactionalManager.query(
+            `EXEC spWarning_GetAllManuresByField
          @FieldID = @0,
          @ApplicationDate = @1,
          @IsCurrentOrganicManure = @2,
          @IsCurrentFertiliser = @3,
          @ExcludeID = @4`,
-          [
-            fieldId,
-            applicationDate,
-            isCurrentOrganicManure ? 1 : 0,
-            isCurrentFertiliser ? 1 : 0,
-            excludeId,
-          ],
-        );
+            [
+              fieldId,
+              applicationDate,
+              isCurrentOrganicManure ? 1 : 0,
+              isCurrentFertiliser ? 1 : 0,
+              excludeId,
+            ],
+          );
 
-        await this.processCombinedManures(
-          combinedManures,
-          transactionalManager,
-          userId,
-        );
-      }),
+          await this.processCombinedManures(
+            combinedManures,
+            transactionalManager,
+            userId,
+          );
+        }),
     );
   }
 
   /* ============== FIELD-LEVEL PROCESSING ================================ */
   async processWarningsByField(fieldId, userId) {
-    return runWithDeadlockRetry(() =>
+    return this.enqueueWarningJob({
+      operationName: "warnings-by-field",
+      jobKey: `warnings-by-field:${fieldId}`,
+      payload: { fieldId, userId },
+    });
+  }
+
+  async executeProcessWarningsByField({ fieldId, userId }) {
+    return this.executeWarningWithDeadlockHandling("warnings-by-field", () =>
       AppDataSource.transaction(async (transactionalManager) => {
         const combinedManures = await transactionalManager.query(
           `EXEC spWarning_GetAllManuresByFieldOnly @FieldID = @0`,
@@ -136,7 +288,15 @@ class ProcessFutureManuresForWarnings {
 
   /* =====================FARM-LEVEL PROCESSING ========================== */
   async processWarningsByFarm(farmId, userId) {
-    return runWithDeadlockRetry(() =>
+    return this.enqueueWarningJob({
+      operationName: "warnings-by-farm",
+      jobKey: `warnings-by-farm:${farmId}`,
+      payload: { farmId, userId },
+    });
+  }
+
+  async executeProcessWarningsByFarm({ farmId, userId }) {
+    return this.executeWarningWithDeadlockHandling("warnings-by-farm", () =>
       AppDataSource.transaction(async (transactionalManager) => {
         const combinedManures = await transactionalManager.query(
           `EXEC spWarning_GetAllManuresByFarm @FarmID = @0`,
@@ -154,7 +314,15 @@ class ProcessFutureManuresForWarnings {
 
   /* ==================CROP-LEVEL PROCESSING ====================== */
   async processWarningsByCrop(cropId, userId) {
-    return runWithDeadlockRetry(() =>
+    return this.enqueueWarningJob({
+      operationName: "warnings-by-crop",
+      jobKey: `warnings-by-crop:${cropId}`,
+      payload: { cropId, userId },
+    });
+  }
+
+  async executeProcessWarningsByCrop({ cropId, userId }) {
+    return this.executeWarningWithDeadlockHandling("warnings-by-crop", () =>
       AppDataSource.transaction(async (transactionalManager) => {
         const combinedManures = await transactionalManager.query(
           `EXEC spWarning_GetAllManuresByCrop @CropID = @0`,
@@ -172,20 +340,23 @@ class ProcessFutureManuresForWarnings {
   }
 
   async processNMaxWarningsByCrop(cropId, userId, transactionalManager) {
-    return runWithDeadlockRetry(async () => {
-      const combinedManures = await transactionalManager.query(
-        `EXEC spWarning_GetAllManuresByCrop @CropID = @0`,
-        [cropId],
-      );
+    return this.executeWarningWithDeadlockHandling(
+      "warnings-nmax-by-crop",
+      async () => {
+        const combinedManures = await transactionalManager.query(
+          `EXEC spWarning_GetAllManuresByCrop @CropID = @0`,
+          [cropId],
+        );
 
-      console.log("combinedManuresbycrops", combinedManures);
+        console.log("combinedManuresbycrops", combinedManures);
 
-      await this.processCombinedManuresForNMax(
-        combinedManures,
-        transactionalManager,
-        userId
-      );
-    });
+        await this.processCombinedManuresForNMax(
+          combinedManures,
+          transactionalManager,
+          userId,
+        );
+      },
+    );
   }
 }
 

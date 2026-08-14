@@ -3,7 +3,9 @@ const { RB209ArableController } = require("./arable.controller");
 const {
   formatErrorResponse,
 } = require("../../../interceptor/responseFormatter");
-const { validationFailAction } = require("../../../shared/validateFailSafeAction");
+const {
+  validationFailAction,
+} = require("../../../shared/validateFailSafeAction");
 const rb209ArableTag = "RB209 Arable";
 module.exports = [
   {
@@ -46,6 +48,43 @@ module.exports = [
     options: {
       tags: ["api", rb209ArableTag],
       description: "The full list of available Crop Types",
+    },
+  },
+  {
+    method: "GET",
+    path: "/vendors/rb209/Arable/CropTypes/Metrics",
+    handler: async (request, h) => {
+      const controller = new RB209ArableController(request, h);
+      return controller.getCropTypesMetrics();
+    },
+    options: {
+      tags: ["api", rb209ArableTag],
+      description:
+        "In-memory metrics for centralized Arable CropTypes usage and third-party calls",
+    },
+  },
+  {
+    method: "POST",
+    path: "/vendors/rb209/Arable/CropTypes/Metrics/Reset",
+    handler: async (request, h) => {
+      const controller = new RB209ArableController(request, h);
+      return controller.resetCropTypesMetrics();
+    },
+    options: {
+      tags: ["api", rb209ArableTag],
+      description: "Reset in-memory Arable CropTypes metrics counters",
+    },
+  },
+  {
+    method: "POST",
+    path: "/vendors/rb209/Arable/CropTypes/Cache/Reset",
+    handler: async (request, h) => {
+      const controller = new RB209ArableController(request, h);
+      return controller.resetCropTypesCache();
+    },
+    options: {
+      tags: ["api", rb209ArableTag],
+      description: "Reset in-memory Arable CropTypes cache",
     },
   },
   {
@@ -129,7 +168,7 @@ module.exports = [
           cropTypeId: Joi.string().required(),
           cropInfo1Id: Joi.string().required(),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -161,7 +200,7 @@ module.exports = [
         params: Joi.object({
           cropInfo2Id: Joi.string().required(),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -193,7 +232,7 @@ module.exports = [
         params: Joi.object({
           potatoGroupId: Joi.string().required(),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -225,7 +264,7 @@ module.exports = [
         params: Joi.object({
           potatoGroupId: Joi.string().required(),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -244,7 +283,7 @@ module.exports = [
         params: Joi.object({
           potatoVarietyId: Joi.string().required(),
         }),
-        failAction: validationFailAction
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {

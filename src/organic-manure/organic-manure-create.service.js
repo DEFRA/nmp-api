@@ -44,9 +44,7 @@ const organicManureCreateMethods = {
   ) {
     const organicManures = [];
     const createContext =
-      await organicManureCreateMethods.getCreateOrganicManureContext.call(
-        this,
-      );
+      await organicManureCreateMethods.getCreateOrganicManureContext.call(this);
     const farmManureTypeData =
       await organicManureCreateMethods.processOrganicManureCreateEntries.call(
         this,
@@ -170,11 +168,11 @@ const organicManureCreateMethods = {
       futurePlanStatus,
       mannerOutputs,
       {
-      transactionalManager,
-      request
+        transactionalManager,
+        request,
       },
       userId,
-      organicManures
+      organicManures,
     );
 
     return organicManureCreateMethods.buildFarmManureTypeData(
@@ -229,9 +227,9 @@ const organicManureCreateMethods = {
     mannerOutputs,
     transactionalRequest,
     userId,
-    organicManures
+    organicManures,
   ) {
-    const {transactionalManager, request} = transactionalRequest;
+    const { transactionalManager, request } = transactionalRequest;
     const previousCrop =
       await this.CalculatePreviousCropService.findPreviousCrop(
         relatedData.fieldData.ID,
@@ -440,12 +438,19 @@ const organicManureCreateMethods = {
       futurePlanStatus.isNextYearFertiliserExist;
 
     if (shouldUpdate) {
-      this.updatingFutureRecommendations.updateRecommendationsForField(
-        cropData?.FieldID,
-        cropData?.Year,
-        request,
-        userId,
-      );
+      this.updatingFutureRecommendations
+        .updateRecommendationsForField(
+          cropData?.FieldID,
+          cropData?.Year,
+          request,
+          userId,
+        )
+        .catch((error) => {
+          console.error(
+            `Error scheduling future recommendation update for field ${cropData?.FieldID}:`,
+            error,
+          );
+        });
     }
   },
 
@@ -459,7 +464,12 @@ const organicManureCreateMethods = {
       isCurrentFertiliser,
       savedOrganicManure.ID,
       userId,
-    );
+    ).catch((error) => {
+      console.error(
+        `Error processing future manure warnings for field ${fieldData.ID}:`,
+        error,
+      );
+    });
   },
 
   buildFarmManureTypeData(organicManureData) {
@@ -484,8 +494,6 @@ const organicManureCreateMethods = {
       MgO: OrganicManure.MgO,
     };
   },
-
-
 };
 
 module.exports = { organicManureCreateMethods };

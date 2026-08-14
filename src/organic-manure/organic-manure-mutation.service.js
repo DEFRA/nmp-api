@@ -77,28 +77,38 @@ const organicManureMutationMethods = {
           },
         });
         if (nextAvailableCrop) {
-          this.updatingFutureRecommendations.updateRecommendationsForField(
-            crop.FieldID,
-            nextAvailableCrop.Year,
-            request,
-            userId,
-          );
+          this.updatingFutureRecommendations
+            .updateRecommendationsForField(
+              crop.FieldID,
+              nextAvailableCrop.Year,
+              request,
+              userId,
+            )
+            .catch((error) => {
+              console.error(
+                `Error scheduling future recommendation update for FieldID: ${crop.FieldID}, Year: ${nextAvailableCrop.Year}`,
+                error,
+              );
+            });
         }
         this.ProcessFutureManuresForWarnings.processWarningsByCrop(
           crop.ID,
           userId,
-        );
+        ).catch((error) => {
+          console.error(
+            `Error processing warning recalculation for crop ${crop.ID}:`,
+            error,
+          );
+        });
 
         return { affectedRows: 1 }; // Success response
       } catch (error) {
         // Log the error and throw an internal server error
         console.error("Error deleting organicManure:", error);
-        return error
+        return error;
       }
     });
-  }
-
-,
+  },
 
   async updateOrganicManure(updatedOrganicManureData, userId, request) {
     return AppDataSource.transaction((transactionalManager) =>
@@ -120,6 +130,7 @@ const organicManureMutationMethods = {
   ) {
     const updatedOrganicManures = [];
     let savedFarmManureType = null;
+    const recommendationUpdateMap = new Map();
 
     for (const manureEntry of updatedOrganicManureData) {
       const updateResult =
@@ -134,8 +145,24 @@ const organicManureMutationMethods = {
       if (updateResult.organicManure) {
         updatedOrganicManures.push(updateResult.organicManure);
       }
+
+      if (updateResult?.crop?.FieldID && updateResult?.crop?.Year) {
+        const recommendationKey = `${updateResult.crop.FieldID}:${updateResult.crop.Year}`;
+        recommendationUpdateMap.set(recommendationKey, updateResult.crop);
+      }
+
       savedFarmManureType =
         updateResult.savedFarmManureType || savedFarmManureType;
+    }
+
+    for (const crop of recommendationUpdateMap.values()) {
+      await organicManureMutationMethods.updateRecommendationsAfterManureChange.call(
+        this,
+        crop,
+        request,
+        userId,
+        transactionalManager,
+      );
     }
 
     return {
@@ -185,14 +212,6 @@ const organicManureMutationMethods = {
         userId,
         transactionalManager,
       );
-
-    await organicManureMutationMethods.updateRecommendationsAfterManureChange.call(
-      this,
-      relatedData.crop,
-      request,
-      userId,
-      transactionalManager,
-    );
     organicManureMutationMethods.processUpdatedManureWarnings.call(
       this,
       relatedData.fieldData,
@@ -200,7 +219,7 @@ const organicManureMutationMethods = {
       userId,
     );
 
-    return { organicManure, savedFarmManureType };
+    return { organicManure, savedFarmManureType, crop: relatedData.crop };
   },
 
   async getOrganicManureUpdateRelatedData(OrganicManure, transactionalManager) {
@@ -218,11 +237,7 @@ const organicManureMutationMethods = {
     return { managementPeriod, crop, fieldData };
   },
 
-  async updateOrganicManureEntity(
-    OrganicManure,
-    userId,
-    transactionalManager,
-  ) {
+  async updateOrganicManureEntity(OrganicManure, userId, transactionalManager) {
     const { ID, CreatedByID, CreatedOn, ...updatedData } = OrganicManure;
     const dataToUpdate = {
       ...updatedData,
@@ -255,11 +270,7 @@ const organicManureMutationMethods = {
     });
   },
 
-  async saveFarmManureTypeForUpdate(
-    manureEntry,
-    userId,
-    transactionalManager,
-  ) {
+  async saveFarmManureTypeForUpdate(manureEntry, userId, transactionalManager) {
     if (!manureEntry.SaveDefaultForFarm) {
       return null;
     }
@@ -363,10 +374,13 @@ const organicManureMutationMethods = {
       isCurrentFertiliser,
       OrganicManure.ID,
       userId,
-    );
-  }
-
-
+    ).catch((error) => {
+      console.error(
+        `Error processing future manure warnings for field ${fieldData.ID}:`,
+        error,
+      );
+    });
+  },
 };
 
 module.exports = { organicManureMutationMethods };

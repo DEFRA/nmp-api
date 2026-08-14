@@ -16,6 +16,14 @@ const getDefaultLogDir = () => {
 const DEFAULT_LOG_DIR = getDefaultLogDir();
 const LOG_JSON_INDENT = 2;
 
+const prependToFileSync = (filePath, newContent) => {
+  const existingContent = fs.existsSync(filePath)
+    ? fs.readFileSync(filePath, "utf8")
+    : "";
+
+  fs.writeFileSync(filePath, `${newContent}${existingContent}`, "utf8");
+};
+
 const safeJsonStringify = (value, space = 0) => {
   try {
     return JSON.stringify(value, null, space);
@@ -58,10 +66,9 @@ const writeYearlyLog = (_filePrefix, logType, payload = null, context = {}) => {
         : null,
     };
 
-    fs.appendFileSync(
+    prependToFileSync(
       logFilePath,
       `${safeJsonStringify(entry, LOG_JSON_INDENT)}\n`,
-      "utf8",
     );
   } catch (loggingError) {
     console.error("Failed to write yearly log:", loggingError);
@@ -156,7 +163,7 @@ const appendYearlyLog = ({
         "---",
       ].join("\n");
 
-      fs.appendFileSync(logFilePath, `${logEntry}\n`, "utf8");
+      prependToFileSync(logFilePath, `${logEntry}\n`);
     } catch (loggingError) {
       console.error("Failed to write yearly log:", loggingError);
     }

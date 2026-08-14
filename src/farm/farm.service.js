@@ -17,9 +17,16 @@ const {
   ProcessFutureManuresForWarnings,
 } = require("../shared/process-future-warning-calculations-service");
 const { FarmsNVZEntity } = require("../db/entity/farms-nvz.entity");
-const { NutrientsLoadingLiveStocksEntity } = require("../db/entity/nutrients-loading-live-stocks-entity");
-const { NutrientsLoadingFarmDetailsEntity } = require("../db/entity/nutrients-loading-farm-details-entity");
-const { NutrientsLoadingManuresEntity } = require("../db/entity/nutrients-loading-manures-entity");
+const {
+  NutrientsLoadingLiveStocksEntity,
+} = require("../db/entity/nutrients-loading-live-stocks-entity");
+const {
+  NutrientsLoadingFarmDetailsEntity,
+} = require("../db/entity/nutrients-loading-farm-details-entity");
+const {
+  NutrientsLoadingManuresEntity,
+} = require("../db/entity/nutrients-loading-manures-entity");
+const { runWithDeadlockRetry } = require("../db/transactionRetry");
 
 class FarmService extends BaseService {
   constructor() {
@@ -238,8 +245,11 @@ class FarmService extends BaseService {
   }
 
   async updateFarm(updatedFarmAndNvzData, userId, farmId, request) {
-    const result = await AppDataSource.transaction(
-      async (transactionalManager) => {
+    let shouldProcessFieldRecommendations = false;
+    let shouldProcessFarmWarnings = false;
+
+    const result = await runWithDeadlockRetry(() =>
+      AppDataSource.transaction(async (transactionalManager) => {
         const existingFarm = await transactionalManager.findOne(FarmEntity, {
           where: { ID: farmId },
         });
@@ -291,25 +301,44 @@ class FarmService extends BaseService {
             updatedFarmData,
           )
         ) {
-          this.ProcessFieldsService.processFieldsForRecommendation(
-            farmId,
-            request,
-            userId,
-          );
+          shouldProcessFieldRecommendations = true;
         }
 
         if (this.hasFarmWarningTriggerChanges(existingFarm, updatedFarmData)) {
-          this.ProcessFutureManuresForWarnings.processWarningsByFarm(
-            farmId,
-            userId,
-          );
+          shouldProcessFarmWarnings = true;
         }
         const updatedFarm = await transactionalManager.findOne(FarmEntity, {
           where: { ID: farmId },
         });
         return { updatedFarm: updatedFarm, farmNvz: updatedNvz };
-      },
+      }),
     );
+
+    if (shouldProcessFieldRecommendations) {
+      this.ProcessFieldsService.processFieldsForRecommendation(
+        farmId,
+        request,
+        userId,
+      ).catch((error) => {
+        console.error(
+          `Error processing field recommendations for farm ${farmId}:`,
+          error,
+        );
+      });
+    }
+
+    if (shouldProcessFarmWarnings) {
+      this.ProcessFutureManuresForWarnings.processWarningsByFarm(
+        farmId,
+        userId,
+      ).catch((error) => {
+        console.error(
+          `Error processing warning recalculation for farm ${farmId}:`,
+          error,
+        );
+      });
+    }
+
     return result;
   }
 
