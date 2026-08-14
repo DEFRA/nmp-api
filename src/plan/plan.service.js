@@ -43,25 +43,37 @@ const {
 const {
   CalculateMannerOutputService,
 } = require("../shared/calculate-manner-output-service");
-const { CalculateCropsSnsAnalysisService } = require("../shared/calculate-crops-sns-analysis-service");
-const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-other");
-const { CalculatePreviousCropService } = require("../shared/previous-year-crop-service");
-const { GenerateRecommendations } = require("../shared/generate-recomendations-service");
-const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
-const { CurrentAndFuture } = require("../shared/generate-current-and-future-recommendations-service");
+const {
+  CalculateCropsSnsAnalysisService,
+} = require("../shared/calculate-crops-sns-analysis-service");
+const {
+  CalculatePKBalanceOther,
+} = require("../shared/calculate-pk-balance-other");
+const {
+  CalculatePreviousCropService,
+} = require("../shared/previous-year-crop-service");
+const {
+  GenerateRecommendations,
+} = require("../shared/generate-recomendations-service");
+const {
+  UpdatingFutureRecommendations,
+} = require("../shared/updating-future-recommendations-service");
+const {
+  CurrentAndFuture,
+} = require("../shared/generate-current-and-future-recommendations-service");
 
 class PlanService extends BaseService {
   constructor() {
     super(RecommendationEntity);
     this.repository = AppDataSource.getRepository(RecommendationEntity);
     this.managementPeriodRepository = AppDataSource.getRepository(
-      ManagementPeriodEntity
+      ManagementPeriodEntity,
     );
     this.cropRepository = AppDataSource.getRepository(CropEntity);
     this.fieldRepository = AppDataSource.getRepository(FieldEntity);
     this.farmRepository = AppDataSource.getRepository(FarmEntity);
     this.recommendationCommentRepository = AppDataSource.getRepository(
-      RecommendationCommentEntity
+      RecommendationCommentEntity,
     );
     this.soilAnalysisRepository =
       AppDataSource.getRepository(SoilAnalysisEntity);
@@ -72,11 +84,11 @@ class PlanService extends BaseService {
     this.snsAnalysisRepository = AppDataSource.getRepository(SnsAnalysesEntity);
     this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
     this.fertiliserRepository = AppDataSource.getRepository(
-      FertiliserManuresEntity
+      FertiliserManuresEntity,
     );
     this.countryRepository = AppDataSource.getRepository(CountryEntity);
     this.excessRainfallRepository = AppDataSource.getRepository(
-      ExcessRainfallsEntity
+      ExcessRainfallsEntity,
     );
     this.grassGrowthClass = new GrassGrowthService();
     this.calculateGrassId = new CalculateGrassHistoryAndPreviousGrass();
@@ -103,7 +115,6 @@ class PlanService extends BaseService {
     return data;
   }
 
- 
   async handleFieldValidation(fieldId) {
     const errors = [];
 
@@ -167,7 +178,7 @@ class PlanService extends BaseService {
 
     return errors;
   }
- 
+
   async savedDefault(cropData, userId, transactionalManager) {
     const ManagementPeriods = [];
 
@@ -179,7 +190,7 @@ class PlanService extends BaseService {
         FieldID: cropData.Crop.FieldID, // assuming cropData contains Crop object
         CreatedByID: userId,
         CreatedOn: new Date(),
-      })
+      }),
     );
 
     // Iterate over the cropData ManagementPeriods and save them using the transactionalManager
@@ -191,7 +202,7 @@ class PlanService extends BaseService {
           CropID: savedCrop.ID,
           CreatedByID: userId,
           CreatedOn: new Date(),
-        })
+        }),
       );
       ManagementPeriods.push(savedManagementPeriod);
     }
@@ -203,7 +214,6 @@ class PlanService extends BaseService {
     };
   }
 
- 
   async getCropForYear(fieldId, targetYear, transactionalManager) {
     let crop = await transactionalManager.findOne(CropEntity, {
       where: { FieldID: fieldId, Year: targetYear, CropOrder: 2 },
@@ -215,12 +225,12 @@ class PlanService extends BaseService {
     }
     return crop;
   }
- 
+
   async createNutrientsRecommendationForField(
     crops,
     userId,
     request,
-    transactionalManager
+    transactionalManager,
   ) {
     let savedPlan;
     // ✅ If a global transaction manager is provided, use it.
@@ -229,7 +239,7 @@ class PlanService extends BaseService {
         crops,
         userId,
         request,
-        transactionalManager
+        transactionalManager,
       );
       return savedPlan;
     }
@@ -240,7 +250,7 @@ class PlanService extends BaseService {
         crops,
         userId,
         request,
-        localManager
+        localManager,
       );
       return savedPlan;
     });
@@ -251,9 +261,8 @@ class PlanService extends BaseService {
     Errors.push(...errors);
 
     const fieldId = crop.FieldID;
-    const { field, errors: fieldErrors } = await this.handleFieldValidation(
-      fieldId
-    );
+    const { field, errors: fieldErrors } =
+      await this.handleFieldValidation(fieldId);
     Errors.push(...fieldErrors);
 
     if (Errors.length > 0) {
@@ -263,13 +272,19 @@ class PlanService extends BaseService {
     return field;
   }
 
-  async saveDefaultCropPlan(cropData, crop, userId, request, transactionalManager) {
+  async saveDefaultCropPlan(
+    cropData,
+    crop,
+    userId,
+    request,
+    transactionalManager,
+  ) {
     await this.savedDefault(cropData, userId, transactionalManager);
     await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
       crop,
       transactionalManager,
       request,
-      userId
+      userId,
     );
 
     return {
@@ -278,14 +293,19 @@ class PlanService extends BaseService {
     };
   }
 
-  async saveCropAndManagementPeriods(cropData, crop, userId, transactionalManager) {
+  async saveCropAndManagementPeriods(
+    cropData,
+    crop,
+    userId,
+    transactionalManager,
+  ) {
     const savedCrop = await transactionalManager.save(
       CropEntity,
       this.cropRepository.create({
         ...crop,
         CreatedByID: userId,
         CreatedOn: new Date(),
-      })
+      }),
     );
 
     const ManagementPeriods = [];
@@ -297,7 +317,7 @@ class PlanService extends BaseService {
           CropID: savedCrop.ID,
           CreatedByID: userId,
           CreatedOn: new Date(),
-        })
+        }),
       );
       ManagementPeriods.push(savedManagementPeriod);
     }
@@ -330,14 +350,14 @@ class PlanService extends BaseService {
     field,
     userId,
     request,
-    transactionalManager
+    transactionalManager,
   ) {
     const organicManure = null;
     const ManagementPeriods = await this.saveCropAndManagementPeriods(
       cropData,
       crop,
       userId,
-      transactionalManager
+      transactionalManager,
     );
 
     const savedRecommendation =
@@ -347,7 +367,7 @@ class PlanService extends BaseService {
         organicManure,
         transactionalManager,
         request,
-        userId
+        userId,
       );
 
     await this.updateNextCropRecommendations(crop, request, userId);
@@ -356,7 +376,7 @@ class PlanService extends BaseService {
       message: "crop saved",
       crop: crop.FieldID,
       Recommendations: savedRecommendation,
-      ManagementPeriods: ManagementPeriods
+      ManagementPeriods: ManagementPeriods,
     };
   }
 
@@ -364,19 +384,19 @@ class PlanService extends BaseService {
     crops,
     userId,
     request,
-    transactionalManager
+    transactionalManager,
   ) {
     const Recommendations = [];
     const Errors = [];
     for (const cropData of crops) {
       const crop = cropData?.Crop;
       const field = await this.validateCropAndField(crop, Errors);
-    
+
       const previousCrop =
         await this.CalculatePreviousCropService.findPreviousCrop(
           field.ID,
           crop.Year,
-          transactionalManager
+          transactionalManager,
         );
 
       if (crop.CropTypeID === CropTypeMapper.OTHER || !previousCrop) {
@@ -385,7 +405,7 @@ class PlanService extends BaseService {
           crop,
           userId,
           request,
-          transactionalManager
+          transactionalManager,
         );
         Recommendations.push(savedDefaultCrop);
       } else {
@@ -395,14 +415,14 @@ class PlanService extends BaseService {
           field,
           userId,
           request,
-          transactionalManager
+          transactionalManager,
         );
         Recommendations.push(savedCropPlan);
       }
     }
 
     return {
-      Recommendations
+      Recommendations,
     };
   }
 
@@ -419,7 +439,7 @@ class PlanService extends BaseService {
     } catch (error) {
       console.error(
         "Error while fetching crop plans fields join data using farmId, harvest year and cropGroupName:",
-        error
+        error,
       );
       throw error;
     }
@@ -442,9 +462,7 @@ class PlanService extends BaseService {
   async mapCropTypeIdWithTheirNames(plans) {
     try {
       const unorderedMap = {};
-      const cropTypesList = await this.rB209ArableService.getData(
-        "/Arable/CropTypes"
-      );
+      const cropTypesList = await this.rB209ArableService.getCropTypesList();
 
       for (const cropType of cropTypesList) {
         unorderedMap[cropType.cropTypeId] = cropType.cropType;
@@ -475,7 +493,7 @@ class PlanService extends BaseService {
     } catch (error) {
       console.error(
         "Error while fetching plans data join data by farmId and harvest year:",
-        error
+        error,
       );
       throw error;
     }
@@ -493,7 +511,7 @@ class PlanService extends BaseService {
     } catch (error) {
       console.error(
         "Error while fetching crop plans croptypes join data by farmId and harvest year:",
-        error
+        error,
       );
       throw error;
     }
@@ -502,7 +520,7 @@ class PlanService extends BaseService {
     fieldIds,
     harvestYear,
     cropGroupName,
-    cropOrder
+    cropOrder,
   ) {
     try {
       const storedProcedure =
@@ -517,7 +535,7 @@ class PlanService extends BaseService {
     } catch (error) {
       console.error(
         "Error while fetching crop plans management period ids using fieldIds,  harvest year and crop typeId:",
-        error
+        error,
       );
       throw error;
     }

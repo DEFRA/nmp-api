@@ -14,11 +14,11 @@ const fieldUpdateMethods = {
         updatedFieldData;
       const originalField = await this.getOriginalField(
         transactionalManager,
-        fieldId
+        fieldId,
       );
       const isSensitiveChange = await this.hasSensitiveFieldChanged(
         payload.Field,
-        originalField
+        originalField,
       );
       console.log(`isSensitiveChange: ${isSensitiveChange}`);
       if (isSensitiveChange) {
@@ -26,7 +26,7 @@ const fieldUpdateMethods = {
           transactionalManager,
           fieldId,
           request,
-          userId
+          userId,
         );
       }
 
@@ -131,7 +131,12 @@ const fieldUpdateMethods = {
     this.ProcessFutureManuresForWarnings.processWarningsByField(
       fieldId,
       userId,
-    );
+    ).catch((error) => {
+      console.error(
+        `Error processing warning recalculation for field ${fieldId}:`,
+        error,
+      );
+    });
   },
 
   async getUpdatedField(transactionalManager, fieldId) {
@@ -160,7 +165,7 @@ const fieldUpdateMethods = {
 
       const isSensitiveChange = await this.hasSensitiveFieldChanged(
         payload,
-        originalField
+        originalField,
       );
 
       if (isSensitiveChange) {

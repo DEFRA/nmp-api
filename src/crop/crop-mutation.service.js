@@ -315,48 +315,43 @@ const cropMutationMethods = {
 
   async updateCropData(body, userId, request, transactionalManager) {
     // If a global transaction manager is provided, use it.
-    if (transactionalManager) {return this.updateCrop(body, userId, request, transactionalManager)}
+    if (transactionalManager) {
+      return this.updateCrop(body, userId, request, transactionalManager);
+    }
     //  Otherwise, start a new local transaction.
-    return AppDataSource.transaction(async (localManager) => {return this.updateCrop(body, userId, request, localManager)});
+    return AppDataSource.transaction(async (localManager) => {
+      return this.updateCrop(body, userId, request, localManager);
+    });
   },
 
   async updateCrop(body, userId, request, transactionalManager) {
     const updatedResults = [],cropData = body.Crops;
     for (const cropEntry of cropData) {
       const crop = cropEntry?.Crop;
-      const {ID,CreatedByID,CreatedOn,ModifiedOn,ModifiedByID,EncryptedCounter,FieldName,IsDeleted,...updatedCropData} = crop;
-      const cropUpdateResult = await transactionalManager.update(CropEntity,ID,
+      const {
+        ID,CreatedByID,CreatedOn,ModifiedOn,ModifiedByID,EncryptedCounter,FieldName,IsDeleted,...updatedCropData} = crop;
+      const cropUpdateResult = await transactionalManager.update(CropEntity,
+        ID,
         { ...updatedCropData, ModifiedByID: userId, ModifiedOn: new Date() },
       );
-      if (cropUpdateResult.affected === 0) {console.warn(`Crop with ID ${ID} not found`);
-       continue;
+      if (cropUpdateResult.affected === 0) {
+        console.warn(`Crop with ID ${ID} not found`);
+        continue;
       }
-      const updatedCrop = await transactionalManager.findOne(CropEntity, {where: { ID: ID }});
+      const updatedCrop = await transactionalManager.findOne(CropEntity, {
+        where: { ID: ID },
+      });
       // Get the rb209CountryID of the farm
       const rb209CountryID = await this.fetchRb209CountryId(crop.FieldID,transactionalManager);
-      await this.validateAndHandleSecondCrop(
-        transactionalManager,
-        updatedCrop,
-        updatedCrop.FieldID,
-        updatedCrop.Year,
-        rb209CountryID,
-      );
-      const updatedManagementPeriods = await this.syncManagementPeriodsBySequence(
-          transactionalManager,
-          crop.ID,
-          userId,
-          cropEntry.ManagementPeriods
-        );
+      await this.validateAndHandleSecondCrop(transactionalManager,updatedCrop,updatedCrop.FieldID,updatedCrop.Year,rb209CountryID);
+      const updatedManagementPeriods = await this.syncManagementPeriodsBySequence(transactionalManager,crop.ID,userId,cropEntry.ManagementPeriods);
       const organicManure = null;
       await this.generateRecommendations.generateRecommendations(
         updatedCrop.FieldID,
-        updatedCrop.Year,
-        organicManure,
+        updatedCrop.Year,organicManure,
         transactionalManager,
-        request,
-        userId,
+        request,userId,
       );
-
       const nextAvailableCrop = await transactionalManager.findOne(CropEntity, {
         where: {
           FieldID: updatedCrop.FieldID,
@@ -365,21 +360,30 @@ const cropMutationMethods = {
         order: { Year: "ASC" },
       });
       console.log("nextAvailableCrop", nextAvailableCrop);
-
-      if (nextAvailableCrop) { 
+      if (nextAvailableCrop) {
         this.updatingFutureRecommendations.updateRecommendationsForField(
-            updatedCrop.FieldID,
-            nextAvailableCrop.Year,
-            request,
-            userId
+            updatedCrop.FieldID,nextAvailableCrop.Year,
+            request,userId
           )
-          .catch((error) => {console.error("Error updating next crop's recommendations:", error)});
+          .catch((error) => {
+            console.error("Error updating next crop's recommendations:", error);
+          });
       }
-      this.ProcessFutureManuresForWarnings.processWarningsByCrop(updatedCrop.ID, userId);
-
-      if (updatedCrop) {updatedResults.push({crop: updatedCrop,ManagementPeriods: updatedManagementPeriods})}
+      this.ProcessFutureManuresForWarnings.processWarningsByCrop(
+        updatedCrop.ID,
+        userId,
+      ).catch((error) => {
+        console.error(
+          `Error processing warning recalculation for crop ${updatedCrop.ID}:`,
+          error,
+        );
+      });
+      if (updatedCrop) {
+        updatedResults.push({crop: updatedCrop,
+          ManagementPeriods: updatedManagementPeriods,
+        });
+      }
     }
-
     return updatedResults;
   },
 

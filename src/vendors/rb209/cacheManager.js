@@ -13,6 +13,10 @@ class CacheManager {
       setTimeout(() => this.cache.delete(key), options.ttl * 1000);
     }
   }
+
+  async delete(key) {
+    return this.cache.delete(key);
+  }
 }
 
 module.exports = CacheManager;

@@ -1,19 +1,23 @@
-const { getRepository, In } = require("typeorm");
+const { In } = require("typeorm");
 const {
   SecondCropLinkingEntity,
 } = require("../db/entity/second-crop-linking.entity");
+const { AppDataSource } = require("../db/data-source");
 
 class SecondCropLinkingsService {
   constructor() {
-    this.repository = getRepository(SecondCropLinkingEntity);
+    this.repository = AppDataSource.getRepository(SecondCropLinkingEntity);
     this.COUNTRY_BOTH = 3;
   }
 
-  async getSecondCropTypeLinkingByFirstCropId(firstCropID,rB209CountryID) {
+  async getSecondCropTypeLinkingByFirstCropId(firstCropID, rB209CountryID) {
     try {
       // Query the repository to find the SecondCropID linked to the given FirstCropID
       const secondCropTypes = await this.repository.find({
-        where: { FirstCropID: firstCropID,     RB209CountryID: In([this.COUNTRY_BOTH, rB209CountryID]) },        
+        where: {
+          FirstCropID: firstCropID,
+          RB209CountryID: In([this.COUNTRY_BOTH, rB209CountryID]),
+        },
         select: ["SecondCropID"], // Select only the SecondCropID field
       });
 
