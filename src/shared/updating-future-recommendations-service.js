@@ -35,11 +35,13 @@ const parsedDeadlockDelayMs = Number.parseInt(
   process.env.FUTURE_RECOMMENDATION_DEADLOCK_DELAY_MS,
   10,
 );
+const minFutureRecommendationDeadlockDelayMs = 50;
+const defaultFutureRecommendationDeadlockDelayMs = 150;
 const FUTURE_RECOMMENDATION_DEADLOCK_DELAY_MS = Number.isFinite(
   parsedDeadlockDelayMs,
 )
-  ? Math.max(50, parsedDeadlockDelayMs)
-  : 150;
+  ? Math.max(minFutureRecommendationDeadlockDelayMs, parsedDeadlockDelayMs)
+  : defaultFutureRecommendationDeadlockDelayMs;
 
 const parsedDeadlockJitterMs = Number.parseInt(
   process.env.FUTURE_RECOMMENDATION_DEADLOCK_JITTER_MS,
@@ -105,8 +107,7 @@ class UpdatingFutureRecommendations {
     return new BackgroundJobQueue({
       concurrency: MAX_CONCURRENT_JOBS,
       getJobKey: (job) => `${job.fieldID}:${job.year}`,
-      runJob: (job) =>
-        UpdatingFutureRecommendations.processQueuedRecommendationUpdate(job),
+      runJob: (job) =>UpdatingFutureRecommendations.processQueuedRecommendationUpdate(job),
       onDuplicate: (job) => {
         console.log(
           `Job already queued or running for FieldID: ${job.fieldID}, Year: ${job.year}`,
@@ -192,6 +193,7 @@ class UpdatingFutureRecommendations {
   }
 
   static async markInProgress(fieldID, year, transactionalManager) {
+    const duplicateKeyErrorNumber = 2627, uniqueConstraintErrorNumber = 2601;
     try {
       await transactionalManager.insert(InprogressCalculationsEntity, {
         FieldID: fieldID,
@@ -201,7 +203,7 @@ class UpdatingFutureRecommendations {
     } catch (error) {
       // SQL Server duplicate key violation means another worker already owns this job.
       const driverNumber = error?.driverError?.number ?? error?.number;
-      if (driverNumber === 2627 || driverNumber === 2601) {
+      if (driverNumber === duplicateKeyErrorNumber || driverNumber === uniqueConstraintErrorNumber) {
         return false;
       }
 
@@ -247,25 +249,15 @@ class UpdatingFutureRecommendations {
   static async processQueuedRecommendationUpdate(job) {
     const { fieldID, year, request, userId } = job;
     let lockAcquired = false;
-
     try {
-      lockAcquired = await UpdatingFutureRecommendations.acquireInProgressSlot(
-        fieldID,
-        year,
-      );
-
+      lockAcquired = await UpdatingFutureRecommendations.acquireInProgressSlot(fieldID, year);
       if (!lockAcquired) {
-        console.log(
-          `Skipping processing for FieldID: ${fieldID}, Year: ${year} because it is already in progress.`,
-        );
+        console.log(`Skipping processing for FieldID: ${fieldID}, Year: ${year} because it is already in progress.`);
         return;
       }
-
       console.log(`Saved entry for FieldID: ${fieldID}, Year: ${year}`);
-
       const newOrganicManure = null;
-      await runWithDeadlockRetry(
-        () =>
+      await runWithDeadlockRetry(() =>
           UpdatingFutureRecommendations.getGenerateRecommendationsService().generateRecommendations(
             fieldID,
             year,
