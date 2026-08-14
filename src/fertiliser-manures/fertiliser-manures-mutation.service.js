@@ -477,46 +477,14 @@ const fertiliserManuresMutationMethods = {
             ModifiedOn: new Date(),
           },
         );
-
-        await this.CreateOrUpdateWarningMessage.syncWarningMessages(
-          inorganicManure.ManagementPeriodID,
-          inorganicManure,
-          warningMessages,
-          transactionalManager,
-          userId,
-        );
-
-        if (result.affected === 0) {
-          console.log(`Fertiliser Manures with ID ${ID} not found`);
-        }
-
-        const fertiliserManure = await transactionalManager.findOne(
-          FertiliserManuresEntity,
-          {
-            where: { ID: ID },
-          },
-        );
-        if (fertiliserManure) {
-          updatedFertilisers.push(fertiliserManure);
-        }
-        const managementPeriod = await this.managementPeriodRepository.findOne({
-          where: { ID: fertiliserManure.ManagementPeriodID },
-        });
-        const crop = await this.cropRepository.findOne({
-          where: { ID: managementPeriod.CropID },
-        });
-
-        await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
-          crop,
-          transactionalManager,
-          request,
-          userId,
-        );
-
-        this.ProcessFutureManuresForWarnings.processWarningsByField(
-          crop.FieldID,
-          userId,
-        ).catch((error) => {
+        await this.CreateOrUpdateWarningMessage.syncWarningMessages(inorganicManure.ManagementPeriodID,inorganicManure,warningMessages, transactionalManager,userId);
+        if (result.affected === 0) {console.log(`Fertiliser Manures with ID ${ID} not found`)}
+        const fertiliserManure = await transactionalManager.findOne(FertiliserManuresEntity,{where: { ID: ID }});
+        if (fertiliserManure) {updatedFertilisers.push(fertiliserManure)}
+        const managementPeriod = await this.managementPeriodRepository.findOne({where: { ID: fertiliserManure.ManagementPeriodID }});
+        const crop = await this.cropRepository.findOne({ where: { ID: managementPeriod.CropID }});
+        await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(crop,transactionalManager,request,userId);
+        this.ProcessFutureManuresForWarnings.processWarningsByField(crop.FieldID,userId).catch((error) => {
           console.error(
             `Error processing warning recalculation for field ${crop.FieldID}:`,
             error,
@@ -526,46 +494,25 @@ const fertiliserManuresMutationMethods = {
       return { FertiliserManure: updatedFertilisers };
     });
   },
-
   async deleteFertiliserManure(fertliserManureId, userId, request) {
     return AppDataSource.transaction(async (transactionalManager) => {
-      // Check if the Organic Manure exists
       const fertiliserManureToDelete = await this.repository.findOneBy({
         ID: fertliserManureId,
       });
-      // If the fertiliserManure does not exist, throw a not found error
-      if (fertiliserManureToDelete == null) {
-        console.log(`Fertiliser Manure with ID ${fertliserManureId} not found`);
-      }
+      if (fertiliserManureToDelete == null) {console.log(`Fertiliser Manure with ID ${fertliserManureId} not found`)}
       const managementPeriod = await this.managementPeriodRepository.findOne({
         where: { ID: fertiliserManureToDelete.ManagementPeriodID },
         select: ["CropID"],
       });
-
-      // If the managementPeriod does not exist, throw a not found error
-      if (managementPeriod == null) {
-        console.log(`managementPeriod not found`);
-      }
-      const crop = await this.cropRepository.findOne({
-        where: { ID: managementPeriod.CropID },
-      });
-
-      // If the crop does not exist, throw a not found error
-      if (crop == null) {
-        console.log(`crop  not found`);
-      }
-
+      if (managementPeriod == null) {console.log(`managementPeriod not found`)}
+      const crop = await this.cropRepository.findOne({ where: { ID: managementPeriod.CropID }});
+      if (crop == null) { console.log(`crop  not found`)}
       try {
         // Call the stored procedure to delete the fertliserManureId and related entities
         const storedProcedure =
           "EXEC [spFertiliserManures_DeleteFertiliserManures] @ID = @0";
         await transactionalManager.query(storedProcedure, [fertliserManureId]);
-        await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
-          crop,
-          transactionalManager,
-          request,
-          userId,
-        );
+        await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(crop,transactionalManager,request,userId);
         this.ProcessFutureManuresForWarnings.processWarningsByCrop(
           crop.ID,
           userId,
