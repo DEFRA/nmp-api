@@ -22,68 +22,31 @@ const fieldRelatedMethods = {
     const fields = await this.repository.findByIds(fieldIds);
     const cropTypeAllData = await this.rB209ArableService.getCropTypesList();
     const farm = await this.FarmService.getFarmById(fields[0].FarmID);
-    const applicationReferenceData =
-      await this.fetchAllApplicationReferenceData(request);
-
+    const applicationReferenceData =await this.fetchAllApplicationReferenceData(request);
     farm.Fields = await Promise.all(
-      fields.map((field) =>
-        fieldRelatedMethods.buildFieldRelatedData.call(
-          this,
-          field,
-          year,
-          farm,
-          cropTypeAllData,
-          applicationReferenceData,
-        ),
+      fields.map((field) => fieldRelatedMethods.buildFieldRelatedData.call(this,field,
+          year,farm,
+          cropTypeAllData, applicationReferenceData),
       ),
     );
-
     return { Farm: farm };
   },
 
-  async buildFieldRelatedData(
-    field,
-    year,
-    farm,
-    cropTypeAllData,
-    applicationReferenceData,
-  ) {
-    const crops = await this.cropRepository.find({
-      where: { FieldID: field.ID, Year: year },
-    });
-    const previousCropData = await fieldRelatedMethods.getPreviousCropData.call(
-      this,
-      field.ID,
-      year,
-    );
-    const previousCropTypeName = previousCropData
-      ? await this.getCropTypeName(previousCropData.CropTypeID, cropTypeAllData)
-      : null;
+  async buildFieldRelatedData(field,year,farm,cropTypeAllData,applicationReferenceData) {
+    const crops = await this.cropRepository.find({where: { FieldID: field.ID, Year: year }});
+    const previousCropData = await fieldRelatedMethods.getPreviousCropData.call(this,field.ID,year);
+    const previousCropTypeName = previousCropData ? await this.getCropTypeName(previousCropData.CropTypeID, cropTypeAllData): null;
     const previousGrasses = await this.getPreviousCropDataByFieldID(field.ID);
-    const grassManagementOptionName =
-      await fieldRelatedMethods.getGrassManagementOptionName.call(
-        this,
-        previousGrasses,
-      );
-    const pkBalance = await this.pkBalanceRepository.findOne({
-      where: { FieldID: field.ID, Year: year },
-    });
-
+    const grassManagementOptionName =await fieldRelatedMethods.getGrassManagementOptionName.call(this,previousGrasses);
+    const pkBalance = await this.pkBalanceRepository.findOne({where: { FieldID: field.ID, Year: year }});
     await fieldRelatedMethods.addGrassCropNames.call(this, crops);
-    const { cropsWithManagement, soilAnalysis } =
-      await fieldRelatedMethods.buildCropsWithManagement.call(
-        this,
-        crops,
-        field.ID,
-        year,
-        cropTypeAllData,
-        applicationReferenceData,
+    const { cropsWithManagement, soilAnalysis } = await fieldRelatedMethods.buildCropsWithManagement.call(
+        this, crops,
+        field.ID,year,
+        cropTypeAllData,applicationReferenceData,
       );
     const soilDetails = await fieldRelatedMethods.buildSoilDetails.call(
-      this,
-      field,
-      farm,
-      pkBalance,
+      this,field,farm,pkBalance,
       soilAnalysis,
     );
 

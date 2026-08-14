@@ -270,6 +270,157 @@ const fertiliserManuresMutationMethods = {
     console.log("PK Balance data not found for field and year:");
   },
 
+  async queueFutureWarningsForSavedFertiliser(
+    savedFertiliser,
+    userId,
+    transactionalManager,
+  ) {
+    const cropAndField = await transactionalManager
+      .createQueryBuilder(ManagementPeriodEntity, "mp")
+      .leftJoin(CropEntity, "crop", "crop.ID = mp.CropID")
+      .select(["mp.CropID AS CropID", "crop.FieldID AS FieldID"])
+      .where("mp.ID = :managementPeriodID", {
+        managementPeriodID: savedFertiliser.ManagementPeriodID,
+      })
+      .getRawOne();
+
+    const isCurrentOrganicManure = false,
+      isCurrentFertiliser = true;
+    this.ProcessFutureManuresForWarnings.processFutureManures(
+      cropAndField.FieldID,
+      savedFertiliser.ApplicationDate,
+      isCurrentOrganicManure,
+      isCurrentFertiliser,
+      savedFertiliser.ID,
+      userId,
+    ).catch((error) => {
+      console.error(
+        `Error processing future manure warnings for field ${cropAndField.FieldID}:`,
+        error,
+      );
+    });
+  },
+
+  async saveFertilisersAndQueueWarnings(
+    fertiliserManureData,
+    userId,
+    transactionalManager,
+  ) {
+    const fertiliserManures = [];
+
+    for (const fertiliser of fertiliserManureData) {
+      const fertiliserManure = fertiliser.FertiliserManure;
+      const savedFertiliser = await transactionalManager.save(
+        FertiliserManuresEntity,
+        this.repository.create({
+          ...fertiliserManure,
+          CreatedByID: userId,
+          CreatedOn: new Date(),
+        }),
+      );
+
+      fertiliserManures.push(savedFertiliser);
+      await this.saveWarningMessages(
+        fertiliser,
+        savedFertiliser,
+        userId,
+        transactionalManager,
+      );
+      await this.queueFutureWarningsForSavedFertiliser(
+        savedFertiliser,
+        userId,
+        transactionalManager,
+      );
+    }
+
+    return fertiliserManures;
+  },
+
+  async processFertiliserForPKAndRecommendations({
+    fertManure,
+    cropPlanAllData,
+    managementPeriodAllData,
+    fieldAllData,
+    fertiliserAllData,
+    soilAnalysisAllData,
+    pkBalanceAllData,
+    fertiliserManureData,
+    recommandationAllData,
+    transactionalManager,
+    request,
+    userId,
+  }) {
+    const fertiliserData = fertiliserAllData.filter((fertData) => {
+      return fertData.ManagementPeriodID === fertManure.ManagementPeriodID;
+    });
+    const managementPeriodData = await this.findAsArray(
+      managementPeriodAllData,
+      (manData) => manData.ID === fertManure.ManagementPeriodID,
+    );
+    const cropData = await this.findAsArray(
+      cropPlanAllData,
+      (crop) => crop.ID === managementPeriodData[0]?.CropID,
+    );
+    const fieldData = await this.findAsArray(
+      fieldAllData,
+      (field) => field.ID === cropData[0]?.FieldID,
+    );
+    const soilAnalsisData = soilAnalysisAllData.filter((soilAnalyses) => {
+      return soilAnalyses.FieldID === cropData[0]?.FieldID;
+    });
+
+    let isSoilAnalysisHavePAndK = false;
+    if (soilAnalsisData.length > 0) {
+      isSoilAnalysisHavePAndK = !!soilAnalsisData.some(
+        (item) => item.PhosphorusIndex !== null || item.PotassiumIndex !== null,
+      );
+    }
+
+    if (isSoilAnalysisHavePAndK) {
+      const pkBalanceData = pkBalanceAllData.filter((pkBalance) => {
+        return (
+          pkBalance.FieldID === fieldData[0]?.ID &&
+          pkBalance.Year === cropData[0]?.Year
+        );
+      });
+      const cropPlanForNextYear = cropPlanAllData.filter((cropPlan) => {
+        return (
+          cropPlan.FieldID === fieldData[0]?.ID &&
+          cropPlan.Year > cropData[0]?.Year
+        );
+      });
+      const { isNextYearPlanExist, isNextYearFertiliserExist } =
+        this.checkNextYearPlanAndFertiliserExist(
+          cropPlanForNextYear,
+          managementPeriodAllData,
+          fertiliserAllData,
+          fertManure,
+        );
+
+      await this.handlePKBalanceAndFutureRecommendations({
+        isNextYearPlanExist,
+        isNextYearFertiliserExist,
+        fieldData,
+        cropData,
+        request,
+        userId,
+        pkBalanceData,
+        fertiliserData,
+        managementPeriodData,
+        fertiliserManureData,
+        recommandationAllData,
+        transactionalManager,
+      });
+    }
+
+    await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
+      cropData[0],
+      transactionalManager,
+      request,
+      userId,
+    );
+  },
+
   async createFertiliserManures(fertiliserManureData, userId, request) {
     const cropPlanAllData = await this.cropRepository.find();
     const recommandationAllData = await this.RecommendationRepository.find();
@@ -277,120 +428,34 @@ const fertiliserManuresMutationMethods = {
       await this.managementPeriodRepository.find();
     const fieldAllData = await this.fieldRepository.find(),
       fertiliserAllData = await this.repository.find();
+
     return AppDataSource.transaction(async (transactionalManager) => {
-      const fertiliserManures = [];
-      for (const fertiliser of fertiliserManureData) {
-        const fertiliserManure = fertiliser.FertiliserManure;
-        // Save fertiliser first
-        const savedFertiliser = await transactionalManager.save(
-          FertiliserManuresEntity,
-          this.repository.create({
-            ...fertiliserManure,
-            CreatedByID: userId,
-            CreatedOn: new Date(),
-          }),
-        );
-        fertiliserManures.push(savedFertiliser);
-        await this.saveWarningMessages(
-          fertiliser,
-          savedFertiliser,
-          userId,
-          transactionalManager,
-        );
-        const cropAndField = await transactionalManager
-          .createQueryBuilder(ManagementPeriodEntity, "mp")
-          .leftJoin(CropEntity, "crop", "crop.ID = mp.CropID")
-          .select(["mp.CropID AS CropID", "crop.FieldID AS FieldID"])
-          .where("mp.ID = :managementPeriodID", {
-            managementPeriodID: savedFertiliser.ManagementPeriodID,
-          })
-          .getRawOne();
-        const isCurrentOrganicManure = false,
-          isCurrentFertiliser = true;
-        this.ProcessFutureManuresForWarnings.processFutureManures(
-          cropAndField.FieldID,
-          savedFertiliser.ApplicationDate,
-          isCurrentOrganicManure,
-          isCurrentFertiliser,
-          savedFertiliser.ID,
-          userId,
-        ).catch((error) => {
-          console.error(
-            `Error processing future manure warnings for field ${cropAndField.FieldID}:`,
-            error,
-          );
-        });
-      }
+      const fertiliserManures = await this.saveFertilisersAndQueueWarnings(
+        fertiliserManureData,
+        userId,
+        transactionalManager,
+      );
+
       const soilAnalysisAllData = await this.soilAnalysisRepository.find(),
         pkBalanceAllData = await this.pkBalanceRepository.find();
+
       for (const fertManure of fertiliserManures) {
-        const fertiliserData = fertiliserAllData.filter((fertData) => {
-          return fertData.ManagementPeriodID === fertManure.ManagementPeriodID;
-        });
-        const managementPeriodData = await this.findAsArray(
-          managementPeriodAllData,
-          (manData) => manData.ID === fertManure.ManagementPeriodID,
-        );
-        const cropData = await this.findAsArray(
+        await this.processFertiliserForPKAndRecommendations({
+          fertManure,
           cropPlanAllData,
-          (crop) => crop.ID === managementPeriodData[0]?.CropID,
-        );
-        const fieldData = await this.findAsArray(
+          managementPeriodAllData,
           fieldAllData,
-          (field) => field.ID === cropData[0]?.FieldID,
-        );
-        const soilAnalsisData = soilAnalysisAllData.filter((soilAnalyses) => {
-          return soilAnalyses.FieldID === cropData[0]?.FieldID;
-        });
-        let isSoilAnalysisHavePAndK = false;
-        if (soilAnalsisData.length > 0) {
-          isSoilAnalysisHavePAndK = !!soilAnalsisData.some(
-            (item) =>
-              item.PhosphorusIndex !== null || item.PotassiumIndex !== null,
-          );
-        }
-        if (isSoilAnalysisHavePAndK) {
-          const pkBalanceData = pkBalanceAllData.filter((pkBalance) => {
-            return (
-              pkBalance.FieldID === fieldData[0]?.ID &&
-              pkBalance.Year === cropData[0]?.Year
-            );
-          });
-          const cropPlanForNextYear = cropPlanAllData.filter((cropPlan) => {
-            return (
-              cropPlan.FieldID === fieldData[0]?.ID &&
-              cropPlan.Year > cropData[0]?.Year
-            );
-          });
-          const { isNextYearPlanExist, isNextYearFertiliserExist } =
-            this.checkNextYearPlanAndFertiliserExist(
-              cropPlanForNextYear,
-              managementPeriodAllData,
-              fertiliserAllData,
-              fertManure,
-            );
-          await this.handlePKBalanceAndFutureRecommendations({
-            isNextYearPlanExist,
-            isNextYearFertiliserExist,
-            fieldData,
-            cropData,
-            request,
-            userId,
-            pkBalanceData,
-            fertiliserData,
-            managementPeriodData,
-            fertiliserManureData,
-            recommandationAllData,
-            transactionalManager,
-          });
-        }
-        await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
-          cropData[0],
+          fertiliserAllData,
+          soilAnalysisAllData,
+          pkBalanceAllData,
+          fertiliserManureData,
+          recommandationAllData,
           transactionalManager,
           request,
           userId,
-        );
+        });
       }
+
       return fertiliserManures;
     });
   },
