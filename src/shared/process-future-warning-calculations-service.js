@@ -23,9 +23,11 @@ const parsedWarningDeadlockDelayMs = Number.parseInt(
   process.env.WARNING_DEADLOCK_DELAY_MS,
   10,
 );
+const MIN_WARNING_DEADLOCK_DELAY_MS = 50;
+const DEFAULT_WARNING_DEADLOCK_DELAY_MS = 150;
 const WARNING_DEADLOCK_DELAY_MS = Number.isFinite(parsedWarningDeadlockDelayMs)
-  ? Math.max(50, parsedWarningDeadlockDelayMs)
-  : 150;
+  ? Math.max(MIN_WARNING_DEADLOCK_DELAY_MS, parsedWarningDeadlockDelayMs)
+  : DEFAULT_WARNING_DEADLOCK_DELAY_MS;
 
 const parsedWarningDeadlockJitterMs = Number.parseInt(
   process.env.WARNING_DEADLOCK_JITTER_MS,
