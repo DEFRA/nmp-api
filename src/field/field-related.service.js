@@ -49,157 +49,87 @@ const fieldRelatedMethods = {
       this,field,farm,pkBalance,
       soilAnalysis,
     );
-
     return {
       ...field,
       Management: grassManagementOptionName,
       PreviousCropID: previousCropData ? previousCropData.CropTypeID : null,
-      PreviousCrop: previousCropTypeName,
-      Crops: cropsWithManagement,
-      // PreviousGrasses: previousGrasses,
-      SoilAnalysis: soilAnalysis,
-      SoilDetails: soilDetails,
+      PreviousCrop: previousCropTypeName, Crops: cropsWithManagement,
+      SoilAnalysis: soilAnalysis,SoilDetails: soilDetails
     };
   },
-
   async getPreviousCropData(fieldId, year) {
     const previousCropData = await this.cropRepository.findOne({
       where: { FieldID: fieldId, Year: year - 1 },
       select: ["CropTypeID"],
       order: { CreatedOn: "DESC" },
     });
-
-    if (previousCropData != null) {
-      return previousCropData;
-    }
-
+    if (previousCropData != null) {return previousCropData}
     return this.previousCroppingRepository.findOne({
       where: { FieldID: fieldId, HarvestYear: year - 1 },
       select: ["CropTypeID"],
     });
   },
-
   async getGrassManagementOptionName(previousGrasses) {
-    if (!previousGrasses?.GrassManagementOptionID) {
-      return null;
-    }
-
-    const grassManagementOption =
-      await this.grassManagementOptionsRepository.findOne({
+    if (!previousGrasses?.GrassManagementOptionID) {return null}
+    const grassManagementOption = await this.grassManagementOptionsRepository.findOne({
         where: { ID: previousGrasses.GrassManagementOptionID },
-        select: ["Name"],
+        select: ["Name"]
       });
     console.log("grassManagementOption", grassManagementOption);
-
     return grassManagementOption ? grassManagementOption.Name : null;
   },
 
   async addGrassCropNames(crops) {
-    if (crops == null) {
-      return;
-    }
-
+    if (crops == null) { return}
     for (const crop of crops) {
       if (crop.CropTypeID === CropTypeMapper.GRASS) {
         await fieldRelatedMethods.addGrassCropName.call(this, crop);
       }
     }
   },
-
   async addGrassCropName(crop) {
-    const hasDefoliationData =
-      crop.SwardTypeID != null &&
-      crop.PotentialCut != null &&
-      crop.DefoliationSequenceID != null;
-
-    crop.DefoliationSequenceName = hasDefoliationData
-      ? await this.findDefoliationSequenceDescription(
+    const hasDefoliationData =crop.SwardTypeID != null && crop.PotentialCut != null && crop.DefoliationSequenceID != null;
+    crop.DefoliationSequenceName = hasDefoliationData ? await this.findDefoliationSequenceDescription(
           crop.SwardManagementID,
           crop.PotentialCut,
           crop.DefoliationSequenceID,
-          crop.Establishment,
+          crop.Establishment
         )
       : null;
-    crop.SwardTypeName =
-      crop.SwardTypeID == null
-        ? null
-        : await this.findSwardType(crop.SwardTypeID);
-    crop.SwardManagementName =
-      crop.SwardManagementID == null
-        ? null
-        : await this.findSwardTypeManagment(crop.SwardManagementID);
-    crop.EstablishmentName =
-      crop.Establishment == null
-        ? null
-        : await this.findGrassSeason(crop.Establishment);
+    crop.SwardTypeName = crop.SwardTypeID == null ? null: await this.findSwardType(crop.SwardTypeID);
+    crop.SwardManagementName = crop.SwardManagementID == null ? null: await this.findSwardTypeManagment(crop.SwardManagementID);
+    crop.EstablishmentName = crop.Establishment == null ? null : await this.findGrassSeason(crop.Establishment);
   },
-
-  async buildCropsWithManagement(
-    crops,
-    fieldId,
-    year,
-    cropTypeAllData,
-    applicationReferenceData,
-  ) {
+  async buildCropsWithManagement(crops,fieldId,year,cropTypeAllData,applicationReferenceData){
     const cropsWithManagement = [];
     let soilAnalysis = null;
-
     for (const crop of crops) {
-      const cropResult = await fieldRelatedMethods.buildCropWithManagement.call(
-        this,
-        crop,
-        fieldId,
-        year,
-        cropTypeAllData,
-        applicationReferenceData,
-        soilAnalysis,
+      const cropResult = await fieldRelatedMethods.buildCropWithManagement.call(this,
+        crop,fieldId,
+        year,cropTypeAllData,
+        applicationReferenceData,soilAnalysis
       );
       cropsWithManagement.push(cropResult.crop);
       soilAnalysis = cropResult.soilAnalysis;
     }
-
     return { cropsWithManagement, soilAnalysis };
   },
-
-  async buildCropWithManagement(
-    crop,
-    fieldId,
-    year,
-    cropTypeAllData,
-    applicationReferenceData,
-    currentSoilAnalysis,
-  ) {
+  async buildCropWithManagement(crop,fieldId, year,cropTypeAllData, applicationReferenceData, currentSoilAnalysis) {
     try {
-      const snsAnalysis = await fieldRelatedMethods.getSnsAnalysis.call(
-        this,
-        crop.ID,
-      );
-      const managementPeriods = await this.managementPeriodRepository.find({
-        where: { CropID: crop.ID },
-      });
+      const snsAnalysis = await fieldRelatedMethods.getSnsAnalysis.call(this,crop.ID);
+      const managementPeriods = await this.managementPeriodRepository.find({where: { CropID: crop.ID }});
       const { managementWithSubData, soilAnalysis } =
-        await fieldRelatedMethods.buildManagementWithSubData.call(
-          this,
-          managementPeriods,
-          fieldId,
-          year,
-          applicationReferenceData,
-          currentSoilAnalysis,
-        );
-      const cropNames = await fieldRelatedMethods.getCropNames.call(
-        this,
-        crop,
-        cropTypeAllData,
-      );
-
+        await fieldRelatedMethods.buildManagementWithSubData.call(this,managementPeriods,
+          fieldId,year,applicationReferenceData,currentSoilAnalysis);
+      const cropNames = await fieldRelatedMethods.getCropNames.call(this,crop,cropTypeAllData);
       return {
         crop: {
           ...crop,
           ...cropNames,
           ManagementPeriods: managementWithSubData,
-          SNSAnalysis: snsAnalysis,
+          SNSAnalysis: snsAnalysis
         },
-        soilAnalysis,
+        soilAnalysis
       };
     } catch (error) {
       console.error("Error processing crop", crop.ID, error);
@@ -212,12 +142,10 @@ const fieldRelatedMethods = {
       };
     }
   },
-
   async getSnsAnalysis(cropId) {
     const snsAnalysis = await this.snsAnalysisRepository.findOne({
       where: { CropID: cropId },
     });
-
     return snsAnalysis
       ? {
           SNSValue: snsAnalysis.SoilNitrogenSupplyValue,

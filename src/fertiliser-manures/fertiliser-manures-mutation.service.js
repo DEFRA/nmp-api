@@ -394,7 +394,6 @@ const fertiliserManuresMutationMethods = {
         recommandationAllData,transactionalManager
       });
     }
-
     await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
       cropData[0],
       transactionalManager,
