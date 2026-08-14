@@ -337,22 +337,13 @@ const fertiliserManuresMutationMethods = {
   },
 
   async processFertiliserForPKAndRecommendations({
-    fertManure,
-    cropPlanAllData,
-    managementPeriodAllData,
-    fieldAllData,
-    fertiliserAllData,
-    soilAnalysisAllData,
-    pkBalanceAllData,
-    fertiliserManureData,
-    recommandationAllData,
-    transactionalManager,
-    request,
-    userId,
+    fertManure,cropPlanAllData,managementPeriodAllData,
+    fieldAllData,fertiliserAllData,soilAnalysisAllData,
+    pkBalanceAllData,fertiliserManureData,
+    recommandationAllData,transactionalManager,
+    request,userId
   }) {
-    const fertiliserData = fertiliserAllData.filter((fertData) => {
-      return fertData.ManagementPeriodID === fertManure.ManagementPeriodID;
-    });
+    const fertiliserData = fertiliserAllData.filter((fertData) => { return fertData.ManagementPeriodID === fertManure.ManagementPeriodID});
     const managementPeriodData = await this.findAsArray(
       managementPeriodAllData,
       (manData) => manData.ID === fertManure.ManagementPeriodID,
@@ -396,20 +387,11 @@ const fertiliserManuresMutationMethods = {
           fertiliserAllData,
           fertManure,
         );
-
       await this.handlePKBalanceAndFutureRecommendations({
-        isNextYearPlanExist,
-        isNextYearFertiliserExist,
-        fieldData,
-        cropData,
-        request,
-        userId,
-        pkBalanceData,
-        fertiliserData,
-        managementPeriodData,
-        fertiliserManureData,
-        recommandationAllData,
-        transactionalManager,
+        isNextYearPlanExist,isNextYearFertiliserExist,
+        fieldData,cropData,request,userId,pkBalanceData,
+        fertiliserData, managementPeriodData, fertiliserManureData,
+        recommandationAllData,transactionalManager
       });
     }
 
