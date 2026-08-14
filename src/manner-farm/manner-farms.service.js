@@ -250,6 +250,13 @@ class MannerFarmsService extends BaseService {
     ]);
   });
 }
+async checkMannerFarmExists(organisationId, name) {
+    const matchedMannerFarm = await this.repository.findOne({
+      where: { OrganisationID: organisationId, Name: name },
+      select: { ID: true, Name: true, OrganisationID: true },
+    });
+    return { exists: Boolean(matchedMannerFarm) };
+  }
 }
 
 module.exports = { MannerFarmsService };

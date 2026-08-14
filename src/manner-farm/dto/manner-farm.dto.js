@@ -25,6 +25,11 @@ const CreateMannerFarmDto = Joi.object({
   ModifiedByID: Joi.number().integer().allow(null).default(null),
 });
 
+const CheckMannerFarmExistsDto = Joi.object({
+  organisationId: Joi.string().guid().required(),
+  name: Joi.string().max(maxTwoFifty).required(),
+});
+
 const CreateMannerFarmWithEstimationDto = Joi.object({
   MannerFarm: CreateMannerFarmDto.required(),
   MannerEstimation: CreateMannerEstimationDto.required(),
@@ -34,4 +39,5 @@ const CreateMannerFarmWithEstimationDto = Joi.object({
 module.exports = {
   CreateMannerFarmDto,
   CreateMannerFarmWithEstimationDto,
+  CheckMannerFarmExistsDto,
 };

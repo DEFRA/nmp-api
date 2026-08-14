@@ -1,6 +1,6 @@
 const { validationFailAction } = require("../shared/validateFailSafeAction");
 const { MannerFarmsController } = require("./manner-farms.controller");
-const { CreateMannerFarmWithEstimationDto } = require("./dto/manner-farm.dto");
+const { CreateMannerFarmWithEstimationDto, CheckMannerFarmExistsDto } = require("./dto/manner-farm.dto");
 const Joi = require("joi");
 const mannerFarms = "Manner Farms";
 module.exports = [
@@ -79,6 +79,23 @@ module.exports = [
     handler: async (request, h) => {
       const controller = new MannerFarmsController(request, h);
       return controller.deleteMannerFarmsByIds();
+    },
+  },
+    {
+    method: "GET",
+    path: "/manner-farms/exists",
+    options: {
+      tags: ["api", mannerFarms],
+      description:
+        "Check whether a Manner farm exists by organisation id and name",
+      validate: {
+        query: CheckMannerFarmExistsDto,
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new MannerFarmsController(request, h);
+      return controller.checkMannerFarmExists();
     },
   },
 ];
