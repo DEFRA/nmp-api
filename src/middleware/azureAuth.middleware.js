@@ -5,8 +5,8 @@ const { UserEntity } = require("../db/entity/user.entity");
 const { AzureAuthService } = require("./azureAuth.service");
 const EnvironmentService = require("../shared/environment.service");
 const { StaticStrings } = require("../shared/static.string");
-const { getRepository } = require("typeorm");
 const boom = require("@hapi/boom");
+const { AppDataSource } = require("../db/data-source");
 
 class AzureAuthMiddleware {
   #excludedPaths;
@@ -23,11 +23,11 @@ class AzureAuthMiddleware {
       "/swagger.json",
       "/swaggerui",
     ];
-    this.#otherExcludedPaths="/";
+    this.#otherExcludedPaths = "/";
     this.#optionalUserPresentPath = ["/users"];
     this.#clientId = EnvironmentService.azureAdB2cClientId();
     this.#azureAuthService = new AzureAuthService();
-    this.#userRepository = getRepository(UserEntity);
+    this.#userRepository = AppDataSource.getRepository(UserEntity);
   }
 
   #getKey(header, jwksUri) {
@@ -80,7 +80,6 @@ class AzureAuthMiddleware {
       console.log(`Validating token for path: ${currentPath}`);
     }
 
-
     if (!authHeader?.startsWith("Bearer ")) {
       throw boom.unauthorized(StaticStrings.ERR_TOKEN_NOT_PROVIDED);
     }
@@ -89,8 +88,8 @@ class AzureAuthMiddleware {
     // Check if the current path is in the excluded paths
 
     try {
-      const { issuerUrl, jwksUri } = await this.#azureAuthService.getData();   
-      
+      const { issuerUrl, jwksUri } = await this.#azureAuthService.getData();
+
       const jwtUserData = await this.#validateToken(token, issuerUrl, jwksUri);
 
       // Token is valid, proceed with the request
@@ -99,8 +98,9 @@ class AzureAuthMiddleware {
       });
       request["userId"] = user?.ID;
 
-      if (this.#optionalUserPresentPath.includes(currentPath))
-        {return h.continue}
+      if (this.#optionalUserPresentPath.includes(currentPath)) {
+        return h.continue;
+      }
 
       if (!user) {
         throw boom.unauthorized(StaticStrings.ERR_INVALID_EMAIL);

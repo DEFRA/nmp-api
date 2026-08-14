@@ -20,19 +20,17 @@ const mannerEstimationsReadHelpers = {
     const mannerEstimationData = await this.repository.findOne({
       where: { ID: id },
     });
- if (!mannerEstimationData) {
+    if (!mannerEstimationData) {
       return null;
     }
     const mannerFarm = await this.mannerFarmsRepository.findOne({
-        where: { ID: mannerEstimationData.MannerFarmID }
+      where: { ID: mannerEstimationData.MannerFarmID },
     });
 
-   
     const estimationNames = await this.getMannerEstimationDisplayNames(
       mannerEstimationData,
       request,
     );
-      
 
     const mannerEstimationApplicationsWithManureTypeName =
       await this.getMannerEstimationApplicationsWithManureTypeName(id, request);
@@ -52,38 +50,46 @@ const mannerEstimationsReadHelpers = {
     mannerEstimationData.TopSoil = estimationNames.topSoil;
     mannerEstimationData.SubSoil = estimationNames.subSoil;
     mannerEstimationData.Country = estimationNames.countryName;
- 
+
     return {
-      MannerFarm:mannerFarm,
+      MannerFarm: mannerFarm,
       MannerEstimation: mannerEstimationData,
-      MannerEstimationApplication:mannerEstimationApplicationsWithManureTypeName,
-      TotalMannerCalculateNutrient:  mannerEstimationApplicationsWithCombinedResult,
+      MannerEstimationApplication:
+        mannerEstimationApplicationsWithManureTypeName,
+      TotalMannerCalculateNutrient:
+        mannerEstimationApplicationsWithCombinedResult,
       LastUpdatedOn: lastUpdatedOn,
     };
   },
 
-  async addCombinedApplicationResult(mannerFarm,mannerEstimation, applications, request) {
-      const allManureData = await this.MannerManureTypesService.getData(
-           "/manure-types",
-           request,
-         );
+  async addCombinedApplicationResult(
+    mannerFarm,
+    mannerEstimation,
+    applications,
+    request,
+  ) {
+    const allManureData = await this.MannerManureTypesService.getData(
+      "/manure-types",
+      request,
+    );
     const manureApplications = [];
-     await this.CalculateMannerOutputService.processMultipleManures(
-       applications,
-       allManureData,
-       manureApplications
-     );
-     const mannerEstimationApplicationsRequest = this.buildMannerOutputReq(mannerFarm,
-       mannerEstimation,
-       manureApplications
-     );
-      const mannerEstimationApplicationsOutput =
+    await this.CalculateMannerOutputService.processMultipleManures(
+      applications,
+      allManureData,
+      manureApplications,
+    );
+    const mannerEstimationApplicationsRequest = this.buildMannerOutputReq(
+      mannerFarm,
+      mannerEstimation,
+      manureApplications,
+    );
+    const mannerEstimationApplicationsOutput =
       await this.MannerCalculateNutrientsService.postData(
         "/calculate-nutrients",
         mannerEstimationApplicationsRequest,
         request,
       );
-     
+
     return mannerEstimationApplicationsOutput.data;
   },
 
@@ -115,10 +121,7 @@ const mannerEstimationsReadHelpers = {
     if (cropTypeId === null) {
       return null;
     }
-    const cropTypeData = await this.rB209ArableService.getData(
-      `/Arable/CropType/${cropTypeId}`,
-    );
-    return cropTypeData?.cropTypeName ?? null;
+    return this.rB209ArableService.getCropTypeNameById(cropTypeId);
   },
 
   async getMannerLookupNameById(service, endpoint, idValue, request) {
@@ -245,28 +248,30 @@ const mannerEstimationsReadHelpers = {
     cache.set(id, lookupData?.data?.name ?? null);
   },
 
-getLastUpdatedOn(mannerFarm, mannerEstimationData = [], mannerEstimationApplications = []) {
-  const dates = [
-    mannerFarm?.ModifiedOn || mannerFarm?.CreatedOn,
+  getLastUpdatedOn(
+    mannerFarm,
+    mannerEstimationData = [],
+    mannerEstimationApplications = [],
+  ) {
+    const dates = [
+      mannerFarm?.ModifiedOn || mannerFarm?.CreatedOn,
 
-   
       mannerEstimationData.ModifiedOn || mannerEstimationData.CreatedOn,
-    
 
-    ...mannerEstimationApplications.map(application =>
-      application.ModifiedOn || application.CreatedOn
-    ),
-  ]
-    .filter(Boolean)
-    .map(date => new Date(date).getTime())
-    .filter(timestamp => !Number.isNaN(timestamp));
+      ...mannerEstimationApplications.map(
+        (application) => application.ModifiedOn || application.CreatedOn,
+      ),
+    ]
+      .filter(Boolean)
+      .map((date) => new Date(date).getTime())
+      .filter((timestamp) => !Number.isNaN(timestamp));
 
-  if (dates.length === 0) {
-    return null;
-  }
+    if (dates.length === 0) {
+      return null;
+    }
 
-  return new Date(Math.max(...dates));
-},
+    return new Date(Math.max(...dates));
+  },
 
   toNumericId(value) {
     if (typeof value === "number" && Number.isFinite(value)) {
@@ -295,21 +300,21 @@ getLastUpdatedOn(mannerFarm, mannerEstimationData = [], mannerEstimationApplicat
     });
   },
 
- async getMannerEstimationByFarmId(mannerFarmID) {
+  async getMannerEstimationByFarmId(mannerFarmID) {
     const mannerFarm = await this.mannerFarmsRepository.findOne({
-        where: { ID: mannerFarmID }
+      where: { ID: mannerFarmID },
     });
 
     const mannerEstimate = await this.repository.find({
-        where: { MannerFarmID: mannerFarmID },
-        order: { ID: "ASC" },
+      where: { MannerFarmID: mannerFarmID },
+      order: { ID: "ASC" },
     });
 
-    return mannerEstimate.map(item => ({
-        ...item,
-        FarmName: mannerFarm.Name
+    return mannerEstimate.map((item) => ({
+      ...item,
+      FarmName: mannerFarm.Name,
     }));
-},
+  },
 };
 
 module.exports = { mannerEstimationsReadHelpers };
