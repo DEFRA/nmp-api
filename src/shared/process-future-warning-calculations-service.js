@@ -49,6 +49,13 @@ const WARNING_BACKGROUND_MAX_CONCURRENCY = Number.isFinite(
   ? Math.max(1, parsedWarningQueueConcurrency)
   : 1;
 
+const WARNING_OPERATIONS = {
+  FUTURE_MANURES: "warnings-future-manures",
+  BY_FIELD: "warnings-by-field",
+  BY_FARM: "warnings-by-farm",
+  BY_CROP: "warnings-by-crop",
+};
+
 class ProcessFutureManuresForWarnings {
   static sharedQueue;
 
@@ -96,13 +103,13 @@ class ProcessFutureManuresForWarnings {
     const { operationName, payload } = job;
 
     switch (operationName) {
-      case "warnings-future-manures":
+      case WARNING_OPERATIONS.FUTURE_MANURES:
         return this.executeProcessFutureManures(payload);
-      case "warnings-by-field":
+      case WARNING_OPERATIONS.BY_FIELD:
         return this.executeProcessWarningsByField(payload);
-      case "warnings-by-farm":
+      case WARNING_OPERATIONS.BY_FARM:
         return this.executeProcessWarningsByFarm(payload);
-      case "warnings-by-crop":
+      case WARNING_OPERATIONS.BY_CROP:
         return this.executeProcessWarningsByCrop(payload);
       default:
         console.warn(`Unsupported warning job: ${operationName}`);
@@ -212,8 +219,8 @@ class ProcessFutureManuresForWarnings {
     userId,
   ) {
     return this.enqueueWarningJob({
-      operationName: "warnings-future-manures",
-      jobKey: `warnings-future-manures:${fieldId}:${applicationDate}:${excludeId}`,
+      operationName: WARNING_OPERATIONS.FUTURE_MANURES,
+      jobKey: `${WARNING_OPERATIONS.FUTURE_MANURES}:${fieldId}:${applicationDate}:${excludeId}`,
       payload: {
         fieldId,
         applicationDate,
@@ -234,7 +241,7 @@ class ProcessFutureManuresForWarnings {
     userId,
   }) {
     return this.executeWarningWithDeadlockHandling(
-      "warnings-future-manures",
+      WARNING_OPERATIONS.FUTURE_MANURES,
       () =>
         AppDataSource.transaction(async (transactionalManager) => {
           const combinedManures = await transactionalManager.query(
@@ -265,79 +272,85 @@ class ProcessFutureManuresForWarnings {
   /* ============== FIELD-LEVEL PROCESSING ================================ */
   async processWarningsByField(fieldId, userId) {
     return this.enqueueWarningJob({
-      operationName: "warnings-by-field",
-      jobKey: `warnings-by-field:${fieldId}`,
+      operationName: WARNING_OPERATIONS.BY_FIELD,
+      jobKey: `${WARNING_OPERATIONS.BY_FIELD}:${fieldId}`,
       payload: { fieldId, userId },
     });
   }
 
   async executeProcessWarningsByField({ fieldId, userId }) {
-    return this.executeWarningWithDeadlockHandling("warnings-by-field", () =>
-      AppDataSource.transaction(async (transactionalManager) => {
-        const combinedManures = await transactionalManager.query(
-          `EXEC spWarning_GetAllManuresByFieldOnly @FieldID = @0`,
-          [fieldId],
-        );
+    return this.executeWarningWithDeadlockHandling(
+      WARNING_OPERATIONS.BY_FIELD,
+      () =>
+        AppDataSource.transaction(async (transactionalManager) => {
+          const combinedManures = await transactionalManager.query(
+            `EXEC spWarning_GetAllManuresByFieldOnly @FieldID = @0`,
+            [fieldId],
+          );
 
-        await this.processCombinedManures(
-          combinedManures,
-          transactionalManager,
-          userId,
-        );
-      }),
+          await this.processCombinedManures(
+            combinedManures,
+            transactionalManager,
+            userId,
+          );
+        }),
     );
   }
 
   /* =====================FARM-LEVEL PROCESSING ========================== */
   async processWarningsByFarm(farmId, userId) {
     return this.enqueueWarningJob({
-      operationName: "warnings-by-farm",
-      jobKey: `warnings-by-farm:${farmId}`,
+      operationName: WARNING_OPERATIONS.BY_FARM,
+      jobKey: `${WARNING_OPERATIONS.BY_FARM}:${farmId}`,
       payload: { farmId, userId },
     });
   }
 
   async executeProcessWarningsByFarm({ farmId, userId }) {
-    return this.executeWarningWithDeadlockHandling("warnings-by-farm", () =>
-      AppDataSource.transaction(async (transactionalManager) => {
-        const combinedManures = await transactionalManager.query(
-          `EXEC spWarning_GetAllManuresByFarm @FarmID = @0`,
-          [farmId],
-        );
+    return this.executeWarningWithDeadlockHandling(
+      WARNING_OPERATIONS.BY_FARM,
+      () =>
+        AppDataSource.transaction(async (transactionalManager) => {
+          const combinedManures = await transactionalManager.query(
+            `EXEC spWarning_GetAllManuresByFarm @FarmID = @0`,
+            [farmId],
+          );
 
-        await this.processCombinedManures(
-          combinedManures,
-          transactionalManager,
-          userId,
-        );
-      }),
+          await this.processCombinedManures(
+            combinedManures,
+            transactionalManager,
+            userId,
+          );
+        }),
     );
   }
 
   /* ==================CROP-LEVEL PROCESSING ====================== */
   async processWarningsByCrop(cropId, userId) {
     return this.enqueueWarningJob({
-      operationName: "warnings-by-crop",
-      jobKey: `warnings-by-crop:${cropId}`,
+      operationName: WARNING_OPERATIONS.BY_CROP,
+      jobKey: `${WARNING_OPERATIONS.BY_CROP}:${cropId}`,
       payload: { cropId, userId },
     });
   }
 
   async executeProcessWarningsByCrop({ cropId, userId }) {
-    return this.executeWarningWithDeadlockHandling("warnings-by-crop", () =>
-      AppDataSource.transaction(async (transactionalManager) => {
-        const combinedManures = await transactionalManager.query(
-          `EXEC spWarning_GetAllManuresByCrop @CropID = @0`,
-          [cropId],
-        );
-        console.log("combinedManuresbycrops", combinedManures);
+    return this.executeWarningWithDeadlockHandling(
+      WARNING_OPERATIONS.BY_CROP,
+      () =>
+        AppDataSource.transaction(async (transactionalManager) => {
+          const combinedManures = await transactionalManager.query(
+            `EXEC spWarning_GetAllManuresByCrop @CropID = @0`,
+            [cropId],
+          );
+          console.log("combinedManuresbycrops", combinedManures);
 
-        await this.processCombinedManures(
-          combinedManures,
-          transactionalManager,
-          userId,
-        );
-      }),
+          await this.processCombinedManures(
+            combinedManures,
+            transactionalManager,
+            userId,
+          );
+        }),
     );
   }
 
