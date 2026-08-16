@@ -32,6 +32,9 @@ const handleStringState = (char, stringState) => {
     nextState.escaped = true;
   } else if (char === '"') {
     nextState.inString = false;
+  } else {
+    nextState.inString = true;
+    nextState.escaped = false;
   }
 
   return nextState;
@@ -88,66 +91,92 @@ class LogsService {
     this.logDir = getDefaultLogDir();
   }
 
-  validateDate(date) {
-    return Boolean(date) && DATE_PATTERN.test(date);
+  buildEmptyLogsResponse(date) {
+    return {
+      date,
+      totalFilesScanned: 0,
+      totalLogs: 0,
+      logs: [],
+    };
   }
 
-  async getLogsByDate(date) {
-    if (!this.validateDate(date)) {
-      return {
-        date,
-        totalFilesScanned: 0,
-        totalLogs: 0,
-        logs: [],
-      };
-    }
-
-    if (!fs.existsSync(this.logDir)) {
-      return {
-        date,
-        totalFilesScanned: 0,
-        totalLogs: 0,
-        logs: [],
-      };
-    }
-
+  async getLogFiles() {
     const files = await fs.promises.readdir(this.logDir, {
       withFileTypes: true,
     });
-    const logFiles = files
+
+    return files
       .filter(
         (file) =>
           file.isFile() && path.extname(file.name).toLowerCase() === ".log",
       )
       .map((file) => file.name);
+  }
 
+  mapEntryToCollectedLog(entry, fileName) {
+    return {
+      fileName,
+      timestamp: entry.timestamp,
+      level: entry.level || null,
+      service: entry.service || null,
+      payload: entry.payload || null,
+      error: entry.error || null,
+    };
+  }
+
+  collectLogsFromBlocks(jsonBlocks, fileName, date) {
+    const matchingLogs = [];
+
+    for (const block of jsonBlocks) {
+      try {
+        const entry = JSON.parse(block);
+        const timestamp = entry?.timestamp;
+
+        if (typeof timestamp === "string" && timestamp.startsWith(date)) {
+          matchingLogs.push(this.mapEntryToCollectedLog(entry, fileName));
+        }
+      } catch (_error) {
+        console.log(_error);
+      }
+    }
+
+    return matchingLogs;
+  }
+
+  async collectLogsByDate(date, logFiles) {
     const collectedLogs = [];
 
     for (const fileName of logFiles) {
       const filePath = path.join(this.logDir, fileName);
       const fileContent = await fs.promises.readFile(filePath, "utf8");
       const jsonBlocks = extractJsonObjects(fileContent);
+      const matchingLogs = this.collectLogsFromBlocks(
+        jsonBlocks,
+        fileName,
+        date,
+      );
 
-      for (const block of jsonBlocks) {
-        try {
-          const entry = JSON.parse(block);
-          const timestamp = entry?.timestamp;
-
-          if (typeof timestamp === "string" && timestamp.startsWith(date)) {
-            collectedLogs.push({
-              fileName,
-              timestamp,
-              level: entry.level || null,
-              service: entry.service || null,
-              payload: entry.payload || null,
-              error: entry.error || null,
-            });
-          }
-        } catch (_error) {
-          console.log(_error);
-        }
-      }
+      collectedLogs.push(...matchingLogs);
     }
+
+    return collectedLogs;
+  }
+
+  validateDate(date) {
+    return Boolean(date) && DATE_PATTERN.test(date);
+  }
+
+  async getLogsByDate(date) {
+    if (!this.validateDate(date)) {
+      return this.buildEmptyLogsResponse(date);
+    }
+
+    if (!fs.existsSync(this.logDir)) {
+      return this.buildEmptyLogsResponse(date);
+    }
+
+    const logFiles = await this.getLogFiles();
+    const collectedLogs = await this.collectLogsByDate(date, logFiles);
 
     collectedLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
