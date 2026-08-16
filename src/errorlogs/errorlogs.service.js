@@ -14,47 +14,68 @@ const getDefaultLogDir = () => {
   return path.resolve(process.cwd(), "logs");
 };
 
+const handleStringState = (char, stringState) => {
+  const nextState = { ...stringState };
+
+  if (!nextState.inString) {
+    if (char === '"') {
+      nextState.inString = true;
+    }
+    return nextState;
+  }
+
+  if (nextState.escaped) {
+    nextState.escaped = false;
+  } else if (char === "\\") {
+    nextState.escaped = true;
+  } else if (char === '"') {
+    nextState.inString = false;
+  }
+
+  return nextState;
+};
+
+const handleBraceState = (char, index, content, braceState, blocks) => {
+  if (char === "{") {
+    if (braceState.depth === 0) {
+      braceState.blockStart = index;
+    }
+    braceState.depth += 1;
+    return;
+  }
+
+  if (char === "}" && braceState.depth > 0) {
+    braceState.depth -= 1;
+    if (braceState.depth === 0 && braceState.blockStart >= 0) {
+      blocks.push(content.slice(braceState.blockStart, index + 1));
+      braceState.blockStart = -1;
+    }
+  }
+};
+
 const extractJsonObjects = (content) => {
   const blocks = [];
-  let depth = 0;
-  let blockStart = -1;
-  let inString = false;
-  let escaped = false;
+  const stringState = {
+    inString: false,
+    escaped: false,
+  };
+  const braceState = {
+    depth: 0,
+    blockStart: -1,
+  };
 
   for (let i = 0; i < content.length; i += 1) {
     const char = content[i];
 
-    if (inString) {
-      if (escaped) {
-        escaped = false;
-      } else if (char === "\\") {
-        escaped = true;
-      } else if (char === '"') {
-        inString = false;
-      }
+    const nextStringState = handleStringState(char, stringState);
+    stringState.inString = nextStringState.inString;
+    stringState.escaped = nextStringState.escaped;
+
+    if (stringState.inString || stringState.escaped) {
       continue;
     }
 
-    if (char === '"') {
-      inString = true;
-      continue;
-    }
-
-    if (char === "{") {
-      if (depth === 0) {
-        blockStart = i;
-      }
-      depth += 1;
-      continue;
-    }
-
-    if (char === "}" && depth > 0) {
-      depth -= 1;
-      if (depth === 0 && blockStart >= 0) {
-        blocks.push(content.slice(blockStart, i + 1));
-        blockStart = -1;
-      }
-    }
+    handleBraceState(char, i, content, braceState, blocks);
   }
 
   return blocks;
