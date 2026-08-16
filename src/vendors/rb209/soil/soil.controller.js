@@ -21,27 +21,39 @@ class RB209SoilController {
   }
 
   async getSoilTypes() {
-   return this.getSoilDataHander();
+    try {
+      const data = await this.#service.getSoilTypesList();
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
   }
 
   async getSoilTypeBySoilTypeId() {
-   return this.getSoilDataHander();
+    const { soilTypeId } = this.#request.params;
+
+    try {
+      const data = await this.#service.getSoilTypeBySoilTypeId(soilTypeId);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
   }
 
   async getMethodologiesByNutrientIdAndCountryId() {
-   return this.getSoilDataHander();
+    return this.getSoilDataHander();
   }
 
   async getMethodologyByNutrientIdAndMethodologyId() {
-   return this.getSoilDataHander();
+    return this.getSoilDataHander();
   }
 
   async getNutrientIndexByNutrientIdAndIndexId() {
-   return this.getSoilDataHander();
+    return this.getSoilDataHander();
   }
 
   async getNutrientIndexByNutrientIdAndNutrientValueAndMethodologyId() {
-   return this.getSoilDataHander();
+    return this.getSoilDataHander();
   }
 
   async getNutrientIndexByNutrientIdAndNutrientValueMethodologyIdAndCountryId() {
