@@ -20,6 +20,8 @@ const handleStringState = (char, stringState) => {
   if (!nextState.inString) {
     if (char === '"') {
       nextState.inString = true;
+    } else {
+      nextState.inString = false;
     }
     return nextState;
   }
