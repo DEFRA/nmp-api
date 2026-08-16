@@ -38,6 +38,10 @@ class BackgroundJobQueue {
     }
   }
 
+  hasJobKey(jobKey) {
+    return this.queuedOrRunningJobKeys.has(jobKey);
+  }
+
   drain() {
     while (this.activeJobs < this.concurrency && this.pendingJobs.length > 0) {
       const job = this.pendingJobs.shift();
