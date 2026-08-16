@@ -38,7 +38,7 @@ const getCachedEndpointData = async (options) => {
   }
 
   if (typeof fetcher !== "function") {
-    throw new Error("fetcher function is required for getCachedEndpointData");
+    throw new TypeError("fetcher function is required for getCachedEndpointData");
   }
 
   if (!forceRefresh) {

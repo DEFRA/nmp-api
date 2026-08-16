@@ -68,40 +68,51 @@ class RB209ArableService extends RB209BaseService {
     return match?.cropType ?? match?.cropTypeName ?? null;
   }
 
+  getCachedCropTypeMatch(cropTypes, normalizedCropTypeId) {
+    if (!Array.isArray(cropTypes) || !Number.isFinite(normalizedCropTypeId)) {
+      return null;
+    }
+
+    return (
+      cropTypes.find(
+        ({ cropTypeId: listCropTypeId }) =>
+          Number(listCropTypeId) === normalizedCropTypeId,
+      ) ?? null
+    );
+  }
+
+  mapCropTypeResponse(cropTypeData) {
+    if (
+      cropTypeData &&
+      typeof cropTypeData === "object" &&
+      "cropTypeName" in cropTypeData
+    ) {
+      return cropTypeData;
+    }
+
+    return {
+      cropTypeName:
+        cropTypeData?.cropType ?? cropTypeData?.cropTypeName ?? null,
+    };
+  }
+
   async getCropTypeByCropTypeId(cropTypeId) {
     const cropTypes = await this.getCropTypesList();
     const normalizedCropTypeId = Number(cropTypeId);
+    const cachedMatch = this.getCachedCropTypeMatch(
+      cropTypes,
+      normalizedCropTypeId,
+    );
 
-    if (Array.isArray(cropTypes) && Number.isFinite(normalizedCropTypeId)) {
-      const cachedMatch = cropTypes.find(
-        ({ cropTypeId: listCropTypeId }) =>
-          Number(listCropTypeId) === normalizedCropTypeId,
-      );
-
-      if (cachedMatch) {
-        return {
-          cropTypeName:
-            cachedMatch.cropType ?? cachedMatch.cropTypeName ?? null,
-        };
-      }
+    if (cachedMatch) {
+      return this.mapCropTypeResponse(cachedMatch);
     }
 
     const fallbackCropType = await this.getData(
       `/Arable/CropType/${cropTypeId}`,
     );
 
-    if (
-      fallbackCropType &&
-      typeof fallbackCropType === "object" &&
-      "cropTypeName" in fallbackCropType
-    ) {
-      return fallbackCropType;
-    }
-
-    return {
-      cropTypeName:
-        fallbackCropType?.cropType ?? fallbackCropType?.cropTypeName ?? null,
-    };
+    return this.mapCropTypeResponse(fallbackCropType);
   }
 
   async getCropTypesMetrics() {
