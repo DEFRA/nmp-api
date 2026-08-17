@@ -39,7 +39,14 @@ class RB209ArableController {
   }
 
   async getCropTypeByCropTypeId() {
-    return this.getCropGroups();
+    const { cropTypeId } = this.#request.params;
+
+    try {
+      const data = await this.#service.getCropTypeByCropTypeId(cropTypeId);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
   }
 
   async getCropInfo1s() {

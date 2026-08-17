@@ -57,5 +57,6 @@ module.exports = [
   ...require("./farm-average-yield/farm-average-yields.route"),
   ...require("./manner-estimations/manner-estimations.route"),
   ...require("./manner-estimation-applications/manner-estimation-applications.route"),
-  ...require("./manner-farm/manner-farms.route")
+  ...require("./manner-farm/manner-farms.route"),
+  ...require("./errorlogs/errorlogs.route"),
 ].map((route) => wrapRouteWithLogging(route));
