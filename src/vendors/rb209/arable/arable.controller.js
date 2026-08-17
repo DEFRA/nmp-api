@@ -12,9 +12,8 @@ class RB209ArableController {
   }
 
   async getCropGroups() {
-    const url = this.#request.url.pathname.split("/rb209")[1];
     try {
-      const data = await this.#service.getData(url);
+      const data = await this.#service.getCropGroupsList();
       return this.#h.response(data);
     } catch (error) {
       return this.#h.response({ error });
@@ -22,7 +21,14 @@ class RB209ArableController {
   }
 
   async getCropGroupsBycropGroupId() {
-    return this.getCropGroups();
+    const { cropGroupId } = this.#request.params;
+
+    try {
+      const data = await this.#service.getCropGroupByCropGroupId(cropGroupId);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
   }
 
   async getCropTypes() {
@@ -35,7 +41,14 @@ class RB209ArableController {
   }
 
   async getCropTypesByCropGroupId() {
-    return this.getCropGroups();
+    const { cropGroupId } = this.#request.params;
+
+    try {
+      const data = await this.#service.getCropTypesByCropGroupId(cropGroupId);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
   }
 
   async getCropTypeByCropTypeId() {
