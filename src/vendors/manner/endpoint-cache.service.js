@@ -32,11 +32,11 @@ const getCachedEndpointData = async (options) => {
   } = options ?? {};
 
   if (!cacheKey || typeof cacheKey !== "string") {
-    throw new Error("cacheKey is required for getCachedEndpointData");
+    throw new TypeError("cacheKey is required for getCachedEndpointData");
   }
 
   if (typeof fetcher !== "function") {
-    throw new Error("fetcher function is required for getCachedEndpointData");
+    throw new TypeError("fetcher function is required for getCachedEndpointData");
   }
 
   if (!forceRefresh) {

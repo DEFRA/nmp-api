@@ -21,47 +21,39 @@ const normalizeBooleanQueryValue = (value) => {
   return undefined;
 };
 
-const matchesQuery = (manureType, query = {}) => {
-  if (query.manureGroupId !== undefined) {
-    if (String(manureType?.manureGroupId) !== String(query.manureGroupId)) {
-      return false;
-    }
-  }
+const matchesOptionalIdField = (actualValue, queryValue) =>
+  queryValue === undefined || String(actualValue) === String(queryValue);
 
-  if (query.manureTypeCategoryId !== undefined) {
-    if (
-      String(manureType?.manureTypeCategoryId) !==
-      String(query.manureTypeCategoryId)
-    ) {
-      return false;
-    }
-  }
-
-  if (query.countryId !== undefined) {
-    if (String(manureType?.countryId) !== String(query.countryId)) {
-      return false;
-    }
-  }
-
-  const highRanFilter = normalizeBooleanQueryValue(
-    query.highReadilyAvailableNitrogen,
+const matchesOptionalBooleanField = (actualValue, queryValue) => {
+  const normalizedQueryValue = normalizeBooleanQueryValue(queryValue);
+  return (
+    normalizedQueryValue === undefined ||
+    Boolean(actualValue) === normalizedQueryValue
   );
-  if (
-    highRanFilter !== undefined &&
-    Boolean(manureType?.highReadilyAvailableNitrogen) !== highRanFilter
-  ) {
+};
+
+const matchesQuery = (manureType, query = {}) => {
+  const idFieldMappings = [
+    ["manureGroupId", "manureGroupId"],
+    ["manureTypeCategoryId", "manureTypeCategoryId"],
+    ["countryId", "countryId"],
+  ];
+
+  const hasMatchingIdFields = idFieldMappings.every(
+    ([manureTypeField, queryField]) =>
+      matchesOptionalIdField(manureType?.[manureTypeField], query[queryField]),
+  );
+
+  if (!hasMatchingIdFields) {
     return false;
   }
 
-  const isLiquidFilter = normalizeBooleanQueryValue(query.isLiquid);
-  if (
-    isLiquidFilter !== undefined &&
-    Boolean(manureType?.isLiquid) !== isLiquidFilter
-  ) {
-    return false;
-  }
-
-  return true;
+  return (
+    matchesOptionalBooleanField(
+      manureType?.highReadilyAvailableNitrogen,
+      query.highReadilyAvailableNitrogen,
+    ) && matchesOptionalBooleanField(manureType?.isLiquid, query.isLiquid)
+  );
 };
 
 class MannerManureTypesService extends MannerBaseService {
