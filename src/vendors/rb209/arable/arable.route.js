@@ -122,7 +122,7 @@ module.exports = [
     },
     handler: async (request, h) => {
       const controller = new RB209ArableController(request, h);
-      return controller.getCropInfo1sByCropTypeId(request, h);
+      return controller.getCropTypeByCropTypeId(request, h);
     },
   },
   {
