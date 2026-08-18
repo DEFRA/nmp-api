@@ -33,36 +33,36 @@ const withFilteredItems = (payload, filteredItems) => {
 const getManureTypeIdValue = (manureType) =>
   manureType?.id ?? manureType?.manureTypeId ?? manureType?.manureTypeID;
 
-const normalizeOptionalQueryValue = (value) => {
-  if (value === undefined || value === null) {
-    return undefined;
-  }
+const isNullOrUndefined = (value) => value === undefined || value === null;
 
-  if (typeof value !== "string") {
+const isUndefinedLikeString = (value) => {
+  const loweredValue = value.toLowerCase();
+  return loweredValue === "undefined" || loweredValue === "null";
+};
+
+const normalizeWrappedQueryString = (value) => {
+  const hasSingleQuotes = value.startsWith("'") && value.endsWith("'");
+  const hasDoubleQuotes = value.startsWith('"') && value.endsWith('"');
+
+  if (!hasSingleQuotes && !hasDoubleQuotes) {
     return value;
   }
 
+  const unquotedValue = value.slice(1, -1).trim();
+  return unquotedValue || undefined;
+};
+
+const normalizeOptionalQueryValue = (value) => {
+  if (isNullOrUndefined(value) || typeof value !== "string") {
+    return value ?? undefined;
+  }
+
   const trimmedValue = value.trim();
-  if (!trimmedValue) {
+  if (!trimmedValue || isUndefinedLikeString(trimmedValue)) {
     return undefined;
   }
 
-  const loweredValue = trimmedValue.toLowerCase();
-  if (loweredValue === "undefined" || loweredValue === "null") {
-    return undefined;
-  }
-
-  const hasSingleQuotes =
-    trimmedValue.startsWith("'") && trimmedValue.endsWith("'");
-  const hasDoubleQuotes =
-    trimmedValue.startsWith('"') && trimmedValue.endsWith('"');
-
-  if (hasSingleQuotes || hasDoubleQuotes) {
-    const unquotedValue = trimmedValue.slice(1, -1).trim();
-    return unquotedValue || undefined;
-  }
-
-  return trimmedValue;
+  return normalizeWrappedQueryString(trimmedValue);
 };
 
 const normalizeBooleanQueryValue = (value) => {
