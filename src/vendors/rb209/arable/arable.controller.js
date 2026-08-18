@@ -11,6 +11,16 @@ class RB209ArableController {
     this.#service = new RB209ArableService();
   }
 
+  async getCropsdetails() {
+    const url = this.#request.url.pathname.split("/rb209")[1];
+    try {
+      const data = await this.#service.getData(url);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+
   async getCropGroups() {
     try {
       const data = await this.#service.getCropGroupsList();
@@ -63,43 +73,43 @@ class RB209ArableController {
   }
 
   async getCropInfo1s() {
-    return this.getCropGroups();
+    return this.getCropsdetails();
   }
 
   async getCropInfo1sByCropTypeId() {
-    return this.getCropGroups();
+    return this.getCropsdetails();
   }
 
   async getCropInfo1ByCropTypeIdAndCropInfo1Id() {
-    return this.getCropGroups();
+    return this.getCropsdetails();
   }
 
   async getCropInfo2s() {
-    return this.getCropGroups();
+    return this.getCropsdetails();
   }
 
   async getCropInfo2CropInfo2Id() {
-    return this.getCropGroups();
+    return this.getCropsdetails();
   }
 
   async getPotatoGroups() {
-    return this.getCropGroups();
+    return this.getCropsdetails();
   }
 
   async getPotatoGroupByPotatoGroupId() {
-    return this.getCropGroups();
+    return this.getCropsdetails();
   }
 
   async getPotatoVarieties() {
-    return this.getCropGroups();
+    return this.getCropsdetails();
   }
 
   async getPotatoVarietiesByPotatoGroupId() {
-    return this.getCropGroups();
+    return this.getCropsdetails();
   }
 
   async getPotatoVarietyByPotatoVarietyId() {
-    return this.getCropGroups();
+    return this.getCropsdetails();
   }
 
   async getCropTypesMetrics() {
