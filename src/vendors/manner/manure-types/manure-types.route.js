@@ -14,6 +14,10 @@ module.exports = [
       description: "Retrieve all manure types or filter by criteria",
       validate: {
         query: Joi.object({
+          id: Joi.number().optional().description("ID of the manure type"),
+          name: Joi.string()
+            .optional()
+            .description("Name of the manure type to filter by"),
           manureGroupId: Joi.string()
             .optional()
             .description("ID of the manure group to filter by"),
@@ -26,14 +30,30 @@ module.exports = [
           highReadilyAvailableNitrogen: Joi.boolean()
             .optional()
             .description(
-              "Whether to filter by highly readily available nitrogen (true/false)"
+              "Whether to filter by highly readily available nitrogen (true/false)",
             ),
           isLiquid: Joi.boolean()
             .optional()
             .description(
-              "Whether to filter by liquid manure types (true/false)"
+              "Whether to filter by liquid manure types (true/false)",
             ),
-        }),
+        })
+          .rename("manureGroupID", "manureGroupId", {
+            alias: false,
+            override: true,
+            ignoreUndefined: true,
+          })
+          .rename("manureTypeCategoryID", "manureTypeCategoryId", {
+            alias: false,
+            override: true,
+            ignoreUndefined: true,
+          })
+          .rename("countryID", "countryId", {
+            alias: false,
+            override: true,
+            ignoreUndefined: true,
+          })
+          .unknown(true),
       },
     },
   },

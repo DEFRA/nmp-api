@@ -13,6 +13,8 @@ class MannerManureTypesController {
 
   async getAllManureTypes() {
     const {
+      id,
+      name,
       manureGroupId,
       manureTypeCategoryId,
       countryId,
@@ -21,6 +23,8 @@ class MannerManureTypesController {
     } = this.#request.query;
 
     const data = await this.#service.getAllManureTypesByQuery(this.#request, {
+      id,
+      name,
       manureGroupId,
       manureTypeCategoryId,
       countryId,
