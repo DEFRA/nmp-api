@@ -111,7 +111,7 @@ class MannerEstimationApplicationsService extends BaseService {
         const mannerFarm = await transactionalManager.findOne(
         MannerFarmsEntity,
         {
-          where: { ID: mannerEstimation.FarmID },
+          where: { ID: mannerEstimation.MannerFarmID },
         },
       );
 
