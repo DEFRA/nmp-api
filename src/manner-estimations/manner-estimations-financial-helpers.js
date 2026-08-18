@@ -314,9 +314,7 @@ const mannerEstimationsFinancialHelpers = {
       );
       const nutrientProduct =
         nutrientPercentageData?.data ?? nutrientPercentageData;
-      const nutrientPercentage = Number(
-        nutrientProduct?.nutrientPercentage ?? 0,
-      );
+      
       let totalNutrientValue = 0;
       switch (nutrientId) {
         case NUTRIENT_ID.NITROGEN:
