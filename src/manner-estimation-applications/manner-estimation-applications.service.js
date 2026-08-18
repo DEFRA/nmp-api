@@ -149,6 +149,7 @@ class MannerEstimationApplicationsService extends BaseService {
         CreatedOn,
         ModifiedByID,
         ModifiedOn,
+         EndOfDrain,Rainfall,
         ...applicationDataToUpdate
       } = mappedMannerEstimationApplication;
 

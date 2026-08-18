@@ -190,7 +190,7 @@ const mannerEstimationsFinancialHelpers = {
       this.buildMannerEstimationApplicationFinancialValues(
         applicationNutrientFinancialValues,
       );
-    const { ID: applicationId, ...applicationDataToUpdate } =
+    const { ID: applicationId,EndOfDrain,Rainfall, ...applicationDataToUpdate } =
       mappedMannerEstimationApplication;
     const updatedApplicationResult = await transactionalManager.update(
       MannerEstimationApplicationsEntity,
@@ -289,14 +289,17 @@ const mannerEstimationsFinancialHelpers = {
       [NUTRIENT_ID.NITROGEN]: {
         productId: mannerEstimation.NitrogenProductId,
         price: mannerEstimation.NitrogenPrice,
+        ProductPrice:mannerEstimation.NitrogenProductPrice,
       },
       [NUTRIENT_ID.PHOSPHATE]: {
         productId: mannerEstimation.PhosphateProductId,
         price: mannerEstimation.PhosphatePrice,
+        ProductPrice:mannerEstimation.PhosphateProductPrice,
       },
       [NUTRIENT_ID.POTASH]: {
         productId: mannerEstimation.PotashProductId,
         price: mannerEstimation.PotashPrice,
+        ProductPrice:mannerEstimation.PotashProductPrice,
       },
     };
     const nutrientFinancialValuesByNutrientId = {};
@@ -314,10 +317,6 @@ const mannerEstimationsFinancialHelpers = {
       const nutrientPercentage = Number(
         nutrientProduct?.nutrientPercentage ?? 0,
       );
-      const selectedPrice = Number(nutrientConfig.price);
-      const cal1 = nutrientPercentage / 100;
-      const cal2 = cal1 * 1000;
-      const nutrientPrice = Math.round(cal2 * selectedPrice);
       let totalNutrientValue = 0;
       switch (nutrientId) {
         case NUTRIENT_ID.NITROGEN:
@@ -334,12 +333,12 @@ const mannerEstimationsFinancialHelpers = {
         default:
           break;
       }
-      nutrientFinancialValuesByNutrientId[nutrientId] = {
-        nutrientValue: Math.round(totalNutrientValue * selectedPrice),
+     nutrientFinancialValuesByNutrientId[nutrientId] = {
+        nutrientValue: Math.round(totalNutrientValue * nutrientConfig.price),
         productId: nutrientConfig.productId,
         productName: nutrientProduct?.name,
-        productPrice: nutrientPrice,
-        price: selectedPrice,
+        productPrice: nutrientConfig.ProductPrice,
+        price: nutrientConfig.price,
       };
     }
     return nutrientFinancialValuesByNutrientId;
