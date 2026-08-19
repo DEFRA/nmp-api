@@ -372,20 +372,13 @@ class CalculateMannerOutputService {
 
     const sowingDate = new Date(crop.SowingDate);
 
-    const lateSownStartDate = new Date(
-      crop.Year,
-      SEPTEMBER_MONTH_INDEX,
-      LATE_SOWN_START_DAY,
-    );
+   const sowingMonth = sowingDate.getMonth();
+const sowingDay = sowingDate.getDate();
 
-    const lateSownEndDate = new Date(
-      crop.Year + 1,
-      JULY_MONTH_INDEX,
-      LATE_SOWN_END_DAY,
-    );
-
-    const isLateSown =
-      sowingDate > lateSownStartDate && sowingDate <= lateSownEndDate;
+const isLateSown =
+  sowingMonth > SEPTEMBER_MONTH_INDEX ||
+  (sowingMonth === SEPTEMBER_MONTH_INDEX &&
+    sowingDay > LATE_SOWN_START_DAY);
 
     if (isLateSown && cropTypeLinkingData.LateSownMannerCropTypeID) {
       return cropTypeLinkingData.LateSownMannerCropTypeID;
