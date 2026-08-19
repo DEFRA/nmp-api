@@ -341,9 +341,7 @@ class CalculateMannerOutputService {
 
   async getMannerCropTypeId(crop, transactionalManager) {
     const SEPTEMBER_MONTH_INDEX = 8;
-    const JULY_MONTH_INDEX = 6;
     const LATE_SOWN_START_DAY = 15;
-    const LATE_SOWN_END_DAY = 31;
     if (crop?.CropTypeID === null) {
       console.log("Invalid crop data: CropTypeID is required");
     }
