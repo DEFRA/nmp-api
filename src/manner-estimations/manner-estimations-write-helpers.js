@@ -168,11 +168,7 @@ const mannerEstimationsWriteHelpers = {
 
   buildMannerOutputReq(mannerFarm,mannerEstimation, manureApplications) {
     return {
-      runType:
-        mannerFarm.CountryID === CountryMapper.ENGLAND ||
-        mannerFarm.CountryID === CountryMapper.WELSH
-          ? RunTypeMapper.MANNERENGLAND
-          : RunTypeMapper.MANNERSCOTLAND,
+      runType:mannerFarm.CountryID === CountryMapper.SCOTLAND? RunTypeMapper.MANNERSCOTLAND: RunTypeMapper.MANNERENGLAND,
       postcode: mannerFarm.Postcode.split(" ")[0],
       countryID: mannerFarm.CountryID,
       field: {
