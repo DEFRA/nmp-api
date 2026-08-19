@@ -10,9 +10,7 @@ const NUTRIENT_ID = { NITROGEN: 1, PHOSPHATE: 2, POTASH: 3 };
 const AUGUST_MONTH = 7;
 const JULY_MONTH = 6;
 
-const {
-  MannerFarmsEntity,
-} = require("../db/entity/manner-farms.entity");
+const { MannerFarmsEntity } = require("../db/entity/manner-farms.entity");
 
 const mannerEstimationsFinancialHelpers = {
   async updateMannerEstimationWithApplications(payload, userId, request) {
@@ -27,16 +25,13 @@ const mannerEstimationsFinancialHelpers = {
           mannerEstimationId,
         );
 
-        const mannerFarm = await transactionalManager.findOne(
-        MannerFarmsEntity,
-        {
-          where: { ID: MannerEstimation.MannerFarmID },
-        },
-      );
-        const mannerEstimationDetail = {
-    ...MannerEstimation,
-    ...mannerFarm
-};
+      const mannerFarm = await transactionalManager.findOne(MannerFarmsEntity, {
+        where: { ID: MannerEstimation.MannerFarmID },
+      });
+      const mannerEstimationDetail = {
+        ...MannerEstimation,
+        ...mannerFarm,
+      };
       const mannerEstimationFinancialValues =
         await this.getMannerEstimationFinancialValuesForUpdate(
           mannerFarm,
@@ -60,7 +55,7 @@ const mannerEstimationsFinancialHelpers = {
         mannerEstimationId,
         mannerFarm,
         userId,
-        request
+        request,
       );
 
       return this.buildUpdatedMannerEstimationPayload(
@@ -190,8 +185,12 @@ const mannerEstimationsFinancialHelpers = {
       this.buildMannerEstimationApplicationFinancialValues(
         applicationNutrientFinancialValues,
       );
-    const { ID: applicationId,EndOfDrain,Rainfall, ...applicationDataToUpdate } =
-      mappedMannerEstimationApplication;
+    const {
+      ID: applicationId,
+      EndOfDrain,
+      Rainfall,
+      ...applicationDataToUpdate
+    } = mappedMannerEstimationApplication;
     const updatedApplicationResult = await transactionalManager.update(
       MannerEstimationApplicationsEntity,
       { ID: applicationId, MannerEstimationID: mannerEstimationId },
@@ -289,17 +288,17 @@ const mannerEstimationsFinancialHelpers = {
       [NUTRIENT_ID.NITROGEN]: {
         productId: mannerEstimation.NitrogenProductId,
         price: mannerEstimation.NitrogenPrice,
-        ProductPrice:mannerEstimation.NitrogenProductPrice,
+        ProductPrice: mannerEstimation.NitrogenProductPrice,
       },
       [NUTRIENT_ID.PHOSPHATE]: {
         productId: mannerEstimation.PhosphateProductId,
         price: mannerEstimation.PhosphatePrice,
-        ProductPrice:mannerEstimation.PhosphateProductPrice,
+        ProductPrice: mannerEstimation.PhosphateProductPrice,
       },
       [NUTRIENT_ID.POTASH]: {
         productId: mannerEstimation.PotashProductId,
         price: mannerEstimation.PotashPrice,
-        ProductPrice:mannerEstimation.PotashProductPrice,
+        ProductPrice: mannerEstimation.PotashProductPrice,
       },
     };
     const nutrientFinancialValuesByNutrientId = {};
@@ -314,7 +313,7 @@ const mannerEstimationsFinancialHelpers = {
       );
       const nutrientProduct =
         nutrientPercentageData?.data ?? nutrientPercentageData;
-      
+
       let totalNutrientValue = 0;
       switch (nutrientId) {
         case NUTRIENT_ID.NITROGEN:
@@ -331,10 +330,13 @@ const mannerEstimationsFinancialHelpers = {
         default:
           break;
       }
-     nutrientFinancialValuesByNutrientId[nutrientId] = {
+      nutrientFinancialValuesByNutrientId[nutrientId] = {
         nutrientValue: Math.round(totalNutrientValue * nutrientConfig.price),
         productId: nutrientConfig.productId,
         productName: nutrientProduct?.name,
+        nutrientPercentage:
+          nutrientProduct?.nutrientPercentage ??
+          nutrientProduct?.NutrientPercentage,
         productPrice: nutrientConfig.ProductPrice,
         price: nutrientConfig.price,
       };
@@ -377,6 +379,7 @@ const mannerEstimationsFinancialHelpers = {
         nutrientValue: Math.round(totalNutrientValue * nutrient.unitRate),
         productId: product.id,
         productName: product.name,
+        nutrientPercentage: nutrientPercentage,
         productPrice: nutrientPrice,
         price: nutrient.unitRate,
       };
@@ -394,24 +397,40 @@ const mannerEstimationsFinancialHelpers = {
       nutrientFinancialValuesByNutrientId[NUTRIENT_ID.POTASH];
     if (nitrogenValues) {
       mannerEstimationValues.NitrogenProductId = nitrogenValues.productId;
-      mannerEstimationValues.NitrogenProductName = nitrogenValues.productName;
+      mannerEstimationValues.NitrogenProductName =
+        this.buildNutrientProductNameWithPercentage(nitrogenValues, "N");
       mannerEstimationValues.NitrogenProductPrice = nitrogenValues.productPrice;
       mannerEstimationValues.NitrogenPrice = nitrogenValues.price;
     }
     if (phosphateValues) {
       mannerEstimationValues.PhosphateProductId = phosphateValues.productId;
-      mannerEstimationValues.PhosphateProductName = phosphateValues.productName;
+      mannerEstimationValues.PhosphateProductName =
+        this.buildNutrientProductNameWithPercentage(phosphateValues, "P2O5");
       mannerEstimationValues.PhosphateProductPrice =
         phosphateValues.productPrice;
       mannerEstimationValues.PhosphatePrice = phosphateValues.price;
     }
     if (potashValues) {
       mannerEstimationValues.PotashProductId = potashValues.productId;
-      mannerEstimationValues.PotashProductName = potashValues.productName;
+      mannerEstimationValues.PotashProductName =
+        this.buildNutrientProductNameWithPercentage(potashValues, "K2O");
       mannerEstimationValues.PotashProductPrice = potashValues.productPrice;
       mannerEstimationValues.PotashPrice = potashValues.price;
     }
     return mannerEstimationValues;
+  },
+
+  buildNutrientProductNameWithPercentage(nutrientValues, nutrientLabel) {
+    if (!nutrientValues?.productName) {
+      return nutrientValues?.productName;
+    }
+
+    const nutrientPercentage = nutrientValues.nutrientPercentage;
+    if (nutrientPercentage == null || nutrientPercentage === "") {
+      return nutrientValues.productName;
+    }
+
+    return `${nutrientValues.productName} ${nutrientPercentage}% ${nutrientLabel}`;
   },
 
   buildMannerEstimationApplicationFinancialValues(
