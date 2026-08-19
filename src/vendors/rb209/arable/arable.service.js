@@ -11,6 +11,7 @@ const {
 
 const cacheManager = new CacheManager();
 const CROP_TYPES_CACHE_KEY = "rb209-arable-crop-types-list";
+const CROP_GROUPS_CACHE_KEY = "rb209-arable-crop-groups-list";
 
 const cropTypesMetrics = {
   totalRequests: 0,
@@ -51,6 +52,59 @@ class RB209ArableService extends RB209BaseService {
       },
       fetcher: async () => this.getData(ARABLE.ALL_ARABLE_CROP_TYPES_ENDPOINT),
     });
+  }
+
+  async getCropGroupsList(options = {}) {
+    const { forceRefresh = false } = options;
+
+    return getCachedEndpointData({
+      cacheKey: CROP_GROUPS_CACHE_KEY,
+      forceRefresh,
+      isCachedValueValid: (cachedCropGroups) =>
+        Array.isArray(cachedCropGroups) && cachedCropGroups.length > 0,
+      shouldCache: (cropGroups) => Array.isArray(cropGroups),
+      fetcher: async () => this.getData("/Arable/CropGroups"),
+    });
+  }
+
+  async getCropGroupByCropGroupId(cropGroupId) {
+    const cropGroups = await this.getCropGroupsList();
+    const normalizedCropGroupId = Number(cropGroupId);
+
+    if (Array.isArray(cropGroups)) {
+      const cachedMatch = cropGroups.find(
+        ({ cropGroupId: listCropGroupId }) => {
+          if (Number.isFinite(normalizedCropGroupId)) {
+            return Number(listCropGroupId) === normalizedCropGroupId;
+          }
+
+          return String(listCropGroupId) === String(cropGroupId);
+        },
+      );
+
+      if (cachedMatch) {
+        return cachedMatch;
+      }
+    }
+
+    return this.getData(`/Arable/CropGroup/${cropGroupId}`);
+  }
+
+  async getCropTypesByCropGroupId(cropGroupId) {
+    const cropTypes = await this.getCropTypesList();
+    const normalizedCropGroupId = Number(cropGroupId);
+
+    if (Array.isArray(cropTypes)) {
+      return cropTypes.filter(({ cropGroupId: listCropGroupId }) => {
+        if (Number.isFinite(normalizedCropGroupId)) {
+          return Number(listCropGroupId) === normalizedCropGroupId;
+        }
+
+        return String(listCropGroupId) === String(cropGroupId);
+      });
+    }
+
+    return this.getData(`/Arable/CropTypes/${cropGroupId}`);
   }
 
   async getCropTypeNameById(cropTypeId) {

@@ -14,14 +14,30 @@ const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const { FarmEntity } = require("../db/entity/farm.entity");
 const { HandleSoilAnalysisService } = require("../shared/handle-soil-analysis");
-const { CalculatePKBalanceOther } = require("../shared/calculate-pk-balance-other");
-const { WarningMessagesEntity } = require("../db/entity/warning-message.entity");
-const { CreateOrUpdateWarningMessage } = require("../shared/create-update-warning-messages.service");
-const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
-const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
-const { CurrentAndFuture } = require("../shared/generate-current-and-future-recommendations-service");
-const { fertiliserManuresQueryMethods } = require("./fertiliser-manures-query.service");
-const { fertiliserManuresMutationMethods } = require("./fertiliser-manures-mutation.service");
+const {
+  CalculatePKBalanceOther,
+} = require("../shared/calculate-pk-balance-other");
+const {
+  WarningMessagesEntity,
+} = require("../db/entity/warning-message.entity");
+const {
+  CreateOrUpdateWarningMessage,
+} = require("../shared/create-update-warning-messages.service");
+const {
+  ProcessFutureManuresForWarnings,
+} = require("../shared/process-future-warning-calculations-service");
+const {
+  UpdatingFutureRecommendations,
+} = require("../shared/updating-future-recommendations-service");
+const {
+  CurrentAndFuture,
+} = require("../shared/generate-current-and-future-recommendations-service");
+const {
+  fertiliserManuresQueryMethods,
+} = require("./fertiliser-manures-query.service");
+const {
+  fertiliserManuresMutationMethods,
+} = require("./fertiliser-manures-mutation.service");
 
 class FertiliserManuresService extends BaseService {
   constructor() {
@@ -53,7 +69,10 @@ class FertiliserManuresService extends BaseService {
   }
 
   async getFertiliserManureNitrogenSum(...args) {
-    return fertiliserManuresQueryMethods.getFertiliserManureNitrogenSum.call(this, ...args);
+    return fertiliserManuresQueryMethods.getFertiliserManureNitrogenSum.call(
+      this,
+      ...args,
+    );
   }
 
   async getTotalNitrogen(...args) {
@@ -61,7 +80,10 @@ class FertiliserManuresService extends BaseService {
   }
 
   async getTotalNitrogenByCropID(...args) {
-    return fertiliserManuresQueryMethods.getTotalNitrogenByCropID.call(this, ...args);
+    return fertiliserManuresQueryMethods.getTotalNitrogenByCropID.call(
+      this,
+      ...args,
+    );
   }
 
   async getTotalP205AndK20(...args) {
@@ -69,31 +91,52 @@ class FertiliserManuresService extends BaseService {
   }
 
   async getTotalFertiliserP205AndK20FromRecommandation(...args) {
-    return fertiliserManuresQueryMethods.getTotalFertiliserP205AndK20FromRecommandation.call(this, ...args);
+    return fertiliserManuresQueryMethods.getTotalFertiliserP205AndK20FromRecommandation.call(
+      this,
+      ...args,
+    );
   }
 
   async getFertiliserByFarmIdAndYear(...args) {
-    return fertiliserManuresQueryMethods.getFertiliserByFarmIdAndYear.call(this, ...args);
+    return fertiliserManuresQueryMethods.getFertiliserByFarmIdAndYear.call(
+      this,
+      ...args,
+    );
   }
 
   async getTotalNitrogenByManagementPeriodID(...args) {
-    return fertiliserManuresQueryMethods.getTotalNitrogenByManagementPeriodID.call(this, ...args);
+    return fertiliserManuresQueryMethods.getTotalNitrogenByManagementPeriodID.call(
+      this,
+      ...args,
+    );
   }
 
   async getTotalNitrogenByManagementPeriodIDAndIsAutumn(...args) {
-    return fertiliserManuresQueryMethods.getTotalNitrogenByManagementPeriodIDAndIsAutumn.call(this, ...args);
+    return fertiliserManuresQueryMethods.getTotalNitrogenByManagementPeriodIDAndIsAutumn.call(
+      this,
+      ...args,
+    );
   }
 
   async getClosedPeriodByID(...args) {
-    return fertiliserManuresQueryMethods.getClosedPeriodByID.call(this, ...args);
+    return fertiliserManuresQueryMethods.getClosedPeriodByID.call(
+      this,
+      ...args,
+    );
   }
 
   async setOtherCropPKBalance(...args) {
-    return fertiliserManuresMutationMethods.setOtherCropPKBalance.call(this, ...args);
+    return fertiliserManuresMutationMethods.setOtherCropPKBalance.call(
+      this,
+      ...args,
+    );
   }
 
   async preparePKBalanceUpdateData(...args) {
-    return fertiliserManuresMutationMethods.preparePKBalanceUpdateData.call(this, ...args);
+    return fertiliserManuresMutationMethods.preparePKBalanceUpdateData.call(
+      this,
+      ...args,
+    );
   }
 
   async findAsArray(...args) {
@@ -101,35 +144,80 @@ class FertiliserManuresService extends BaseService {
   }
 
   async buildPKBalanceData(...args) {
-    return fertiliserManuresMutationMethods.buildPKBalanceData.call(this, ...args);
+    return fertiliserManuresMutationMethods.buildPKBalanceData.call(
+      this,
+      ...args,
+    );
   }
 
   async saveWarningMessages(...args) {
-    return fertiliserManuresMutationMethods.saveWarningMessages.call(this, ...args);
+    return fertiliserManuresMutationMethods.saveWarningMessages.call(
+      this,
+      ...args,
+    );
   }
 
   checkNextYearPlanAndFertiliserExist(...args) {
-    return fertiliserManuresMutationMethods.checkNextYearPlanAndFertiliserExist.call(this, ...args);
+    return fertiliserManuresMutationMethods.checkNextYearPlanAndFertiliserExist.call(
+      this,
+      ...args,
+    );
   }
 
   async updatePKBalanceAndRegenerateRecommendations(...args) {
-    return fertiliserManuresMutationMethods.updatePKBalanceAndRegenerateRecommendations.call(this, ...args);
+    return fertiliserManuresMutationMethods.updatePKBalanceAndRegenerateRecommendations.call(
+      this,
+      ...args,
+    );
   }
 
   async handlePKBalanceAndFutureRecommendations(...args) {
-    return fertiliserManuresMutationMethods.handlePKBalanceAndFutureRecommendations.call(this, ...args);
+    return fertiliserManuresMutationMethods.handlePKBalanceAndFutureRecommendations.call(
+      this,
+      ...args,
+    );
+  }
+
+  async queueFutureWarningsForSavedFertiliser(...args) {
+    return fertiliserManuresMutationMethods.queueFutureWarningsForSavedFertiliser.call(
+      this,
+      ...args,
+    );
+  }
+
+  async saveFertilisersAndQueueWarnings(...args) {
+    return fertiliserManuresMutationMethods.saveFertilisersAndQueueWarnings.call(
+      this,
+      ...args,
+    );
+  }
+
+  async processFertiliserForPKAndRecommendations(...args) {
+    return fertiliserManuresMutationMethods.processFertiliserForPKAndRecommendations.call(
+      this,
+      ...args,
+    );
   }
 
   async createFertiliserManures(...args) {
-    return fertiliserManuresMutationMethods.createFertiliserManures.call(this, ...args);
+    return fertiliserManuresMutationMethods.createFertiliserManures.call(
+      this,
+      ...args,
+    );
   }
 
   async updateFertiliser(...args) {
-    return fertiliserManuresMutationMethods.updateFertiliser.call(this, ...args);
+    return fertiliserManuresMutationMethods.updateFertiliser.call(
+      this,
+      ...args,
+    );
   }
 
   async deleteFertiliserManure(...args) {
-    return fertiliserManuresMutationMethods.deleteFertiliserManure.call(this, ...args);
+    return fertiliserManuresMutationMethods.deleteFertiliserManure.call(
+      this,
+      ...args,
+    );
   }
 }
 

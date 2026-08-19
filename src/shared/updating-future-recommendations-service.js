@@ -11,78 +11,23 @@ const {
   runWithDeadlockRetry,
   isDeadlockError,
 } = require("../db/transactionRetry");
-const { BackgroundJobQueue } = require("./background-job-queue");
-
-const parsedQueueConcurrency = Number.parseInt(
-  process.env.FUTURE_RECOMMENDATION_MAX_CONCURRENCY,
-  10,
-);
-const MAX_CONCURRENT_JOBS = Number.isFinite(parsedQueueConcurrency)
-  ? Math.max(1, parsedQueueConcurrency)
-  : 1;
-
-const parsedDeadlockRetries = Number.parseInt(
-  process.env.FUTURE_RECOMMENDATION_DEADLOCK_RETRIES,
-  10,
-);
-const FUTURE_RECOMMENDATION_DEADLOCK_RETRIES = Number.isFinite(
-  parsedDeadlockRetries,
-)
-  ? Math.max(0, parsedDeadlockRetries)
-  : 4;
-
-const parsedDeadlockDelayMs = Number.parseInt(
-  process.env.FUTURE_RECOMMENDATION_DEADLOCK_DELAY_MS,
-  10,
-);
-const minFutureRecommendationDeadlockDelayMs = 50;
-const defaultFutureRecommendationDeadlockDelayMs = 150;
-const FUTURE_RECOMMENDATION_DEADLOCK_DELAY_MS = Number.isFinite(
-  parsedDeadlockDelayMs,
-)
-  ? Math.max(minFutureRecommendationDeadlockDelayMs, parsedDeadlockDelayMs)
-  : defaultFutureRecommendationDeadlockDelayMs;
-
-const parsedDeadlockJitterMs = Number.parseInt(
-  process.env.FUTURE_RECOMMENDATION_DEADLOCK_JITTER_MS,
-  10,
-);
-const FUTURE_RECOMMENDATION_DEADLOCK_JITTER_MS = Number.isFinite(
-  parsedDeadlockJitterMs,
-)
-  ? Math.max(0, parsedDeadlockJitterMs)
-  : 100;
-
-const parsedRequeueRetries = Number.parseInt(
-  process.env.FUTURE_RECOMMENDATION_REQUEUE_RETRIES,
-  10,
-);
-const FUTURE_RECOMMENDATION_REQUEUE_RETRIES = Number.isFinite(
-  parsedRequeueRetries,
-)
-  ? Math.max(0, parsedRequeueRetries)
-  : 2;
-
-const parsedRequeueDelayMs = Number.parseInt(
-  process.env.FUTURE_RECOMMENDATION_REQUEUE_DELAY_MS,
-  10,
-);
-const FUTURE_RECOMMENDATION_REQUEUE_DELAY_MS = Number.isFinite(
-  parsedRequeueDelayMs,
-)
-  ? Math.max(100, parsedRequeueDelayMs)
-  : 1000;
-
-const createBackgroundRequestContext = (request) => ({
-  headers: {
-    authorization: request?.headers?.authorization,
-  },
-});
+const {
+  createFutureRecommendationInprogressLock,
+} = require("./future-recommendation-inprogress-lock");
+const {
+  createBackgroundRequestContext,
+  createQueue,
+  runWithFutureDeadlockRetry,
+  handleDeadlockRequeue,
+  handleInProgressContention,
+} = require("./future-recommendation-background-optimization");
 
 class UpdatingFutureRecommendations {
   static sharedQueue;
 
   static generateRecommendations;
+
+  static inprogressLockManager;
 
   constructor() {
     if (!UpdatingFutureRecommendations.sharedQueue) {
@@ -92,39 +37,9 @@ class UpdatingFutureRecommendations {
   }
 
   static createSharedQueue() {
-    console.log(
-      "Future recommendation queue config:",
-      JSON.stringify({
-        concurrency: MAX_CONCURRENT_JOBS,
-        deadlockRetries: FUTURE_RECOMMENDATION_DEADLOCK_RETRIES,
-        deadlockDelayMs: FUTURE_RECOMMENDATION_DEADLOCK_DELAY_MS,
-        deadlockJitterMs: FUTURE_RECOMMENDATION_DEADLOCK_JITTER_MS,
-        requeueRetries: FUTURE_RECOMMENDATION_REQUEUE_RETRIES,
-        requeueDelayMs: FUTURE_RECOMMENDATION_REQUEUE_DELAY_MS,
-      }),
+    return createQueue((job) =>
+      UpdatingFutureRecommendations.processQueuedRecommendationUpdate(job),
     );
-
-    return new BackgroundJobQueue({
-      concurrency: MAX_CONCURRENT_JOBS,
-      getJobKey: (job) => `${job.fieldID}:${job.year}`,
-      runJob: (job) =>UpdatingFutureRecommendations.processQueuedRecommendationUpdate(job),
-      onDuplicate: (job) => {
-        console.log(
-          `Job already queued or running for FieldID: ${job.fieldID}, Year: ${job.year}`,
-        );
-      },
-      onSuccess: (job) => {
-        console.log(
-          `Successfully processed FieldID: ${job.fieldID}, Year: ${job.year}`,
-        );
-      },
-      onError: (job, error) => {
-        console.error(
-          `Error processing FieldID: ${job.fieldID}, Year: ${job.year}:`,
-          error,
-        );
-      },
-    });
   }
 
   static getGenerateRecommendationsService() {
@@ -134,6 +49,20 @@ class UpdatingFutureRecommendations {
     }
 
     return UpdatingFutureRecommendations.generateRecommendations;
+  }
+
+  static getInprogressLockManager() {
+    if (!UpdatingFutureRecommendations.inprogressLockManager) {
+      UpdatingFutureRecommendations.inprogressLockManager =
+        createFutureRecommendationInprogressLock({
+          AppDataSource,
+          InprogressCalculationsEntity,
+          runWithDeadlockRetry,
+          runWithFutureDeadlockRetry,
+        });
+    }
+
+    return UpdatingFutureRecommendations.inprogressLockManager;
   }
 
   async getYearsGreaterThanGivenYear(fieldID, year) {
@@ -187,77 +116,36 @@ class UpdatingFutureRecommendations {
       request: createBackgroundRequestContext(request),
       userId,
       requeueAttempt: 0,
+      lockWaitAttempt: 0,
+      staleLockRecoveryAttempt: 0,
     }));
 
     UpdatingFutureRecommendations.sharedQueue.enqueueMany(jobs);
   }
 
-  static async markInProgress(fieldID, year, transactionalManager) {
-    const duplicateKeyErrorNumber = 2627, uniqueConstraintErrorNumber = 2601;
-    try {
-      await transactionalManager.insert(InprogressCalculationsEntity, {
-        FieldID: fieldID,
-        Year: year,
-      });
-      return true;
-    } catch (error) {
-      // SQL Server duplicate key violation means another worker already owns this job.
-      const driverNumber = error?.driverError?.number ?? error?.number;
-      if (driverNumber === duplicateKeyErrorNumber || driverNumber === uniqueConstraintErrorNumber) {
-        return false;
-      }
-
-      throw error;
-    }
-  }
-
-  static async clearInProgress(fieldID, year) {
-    return runWithDeadlockRetry(
-      () =>
-        AppDataSource.manager.delete(InprogressCalculationsEntity, {
-          FieldID: fieldID,
-          Year: year,
-        }),
-      {
-        retries: FUTURE_RECOMMENDATION_DEADLOCK_RETRIES,
-        delayMs: FUTURE_RECOMMENDATION_DEADLOCK_DELAY_MS,
-        backoffMultiplier: 2,
-        jitterMs: FUTURE_RECOMMENDATION_DEADLOCK_JITTER_MS,
-        operationName: "future-recommendation-clear-in-progress",
-      },
-    );
-  }
-
-  static async acquireInProgressSlot(fieldID, year) {
-    return runWithDeadlockRetry(
-      () =>
-        UpdatingFutureRecommendations.markInProgress(
-          fieldID,
-          year,
-          AppDataSource.manager,
-        ),
-      {
-        retries: FUTURE_RECOMMENDATION_DEADLOCK_RETRIES,
-        delayMs: FUTURE_RECOMMENDATION_DEADLOCK_DELAY_MS,
-        backoffMultiplier: 2,
-        jitterMs: FUTURE_RECOMMENDATION_DEADLOCK_JITTER_MS,
-        operationName: "future-recommendation-acquire-in-progress",
-      },
-    );
-  }
-
   static async processQueuedRecommendationUpdate(job) {
     const { fieldID, year, request, userId } = job;
     let lockAcquired = false;
+    const lockManager =
+      UpdatingFutureRecommendations.getInprogressLockManager();
     try {
-      lockAcquired = await UpdatingFutureRecommendations.acquireInProgressSlot(fieldID, year);
+      lockAcquired = await lockManager.acquireInProgressSlot(fieldID, year);
       if (!lockAcquired) {
-        console.log(`Skipping processing for FieldID: ${fieldID}, Year: ${year} because it is already in progress.`);
+        await handleInProgressContention({
+          job,
+          fieldID,
+          year,
+          sharedQueue: UpdatingFutureRecommendations.sharedQueue,
+          clearInProgress: lockManager.clearInProgress,
+        });
         return;
       }
       console.log(`Saved entry for FieldID: ${fieldID}, Year: ${year}`);
       const newOrganicManure = null;
-      await runWithDeadlockRetry(() =>
+      await runWithFutureDeadlockRetry(
+        runWithDeadlockRetry,
+        "future-recommendation-generate",
+        () =>
           UpdatingFutureRecommendations.getGenerateRecommendationsService().generateRecommendations(
             fieldID,
             year,
@@ -266,46 +154,18 @@ class UpdatingFutureRecommendations {
             request,
             userId,
           ),
-        {
-          retries: FUTURE_RECOMMENDATION_DEADLOCK_RETRIES,
-          delayMs: FUTURE_RECOMMENDATION_DEADLOCK_DELAY_MS,
-          backoffMultiplier: 2,
-          jitterMs: FUTURE_RECOMMENDATION_DEADLOCK_JITTER_MS,
-          operationName: "future-recommendation-generate",
-        },
       );
     } catch (error) {
-      const requeueAttempt = Number.isFinite(job?.requeueAttempt)
-        ? job.requeueAttempt
-        : 0;
-
       if (
-        isDeadlockError(error) &&
-        requeueAttempt < FUTURE_RECOMMENDATION_REQUEUE_RETRIES
-      ) {
-        const nextAttempt = requeueAttempt + 1;
-        const retryDelay =
-          FUTURE_RECOMMENDATION_REQUEUE_DELAY_MS * Math.pow(2, requeueAttempt);
-
-        console.warn(
-          `Deadlock persisted for FieldID: ${fieldID}, Year: ${year}. Requeueing attempt ${nextAttempt}/${FUTURE_RECOMMENDATION_REQUEUE_RETRIES} in ${retryDelay}ms.`,
-        );
-
-        setTimeout(() => {
-          UpdatingFutureRecommendations.sharedQueue.enqueue({
-            ...job,
-            requeueAttempt: nextAttempt,
-          });
-        }, retryDelay);
-
-        return;
-      }
-
-      if (isDeadlockError(error)) {
-        console.error(
-          `Deadlock persisted for FieldID: ${fieldID}, Year: ${year} after ${requeueAttempt} requeue attempts. Skipping this background cycle to keep service healthy.`,
+        handleDeadlockRequeue({
           error,
-        );
+          isDeadlockError,
+          job,
+          fieldID,
+          year,
+          sharedQueue: UpdatingFutureRecommendations.sharedQueue,
+        })
+      ) {
         return;
       }
 
@@ -313,7 +173,7 @@ class UpdatingFutureRecommendations {
     } finally {
       if (lockAcquired) {
         try {
-          await UpdatingFutureRecommendations.clearInProgress(fieldID, year);
+          await lockManager.clearInProgress(fieldID, year);
           console.log(`Deleted entry for FieldID: ${fieldID}, Year: ${year}`);
         } catch (cleanupError) {
           console.error(
