@@ -18,6 +18,7 @@ const {
 } = require("./calculate-next-year-available-n");
 const { RunTypeMapper } = require("../constants/run-type-mapper");
 const { CountryEntity } = require("../db/entity/country.entity");
+const { CountryMapper } = require("../constants/country-mapper");
 
 class CalculateMannerOutputService {
   constructor() {
@@ -322,9 +323,7 @@ class CalculateMannerOutputService {
       },
     });
     return {
-      runType: farmData.EnglishRules
-        ? RunTypeMapper.MANNERENGLAND
-        : RunTypeMapper.MANNERSCOTLAND,
+      runType:farmData.CountryID === CountryMapper.SCOTLAND ? RunTypeMapper.MANNERSCOTLAND : RunTypeMapper.MANNERENGLAND,
       postcode: farmData.ClimateDataPostCode.split(" ")[0],
       countryID: rb209CountryData.RB209CountryID,
       field: {
