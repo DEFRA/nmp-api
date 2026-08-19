@@ -323,8 +323,8 @@ class CalculateMannerOutputService {
     });
     return {
       runType: farmData.EnglishRules
-        ? RunTypeMapper.PLANETENGLAND
-        : RunTypeMapper.PLANETSCOTLAND,
+        ? RunTypeMapper.MANNERENGLAND
+        : RunTypeMapper.MANNERSCOTLAND,
       postcode: farmData.ClimateDataPostCode.split(" ")[0],
       countryID: rb209CountryData.RB209CountryID,
       field: {
@@ -341,9 +341,7 @@ class CalculateMannerOutputService {
 
   async getMannerCropTypeId(crop, transactionalManager) {
     const SEPTEMBER_MONTH_INDEX = 8;
-    const JULY_MONTH_INDEX = 6;
     const LATE_SOWN_START_DAY = 15;
-    const LATE_SOWN_END_DAY = 31;
     if (crop?.CropTypeID === null) {
       console.log("Invalid crop data: CropTypeID is required");
     }
@@ -372,20 +370,13 @@ class CalculateMannerOutputService {
 
     const sowingDate = new Date(crop.SowingDate);
 
-    const lateSownStartDate = new Date(
-      crop.Year,
-      SEPTEMBER_MONTH_INDEX,
-      LATE_SOWN_START_DAY,
-    );
+   const sowingMonth = sowingDate.getMonth();
+const sowingDay = sowingDate.getDate();
 
-    const lateSownEndDate = new Date(
-      crop.Year + 1,
-      JULY_MONTH_INDEX,
-      LATE_SOWN_END_DAY,
-    );
-
-    const isLateSown =
-      sowingDate > lateSownStartDate && sowingDate <= lateSownEndDate;
+const isLateSown =
+  sowingMonth > SEPTEMBER_MONTH_INDEX ||
+  (sowingMonth === SEPTEMBER_MONTH_INDEX &&
+    sowingDay > LATE_SOWN_START_DAY);
 
     if (isLateSown && cropTypeLinkingData.LateSownMannerCropTypeID) {
       return cropTypeLinkingData.LateSownMannerCropTypeID;
