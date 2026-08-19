@@ -12,7 +12,11 @@ const {
 const { In } = require("typeorm");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
 const { ARABLE } = require("../constants/rb209-endpoints-mapper");
-const { FieldEntity, FarmEntity, CountryEntity } = require("../organic-manure/organic-manure-dependencies");
+const {
+  FieldEntity,
+  FarmEntity,
+  CountryEntity,
+} = require("../organic-manure/organic-manure-dependencies");
 
 async function findCropDetailsFromRepo(service, CropID) {
   try {
@@ -176,10 +180,8 @@ async function buildOrganicMaterials(service, cropDetails, request) {
       const organicManureData = managementPeriodIds
         ? await findOrganicManureData(service, managementPeriodIds)
         : [];
-      const allManureData = await service.MannerManureTypesService.getData(
-        "/manure-types",
-        request,
-      );
+      const allManureData =
+        await service.MannerManureTypesService.getAllManureTypesList(request);
 
       return Promise.all(
         organicManureData.map((organicManure) =>

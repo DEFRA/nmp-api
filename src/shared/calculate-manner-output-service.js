@@ -472,10 +472,8 @@ class CalculateMannerOutputService {
       },
     });
 
-    const allManureData = await this.MannerManureTypesService.getData(
-      "/manure-types",
-      request,
-    );
+    const allManureData =
+      await this.MannerManureTypesService.getAllManureTypesList(request);
 
     const cropsToProcess = [
       cropData,
