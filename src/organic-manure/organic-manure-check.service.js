@@ -92,9 +92,7 @@ const organicManureCheckMethods = {
         "Failed to check manure existence due to an internal error",
       );
     }
-  }
-
-,
+  },
 
   async checkLivestockManureExists(
     cropId,
@@ -104,37 +102,44 @@ const organicManureCheckMethods = {
     request,
   ) {
     try {
-      const allManureTypes = await this.MannerManureTypesService.getData("/manure-types", request,);
+      const allManureTypes =
+        await this.MannerManureTypesService.getAllManureTypesList(request);
       if (!allManureTypes?.data || allManureTypes.data.length === 0) {
         console.error("No manure types returned from the Manner API");
       }
-      const livestockManureTypes = allManureTypes.data.filter((manure) => manure.manureGroupID === 1);
+      const livestockManureTypes = allManureTypes.data.filter(
+        (manure) => manure.manureGroupID === 1,
+      );
       const manureTypeIds = livestockManureTypes.map((manure) => manure.id);
       if (!manureTypeIds || manureTypeIds.length === 0) {
         return false; // No valid manure types found
       }
 
       const query = this.repository
-  .createQueryBuilder("organicManure")
-  .where("organicManure.ManureTypeID IN (:...manureTypeIds)", {
-    manureTypeIds,
-  })
-  .innerJoin("ManagementPeriods", "M", "M.ID = organicManure.ManagementPeriodID")
-  .andWhere("M.CropID = :cropId", { cropId })
-  .andWhere(
-    "organicManure.ApplicationDate BETWEEN :dateFrom AND :dateTo",
-    {
-      dateFrom: new Date(dateFrom),
-      dateTo: new Date(dateTo),
-    }
-  );
+        .createQueryBuilder("organicManure")
+        .where("organicManure.ManureTypeID IN (:...manureTypeIds)", {
+          manureTypeIds,
+        })
+        .innerJoin(
+          "ManagementPeriods",
+          "M",
+          "M.ID = organicManure.ManagementPeriodID",
+        )
+        .andWhere("M.CropID = :cropId", { cropId })
+        .andWhere(
+          "organicManure.ApplicationDate BETWEEN :dateFrom AND :dateTo",
+          {
+            dateFrom: new Date(dateFrom),
+            dateTo: new Date(dateTo),
+          },
+        );
 
-if (organicManureID != null) {
-  query.andWhere("organicManure.ID != :organicManureID", {
-    organicManureID,
-  });
-}
-const manureTypeExists = await query.getCount();
+      if (organicManureID != null) {
+        query.andWhere("organicManure.ID != :organicManureID", {
+          organicManureID,
+        });
+      }
+      const manureTypeExists = await query.getCount();
       return manureTypeExists > 0;
     } catch (error) {
       console.error("Error checking for manure existence:", error.message);
@@ -142,9 +147,7 @@ const manureTypeExists = await query.getCount();
         "Failed to check manure existence due to an internal error",
       );
     }
-  }
-
-,
+  },
 
   async getP205AndK20fromfertiliser(managementPeriodId) {
     let sumOfP205 = 0;
@@ -166,8 +169,7 @@ const manureTypeExists = await query.getCount();
       }
     }
     return { p205: sumOfP205, k20: sumOfK20 };
-  }
-
+  },
 };
 
 module.exports = { organicManureCheckMethods };
