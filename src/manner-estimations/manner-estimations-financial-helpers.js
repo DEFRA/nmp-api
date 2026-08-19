@@ -430,7 +430,12 @@ const mannerEstimationsFinancialHelpers = {
       return nutrientValues.productName;
     }
 
-    return `${nutrientValues.productName} ${nutrientPercentage}% ${nutrientLabel}`;
+    const normalizedPercentage = Number(nutrientPercentage);
+    const formattedPercentage = Number.isNaN(normalizedPercentage)
+      ? nutrientPercentage
+      : normalizedPercentage;
+
+    return `${nutrientValues.productName} (${formattedPercentage}% ${nutrientLabel})`;
   },
 
   buildMannerEstimationApplicationFinancialValues(
