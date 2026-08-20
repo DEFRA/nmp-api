@@ -196,7 +196,7 @@ class GenerateRecommendations {
       };
       return this.handleOtherCropRecommendation(
         otherCropContext,
-        sharedContext,L
+        sharedContext,
       );
     }
 
