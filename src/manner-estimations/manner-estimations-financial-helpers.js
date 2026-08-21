@@ -331,10 +331,10 @@ const hasGrassCropType =
         case NUTRIENT_ID.NITROGEN:
           totalNutrientValue =
             mannerEstimationApplication.CropAvailableNCurrentCrop;
-             if (hasGrassCropType) {
-               totalNutrientValue += mannerEstimationApplication.NextGrassNitrogenCropCurrentYear ||
-                 0;
-             }
+            totalNutrientValue += hasGrassCropType
+  ? mannerEstimationApplication.NextGrassNitrogenCropCurrentYear || 0
+  : 0;
+
           break;
         case NUTRIENT_ID.PHOSPHATE:
           totalNutrientValue = mannerEstimationApplication.TotalP2O5;
@@ -391,10 +391,10 @@ const hasGrassCropType =
         case NUTRIENT_ID.NITROGEN:
           totalNutrientValue =
             mannerEstimationApplication.CropAvailableNCurrentCrop;
-             if (hasGrassCropType) {
-               totalNutrientValue += mannerEstimationApplication.NextGrassNitrogenCropCurrentYear ||
-                 0;
-             }
+            totalNutrientValue += hasGrassCropType
+  ? mannerEstimationApplication.NextGrassNitrogenCropCurrentYear || 0
+  : 0;
+
           break;
         case NUTRIENT_ID.PHOSPHATE:
           totalNutrientValue = mannerEstimationApplication.TotalP2O5;
