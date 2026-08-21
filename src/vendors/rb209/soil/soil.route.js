@@ -143,7 +143,7 @@ module.exports = [
         params: Joi.object({
           countryId: Joi.number().integer().required(),
           nutrientId: Joi.number().integer().required(),
-          nutrientValue: Joi.number().integer().required(),
+          nutrientValue: Joi.number().required(),
           methodologyId: Joi.number().integer().required(),
         }),
         failAction: validationFailAction,
