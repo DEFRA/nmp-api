@@ -160,8 +160,7 @@ const recommendationRequestHelpers = {
     return crops;
   },
 
-  async determineFieldType(crop, transactionalManager) {
-    const crops = await this.resolveCrops(crop, transactionalManager);
+  async determineFieldType(crops) {
     if (crops.length === 1) {
       const cropTypeID = crops[0].CropTypeID;
       if (cropTypeID === CropTypeMapper.GRASS) {
@@ -380,13 +379,11 @@ const recommendationRequestHelpers = {
     const cropType = cropTypesList.find(
       (cropTp) => cropTp.cropTypeId === crop.CropTypeID,
     );
-
     if (!cropType || cropType.cropGroupId === null) {
       console.log(
         `Invalid CropTypeId for crop having field name ${field.Name}`,
       );
     }
-
     const previousCrop =
       await this.CalculatePreviousCropService.findPreviousCrop(
         field.ID,
@@ -420,7 +417,9 @@ const recommendationRequestHelpers = {
       grassGrowthClass,
       transactionalManager,
     );
-    const fieldType = await this.determineFieldType(crop, transactionalManager);
+    const fieldType = await this.determineFieldType(
+      dataMultipleCrops
+    );
 
     return {
       previousCrop,

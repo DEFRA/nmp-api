@@ -323,7 +323,10 @@ class CalculateMannerOutputService {
       },
     });
     return {
-      runType:farmData.CountryID === CountryMapper.SCOTLAND ? RunTypeMapper.MANNERSCOTLAND : RunTypeMapper.MANNERENGLAND,
+      runType:
+        farmData.CountryID === CountryMapper.SCOTLAND
+          ? RunTypeMapper.MANNERSCOTLAND
+          : RunTypeMapper.MANNERENGLAND,
       postcode: farmData.ClimateDataPostCode.split(" ")[0],
       countryID: rb209CountryData.RB209CountryID,
       field: {
@@ -369,13 +372,13 @@ class CalculateMannerOutputService {
 
     const sowingDate = new Date(crop.SowingDate);
 
-   const sowingMonth = sowingDate.getMonth();
-const sowingDay = sowingDate.getDate();
+    const sowingMonth = sowingDate.getMonth();
+    const sowingDay = sowingDate.getDate();
 
-const isLateSown =
-  sowingMonth > SEPTEMBER_MONTH_INDEX ||
-  (sowingMonth === SEPTEMBER_MONTH_INDEX &&
-    sowingDay > LATE_SOWN_START_DAY);
+    const isLateSown =
+      sowingMonth > SEPTEMBER_MONTH_INDEX ||
+      (sowingMonth === SEPTEMBER_MONTH_INDEX &&
+        sowingDay > LATE_SOWN_START_DAY);
 
     if (isLateSown && cropTypeLinkingData.LateSownMannerCropTypeID) {
       return cropTypeLinkingData.LateSownMannerCropTypeID;
@@ -452,15 +455,18 @@ const isLateSown =
     fieldData,
     transactionalManager,
     request,
+    crops = []
   ) {
     const allMannerOutputs = [];
-
-    const allCrops = await transactionalManager.find(CropEntity, {
-      where: {
-        FieldID: cropData.FieldID,
-        Year: cropData.Year,
-      },
-    });
+     const allCrops =
+       crops.length > 0
+         ? crops
+         : await transactionalManager.find(CropEntity, {
+             where: {
+               FieldID: cropData.FieldID,
+               Year: cropData.Year,
+             },
+           });
 
     const allManureData =
       await this.MannerManureTypesService.getAllManureTypesList(request);
