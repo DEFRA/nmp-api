@@ -1,5 +1,5 @@
 const Joi = require("joi");
-const minimumMinuesTwo = -2, maximumNine = 9,defaultMethodologyId = 4;
+const minimumMinuesTwo = -2, maximumNine = 9,defaultMethodologyId = 4,  precisionOne = 1;
 const SoilAnalysisDto = Joi.object({
   FieldID: Joi.number().integer().required().allow(null),
   Year: Joi.number().integer().required().allow(null),
@@ -7,7 +7,7 @@ const SoilAnalysisDto = Joi.object({
   Date: Joi.date().iso().required().allow(null),
   PH: Joi.number().required().allow(null),
   PhosphorusMethodologyID: Joi.number().integer().required().allow(null),
-  Phosphorus: Joi.number().required().allow(null),
+  Phosphorus: Joi.number().precision(precisionOne).required().allow(null),
   PhosphorusIndex: Joi.number().integer().required().allow(null),
   Potassium: Joi.number().required().allow(null),
   PotassiumIndex: Joi.number()

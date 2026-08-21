@@ -214,10 +214,12 @@ const mannerEstimationsWriteHelpers = {
         );
 
       const nutrientFinancialValues =
-        this.calculateNutrientFinancialValuesByNutrientId(
+        await this.calculateNutrientFinancialValuesByNutrientId(
           nutrientProducts,
           nutrients,
           mappedMannerEstimationApplication,
+          request,
+          MannerEstimation
         );
       const mannerEstimationFinancialValues =
         this.buildMannerEstimationFinancialValues(nutrientFinancialValues);

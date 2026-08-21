@@ -18,6 +18,7 @@ const MannerIncorporationDelayService = require("../vendors/manner/incorporation
 const MannerMoistureTypesService = require("../vendors/manner/moisture-types/moisture-types.service");
 const MannerWindspeedService = require("../vendors/manner/windspeed/windspeed.service");
 const MannerRainTypesService = require("../vendors/manner/rain-types/rain-types.service");
+const MannerApiCropTypesService = require("../vendors/manner/crop-types/crop-types.service");
 const { CountryEntity } = require("../db/entity/country.entity");
 const {
   CalculateMannerOutputService,
@@ -59,8 +60,8 @@ class MannerEstimationsService extends BaseService {
     this.MannerWindspeedService = new MannerWindspeedService();
     this.MannerRainTypesService = new MannerRainTypesService();
     this.CalculateMannerOutputService = new CalculateMannerOutputService();
-    this.MannerCalculateNutrientsService =
-      new MannerCalculateNutrientsService();
+    this.MannerCalculateNutrientsService = new MannerCalculateNutrientsService();
+    this.MannerCropTypesService = new MannerApiCropTypesService();
           this.mannerFarmsRepository = AppDataSource.getRepository(
       MannerFarmsEntity,
     );

@@ -43,7 +43,7 @@ class MannerFarmsService extends BaseService {
           savedMannerFarm,mappedMannerEstimation,
           MannerEstimationApplication,request
         );
-      const nutrientFinancialValues = this.mannerEstimationsService.calculateNutrientFinancialValuesByNutrientId(nutrientProducts,nutrients,mappedMannerEstimationApplication);
+      const nutrientFinancialValues = await this.mannerEstimationsService.calculateNutrientFinancialValuesByNutrientId(nutrientProducts,nutrients,mappedMannerEstimationApplication,request);
       const mannerEstimationFinancialValues = this.mannerEstimationsService.buildMannerEstimationFinancialValues(nutrientFinancialValues);
       const mannerEstimationApplicationFinancialValues = this.mannerEstimationsService.buildMannerEstimationApplicationFinancialValues(nutrientFinancialValues);
       const mannerEstimationEntity = transactionalManager.create(

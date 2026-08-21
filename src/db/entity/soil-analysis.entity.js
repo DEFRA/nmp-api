@@ -38,7 +38,9 @@ const SoilAnalysisEntity = new EntitySchema({
       nullable: true,
     },
     Phosphorus: {
-      type: "int",
+       type: "decimal",
+      precision: 18,
+      scale: 1,
       nullable: true,
     },
     PhosphorusIndex: {
