@@ -350,8 +350,7 @@ const hasGrassCropType =
         productId: nutrientConfig.productId,
         productName: nutrientProduct?.name,
         nutrientPercentage:
-          nutrientProduct?.nutrientPercentage ??
-          nutrientProduct?.NutrientPercentage,
+          nutrientProduct?.nutrientPercentage,
         productPrice: nutrientConfig.ProductPrice,
         price: nutrientConfig.price,
       };
