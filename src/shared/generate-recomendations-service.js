@@ -100,8 +100,7 @@ class GenerateRecommendations {
     const fertiliserData =
       await this.totalFertiliserByField.getTotalFertiliserByFieldAndYear(
         transactionalManager,
-        fieldID,
-        Year,
+        crops
       );
     return { cropTypesList, fieldRelatedData, crops, fertiliserData };
   }
@@ -219,7 +218,7 @@ class GenerateRecommendations {
       await this.getGenerateRecommendationsContext(
         fieldID,
         Year,
-        transactionalManager,
+        transactionalManager
       );
 
     const results = [];
@@ -243,6 +242,7 @@ class GenerateRecommendations {
         newOrganicManure,
         transactionalManager,
         request,
+        crops
       );
 
       const result = await this.processCropRecommendation({
