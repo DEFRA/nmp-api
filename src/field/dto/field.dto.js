@@ -7,7 +7,8 @@ const maxTwentyValues = 20,
   minMinuesTwo = -2,
   precisionEighteen = 18,
   precisionNine = 9,
-  precisionThree = 3;
+  precisionThree = 3,
+  precisionOne = 1;
 const AuditFields = {
   CreatedOn: Joi.date().iso().allow(null),
   CreatedByID: Joi.number().integer().allow(null),
@@ -46,7 +47,7 @@ const SoilAnalysisSchema = Joi.object({
   Date: Joi.date().iso().allow(null),
   PH: Joi.number().precision(precisionEighteen).allow(null),
   PhosphorusMethodologyID: Joi.number().integer().allow(null),
-  Phosphorus: Joi.number().integer().allow(null),
+  Phosphorus: Joi.number().precision(precisionOne).allow(null),
   PhosphorusIndex: Joi.number()
     .integer()
     .min(0)

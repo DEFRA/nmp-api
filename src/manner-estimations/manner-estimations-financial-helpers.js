@@ -284,6 +284,18 @@ const mannerEstimationsFinancialHelpers = {
     mannerEstimationApplication,
     request,
   ) {
+    
+     const manureCropTypes = await this.MannerCropTypesService.getData(
+       `/crop-types`,
+       request
+     );
+     const grassCropType = manureCropTypes.data.find(
+  (cropType) => cropType.name === 'Grass'
+);
+
+const hasGrassCropType =
+      mannerEstimation?.MannerCropTypeID === grassCropType?.id;
+
     const nutrientConfigById = {
       [NUTRIENT_ID.NITROGEN]: {
         productId: mannerEstimation.NitrogenProductId,
@@ -318,8 +330,11 @@ const mannerEstimationsFinancialHelpers = {
       switch (nutrientId) {
         case NUTRIENT_ID.NITROGEN:
           totalNutrientValue =
-            mannerEstimationApplication.CropAvailableNCurrentCrop +
-            mannerEstimationApplication.CropAvailableNitrogenFollowingCropYearTwo;
+            mannerEstimationApplication.CropAvailableNCurrentCrop;
+            totalNutrientValue += hasGrassCropType
+  ? mannerEstimationApplication.NextGrassNitrogenCropCurrentYear || 0
+  : 0;
+
           break;
         case NUTRIENT_ID.PHOSPHATE:
           totalNutrientValue = mannerEstimationApplication.TotalP2O5;
@@ -335,8 +350,7 @@ const mannerEstimationsFinancialHelpers = {
         productId: nutrientConfig.productId,
         productName: nutrientProduct?.name,
         nutrientPercentage:
-          nutrientProduct?.nutrientPercentage ??
-          nutrientProduct?.NutrientPercentage,
+          nutrientProduct?.nutrientPercentage,
         productPrice: nutrientConfig.ProductPrice,
         price: nutrientConfig.price,
       };
@@ -344,12 +358,24 @@ const mannerEstimationsFinancialHelpers = {
     return nutrientFinancialValuesByNutrientId;
   },
 
-  calculateNutrientFinancialValuesByNutrientId(
+ async calculateNutrientFinancialValuesByNutrientId(
     nutrientProducts,
     nutrients,
     mannerEstimationApplication,
+    request,
+    mannerEstimation
   ) {
     const nutrientFinancialValuesByNutrientId = {};
+     const manureCropTypes = await this.MannerCropTypesService.getData(
+       `/crop-types`,
+       request
+     );
+    const grassCropType = manureCropTypes.data.find(
+  (cropType) => cropType.name === 'Grass'
+);
+
+const hasGrassCropType =
+      mannerEstimation?.MannerCropTypeID === grassCropType?.id;
     for (const product of nutrientProducts) {
       const nutrient = nutrients.data.find((n) => n.id === product.nutrientID);
       if (!nutrient) {
@@ -363,8 +389,11 @@ const mannerEstimationsFinancialHelpers = {
       switch (nutrient.id) {
         case NUTRIENT_ID.NITROGEN:
           totalNutrientValue =
-            mannerEstimationApplication.CropAvailableNCurrentCrop +
-            mannerEstimationApplication.CropAvailableNitrogenFollowingCropYearTwo;
+            mannerEstimationApplication.CropAvailableNCurrentCrop;
+            totalNutrientValue += hasGrassCropType
+  ? mannerEstimationApplication.NextGrassNitrogenCropCurrentYear || 0
+  : 0;
+
           break;
         case NUTRIENT_ID.PHOSPHATE:
           totalNutrientValue = mannerEstimationApplication.TotalP2O5;
