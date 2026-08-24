@@ -168,13 +168,19 @@ class GenerateRecommendations {
       userId,
       fertiliserData,
     } = cropContext;
-
-    const cropPOfftake = await this.calculateCropPOfftake(
+      let cropPOfftake = 0;
+      const isPotatoCrop =
+        crop.CropTypeID === CropTypeMapper.POTATOVARIETYGROUP1 ||
+        crop.CropTypeID === CropTypeMapper.POTATOVARIETYGROUP2 ||
+        crop.CropTypeID === CropTypeMapper.POTATOVARIETYGROUP3 ||
+        crop.CropTypeID === CropTypeMapper.POTATOVARIETYGROUP4;
+    if(isPotatoCrop){
+    cropPOfftake = await this.calculateCropPOfftake(
       latestSoilAnalysis,
       crop.CropTypeID,
       crop.Yield,
     );
-
+  }
     if (
       crop.CropTypeID === CropTypeMapper.OTHER ||
       crop?.IsBasePlan ||
