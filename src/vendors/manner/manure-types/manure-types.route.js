@@ -1,5 +1,6 @@
 const Joi = require("joi"); // For validation
 const MannerManureTypesController = require("./manure-types.controller");
+const { CalculateNutrientsByDryMatterDto } = require("./dto/calculate-nutrients-by-dry-matter.dto");
 
 module.exports = [
   {
@@ -71,6 +72,21 @@ module.exports = [
         params: Joi.object({
           id: Joi.number().required(),
         }),
+      },
+    },
+  },
+  {
+    method: "POST",
+    path: "/vendors/manner/calculate-nutrients-by-dry-matter-percentage",
+    handler: async (request, h) => {
+      const controller = new MannerManureTypesController(request, h);
+      return controller.calculateNutrientsByDryMatter(request, h);
+    },
+    options: {
+      tags: ["api", "Manner manure-types"],
+      description: "Calculate nutrients by dry matter percentage",
+      validate: {
+        payload: CalculateNutrientsByDryMatterDto,
       },
     },
   },

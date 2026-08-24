@@ -40,5 +40,12 @@ class MannerManureTypesController {
     const data = await this.#service.getManureTypeById(id, this.#request);
     return this.#h.response(data);
   }
+
+  async calculateNutrientsByDryMatter() {
+    const payload = this.#request.payload;
+    const url = this.#request.url.pathname.split("/manner")[1];
+    const data = await this.#service.postData(url, payload, this.#request);
+    return this.#h.response(data);
+  }
 }
 module.exports = MannerManureTypesController;
