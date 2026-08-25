@@ -23,7 +23,8 @@ class HanldeMannerAndAnalysis {
     const snsAnalysesData =await this.CalculateCropsSnsAnalysisService.getCropsSnsAnalyses(
         transactionalManager,
         fieldID,
-        crop.Year
+        crop.Year,
+        crops
       );
     const { latestSoilAnalysis, soilAnalysisRecords } = await this.HandleSoilAnalysisService.handleSoilAnalysisValidation(
         fieldID,

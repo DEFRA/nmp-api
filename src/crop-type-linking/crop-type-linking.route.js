@@ -6,7 +6,7 @@ const { formatErrorResponse } = require("../interceptor/responseFormatter");
 
 const getController = (request, h) =>
   new CropTypeLinkingsController(request, h);
-const BAD_REQUEST=400;
+const BAD_REQUEST = 400;
 module.exports = [
   {
     method: "GET",
@@ -29,7 +29,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(BAD_REQUEST)
             .takeover();
@@ -50,9 +50,9 @@ module.exports = [
         params: Joi.object({
           cropTypeID: Joi.number().integer().required(),
         }),
-         query: Joi.object({
-                  countryID: Joi.number().required(),
-                }),
+        query: Joi.object({
+          countryID: Joi.number().required(),
+        }),
         failAction: (request, h, err) => {
           return h
             .response(
@@ -61,7 +61,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(BAD_REQUEST)
             .takeover();
@@ -69,7 +69,7 @@ module.exports = [
       },
     },
   },
-   {
+  {
     method: "GET",
     path: "/crop-type-linkings",
     handler: async (request, h) => {
@@ -87,7 +87,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(BAD_REQUEST)
             .takeover();
@@ -103,7 +103,8 @@ module.exports = [
     },
     options: {
       tags: ["api", "Scotland nmax values"],
-      description: "Get Scotland nmax values by CropTypeID, SoilTypeId and ResidueGroup",
+      description:
+        "Get Scotland nmax values by CropTypeID, SoilTypeId and ResidueGroup",
       validate: {
         params: Joi.object({
           cropTypeId: Joi.number().integer().required(),
@@ -120,7 +121,7 @@ module.exports = [
                   error: err,
                 },
                 request,
-              })
+              }),
             )
             .code(BAD_REQUEST)
             .takeover();
