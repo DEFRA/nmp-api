@@ -70,9 +70,15 @@ const mannerEstimationsReadHelpers = {
   ) {
     const allManureData =
       await this.MannerManureTypesService.getAllManureTypesList(request);
+      const mannerApplicationData = applications.map((item) => ({
+  ...item,
+  EndOfDrain: item.EndOfDrainageDate,
+  Rainfall: item.RainfallPostApplication,
+}));
+
     const manureApplications = [];
     await this.CalculateMannerOutputService.processMultipleManures(
-      applications,
+      mannerApplicationData,
       allManureData,
       manureApplications,
     );
