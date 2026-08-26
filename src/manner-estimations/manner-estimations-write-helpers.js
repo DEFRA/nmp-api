@@ -274,13 +274,13 @@ const mannerEstimationsWriteHelpers = {
       request,
     );
 
-      const  mannerApplication = applications;
+      const  mannerApplicationData = applications;
 
-      mannerApplication.EndOfDrain = applications.EndOfDrainageDate;
-      mannerApplication.Rainfall=applications.RainfallPostApplication;
+      mannerApplicationData.EndOfDrain = applications.EndOfDrainageDate;
+      mannerApplicationData.Rainfall=applications.RainfallPostApplication;
     const manureApplication =
       await this.CalculateMannerOutputService.buildManureApplicationObject(
-        mannerApplication,
+        mannerApplicationData,
         manureTypeData,
       );
   
