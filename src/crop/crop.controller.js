@@ -67,10 +67,6 @@ class CropController {
           cropGroupName,
           cropOrder,
         );
-      if (managementPeriodIds.ManagementPeriods.length === 0) {
-        throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
-      }
-
       return this.#h.response(managementPeriodIds);
     } catch (error) {
       console.error(
