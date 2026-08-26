@@ -1,4 +1,6 @@
 const { AppDataSource } = require("../db/data-source");
+const { normalizeDateWithTime } = require("../shared/dataValidate");
+const { ManureTypeMapper } = require("../constants/manure-type-mapper");
 
 const mannerEstimationsReadHelpers = {
   async checkMannerEstimationExists(mannerFarmId, name) {
@@ -318,6 +320,75 @@ const mannerEstimationsReadHelpers = {
       ...item,
       FarmName: mannerFarm.Name,
     }));
+  },
+
+  async getTotalApplicationRate(
+    mannerEstimationId,
+    fromDate,
+    toDate,
+    mannerEstimationApplicationId,
+    isPoultry,
+    request,
+  ) {
+    const START_OF_DAY = {
+      HOUR: 0,
+      MINUTE: 0,
+      SECOND: 0,
+      MILLISECOND: 0,
+    };
+
+    const END_OF_DAY = {
+      HOUR: 23,
+      MINUTE: 59,
+      SECOND: 59,
+      MILLISECOND: 999,
+    };
+
+    const fromDateFormatted = normalizeDateWithTime(fromDate, START_OF_DAY);
+    const toDateFormatted = normalizeDateWithTime(toDate, END_OF_DAY);
+
+    const allManureTypes = await this.MannerManureTypesService.getData(
+      "/manure-types",
+      request,
+    );
+
+    const highRanManureTypes = allManureTypes.data.filter(
+      (manure) => manure.highReadilyAvailableNitrogen === true,
+    );
+
+    let manureTypeIds = highRanManureTypes.map((manure) => manure.id);
+
+    if (isPoultry) {
+      manureTypeIds = [ManureTypeMapper.PoultryManure];
+    } else {
+      manureTypeIds = manureTypeIds.filter(
+        (id) => id !== ManureTypeMapper.PoultryManure,
+      );
+    }
+
+    const query = this.mannerEstimationApplicationRepository
+      .createQueryBuilder("MEA")
+      .select("SUM(COALESCE(MEA.ApplicationRate, 0))", "totalApplicationRate")
+      .where("MEA.MannerEstimationID = :mannerEstimationId", {
+        mannerEstimationId,
+      })
+      .andWhere("MEA.ApplicationDate BETWEEN :fromDate AND :toDate", {
+        fromDate: fromDateFormatted,
+        toDate: toDateFormatted,
+      })
+      .andWhere("MEA.ManureTypeID IN (:...manureTypeIds)", {
+        manureTypeIds,
+      });
+
+    if (mannerEstimationApplicationId != null) {
+      query.andWhere("MEA.ID != :mannerEstimationApplicationId", {
+        mannerEstimationApplicationId,
+      });
+    }
+
+    const result = await query.getRawOne();
+
+    return Number.parseInt(result?.totalApplicationRate) || 0;
   },
 };
 

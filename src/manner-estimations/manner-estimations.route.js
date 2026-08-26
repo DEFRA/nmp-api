@@ -156,4 +156,32 @@ module.exports = [
       return controller.checkMannerEstimationExists();
     },
   },
+  {
+    method: "GET",
+    path: "/manner-estimations/total-application-rate/{mannerEstimationId}",
+    options: {
+      tags: ["api", mannerEstimations],
+      description:
+        "Get total application rate by manner estimation ID and date range",
+      validate: {
+        params: Joi.object({
+          mannerEstimationId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          fromDate: Joi.date().iso().required(),
+          toDate: Joi.date().iso().required(),
+          mannerEstimationApplicationId: Joi.number()
+            .integer()
+            .allow(null)
+            .optional(),
+          isPoultry: Joi.boolean().required(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new MannerEstimationsController(request, h);
+      return controller.getTotalApplicationRate();
+    },
+  },
 ];
