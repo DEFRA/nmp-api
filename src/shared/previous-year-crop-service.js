@@ -23,8 +23,6 @@ class CalculatePreviousCropService {
     if (crops.length === 1) {
       return crops[0];
     }
-
-    console.warn(`No crop found in CropEntity for FieldID`);
     return null;
   }
 
