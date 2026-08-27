@@ -1,4 +1,6 @@
 const { EntitySchema } = require("typeorm");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
+const { auditColumns } = require("../../constants/audits-columns");
 
 const SoilAnalysisEntity = new EntitySchema({
   name: "SoilAnalysis",
@@ -36,7 +38,9 @@ const SoilAnalysisEntity = new EntitySchema({
       nullable: true,
     },
     Phosphorus: {
-      type: "int",
+       type: "decimal",
+      precision: 18,
+      scale: 1,
       nullable: true,
     },
     PhosphorusIndex: {
@@ -47,11 +51,19 @@ const SoilAnalysisEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
+    PotassiumMethodologyID: {
+      type: "int",
+      nullable: true,
+    },
     PotassiumIndex: {
       type: "smallint",
       nullable: true,
     },
     Magnesium: {
+      type: "int",
+      nullable: true,
+    },
+    MagnesiumMethodologyID: {
       type: "int",
       nullable: true,
     },
@@ -87,17 +99,7 @@ const SoilAnalysisEntity = new EntitySchema({
       length: 20,
       nullable: true,
     },
-    PotassiumAnalysis: {
-      type: "nvarchar",
-      length: 50,
-      nullable: true,
-    },
     PotassiumStatus: {
-      type: "nvarchar",
-      length: 20,
-      nullable: true,
-    },
-    MagnesiumAnalysis: {
       type: "nvarchar",
       length: 20,
       nullable: true,
@@ -112,10 +114,7 @@ const SoilAnalysisEntity = new EntitySchema({
       length: 20,
       nullable: true,
     },
-    SoilAnalysisMethod: {
-      type: "int",
-      nullable: true,
-    },
+
     Comments: {
       type: "nvarchar",
       length: 255,
@@ -129,29 +128,11 @@ const SoilAnalysisEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
-    CreatedOn: {
-      type: "datetime2",
-      nullable: true,
-      precision: 7,
-      default: () => "GETDATE()",
-    },
-    CreatedByID: {
-      type: "int",
-      nullable: true,
-    },
-    ModifiedOn: {
-      type: "datetime2",
-      nullable: true,
-      precision: 7,
-    },
-    ModifiedByID: {
-      type: "int",
-      nullable: true,
-    },
+    ...auditColumns,
   },
   relations: {
     Field: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "Field",
       inverseSide: "SoilAnalyses",
       joinColumn: {
@@ -159,14 +140,14 @@ const SoilAnalysisEntity = new EntitySchema({
       },
     },
     CreatedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: {
         name: "CreatedByID",
       },
     },
     ModifiedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: {
         name: "ModifiedByID",

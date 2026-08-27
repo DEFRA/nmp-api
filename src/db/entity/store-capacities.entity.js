@@ -1,4 +1,5 @@
 const { EntitySchema } = require("typeorm");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const StoreCapacitiesEntity = new EntitySchema({
   name: "StoreCapacities",
@@ -130,44 +131,44 @@ const StoreCapacitiesEntity = new EntitySchema({
   },
   relations: {
     Farms: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "Farm",
       joinColumn: { name: "FarmID" },
       inverseSide: "StoreCapacity",
     },
     MaterialState: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "MaterialStates",
       joinColumn: { name: "MaterialStateID" },
       inverseSide: "StoreCapacity",
     },
     StorageType: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "StorageTypes",
       joinColumn: { name: "StorageTypeID" },
       inverseSide: "StoreCapacity",
     },
     SolidManureType: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "SolidManureTypes",
       joinColumn: { name: "SolidManureTypeID" },
       inverseSide: "StoreCapacity",
     },
     BankSlopeAngle: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "BankSlopeAngles",
       joinColumn: { name: "BankSlopeAngleID" },
       inverseSide: "StoreCapacity",
     },
 
     CreatedBy: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "CreatedByID" },
       inverseSide: "CreatedStoreCapacitiesByUser",
     },
     ModifiedBy: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "ModifiedByID" },
       inverseSide: "ModifiedStoreCapacitiesByUser",

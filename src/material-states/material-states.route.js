@@ -1,6 +1,7 @@
 const Joi = require("joi");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { MaterialStatesController } = require("./material-states.controller");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 
 module.exports = [
@@ -26,18 +27,8 @@ module.exports = [
         params: Joi.object({
           id: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: { error: err },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
-      },
+        failAction: validationFailAction
+      }
     },
     handler: async (request, h) => {
       const controller = new MaterialStatesController(request, h);

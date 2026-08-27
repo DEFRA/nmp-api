@@ -1,4 +1,6 @@
 const { EntitySchema } = require("typeorm");
+const { manureNutrientColumns } = require("../../constants/manure-nutrient.columns");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const FarmManureTypeEntity = new EntitySchema({
   name: "FarmManureType",
@@ -23,51 +25,7 @@ const FarmManureTypeEntity = new EntitySchema({
     FieldTypeID: {
       type: "int",
     },
-    DryMatter: {
-      type: "decimal",
-      precision: 18,
-      scale: 2,
-    },
-    TotalN: {
-      type: "decimal",
-      precision: 18,
-      scale: 2,
-    },
-    NH4N: {
-      type: "decimal",
-      precision: 18,
-      scale: 2,
-    },
-    Uric: {
-      type: "decimal",
-      precision: 18,
-      scale: 2,
-    },
-    NO3N: {
-      type: "decimal",
-      precision: 18,
-      scale: 2,
-    },
-    P2O5: {
-      type: "decimal",
-      precision: 18,
-      scale: 2,
-    },
-    K2O: {
-      type: "decimal",
-      precision: 18,
-      scale: 2,
-    },
-    SO3: {
-      type: "decimal",
-      precision: 18,
-      scale: 2,
-    },
-    MgO: {
-      type: "decimal",
-      precision: 18,
-      scale: 2,
-    },
+    ...manureNutrientColumns,
     CreatedOn: {
       type: "datetime2",
       precision: 7,
@@ -90,25 +48,25 @@ const FarmManureTypeEntity = new EntitySchema({
   },
   relations: {
     CreatedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "CreatedByID" },
       inverseSide: "CreatedOrganicManures",
     },
     ModifiedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "ModifiedByID" },
       inverseSide: "ModifiedOrganicManures",
     },
     Farm: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "Farm",
       joinColumn: { name: "FarmID" },
       inverseSide: "FarmManureTypes",
     },
     ManureType: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "ManureType",
       joinColumn: { name: "ManureTypeID" },
       inverseSide: "FarmManureTypes",

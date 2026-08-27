@@ -9,14 +9,18 @@ const { CropEntity } = require("../db/entity/crop.entity");
 
 class CalculateCropsSnsAnalysisService {
   
-  async getCropsSnsAnalyses(transactionalManager, fieldId, year) {
+  async getCropsSnsAnalyses(transactionalManager, fieldId, year,allCrops=[]) {
     // Step 1: find crops by field and year
-    const crops = await transactionalManager.find(CropEntity, {
-      where: {
-        FieldID: fieldId,
-        Year: year,
-      },
-    });
+
+    const crops =
+      allCrops.length > 0
+        ? allCrops
+        : await transactionalManager.find(CropEntity, {
+            where: {
+              FieldID: fieldId,
+              Year: year,
+            },
+          });
 
     const result = [];
 
@@ -40,12 +44,13 @@ class CalculateCropsSnsAnalysisService {
 
   // Helper method with transactional manager
   async getSnsAnalysesData(transactionalManager, cropId) {
-    return await transactionalManager.findOne(
+     const snsAnalysesData = await transactionalManager.findOne(
       SnsAnalysesEntity,
       {
         where: { CropID: cropId },
       }
     );
+    return snsAnalysesData;
   }
 }
 

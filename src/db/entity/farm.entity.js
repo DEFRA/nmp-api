@@ -1,4 +1,5 @@
 const { EntitySchema } = require("typeorm");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const FarmEntity = new EntitySchema({
   name: "Farm",
@@ -145,62 +146,68 @@ const FarmEntity = new EntitySchema({
   },
   relations: {
     Fields: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "Field",
       joinColumn: { name: "ID" },
       inverseSide: "Farm",
     },
     Organisation: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "Organisation",
       joinColumn: { name: "OrganisationID" },
       inverseSide: "Farms",
     },
     FarmManureTypes: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "FarmManureType",
       joinColumn: { name: "ID" },
       inverseSide: "Farm",
     },
     ExcessRainfalls: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "ExcessRainfalls",
       joinColumn: { name: "ID" },
       inverseSide: "Farm",
     },
     NutrientsLoadingLiveStocks: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "NutrientsLoadingLiveStocks",
       joinColumn: { name: "ID" },
       inverseSide: "Farm",
     },
     CreatedByUser: {
       target: "User",
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       inverseSide: "CreatedFarms",
       joinColumn: { name: "CreatedByID" },
     },
     ModifiedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       inverseSide: "ModifiedFarms",
       joinColumn: { name: "ModifiedByID" },
     },
     Country: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "Country",
       joinColumn: { name: "CountryID" },
       inverseSide: "Farms",
     },
     StoreCapacity: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "StoreCapacities",
       joinColumn: { name: "ID" },
       inverseSide: "Farms",
     },
     FarmsNVZ: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "FarmsNVZ",
+      joinColumn: { name: "ID" },
+      inverseSide: "Farms",
+    },
+    FarmAverageYields: {
+      type: RELATION_TYPES.ONE_TO_MANY,
+      target: "FarmAverageYields",
       joinColumn: { name: "ID" },
       inverseSide: "Farms",
     },

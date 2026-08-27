@@ -162,6 +162,27 @@ class OrganicManureController {
       return this.#h.response({ error });
     }
   }
+  async checkLivestockManureExists() {
+    const {
+      cropId,
+      dateFrom,
+      dateTo,
+      organicManureID,
+    } = this.#request.query;
+
+    try {
+      const manureExists = await this.#organicManureService.checkLivestockManureExists(
+        cropId,
+        dateFrom,
+        dateTo,
+        organicManureID,
+        this.#request,
+      );
+      return this.#h.response({ exists: manureExists });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
 
   async deleteOrganicManureByIds() {
     const { organicManureIds } = this.#request.payload; // assuming an array of IDs is passed in the payload
@@ -169,7 +190,7 @@ class OrganicManureController {
 
     try {
       // Loop through each organicManureId and call the service method to delete it
-      for (let organicManureId of organicManureIds) {
+      for (const organicManureId of organicManureIds) {
         const result = await this.#organicManureService.deleteOrganicManure(
           organicManureId,
           userId,
@@ -234,12 +255,8 @@ class OrganicManureController {
       const data = await this.#organicManureService.updateOrganicManure(
         updatedOrganicManureData, // Pass the current manure object
         userId, // User ID
-        // parseInt(fertiliserId), // Fertiliser ID
-        this.#request, // Original request
+        this.#request
       );
-      // results.push(data); // Store result of each update
-      // }
-
       return this.#h.response({ data }); // Respond with the aggregated results
     } catch (error) {
       return this.#h.response({ error });
@@ -253,6 +270,61 @@ class OrganicManureController {
           managementPeriodID,
         );
       return this.#h.response({ TotalN: totalN });
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+
+  async getClosedPeriodByID() {
+    const { soilTypeId } = this.#request.params;
+    try {
+      const closedPeriod = await this.#organicManureService.getClosedPeriodByID(
+        soilTypeId,
+        this.#request.query,
+      );
+      return this.#h.response(closedPeriod);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+
+  async getTotalApplicationRate() {
+    try {
+      const { cropId } = this.#request.params;
+      const { startDate, endDate, organicManureID, isPoultry } =
+        this.#request.query;
+
+      const total = await this.#organicManureService.getTotalApplicationRate(
+        cropId,
+        startDate,
+        endDate,
+        organicManureID,
+        isPoultry,
+        this.#request,
+      );
+
+      return this.#h.response(total);
+    } catch (error) {
+      console.error(error);
+      return this.#h.response(error)
+    }
+  }
+
+  async checkGreenCompostExists() {
+    const { fieldId } = this.#request.params;
+    const { startDate, endDate, organicManureID } = this.#request.query;
+
+    try {
+      const exists = await this.#organicManureService.checkGreenCompostExists(
+        fieldId,
+        startDate,
+        endDate,
+        organicManureID,
+      );
+
+      return this.#h.response({
+        exists,
+      });
     } catch (error) {
       return this.#h.response({ error });
     }

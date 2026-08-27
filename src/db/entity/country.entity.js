@@ -1,4 +1,5 @@
 const { EntitySchema } = require("typeorm");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const CountryEntity = new EntitySchema({
   name: "Country",
@@ -8,29 +9,35 @@ const CountryEntity = new EntitySchema({
       type: "int",
       primary: true,
       generated: true,
-      generationStrategy: "identity",
+      generationStrategy: "identity"
     },
     Name: {
       type: "nvarchar",
-      length: 50,
+      length: 50
     },
     RB209CountryID: {
       type: "int",
-      nullable: false,
+      nullable: false
     },
   },
   relations: {
     ManureTypes: {
       target: "ManureType",
-      type: "one-to-many",
+      type: RELATION_TYPES.MANY_TO_ONE,
       inverseSide: "Country",
-      joinColumn: { name: "ID" },
+      joinColumn: { name: "ID" }
     },
     Farms: {
       target: "Farm",
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       inverseSide: "Country",
-      joinColumn: { name: "CountryID" }, // Specifies the column in the Farm table that links to Country
+      joinColumn: { name: "ID" }
+    },
+    MannerEstimations: {
+      target: "MannerEstimations",
+      type: RELATION_TYPES.ONE_TO_MANY,
+      inverseSide: "Country",
+      joinColumn: { name: "ID" }
     },
   },
 });

@@ -1,4 +1,7 @@
 const { EntitySchema } = require("typeorm");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
+const { auditColumns } = require("../../constants/audits-columns");
+const { previousRelations } = require("../../constants/previous-grass-entitiy-relations");
 
 const PreviousCroppingEntity = new EntitySchema({
   name: "PreviousCroppings",
@@ -45,55 +48,32 @@ const PreviousCroppingEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
-    CreatedOn: {
-      type: "datetime2",
-      nullable: true,
-      default: () => "getdate()",
-    },
-    CreatedByID: {
-      type: "int",
-      nullable: true,
-    },
-    ModifiedOn: {
-      type: "datetime2",
-      nullable: true,
-    },
-    ModifiedByID: {
-      type: "int",
-      nullable: true,
-    },
+  ...auditColumns
   },
   relations: {
-    Fields: {
-      type: "many-to-one",
-      target: "Fields",
-      joinColumn: { name: "FieldID" },
-      inverseSide: "PreviousCropingField",
-    },
-    GrassManagementOptions: {
-      type: "many-to-one",
-      target: "GrassManagementOptions",
-      joinColumn: { name: "GrassManagementOptionID" },
-      inverseSide: "PreviousCroppingGrassManagementOption",
-    },
-    SoilNitrogenSupplyItems: {
-      type: "many-to-one",
-      target: "SoilNitrogenSupplyItems",
-      joinColumn: { name: "SoilNitrogenSupplyItemID" },
-      inverseSide: "PreviousCroppingGrassManagementOption",
-    },
-    CreatedByUser: {
-      type: "many-to-one",
-      target: "User",
-      joinColumn: { name: "CreatedByID" },
-      inverseSide: "CreatedPreviousCroppings",
-    },
-    ModifiedByUser: {
-      type: "many-to-one",
-      target: "User",
-      joinColumn: { name: "ModifiedByID" },
-      inverseSide: "ModifiedPreviousCroppings",
-    },
+  ...previousRelations,
+
+  Fields: {
+    ...previousRelations.Fields,
+    target: "Fields",
+    inverseSide: "PreviousCropingField",
   },
+  GrassManagementOptions: {
+    ...previousRelations.GrassManagementOptions,
+    inverseSide: "PreviousCroppingGrassManagementOption",
+  },
+  SoilNitrogenSupplyItems: {
+    ...previousRelations.SoilNitrogenSupplyItems,
+    inverseSide: "PreviousCroppingGrassManagementOption",
+  },
+  CreatedByUser: {
+    ...previousRelations.CreatedByUser,
+    inverseSide: "CreatedPreviousCroppings",
+  },
+  ModifiedByUser: {
+    ...previousRelations.ModifiedByUser,
+    inverseSide: "ModifiedPreviousCroppings",
+  },
+}
 });
 module.exports = { PreviousCroppingEntity };

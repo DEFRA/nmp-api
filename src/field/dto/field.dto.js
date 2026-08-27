@@ -2,6 +2,19 @@ const Joi = require("joi");
 const {
   CreateCropWithManagementPeriodsDto,
 } = require("../../crop/dto/crops.dto");
+const maxTwentyValues = 20,
+  maxTwoFiftyFive = 255,
+  minMinuesTwo = -2,
+  precisionEighteen = 18,
+  precisionNine = 9,
+  precisionThree = 3,
+  precisionOne = 1;
+const AuditFields = {
+  CreatedOn: Joi.date().iso().allow(null),
+  CreatedByID: Joi.number().integer().allow(null),
+  ModifiedOn: Joi.date().iso().allow(null),
+  ModifiedByID: Joi.number().integer().allow(null),
+};
 
 const FieldEntitySchema = Joi.object({
   ID: Joi.number().integer().allow(null),
@@ -20,10 +33,7 @@ const FieldEntitySchema = Joi.object({
   IsWithinNVZ: Joi.boolean().optional(),
   IsAbove300SeaLevel: Joi.boolean().optional(),
   IsActive: Joi.boolean().required(),
-  CreatedOn: Joi.date().iso().allow(null),
-  CreatedByID: Joi.number().integer().allow(null),
-  ModifiedOn: Joi.date().iso().allow(null),
-  ModifiedByID: Joi.number().integer().allow(null),
+  ...AuditFields,
   EncryptedFieldId: Joi.string()
     .pattern(/^[a-zA-Z0-9]*$/) // Alphanumeric pattern
     .allow(null) // Allows null
@@ -35,44 +45,58 @@ const SoilAnalysisSchema = Joi.object({
   Year: Joi.number().integer().required(),
   SulphurDeficient: Joi.boolean().default(true).required(),
   Date: Joi.date().iso().allow(null),
-  PH: Joi.number().precision(18).allow(null),
+  PH: Joi.number().precision(precisionEighteen).allow(null),
   PhosphorusMethodologyID: Joi.number().integer().allow(null),
-  Phosphorus: Joi.number().integer().allow(null),
+  Phosphorus: Joi.number().precision(precisionOne).allow(null),
   PhosphorusIndex: Joi.number()
     .integer()
     .min(0)
-    .max(255)
+    .max(maxTwoFiftyFive)
     .default(0)
     .allow(null),
   Potassium: Joi.number().integer().allow(null),
-  PotassiumIndex: Joi.number().integer().min(-2).max(9).allow(null),
+  PotassiumIndex: Joi.number()
+    .integer()
+    .min(minMinuesTwo)
+    .max(precisionNine)
+    .allow(null),
+  PotassiumMethodologyID: Joi.number()
+    .integer()
+    .default(4)
+    .required()
+    .allow(null),
   Magnesium: Joi.number().integer().allow(null),
-  MagnesiumIndex: Joi.number().integer().min(0).max(255).default(0).allow(null),
+  MagnesiumMethodologyID: Joi.number()
+    .integer()
+    .default(4)
+    .required()
+    .allow(null),
+  MagnesiumIndex: Joi.number()
+    .integer()
+    .min(0)
+    .max(maxTwoFiftyFive)
+    .default(0)
+    .allow(null),
   SoilNitrogenSupply: Joi.number().integer().allow(null),
   SoilNitrogenSupplyIndex: Joi.number()
     .integer()
     .min(0)
-    .max(255)
+    .max(maxTwoFiftyFive)
     .default(0)
     .allow(null),
 
   SoilNitrogenSampleDate: Joi.date().iso().allow(null),
   Sodium: Joi.number().integer().allow(null),
-  Lime: Joi.number().precision(3).allow(null),
-  PhosphorusStatus: Joi.string().max(20).allow(null),
-  PotassiumAnalysis: Joi.string().max(50).allow(null),
-  PotassiumStatus: Joi.string().max(20).allow(null),
-  MagnesiumAnalysis: Joi.string().max(20).allow(null),
-  MagnesiumStatus: Joi.string().max(20).allow(null),
-  NitrogenResidueGroup: Joi.string().max(20).allow(null),
-  SoilAnalysisMethod: Joi.number().integer().optional().allow(null),
+  Lime: Joi.number().precision(precisionThree).allow(null),
+  PhosphorusStatus: Joi.string().max(maxTwentyValues).allow(null),
+
+  PotassiumStatus: Joi.string().max(maxTwentyValues).allow(null),
+  MagnesiumStatus: Joi.string().max(maxTwentyValues).allow(null),
+  NitrogenResidueGroup: Joi.string().max(maxTwentyValues).allow(null),
   OrganicMatterPercentage: Joi.number().integer().optional().allow(null),
-  Comments: Joi.string().max(255).allow(null),
+  Comments: Joi.string().max(maxTwoFiftyFive).allow(null),
   PreviousID: Joi.number().integer().allow(null),
-  CreatedOn: Joi.date().iso().allow(null),
-  CreatedByID: Joi.number().integer().allow(null),
-  ModifiedOn: Joi.date().iso().allow(null),
-  ModifiedByID: Joi.number().integer().allow(null),
+  ...AuditFields,
 });
 
 const PreviousGrassesSchema = Joi.object({
@@ -84,10 +108,7 @@ const PreviousGrassesSchema = Joi.object({
   GrassManagementOptionID: Joi.number().integer().allow(null),
   HasGreaterThan30PercentClover: Joi.boolean().allow(null),
   SoilNitrogenSupplyItemID: Joi.number().integer().allow(null),
-  CreatedOn: Joi.date().iso().allow(null),
-  CreatedByID: Joi.number().integer().allow(null),
-  ModifiedOn: Joi.date().iso().allow(null),
-  ModifiedByID: Joi.number().integer().allow(null),
+  ...AuditFields,
 }).required();
 
 const PreviousCroppingSchema = Joi.object({
@@ -101,22 +122,16 @@ const PreviousCroppingSchema = Joi.object({
   GrassManagementOptionID: Joi.number().integer().allow(null),
   HasGreaterThan30PercentClover: Joi.boolean().allow(null),
   SoilNitrogenSupplyItemID: Joi.number().integer().allow(null),
-  CreatedOn: Joi.date().iso().allow(null),
-  CreatedByID: Joi.number().integer().allow(null),
-  ModifiedOn: Joi.date().iso().allow(null),
-  ModifiedByID: Joi.number().integer().allow(null),
-  Action: Joi.number().integer().allow(null).optional()
+  ...AuditFields,
+  Action: Joi.number().integer().allow(null).optional(),
 }).required();
 const PKBalanceSchema = Joi.object({
   Year: Joi.number().required(),
   FieldID: Joi.number().allow(null).optional(),
   PBalance: Joi.number().required(),
   KBalance: Joi.number().required(),
-  PreviousID:Joi.number().allow(null).optional(),
-  CreatedOn: Joi.date().iso().allow(null),
-  CreatedByID: Joi.number().integer().allow(null),
-  ModifiedOn: Joi.date().iso().allow(null),
-  ModifiedByID: Joi.number().integer().allow(null),
+  PreviousID: Joi.number().allow(null).optional(),
+  ...AuditFields,
 });
 // UpdateFieldDto Schema
 const UpdateFieldDtoSchema = Joi.object({

@@ -16,11 +16,12 @@ class AzureAuthService {
 
   async getData() {
     try {
-      if (this.#issuerUrl && this.#jwksUri)
+      if (this.#issuerUrl && this.#jwksUri){
         return {
           issuerUrl: this.#issuerUrl,
           jwksUri: this.#jwksUri,
         };
+      }
       const response = await this.#request.get();
       this.#issuerUrl = response?.data?.issuer;
       this.#jwksUri = response?.data?.jwks_uri;

@@ -3,31 +3,20 @@ const { SNSAnalysesController } = require("./sns-analysis.controller");
 
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { CreateSnsAnalysisDto, UpdateSnsAnalysisDto } = require("./dto/sns-analysis.dto");
-
+const { validationFailAction } = require("../shared/validateFailSafeAction");
+const snsAnalysisTag = "SNS Analysis";
 module.exports = [
   {
     method: "GET",
     path: "/sns-analyses/crop/{cropId}",
     options: {
-      tags: ["api", "SNS Analysis"],
+      tags: ["api", snsAnalysisTag],
       description: "Get SNS Analyses by Crop Id",
       validate: {
         params: Joi.object({
           cropId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -44,23 +33,11 @@ module.exports = [
       return controller.createSnsAnalysis();
     },
     options: {
-      tags: ["api", "SNS Analysis"],
+      tags: ["api", snsAnalysisTag],
       description: "Create SNS Analysis",
       validate: {
         payload: CreateSnsAnalysisDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -68,25 +45,13 @@ module.exports = [
     method: "DELETE",
     path: "/snsAnalysis/{snsAnalysisId}",
     options: {
-      tags: ["api", "SNS Analysis"],
+      tags: ["api", snsAnalysisTag],
       description: "Delete SnsAnalysis by SnsAnalysis Id",
       validate: {
         params: Joi.object({
           snsAnalysisId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -103,26 +68,14 @@ module.exports = [
       return controller.updateSnsAnalysis();
     },
     options: {
-      tags: ["api", "SNS Analysis"],
+      tags: ["api", snsAnalysisTag],
       description: "Update SnsAnalysis by Id",
       validate: {
         params: Joi.object({
           snsAnalysisId: Joi.number().integer().required(),
         }),
         payload: UpdateSnsAnalysisDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },

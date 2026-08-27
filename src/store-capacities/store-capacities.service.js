@@ -76,7 +76,7 @@ class StoreCapacitiesService extends BaseService {
     }
   }
   async createStoreCapacities(payload, userId) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const {
         FarmID,
         StoreName,
@@ -103,7 +103,7 @@ class StoreCapacitiesService extends BaseService {
         CreatedByID: userId,
       });
 
-      const saved = await transactionalManager.save(
+      await transactionalManager.save(
         StoreCapacitiesEntity,
         newRecord
       );
@@ -120,7 +120,7 @@ class StoreCapacitiesService extends BaseService {
   async copyStorageCapacities(body, userId) {
     const { FarmID, Year, CopyYear } = body;
 
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const storageCapacities = await transactionalManager.find(
         StoreCapacitiesEntity,
         { where: { FarmID: FarmID, Year: CopyYear } }
@@ -139,12 +139,13 @@ class StoreCapacitiesService extends BaseService {
           CreatedByID: userId,
         });
       });
-      return await transactionalManager.save(StoreCapacitiesEntity, newRecords);
+      const savedStoreCapacitites = await transactionalManager.save(StoreCapacitiesEntity, newRecords);
+      return savedStoreCapacitites;
+
     });
   }
-
   async updateStoreCapacities(payload, userId) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const {
         ID,
         FarmID,

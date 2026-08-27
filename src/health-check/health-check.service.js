@@ -14,6 +14,7 @@ class HealthCheckService {
       if (this.dataSource.isInitialized) {
         return { message: "NMP API is working" };
       }
+       return { message: "Database connection is not initialized" };
     } catch (error) {
       console.error("Database connection error:", error);
       return {
@@ -27,6 +28,7 @@ class HealthCheckService {
     try {
       // Call the login method
       const loginResponse = await this.rb209Service.login();
+      console.log(loginResponse);
       return { message: "RB209 API is Working" };
     } catch (error) {
       console.error("RB209 API is not working:", error);

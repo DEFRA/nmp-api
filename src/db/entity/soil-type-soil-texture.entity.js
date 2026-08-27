@@ -1,7 +1,4 @@
 const { EntitySchema } = require("typeorm");
-const TopSoilEntity = require("./top-soil.entity");
-const SubSoilEntity = require("./sub-soil.entity");
-
 
 const SoilTypeSoilTextureEntity = new EntitySchema({
   name: "SoilTypeSoilTexture",

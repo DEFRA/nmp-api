@@ -1,4 +1,5 @@
 const { EntitySchema } = require("typeorm");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const CropTypeLinkingEntity = new EntitySchema({
   name: "CropTypeLinking",
@@ -6,56 +7,56 @@ const CropTypeLinkingEntity = new EntitySchema({
   columns: {
     CropTypeID: {
       type: "int",
-      primary: true
+      primary: true,
     },
     MannerCropTypeID: {
       type: "int",
-      primary: true
+      primary: true,
     },
     DefaultYield: {
       type: "decimal",
       precision: 18,
       scale: 1,
-      nullable: true
+      nullable: true,
     },
     DefaultYieldScotland: {
       type: "decimal",
       precision: 18,
       scale: 1,
-      nullable: true
+      nullable: true,
     },
     IsPerennial: {
       type: "bit",
-      nullable: false
+      nullable: false,
     },
     NMaxLimitEngland: {
       type: "int",
-      nullable: true
+      nullable: true,
     },
     NMaxLimitWales: {
       type: "int",
-      nullable: true
-    },
-    NMaxLimitScotland: {
-      type: "int",
-      nullable: true
+      nullable: true,
     },
     SNSCategoryID: {
       type: "int",
-      nullable: true
+      nullable: true,
     },
     CropInfoOneQuestionID: {
       type: "int",
-      nullable: true
+      nullable: true,
+    },
+    CropInfoOneScotlandQuestionID: {
+      type: "int",
+      nullable: true,
     },
     LateSownMannerCropTypeID: {
       type: "int",
-      nullable: true
+      nullable: true,
     },
   },
   relations: {
     MannerCropType: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "MannerCropType",
       joinColumn: {
         name: "MannerCropTypeID",
@@ -63,15 +64,21 @@ const CropTypeLinkingEntity = new EntitySchema({
       inverseSide: "CropTypeLinkings",
     },
     SNSCategories: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "SNSCategories",
       joinColumn: { name: "SNSCategoryID" },
       inverseSide: "CropTypeLinkings",
     },
     CropInfoOneQuestion: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "CropInfoQuestions",
       joinColumn: { name: "CropInfoOneQuestionID" },
+      inverseSide: "CropTypeLinking",
+    },
+    CropInfoOneScotlandQuestion: {
+      type: RELATION_TYPES.MANY_TO_ONE,
+      target: "CropInfoQuestions",
+      joinColumn: { name: "CropInfoOneScotlandQuestionID" },
       inverseSide: "CropTypeLinking",
     },
   },

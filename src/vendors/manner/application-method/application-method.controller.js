@@ -15,7 +15,7 @@ class MannerApplicationMethodController {
     const { isLiquid, fieldType } = this.#request.query;
     let endpoint = this.#request.url.pathname.split("/manner")[1];
     // Initialize an array to hold query parameters
-    let queryParams = [];
+    const queryParams = [];
 
     // Add isLiquid query param if it exists
     if (isLiquid !== undefined) {
@@ -37,7 +37,6 @@ class MannerApplicationMethodController {
   }
 
   async getApplicationMethodById() {
-    const { id } = this.#request.params;
     const url = this.#request.url.pathname.split("/manner")[1];
     const data = await this.#service.getData(url, this.#request);
     return this.#h.response(data);

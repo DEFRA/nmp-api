@@ -1,9 +1,5 @@
 const MannerBaseService = require("../base.service");
 
-class MannerTopSoilsService extends MannerBaseService {
-  constructor() {
-    super();
-  }
-}
+class MannerTopSoilsService extends MannerBaseService {}
 
 module.exports = MannerTopSoilsService;

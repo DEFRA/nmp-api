@@ -1,5 +1,7 @@
 // responseFormatter.js
 
+const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
+
 const formatSuccessResponse = (response) => {
   const data = response?.source;
   return {
@@ -12,24 +14,30 @@ const formatSuccessResponse = (response) => {
   };
 };
 
-const formatErrorResponse =  (errorResponse) => {
+const formatErrorResponse = (errorResponse) => {
   const error = errorResponse?.source?.error || errorResponse;
+
+  const errorMessage =
+    [
+      errorResponse?.source?.Errors,
+      errorResponse?.source?.data?.errorMessage,
+      errorResponse?.source?.data?.message,
+      errorResponse?.source?.data?.Invalid,
+      errorResponse?.source?.data?.error,
+      error?.message,
+    ].find(Boolean) || "An error occurred";
+
   return {
     message: "fail",
     status: false,
     data: errorResponse?.source?.data || null,
     statusCode:
-      error?.output?.statusCode || errorResponse?.source?.status || 500,
+      error?.output?.statusCode ||
+      errorResponse?.source?.status ||
+      StatusCodeMapper.INTERNAL_SERVER_ERROR,
     timestamp: new Date().toISOString(),
     error: {
-      message:
-        errorResponse?.source?.Errors ||
-        errorResponse?.source?.data?.errorMessage ||
-        errorResponse?.source?.data?.message ||
-        errorResponse?.source?.data?.Invalid ||
-        errorResponse?.source?.data?.error ||
-        error?.message ||
-        "An error occurred",
+      message: errorMessage,
       stack: process.env.NODE_ENV === "production" ? null : error?.stack,
       path: errorResponse?.request?.path || null,
     },

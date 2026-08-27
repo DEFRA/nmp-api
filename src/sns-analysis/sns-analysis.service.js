@@ -18,7 +18,7 @@ class SnsAnalysisService extends BaseService {
   }
 
   async createSnsAnalysis(snsAnalysisBody, userId, request) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const snsAnalysisRequest = snsAnalysisBody.SnsAnalysis;
       const snsAnalysis = await transactionalManager.save(SnsAnalysesEntity, {
         ...snsAnalysisRequest,
@@ -40,7 +40,7 @@ class SnsAnalysisService extends BaseService {
   }
 
   async deleteSnsAnalysis(snsAnalysisId, userId, request) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       // Check if the soilAnalysis exists
       const snsAnalysisToDelete = await transactionalManager.findOne(
         SnsAnalysesEntity,
@@ -79,7 +79,7 @@ class SnsAnalysisService extends BaseService {
     snsAnalysisId,
     request
   ) {
-    return await AppDataSource.transaction(async (transactionalManager) => {
+    return AppDataSource.transaction(async (transactionalManager) => {
       const { CreatedByID, CreatedOn,CropID, ...updatedData } =
         updatedSnsAnalysisData.SnsAnalysis;
 

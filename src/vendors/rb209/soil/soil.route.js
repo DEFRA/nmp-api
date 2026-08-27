@@ -3,7 +3,8 @@ const { RB209SoilController } = require("./soil.controller");
 const {
   formatErrorResponse,
 } = require("../../../interceptor/responseFormatter");
-
+const { validationFailAction } = require("../../../shared/validateFailSafeAction");
+const rb209SoilTag = "RB209 Soil";
 module.exports = [
   {
     method: "GET",
@@ -13,7 +14,7 @@ module.exports = [
       return controller.getSoilTypes(request, h);
     },
     options: {
-      tags: ["api", "RB209 Soil"],
+      tags: ["api", rb209SoilTag],
       description: "The full list of available Soil Types",
     },
   },
@@ -25,25 +26,13 @@ module.exports = [
       return controller.getSoilTypeBySoilTypeId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Soil"],
+      tags: ["api", rb209SoilTag],
       description: "Individual Soil Type - filtered by Soil Type Id",
       validate: {
         params: Joi.object({
           soilTypeId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -56,7 +45,7 @@ module.exports = [
       return controller.getMethodologiesByNutrientIdAndCountryId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Soil"],
+      tags: ["api", rb209SoilTag],
       description:
         "A filtered list of available Soil Methodologies - filtered by Nutrient Id and Country Id",
       validate: {
@@ -64,19 +53,7 @@ module.exports = [
           nutrientId: Joi.string().required(),
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -89,7 +66,7 @@ module.exports = [
       return controller.getMethodologyByNutrientIdAndMethodologyId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Soil"],
+      tags: ["api", rb209SoilTag],
       description:
         "Individual Soil Methodology - filtered by Nutrient Id and Methodology Id",
       validate: {
@@ -97,19 +74,7 @@ module.exports = [
           nutrientId: Joi.string().required(),
           methodologyId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -122,7 +87,7 @@ module.exports = [
       return controller.getNutrientIndexByNutrientIdAndIndexId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Soil"],
+      tags: ["api", rb209SoilTag],
       description:
         "Individual Nutrient Index Item - filtered by Nutrient Id and Index Id",
       validate: {
@@ -130,19 +95,7 @@ module.exports = [
           nutrientId: Joi.number().integer().required(), // Ensure nutrientId is an integer
           indexId: Joi.number().integer().required(), // Ensure indexId is an integer
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -154,11 +107,11 @@ module.exports = [
       const controller = new RB209SoilController(request, h);
       return controller.getNutrientIndexByNutrientIdAndNutrientValueAndMethodologyId(
         request,
-        h
+        h,
       );
     },
     options: {
-      tags: ["api", "RB209 Soil"],
+      tags: ["api", rb209SoilTag],
       description:
         "Individual Nutrient Index Item - filtered by Nutrient Id, Nutrient Value and Methodology Id",
       validate: {
@@ -167,19 +120,60 @@ module.exports = [
           nutrientValue: Joi.string().required(),
           methodologyId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
+      },
+    },
+  },
+
+  {
+    method: "GET",
+    path: "/vendors/rb209/Soil/NutrientIndex/{nutrientId}/{nutrientValue}/{methodologyId}/{countryId}",
+    handler: async (request, h) => {
+      const controller = new RB209SoilController(request, h);
+      return controller.getNutrientIndexByNutrientIdAndNutrientValueMethodologyIdAndCountryId(
+        request,
+        h,
+      );
+    },
+    options: {
+      tags: ["api", rb209SoilTag],
+      description:
+        "Individual Nutrient Index Item - filtered by Nutrient Id, Nutrient Value , Methodology Id,country Id",
+      validate: {
+        params: Joi.object({
+          countryId: Joi.number().integer().required(),
+          nutrientId: Joi.number().integer().required(),
+          nutrientValue: Joi.number().required(),
+          methodologyId: Joi.number().integer().required(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+  },
+
+  {
+    method: "GET",
+    path: "/vendors/rb209/Soil/NutrientIndexes/{methodologyId}",
+    handler: async (request, h) => {
+      const controller = new RB209SoilController(request, h);
+      return controller.getNutrientIndexMethodologyId(request, h);
+    },
+    options: {
+      tags: ["api", rb209SoilTag],
+      description: "Individual Nutrient Index ID - filtered by Methodology Id",
+      validate: {
+        params: Joi.object({
+          methodologyId: Joi.number()
+            .integer()
+            .required()
+            .description("The methodology id to filter on"),
+        }),
+        query: Joi.object({
+          methodologyId: Joi.number()
+            .integer()
+            .description("The nutrient id to filter on (optional)"),
+        }),
+        failAction: validationFailAction,
       },
     },
   },
@@ -191,11 +185,11 @@ module.exports = [
       const controller = new RB209SoilController(request, h);
       return controller.getNutrientIndexIdFromValueByNutrientIdAndMethodologyIdAndNutrientValue(
         request,
-        h
+        h,
       );
     },
     options: {
-      tags: ["api", "RB209 Soil"],
+      tags: ["api", rb209SoilTag],
       description:
         "Individual Nutrient Index Id - filtered by Nutrient Id, Methodology Id and Nutrient Value",
       validate: {
@@ -205,19 +199,7 @@ module.exports = [
           methodologyId: Joi.string().required(),
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -229,11 +211,11 @@ module.exports = [
       const controller = new RB209SoilController(request, h);
       return controller.getNutrientIndicesByNutrientIdAndMethodologyIdAndCountryId(
         request,
-        h
+        h,
       );
     },
     options: {
-      tags: ["api", "RB209 Soil"],
+      tags: ["api", rb209SoilTag],
       description:
         "A filtered list of available Nutrient Indexes - filtered by Nutrient Id, Methodology Id and Country Id",
       validate: {
@@ -242,19 +224,7 @@ module.exports = [
           methodologyId: Joi.string().required(),
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -266,11 +236,11 @@ module.exports = [
       const controller = new RB209SoilController(request, h);
       return controller.getNutrientTargetIndexByCropGroupIdAndNutrientIdAndCountryId(
         request,
-        h
+        h,
       );
     },
     options: {
-      tags: ["api", "RB209 Soil"],
+      tags: ["api", rb209SoilTag],
       description: "Get the nutrient target index",
       validate: {
         params: Joi.object({
@@ -278,19 +248,7 @@ module.exports = [
           nutrientId: Joi.string().required(),
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -303,25 +261,13 @@ module.exports = [
       return controller.getNvzActionProgramByCountryId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Soil"],
+      tags: ["api", rb209SoilTag],
       description: "The full list of NVZ Action program",
       validate: {
         params: Joi.object({
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -333,30 +279,18 @@ module.exports = [
       const controller = new RB209SoilController(request, h);
       return controller.getSoilPhRecommendationBySoilTypeIdAndCountryId(
         request,
-        h
+        h,
       );
     },
     options: {
-      tags: ["api", "RB209 Soil"],
+      tags: ["api", rb209SoilTag],
       description: "Get list of soil ph Recommendation level",
       validate: {
         params: Joi.object({
           soilTypeId: Joi.string().required(),
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -369,26 +303,14 @@ module.exports = [
       return controller.getSoilPscByCropGroupIdAndPIndexId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Soil"],
+      tags: ["api", rb209SoilTag],
       description: "Get the list of all available PSC for selected crop group",
       validate: {
         params: Joi.object({
           cropGroupId: Joi.string().required(),
           pIndexId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },

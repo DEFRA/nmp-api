@@ -1,165 +1,143 @@
-const RB209ArableService = require("./arable.service")
+const RB209ArableService = require("./arable.service");
 
 class RB209ArableController {
-    #request;
-    #h;
-    #service;
+  #request;
+  #h;
+  #service;
 
-    constructor(request, h) {
-        this.#request = request;
-        this.#h = h;
-        this.#service = new RB209ArableService();
-    }
+  constructor(request, h) {
+    this.#request = request;
+    this.#h = h;
+    this.#service = new RB209ArableService();
+  }
 
-    async getCropGroups() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+  async getCropsdetails() {
+    const url = this.#request.url.pathname.split("/rb209")[1];
+    try {
+      const data = await this.#service.getData(url);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
     }
+  }
 
-    async getCropGroupsBycropGroupId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+  async getCropGroups() {
+    try {
+      const data = await this.#service.getCropGroupsList();
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
     }
+  }
 
-    async getCropTypes() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getCropGroupsBycropGroupId() {
+    const { cropGroupId } = this.#request.params;
 
-    async getCropTypesByCropGroupId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+    try {
+      const data = await this.#service.getCropGroupByCropGroupId(cropGroupId);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
     }
+  }
 
-    async getCropTypeByCropTypeId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+  async getCropTypes() {
+    try {
+      const data = await this.#service.getCropTypesList();
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
     }
+  }
 
-    async getCropInfo1s() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getCropTypesByCropGroupId() {
+    const { cropGroupId } = this.#request.params;
 
-    async getCropInfo1sByCropTypeId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+    try {
+      const data = await this.#service.getCropTypesByCropGroupId(cropGroupId);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
     }
+  }
 
-    async getCropInfo1ByCropTypeIdAndCropInfo1Id() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getCropTypeByCropTypeId() {
+    const { cropTypeId } = this.#request.params;
 
-    async getCropInfo2s() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+    try {
+      const data = await this.#service.getCropTypeByCropTypeId(cropTypeId);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
     }
+  }
 
-    async getCropInfo2CropInfo2Id() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getCropInfo1s() {
+    return this.getCropsdetails();
+  }
 
-    async getPotatoGroups() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getCropInfo1sByCropTypeId() {
+    return this.getCropsdetails();
+  }
 
-    async getPotatoGroupByPotatoGroupId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getCropInfo1ByCropTypeIdAndCropInfo1Id() {
+    return this.getCropsdetails();
+  }
 
-    async getPotatoVarieties() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getCropInfo2s() {
+    return this.getCropsdetails();
+  }
 
-    async getPotatoVarietiesByPotatoGroupId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getCropInfo2CropInfo2Id() {
+    return this.getCropsdetails();
+  }
 
-    async getPotatoVarietyByPotatoVarietyId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
+  async getPotatoGroups() {
+    return this.getCropsdetails();
+  }
+
+  async getPotatoGroupByPotatoGroupId() {
+    return this.getCropsdetails();
+  }
+
+  async getPotatoVarieties() {
+    return this.getCropsdetails();
+  }
+
+  async getPotatoVarietiesByPotatoGroupId() {
+    return this.getCropsdetails();
+  }
+
+  async getPotatoVarietyByPotatoVarietyId() {
+    return this.getCropsdetails();
+  }
+
+  async getCropTypesMetrics() {
+    try {
+      const data = await this.#service.getCropTypesMetrics();
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
     }
+  }
+
+  async resetCropTypesMetrics() {
+    try {
+      const data = this.#service.resetCropTypesMetrics();
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
+
+  async resetCropTypesCache() {
+    try {
+      const data = await this.#service.resetCropTypesCache();
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
 }
 
 module.exports = { RB209ArableController };

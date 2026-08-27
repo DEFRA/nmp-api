@@ -17,5 +17,13 @@ class SoilTypeSoilTextureService extends BaseService {
       console.log("soilTypeSoilTextureData", soilTypeSoilTextureData);
     return soilTypeSoilTextureData;
   }
+  async getSoilTypeIdByTopSoilAndSubSoil(topSoilId, subSoilId) {
+    const record = await this.repository.findOneBy({
+        TopSoilID: topSoilId,
+        SubSoilID: subSoilId
+    });
+
+    return record?.SoilTypeID ?? null;
+  }
 }
 module.exports = { SoilTypeSoilTextureService };

@@ -5,7 +5,8 @@ const {
 const {
   formatErrorResponse,
 } = require("../../../interceptor/responseFormatter");
-
+const { validationFailAction } = require("../../../shared/validateFailSafeAction");
+const organicMaterialDescriptionVendorTag = "RB209 OrganicMaterial";
 module.exports = [
   {
     method: "GET",
@@ -15,7 +16,7 @@ module.exports = [
       return controller.getOrganicMaterialCategories();
     },
     options: {
-      tags: ["api", "RB209 OrganicMaterial"],
+      tags: ["api", organicMaterialDescriptionVendorTag],
       description:
         "This endpoint is used to return Organic Material Categories",
     },
@@ -28,7 +29,7 @@ module.exports = [
       return controller.getOrganicMaterialTypes();
     },
     options: {
-      tags: ["api", "RB209 OrganicMaterial"],
+      tags: ["api", organicMaterialDescriptionVendorTag],
       description:
         "This endpoint is used to return Organic Material Types, with optional filtering by dryMatterSplit or organicMaterialCategoryId",
       validate: {
@@ -36,19 +37,7 @@ module.exports = [
           dryMatterSplit: Joi.boolean().optional(),
           organicMaterialCategoryId: Joi.string().optional(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -60,26 +49,14 @@ module.exports = [
       return controller.getIncorporationMethodsByOrganicMaterialTypeId();
     },
     options: {
-      tags: ["api", "RB209 OrganicMaterial"],
+      tags: ["api", organicMaterialDescriptionVendorTag],
       description:
         "Organic Material Incorporation Method list based on OrganicMaterialTypeId",
       validate: {
         params: Joi.object({
           organicMaterialTypeId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -91,7 +68,7 @@ module.exports = [
       return controller.getIncorporationMethods();
     },
     options: {
-      tags: ["api", "RB209 OrganicMaterial"],
+      tags: ["api", organicMaterialDescriptionVendorTag],
       description: "Organic Material Incorporation Method list",
     },
   },
@@ -103,26 +80,14 @@ module.exports = [
       return controller.getIncorporationMethodByIncorporationMethodId();
     },
     options: {
-      tags: ["api", "RB209 OrganicMaterial"],
+      tags: ["api", organicMaterialDescriptionVendorTag],
       description:
         "Organic Material Incorporation Method Item based on Incorporation Method ID",
       validate: {
         params: Joi.object({
           incorporationMethodId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -134,7 +99,7 @@ module.exports = [
       return controller.getOrganicMaterialTypeItemByOrganicMaterialTypeIdAndDryMatterSplit();
     },
     options: {
-      tags: ["api", "RB209 OrganicMaterial"],
+      tags: ["api", organicMaterialDescriptionVendorTag],
       description:
         "Returns the organic material type item based on the provided organicMaterialTypeId and dryMatterSplit",
       validate: {
@@ -142,19 +107,7 @@ module.exports = [
           organicMaterialTypeId: Joi.string().required(),
           dryMatterSplit: Joi.boolean().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -166,26 +119,14 @@ module.exports = [
       return controller.getOrganicMaterialTypeItemByOrganicMaterialTypeId();
     },
     options: {
-      tags: ["api", "RB209 OrganicMaterial"],
+      tags: ["api", organicMaterialDescriptionVendorTag],
       description:
         "Returns the organic material type item based on the provided organicMaterialTypeId",
       validate: {
         params: Joi.object({
           organicMaterialTypeId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -197,26 +138,14 @@ module.exports = [
       return controller.getOrganicMaterialCategoryItemByOrganicMaterialCategoryId();
     },
     options: {
-      tags: ["api", "RB209 OrganicMaterial"],
+      tags: ["api", organicMaterialDescriptionVendorTag],
       description:
         "Returns the organic material category item based on the provided organicMaterialCategoryId",
       validate: {
         params: Joi.object({
           organicMaterialCategoryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },

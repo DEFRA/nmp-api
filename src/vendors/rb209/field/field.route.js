@@ -1,9 +1,7 @@
 const { RB209FieldController } = require("./field.controller");
 const Joi = require("joi");
-const {
-  formatErrorResponse,
-} = require("../../../interceptor/responseFormatter");
-
+const { validationFailAction } = require("../../../shared/validateFailSafeAction");
+const rb209FieldTag = "RB209 Field";
 module.exports = [
   {
     method: "GET",
@@ -13,7 +11,7 @@ module.exports = [
       return controller.getCountries();
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description: "The full list of available Countries",
     },
   },
@@ -25,26 +23,14 @@ module.exports = [
       return controller.getCountryByCountryId();
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description:
         "Individual Country Text filtered from the supplied corresponding Country Id",
       validate: {
         params: Joi.object({
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -56,25 +42,13 @@ module.exports = [
       return controller.getFieldTypesByCountryId();
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description: "The full list of available Field Types",
       validate: {
         params: Joi.object({
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -86,26 +60,14 @@ module.exports = [
       return controller.getFieldTypeByFieldTypeId();
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description:
         "Individual Field Type Text filtered from the supplied corresponding Field Type Id",
       validate: {
         params: Joi.object({
           fieldTypeId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -117,26 +79,14 @@ module.exports = [
       return controller.getNutrientByNutrientId();
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description:
         "Individual Nutrient Text filtered from the supplied corresponding Nutrient Id",
       validate: {
         params: Joi.object({
           nutrientId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -148,7 +98,7 @@ module.exports = [
       return controller.getNutrients(request, h);
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description: "The full list of available Nutrients",
     },
   },
@@ -157,13 +107,13 @@ module.exports = [
     path: "/vendors/rb209/Field/SecondCropType_List/{cropGroupId1}/{cropTypeId1}/{cropGroupId2}/{countryId}",
     handler: async (request, h) => {
       const controller = new RB209FieldController(request, h);
-      return controller.getSecondCropType_ListByCropGroupId1AndCropTypeId1AndCropGroupId2AndCountryId(
+      return controller.getSecondCropTypeListByCropGroupId1AndCropTypeIdOneAndCropGroupIdTwoAndCountryId(
         request,
-        h
+        h,
       );
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description:
         "Some Crops (both Arable and Grassland) allow a second Crop to be sown in the same Crop Year: The filtered list of available Second Crop Types after the first Crop",
       validate: {
@@ -173,19 +123,7 @@ module.exports = [
           cropGroupId2: Joi.string().required(),
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -197,25 +135,13 @@ module.exports = [
       return controller.getSiteClassBySiteClassId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description: "The full list of available Nutrients",
       validate: {
         params: Joi.object({
           siteClassId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -227,25 +153,13 @@ module.exports = [
       return controller.getSiteClassesByCountryId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description: "Site Class list",
       validate: {
         params: Joi.object({
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -256,11 +170,11 @@ module.exports = [
       const controller = new RB209FieldController(request, h);
       return controller.getSiteClassItemBySoilTypeIdAndAltitudeAndPostcodeAndCountryId(
         request,
-        h
+        h,
       );
     },
     options: {
-      tags: ["api", "RB209 Field"],
+      tags: ["api", rb209FieldTag],
       description: "Site Class list",
       validate: {
         params: Joi.object({
@@ -269,19 +183,7 @@ module.exports = [
           postcode: Joi.string().required(),
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },

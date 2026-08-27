@@ -10,203 +10,81 @@ class RB209GrassController {
     this.#h = h;
     this.#service = new RB209GrassService();
   }
-  async getGrassDefoliationSequenceByDefoliationSequenceId() {
-    let url = this.#request.url.pathname.split("/rb209")[1];
-    const { defoliationSequenceId } = this.#request.params;
+
+  getRb209Path() {
+    return this.#request.url.pathname.split("/rb209")[1];
+  }
+
+  async handleGetData() {
+    const url = this.getRb209Path();
     try {
       const data = await this.#service.getData(url);
-      return this.#h.response({ data });
+      return this.#h.response(data);
     } catch (error) {
       return this.#h.response({ error });
     }
+  }
+  async getGrassDefoliationSequenceByDefoliationSequenceId() {
+    return this.handleGetData();
   }
   async getGrassDefoliationSequence() {
-    //let url = this.#request.url.pathname.split("/rb209")[1];
-    const url = this.#request.url.pathname.split("/rb209")[1];
-
-    //const { swardTypeId, numberOfCuts } = this.#request.query;
-    // const { swardManagementId, numberOfCuts } = this.#request.params;
-
-    // const queryParams = [];
-    // if (swardTypeId !== undefined) {
-    //   queryParams.push(`swardTypeId=${swardTypeId}`);
-    // }
-    // if (numberOfCuts !== undefined) {
-    //   queryParams.push(`numberOfCuts=${numberOfCuts}`);
-    // }
-
-    // if (queryParams.length > 0) {
-    //   url += "?" + queryParams.join("&");
-    // }
-
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-      // console.log("data oof defoliation",data)
-      // if (data.status != 404 ) {
-      //   return this.#h.response(data);
-      // } else {
-      //   const data = await this.#service.getData(
-      //     `Grass/DefoliationSequence/${swardTypeId}/${numberOfCuts}`
-      //   );
-      //   console.log("data needed", data);
-      //   return this.#h.response({ list: data });
-      // }
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.handleGetData();
   }
   async getGrassGrowthClassesByCountryId() {
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.handleGetData();
   }
   async getGrassHistoriesByCountryId() {
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.handleGetData();
   }
   async getGrassHistoryByGrassHistoryId() {
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.handleGetData();
   }
   async getGrassSeasonBySeasonId() {
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.handleGetData();
   }
   async getGrassSeasonByCountryId() {
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.handleGetData();
   }
   async getGrassGrowthClassByGrassGrowthClassId() {
-    const { grassGrowthClassId } = this.#request.params;
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.handleGetData();
   }
 
   async getGrassGrowthClassBySoilTypeIdAndRainfallAndAltitudeAndChalk() {
-    const { soilTypeId, rainfall, altitude, chalk } = this.#request.params;
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.handleGetData();
   }
   async getGrassCutsForField() {
-    let url = this.#request.url.pathname.split("/rb209")[1];
-    const { swardTypeId, swardManagementId } = this.#request.params;
-
-    // const queryParams = [];
-    // if (swardTypeId !== undefined) {
-    //   queryParams.push(`swardTypeId=${swardTypeId}`);
-    // }
-    // if (swardManagementId !== undefined) {
-    //   queryParams.push(`swardManagementId=${swardManagementId}`);
-    // }
-
-    // if (queryParams.length > 0) {
-    //   url += "?" + queryParams.join("&");
-    // }
-
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response({ data });
-
-      // if(data.status!=404){
-
-      //   return this.#h.response(data);
-      // }else{
-      //   console.log("swardTypeId", swardTypeId);
-      //   console.log("swardManagementId", swardManagementId);
-      // const data = await this.#service.getData(
-      //   `Grass/PotentialCuts/${swardTypeId}/${swardManagementId}`
-      // );
-      // console.log("data needed for", data);
-
-      //   return this.#h.response({data});
-
-      // }
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.handleGetData();
   }
   async getSwardManagementBySwardManagementId() {
-    let url = this.#request.url.pathname.split("/rb209")[1];
-    const { swardManagementId } = this.#request.params;
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response({ data });
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.handleGetData();
+  }
+  async getSiteClassIdBySoilTypeIdAndRainfallAndAltitude() {
+    return this.handleGetData();
   }
   async getSwardManagementsForGrassFields() {
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.handleGetData();
   }
   async getSwardManagementBySwardTypeId() {
-    let url = this.#request.url.pathname.split("/rb209")[1];
-    const { swardTypeId } = this.#request.params;
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response({ data });
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.handleGetData();
   }
   async getSwardTypeBySwardTypeId() {
-    let url = this.#request.url.pathname.split("/rb209")[1];
-    const { swardTypeId } = this.#request.params;
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response({ data });
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.handleGetData();
   }
   async getSwardTypesForField() {
-    const url = this.#request.url.pathname.split("/rb209")[1];
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.handleGetData();
+  }
+
+  async getSwardTypesFilterByCountryId() {
+    const { countryId } = this.#request.params;
+     try {
+       const record = await this.#service.getSwardTypesFilterByCountryId(
+         countryId
+       );
+       return this.#h.response(record);
+     } catch (error) {
+       console.error("Error in getSwardTypesFilterByCountryId:", error);
+       return this.#h.response(error);
+     }
   }
 
   async getSwardTypesFilterByCountryId() {
@@ -222,35 +100,10 @@ class RB209GrassController {
   }
 
   async getYieldRangesForGrassFields() {
-    let url = this.#request.url.pathname.split("/rb209")[1];
-    const { sequenceId, grassGrowthClassId } = this.#request.params;
-
-    // const queryParams = [];
-    // if (sequenceId !== undefined) {
-    //   queryParams.push(`sequenceId=${sequenceId}`);
-    // }
-    // if (grassGrowthClassId !== undefined) {
-    //   queryParams.push(`grassGrowthClassId=${grassGrowthClassId}`);
-    // }
-
-    // if (queryParams.length > 0) {
-    //   url += "?" + queryParams.join("&");
-    // }
-
-    try {
-      const data = await this.#service.getData(url);
-      return this.#h.response(data);
-      // if (data.status != 404 || data.status != 422) {
-      //   return this.#h.response(data);
-      // } else {
-      //   const data = await this.#service.getData(
-      //     `Grass/YieldRangesEnglandAndWales/${sequenceId}/${grassGrowthClassId}`
-      //   );
-      //   return this.#h.response(data);
-      // }
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.handleGetData();
+  }
+  async getYieldRangesForGrassFieldsBySequenceIdAndSiteClassId() {
+    return this.handleGetData();
   }
 }
 

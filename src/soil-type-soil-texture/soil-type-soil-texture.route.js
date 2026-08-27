@@ -1,6 +1,7 @@
 const Joi = require("joi");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { SoilTypeSoilTextureController } = require("./soil-type-soil-texture.controller");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 module.exports = [
   {
@@ -13,24 +14,31 @@ module.exports = [
         params: Joi.object({
           soilTypeId: Joi.number().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {
       const controller = new SoilTypeSoilTextureController(request, h);
       return controller.getTopSoilSubSoilBySoilTypeId();
+    },
+  },
+  {
+    method: "GET",
+    path: "/soil-type-soil-texture/{topSoilId}/{subSoilId}",
+    options: {
+      tags: ["api", "Soil Type Soil Texture "],
+      description: "Get SoilTypeID by Top Soil Sub Soil ID's",
+      validate: {
+        params: Joi.object({
+          topSoilId: Joi.number().required(),
+          subSoilId: Joi.number().required(),
+        }),
+        failAction: validationFailAction
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new SoilTypeSoilTextureController(request, h);
+      return controller.getSoilTypeByTopSoilSubSoilId();
     },
   },
 ];

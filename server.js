@@ -11,7 +11,9 @@ const pack = require("./package");
 const routes = require("./src/routes");
 const ormConfig = require("./src/db/ormConfig");
 
-const { AzureAuthMiddleware } = require("./src/middleware/azureAuth.middleware");
+const {
+  AzureAuthMiddleware,
+} = require("./src/middleware/azureAuth.middleware");
 const responseHandlerPlugin = require("./src/interceptor/response.interceptor");
 const EnvironmentService = require("./src/shared/environment.service");
 
@@ -21,8 +23,8 @@ const init = async () => {
       title: "Nutrients Management Planning Api",
       version: pack.version,
     },
-    schemes: ["http","https"],
-    documentationPath: EnvironmentService.APPLICATION_SWAGGER_PATH() || "/docs",
+    schemes: ["http", "https"],
+    documentationPath: EnvironmentService.applicationSwaggerPath() || "/docs",
     grouping: "tags",
     securityDefinitions: {
       Bearer: {
@@ -44,7 +46,7 @@ const init = async () => {
   const azureAuthMiddleware = new AzureAuthMiddleware();
 
   const server = hapi.server({
-    port: process.env.PORT ?? EnvironmentService.APPLICATION_PORT(),
+    port: process.env.PORT ?? EnvironmentService.applicationPort(),
     // Use the port provided by IIS,
     // host: "localhost",
   });
@@ -67,13 +69,7 @@ const init = async () => {
 
   server.events.on("response", function (request) {
     console.log(
-      request.info.remoteAddress +
-        ": " +
-        request.method.toUpperCase() +
-        " " +
-        request.path +
-        " --> " +
-        request.response.statusCode
+      `${request.method.toUpperCase()} ${request.path} --> ${request.response.statusCode}`,
     );
   });
 

@@ -25,37 +25,35 @@ class CalculateFutureWarningMessageService {
     const rules = await getRulesFn(
       entity,
       this,
-      this.formatToDayMonth?.bind(this)
+      this.formatToDayMonth?.bind(this),
     );
 
     for (const r of rules) {
       const sp = await this.execSP(manager, r.sql, [entity.ID]);
-      if (!sp || !(await r.predicate.call(this, sp))) {
-        continue;
+
+      if (sp && (await r.predicate.call(this, sp))) {
+        const template = await this.getTemplate(
+          manager,
+          context.farm.CountryID,
+          r.key,
+        );
+
+        if (template) {
+          const localized = await this.bind(
+            template,
+            r.values ? await r.values(sp) : [],
+          );
+
+          warnings.push(
+            await this.buildMessage({
+              field: context.field,
+              crop: context.crop,
+              joining: r.join === "FIELD" ? context.field : entity,
+              localized,
+            }),
+          );
+        }
       }
-
-      const template = await this.getTemplate(
-        manager,
-        context.farm.CountryID,
-        r.key
-      );
-      if (!template) {
-        continue;
-      }
-
-      const localized = await this.bind(
-        template,
-        r.values ? await r.values(sp) : []
-      );
-
-      warnings.push(
-        await this.buildMessage({
-          field: context.field,
-          crop: context.crop,
-          joining: r.join === "FIELD" ? context.field : entity,
-          localized,
-        })
-      );
     }
 
     return warnings;
@@ -101,7 +99,7 @@ class CalculateFutureWarningMessageService {
       typeof text === "string"
         ? values.reduce(
             (acc, v, i) => acc.split(`{${i}}`).join(String(v)),
-            text
+            text,
           )
         : text;
 
@@ -143,20 +141,63 @@ class CalculateFutureWarningMessageService {
   /* =========== ORGANIC MANURE PREDICATES (ASYNC) =============== */
 
   async yearlyN(sp) {
+    const isOverLimit = sp.IsOrganicManureNFieldLimit;
+    if (sp.IsFieldScotland) {
+      return sp.IsWithinNvz && isOverLimit;
+    }
+    if (sp.IsFieldEngland) {
+      return sp.IsWithinNvz && isOverLimit;
+    }
+    if (sp.IsFieldWelsh) {
+      return isOverLimit;
+    }
+    return false;
+  }
+
+  isBaseCondition(sp) {
     return (
-      (sp.IsFieldEngland && sp.IsWithinNvz && sp.IsOrganicManureNFieldLimit) ||
-      (sp.IsFieldWelsh && sp.IsOrganicManureNFieldLimit)
+      sp.IsGreenCompost &&
+      sp.IsRestrictedCropNotPresent &&
+      sp.IsTotalNitrogenAboveLimit
+    );
+  }
+
+  isEngland(sp) {
+    return sp.IsFieldEngland && sp.IsFieldWithinNvz;
+  }
+
+  isWelsh(sp) {
+    return sp.IsFieldWelsh;
+  }
+
+  isScotland(sp) {
+    return (
+      sp.IsFieldScotland &&
+      sp.IsAnyGreenCompostLast2Years &&
+      sp.IsFieldWithinNvz &&
+      sp.TotalOrganicManureNitrogen
     );
   }
 
   async twoYearCompost(sp) {
-    const c =
-      sp.IsGreenCompost &&
-      sp.IsRestrictedCropNotPresent &&
-      sp.IsTotalNitrogenAboveLimit;
-    return (
-      (sp.IsFieldEngland && sp.IsFieldWithinNvz && c) || (sp.IsFieldWelsh && c)
-    );
+    if (this.isEngland(sp) && this.isBaseCondition(sp)) {
+      return true;
+    }
+
+    if (this.isWelsh(sp) && this.isBaseCondition(sp)) {
+      return true;
+    }
+
+    if (this.isScotland(sp)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  async nFieldLimitGreenCompostOnly(sp) {
+    const c = sp.IsOrganicManureNFieldLimit;
+    return sp.IsFieldScotland && sp.IsWithinNvz && c;
   }
 
   async fourYearCompost(sp) {
@@ -179,14 +220,76 @@ class CalculateFutureWarningMessageService {
   }
 
   async closedPeriod(sp) {
-    return (
-      !sp.RegisteredOrganicProducer &&
-      sp.IsHighRanManures &&
-      sp.IsWithinClosedPeriod &&
-      (sp.IsFieldInEngland || sp.IsFieldInWelsh)
-    );
+    const isHighRiskClosedPeriod =
+      sp.IsHighRanManures && sp.IsWithinClosedPeriod;
+
+    if (sp.IsFieldInScotland) {
+      return isHighRiskClosedPeriod;
+    }
+
+    if (sp.IsFieldInEngland || sp.IsFieldInWelsh) {
+      return !sp.RegisteredOrganicProducer && isHighRiskClosedPeriod;
+    }
+
+    return false;
   }
 
+  async closedPeriodScotlandHighRanTillJulyEnd(sp) {
+    const common =
+      sp.IsWithinNVZ &&
+      sp.IsTotalApplicationRateAbove30 &&
+      sp.IsHighRanManures &&
+      sp.IsFieldScotland;
+    return sp.IsWithinPreWindow && common;
+  }
+
+  async scotlandHighRanTillJulyEndOnlyPoultry(sp) {
+    const common =
+      sp.IsWithinNVZ &&
+      sp.IsTotalApplicationRateAbove5 &&
+      sp.IsHighRanManures &&
+      sp.IsFieldScotland &&
+      sp.IsPoultryManure;
+    return sp.IsWithinPreWindow && common;
+  }
+
+  async closedPeriodScotlandHighRanFeb(sp) {
+    const common =
+      sp.IsWithinNVZ &&
+      sp.IsTotalApplicationRateAbove30 &&
+      sp.IsHighRanManures &&
+      sp.IsFieldScotland;
+    return sp.IsWithinPostWindow && common;
+  }
+
+  async scotlandHighRanTillFebOnlyPoultry(sp) {
+    const common =
+      sp.IsWithinNVZ &&
+      sp.IsTotalApplicationRateAbove5 &&
+      sp.IsHighRanManures &&
+      sp.IsFieldScotland &&
+      sp.IsPoultryManure;
+    return sp.IsWithinPostWindow && common;
+  }
+
+  async scotlandLiveStockTwentyDayGap(sp) {
+    return sp.IsTriggered;
+  }
+
+  async closedPeriodForFertiliserApartFromBrassica(sp) {
+    return sp.IsTriggered;
+  }
+
+  async closedPeriodForFertiliserForBrassica(sp) {
+    return sp.IsTriggered;
+  }
+
+  async scotlandHighRanInJulyMonth(sp) {
+    return sp.IsTriggered;
+  }
+  async scotLandAugSepHighRan(sp) {
+    return sp.IsTriggered;
+  }
   async sixthExclusion(sp) {
     const commonConditions =
       sp.IsHighRanManures &&
@@ -379,8 +482,7 @@ class CalculateFutureWarningMessageService {
     const common =
       sp.IsGrassCropType &&
       sp.IsInsideClosedPeriodToOctober &&
-      (sp.IsCurrentNAbove40 ||
-      sp.IsTotalClosedPeriodNAbove80);
+      (sp.IsCurrentNAbove40 || sp.IsTotalClosedPeriodNAbove80);
 
     const england = sp.IsFieldInEngland && sp.IsWithinNVZ;
     const wales = sp.IsFieldInWales;
@@ -399,13 +501,25 @@ class CalculateFutureWarningMessageService {
     return insidePeriod && isRelevantCrop && (isEngland || isWales);
   }
 
+  async scotlandFertiliserNResidueGroup(sp) {
+    return sp.IsTriggered;
+  }
+
+  async manureNMaxScotland(sp) {
+    return sp.IsFieldWithinScotland && sp.IsNExceeding && sp.IsWithinNVZ;
+  }
+
+  async scotlandFertiliserNResidueGroupSpecific(sp) {
+    return sp.IsTriggered;
+  }
+
   async calculateFertiliserWarningMessage(manager, fertiliser) {
     return this.commonWarningMessageCalculator(
       manager,
       fertiliser,
       this.GetWarningRulesAndSpService.getFertiliserRules.bind(
-        this.GetWarningRulesAndSpService
-      )
+        this.GetWarningRulesAndSpService,
+      ),
     );
   }
 
@@ -414,8 +528,18 @@ class CalculateFutureWarningMessageService {
       manager,
       manure,
       this.GetWarningRulesAndSpService.getOrganicManureRules.bind(
-        this.GetWarningRulesAndSpService
-      )
+        this.GetWarningRulesAndSpService,
+      ),
+    );
+  }
+
+  async calculateOnlyNMaxMessage(manager, manure) {
+    return this.commonWarningMessageCalculator(
+      manager,
+      manure,
+      this.GetWarningRulesAndSpService.getNMaxRules.bind(
+        this.GetWarningRulesAndSpService,
+      ),
     );
   }
 }

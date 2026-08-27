@@ -1,22 +1,72 @@
 const { MoreThan } = require("typeorm");
 const { CropEntity } = require("../db/entity/crop.entity");
-const { InprogressCalculationsEntity } = require("../db/entity/inprogress-calculations-entity");
-const RB209ArableService = require("../vendors/rb209/arable/arable.service");
-const { GenerateRecommendations } = require("./generate-recomendations-service");
+const {
+  InprogressCalculationsEntity,
+} = require("../db/entity/inprogress-calculations-entity");
+const {
+  GenerateRecommendations,
+} = require("./generate-recomendations-service");
 const { AppDataSource } = require("../db/data-source");
+const {
+  runWithDeadlockRetry,
+  isDeadlockError,
+} = require("../db/transactionRetry");
+const {
+  createFutureRecommendationInprogressLock,
+} = require("./future-recommendation-inprogress-lock");
+const {
+  createBackgroundRequestContext,
+  createQueue,
+  runWithFutureDeadlockRetry,
+  handleDeadlockRequeue,
+  handleInProgressContention,
+} = require("./future-recommendation-background-optimization");
 
 class UpdatingFutureRecommendations {
+  static sharedQueue;
+
+  static generateRecommendations;
+
+  static inprogressLockManager;
+
   constructor() {
-    this.farmExistRepository = AppDataSource.getRepository(
-      InprogressCalculationsEntity,
+    if (!UpdatingFutureRecommendations.sharedQueue) {
+      UpdatingFutureRecommendations.sharedQueue =
+        UpdatingFutureRecommendations.createSharedQueue();
+    }
+  }
+
+  static createSharedQueue() {
+    return createQueue((job) =>
+      UpdatingFutureRecommendations.processQueuedRecommendationUpdate(job),
     );
-    this.cropRepository = AppDataSource.getRepository(CropEntity);
-    this.rB209ArableService = new RB209ArableService();
-    this.generateRecommendations = new GenerateRecommendations();
+  }
+
+  static getGenerateRecommendationsService() {
+    if (!UpdatingFutureRecommendations.generateRecommendations) {
+      UpdatingFutureRecommendations.generateRecommendations =
+        new GenerateRecommendations();
+    }
+
+    return UpdatingFutureRecommendations.generateRecommendations;
+  }
+
+  static getInprogressLockManager() {
+    if (!UpdatingFutureRecommendations.inprogressLockManager) {
+      UpdatingFutureRecommendations.inprogressLockManager =
+        createFutureRecommendationInprogressLock({
+          AppDataSource,
+          InprogressCalculationsEntity,
+          runWithDeadlockRetry,
+          runWithFutureDeadlockRetry,
+        });
+    }
+
+    return UpdatingFutureRecommendations.inprogressLockManager;
   }
 
   async getYearsGreaterThanGivenYear(fieldID, year) {
-    const years = await this.cropRepository.find({
+    const years = await AppDataSource.manager.find(CropEntity, {
       where: {
         FieldID: fieldID,
         Year: MoreThan(year), // Fetch records with Year greater than the provided year
@@ -27,86 +77,112 @@ class UpdatingFutureRecommendations {
     // Extract and return unique years
     return years.map((record) => record.Year);
   }
+
   async updateRecommendationsForField(fieldID, year, request, userId) {
-    // Fetch all years greater than the provided year for the given FieldID
-    const yearsGreaterThanGivenYear = await this.getYearsGreaterThanGivenYear(
-      fieldID,
-      year,
-    );
-    const allYearsTogether = [year, ...yearsGreaterThanGivenYear];
-    this.processYearsInBackground(fieldID, allYearsTogether, request, userId);
-  }
-
-  async processYearsInBackground(fieldID, years, request, userId) {
-    for (const yearToSave of years) {
-      try {
-        // Check if FieldID and Year combination already exists
-        const existingEntry = await this.farmExistRepository.findOne({
-          where: { FieldID: fieldID, Year: yearToSave },
-        });
-
-        // If it doesn't exist, save it
-        if (existingEntry) {
-          console.log(
-            `Entry for FieldID: ${fieldID}, Year: ${yearToSave} already exists`,
-          );
-        } else {
-          await this.farmExistRepository.save({
-            FieldID: fieldID,
-            Year: yearToSave,
-          });
-          console.log(
-            `Saved entry for FieldID: ${fieldID}, Year: ${yearToSave}`,
-          );
-        }
-      } catch (error) {
-        console.error(
-          `Error saving entry for FieldID: ${fieldID}, Year: ${yearToSave}`,
-          error,
-        );
-      }
-    }
-
-    // If there are remaining years, process them in the background
-    if (years.length > 0) {
-      console.log("Processing the following years in background:", years);
-      for (const yearToUpdate of years) {
-        try {
-          // Call the updateRecommendationAndOrganicManure for each remaining year
-          await this.updateRecommendationAndOrganicManure(
-            fieldID,
-            yearToUpdate,
-            request,
-            userId,
-          );
-          console.log(`Successfully processed year ${yearToUpdate}`);
-        } catch (error) {
-          console.error(`Error processing year ${yearToUpdate}:`, error);
-        }
-      }
-    } else {
-      console.log("No years greater than the given year were found.");
-    }
-  }
-
-  async updateRecommendationAndOrganicManure(fieldID, year, request, userId) {
-    return AppDataSource.transaction(async (transactionalManager) => {
-      const newOrganicManure = null;
-      await this.generateRecommendations.generateRecommendations(
+    try {
+      // Fetch all years greater than the provided year for the given FieldID.
+      const yearsGreaterThanGivenYear = await this.getYearsGreaterThanGivenYear(
         fieldID,
         year,
-        newOrganicManure,
-        transactionalManager,
-        request,
-        userId
       );
 
-      await transactionalManager.delete(InprogressCalculationsEntity, {
-        FieldID: fieldID,
-        Year: year
-      });
-      console.log(`Deleted entry for FieldID: ${fieldID}, Year: ${year}`);
-    });
+      const uniqueYears = [...new Set([year, ...yearsGreaterThanGivenYear])]
+        .map(Number)
+        .filter((item) => Number.isFinite(item))
+        .sort((a, b) => a - b);
+      this.processYearsInBackground(fieldID, uniqueYears, request, userId);
+    } catch (error) {
+      console.error(
+        `Error queueing recommendation updates for FieldID: ${fieldID}, Year: ${year}`,
+        error,
+      );
+    }
+  }
+
+  processYearsInBackground(fieldID, years, request, userId) {
+    if (!Array.isArray(years) || years.length === 0) {
+      console.log("No years greater than the given year were found.");
+      return;
+    }
+
+    console.log(
+      "Queueing the following years for background processing:",
+      years,
+    );
+
+    const jobs = years.map((yearToQueue) => ({
+      fieldID,
+      year: yearToQueue,
+      request: createBackgroundRequestContext(request),
+      userId,
+      requeueAttempt: 0,
+      lockWaitAttempt: 0,
+      staleLockRecoveryAttempt: 0,
+    }));
+
+    UpdatingFutureRecommendations.sharedQueue.enqueueMany(jobs);
+  }
+
+  static async processQueuedRecommendationUpdate(job) {
+    const { fieldID, year, request, userId } = job;
+    let lockAcquired = false;
+    const lockManager =
+      UpdatingFutureRecommendations.getInprogressLockManager();
+    try {
+      lockAcquired = await lockManager.acquireInProgressSlot(fieldID, year);
+      if (!lockAcquired) {
+        await handleInProgressContention({
+          job,
+          fieldID,
+          year,
+          sharedQueue: UpdatingFutureRecommendations.sharedQueue,
+          clearInProgress: lockManager.clearInProgress,
+        });
+        return;
+      }
+      console.log(`Saved entry for FieldID: ${fieldID}, Year: ${year}`);
+      const newOrganicManure = null;
+      await runWithFutureDeadlockRetry(
+        runWithDeadlockRetry,
+        "future-recommendation-generate",
+        () =>
+          UpdatingFutureRecommendations.getGenerateRecommendationsService().generateRecommendations(
+            fieldID,
+            year,
+            newOrganicManure,
+            AppDataSource.manager,
+            request,
+            userId,
+          ),
+      );
+    } catch (error) {
+      if (
+        handleDeadlockRequeue({
+          error,
+          isDeadlockError,
+          job,
+          fieldID,
+          year,
+          sharedQueue: UpdatingFutureRecommendations.sharedQueue,
+        })
+      ) {
+        return;
+      }
+
+      throw error;
+    } finally {
+      if (lockAcquired) {
+        try {
+          await lockManager.clearInProgress(fieldID, year);
+          console.log(`Deleted entry for FieldID: ${fieldID}, Year: ${year}`);
+        } catch (cleanupError) {
+          console.error(
+            `Error cleaning up in-progress entry for FieldID: ${fieldID}, Year: ${year}`,
+            cleanupError,
+          );
+        }
+      }
+    }
   }
 }
 

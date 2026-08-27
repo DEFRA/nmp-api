@@ -1,12 +1,208 @@
 const RB209BaseService = require("../base.service");
 const CacheManager = require("../cacheManager");
+const { ARABLE } = require("../../../constants/rb209-endpoints-mapper");
+const {
+  getCachedEndpointData,
+  getCachedValue,
+  resetCachedEndpointData,
+  isCacheRequestInFlight,
+  getEndpointCacheTtlSeconds,
+} = require("../endpoint-cache.service");
 
 const cacheManager = new CacheManager();
+const CROP_TYPES_CACHE_KEY = "rb209-arable-crop-types-list";
+const CROP_GROUPS_CACHE_KEY = "rb209-arable-crop-groups-list";
+
+const cropTypesMetrics = {
+  totalRequests: 0,
+  thirdPartyCalls: 0,
+  cacheHits: 0,
+  inFlightJoins: 0,
+  lastFetchedAt: null,
+};
 
 class RB209ArableService extends RB209BaseService {
-    constructor() {
-        super(cacheManager);
+  constructor() {
+    super(cacheManager);
+  }
+
+  async getCropTypesList(options = {}) {
+    const { forceRefresh = false } = options;
+    cropTypesMetrics.totalRequests += 1;
+
+    return getCachedEndpointData({
+      cacheKey: CROP_TYPES_CACHE_KEY,
+      forceRefresh,
+      isCachedValueValid: (cachedCropTypes) =>
+        Array.isArray(cachedCropTypes) && cachedCropTypes.length > 0,
+      shouldCache: (cropTypes) => Array.isArray(cropTypes),
+      onCacheHit: () => {
+        cropTypesMetrics.cacheHits += 1;
+      },
+      onInFlightJoin: () => {
+        cropTypesMetrics.inFlightJoins += 1;
+      },
+      onFetchStart: () => {
+        cropTypesMetrics.thirdPartyCalls += 1;
+      },
+      onFetchSuccess: (cropTypes) => {
+        if (Array.isArray(cropTypes)) {
+          cropTypesMetrics.lastFetchedAt = new Date().toISOString();
+        }
+      },
+      fetcher: async () => this.getData(ARABLE.ALL_ARABLE_CROP_TYPES_ENDPOINT),
+    });
+  }
+
+  async getCropGroupsList(options = {}) {
+    const { forceRefresh = false } = options;
+
+    return getCachedEndpointData({
+      cacheKey: CROP_GROUPS_CACHE_KEY,
+      forceRefresh,
+      isCachedValueValid: (cachedCropGroups) =>
+        Array.isArray(cachedCropGroups) && cachedCropGroups.length > 0,
+      shouldCache: (cropGroups) => Array.isArray(cropGroups),
+      fetcher: async () => this.getData("/Arable/CropGroups"),
+    });
+  }
+
+  async getCropGroupByCropGroupId(cropGroupId) {
+    const cropGroups = await this.getCropGroupsList();
+    const normalizedCropGroupId = Number(cropGroupId);
+
+    if (Array.isArray(cropGroups)) {
+      const cachedMatch = cropGroups.find(
+        ({ cropGroupId: listCropGroupId }) => {
+          if (Number.isFinite(normalizedCropGroupId)) {
+            return Number(listCropGroupId) === normalizedCropGroupId;
+          }
+
+          return String(listCropGroupId) === String(cropGroupId);
+        },
+      );
+
+      if (cachedMatch) {
+        return cachedMatch;
+      }
     }
+
+    return this.getData(`/Arable/CropGroup/${cropGroupId}`);
+  }
+
+  async getCropTypesByCropGroupId(cropGroupId) {
+    const cropTypes = await this.getCropTypesList();
+    const normalizedCropGroupId = Number(cropGroupId);
+
+    if (Array.isArray(cropTypes)) {
+      return cropTypes.filter(({ cropGroupId: listCropGroupId }) => {
+        if (Number.isFinite(normalizedCropGroupId)) {
+          return Number(listCropGroupId) === normalizedCropGroupId;
+        }
+
+        return String(listCropGroupId) === String(cropGroupId);
+      });
+    }
+
+    return this.getData(`/Arable/CropTypes/${cropGroupId}`);
+  }
+
+  async getCropTypeNameById(cropTypeId) {
+    const cropTypes = await this.getCropTypesList();
+    if (!Array.isArray(cropTypes)) {
+      return null;
+    }
+
+    const normalizedCropTypeId = Number(cropTypeId);
+    const match = cropTypes.find(
+      ({ cropTypeId: listCropTypeId }) =>
+        Number(listCropTypeId) === normalizedCropTypeId,
+    );
+
+    return match?.cropType ?? match?.cropTypeName ?? null;
+  }
+
+  getCachedCropTypeMatch(cropTypes, normalizedCropTypeId) {
+    if (!Array.isArray(cropTypes) || !Number.isFinite(normalizedCropTypeId)) {
+      return null;
+    }
+
+    return (
+      cropTypes.find(
+        ({ cropTypeId: listCropTypeId }) =>
+          Number(listCropTypeId) === normalizedCropTypeId,
+      ) ?? null
+    );
+  }
+
+  mapCropTypeResponse(cropTypeData) {
+    if (
+      cropTypeData &&
+      typeof cropTypeData === "object" &&
+      "cropTypeName" in cropTypeData
+    ) {
+      return cropTypeData;
+    }
+
+    return {
+      cropTypeName:
+        cropTypeData?.cropType ?? cropTypeData?.cropTypeName ?? null,
+    };
+  }
+
+  async getCropTypeByCropTypeId(cropTypeId) {
+    const cropTypes = await this.getCropTypesList();
+    const normalizedCropTypeId = Number(cropTypeId);
+    const cachedMatch = this.getCachedCropTypeMatch(
+      cropTypes,
+      normalizedCropTypeId,
+    );
+
+    if (cachedMatch) {
+      return this.mapCropTypeResponse(cachedMatch);
+    }
+
+    const fallbackCropType = await this.getData(
+      `/Arable/CropType/${cropTypeId}`,
+    );
+
+    return this.mapCropTypeResponse(fallbackCropType);
+  }
+
+  async getCropTypesMetrics() {
+    const cachedCropTypes = await getCachedValue(CROP_TYPES_CACHE_KEY);
+    const cachedItems = Array.isArray(cachedCropTypes)
+      ? cachedCropTypes.length
+      : 0;
+
+    return {
+      ...cropTypesMetrics,
+      cacheTtlSeconds: getEndpointCacheTtlSeconds(),
+      hasCachedCropTypes: cachedItems > 0,
+      cachedItems,
+      hasInFlightRequest: isCacheRequestInFlight(CROP_TYPES_CACHE_KEY),
+    };
+  }
+
+  resetCropTypesMetrics() {
+    cropTypesMetrics.totalRequests = 0;
+    cropTypesMetrics.thirdPartyCalls = 0;
+    cropTypesMetrics.cacheHits = 0;
+    cropTypesMetrics.inFlightJoins = 0;
+    cropTypesMetrics.lastFetchedAt = null;
+
+    return {
+      message: "Crop type metrics reset successfully",
+    };
+  }
+
+  async resetCropTypesCache() {
+    await resetCachedEndpointData(CROP_TYPES_CACHE_KEY);
+
+    return {
+      message: "Crop type cache reset successfully",
+    };
+  }
 }
 
 module.exports = RB209ArableService;

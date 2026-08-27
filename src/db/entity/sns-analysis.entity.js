@@ -1,6 +1,6 @@
 const { EntitySchema } = require("typeorm");
-//const CropEntity = require("./crop.entity");
 const UserEntity = require("./user.entity");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const SnsAnalysesEntity = new EntitySchema({
   name: "SnsAnalyses",
@@ -83,6 +83,11 @@ const SnsAnalysesEntity = new EntitySchema({
       type: "tinyint",
       nullable: true,
     },
+    NitrogenResidueGroup: {
+      type: "nvarchar",
+      length: 20,
+      nullable: true,
+    },
     CreatedOn: {
       type: "datetime2",
       nullable: true,
@@ -105,13 +110,13 @@ const SnsAnalysesEntity = new EntitySchema({
   },
   relations: {
     Crops: {
-      type: "many-to-one",
+      type:  RELATION_TYPES.MANY_TO_ONE,
       target: "Crop",
       joinColumn: { name: "CropID" },
       inverseSide: "CropIDSnsAnalyses",
     },
     CreatedByUser: {
-      type: "many-to-one",
+      type:  RELATION_TYPES.MANY_TO_ONE,
       target: "User", // reference to UserEntity
       inverseSide: "CreatedSnsAnalyses", // the one-to-many relation defined in UserEntity
       joinColumn: {
@@ -119,7 +124,7 @@ const SnsAnalysesEntity = new EntitySchema({
       },
     },
     ModifiedByUser: {
-      type: "many-to-one",
+      type:  RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       inverseSide: "ModifiedSnsAnalyses", // the one-to-many relation defined in UserEntity
       joinColumn: {

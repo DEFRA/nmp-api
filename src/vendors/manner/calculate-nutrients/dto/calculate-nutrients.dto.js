@@ -116,6 +116,7 @@ const CreateManureApplicationDto = Joi.object({
     .items(ManureApplicationDto)
     .required()
     .description("List of manure applications"),
+  indivisualApplicationOutput: Joi.boolean().optional().default(false),
 }).required();
 
 // Exporting the DTO schema for usage in Hapi routes

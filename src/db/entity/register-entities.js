@@ -28,8 +28,6 @@ const {
 const {
   SoilTypeSoilTextureEntity,
 } = require("../entity/soil-type-soil-texture.entity");
-const { SubSoilEntity } = require("../entity/sub-soil.entity");
-const { TopSoilEntity } = require("../entity/top-soil.entity");
 const { RecommendationEntity } = require("../entity/recommendation.entity");
 const {
   RecommendationCommentEntity,
@@ -117,7 +115,14 @@ const {
 const { SNSCategoriesEntity } = require("./snsCategories.entity");
 const { UserExtensionsEntity } = require("./user-extension.entity");
 const { PscIndexEntity } = require("./psc-index.entity");
-
+const { SoilAnalysesMethodsEntity } = require("./soil-analyses-methods.entity");
+const { ScotlandNMaxValuesEntity } = require("./scotland-nmax-values.entity");
+const { FarmAverageYieldsEntity } = require("./farm-average-yield-entity");
+const { MannerEstimationsEntity } = require("./manner-estimations.entity");
+const {
+  MannerEstimationApplicationsEntity,
+} = require("./manner-estimation-applications.entity");
+const { MannerFarmsEntity } = require("./manner-farms.entity");
 // Export as a single array
 
 const entities = [
@@ -141,8 +146,6 @@ const entities = [
   ApplicationMethodsIncorpMethodEntity,
   IncorpMethodsIncorpDelayEntity,
   SoilTypeSoilTextureEntity,
-  SubSoilEntity,
-  TopSoilEntity,
   RecommendationEntity,
   RecommendationCommentEntity,
   OrganicManureEntity,
@@ -183,7 +186,13 @@ const entities = [
   WarningCodeEntity,
   WarningsEntity,
   FarmsNVZEntity,
-  PscIndexEntity
+  PscIndexEntity,
+  SoilAnalysesMethodsEntity,
+  ScotlandNMaxValuesEntity,
+  FarmAverageYieldsEntity,
+  MannerEstimationsEntity,
+  MannerEstimationApplicationsEntity,
+  MannerFarmsEntity,
 ];
 
 module.exports = { entities };

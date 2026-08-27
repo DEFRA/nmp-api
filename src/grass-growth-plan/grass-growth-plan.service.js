@@ -5,6 +5,7 @@ const RB209GrasslandService = require("../vendors/rb209/grassland/grassland.serv
 const MannerRainfallPostApplicationService = require("../vendors/manner/rainfall-post-application/rainfall-post-application.service");
 const { FarmEntity } = require("../db/entity/farm.entity");
 const RB209GrassService = require("../vendors/rb209/grass/grass.service");
+const { FieldAboveOrBelowSeaLevelMapper } = require("../constants/field-is-above-sea-level");
 
 class GrassGrowthService extends BaseService {
   constructor() {
@@ -17,23 +18,32 @@ class GrassGrowthService extends BaseService {
   }
 
   async getGrassGrowthClassByFieldId(fieldIds, request) {
-    const results = [];
+    return AppDataSource.transaction(async (transactionalManager) => {
+      const results = [];
 
-    for (const fieldId of fieldIds) {
-      const fieldResult = await this.calculateGrassGrowthClassByFieldId(
-        fieldId,
-        request
-      );
-      results.push(fieldResult);
-    }
+      for (const fieldId of fieldIds) {
+        const fieldResult = await this.calculateGrassGrowthClassByFieldId(
+          fieldId,
+          request,
+          transactionalManager,
+        );
 
-    return results; // Return array of responses for each fieldId
+        results.push(fieldResult);
+      }
+
+      return results;
+    });
   }
 
-  async calculateGrassGrowthClassByFieldId(fieldId, request) {
+  async calculateGrassGrowthClassByFieldId(
+    fieldId,
+    request,
+    transactionalManager,
+    fieldRelatedData = null
+  ) {
     try {
       // Fetch field details
-      const field = await this.fieldRepository.findOne({
+      const field = await transactionalManager.findOne(FieldEntity, {
         where: { ID: fieldId },
       });
 
@@ -42,7 +52,7 @@ class GrassGrowthService extends BaseService {
       }
 
       // Fetch farm details
-      const farm = await this.farmRepository.findOne({
+      const farm = await transactionalManager.findOne(FarmEntity, {
         where: { ID: field.FarmID },
       });
 
@@ -51,27 +61,43 @@ class GrassGrowthService extends BaseService {
       }
 
       // Determine altitude based on IsAbove300SeaLevel
-      const altitude = field.IsAbove300SeaLevel === true ? 350 : 100; 
+      const altitude = field.IsAbove300SeaLevel
+        ? FieldAboveOrBelowSeaLevelMapper.ABOVETHREEHUNDRED
+        : FieldAboveOrBelowSeaLevelMapper.BELOWTHREEHUNDRED;
 
       // Ensure SoilOverChalk is false if it's null
       const soilOverChalk = field.SoilOverChalk ?? false;
+      const postcode = farm.ClimateDataPostCode;
+      let summerRainfall=null;
+      if (
+        fieldRelatedData?.summerRainfall === undefined ||
+        fieldRelatedData?.summerRainfall === null
+      ) {
+        const rainfall =
+          await this.MannerRainfallPostApplicationService.getData(
+            `climates/rainfall-april-to-september/${postcode}`,
+            request,
+          );
+        summerRainfall = rainfall.data.value;
+      } else {
+        summerRainfall = fieldRelatedData?.summerRainfall;
+      }
 
-      // Fetch rainfall data
-      const rainfall = await this.MannerRainfallPostApplicationService.getData(
-        `rainfall-april-to-september/${farm.ClimateDataPostCode}`,
-        request
-      );
-
-      const summerRainfall = rainfall.data.value;
 
       // Fetch grass growth data
       const grassGrowthData = await this.grassGrowthService.getData(
-        `Grass/GrassGrowthClass/${field.SoilTypeID}/${summerRainfall}/${altitude}/${soilOverChalk}`
+        `Grass/GrassGrowthClass/${field.SoilTypeID}/${summerRainfall}/${altitude}/${soilOverChalk}`,
       );
 
-      return { ...grassGrowthData, fieldId };
+      return {
+        ...grassGrowthData,
+        fieldId,
+      };
     } catch (error) {
-      return { fieldId, error: error.message || "Error fetching data" };
+      return {
+        fieldId,
+        error: error.message || "Error fetching data",
+      };
     }
   }
 }

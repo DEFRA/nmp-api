@@ -1,14 +1,14 @@
 const Joi = require("joi");
 const { PreviousCroppingController } = require("./previous-cropping.controller");
 const { CreatePreviousCroppingDto } = require("./dto/previous-cropping.dto");
-const { formatErrorResponse } = require("../interceptor/responseFormatter");
-
+const { validationFailAction } = require("../shared/validateFailSafeAction");
+const previousCroppingTag = "Previous Cropping";
 module.exports = [
   {
     method: "GET",
     path: "/previous-cropping/{fieldId}",
     options: {
-      tags: ["api", "Previous Cropping"],
+      tags: ["api", previousCroppingTag],
       description: "Get previous croppping data by Field ID and Year",
       validate: {
         params: Joi.object({
@@ -17,19 +17,7 @@ module.exports = [
         query: Joi.object({
           year: Joi.number().integer().optional().allow(null), // Expecting year as a query parameter
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {
@@ -41,8 +29,9 @@ module.exports = [
     method: "GET",
     path: "/previous-cropping-previous-years/{fieldId}",
     options: {
-      tags: ["api", "Previous Cropping"],
-      description: "Get previous croppping data older than given Year by Field ID and Year",
+      tags: ["api", previousCroppingTag],
+      description:
+        "Get previous croppping data older than given Year by Field ID and Year",
       validate: {
         params: Joi.object({
           fieldId: Joi.number().integer().required(),
@@ -50,19 +39,7 @@ module.exports = [
         query: Joi.object({
           year: Joi.number().integer().optional().allow(null), // Expecting year as a query parameter
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {
@@ -71,29 +48,17 @@ module.exports = [
     },
   },
 
-{
+  {
     method: "GET",
     path: "/previous-cropping-year/{farmId}",
     options: {
-      tags: ["api", "Previous Cropping"],
+      tags: ["api", previousCroppingTag],
       description: "Get previous croppping year by Farm ID",
       validate: {
         params: Joi.object({
           farmId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {
@@ -110,23 +75,11 @@ module.exports = [
       return controller.mergePreviousCropping();
     },
     options: {
-      tags: ["api", "Previous Cropping"],
+      tags: ["api", previousCroppingTag],
       description: "Merge Previous Cropping",
       validate: {
         payload: CreatePreviousCroppingDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },

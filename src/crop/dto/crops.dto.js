@@ -1,5 +1,8 @@
 const Joi = require("joi");
-
+const precisionThree = 3;
+const maxHundred = 100;
+const maxOneTwenty = 120;
+const maxOneTwentyEight = 128;
 // Crop Schema
 const CropDto = Joi.object({
   ID: Joi.number().integer().allow(null).optional(),
@@ -7,43 +10,43 @@ const CropDto = Joi.object({
   Year: Joi.number().integer().required(),
   CropTypeID: Joi.number().integer().allow(null),
   FieldType: Joi.number().integer().required(),
-  Variety: Joi.string().max(100).allow(null),
-  OtherCropName: Joi.string().max(128).allow(null),
+  Variety: Joi.string().max(maxHundred).allow(null),
+  OtherCropName: Joi.string().max(maxOneTwentyEight).allow(null),
   CropInfo1: Joi.number().integer().allow(null),
   CropInfo2: Joi.number().integer().allow(null),
   SowingDate: Joi.date().iso().allow(null),
-  Yield: Joi.number().precision(3).allow(null),
-  CropGroupName: Joi.string().max(120).allow(null),
+  Yield: Joi.number().precision(precisionThree).allow(null),
+  CropGroupName: Joi.string().max(maxOneTwenty).allow(null),
   Confirm: Joi.boolean().required(),
   PreviousGrass: Joi.number().integer().allow(null),
   GrassHistory: Joi.number().integer().allow(null),
   Comments: Joi.string().allow(null),
   Establishment: Joi.number().integer().allow(null),
   LivestockType: Joi.number().integer().allow(null),
-  MilkYield: Joi.number().allow(null).precision(3).default(0).allow(null),
-  ConcentrateUse: Joi.number().allow(null).precision(3).default(0).allow(null),
-  StockingRate: Joi.number().allow(null).precision(3).default(0).allow(null),
+  MilkYield: Joi.number()
+    .allow(null)
+    .precision(precisionThree)
+    .default(0)
+    .allow(null),
+  ConcentrateUse: Joi.number()
+    .allow(null)
+    .precision(precisionThree)
+    .default(0)
+    .allow(null),
+  StockingRate: Joi.number()
+    .allow(null)
+    .precision(precisionThree)
+    .default(0)
+    .allow(null),
   DefoliationSequenceID: Joi.number()
     .integer()
     .allow(null)
     .default(0)
     .allow(null),
   GrazingIntensity: Joi.number().integer().allow(null).allow(null),
-  SwardTypeID: Joi.number()
-    .integer()
-    .allow(null)
-    .default(0)
-    .allow(null),
-    SwardManagementID: Joi.number()
-    .integer()
-    .allow(null)
-    .default(0)
-    .allow(null),
-    PotentialCut: Joi.number()
-    .integer()
-    .allow(null)
-    .default(0)
-    .allow(null),
+  SwardTypeID: Joi.number().integer().allow(null).default(0).allow(null),
+  SwardManagementID: Joi.number().integer().allow(null).default(0).allow(null),
+  PotentialCut: Joi.number().integer().allow(null).default(0).allow(null),
   PreviousID: Joi.number().integer().allow(null),
   CropOrder: Joi.number().integer().required(),
   CreatedOn: Joi.date().iso().allow(null).optional(),

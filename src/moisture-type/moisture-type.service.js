@@ -13,19 +13,18 @@ class MoistureTypeService extends BaseService {
 
   async getDefaultSoilMoistureType(applicationDate, request) {
     const date = validateISODateFormat(applicationDate);
+    const may=5, june=6, july=7;
     //calling manner api
     const moisturTypeList = await this.moistureMannerService.getData(
       "moisture-types",
       request
     );
-
     if (moisturTypeList.success && moisturTypeList.data) {
       // Get the month from the application date
       const month = date.getMonth() + 1;
 
       // Determine soil moisture type based on the month
-      const soilMoistureType =
-        month === 5 || month === 6 || month === 7 ? "Dry" : "Moist";
+      const soilMoistureType = month === may || month === june || month === july ? "Dry" : "Moist";
 
       // Find the corresponding moisture type in the manner data
       const moistureType = moisturTypeList.data.find(

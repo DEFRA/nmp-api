@@ -3,6 +3,7 @@ const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { UserExtensionController } = require("./user-extension.controller");
 const { updateIsTermsOfUseAcceptedDto, updateDoNotShowAboutThisServiceDto, doNotShowAboutMannerDto } = require("./dto/user-extension.dto");
 const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 module.exports = [
   {
@@ -13,19 +14,7 @@ module.exports = [
       description: "Update IsTermsOfUseAccepted in UserExtension",
       validate: {
         payload: updateIsTermsOfUseAcceptedDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -41,25 +30,13 @@ module.exports = [
       description: "Update DoNotShowAboutThisService in UserExtension",
       validate: {
         payload: updateDoNotShowAboutThisServiceDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request
-              })
-            )
-            .code(400)
-            .takeover();
-        }
-      }
+        failAction: validationFailAction,
+      },
     },
     handler: async (request, h) => {
       const controller = new UserExtensionController(request, h);
       return controller.updateDoNotShowAboutThisService();
-    }
+    },
   },
   {
     method: "PUT",
@@ -69,19 +46,7 @@ module.exports = [
       description: "Update DoNotShowAboutManner in UserExtension",
       validate: {
         payload: doNotShowAboutMannerDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(StatusCodeMapper.BAD_REQUEST)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -96,19 +61,7 @@ module.exports = [
       tags: ["api", "UserExtension"],
       description: "Get UserExtension by UserID",
       validate: {
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {

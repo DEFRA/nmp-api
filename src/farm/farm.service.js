@@ -3,7 +3,7 @@ const { FarmEntity } = require("../db/entity/farm.entity");
 const { BaseService } = require("../base/base.service");
 const { AppDataSource } = require("../db/data-source");
 const { FieldEntity } = require("../db/entity/field.entity");
-const { getRepository } = require("typeorm");
+const { getRepository, In } = require("typeorm");
 const { FieldNVZMapper } = require("../constants/field-nvz-mapper");
 const {
   FieldAbove300SeaLevelMapper,
@@ -17,11 +17,30 @@ const {
   ProcessFutureManuresForWarnings,
 } = require("../shared/process-future-warning-calculations-service");
 const { FarmsNVZEntity } = require("../db/entity/farms-nvz.entity");
+const {
+  NutrientsLoadingLiveStocksEntity,
+} = require("../db/entity/nutrients-loading-live-stocks-entity");
+const {
+  NutrientsLoadingFarmDetailsEntity,
+} = require("../db/entity/nutrients-loading-farm-details-entity");
+const {
+  NutrientsLoadingManuresEntity,
+} = require("../db/entity/nutrients-loading-manures-entity");
+const { runWithDeadlockRetry } = require("../db/transactionRetry");
 
 class FarmService extends BaseService {
   constructor() {
     super(FarmEntity);
-    this.repository = getRepository(FarmEntity);
+    this.repository = AppDataSource.getRepository(FarmEntity);
+    this.nutrientsLoadingLiveStocksRepository = AppDataSource.getRepository(
+      NutrientsLoadingLiveStocksEntity,
+    );
+    this.nutrientsLoadingFarmDetailsRepository = AppDataSource.getRepository(
+      NutrientsLoadingFarmDetailsEntity,
+    );
+    this.nutrientsLoadingManuresRepository = AppDataSource.getRepository(
+      NutrientsLoadingManuresEntity,
+    );
     this.ProcessFieldsService = new ProcessFieldsService();
     this.ProcessFutureManuresForWarnings =
       new ProcessFutureManuresForWarnings();
@@ -123,7 +142,7 @@ class FarmService extends BaseService {
         };
       });
     } catch (error) {
-      console.log(error)
+      console.log(error);
       throw error; // rethrow so controller handles it
     }
   }
@@ -226,37 +245,27 @@ class FarmService extends BaseService {
   }
 
   async updateFarm(updatedFarmAndNvzData, userId, farmId, request) {
-    const result = await AppDataSource.transaction(
-      async (transactionalManager) => {
+    let shouldProcessFieldRecommendations = false,shouldProcessFarmWarnings = false;
+    const result = await runWithDeadlockRetry(() =>
+      AppDataSource.transaction(async (transactionalManager) => {
         const existingFarm = await transactionalManager.findOne(FarmEntity, {
-          where: { ID: farmId }
+          where: { ID: farmId },
         });
         if (!existingFarm) {throw boom.notFound(`Farm with ID ${farmId} not found`)}
-        const updatedFarmData = updatedFarmAndNvzData.Farm;
-        const farmNvzList = updatedFarmAndNvzData.FarmsNvz;
-        const {
-          ID,
-          FullAddress,
-          EncryptedFarmId,
-          CreatedByID,
-          CreatedOn,
-          ...updateData
+        const updatedFarmData = updatedFarmAndNvzData.Farm,farmNvzList = updatedFarmAndNvzData.FarmsNvz;
+        const {ID,FullAddress,
+          EncryptedFarmId,CreatedByID,
+          CreatedOn,...updateData
         } = updatedFarmData;
-        const farmCount = await this.farmCountByNameAndPostcode(
-          updateData.Name,
-          updateData.Postcode,
-          existingFarm.OrganisationID,
-          farmId,
+        const farmCount = await this.farmCountByNameAndPostcode(updateData.Name,updateData.Postcode,
+          existingFarm.OrganisationID,farmId);
+        if (farmCount > 0) {
+          throw boom.badRequest("Farm already exists with this Name and Postcode");
+        }
+        const updatedNvz = await this.syncFarmNvz(transactionalManager,farmId,
+          farmNvzList,userId
         );
-        if (farmCount > 0) {throw boom.badRequest("Farm already exists with this Name and Postcode")}
-        const updatedNvz = await this.syncFarmNvz(
-          transactionalManager,
-          farmId,
-          farmNvzList,
-          userId,
-        );
-        const updateResult = await transactionalManager.update(
-          FarmEntity,
+        const updateResult = await transactionalManager.update(FarmEntity,
           farmId,
           {
             ...updateData,
@@ -267,36 +276,127 @@ class FarmService extends BaseService {
         if (updateResult.affected === 0) {
           console.log(`Farm with ID ${farmId} not found`);
         }
-
-        if (
-          this.hasFieldRecommendationTriggerChanges(
-            existingFarm,
-            updatedFarmData,
-          )
-        ) {
-          this.ProcessFieldsService.processFieldsForRecommendation(
-            farmId,
-            request,
-            userId,
-          );
+        if (this.hasFieldRecommendationTriggerChanges(existingFarm,updatedFarmData)) {
+          shouldProcessFieldRecommendations = true;
         }
-
-        if (this.hasFarmWarningTriggerChanges(existingFarm, updatedFarmData)) {
-          this.ProcessFutureManuresForWarnings.processWarningsByFarm(
-            farmId,
-            userId,
-          );
-        }
+        if (this.hasFarmWarningTriggerChanges(existingFarm, updatedFarmData)) {shouldProcessFarmWarnings = true}
         const updatedFarm = await transactionalManager.findOne(FarmEntity, {
           where: { ID: farmId },
         });
-        return {
-          updatedFarm: updatedFarm,
-          farmNvz: updatedNvz,
-        };
-      },
+        return { updatedFarm: updatedFarm, farmNvz: updatedNvz };
+      }),
     );
+    if (shouldProcessFieldRecommendations) {
+      this.ProcessFieldsService.processFieldsForRecommendation(
+        farmId,request,userId
+      ).catch((error) => {
+        console.error(
+          `Error processing field recommendations for farm ${farmId}:`,
+          error,
+        );
+      });
+    }
+    if (shouldProcessFarmWarnings) {
+      this.ProcessFutureManuresForWarnings.processWarningsByFarm(farmId,userId).catch((error) => {
+        console.error(
+          `Error processing warning recalculation for farm ${farmId}:`,
+          error,
+        );
+      });
+    }
     return result;
+  }
+
+  updateLatestDates(latestDatesByYear, records, yearSelector) {
+    for (const record of records) {
+      const year = yearSelector(record);
+      const currentDate = record.ModifiedOn || record.CreatedOn;
+
+      if (year !== null && year !== undefined && currentDate) {
+        const existingDate = latestDatesByYear.get(year);
+
+        if (!existingDate || currentDate > existingDate) {
+          latestDatesByYear.set(year, currentDate);
+        }
+      }
+    }
+  }
+
+  formatDate(date) {
+    if (!date) {
+      return null;
+    }
+
+    return date.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  }
+
+  async getLastUpdatedDates(farmId, years) {
+    const liveStocks = await this.nutrientsLoadingLiveStocksRepository.find({
+      where: {
+        FarmID: farmId,
+        CalendarYear: In(years),
+      },
+      select: {
+        CalendarYear: true,
+        CreatedOn: true,
+        ModifiedOn: true,
+      },
+    });
+
+    const farmDetails = await this.nutrientsLoadingFarmDetailsRepository.find({
+      where: {
+        FarmID: farmId,
+        CalendarYear: In(years),
+      },
+      select: {
+        CalendarYear: true,
+        TotalFarmed: true,
+        CreatedOn: true,
+        ModifiedOn: true,
+      },
+    });
+
+    const manures = await this.nutrientsLoadingManuresRepository.find({
+      where: {
+        FarmID: farmId,
+      },
+      select: {
+        ManureDate: true,
+        CreatedOn: true,
+        ModifiedOn: true,
+      },
+    });
+
+    const latestDatesByYear = new Map();
+
+    this.updateLatestDates(
+      latestDatesByYear,
+      liveStocks,
+      (record) => record.CalendarYear,
+    );
+
+    this.updateLatestDates(
+      latestDatesByYear,
+      farmDetails.filter((record) => record.TotalFarmed !== null),
+      (record) => record.CalendarYear,
+    );
+
+    this.updateLatestDates(
+      latestDatesByYear,
+      manures.filter((record) =>
+        years.includes(new Date(record.ManureDate).getFullYear()),
+      ),
+      (record) => new Date(record.ManureDate).getFullYear(),
+    );
+
+    return years.map((year) => ({
+      Year: year,
+      LastUpdatedDate: this.formatDate(latestDatesByYear.get(year) || null),
+    }));
   }
 }
 

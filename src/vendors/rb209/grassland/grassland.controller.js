@@ -1,239 +1,110 @@
 const RB209GrasslandService = require('./grassland.service');
 
 class RB209GrasslandController {
-    #request;
-    #h;
-    #service;
+  #request;
+  #h;
+  #service;
 
-    constructor(request, h) {
-        this.#request = request;
-        this.#h = h;
-        this.#service = new RB209GrasslandService();
+  constructor(request, h) {
+    this.#request = request;
+    this.#h = h;
+    this.#service = new RB209GrasslandService();
+  }
+
+  async getGrasslandDataHelper() {
+    const url = this.#request.url.pathname.split("/rb209")[1];
+    try {
+      const data = await this.#service.getData(url);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
     }
+  }
 
-    async getGrasslandSeasonsByCountryId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getGrasslandSeasonsByCountryId() {
+   return this.getGrasslandDataHelper();
+  }
 
-    async getGrasslandSeasonBySeasonId() {
-        const { seasonId } = this.#request.params;
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getGrasslandSeasonBySeasonId() {
+   return this.getGrasslandDataHelper();
+  }
 
-    async getGrasslandFieldTypesByCountryId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getGrasslandFieldTypesByCountryId() {
+   return this.getGrasslandDataHelper();
+  }
 
-    async getGrasslandFieldTypeByFieldTypeId() {
-        const { fieldTypeId } = this.#request.params;
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getGrasslandFieldTypeByFieldTypeId() {
+   return this.getGrasslandDataHelper();
+  }
 
-    async getGrassGrowthClassesByCountryId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getGrassGrowthClassesByCountryId() {
+   return this.getGrasslandDataHelper();
+  }
 
-    async getGrassGrowthClassByGrassGrowthClassId() {
-        const { grassGrowthClassId } = this.#request.params;
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getGrassGrowthClassByGrassGrowthClassId() {
+   return this.getGrasslandDataHelper();
+   
+  }
 
-    async getGrassGrowthClassBySoilTypeIdAndRainfallAndAltitudeAndChalk() {
-        const { soilTypeId, rainfall, altitude, chalk } = this.#request.params;
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getGrassGrowthClassBySoilTypeIdAndRainfallAndAltitudeAndChalk() {
+   return this.getGrasslandDataHelper();
+  }
 
-    async getCropMaterialsByCountryId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getCropMaterialsByCountryId() {
+   return this.getGrasslandDataHelper();
+  }
 
-    async getCropMaterialByCropMaterialId() {
-        const { cropMaterialId } = this.#request.params;
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getCropMaterialByCropMaterialId() {
+      return this.getGrasslandDataHelper();
+  }
 
-    async getYieldTypeByYieldTypeId() {
-        const { yieldTypeId } = this.#request.params;
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getYieldTypeByYieldTypeId() {
+   return this.getGrasslandDataHelper();
+  }
 
-    async getYieldTypesByCountryId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getYieldTypesByCountryId() {
+    return this.getGrasslandDataHelper();
+  }
 
-    async getSoilNitrogenSuppliesByCountryId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getSoilNitrogenSuppliesByCountryId() {
+   return this.getGrasslandDataHelper();
+  }
 
-    async getSoilNitrogenSupplyItemBySoilNitrogenSupplyId() {
-        const { soilNitrogenSupplyId } = this.#request.params;
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getSoilNitrogenSupplyItemBySoilNitrogenSupplyId() {
+   return this.getGrasslandDataHelper();
+  }
 
-    async getGrassHistoriesByCountryId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getGrassHistoriesByCountryId() {
+    return this.getGrasslandDataHelper();
+  }
 
-    async getGrassHistoryByGrassHistoryId() {
-        const { grassHistoryId } = this.#request.params;
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getGrassHistoryByGrassHistoryId() {
+    return this.getGrasslandDataHelper();
+  }
 
-    async getSequenceItemsByCountryId() {
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getSequenceItemsByCountryId() {
+    return this.getGrasslandDataHelper();
+  }
 
-    async getSequenceItemBySequenceItemId() {
-        const { sequenceItemId } = this.#request.params;
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getSequenceItemBySequenceItemId() {
+    return this.getGrasslandDataHelper();
+  }
 
-    async getGrassSequencesBySeasonIdAndFieldTypeIdAndCountryId() {
-        const { seasonId, fieldTypeId, countryId } = this.#request.params;
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getGrassSequencesBySeasonIdAndFieldTypeIdAndCountryId() {
+    return this.getGrasslandDataHelper();
+  }
 
-    async getGrassSequenceItemByGrassSequenceId() {
-        const { grassSequenceId } = this.#request.params;
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getGrassSequenceItemByGrassSequenceId() {
+    return this.getGrasslandDataHelper();
+  }
 
-    async getSoilNitrogenSupplyByGrassHistoryId() {
-        const { grassHistoryId } = this.#request.params;
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
+  async getSoilNitrogenSupplyByGrassHistoryId() {
+    return this.getGrasslandDataHelper();
+  }
 
-    async getGrasslandFieldTypeItemByFieldTypeId() {
-        const { fieldTypeId } = this.#request.params;
-        const url = this.#request.url.pathname.split('/rb209')[1];
-        try {
-            const data = await this.#service.getData(url);
-            return this.#h.response(data);
-        } catch (error) {
-            return this.#h.response({ error });
-        }
-    }
-
+  async getGrasslandFieldTypeItemByFieldTypeId() {
+    return this.getGrasslandDataHelper();
+  }
 }
 
 module.exports = { RB209GrasslandController };

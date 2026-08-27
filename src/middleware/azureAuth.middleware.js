@@ -5,8 +5,8 @@ const { UserEntity } = require("../db/entity/user.entity");
 const { AzureAuthService } = require("./azureAuth.service");
 const EnvironmentService = require("../shared/environment.service");
 const { StaticStrings } = require("../shared/static.string");
-const { getRepository } = require("typeorm");
 const boom = require("@hapi/boom");
+const { AppDataSource } = require("../db/data-source");
 
 class AzureAuthMiddleware {
   #excludedPaths;
@@ -19,15 +19,15 @@ class AzureAuthMiddleware {
 
   constructor() {
     this.#excludedPaths = [
-      EnvironmentService.APPLICATION_SWAGGER_PATH() || "/docs",
+      EnvironmentService.applicationSwaggerPath() || "/docs",
       "/swagger.json",
       "/swaggerui",
     ];
-    this.#otherExcludedPaths="/";
+    this.#otherExcludedPaths = "/";
     this.#optionalUserPresentPath = ["/users"];
-    this.#clientId = EnvironmentService.AZURE_AD_B2C_CLIENT_ID();
+    this.#clientId = EnvironmentService.azureAdB2cClientId();
     this.#azureAuthService = new AzureAuthService();
-    this.#userRepository = getRepository(UserEntity);
+    this.#userRepository = AppDataSource.getRepository(UserEntity);
   }
 
   #getKey(header, jwksUri) {
@@ -70,17 +70,17 @@ class AzureAuthMiddleware {
     const currentPath = request.route.path;
 
     if (this.#otherExcludedPaths.includes(currentPath)) {
-      // Skip token validation and proceed with the request
       return h.continue;
     } else if (
       this.#excludedPaths.some((path) => currentPath.startsWith(path))
     ) {
       console.log(`Skipping token validation for path: ${currentPath}`); // Debugging
       return h.continue; // Skip token validation and proceed
+    } else {
+      console.log(`Validating token for path: ${currentPath}`);
     }
 
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!authHeader?.startsWith("Bearer ")) {
       throw boom.unauthorized(StaticStrings.ERR_TOKEN_NOT_PROVIDED);
     }
 
@@ -88,8 +88,8 @@ class AzureAuthMiddleware {
     // Check if the current path is in the excluded paths
 
     try {
-      const { issuerUrl, jwksUri } = await this.#azureAuthService.getData();   
-      
+      const { issuerUrl, jwksUri } = await this.#azureAuthService.getData();
+
       const jwtUserData = await this.#validateToken(token, issuerUrl, jwksUri);
 
       // Token is valid, proceed with the request
@@ -98,8 +98,9 @@ class AzureAuthMiddleware {
       });
       request["userId"] = user?.ID;
 
-      if (this.#optionalUserPresentPath.includes(currentPath))
+      if (this.#optionalUserPresentPath.includes(currentPath)) {
         return h.continue;
+      }
 
       if (!user) {
         throw boom.unauthorized(StaticStrings.ERR_INVALID_EMAIL);

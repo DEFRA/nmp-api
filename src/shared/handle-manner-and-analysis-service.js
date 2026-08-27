@@ -17,12 +17,14 @@ class HanldeMannerAndAnalysis {
     fieldRelatedData,
     newOrganicManure,
     transactionalManager,
-    request
+    request,
+    crops
   ) {
     const snsAnalysesData =await this.CalculateCropsSnsAnalysisService.getCropsSnsAnalyses(
         transactionalManager,
         fieldID,
-        crop.Year
+        crop.Year,
+        crops
       );
     const { latestSoilAnalysis, soilAnalysisRecords } = await this.HandleSoilAnalysisService.handleSoilAnalysisValidation(
         fieldID,
@@ -39,6 +41,7 @@ class HanldeMannerAndAnalysis {
         fieldRelatedData,
         transactionalManager,
         request,
+        crops
       );
 
      const previousCrop =await this.CalculatePreviousCropService.findPreviousCrop(

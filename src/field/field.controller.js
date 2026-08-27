@@ -44,8 +44,7 @@ class FieldController {
     const { farmId } = this.#request.params;
     const { shortSummary } = this.#request.query;
     let selectOptions = {};
-    if (shortSummary) selectOptions = { ID: true, Name: true, FarmID: true };
-
+    if (shortSummary) { selectOptions = { ID: true, Name: true, FarmID: true }}
     try {
       const records =
         (await this.#fieldService.getBy("FarmID", farmId, selectOptions))
@@ -177,7 +176,7 @@ class FieldController {
       // Return the Field objects with related data
       return this.#h.response(fieldData);
     } catch (error) {
-      return this.#h.response({ error: error.message }).code(400);
+      return this.#h.response({ error: error.message });
     }
   }
 }

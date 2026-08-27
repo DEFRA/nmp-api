@@ -1,4 +1,5 @@
 const { EntitySchema } = require("typeorm");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const RecommendationEntity = new EntitySchema({
   name: "Recommendation",
@@ -234,28 +235,32 @@ const RecommendationEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
+    IsSacMethodology: {
+      type: "bit",
+      default: 0,
+    },
   },
   relations: {
     ManagementPeriod: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "ManagementPeriod",
       joinColumn: { name: "ManagementPeriodID" },
       inverseSide: "Recommendations",
     },
     CreatedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "CreatedByID" },
       inverseSide: "CreatedRecommendations",
     },
     ModifiedByUser: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "User",
       joinColumn: { name: "ModifiedByID" },
       inverseSide: "ModifiedRecommendations",
     },
     RecommendationComments: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "RecommendationComment",
       joinColumn: { name: "ID" },
       inverseSide: "Recommendation",

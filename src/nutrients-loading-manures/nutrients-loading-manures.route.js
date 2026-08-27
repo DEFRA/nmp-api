@@ -7,6 +7,7 @@ const {
   NutrientsLoadingManuresDto,
   CreateOrUpdateNutrientsLoadingManuresDto,
 } = require("./dto/nutrients-loading-manures.dto");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 module.exports = [
   {
@@ -19,11 +20,7 @@ module.exports = [
         params: Joi.object({
           farmID: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) =>
-          h
-            .response(formatErrorResponse({ source: { error: err }, request }))
-            .code(400)
-            .takeover(),
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -41,11 +38,7 @@ module.exports = [
         params: Joi.object({
           id: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) =>
-          h
-            .response(formatErrorResponse({ source: { error: err }, request }))
-            .code(400)
-            .takeover(),
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -62,11 +55,7 @@ module.exports = [
       description: "Create NutrientsLoadingManures",
       validate: {
         payload: CreateOrUpdateNutrientsLoadingManuresDto,
-        failAction: (request, h, err) =>
-          h
-            .response(formatErrorResponse({ source: { error: err }, request }))
-            .code(400)
-            .takeover(),
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -74,7 +63,6 @@ module.exports = [
       return controller.createNutrientsLoadingManures();
     },
   },
-
 
   {
     method: "PUT",
@@ -84,11 +72,7 @@ module.exports = [
       description: "Update NutrientsLoadingManures",
       validate: {
         payload: CreateOrUpdateNutrientsLoadingManuresDto,
-        failAction: (request, h, err) =>
-          h
-            .response(formatErrorResponse({ source: { error: err }, request }))
-            .code(400)
-            .takeover(),
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -101,24 +85,13 @@ module.exports = [
     path: "/nutrientsLoadingManures/{nutrientsLoadingManureId}",
     options: {
       tags: ["api", "NutrientsLoadingManures"],
-      description: "Delete NutrientsLoadingManures by NutrientsLoadingManure Id",
+      description:
+        "Delete NutrientsLoadingManures by NutrientsLoadingManure Id",
       validate: {
         params: Joi.object({
           nutrientsLoadingManureId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {

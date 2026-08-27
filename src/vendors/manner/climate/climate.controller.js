@@ -10,19 +10,16 @@ class MannerClimateController {
     this.#h = h;
     this.#service = new MannerClimateService();
   }
-
-  async getAllClimatesListByPostCode() {
-    const { postcode } = this.#request.query;
+  async handlerGetData() {
     const endpoint = this.#request.url.pathname.split("/manner")[1];
     const data = await this.#service.getData(endpoint, this.#request);
     return this.#h.response(data);
   }
-
+  async getAllClimatesListByPostCode() {
+    return this.handlerGetData();
+  }
   async getAverageAnnualRainfallByPostCode() {
-    const { postcode } = this.#request.query;
-    const endpoint = this.#request.url.pathname.split("/manner")[1];
-    const data = await this.#service.getData(endpoint, this.#request);
-    return this.#h.response(data);
+    return this.handlerGetData();
   }
 }
 

@@ -10,11 +10,10 @@ class RB209GrassService extends RB209BaseService {
 
   async getSwardTypesFilterByCountryId(countryId) {
     const records = await this.getData("Grass/SwardTypes");
-    return records.filter(
-      (record) =>
-        record.countryId === CountryMapper.WELSH ||
-        record.countryId === countryId,
-    );
+      return records.filter(
+        (record) =>
+          record.countryId === CountryMapper.WELSH || record.countryId === countryId,
+      );
   }
 }
 

@@ -3,7 +3,9 @@ const { RB209GrasslandController } = require("./grassland.controller");
 const {
   formatErrorResponse,
 } = require("../../../interceptor/responseFormatter");
+const { validationFailAction } = require("../../../shared/validateFailSafeAction");
 
+const adasGrasslandTag = "RB209 Grassland";
 module.exports = [
   // Grassland Seasons by Country ID
   {
@@ -14,25 +16,13 @@ module.exports = [
       return controller.getGrasslandSeasonsByCountryId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description: "List of grassland seasons by country ID",
       validate: {
         params: Joi.object({
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -46,25 +36,13 @@ module.exports = [
       return controller.getGrasslandSeasonBySeasonId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description: "Individual grassland season filtered by season ID",
       validate: {
         params: Joi.object({
           seasonId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -78,25 +56,13 @@ module.exports = [
       return controller.getGrasslandFieldTypesByCountryId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description: "List of grassland field types by country ID",
       validate: {
         params: Joi.object({
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -110,25 +76,13 @@ module.exports = [
       return controller.getGrasslandFieldTypeByFieldTypeId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description: "Individual grassland field type filtered by field type ID",
       validate: {
         params: Joi.object({
           fieldTypeId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -142,25 +96,13 @@ module.exports = [
       return controller.getGrassGrowthClassesByCountryId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description: "List of grass growth classes by country ID",
       validate: {
         params: Joi.object({
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -174,26 +116,14 @@ module.exports = [
       return controller.getGrassGrowthClassByGrassGrowthClassId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description:
         "Individual grass growth class filtered by grass growth class ID",
       validate: {
         params: Joi.object({
           grassGrowthClassId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -206,11 +136,11 @@ module.exports = [
       const controller = new RB209GrasslandController(request, h);
       return controller.getGrassGrowthClassBySoilTypeIdAndRainfallAndAltitudeAndChalk(
         request,
-        h
+        h,
       );
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description:
         "Grass growth class filtered by soil type, rainfall, altitude, and chalk",
       validate: {
@@ -220,19 +150,7 @@ module.exports = [
           altitude: Joi.number().required(),
           chalk: Joi.boolean().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -246,25 +164,13 @@ module.exports = [
       return controller.getCropMaterialsByCountryId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description: "Full list of available Crop Materials for Grassland fields",
       validate: {
         params: Joi.object({
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -278,26 +184,14 @@ module.exports = [
       return controller.getCropMaterialByCropMaterialId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description:
         "Individual Crop Material Text filtered from the supplied corresponding Crop Material ID",
       validate: {
         params: Joi.object({
           cropMaterialId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -311,25 +205,13 @@ module.exports = [
       return controller.getYieldTypeByYieldTypeId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description: "Individual yield type filtered by yield type ID",
       validate: {
         params: Joi.object({
           yieldTypeId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -343,25 +225,13 @@ module.exports = [
       return controller.getYieldTypesByCountryId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description: "List of yield types by country ID",
       validate: {
         params: Joi.object({
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -375,25 +245,13 @@ module.exports = [
       return controller.getSoilNitrogenSuppliesByCountryId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description: "List of soil nitrogen supplies by country ID",
       validate: {
         params: Joi.object({
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -406,30 +264,18 @@ module.exports = [
       const controller = new RB209GrasslandController(request, h);
       return controller.getSoilNitrogenSupplyItemBySoilNitrogenSupplyId(
         request,
-        h
+        h,
       );
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description:
         "Individual Soil Nitrogen Supply (SNS) Text filtered from the supplied corresponding Soil Nitrogen Supply ID",
       validate: {
         params: Joi.object({
           soilNitrogenSupplyId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -443,25 +289,13 @@ module.exports = [
       return controller.getGrassHistoriesByCountryId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description: "List of grass histories by country ID",
       validate: {
         params: Joi.object({
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -475,25 +309,13 @@ module.exports = [
       return controller.getGrassHistoryByGrassHistoryId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description: "Individual grass history filtered by grass history ID",
       validate: {
         params: Joi.object({
           grassHistoryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -505,25 +327,13 @@ module.exports = [
       return controller.getGrasslandFieldTypeItemByFieldTypeId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description: "Grassland Field Type of Grassland Field Type ID provided",
       validate: {
         params: Joi.object({
           fieldTypeId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -535,26 +345,14 @@ module.exports = [
       return controller.getGrassSequenceItemByGrassSequenceId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description:
         "Individual Grass Sequence Text filtered from the supplied corresponding Grass Sequence ID",
       validate: {
         params: Joi.object({
           grassSequenceId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -565,11 +363,11 @@ module.exports = [
       const controller = new RB209GrasslandController(request, h);
       return controller.getGrassSequencesBySeasonIdAndFieldTypeIdAndCountryId(
         request,
-        h
+        h,
       );
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description:
         "Full list of available Grass Sequences for Grassland fields",
       validate: {
@@ -578,19 +376,7 @@ module.exports = [
           fieldTypeId: Joi.string().required(),
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -602,26 +388,14 @@ module.exports = [
       return controller.getSequenceItemBySequenceItemId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description:
         "Individual Sequence Item Text filtered from the supplied corresponding Sequence Item ID",
       validate: {
         params: Joi.object({
           sequenceItemId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -633,25 +407,13 @@ module.exports = [
       return controller.getSequenceItemsByCountryId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description: "Full list of available Sequence Items for Grassland fields",
       validate: {
         params: Joi.object({
           countryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
@@ -663,26 +425,14 @@ module.exports = [
       return controller.getSoilNitrogenSupplyByGrassHistoryId(request, h);
     },
     options: {
-      tags: ["api", "RB209 Grassland"],
+      tags: ["api", adasGrasslandTag],
       description:
         "Calculate the Soil Nitrogen Supply (SNS) Status for a Grassland Field",
       validate: {
         params: Joi.object({
           grassHistoryId: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },

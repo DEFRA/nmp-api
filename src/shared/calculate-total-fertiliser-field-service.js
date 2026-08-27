@@ -37,22 +37,12 @@ class TotalFertiliserByField {
     return { p205: sumOfP205, k20: sumOfK20 };
   }
 
-  async getTotalFertiliserByFieldAndYear(transactionalManager, fieldID, year) {
-    // Find all crops for field + year
-    const crops = await transactionalManager.find(CropEntity, {
-      where: {
-        FieldID: fieldID,
-        Year: year
-      },
-      select: { ID: true }
-    });
-
-    if (!crops.length) {
-      return { p205: 0, k20: 0 };
-    }
-
+  async getTotalFertiliserByFieldAndYear(
+    transactionalManager,
+    crops
+  ) {
+    if (!crops.length) {return { p205: 0, k20: 0 }}
     const cropIds = crops.map((crop) => crop.ID);
-
     // Find all management periods for those crop IDs
     const managementPeriods = await transactionalManager.find(
       ManagementPeriodEntity,

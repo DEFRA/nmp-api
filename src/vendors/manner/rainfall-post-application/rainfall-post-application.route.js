@@ -9,7 +9,7 @@ const MannerRainfallPostApplicationController = require("./rainfall-post-applica
 module.exports = [
   {
     method: "POST",
-    path: "/vendors/manner/rainfall-post-application",
+    path: "/vendors/manner/climates/rainfall-post-application",
     handler: async (request, h) => {
       // Create a new instance of the controller for each request
       const controller = new MannerRainfallPostApplicationController(
@@ -19,7 +19,7 @@ module.exports = [
       return controller.calculateRainfallPostApplicationOfManure();
     },
     options: {
-      tags: ["api", "Manner Rainfall"],
+      tags: ["api", "Manner climates"],
       description: "Calculate Rainfall Post Application of Manure",
       validate: {
         payload: CreateRainfallPostApplicationDto,
@@ -28,7 +28,7 @@ module.exports = [
   },
   {
     method: "GET",
-    path: "/vendors/manner/rainfall-april-to-september/{postcode}",
+    path: "/vendors/manner/climates/rainfall-april-to-september/{postcode}",
     handler: async (request, h) => {
       // Create a new instance of the controller for each request
       const controller = new MannerRainfallPostApplicationController(
@@ -38,7 +38,7 @@ module.exports = [
       return controller.calculateRainfallAprilToSeptemberOfManure();
     },
     options: {
-      tags: ["api", "Manner Rainfall"],
+      tags: ["api", "Manner climates"],
       description: "Calculate Rainfall April to September of Manure",
       validate: {
         params: Joi.object({

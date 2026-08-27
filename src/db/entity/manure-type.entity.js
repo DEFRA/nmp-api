@@ -1,4 +1,6 @@
 const { EntitySchema } = require("typeorm");
+const { manureNutrientColumns } = require("../../constants/manure-nutrient.columns");
+const { RELATION_TYPES } = require("../../constants/relations-mapper");
 
 const ManureTypeEntity = new EntitySchema({
   name: "ManureType",
@@ -29,51 +31,7 @@ const ManureTypeEntity = new EntitySchema({
     IsLiquid: {
       type: "bit",
     },
-    DryMatter: {
-      type: "decimal",
-      precision: 18,
-      scale: 2,
-    },
-    TotalN: {
-      type: "decimal",
-      precision: 18,
-      scale: 2,
-    },
-    NH4N: {
-      type: "decimal",
-      precision: 18,
-      scale: 2,
-    },
-    Uric: {
-      type: "decimal",
-      precision: 18,
-      scale: 2,
-    },
-    NO3N: {
-      type: "decimal",
-      precision: 18,
-      scale: 2,
-    },
-    P2O5: {
-      type: "decimal",
-      precision: 18,
-      scale: 2,
-    },
-    K2O: {
-      type: "decimal",
-      precision: 18,
-      scale: 2,
-    },
-    SO3: {
-      type: "decimal",
-      precision: 18,
-      scale: 2,
-    },
-    MgO: {
-      type: "decimal",
-      precision: 18,
-      scale: 2,
-    },
+    ...manureNutrientColumns,
     P2O5Available: {
       type: "int",
     },
@@ -94,31 +52,31 @@ const ManureTypeEntity = new EntitySchema({
   },
   relations: {
     OrganicManures: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "OrganicManure",
       joinColumn: { name: "ID" },
       inverseSide: "ManureType",
     },
     ManureGroup: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "ManureGroup",
       joinColumn: { name: "ManureGroupID" },
       inverseSide: "ManureTypes",
     },
     Country: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "Country",
       joinColumn: { name: "CountryID" },
       inverseSide: "ManureTypes",
     },
     ManureTypeCategory: {
-      type: "many-to-one",
+      type: RELATION_TYPES.MANY_TO_ONE,
       target: "ManureTypeCategory",
       joinColumn: { name: "ManureTypeCategoryID" },
       inverseSide: "ManureTypes",
     },
     FarmManureTypes: {
-      type: "one-to-many",
+      type: RELATION_TYPES.ONE_TO_MANY,
       target: "FarmManureType",
       joinColumn: { name: "ID" },
       inverseSide: "ManureType",

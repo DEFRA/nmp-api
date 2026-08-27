@@ -1,29 +1,42 @@
-const { ManagementPeriodEntity } = require("../db/entity/management-period.entity");
-const { RecommendationCommentEntity } = require("../db/entity/recommendation-comment.entity");
+const {
+  ManagementPeriodEntity,
+} = require("../db/entity/management-period.entity");
+const {
+  RecommendationCommentEntity,
+} = require("../db/entity/recommendation-comment.entity");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
 
 class SavingOtherCropRecommendations {
-
-
   async buildCropOrderData(OrganicManure, mannerOutputs, latestSoilAnalysis) {
+    const resolveMannerValue = (mannerValue, organicValue) => {
+      if (!mannerOutputs) {
+        return organicValue;
+      }
+
+      return mannerValue === 0 ? null : mannerValue;
+    };
+
     return {
       CropN: null,
       NBalance: null,
-      ManureN: mannerOutputs
-        ? mannerOutputs[0]?.availableN
-        : OrganicManure.AvailableN,
+      ManureN: resolveMannerValue(
+        mannerOutputs[0]?.availableN,
+        OrganicManure?.AvailableN,
+      ),
       FertilizerN: null,
       CropP2O5: null,
       PBalance: null,
-      ManureP2O5: mannerOutputs
-        ? mannerOutputs[0]?.availableP
-        : OrganicManure.AvailableP2O5,
+      ManureP2O5: resolveMannerValue(
+        mannerOutputs[0]?.availableP,
+        OrganicManure?.AvailableP2O5,
+      ),
       FertilizerP2O5: null,
       CropK2O: null,
       KBalance: null,
-      ManureK2O: mannerOutputs
-        ? mannerOutputs[0]?.availableK
-        : OrganicManure.AvailableK2O,
+      ManureK2O: resolveMannerValue(
+        mannerOutputs[0]?.availableK,
+        OrganicManure?.AvailableK2O,
+      ),
       FertilizerK2O: null,
       CropMgO: null,
       MgBalance: null,
@@ -31,9 +44,10 @@ class SavingOtherCropRecommendations {
       FertilizerMgO: null,
       CropSO3: null,
       SBalance: null,
-      ManureSO3: mannerOutputs
-        ? mannerOutputs[0]?.availableS
-        : OrganicManure.AvailableSO3,
+      ManureSO3: resolveMannerValue(
+        mannerOutputs[0]?.availableS,
+        OrganicManure?.AvailableSO3,
+      ),
       FertilizerSO3: null,
       CropNa2O: null,
       NaBalance: null,
@@ -43,7 +57,7 @@ class SavingOtherCropRecommendations {
       LimeBalance: null,
       ManureLime: null,
       FertilizerLime: null,
-      PH: latestSoilAnalysis?.PH?.toString() || null,
+      PH: null,
       SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
       PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
       KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
@@ -59,12 +73,12 @@ class SavingOtherCropRecommendations {
     mannerOutputs,
     userId,
     latestSoilAnalysis,
-    crop
+    crop,
   ) {
     const cropOrderData = await this.buildCropOrderData(
       OrganicManure,
       mannerOutputs,
-      latestSoilAnalysis
+      latestSoilAnalysis,
     );
     let managementPeriods = [];
     if (OrganicManure) {
@@ -87,7 +101,7 @@ class SavingOtherCropRecommendations {
         RecommendationEntity,
         {
           where: {
-            ManagementPeriodID: period.ID
+            ManagementPeriodID: period.ID,
           },
         },
       );
@@ -118,12 +132,12 @@ class SavingOtherCropRecommendations {
         updatedRecommendations.push(recommendation);
       } else {
         // If no recommendation exists, create a new one
-        recommendation = transactionalManager.create(RecommendationEntity,{
+        recommendation = transactionalManager.create(RecommendationEntity, {
           ...cropOrderData,
           ManagementPeriodID: period.ID,
           Comments: "New recommendation created",
           CreatedOn: new Date(),
-          CreatedByID: userId
+          CreatedByID: userId,
         });
         await transactionalManager.save(RecommendationEntity, recommendation);
         updatedRecommendations.push(recommendation);

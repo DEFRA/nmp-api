@@ -3,6 +3,7 @@ const { FarmController } = require("./farm.controller");
 const { FarmPayloadDto, FarmUpdatePayloadDto } = require("./dto/farm.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
 
 const getController = (request, h) => new FarmController(request, h);
 
@@ -20,19 +21,7 @@ module.exports = [
           Id: Joi.number().optional(),
           OrganisationID: Joi.string().guid().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -51,6 +40,22 @@ module.exports = [
     },
   },
   {
+  method: "GET",
+  path: "/farmsWithLastUpdatedDate/{organisationId}",
+  options: {
+    tags: ["api", "Farm"],
+    description: "Get all farms with last updated date",
+    validate: {
+      params: Joi.object({
+        organisationId: Joi.string().required(),
+      }),
+    },
+  },
+  handler: async (request, h) => {
+    return getController(request, h).getAllWithLastUpdatedDate();
+  },
+},
+  {
     method: "GET",
     path: "/farms/{farmId}",
     options: {
@@ -60,26 +65,14 @@ module.exports = [
         params: Joi.object({
           farmId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(StatusCodeMapper.BAD_REQUEST)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
       return getController(request, h).getById();
     },
   },
-  
+
   {
     method: "DELETE",
     path: "/farms/{farmId}",
@@ -90,19 +83,7 @@ module.exports = [
         params: Joi.object({
           farmId: Joi.number().integer().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
     handler: async (request, h) => {
@@ -120,19 +101,7 @@ module.exports = [
       description: "Create Farm API",
       validate: {
         payload: FarmPayloadDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -148,19 +117,7 @@ module.exports = [
       description: "Update Farm api",
       validate: {
         payload: FarmPayloadDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -180,19 +137,29 @@ module.exports = [
         query: Joi.object({
           shortSummary: Joi.boolean().optional(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              }),
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
+      },
+    },
+  },
+  {
+    method: "GET",
+    path: "/farms/last-updated/{farmId}",
+    handler: async (request, h) => {
+      return getController(request, h).getLastUpdatedDates();
+    },
+    options: {
+      tags: ["api", "Farm"],
+      description: "Get last updated dates for farm data",
+      validate: {
+        params: Joi.object({
+          farmId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          years: Joi.string()
+            .required()
+            .description("Comma separated years E.g. 2022,2023,2024")
+        }),
+        failAction: validationFailAction,
       },
     },
   },

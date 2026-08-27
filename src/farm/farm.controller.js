@@ -38,6 +38,22 @@ class FarmController {
     }
   }
 
+  async getAllWithLastUpdatedDate() {
+  try {
+    const { organisationId } = this.#request.params;
+
+    const { records } =
+      await this.#farmService.getAllWithLastUpdatedDate(
+        organisationId
+      );
+
+    return this.#h.response({ Farms: records });
+  } catch (error) {
+    console.error(error);
+    return this.#h.response({ error });
+  }
+}
+
   async getById() {
     try {
       const { farmId } = this.#request.params;
@@ -122,12 +138,25 @@ class FarmController {
         organisationId,
         selectOptions,
       );
-      // if (!farms) {
-      //   throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
-      // }
       return this.#h.response({ Farms: farms.records });
     } catch (error) {
       console.error("Error in getFarmsByOrganisationId controller:", error);
+      return this.#h.response({ error });
+    }
+  }
+
+  async getLastUpdatedDates() {
+    try {
+    const { farmId } = this.#request.params;
+    const { years } = this.#request.query;
+      const yearsOfFarm = years.split(",").map(Number);
+    const lastUpdatedDateData = await this.#farmService.getLastUpdatedDates(
+      farmId,
+      yearsOfFarm
+    );
+    return this.#h.response(lastUpdatedDateData);
+    } catch (error) {
+      console.error(error);
       return this.#h.response({ error });
     }
   }

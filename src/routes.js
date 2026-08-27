@@ -1,3 +1,5 @@
+const { wrapRouteWithLogging } = require("./shared/route-logging-wrapper");
+
 module.exports = [
   ...require("./health-check/health-check.route"),
   ...require("./vendors/rb209/rb209.routes"),
@@ -49,5 +51,12 @@ module.exports = [
   ...require("./warning-message/warning-message.route"),
   ...require("./warning/warning-route"),
   ...require("./farms-NVZ/farms-NVZ.route"),
-  ...require("./psc-index/psc-index.route")
-];
+  ...require("./psc-index/psc-index.route"),
+  ...require("./soil-analyses-method/soil-analyses-method.route"),
+  ...require("./scotland-nmax-values/scotland-nmax-values.route"),
+  ...require("./farm-average-yield/farm-average-yields.route"),
+  ...require("./manner-estimations/manner-estimations.route"),
+  ...require("./manner-estimation-applications/manner-estimation-applications.route"),
+  ...require("./manner-farm/manner-farms.route"),
+  ...require("./errorlogs/errorlogs.route"),
+].map((route) => wrapRouteWithLogging(route));

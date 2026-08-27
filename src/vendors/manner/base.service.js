@@ -1,7 +1,7 @@
 const axios = require("axios");
-const https = require("https");
+const https = require("node:https");
 const EnvironmentService = require("../../shared/environment.service");
- // Adjust the path accordingly
+const { logMannerApiError } = require("./manner-error-logger.service");
 
 class MannerBaseService {
   #request;
@@ -10,9 +10,9 @@ class MannerBaseService {
   constructor() {
     // Set up Axios instance with base URL and https agent
     this.#request = axios.create({
-      baseURL: EnvironmentService.MANNER_BASE_URL(), // Get the base URL from environment service
+      baseURL: EnvironmentService.mannerBaseUrl(), // Get the base URL from environment service
       httpsAgent: new https.Agent({
-        rejectUnauthorized: false, 
+        rejectUnauthorized: false,
       }),
     });
 
@@ -20,10 +20,7 @@ class MannerBaseService {
     this.#request.interceptors.request.use(
       async (config) => {
         //Retrieve the access token from the request headers
-
-        // const token = this.req.headers["authorization"];
-        const token = this.#token; 
-
+        const token = this.#token;
         //Add token to Authorization header if it exists
         if (token) {
           config.headers["Authorization"] = `${token}`;
@@ -31,7 +28,7 @@ class MannerBaseService {
 
         return config;
       },
-      (error) => Promise.reject(error)
+      (error) => Promise.reject(error),
     );
   }
 
@@ -44,24 +41,39 @@ class MannerBaseService {
     const newtoken = request.headers["authorization"];
     // Set the token before making the request
     this.setToken(newtoken);
+    const startedAt = Date.now();
 
     try {
       const response = await this.#request.get(endpoint);
       return response.data; // Return the response data
     } catch (error) {
+      logMannerApiError({
+        method: "GET",
+        endpoint,
+        startedAt,
+        error,
+      });
       return error.response; // Handle and return the error response
     }
   }
 
   // Method to send data via POST request
-  async postData(url, body,request) {
+  async postData(url, body, request) {
     const posttoken = request.headers["authorization"];
     this.setToken(posttoken);
-    
+    const startedAt = Date.now();
+
     try {
       const response = await this.#request.post(url, body);
       return response.data; // Return the response data
     } catch (error) {
+      logMannerApiError({
+        method: "POST",
+        endpoint: url,
+        requestPayload: body,
+        startedAt,
+        error,
+      });
       return error.response.data; // Handle and return the error response
     }
   }

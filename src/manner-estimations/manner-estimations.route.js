@@ -1,0 +1,187 @@
+const {
+  MannerEstimationsController,
+} = require("./manner-estimations.controller");
+const {
+  CreateMannerEstimationWithApplicationDto,
+  UpdateMannerEstimationOnlyDto,
+  CheckMannerEstimationExistsDto,
+  CopyMannerEstimationDto,
+} = require("./dto/create-manner-estimation.dto");
+const { formatErrorResponse } = require("../interceptor/responseFormatter");
+const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
+const { validationFailAction } = require("../shared/validateFailSafeAction");
+const Joi = require("joi");
+const mannerEstimations = "Manner Estimations";
+module.exports = [
+  {
+    method: "POST",
+    path: "/manner-estimations",
+    handler: async (request, h) => {
+      const controller = new MannerEstimationsController(request, h);
+      return controller.createMannerEstimation();
+    },
+    options: {
+      tags: ["api", mannerEstimations],
+      description: "Create a Manner Estimation",
+      validate: {
+        payload: CreateMannerEstimationWithApplicationDto,
+        failAction: validationFailAction,
+      },
+    },
+  },
+  {
+    method: "POST",
+    path: "/manner-estimations/copyestimates",
+    handler: async (request, h) => {
+      const controller = new MannerEstimationsController(request, h);
+      return controller.copyMannerEstimation();
+    },
+    options: {
+      tags: ["api", mannerEstimations],
+      description: "Copy Manner Estimation and related applications",
+      validate: {
+        payload: CopyMannerEstimationDto,
+        failAction: validationFailAction,
+      },
+    },
+  },
+  {
+    method: "PUT",
+    path: "/manner-estimations",
+    handler: async (request, h) => {
+      const controller = new MannerEstimationsController(request, h);
+      return controller.updateMannerEstimationWithApplications();
+    },
+    options: {
+      tags: ["api", mannerEstimations],
+      description: "Update Manner Estimation and related applications",
+      validate: {
+        payload: UpdateMannerEstimationOnlyDto,
+        failAction: validationFailAction,
+      },
+    },
+  },
+  {
+    method: "GET",
+    path: "/manner-estimations/by-mannerFarmID/{mannerFarmID}",
+    options: {
+      tags: ["api", mannerEstimations],
+      description: "Get Manner Estimations by Farm ID",
+      validate: {
+        params: Joi.object({
+          mannerFarmID: Joi.number().integer().required(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new MannerEstimationsController(request, h);
+      return controller.getMannerEstimationByFarmId();
+    },
+  },
+  {
+    method: "GET",
+    path: "/manner-estimations/manner-estimations-by-id/{id}",
+    options: {
+      tags: ["api", mannerEstimations],
+      description: "Get Manner Estimations by ID",
+      validate: {
+        params: Joi.object({
+          id: Joi.number().integer().required(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new MannerEstimationsController(request, h);
+      return controller.getById();
+    },
+  },
+  {
+    method: "GET",
+    path: "/manner-estimations/manner-estimation-related-data/{id}",
+    options: {
+      tags: ["api", mannerEstimations],
+      description: "Get Manner Estimation Related Data by ID",
+      validate: {
+        params: Joi.object({
+          id: Joi.number().integer().required(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new MannerEstimationsController(request, h);
+      return controller.getMannerEstimationRelatedDataById();
+    },
+  },
+  {
+    method: "DELETE",
+    path: "/manner-estimations/",
+    options: {
+      tags: ["api", mannerEstimations],
+      description: "Delete Manner Estimations by MannerEstimation Ids",
+      validate: {
+        payload: Joi.object({
+          mannerEstimationIds: Joi.array()
+            .items(Joi.number().integer().required())
+            .min(1)
+            .required()
+            .description(
+              "Array of mannerEstimation IDs to delete, e.g., [1, 2, 3]",
+            ),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new MannerEstimationsController(request, h);
+      return controller.deleteMannerEstimationsByIds();
+    },
+  },
+  {
+    method: "GET",
+    path: "/manner-estimations/exists",
+    options: {
+      tags: ["api", mannerEstimations],
+      description:
+        "Check whether a Manner Estimation exists by manner farm id and name",
+      validate: {
+        query: CheckMannerEstimationExistsDto,
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new MannerEstimationsController(request, h);
+      return controller.checkMannerEstimationExists();
+    },
+  },
+  {
+    method: "GET",
+    path: "/manner-estimations/total-application-rate/{mannerEstimationId}",
+    options: {
+      tags: ["api", mannerEstimations],
+      description:
+        "Get total application rate by manner estimation ID and date range",
+      validate: {
+        params: Joi.object({
+          mannerEstimationId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          fromDate: Joi.date().iso().required(),
+          toDate: Joi.date().iso().required(),
+          mannerEstimationApplicationId: Joi.number()
+            .integer()
+            .allow(null)
+            .optional(),
+          isPoultry: Joi.boolean().required(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new MannerEstimationsController(request, h);
+      return controller.getTotalApplicationRate();
+    },
+  },
+];

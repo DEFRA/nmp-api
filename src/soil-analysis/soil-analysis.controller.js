@@ -28,7 +28,7 @@ class SoilAnalysesController {
     const { fieldId } = this.#request.params;
     const { shortSummary } = this.#request.query;
     let selectOptions = {};
-    if (shortSummary) selectOptions = { ID: true, Date: true, FieldID: true };
+    if (shortSummary) {selectOptions = { ID: true, Date: true, FieldID: true }}
     try {
       const SoilAnalyses = await this.#soilAnalysisService.getBy(
         "FieldID",

@@ -1,5 +1,5 @@
 const Joi = require("joi");
-
+const minimumMinuesTwo = -2, maximumNine = 9,defaultMethodologyId = 4,  precisionOne = 1;
 const SoilAnalysisDto = Joi.object({
   FieldID: Joi.number().integer().required().allow(null),
   Year: Joi.number().integer().required().allow(null),
@@ -7,24 +7,36 @@ const SoilAnalysisDto = Joi.object({
   Date: Joi.date().iso().required().allow(null),
   PH: Joi.number().required().allow(null),
   PhosphorusMethodologyID: Joi.number().integer().required().allow(null),
-  Phosphorus: Joi.number().required().allow(null),
+  Phosphorus: Joi.number().precision(precisionOne).required().allow(null),
   PhosphorusIndex: Joi.number().integer().required().allow(null),
   Potassium: Joi.number().required().allow(null),
-  PotassiumIndex: Joi.number().integer().min(-2).max(9).required().allow(null),
+  PotassiumIndex: Joi.number()
+    .integer()
+    .min(minimumMinuesTwo)
+    .max(maximumNine)
+    .required()
+    .allow(null),
+  PotassiumMethodologyID: Joi.number()
+    .integer()
+    .default(defaultMethodologyId)
+    .required()
+    .allow(null),
   Magnesium: Joi.number().required().allow(null),
   MagnesiumIndex: Joi.number().integer().required().allow(null),
+  MagnesiumMethodologyID: Joi.number()
+    .integer()
+    .default(4)
+    .required()
+    .allow(null),
   SoilNitrogenSupply: Joi.number().required().allow(null),
   SoilNitrogenSupplyIndex: Joi.number().integer().required().allow(null),
   SoilNitrogenSampleDate: Joi.date().iso().optional().allow(null),
   Sodium: Joi.number().required().allow(null),
   Lime: Joi.number().required().allow(null),
   PhosphorusStatus: Joi.string().required().allow(null),
-  PotassiumAnalysis: Joi.string().required().allow(null),
   PotassiumStatus: Joi.string().required().allow(null),
-  MagnesiumAnalysis: Joi.string().required().allow(null),
   MagnesiumStatus: Joi.string().required().allow(null),
   NitrogenResidueGroup: Joi.string().required().allow(null),
-  SoilAnalysisMethod: Joi.number().integer().optional().allow(null),
   OrganicMatterPercentage: Joi.number().integer().optional().allow(null),
   Comments: Joi.string().optional().allow(null),
   PreviousID: Joi.number().integer().optional().allow(null),

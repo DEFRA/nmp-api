@@ -9,7 +9,9 @@ const {
 const {
   formatErrorResponse,
 } = require("../../../interceptor/responseFormatter");
+const { validationFailAction } = require("../../../shared/validateFailSafeAction");
 
+const recommendationTag = "RB209 Recommendation";
 module.exports = [
   {
     method: "POST",
@@ -19,23 +21,11 @@ module.exports = [
       return controller.calculateNutrientRecommendations();
     },
     options: {
-      tags: ["api", "RB209 Recommendation"],
+      tags: ["api", recommendationTag],
       description: "The main connection to calculate Nutrient Recommendations",
       validate: {
         payload: CalculateNutrientRecommendationsDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -47,23 +37,11 @@ module.exports = [
       return controller.calculateNutrientOfftake();
     },
     options: {
-      tags: ["api", "RB209 Recommendation"],
+      tags: ["api", recommendationTag],
       description: "The calculate crop nutrient offtake value",
       validate: {
         payload: CalculateNutrientOfftakeDto,
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction,
       },
     },
   },
@@ -75,7 +53,7 @@ module.exports = [
       return controller.calculateNutrientDeficiency();
     },
     options: {
-      tags: ["api", "RB209 Recommendation"],
+      tags: ["api", recommendationTag],
       description:
         "To get the nutrient deficiency result based on leaf analysis",
       validate: {
@@ -85,19 +63,7 @@ module.exports = [
           nutrientId: Joi.string().required(),
           nutrientContent: Joi.string().required(),
         }),
-        failAction: (request, h, err) => {
-          return h
-            .response(
-              formatErrorResponse({
-                source: {
-                  error: err,
-                },
-                request,
-              })
-            )
-            .code(400)
-            .takeover();
-        },
+        failAction: validationFailAction
       },
     },
   },
