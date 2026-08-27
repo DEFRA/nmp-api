@@ -27,22 +27,36 @@ const createFutureRecommendationInprogressLock = ({
     }
   };
 
+  const deleteInProgress = (fieldID, year, transactionalManager) =>
+    transactionalManager.delete(InprogressCalculationsEntity, {
+      FieldID: fieldID,
+      Year: year,
+    });
+
   const clearInProgress = async (fieldID, year) =>
     runWithFutureDeadlockRetry(
       runWithDeadlockRetry,
       "future-recommendation-clear-in-progress",
-      () =>
-        AppDataSource.manager.delete(InprogressCalculationsEntity, {
-          FieldID: fieldID,
-          Year: year,
-        }),
+      () => deleteInProgress(fieldID, year, AppDataSource.manager),
     );
 
   const acquireInProgressSlot = async (fieldID, year) =>
     runWithFutureDeadlockRetry(
       runWithDeadlockRetry,
       "future-recommendation-acquire-in-progress",
-      () => markInProgress(fieldID, year, AppDataSource.manager),
+      async () => {
+        const acquired = await markInProgress(
+          fieldID,
+          year,
+          AppDataSource.manager,
+        );
+        if (acquired) {
+          return true;
+        }
+
+        await deleteInProgress(fieldID, year, AppDataSource.manager);
+        return markInProgress(fieldID, year, AppDataSource.manager);
+      },
     );
 
   return {
