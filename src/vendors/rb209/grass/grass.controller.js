@@ -87,6 +87,18 @@ class RB209GrassController {
      }
   }
 
+  async getSwardTypesFilterByCountryId() {
+    const { countryId } = this.#request.params;
+    try {
+      const record =
+        await this.#service.getSwardTypesFilterByCountryId(countryId);
+      return this.#h.response(record);
+    } catch (error) {
+      console.error("Error in getSwardTypesFilterByCountryId:", error);
+      return this.#h.response(error);
+    }
+  }
+
   async getYieldRangesForGrassFields() {
     return this.handleGetData();
   }
