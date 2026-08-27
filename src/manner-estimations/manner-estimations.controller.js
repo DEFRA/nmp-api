@@ -13,7 +13,12 @@ class MannerEstimationsController {
     try {
       const payload = this.#request.payload;
       const userId = this.#request.userId;
-      const result =await this.#mannerEstimationsService.createMannerEstimation(payload,userId,this.#request);
+      const result =
+        await this.#mannerEstimationsService.createMannerEstimation(
+          payload,
+          userId,
+          this.#request,
+        );
       return this.#h.response(result);
     } catch (error) {
       console.error("Error creating Manner Estimation:", error);
@@ -25,7 +30,10 @@ class MannerEstimationsController {
     try {
       const payload = this.#request.payload;
       const userId = this.#request.userId;
-      const result = await this.#mannerEstimationsService.copyMannerEstimation(payload,userId);
+      const result = await this.#mannerEstimationsService.copyMannerEstimation(
+        payload,
+        userId,
+      );
       return this.#h.response(result);
     } catch (error) {
       console.error("Error copying Manner Estimation:", error);
@@ -37,7 +45,12 @@ class MannerEstimationsController {
     try {
       const payload = this.#request.payload;
       const userId = this.#request.userId;
-      const result =await this.#mannerEstimationsService.updateMannerEstimationWithApplications(payload,userId,this.#request);
+      const result =
+        await this.#mannerEstimationsService.updateMannerEstimationWithApplications(
+          payload,
+          userId,
+          this.#request,
+        );
       return this.#h.response(result);
     } catch (error) {
       console.error("Error updating Manner Estimation:", error);
@@ -48,7 +61,10 @@ class MannerEstimationsController {
   async getMannerEstimationByFarmId() {
     try {
       const { mannerFarmID } = this.#request.params;
-      const records =await this.#mannerEstimationsService.getMannerEstimationByFarmId(mannerFarmID);
+      const records =
+        await this.#mannerEstimationsService.getMannerEstimationByFarmId(
+          mannerFarmID,
+        );
       return this.#h.response(records);
     } catch (error) {
       console.error("Error in getByFarmId:", error);
@@ -59,7 +75,11 @@ class MannerEstimationsController {
   async getMannerEstimationRelatedDataById() {
     try {
       const { id } = this.#request.params;
-      const records = await this.#mannerEstimationsService.getMannerEstimationRelatedDataById(id,this.#request);
+      const records =
+        await this.#mannerEstimationsService.getMannerEstimationRelatedDataById(
+          id,
+          this.#request,
+        );
       return this.#h.response(records);
     } catch (error) {
       console.error("Error in getMannerEstimationRelatedDataById:", error);
@@ -81,21 +101,52 @@ class MannerEstimationsController {
   async deleteMannerEstimationsByIds() {
     const { mannerEstimationIds } = this.#request.payload;
     try {
-      await this.#mannerEstimationsService.deleteMannerEstimations(mannerEstimationIds);
-      return this.#h.response({message: "Manner estimations deleted successfully."});
+      await this.#mannerEstimationsService.deleteMannerEstimations(
+        mannerEstimationIds,
+      );
+      return this.#h.response({
+        message: "Manner estimations deleted successfully.",
+      });
     } catch (error) {
       console.error("Error in deleting manner estimations:", error);
-      return this.#h.response({error: error.message})
+      return this.#h.response({ error: error.message });
     }
   }
 
   async checkMannerEstimationExists() {
     try {
       const { mannerFarmID, name } = this.#request.query;
-      const result =await this.#mannerEstimationsService.checkMannerEstimationExists(mannerFarmID,name);
+      const result =
+        await this.#mannerEstimationsService.checkMannerEstimationExists(
+          mannerFarmID,
+          name,
+        );
       return this.#h.response(result);
     } catch (error) {
       console.error("Error checking Manner Estimation existence:", error);
+      return this.#h.response(error);
+    }
+  }
+
+  async getTotalApplicationRate() {
+    try {
+      const { mannerEstimationId } = this.#request.params;
+      const { fromDate, toDate, mannerEstimationApplicationId, isPoultry } =
+        this.#request.query;
+
+      const totalApplicationRate =
+        await this.#mannerEstimationsService.getTotalApplicationRate(
+          mannerEstimationId,
+          fromDate,
+          toDate,
+          mannerEstimationApplicationId,
+          isPoultry,
+          this.#request,
+        );
+
+      return this.#h.response({ TotalApplicationRate: totalApplicationRate });
+    } catch (error) {
+      console.error("Error in getTotalApplicationRate:", error);
       return this.#h.response(error);
     }
   }
