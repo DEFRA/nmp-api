@@ -410,60 +410,24 @@ const cropMutationMethods = {
     });
   },
 
-  async updateSingleCrop(
-    cropEntry,
-    userId,
-    request,
-    transactionalManager,
-    backgroundTasks,
-  ) {
+  async updateSingleCrop(cropEntry,userId,request,transactionalManager,backgroundTasks) {
     const crop = cropEntry?.Crop;
-    const {
-      ID,
-      CreatedByID,
-      CreatedOn,
-      ModifiedOn,
-      ModifiedByID,
-      EncryptedCounter,
-      FieldName,
-      IsDeleted,
-      ...updatedCropData
-    } = crop;
-
+    const {ID,CreatedByID,CreatedOn,ModifiedOn,ModifiedByID,EncryptedCounter,FieldName, IsDeleted,...updatedCropData} = crop;
     const cropUpdateResult = await transactionalManager.update(CropEntity, ID, {
       ...updatedCropData,
       ModifiedByID: userId,
       ModifiedOn: new Date(),
     });
-
     if (cropUpdateResult.affected === 0) {
       console.warn(`Crop with ID ${ID} not found`);
       return null;
     }
-
     const updatedCrop = await transactionalManager.findOne(CropEntity, {
       where: { ID: ID },
     });
-    const rb209CountryID = await this.fetchRb209CountryId(
-      crop.FieldID,
-      transactionalManager,
-    );
-
-    await this.validateAndHandleSecondCrop(
-      transactionalManager,
-      updatedCrop,
-      updatedCrop.FieldID,
-      updatedCrop.Year,
-      rb209CountryID,
-    );
-
-    const updatedManagementPeriods = await this.syncManagementPeriodsBySequence(
-      transactionalManager,
-      crop.ID,
-      userId,
-      cropEntry.ManagementPeriods,
-    );
-
+    const rb209CountryID = await this.fetchRb209CountryId(crop.FieldID,transactionalManager);
+    await this.validateAndHandleSecondCrop( transactionalManager, updatedCrop, updatedCrop.FieldID, updatedCrop.Year, rb209CountryID);
+    const updatedManagementPeriods = await this.syncManagementPeriodsBySequence(transactionalManager,crop.ID,userId,cropEntry.ManagementPeriods);
     const organicManure = null;
     await this.generateRecommendations.generateRecommendations(
       updatedCrop.FieldID,
@@ -473,7 +437,6 @@ const cropMutationMethods = {
       request,
       userId,
     );
-
     const nextAvailableCrop = await transactionalManager.findOne(CropEntity, {
       where: {
         FieldID: updatedCrop.FieldID,
@@ -482,7 +445,6 @@ const cropMutationMethods = {
       order: { Year: "ASC" },
     });
     console.log("nextAvailableCrop", nextAvailableCrop);
-
     this.scheduleFutureRecommendation(
       updatedCrop,
       nextAvailableCrop,
@@ -491,11 +453,7 @@ const cropMutationMethods = {
       userId,
     );
     this.scheduleWarningRecalculation(updatedCrop, backgroundTasks, userId);
-
-    return {
-      crop: updatedCrop,
-      ManagementPeriods: updatedManagementPeriods,
-    };
+    return {crop: updatedCrop,ManagementPeriods: updatedManagementPeriods};
   },
 
   async updateCrop(
