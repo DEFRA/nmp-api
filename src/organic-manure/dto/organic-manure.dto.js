@@ -24,7 +24,7 @@ const baseOrganicManureSchema = {
   Rainfall: Joi.number().integer().required(),
 
   AreaSpread: Joi.number().precision(precisionThree).allow(null),
-  ManureQuantity: Joi.number().precision(precisionThree).allow(null),
+  ManureQuantity: Joi.number().integer().allow(null),
 
   ApplicationMethodID: Joi.number().integer().allow(null),
   IncorporationMethodID: Joi.number().integer().allow(null),
