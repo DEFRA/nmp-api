@@ -49,18 +49,31 @@ class CalculateMannerOutputService {
     CropData,
     managementPeriod,
     transactionalManager,
+    prefetchedContext = null,
   ) {
     if (managementPeriod.Defoliation <= 1) {
       return 0;
     }
 
-    const previousDefoliationManagementPeriods =
-      await transactionalManager.find(ManagementPeriodEntity, {
-        where: {
-          CropID: CropData.ID,
-          Defoliation: managementPeriod.Defoliation - 1,
+    let previousDefoliationManagementPeriods = [];
+    if (prefetchedContext?.managementPeriodsByCropId?.has(CropData.ID)) {
+      previousDefoliationManagementPeriods =
+        prefetchedContext.managementPeriodsByCropId
+          .get(CropData.ID)
+          .filter(
+            (period) => period.Defoliation === managementPeriod.Defoliation - 1,
+          );
+    } else {
+      previousDefoliationManagementPeriods = await transactionalManager.find(
+        ManagementPeriodEntity,
+        {
+          where: {
+            CropID: CropData.ID,
+            Defoliation: managementPeriod.Defoliation - 1,
+          },
         },
-      });
+      );
+    }
 
     const prevManagementPeriodIDs = previousDefoliationManagementPeriods.map(
       (mp) => mp.ID,
@@ -70,14 +83,22 @@ class CalculateMannerOutputService {
       return 0;
     }
 
-    const organicManures = await transactionalManager.find(
-      OrganicManureEntity,
-      {
+    let organicManures = [];
+    if (prefetchedContext?.organicManuresByManagementPeriodId) {
+      for (const managementPeriodID of prevManagementPeriodIDs) {
+        const manuresForPeriod =
+          prefetchedContext.organicManuresByManagementPeriodId.get(
+            managementPeriodID,
+          ) ?? [];
+        organicManures.push(...manuresForPeriod);
+      }
+    } else {
+      organicManures = await transactionalManager.find(OrganicManureEntity, {
         where: {
           ManagementPeriodID: In(prevManagementPeriodIDs),
         },
-      },
-    );
+      });
+    }
 
     return organicManures.reduce(
       (sum, manure) => sum + (manure.AvailableNForNextDefoliation || 0),
@@ -85,7 +106,12 @@ class CalculateMannerOutputService {
     );
   }
 
-  async getCarryOverN(CropData, managementPeriod, transactionalManager) {
+  async getCarryOverN(
+    CropData,
+    managementPeriod,
+    transactionalManager,
+    prefetchedContext = null,
+  ) {
     if (CropData.CropOrder === CropOrderMapper.SECONDCROP) {
       return {
         nextCropAvailableN: 0,
@@ -102,6 +128,7 @@ class CalculateMannerOutputService {
         CropData,
         managementPeriod,
         transactionalManager,
+        prefetchedContext,
       );
 
     return {
@@ -129,12 +156,14 @@ class CalculateMannerOutputService {
     MannerOutput,
     managementPeriod,
     transactionalManager,
+    prefetchedContext = null,
   ) {
     const { nextCropAvailableN, availableNForNextDefoliation } =
       await this.getCarryOverN(
         CropData,
         managementPeriod,
         transactionalManager,
+        prefetchedContext,
       );
 
     const mannerData = MannerOutput?.data;
@@ -284,13 +313,15 @@ class CalculateMannerOutputService {
     organicManureData,
     allManureData,
     transactionalManager,
+    prefetchedContext = null,
   ) {
-    const mulOrganicManuresData = await transactionalManager.find(
-      OrganicManureEntity,
-      {
+    const mulOrganicManuresData =
+      prefetchedContext?.organicManuresByManagementPeriodId?.get(
+        managementPeriodID,
+      ) ??
+      (await transactionalManager.find(OrganicManureEntity, {
         where: { ManagementPeriodID: managementPeriodID },
-      },
-    );
+      }));
 
     const manureApplications = [];
 
@@ -316,12 +347,19 @@ class CalculateMannerOutputService {
     manureApplications,
     soilTypeTextureData,
     transactionalManager,
+    prefetchedContext = null,
   ) {
-    const rb209CountryData = await transactionalManager.findOne(CountryEntity, {
-      where: {
-        ID: farmData.CountryID,
-      },
-    });
+    const rb209CountryData = prefetchedContext?.rb209CountryData
+      ? prefetchedContext.rb209CountryData
+      : await transactionalManager.findOne(CountryEntity, {
+          where: {
+            ID: farmData.CountryID,
+          },
+        });
+
+    if (prefetchedContext && !prefetchedContext.rb209CountryData) {
+      prefetchedContext.rb209CountryData = rb209CountryData;
+    }
     return {
       runType:
         farmData.CountryID === CountryMapper.SCOTLAND
@@ -341,21 +379,32 @@ class CalculateMannerOutputService {
     };
   }
 
-  async getMannerCropTypeId(crop, transactionalManager) {
+  async getMannerCropTypeId(
+    crop,
+    transactionalManager,
+    prefetchedContext = null,
+  ) {
     const SEPTEMBER_MONTH_INDEX = 8;
     const LATE_SOWN_START_DAY = 15;
     if (crop?.CropTypeID === null) {
       console.log("Invalid crop data: CropTypeID is required");
     }
 
-    const cropTypeLinkingData = await transactionalManager.findOne(
-      CropTypeLinkingEntity,
-      {
-        where: {
-          CropTypeID: crop.CropTypeID,
+    let cropTypeLinkingData = null;
+    if (prefetchedContext?.cropTypeLinkingByCropTypeId?.has(crop.CropTypeID)) {
+      cropTypeLinkingData = prefetchedContext.cropTypeLinkingByCropTypeId.get(
+        crop.CropTypeID,
+      );
+    } else {
+      cropTypeLinkingData = await transactionalManager.findOne(
+        CropTypeLinkingEntity,
+        {
+          where: {
+            CropTypeID: crop.CropTypeID,
+          },
         },
-      },
-    );
+      );
+    }
 
     if (!cropTypeLinkingData) {
       console.log(
@@ -413,12 +462,14 @@ class CalculateMannerOutputService {
     soilTypeTextureData,
     transactionalManager,
     request,
+    prefetchedContext,
   }) {
     const manureApplications = await this.buildManureApplications(
       period.ID,
       organicManure,
       allManureData,
       transactionalManager,
+      prefetchedContext,
     );
     let mannerOutputReq = null,
       mannerOutput = null;
@@ -430,6 +481,7 @@ class CalculateMannerOutputService {
         manureApplications,
         soilTypeTextureData,
         transactionalManager,
+        prefetchedContext,
       );
     }
     if (mannerOutputReq) {
@@ -444,6 +496,7 @@ class CalculateMannerOutputService {
       mannerOutput,
       period,
       transactionalManager,
+      prefetchedContext,
     );
     return buildManureOutputs;
   }
@@ -455,18 +508,19 @@ class CalculateMannerOutputService {
     fieldData,
     transactionalManager,
     request,
-    crops = []
+    crops = [],
   ) {
+    const prefetchedContext = fieldData?._prefetchContext ?? null;
     const allMannerOutputs = [];
-     const allCrops =
-       crops.length > 0
-         ? crops
-         : await transactionalManager.find(CropEntity, {
-             where: {
-               FieldID: cropData.FieldID,
-               Year: cropData.Year,
-             },
-           });
+    const allCrops =
+      crops.length > 0
+        ? crops
+        : await transactionalManager.find(CropEntity, {
+            where: {
+              FieldID: cropData.FieldID,
+              Year: cropData.Year,
+            },
+          });
 
     const allManureData =
       await this.MannerManureTypesService.getAllManureTypesList(request);
@@ -477,22 +531,23 @@ class CalculateMannerOutputService {
     ];
 
     for (const crop of cropsToProcess) {
-      const managementPeriods = await transactionalManager.find(
-        ManagementPeriodEntity,
-        { where: { CropID: crop.ID } },
-      );
+      const managementPeriods =
+        prefetchedContext?.managementPeriodsByCropId?.get(crop.ID) ??
+        (await transactionalManager.find(ManagementPeriodEntity, {
+          where: { CropID: crop.ID },
+        }));
       const mannerCropTypeID = await this.getMannerCropTypeId(
         crop,
         transactionalManager,
+        prefetchedContext,
       );
-      const soilTypeTextureData = await transactionalManager.findOne(
-        SoilTypeSoilTextureEntity,
-        {
+      const soilTypeTextureData =
+        prefetchedContext?.soilTypeTextureData ??
+        (await transactionalManager.findOne(SoilTypeSoilTextureEntity, {
           where: {
             SoilTypeID: fieldData.SoilTypeID,
           },
-        },
-      );
+        }));
 
       const orderedPeriods = this.getOrderedManagementPeriods(
         managementPeriods,
@@ -511,6 +566,7 @@ class CalculateMannerOutputService {
           soilTypeTextureData,
           transactionalManager,
           request,
+          prefetchedContext,
         });
 
         allMannerOutputs.push(...output);

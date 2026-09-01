@@ -451,7 +451,17 @@ const cropMutationMethods = {
     backgroundTasks,
   ) {
     const crop = cropEntry?.Crop;
-    const {ID,CreatedByID,CreatedOn,ModifiedOn,ModifiedByID,EncryptedCounter,FieldName,IsDeleted,...updatedCropData} = crop;
+    const {
+      ID,
+      CreatedByID,
+      CreatedOn,
+      ModifiedOn,
+      ModifiedByID,
+      EncryptedCounter,
+      FieldName,
+      IsDeleted,
+      ...updatedCropData
+    } = crop;
     const cropUpdateResult = await transactionalManager.update(CropEntity, ID, {
       ...updatedCropData,
       ModifiedByID: userId,
@@ -464,11 +474,32 @@ const cropMutationMethods = {
     const updatedCrop = await transactionalManager.findOne(CropEntity, {
       where: { ID: ID },
     });
-    const rb209CountryID = await this.fetchRb209CountryId(crop.FieldID,transactionalManager);
-    await this.validateAndHandleSecondCrop(transactionalManager,updatedCrop,updatedCrop.FieldID,updatedCrop.Year,rb209CountryID);
-    const updatedManagementPeriods = await this.syncManagementPeriodsBySequence(transactionalManager,crop.ID,userId,cropEntry.ManagementPeriods);
+    const rb209CountryID = await this.fetchRb209CountryId(
+      crop.FieldID,
+      transactionalManager,
+    );
+    await this.validateAndHandleSecondCrop(
+      transactionalManager,
+      updatedCrop,
+      updatedCrop.FieldID,
+      updatedCrop.Year,
+      rb209CountryID,
+    );
+    const updatedManagementPeriods = await this.syncManagementPeriodsBySequence(
+      transactionalManager,
+      crop.ID,
+      userId,
+      cropEntry.ManagementPeriods,
+    );
     const organicManure = null;
-    await this.generateRecommendations.generateRecommendations(updatedCrop.FieldID,updatedCrop.Year,organicManure,transactionalManager,request,userId);
+    await this.generateRecommendations.generateRecommendations(
+      updatedCrop.FieldID,
+      updatedCrop.Year,
+      organicManure,
+      transactionalManager,
+      request,
+      userId,
+    );
     const nextAvailableCrop = await transactionalManager.findOne(CropEntity, {
       where: {
         FieldID: updatedCrop.FieldID,
@@ -477,39 +508,88 @@ const cropMutationMethods = {
       order: { Year: "ASC" },
     });
     console.log("nextAvailableCrop", nextAvailableCrop);
-    cropMutationMethods.scheduleFutureRecommendation.call(this,updatedCrop,nextAvailableCrop,backgroundTasks,request,userId);
-    cropMutationMethods.scheduleWarningRecalculation.call( this,updatedCrop,backgroundTasks,userId);
+    cropMutationMethods.scheduleFutureRecommendation.call(
+      this,
+      updatedCrop,
+      nextAvailableCrop,
+      backgroundTasks,
+      request,
+      userId,
+    );
+    cropMutationMethods.scheduleWarningRecalculation.call(
+      this,
+      updatedCrop,
+      backgroundTasks,
+      userId,
+    );
     return { crop: updatedCrop, ManagementPeriods: updatedManagementPeriods };
   },
-  async updateCrop( body, userId, request, transactionalManager, backgroundTasks = null) {
-    const updatedResults = [],cropData = body.Crops;
+  async updateCrop(
+    body,
+    userId,
+    request,
+    transactionalManager,
+    backgroundTasks = null,
+  ) {
+    const updatedResults = [],
+      cropData = body.Crops;
     for (const cropEntry of cropData) {
-      const updatedResult = await cropMutationMethods.updateSingleCrop.call(this, cropEntry, userId, request, transactionalManager, backgroundTasks);
-      if (updatedResult) {updatedResults.push(updatedResult)}
+      const updatedResult = await cropMutationMethods.updateSingleCrop.call(
+        this,
+        cropEntry,
+        userId,
+        request,
+        transactionalManager,
+        backgroundTasks,
+      );
+      if (updatedResult) {
+        updatedResults.push(updatedResult);
+      }
     }
     return updatedResults;
   },
 
   async mergeCrop(userId, Crops, request) {
-    const cropsWithID = { Crops: Crops.Crops.filter((crop) => crop.Crop.ID !== null)};
+    const cropsWithID = {
+      Crops: Crops.Crops.filter((crop) => crop.Crop.ID !== null),
+    };
     const cropsWithoutID = Crops.Crops.filter((crop) => crop.Crop.ID === null);
     const cropIds = Crops.Crops.filter(
-     (crop) => crop.Crop.ID !== null && crop.Crop.IsDeleted === true,
+      (crop) => crop.Crop.ID !== null && crop.Crop.IsDeleted === true,
     ) // Adding condition for IsDeleted and ID not null
       .map((crop) => crop.Crop.ID);
     const result = await AppDataSource.transaction(
       async (transactionalManager) => {
         if (cropIds.length > 0) {
           for (const cropId of cropIds) {
-            await this.deleteCrop( cropId, userId, request, transactionalManager);
+            await this.deleteCrop(
+              cropId,
+              userId,
+              request,
+              transactionalManager,
+            );
           }
         }
-        const { backgroundTasks } = await this.updateCropData( cropsWithID, userId, request, transactionalManager);
-        const createdPlan = await this.planService.createNutrientsRecommendationForField(cropsWithoutID,userId, request,transactionalManager);
-        return {isSuccess: createdPlan != null,backgroundTasks};
+        const { backgroundTasks } = await this.updateCropData(
+          cropsWithID,
+          userId,
+          request,
+          transactionalManager,
+        );
+        const createdPlan =
+          await this.planService.createNutrientsRecommendationForField(
+            cropsWithoutID,
+            userId,
+            request,
+            transactionalManager,
+          );
+        return { isSuccess: createdPlan != null, backgroundTasks };
       },
     );
-    cropMutationMethods.dispatchBackgroundTasks.call( this, result.backgroundTasks);
+    cropMutationMethods.dispatchBackgroundTasks.call(
+      this,
+      result.backgroundTasks,
+    );
     return result.isSuccess;
   },
 };

@@ -23,17 +23,30 @@ const {
 const organicManureMutationMethods = {
   async deleteOrganicManure(organicManureId, userId, request) {
     return AppDataSource.transaction(async (transactionalManager) => {
-      const organicManureToDelete = await this.repository.findOneBy({ ID: organicManureId});
-      if (organicManureToDelete == null) {console.log(`Organic Manure with ID ${organicManureId} not found`)}
+      const organicManureToDelete = await this.repository.findOneBy({
+        ID: organicManureId,
+      });
+      if (organicManureToDelete == null) {
+        console.log(`Organic Manure with ID ${organicManureId} not found`);
+      }
       const managementPeriod = await this.managementPeriodRepository.findOne({
         where: { ID: organicManureToDelete.ManagementPeriodID },
         select: ["CropID"],
       });
-      if (managementPeriod == null) { console.log(`managementPeriod with ID ${organicManureToDelete.ManagementPeriodID} not found`)}
-      const crop = await this.cropRepository.findOne({ where: { ID: managementPeriod.CropID }});
-      if (crop == null) {console.log(`crop with ID ${managementPeriod.CropID} not found`)}
+      if (managementPeriod == null) {
+        console.log(
+          `managementPeriod with ID ${organicManureToDelete.ManagementPeriodID} not found`,
+        );
+      }
+      const crop = await this.cropRepository.findOne({
+        where: { ID: managementPeriod.CropID },
+      });
+      if (crop == null) {
+        console.log(`crop with ID ${managementPeriod.CropID} not found`);
+      }
       try {
-        const storedProcedure = "EXEC [spOrganicManures_DeleteOrganicManures] @OrganicManureID = @0";
+        const storedProcedure =
+          "EXEC [spOrganicManures_DeleteOrganicManures] @OrganicManureID = @0";
         await transactionalManager.query(storedProcedure, [organicManureId]);
         const newOrganicManure = null;
         await this.generateRecommendations.generateRecommendations(

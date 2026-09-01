@@ -12,6 +12,17 @@ const {
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
 
 class CalculatePreviousCropService {
+  getPrefetchedCropForYear(prefetchContext, year) {
+    const yearCrops = prefetchContext?.historicalCropsByYear?.get(year) ?? [];
+    return this.pickCropFromList(yearCrops);
+  }
+
+  getPrefetchedPreviousCroppingForYear(prefetchContext, year) {
+    return (
+      prefetchContext?.historicalPreviousCroppingsByYear?.get(year) ?? null
+    );
+  }
+
   pickCropFromList(crops) {
     if (crops.length > 1) {
       return (
@@ -26,7 +37,24 @@ class CalculatePreviousCropService {
     return null;
   }
 
-  async findCropForYear(fieldID, year, transactionalManager) {
+  async findCropForYear(
+    fieldID,
+    year,
+    transactionalManager,
+    prefetchContext = null,
+  ) {
+    if (prefetchContext?.fieldID === fieldID) {
+      const prefetchedCrop = this.getPrefetchedCropForYear(
+        prefetchContext,
+        year,
+      );
+      if (prefetchedCrop) {
+        return prefetchedCrop;
+      }
+
+      return this.getPrefetchedPreviousCroppingForYear(prefetchContext, year);
+    }
+
     const yearCrops = await transactionalManager.find(CropEntity, {
       where: { FieldID: fieldID, Year: year },
     });
@@ -42,8 +70,29 @@ class CalculatePreviousCropService {
     });
   }
 
-  async getPreviousYearCrop(fieldID, currentYear, transactionalManager) {
+  async getPreviousYearCrop(
+    fieldID,
+    currentYear,
+    transactionalManager,
+    prefetchContext = null,
+  ) {
     const previousYear = currentYear - 1;
+
+    if (prefetchContext?.fieldID === fieldID) {
+      const prefetchedPreviousYearCrop = this.getPrefetchedCropForYear(
+        prefetchContext,
+        previousYear,
+      );
+      if (prefetchedPreviousYearCrop) {
+        return prefetchedPreviousYearCrop;
+      }
+
+      return this.getPrefetchedPreviousCroppingForYear(
+        prefetchContext,
+        previousYear,
+      );
+    }
+
     const previousYearCrops = await transactionalManager.find(CropEntity, {
       where: { FieldID: fieldID, Year: previousYear },
     });
@@ -57,7 +106,12 @@ class CalculatePreviousCropService {
     return this.pickCropFromList(previousYearCrops);
   }
 
-  async findPreviousCrop(fieldID, currentYear, transactionalManager) {
+  async findPreviousCrop(
+    fieldID,
+    currentYear,
+    transactionalManager,
+    prefetchContext = null,
+  ) {
     const yearOne = 1,
       yearTwo = 2,
       yearThree = 3;
@@ -73,6 +127,7 @@ class CalculatePreviousCropService {
         fieldID,
         year,
         transactionalManager,
+        prefetchContext,
       );
       collectedCrops.push(selectedCrop || null);
     }
@@ -85,7 +140,12 @@ class CalculatePreviousCropService {
       return null;
     }
 
-    return this.getPreviousYearCrop(fieldID, currentYear, transactionalManager);
+    return this.getPreviousYearCrop(
+      fieldID,
+      currentYear,
+      transactionalManager,
+      prefetchContext,
+    );
   }
 }
 

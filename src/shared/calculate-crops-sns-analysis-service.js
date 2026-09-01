@@ -8,8 +8,13 @@ const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { CropEntity } = require("../db/entity/crop.entity");
 
 class CalculateCropsSnsAnalysisService {
-  
-  async getCropsSnsAnalyses(transactionalManager, fieldId, year,allCrops=[]) {
+  async getCropsSnsAnalyses(
+    transactionalManager,
+    fieldId,
+    year,
+    allCrops = [],
+    prefetchedSnsByCropId = null,
+  ) {
     // Step 1: find crops by field and year
 
     const crops =
@@ -28,13 +33,14 @@ class CalculateCropsSnsAnalysisService {
     for (const crop of crops) {
       const snsAnalysis = await this.getSnsAnalysesData(
         transactionalManager,
-        crop.ID
+        crop.ID,
+        prefetchedSnsByCropId,
       );
 
       if (snsAnalysis) {
         result.push({
           ...snsAnalysis,
-          SNSCropOrder: crop.CropOrder, 
+          SNSCropOrder: crop.CropOrder,
         });
       }
     }
@@ -43,12 +49,20 @@ class CalculateCropsSnsAnalysisService {
   }
 
   // Helper method with transactional manager
-  async getSnsAnalysesData(transactionalManager, cropId) {
-     const snsAnalysesData = await transactionalManager.findOne(
+  async getSnsAnalysesData(
+    transactionalManager,
+    cropId,
+    prefetchedSnsByCropId = null,
+  ) {
+    if (prefetchedSnsByCropId instanceof Map) {
+      return prefetchedSnsByCropId.get(cropId) ?? null;
+    }
+
+    const snsAnalysesData = await transactionalManager.findOne(
       SnsAnalysesEntity,
       {
         where: { CropID: cropId },
-      }
+      },
     );
     return snsAnalysesData;
   }
