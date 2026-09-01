@@ -55,6 +55,9 @@ const {
 const {
   PreviousCroppingEntity,
 } = require("../db/entity/previous-cropping.entity");
+const {
+  recommendationTimingTracker,
+} = require("./recommendation-timing-tracker");
 
 const RECOMMENDATION_LOG_ENDPOINT = "Recommendation/Recommendations";
 const SERVICE_NAME = "generate-recomendations-service.js";
@@ -456,65 +459,79 @@ class GenerateRecommendations {
     transactionalManager,
     request,
     userId,
+    context = {},
   ) {
-    const {
-      cropTypesList,
-      fieldRelatedData,
-      crops,
-      fertiliserData,
-      prefetchContext,
-    } = await this.getGenerateRecommendationsContext(
+    const timingRun = recommendationTimingTracker.start({
       fieldID,
-      Year,
-      transactionalManager,
-    );
+      year: Year,
+      source: context?.source,
+      isBackground: context?.isBackground,
+    });
 
-    const results = [];
-    fieldRelatedData._prefetchContext = prefetchContext;
-    const recommendationApiResponseCache = new Map();
-    const rainfall = await this.MannerRainfallPostApplicationService.getData(
-      `climates/rainfall-april-to-september/${fieldRelatedData.ClimateDataPostCode}`,
-      request,
-    );
-    fieldRelatedData.summerRainfall = rainfall.data.value;
-    for (const crop of crops) {
+    try {
       const {
-        snsAnalysesData,
-        latestSoilAnalysis,
-        soilAnalysisRecords,
-        mannerOutputs,
-        previousCrop,
-      } = await this.HanldeMannerAndAnalysis.getCropPreCalculationData(
-        crop,
-        fieldID,
+        cropTypesList,
         fieldRelatedData,
-        newOrganicManure,
-        transactionalManager,
-        request,
         crops,
+        fertiliserData,
+        prefetchContext,
+      } = await this.getGenerateRecommendationsContext(
+        fieldID,
+        Year,
+        transactionalManager,
       );
 
-      const result = await this.processCropRecommendation({
-        crop,
-        crops,
-        snsAnalysesData,
-        latestSoilAnalysis,
-        soilAnalysisRecords,
-        mannerOutputs,
-        previousCrop,
-        fieldRelatedData,
+      const results = [];
+      fieldRelatedData._prefetchContext = prefetchContext;
+      const recommendationApiResponseCache = new Map();
+      const rainfall = await this.MannerRainfallPostApplicationService.getData(
+        `climates/rainfall-april-to-september/${fieldRelatedData.ClimateDataPostCode}`,
         request,
-        transactionalManager,
-        cropTypesList,
-        newOrganicManure,
-        userId,
-        fertiliserData,
-        recommendationApiResponseCache,
-      });
-      results.push(result);
-    }
+      );
+      fieldRelatedData.summerRainfall = rainfall.data.value;
+      for (const crop of crops) {
+        const {
+          snsAnalysesData,
+          latestSoilAnalysis,
+          soilAnalysisRecords,
+          mannerOutputs,
+          previousCrop,
+        } = await this.HanldeMannerAndAnalysis.getCropPreCalculationData(
+          crop,
+          fieldID,
+          fieldRelatedData,
+          newOrganicManure,
+          transactionalManager,
+          request,
+          crops,
+        );
 
-    return results;
+        const result = await this.processCropRecommendation({
+          crop,
+          crops,
+          snsAnalysesData,
+          latestSoilAnalysis,
+          soilAnalysisRecords,
+          mannerOutputs,
+          previousCrop,
+          fieldRelatedData,
+          request,
+          transactionalManager,
+          cropTypesList,
+          newOrganicManure,
+          userId,
+          fertiliserData,
+          recommendationApiResponseCache,
+        });
+        results.push(result);
+      }
+
+      recommendationTimingTracker.finish(timingRun, "completed");
+      return results;
+    } catch (error) {
+      recommendationTimingTracker.finish(timingRun, "failed");
+      throw error;
+    }
   }
 }
 
