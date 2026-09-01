@@ -31,7 +31,7 @@ const CreateMannerEstimationApplicationDto = Joi.object({
 
   AreaSpread: Joi.number().precision(precisionThree).allow(null),
 
-  ManureQuantity: Joi.number().precision(precisionThree).allow(null),
+  ManureQuantity: Joi.number().integer().allow(null),
 
   ApplicationMethodID: Joi.number().integer().required(),
 
