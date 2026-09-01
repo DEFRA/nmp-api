@@ -37,7 +37,7 @@ const SoilAnalysisDto = Joi.object({
   PotassiumStatus: Joi.string().required().allow(null),
   MagnesiumStatus: Joi.string().required().allow(null),
   NitrogenResidueGroup: Joi.string().required().allow(null),
-  OrganicMatterPercentage: Joi.number().integer().optional().allow(null),
+  OrganicMatterPercentage: Joi.number().min(0).max(100).precision(1).optional().allow(null),
   Comments: Joi.string().optional().allow(null),
   PreviousID: Joi.number().integer().optional().allow(null),
   CreatedOn: Joi.date().iso().allow(null).optional(),
