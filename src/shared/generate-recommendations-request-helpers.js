@@ -453,10 +453,12 @@ const recommendationRequestHelpers = {
         fieldType,
         multipleCrops: dataMultipleCrops.length > 1,
         arable: fieldType === FieldTypeMapper.GRASS ? [] : arableBody,
-        ...(fieldType === FieldTypeMapper.GRASS ||
-        fieldType === FieldTypeMapper.BOTH
-          ? { grass: grassObject }
-          : {}),
+        grassland: {},
+        grass:
+          fieldType === FieldTypeMapper.BOTH ||
+          fieldType === FieldTypeMapper.GRASS
+            ? grassObject
+            : {},
         soil: {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
