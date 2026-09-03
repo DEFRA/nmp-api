@@ -83,9 +83,7 @@ const MannerEstimationApplicationsEntity = new EntitySchema({
     },
 
     ManureQuantity: {
-      type: "decimal",
-      precision: 18,
-      scale: 3,
+      type: "int",
       nullable: true,
     },
 
