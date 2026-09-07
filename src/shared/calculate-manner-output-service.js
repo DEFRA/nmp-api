@@ -452,95 +452,34 @@ class CalculateMannerOutputService {
   }
 
   async processManagementPeriod({
-    crop,
-    period,
-    organicManure,
-    allManureData,
-    farmData,
-    fieldData,
-    mannerCropTypeID,
-    soilTypeTextureData,
-    transactionalManager,
-    request,
-    prefetchedContext,
+    crop,period,organicManure,
+    allManureData,farmData,
+    fieldData,mannerCropTypeID,
+    soilTypeTextureData,transactionalManager,request,prefetchedContext
   }) {
-    const manureApplications = await this.buildManureApplications(
-      period.ID,
-      organicManure,
-      allManureData,
-      transactionalManager,
-      prefetchedContext,
-    );
-    let mannerOutputReq = null,
-      mannerOutput = null;
-    if (manureApplications.length > 0) {
-      mannerOutputReq = await this.buildMannerOutputReq(
-        farmData,
-        fieldData,
-        mannerCropTypeID,
-        manureApplications,
-        soilTypeTextureData,
-        transactionalManager,
-        prefetchedContext,
-      );
-    }
-    if (mannerOutputReq) {
-      mannerOutput = await this.MannerCalculateNutrientsService.postData(
-        "/calculate-nutrients",
-        mannerOutputReq,
-        request,
-      );
-    }
-    const buildManureOutputs = await this.buildMannerOutputs(
-      crop,
-      mannerOutput,
-      period,
-      transactionalManager,
-      prefetchedContext,
-    );
+    const manureApplications = await this.buildManureApplications(period.ID,organicManure,allManureData,transactionalManager,prefetchedContext);
+    let mannerOutputReq = null,mannerOutput = null;
+    if (manureApplications.length > 0) {mannerOutputReq = await this.buildMannerOutputReq( farmData,fieldData,mannerCropTypeID,manureApplications,soilTypeTextureData,transactionalManager,prefetchedContext)}
+    if (mannerOutputReq) {mannerOutput = await this.MannerCalculateNutrientsService.postData("/calculate-nutrients", mannerOutputReq, request)}
+    const buildManureOutputs = await this.buildMannerOutputs(crop,mannerOutput,period, transactionalManager, prefetchedContext);
     return buildManureOutputs;
   }
 
-  async calculateMannerOutputForOrganicManure(
-    cropData,
-    organicManure,
-    farmData,
-    fieldData,
-    transactionalManager,
-    request,
-    crops = [],
-  ) {
+  async calculateMannerOutputForOrganicManure(cropData,organicManure,farmData,fieldData,transactionalManager,request,crops = []) {
     const prefetchedContext = fieldData?._prefetchContext ?? null;
     const allMannerOutputs = [];
-    const allCrops =
-      crops.length > 0
-        ? crops
-        : await transactionalManager.find(CropEntity, {
-            where: {
-              FieldID: cropData.FieldID,
-              Year: cropData.Year,
-            },
+    const allCrops =crops.length > 0 ? crops : await transactionalManager.find(CropEntity, {
+            where: {FieldID: cropData.FieldID,Year: cropData.Year},
           });
 
-    const allManureData =
-      await this.MannerManureTypesService.getAllManureTypesList(request);
-
-    const cropsToProcess = [
-      cropData,
-      ...allCrops.filter((c) => c.ID !== cropData.ID),
-    ];
-
+    const allManureData = await this.MannerManureTypesService.getAllManureTypesList(request);
+    const cropsToProcess = [cropData,...allCrops.filter((c) => c.ID !== cropData.ID)];
     for (const crop of cropsToProcess) {
-      const managementPeriods =
-        prefetchedContext?.managementPeriodsByCropId?.get(crop.ID) ??
+      const managementPeriods = prefetchedContext?.managementPeriodsByCropId?.get(crop.ID) ??
         (await transactionalManager.find(ManagementPeriodEntity, {
           where: { CropID: crop.ID },
         }));
-      const mannerCropTypeID = await this.getMannerCropTypeId(
-        crop,
-        transactionalManager,
-        prefetchedContext,
-      );
+      const mannerCropTypeID = await this.getMannerCropTypeId(crop,transactionalManager,prefetchedContext);
       const soilTypeTextureData =
         prefetchedContext?.soilTypeTextureData ??
         (await transactionalManager.findOne(SoilTypeSoilTextureEntity, {
@@ -549,11 +488,7 @@ class CalculateMannerOutputService {
           },
         }));
 
-      const orderedPeriods = this.getOrderedManagementPeriods(
-        managementPeriods,
-        organicManure,
-      );
-
+      const orderedPeriods = this.getOrderedManagementPeriods(managementPeriods,organicManure);
       for (const period of orderedPeriods) {
         const output = await this.processManagementPeriod({
           crop,

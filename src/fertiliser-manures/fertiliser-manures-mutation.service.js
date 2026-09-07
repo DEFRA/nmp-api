@@ -337,86 +337,33 @@ const fertiliserManuresMutationMethods = {
   },
 
   async processFertiliserForPKAndRecommendations({
-    fertManure,
-    cropPlanAllData,
-    managementPeriodAllData,
-    fieldAllData,
-    fertiliserAllData,
-    soilAnalysisAllData,
-    pkBalanceAllData,
-    fertiliserManureData,
-    recommandationAllData,
-    transactionalManager,
-    request,
-    userId,
-  }) {
-    const fertiliserData = fertiliserAllData.filter((fertData) => {
-      return fertData.ManagementPeriodID === fertManure.ManagementPeriodID;
-    });
-    const managementPeriodData = await this.findAsArray(
-      managementPeriodAllData,
-      (manData) => manData.ID === fertManure.ManagementPeriodID,
-    );
-    const cropData = await this.findAsArray(
-      cropPlanAllData,
-      (crop) => crop.ID === managementPeriodData[0]?.CropID,
-    );
-    const fieldData = await this.findAsArray(
-      fieldAllData,
-      (field) => field.ID === cropData[0]?.FieldID,
-    );
-    const soilAnalsisData = soilAnalysisAllData.filter((soilAnalyses) => {
-      return soilAnalyses.FieldID === cropData[0]?.FieldID;
-    });
-
+    fertManure,cropPlanAllData,managementPeriodAllData,fieldAllData,
+    fertiliserAllData,soilAnalysisAllData,
+    pkBalanceAllData,fertiliserManureData,recommandationAllData,
+    transactionalManager, request,userId}) {
+    const fertiliserData = fertiliserAllData.filter((fertData) => {return fertData.ManagementPeriodID === fertManure.ManagementPeriodID});
+    const managementPeriodData = await this.findAsArray(managementPeriodAllData,(manData) => manData.ID === fertManure.ManagementPeriodID);
+    const cropData = await this.findAsArray(cropPlanAllData,(crop) => crop.ID === managementPeriodData[0]?.CropID);
+    const fieldData = await this.findAsArray(fieldAllData,(field) => field.ID === cropData[0]?.FieldID);
+    const soilAnalsisData = soilAnalysisAllData.filter((soilAnalyses) => {return soilAnalyses.FieldID === cropData[0]?.FieldID});
     let isSoilAnalysisHavePAndK = false;
-    if (soilAnalsisData.length > 0) {
-      isSoilAnalysisHavePAndK = !!soilAnalsisData.some(
-        (item) => item.PhosphorusIndex !== null || item.PotassiumIndex !== null,
-      );
-    }
-
+    if (soilAnalsisData.length > 0) {isSoilAnalysisHavePAndK = !!soilAnalsisData.some((item) => item.PhosphorusIndex !== null || item.PotassiumIndex !== null)}
     if (isSoilAnalysisHavePAndK) {
       const pkBalanceData = pkBalanceAllData.filter((pkBalance) => {
-        return (
-          pkBalance.FieldID === fieldData[0]?.ID &&
-          pkBalance.Year === cropData[0]?.Year
-        );
+        return (pkBalance.FieldID === fieldData[0]?.ID && pkBalance.Year === cropData[0]?.Year);
       });
       const cropPlanForNextYear = cropPlanAllData.filter((cropPlan) => {
-        return (
-          cropPlan.FieldID === fieldData[0]?.ID &&
-          cropPlan.Year > cropData[0]?.Year
-        );
+        return (cropPlan.FieldID === fieldData[0]?.ID &&cropPlan.Year > cropData[0]?.Year);
       });
       const { isNextYearPlanExist, isNextYearFertiliserExist } =
-        this.checkNextYearPlanAndFertiliserExist(
-          cropPlanForNextYear,
-          managementPeriodAllData,
-          fertiliserAllData,
-          fertManure,
-        );
+        this.checkNextYearPlanAndFertiliserExist(cropPlanForNextYear,managementPeriodAllData,fertiliserAllData,fertManure);
       await this.handlePKBalanceAndFutureRecommendations({
-        isNextYearPlanExist,
-        isNextYearFertiliserExist,
-        fieldData,
-        cropData,
-        request,
-        userId,
-        pkBalanceData,
-        fertiliserData,
-        managementPeriodData,
-        fertiliserManureData,
-        recommandationAllData,
-        transactionalManager,
+        isNextYearPlanExist,isNextYearFertiliserExist,
+        fieldData,cropData,request,userId,pkBalanceData,
+        fertiliserData,managementPeriodData,fertiliserManureData,recommandationAllData,transactionalManager
       });
     }
-    await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
-      cropData[0],
-      transactionalManager,
-      request,
-      userId,
-    );
+    await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(cropData[0],transactionalManager,request,userId);
   },
 
   async createFertiliserManures(fertiliserManureData, userId, request) {
