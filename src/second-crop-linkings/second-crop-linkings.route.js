@@ -35,4 +35,17 @@ module.exports = [
       },
     },
   },
+  {
+  method: "GET",
+  path: "/second-crop-linkings",
+  handler: async (request, h) => {
+    const controller = new SecondCropLinkingsController(request, h);
+    return controller.getSecondCropTypeLinkings();
+  },
+  options: {
+    tags: ["api", "SecondCropLinkings"],
+    description: "Get all Second Crop Type Linkings",
+    notes: "Returns all Second Crop Type Linking records",
+  },
+},
 ];
