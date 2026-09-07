@@ -8,9 +8,8 @@ const state = {
 };
 
 const nowNs = () => process.hrtime.bigint();
-
-const toSeconds = (ms) => (ms / 1000).toFixed(3);
-
+const nSPerMs = 3;
+const toSeconds = (ms) => (ms / 1000).toFixed(nSPerMs);
 const normalizeSource = (source) => {
   if (typeof source !== "string" || source.trim() === "") {
     return "foreground";
