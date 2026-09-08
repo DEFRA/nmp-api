@@ -55,14 +55,14 @@ const config = {
   lockWaitRetries: parseEnvInt(
     process.env.FUTURE_RECOMMENDATION_LOCK_WAIT_RETRIES,
     {
-      defaultValue: 8,
+      defaultValue: 2,
       min: 1,
     },
   ),
   lockWaitDelayMs: parseEnvInt(
     process.env.FUTURE_RECOMMENDATION_LOCK_WAIT_DELAY_MS,
     {
-      defaultValue: 1200,
+      defaultValue: 500,
       min: 200,
     },
   ),
@@ -88,7 +88,7 @@ const config = {
   staleLockRecoveryDelayMs: parseEnvInt(
     process.env.FUTURE_RECOMMENDATION_STALE_LOCK_RECOVERY_DELAY_MS,
     {
-      defaultValue: 1200,
+      defaultValue: 500,
       min: 200,
     },
   ),

@@ -365,16 +365,17 @@ const recommendationRequestHelpers = {
     request,
     transactionalManager,
     cropTypesList,
+    prefetchContext = null,
   ) {
     let grassGrowthClass = null;
-    if(crop.CropTypeID === CropTypeMapper.GRASS) {
-     grassGrowthClass =
-      await this.grassGrowthClass.calculateGrassGrowthClassByFieldId(
-        field.ID,
-        request,
-        transactionalManager,
-        field
-      );
+    if (crop.CropTypeID === CropTypeMapper.GRASS) {
+      grassGrowthClass =
+        await this.grassGrowthClass.calculateGrassGrowthClassByFieldId(
+          field.ID,
+          request,
+          transactionalManager,
+          field,
+        );
     }
     const cropType = cropTypesList.find(
       (cropTp) => cropTp.cropTypeId === crop.CropTypeID,
@@ -389,6 +390,7 @@ const recommendationRequestHelpers = {
         field.ID,
         crop.Year,
         transactionalManager,
+        prefetchContext,
       );
     const pkBalanceData = await this.getPKBalanceData(
       field.ID,
@@ -417,9 +419,7 @@ const recommendationRequestHelpers = {
       grassGrowthClass,
       transactionalManager,
     );
-    const fieldType = await this.determineFieldType(
-      dataMultipleCrops
-    );
+    const fieldType = await this.determineFieldType(dataMultipleCrops);
 
     return {
       previousCrop,
@@ -504,6 +504,7 @@ const recommendationRequestHelpers = {
   ) {
     const { soilAnalysisRecords: soilAnalysis, snsAnalysesData } = analysis;
     const { crops: dataMultipleCrops, crop } = singleAndMultipleCrops;
+    const prefetchContext = field?._prefetchContext ?? null;
     const recommendationContext = await this.getRecommendationRequestContext(
       field,
       crop,
@@ -511,6 +512,7 @@ const recommendationRequestHelpers = {
       request,
       transactionalManager,
       cropTypesList,
+      prefetchContext,
     );
 
     const nutrientRecommendationnReqBody =
