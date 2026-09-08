@@ -28,6 +28,17 @@ class SecondCropLinkingsService {
       throw error;
     }
   }
+
+  async getSecondCropTypeLinkings() {
+  try {
+    const secondCropLinkings = await this.repository.find();
+
+    return secondCropLinkings;
+  } catch (error) {
+    console.error("Error fetching Second Crop Type Linkings:", error);
+    throw error;
+  }
+}
 }
 
 module.exports = { SecondCropLinkingsService };

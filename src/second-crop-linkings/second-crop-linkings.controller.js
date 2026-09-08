@@ -26,6 +26,16 @@ class SecondCropLinkingsController {
       return this.#h.response({ error });
     }
   }
+  async getSecondCropTypeLinkings() {
+    try {
+      const records =
+        await this.#secondCropLinkingsService.getSecondCropTypeLinkings();
+      return this.#h.response({ SecondCropLinkings: records });
+    } catch (error) {
+      console.error("Error fetching SecondCropTypeLinking:", error);
+      return this.#h.response({ error });
+    }
+  }
 }
 
 module.exports = { SecondCropLinkingsController };
