@@ -6,6 +6,8 @@ const {
   RecommendationCommentEntity,
 } = require("../db/entity/recommendation-comment.entity");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
+const { CropEntity } = require("../db/entity/crop.entity");
+const { CountryMapper } = require("../constants/country-mapper");
 const {
   CalculateNextDefoliationService,
 } = require("./calculate-next-defoliation-totalN");
@@ -120,7 +122,7 @@ class SavingRecommendationService {
       managementPeriod,
       cropData,
       transactionalManager,
-      { defoliationId, defoliationIds },
+      { defoliationId, defoliationIds, latestSoilAnalysis },
     );
     if (!managementPeriod) {
       return null;
@@ -169,7 +171,14 @@ class SavingRecommendationService {
   }
 
   async applyNutrientCalculations(cropRecData, calculations,allMannerOutputs,managementPeriod,cropData,transactionalManager,defoliations) {
-    const { defoliationId, defoliationIds } = defoliations;
+    const record = await transactionalManager.findOne(CropEntity, {
+    where: { ID: cropData.ID },
+    relations: {
+      Field: { Farm: true},
+      },
+    });
+    const countryId = record?.Field?.Farm?.CountryID;
+    const { defoliationId, defoliationIds, latestSoilAnalysis } = defoliations;
     const mannerOutputs = allMannerOutputs.filter((item) => item.defoliationId === defoliationId);
     let availableNForNextDefoliation = null,nextCropAvailableN = null;
     if (!mannerOutputs || mannerOutputs.length === 0) {
@@ -193,20 +202,20 @@ class SavingRecommendationService {
         cropRecData.ManureP2O5 = normalizeManure(c.manures);
         cropRecData.PBalance = c.pkBalance;
         cropRecData.FertilizerP2O5 = c.cropNeed;
-        cropRecData.PIndex = c.indexpH; // methodology 2 indexText should save otherwise index should be used
+        cropRecData.PIndex = (countryId === CountryMapper.SCOTLAND && latestSoilAnalysis.PhosphorusMethodologyID === 2) ? c.indexText : c.index;
       },
       2: (c) => {
         cropRecData.CropK2O = c.recommendation;
         cropRecData.ManureK2O = normalizeManure(c.manures);
         cropRecData.KBalance = c.pkBalance;
-        cropRecData.FertilizerK2O = c.cropNeed; 
-        cropRecData.KIndex = c.indexpH; // methodology 2 indexText should save otherwise index should be used
+        cropRecData.FertilizerK2O = c.cropNeed;
+        cropRecData.KIndex = (countryId === CountryMapper.SCOTLAND && latestSoilAnalysis.PotassiumMethodologyID === 2) ? c.indexText: c.index;
       },
       3: (c) => {
         cropRecData.CropMgO = c.recommendation;
         cropRecData.MgBalance = c.pkBalance;
         cropRecData.FertilizerMgO = c.cropNeed;
-        cropRecData.MgIndex = c.indexpH; // methodology 2 indexText should save otherwise index should be used
+        cropRecData.MgIndex = (countryId === CountryMapper.SCOTLAND && latestSoilAnalysis.MagnesiumMethodologyID === 2) ? c.indexText: c.index;
       },
       4: (c) => {
         cropRecData.CropNa2O = c.recommendation;
