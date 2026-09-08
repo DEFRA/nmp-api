@@ -170,17 +170,11 @@ class SavingRecommendationService {
     };
   }
 
-  async applyNutrientCalculations(cropRecData, calculations,
-    allMannerOutputs,managementPeriod,
-    cropData,transactionalManager,
-    defoliations
-  ) {
+  async applyNutrientCalculations(cropRecData, calculations,allMannerOutputs,managementPeriod,cropData,transactionalManager,defoliations) {
     const record = await transactionalManager.findOne(CropEntity, {
     where: { ID: cropData.ID },
     relations: {
-      Field: {
-        Farm: true,
-      },
+      Field: { Farm: true},
       },
     });
     const countryId = record?.Field?.Farm?.CountryID;
@@ -208,11 +202,7 @@ class SavingRecommendationService {
         cropRecData.ManureP2O5 = normalizeManure(c.manures);
         cropRecData.PBalance = c.pkBalance;
         cropRecData.FertilizerP2O5 = c.cropNeed;
-        cropRecData.PIndex =
-          (countryId === CountryMapper.SCOTLAND &&
-          latestSoilAnalysis.PhosphorusMethodologyID === 2)
-            ? c.indexText
-            : c.index;
+        cropRecData.PIndex = (countryId === CountryMapper.SCOTLAND && latestSoilAnalysis.PhosphorusMethodologyID === 2) ? c.indexText : c.index;
       },
       2: (c) => {
         cropRecData.CropK2O = c.recommendation;
