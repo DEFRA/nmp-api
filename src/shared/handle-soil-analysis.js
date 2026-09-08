@@ -165,6 +165,8 @@ class HandleSoilAnalysisService {
       "PotassiumIndex",
       "MagnesiumIndex",
       "PotassiumMethodologyID",
+      "PhosphorusMethodologyID",
+      "MagnesiumMethodologyID"
     ];
 
     // Initialize the latest values object

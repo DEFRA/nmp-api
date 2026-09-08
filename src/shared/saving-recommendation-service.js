@@ -122,7 +122,7 @@ class SavingRecommendationService {
       managementPeriod,
       cropData,
       transactionalManager,
-      { defoliationId, defoliationIds },
+      { defoliationId, defoliationIds, latestSoilAnalysis },
     );
     if (!managementPeriod) {
       return null;
@@ -183,11 +183,8 @@ class SavingRecommendationService {
       },
       },
     });
-
     const countryId = record?.Field?.Farm?.CountryID;
-
-
-    const { defoliationId, defoliationIds } = defoliations;
+    const { defoliationId, defoliationIds, latestSoilAnalysis } = defoliations;
     const mannerOutputs = allMannerOutputs.filter((item) => item.defoliationId === defoliationId);
     let availableNForNextDefoliation = null,nextCropAvailableN = null;
     if (!mannerOutputs || mannerOutputs.length === 0) {
@@ -211,20 +208,24 @@ class SavingRecommendationService {
         cropRecData.ManureP2O5 = normalizeManure(c.manures);
         cropRecData.PBalance = c.pkBalance;
         cropRecData.FertilizerP2O5 = c.cropNeed;
-        cropRecData.PIndex =countryId === CountryMapper.SCOTLAND?c.indexText: c.index;
+        cropRecData.PIndex =
+          (countryId === CountryMapper.SCOTLAND &&
+          latestSoilAnalysis.PhosphorusMethodologyID === 2)
+            ? c.indexText
+            : c.index;
       },
       2: (c) => {
         cropRecData.CropK2O = c.recommendation;
         cropRecData.ManureK2O = normalizeManure(c.manures);
         cropRecData.KBalance = c.pkBalance;
         cropRecData.FertilizerK2O = c.cropNeed;
-        cropRecData.KIndex = countryId === CountryMapper.SCOTLAND?c.indexText: c.index;
+        cropRecData.KIndex = (countryId === CountryMapper.SCOTLAND && latestSoilAnalysis.PotassiumMethodologyID === 2) ? c.indexText: c.index;
       },
       3: (c) => {
         cropRecData.CropMgO = c.recommendation;
         cropRecData.MgBalance = c.pkBalance;
         cropRecData.FertilizerMgO = c.cropNeed;
-        cropRecData.MgIndex = countryId === CountryMapper.SCOTLAND?c.indexText: c.index;
+        cropRecData.MgIndex = (countryId === CountryMapper.SCOTLAND && latestSoilAnalysis.MagnesiumMethodologyID === 2) ? c.indexText: c.index;
       },
       4: (c) => {
         cropRecData.CropNa2O = c.recommendation;
