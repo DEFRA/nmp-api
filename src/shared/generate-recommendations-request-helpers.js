@@ -461,7 +461,7 @@ const recommendationRequestHelpers = {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
           nvzActionProgrammeId: field.NVZProgrammeID,
-          psc: field.RB209CountryID === 2 ? 1 : 0,
+          psc: field.PscIndexID,
           pkBalance: {
             phosphate: pkBalanceData == null ? 0 : pkBalanceData.PBalance,
             potash: pkBalanceData == null ? 0 : pkBalanceData.KBalance,
