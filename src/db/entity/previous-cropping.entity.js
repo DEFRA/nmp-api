@@ -1,7 +1,41 @@
 const { EntitySchema } = require("typeorm");
-const { RELATION_TYPES } = require("../../constants/relations-mapper");
 const { auditColumns } = require("../../constants/audits-columns");
-const { previousRelations } = require("../../constants/previous-grass-entitiy-relations");
+const {
+  previousRelations,
+} = require("../../constants/previous-grass-entitiy-relations");
+
+const previousCroppingInverseSides = {
+  Fields: "PreviousCropingField",
+  GrassManagementOptions: "PreviousCroppingGrassManagementOption",
+  SoilNitrogenSupplyItems: "PreviousCroppingGrassManagementOption",
+  CreatedByUser: "CreatedPreviousCroppings",
+  ModifiedByUser: "ModifiedPreviousCroppings",
+};
+
+const previousCroppingTargetOverrides = {
+  Fields: "Fields",
+};
+
+const previousCroppingRelations = Object.fromEntries(
+  Object.entries(previousCroppingInverseSides).map(
+    ([relationName, inverseSide]) => {
+      const overrides = {
+        inverseSide,
+        ...(previousCroppingTargetOverrides[relationName] && {
+          target: previousCroppingTargetOverrides[relationName],
+        }),
+      };
+
+      return [
+        relationName,
+        {
+          ...previousRelations[relationName],
+          ...overrides,
+        },
+      ];
+    },
+  ),
+);
 
 const PreviousCroppingEntity = new EntitySchema({
   name: "PreviousCroppings",
@@ -40,6 +74,10 @@ const PreviousCroppingEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
+    CropInfo1: {
+      type: "int",
+      nullable: true,
+    },
     HasGreaterThan30PercentClover: {
       type: "bit",
       nullable: true,
@@ -48,32 +86,11 @@ const PreviousCroppingEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
-  ...auditColumns
+    ...auditColumns,
   },
   relations: {
-  ...previousRelations,
-
-  Fields: {
-    ...previousRelations.Fields,
-    target: "Fields",
-    inverseSide: "PreviousCropingField",
+    ...previousRelations,
+    ...previousCroppingRelations,
   },
-  GrassManagementOptions: {
-    ...previousRelations.GrassManagementOptions,
-    inverseSide: "PreviousCroppingGrassManagementOption",
-  },
-  SoilNitrogenSupplyItems: {
-    ...previousRelations.SoilNitrogenSupplyItems,
-    inverseSide: "PreviousCroppingGrassManagementOption",
-  },
-  CreatedByUser: {
-    ...previousRelations.CreatedByUser,
-    inverseSide: "CreatedPreviousCroppings",
-  },
-  ModifiedByUser: {
-    ...previousRelations.ModifiedByUser,
-    inverseSide: "ModifiedPreviousCroppings",
-  },
-}
 });
 module.exports = { PreviousCroppingEntity };

@@ -14,10 +14,11 @@ const RecommendationPreviousCroppingDto = Joi.object({
   previousGrassId: Joi.number().allow(null),
   previousCropGroupId: Joi.number().allow(null),
   previousCropTypeId: Joi.number().allow(null),
+  previousCropInfo1Id: Joi.number().allow(null).optional(),
   grassHistoryId: Joi.number().allow(null),
   snsId: Joi.number().allow(null),
   smnDepth: Joi.number().allow(null),
-  measuredSmn: Joi.number().allow(null)
+  measuredSmn: Joi.number().allow(null),
 });
 
 const RecommendationMannerOutputDto = Joi.object({
