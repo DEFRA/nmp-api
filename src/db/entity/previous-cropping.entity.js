@@ -40,6 +40,10 @@ const PreviousCroppingEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
+    CropInfo1: {
+      type: "int",
+      nullable: true,
+    },
     HasGreaterThan30PercentClover: {
       type: "bit",
       nullable: true,
@@ -48,32 +52,32 @@ const PreviousCroppingEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
-  ...auditColumns
+    ...auditColumns,
   },
   relations: {
-  ...previousRelations,
+    ...previousRelations,
 
-  Fields: {
-    ...previousRelations.Fields,
-    target: "Fields",
-    inverseSide: "PreviousCropingField",
+    Fields: {
+      ...previousRelations.Fields,
+      target: "Fields",
+      inverseSide: "PreviousCropingField",
+    },
+    GrassManagementOptions: {
+      ...previousRelations.GrassManagementOptions,
+      inverseSide: "PreviousCroppingGrassManagementOption",
+    },
+    SoilNitrogenSupplyItems: {
+      ...previousRelations.SoilNitrogenSupplyItems,
+      inverseSide: "PreviousCroppingGrassManagementOption",
+    },
+    CreatedByUser: {
+      ...previousRelations.CreatedByUser,
+      inverseSide: "CreatedPreviousCroppings",
+    },
+    ModifiedByUser: {
+      ...previousRelations.ModifiedByUser,
+      inverseSide: "ModifiedPreviousCroppings",
+    },
   },
-  GrassManagementOptions: {
-    ...previousRelations.GrassManagementOptions,
-    inverseSide: "PreviousCroppingGrassManagementOption",
-  },
-  SoilNitrogenSupplyItems: {
-    ...previousRelations.SoilNitrogenSupplyItems,
-    inverseSide: "PreviousCroppingGrassManagementOption",
-  },
-  CreatedByUser: {
-    ...previousRelations.CreatedByUser,
-    inverseSide: "CreatedPreviousCroppings",
-  },
-  ModifiedByUser: {
-    ...previousRelations.ModifiedByUser,
-    inverseSide: "ModifiedPreviousCroppings",
-  },
-}
 });
 module.exports = { PreviousCroppingEntity };

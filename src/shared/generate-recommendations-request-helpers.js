@@ -340,6 +340,7 @@ const recommendationRequestHelpers = {
         previousGrassId: grassHistoryID ? null : previousGrassId,
         previousCropGroupId: isGrass ? null : (cropType?.cropGroupId ?? null),
         previousCropTypeId: isGrass ? null : (previousCrop?.CropTypeID ?? null),
+        previousCropInfo1Id: previousCrop?.CropInfo1 ?? null,
         grassHistoryId: previousGrassId ? null : grassHistoryID,
         snsId: null,
         smnDepth: null,
