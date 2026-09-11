@@ -6,6 +6,8 @@ const {
   RecommendationCommentEntity,
 } = require("../db/entity/recommendation-comment.entity");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
+const { CropEntity } = require("../db/entity/crop.entity");
+const { CountryMapper } = require("../constants/country-mapper");
 const {
   CalculateNextDefoliationService,
 } = require("./calculate-next-defoliation-totalN");
@@ -120,7 +122,7 @@ class SavingRecommendationService {
       managementPeriod,
       cropData,
       transactionalManager,
-      { defoliationId, defoliationIds },
+      { defoliationId, defoliationIds, latestSoilAnalysis },
     );
     if (!managementPeriod) {
       return null;
@@ -168,25 +170,20 @@ class SavingRecommendationService {
     };
   }
 
-  async applyNutrientCalculations(cropRecData, calculations,
-    allMannerOutputs,managementPeriod,
-    cropData,transactionalManager,
-    defoliations
-  ) {
-    const { defoliationId, defoliationIds } = defoliations;
+  async applyNutrientCalculations(cropRecData, calculations,allMannerOutputs,managementPeriod,cropData,transactionalManager,defoliations) {
+    const record = await transactionalManager.findOne(CropEntity, {
+    where: { ID: cropData.ID },
+    relations: {
+      Field: { Farm: true},
+      },
+    });
+    const countryId = record?.Field?.Farm?.CountryID;
+    const { defoliationId, defoliationIds, latestSoilAnalysis } = defoliations;
     const mannerOutputs = allMannerOutputs.filter((item) => item.defoliationId === defoliationId);
     let availableNForNextDefoliation = null,nextCropAvailableN = null;
     if (!mannerOutputs || mannerOutputs.length === 0) {
-      if (defoliationIds.length > 1) {
-        availableNForNextDefoliation = await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
-            transactionalManager,managementPeriod, cropData,
-          );
-      }
-      if (defoliationId === 1) {
-        nextCropAvailableN =await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
-            cropData.FieldID,cropData.Year,transactionalManager
-          );
-      }
+      if (defoliationIds.length > 1) {availableNForNextDefoliation = await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(transactionalManager,managementPeriod, cropData)}
+      if (defoliationId === 1) { nextCropAvailableN =await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(cropData.FieldID,cropData.Year,transactionalManager)}
     }
     const normalizeManure = (value) => (value === 0 ? null : value);
     const nutrientHandlers = {
@@ -194,35 +191,37 @@ class SavingRecommendationService {
         cropRecData.CropN = c.recommendation;
         cropRecData.FertilizerN = c.cropNeed;
         cropRecData.ManureN = c.manures;
-        if (!mannerOutputs || mannerOutputs.length === 0) {cropRecData.ManureN =(availableNForNextDefoliation || 0) + (nextCropAvailableN || 0)}
+        if (!mannerOutputs || mannerOutputs.length === 0) {
+          cropRecData.ManureN = (availableNForNextDefoliation || 0) + (nextCropAvailableN || 0);
+        }
         cropRecData.NBalance = c.pkBalance;
-        cropRecData.NIndex = c.indexpH;
+        cropRecData.NIndex = c.indexpH; // same as of now
       },
       1: (c) => {
         cropRecData.CropP2O5 = c.recommendation;
         cropRecData.ManureP2O5 = normalizeManure(c.manures);
         cropRecData.PBalance = c.pkBalance;
         cropRecData.FertilizerP2O5 = c.cropNeed;
-        cropRecData.PIndex = c.indexpH;
+        cropRecData.PIndex = (countryId === CountryMapper.SCOTLAND && latestSoilAnalysis.PhosphorusMethodologyID === 2) ? c.indexText : c.index;
       },
       2: (c) => {
         cropRecData.CropK2O = c.recommendation;
         cropRecData.ManureK2O = normalizeManure(c.manures);
         cropRecData.KBalance = c.pkBalance;
         cropRecData.FertilizerK2O = c.cropNeed;
-        cropRecData.KIndex = c.indexpH;
+        cropRecData.KIndex = (countryId === CountryMapper.SCOTLAND && latestSoilAnalysis.PotassiumMethodologyID === 2) ? c.indexText: c.index;
       },
       3: (c) => {
         cropRecData.CropMgO = c.recommendation;
         cropRecData.MgBalance = c.pkBalance;
         cropRecData.FertilizerMgO = c.cropNeed;
-        cropRecData.MgIndex = c.indexpH;
+        cropRecData.MgIndex = (countryId === CountryMapper.SCOTLAND && latestSoilAnalysis.MagnesiumMethodologyID === 2) ? c.indexText: c.index;
       },
       4: (c) => {
         cropRecData.CropNa2O = c.recommendation;
         cropRecData.NaBalance = c.pkBalance;
         cropRecData.FertilizerNa2O = c.cropNeed;
-        cropRecData.NaIndex = c.indexpH;
+        cropRecData.NaIndex = c.indexpH; // methodology 2 indexText should save otherwise index should be used
       },
       5: (c) => {
         cropRecData.CropSO3 = c.recommendation;
@@ -235,7 +234,7 @@ class SavingRecommendationService {
         cropRecData.CropLime = c.recommendation;
         cropRecData.LimeBalance = c.pkBalance;
         cropRecData.FertilizerLime = c.cropNeed;
-        cropRecData.PH = c.indexpH;
+        cropRecData.PH = c.indexpH; // same as of now
       },
     };
     for (const calc of calculations) {

@@ -153,6 +153,10 @@ class UpdatingFutureRecommendations {
             AppDataSource.manager,
             request,
             userId,
+            {
+              source: "future-background-queue",
+              isBackground: true,
+            },
           ),
       );
     } catch (error) {

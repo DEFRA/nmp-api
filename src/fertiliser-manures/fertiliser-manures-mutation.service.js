@@ -337,69 +337,33 @@ const fertiliserManuresMutationMethods = {
   },
 
   async processFertiliserForPKAndRecommendations({
-    fertManure,cropPlanAllData,managementPeriodAllData,
-    fieldAllData,fertiliserAllData,soilAnalysisAllData,
-    pkBalanceAllData,fertiliserManureData,
-    recommandationAllData,transactionalManager,
-    request,userId
-  }) {
-    const fertiliserData = fertiliserAllData.filter((fertData) => { return fertData.ManagementPeriodID === fertManure.ManagementPeriodID});
-    const managementPeriodData = await this.findAsArray(
-      managementPeriodAllData,
-      (manData) => manData.ID === fertManure.ManagementPeriodID,
-    );
-    const cropData = await this.findAsArray(
-      cropPlanAllData,
-      (crop) => crop.ID === managementPeriodData[0]?.CropID,
-    );
-    const fieldData = await this.findAsArray(
-      fieldAllData,
-      (field) => field.ID === cropData[0]?.FieldID,
-    );
-    const soilAnalsisData = soilAnalysisAllData.filter((soilAnalyses) => {
-      return soilAnalyses.FieldID === cropData[0]?.FieldID;
-    });
-
+    fertManure,cropPlanAllData,managementPeriodAllData,fieldAllData,
+    fertiliserAllData,soilAnalysisAllData,
+    pkBalanceAllData,fertiliserManureData,recommandationAllData,
+    transactionalManager, request,userId}) {
+    const fertiliserData = fertiliserAllData.filter((fertData) => {return fertData.ManagementPeriodID === fertManure.ManagementPeriodID});
+    const managementPeriodData = await this.findAsArray(managementPeriodAllData,(manData) => manData.ID === fertManure.ManagementPeriodID);
+    const cropData = await this.findAsArray(cropPlanAllData,(crop) => crop.ID === managementPeriodData[0]?.CropID);
+    const fieldData = await this.findAsArray(fieldAllData,(field) => field.ID === cropData[0]?.FieldID);
+    const soilAnalsisData = soilAnalysisAllData.filter((soilAnalyses) => {return soilAnalyses.FieldID === cropData[0]?.FieldID});
     let isSoilAnalysisHavePAndK = false;
-    if (soilAnalsisData.length > 0) {
-      isSoilAnalysisHavePAndK = !!soilAnalsisData.some(
-        (item) => item.PhosphorusIndex !== null || item.PotassiumIndex !== null,
-      );
-    }
-
+    if (soilAnalsisData.length > 0) {isSoilAnalysisHavePAndK = !!soilAnalsisData.some((item) => item.PhosphorusIndex !== null || item.PotassiumIndex !== null)}
     if (isSoilAnalysisHavePAndK) {
       const pkBalanceData = pkBalanceAllData.filter((pkBalance) => {
-        return (
-          pkBalance.FieldID === fieldData[0]?.ID &&
-          pkBalance.Year === cropData[0]?.Year
-        );
+        return (pkBalance.FieldID === fieldData[0]?.ID && pkBalance.Year === cropData[0]?.Year);
       });
       const cropPlanForNextYear = cropPlanAllData.filter((cropPlan) => {
-        return (
-          cropPlan.FieldID === fieldData[0]?.ID &&
-          cropPlan.Year > cropData[0]?.Year
-        );
+        return (cropPlan.FieldID === fieldData[0]?.ID &&cropPlan.Year > cropData[0]?.Year);
       });
       const { isNextYearPlanExist, isNextYearFertiliserExist } =
-        this.checkNextYearPlanAndFertiliserExist(
-          cropPlanForNextYear,
-          managementPeriodAllData,
-          fertiliserAllData,
-          fertManure,
-        );
+        this.checkNextYearPlanAndFertiliserExist(cropPlanForNextYear,managementPeriodAllData,fertiliserAllData,fertManure);
       await this.handlePKBalanceAndFutureRecommendations({
         isNextYearPlanExist,isNextYearFertiliserExist,
         fieldData,cropData,request,userId,pkBalanceData,
-        fertiliserData, managementPeriodData, fertiliserManureData,
-        recommandationAllData,transactionalManager
+        fertiliserData,managementPeriodData,fertiliserManureData,recommandationAllData,transactionalManager
       });
     }
-    await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
-      cropData[0],
-      transactionalManager,
-      request,
-      userId,
-    );
+    await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(cropData[0],transactionalManager,request,userId);
   },
 
   async createFertiliserManures(fertiliserManureData, userId, request) {
@@ -458,14 +422,39 @@ const fertiliserManuresMutationMethods = {
             ModifiedOn: new Date(),
           },
         );
-        await this.CreateOrUpdateWarningMessage.syncWarningMessages(inorganicManure.ManagementPeriodID,inorganicManure,warningMessages, transactionalManager,userId);
-        if (result.affected === 0) {console.log(`Fertiliser Manures with ID ${ID} not found`)}
-        const fertiliserManure = await transactionalManager.findOne(FertiliserManuresEntity,{where: { ID: ID }});
-        if (fertiliserManure) {updatedFertilisers.push(fertiliserManure)}
-        const managementPeriod = await this.managementPeriodRepository.findOne({where: { ID: fertiliserManure.ManagementPeriodID }});
-        const crop = await this.cropRepository.findOne({ where: { ID: managementPeriod.CropID }});
-        await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(crop,transactionalManager,request,userId);
-        this.ProcessFutureManuresForWarnings.processWarningsByField(crop.FieldID,userId).catch((error) => {
+        await this.CreateOrUpdateWarningMessage.syncWarningMessages(
+          inorganicManure.ManagementPeriodID,
+          inorganicManure,
+          warningMessages,
+          transactionalManager,
+          userId,
+        );
+        if (result.affected === 0) {
+          console.log(`Fertiliser Manures with ID ${ID} not found`);
+        }
+        const fertiliserManure = await transactionalManager.findOne(
+          FertiliserManuresEntity,
+          { where: { ID: ID } },
+        );
+        if (fertiliserManure) {
+          updatedFertilisers.push(fertiliserManure);
+        }
+        const managementPeriod = await this.managementPeriodRepository.findOne({
+          where: { ID: fertiliserManure.ManagementPeriodID },
+        });
+        const crop = await this.cropRepository.findOne({
+          where: { ID: managementPeriod.CropID },
+        });
+        await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
+          crop,
+          transactionalManager,
+          request,
+          userId,
+        );
+        this.ProcessFutureManuresForWarnings.processWarningsByField(
+          crop.FieldID,
+          userId,
+        ).catch((error) => {
           console.error(
             `Error processing warning recalculation for field ${crop.FieldID}:`,
             error,
@@ -480,20 +469,33 @@ const fertiliserManuresMutationMethods = {
       const fertiliserManureToDelete = await this.repository.findOneBy({
         ID: fertliserManureId,
       });
-      if (fertiliserManureToDelete == null) {console.log(`Fertiliser Manure with ID ${fertliserManureId} not found`)}
+      if (fertiliserManureToDelete == null) {
+        console.log(`Fertiliser Manure with ID ${fertliserManureId} not found`);
+      }
       const managementPeriod = await this.managementPeriodRepository.findOne({
         where: { ID: fertiliserManureToDelete.ManagementPeriodID },
         select: ["CropID"],
       });
-      if (managementPeriod == null) {console.log(`managementPeriod not found`)}
-      const crop = await this.cropRepository.findOne({ where: { ID: managementPeriod.CropID }});
-      if (crop == null) { console.log(`crop  not found`)}
+      if (managementPeriod == null) {
+        console.log(`managementPeriod not found`);
+      }
+      const crop = await this.cropRepository.findOne({
+        where: { ID: managementPeriod.CropID },
+      });
+      if (crop == null) {
+        console.log(`crop  not found`);
+      }
       try {
         // Call the stored procedure to delete the fertliserManureId and related entities
         const storedProcedure =
           "EXEC [spFertiliserManures_DeleteFertiliserManures] @ID = @0";
         await transactionalManager.query(storedProcedure, [fertliserManureId]);
-        await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(crop,transactionalManager,request,userId);
+        await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
+          crop,
+          transactionalManager,
+          request,
+          userId,
+        );
         this.ProcessFutureManuresForWarnings.processWarningsByCrop(
           crop.ID,
           userId,

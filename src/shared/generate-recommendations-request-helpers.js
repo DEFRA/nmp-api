@@ -340,6 +340,7 @@ const recommendationRequestHelpers = {
         previousGrassId: grassHistoryID ? null : previousGrassId,
         previousCropGroupId: isGrass ? null : (cropType?.cropGroupId ?? null),
         previousCropTypeId: isGrass ? null : (previousCrop?.CropTypeID ?? null),
+        previousCropInfo1Id: previousCrop?.CropInfo1 ?? null,
         grassHistoryId: previousGrassId ? null : grassHistoryID,
         snsId: null,
         smnDepth: null,
@@ -365,16 +366,17 @@ const recommendationRequestHelpers = {
     request,
     transactionalManager,
     cropTypesList,
+    prefetchContext = null,
   ) {
     let grassGrowthClass = null;
-    if(crop.CropTypeID === CropTypeMapper.GRASS) {
-     grassGrowthClass =
-      await this.grassGrowthClass.calculateGrassGrowthClassByFieldId(
-        field.ID,
-        request,
-        transactionalManager,
-        field
-      );
+    if (crop.CropTypeID === CropTypeMapper.GRASS) {
+      grassGrowthClass =
+        await this.grassGrowthClass.calculateGrassGrowthClassByFieldId(
+          field.ID,
+          request,
+          transactionalManager,
+          field,
+        );
     }
     const cropType = cropTypesList.find(
       (cropTp) => cropTp.cropTypeId === crop.CropTypeID,
@@ -389,6 +391,7 @@ const recommendationRequestHelpers = {
         field.ID,
         crop.Year,
         transactionalManager,
+        prefetchContext,
       );
     const pkBalanceData = await this.getPKBalanceData(
       field.ID,
@@ -417,9 +420,7 @@ const recommendationRequestHelpers = {
       grassGrowthClass,
       transactionalManager,
     );
-    const fieldType = await this.determineFieldType(
-      dataMultipleCrops
-    );
+    const fieldType = await this.determineFieldType(dataMultipleCrops);
 
     return {
       previousCrop,
@@ -461,7 +462,7 @@ const recommendationRequestHelpers = {
           soilTypeId: field.SoilTypeID,
           kReleasingClay: field.SoilReleasingClay,
           nvzActionProgrammeId: field.NVZProgrammeID,
-          psc: field.RB209CountryID === 2 ? 1 : 0,
+          psc: field.PscIndexID,
           pkBalance: {
             phosphate: pkBalanceData == null ? 0 : pkBalanceData.PBalance,
             potash: pkBalanceData == null ? 0 : pkBalanceData.KBalance,
@@ -504,6 +505,7 @@ const recommendationRequestHelpers = {
   ) {
     const { soilAnalysisRecords: soilAnalysis, snsAnalysesData } = analysis;
     const { crops: dataMultipleCrops, crop } = singleAndMultipleCrops;
+    const prefetchContext = field?._prefetchContext ?? null;
     const recommendationContext = await this.getRecommendationRequestContext(
       field,
       crop,
@@ -511,6 +513,7 @@ const recommendationRequestHelpers = {
       request,
       transactionalManager,
       cropTypesList,
+      prefetchContext,
     );
 
     const nutrientRecommendationnReqBody =
