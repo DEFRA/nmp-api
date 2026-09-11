@@ -123,6 +123,7 @@ const PreviousCroppingSchema = Joi.object({
   HasGreaterThan30PercentClover: Joi.boolean().allow(null),
   SoilNitrogenSupplyItemID: Joi.number().integer().allow(null),
   CropInfo1: Joi.number().allow(null).optional(),
+  PreviousGrassID: Joi.number().optional().allow(null),
   ...AuditFields,
   Action: Joi.number().integer().allow(null).optional(),
 }).required();
