@@ -12,6 +12,7 @@ const PreviousCroppingDto = Joi.object({
   HasGreaterThan30PercentClover:Joi.bool().optional().allow(null),
   SoilNitrogenSupplyItemID: Joi.number().optional().allow(null),
   CropInfo1: Joi.number().allow(null).optional(),
+  PreviousGrassID: Joi.number().optional().allow(null),
   CreatedOn: Joi.date().allow(null),
   CreatedByID: Joi.number().allow(null),
   ModifiedOn: Joi.date().optional().allow(null),
