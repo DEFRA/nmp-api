@@ -432,10 +432,6 @@ const calculatePreviousGrassLookupMethods = {
   },
 
   async getPreviousGrassID(crop, transactionalManager, harvestYear) {
-    if (!crop?.FieldID || !harvestYear) {
-      return null;
-    }
-
     const rb209CountryId = await this.getRb209CountryId(
       crop.FieldID,
       transactionalManager,
