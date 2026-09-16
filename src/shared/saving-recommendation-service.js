@@ -195,7 +195,7 @@ class SavingRecommendationService {
           cropRecData.ManureN = (availableNForNextDefoliation || 0) + (nextCropAvailableN || 0);
         }
         cropRecData.NBalance = c.pkBalance;
-        cropRecData.NIndex = c.indexpH; // same as of now
+        cropRecData.NIndex = c.index; // same as of now
       },
       1: (c) => {
         cropRecData.CropP2O5 = c.recommendation;
@@ -221,20 +221,20 @@ class SavingRecommendationService {
         cropRecData.CropNa2O = c.recommendation;
         cropRecData.NaBalance = c.pkBalance;
         cropRecData.FertilizerNa2O = c.cropNeed;
-        cropRecData.NaIndex = c.indexpH; // methodology 2 indexText should save otherwise index should be used
+        cropRecData.NaIndex = c.index; // methodology 2 indexText should save otherwise index should be used
       },
       5: (c) => {
         cropRecData.CropSO3 = c.recommendation;
         cropRecData.ManureSO3 = normalizeManure(c.manures);
         cropRecData.SBalance = c.pkBalance;
         cropRecData.FertilizerSO3 = c.cropNeed;
-        cropRecData.SIndex = c.indexpH;
+        cropRecData.SIndex = c.index;
       },
       6: (c) => {
         cropRecData.CropLime = c.recommendation;
         cropRecData.LimeBalance = c.pkBalance;
         cropRecData.FertilizerLime = c.cropNeed;
-        cropRecData.PH = c.indexpH; // same as of now
+        cropRecData.PH = c.soilpH; // same as of now
       },
     };
     for (const calc of calculations) {
