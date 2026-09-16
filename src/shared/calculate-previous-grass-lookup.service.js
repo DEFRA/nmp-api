@@ -411,7 +411,7 @@ const calculatePreviousGrassLookupMethods = {
     }
 
     const cropForYear = await transactionalManager.findOne(CropEntity, {
-      where: { FieldID: crop.FieldID, Year: harvestYear },
+      where: { FieldID: crop.FieldID, Year: harvestYear-1 },
       select: ["ID", "PreviousGrass"],
     });
 
@@ -422,7 +422,7 @@ const calculatePreviousGrassLookupMethods = {
     const previousCropping = await transactionalManager.findOne(
       PreviousCroppingEntity,
       {
-        where: { FieldID: crop.FieldID, HarvestYear: harvestYear },
+        where: { FieldID: crop.FieldID, HarvestYear: harvestYear-1 },
         select: ["PreviousGrassID"],
         order: { ID: "DESC" },
       },
