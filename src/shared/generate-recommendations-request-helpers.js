@@ -407,18 +407,8 @@ const recommendationRequestHelpers = {
       crop.Year,
       transactionalManager,
     );
-    const { grassHistoryID, previousGrassId } =
-      await this.resolveGrassHistoryAndPreviousGrass(
-        crop,
-        field,
-        transactionalManager,
-      );
-    const arableBody = await this.buildArableBody(
-      dataMultipleCrops,
-      field,
-      transactionalManager,
-      cropTypesList,
-    );
+    const { grassHistoryID, previousGrassId } = await this.resolveGrassHistoryAndPreviousGrass(crop,field,transactionalManager);
+    const arableBody = await this.buildArableBody(dataMultipleCrops,field,transactionalManager,cropTypesList);
     const grassObject = await this.buildGrassObject(
       crop,
       grassGrowthClass,
