@@ -412,11 +412,11 @@ const calculatePreviousGrassLookupMethods = {
 
     const cropForYear = await transactionalManager.findOne(CropEntity, {
       where: { FieldID: crop.FieldID, Year: harvestYear },
-      select: ["PreviousGrass"],
+      select: ["ID", "PreviousGrass"],
     });
 
-    if (cropForYear?.PreviousGrass != null) {
-      return cropForYear.PreviousGrass;
+    if (cropForYear) {
+      return cropForYear.PreviousGrass ?? null;
     }
 
     const previousCropping = await transactionalManager.findOne(
