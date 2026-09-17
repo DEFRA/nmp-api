@@ -234,7 +234,7 @@ class SavingRecommendationService {
         cropRecData.CropLime = c.recommendation;
         cropRecData.LimeBalance = c.pkBalance;
         cropRecData.FertilizerLime = c.cropNeed;
-        cropRecData.PH = c.soilpH; // same as of now
+        cropRecData.PH = c.soilpH.toString();
       },
     };
     for (const calc of calculations) {
