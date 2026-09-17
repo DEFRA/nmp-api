@@ -86,6 +86,10 @@ const PreviousCroppingEntity = new EntitySchema({
       type: "int",
       nullable: true,
     },
+    PreviousGrassID: {
+      type: "int",
+      nullable: true,
+    },
     ...auditColumns,
   },
   relations: {

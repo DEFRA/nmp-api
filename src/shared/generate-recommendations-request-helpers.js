@@ -1,4 +1,5 @@
 const { Not } = require("typeorm");
+const { CountryMapper } = require("../constants/country-mapper");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
 const {
@@ -329,19 +330,22 @@ const recommendationRequestHelpers = {
     cropTypesList,
     grassHistoryID,
     previousGrassId,
+    countryId,
   }) {
     if (previousCrop) {
       const cropType = cropTypesList.find(
         (cropTp) => cropTp?.cropTypeId === previousCrop?.CropTypeID,
       );
       const isGrass = previousCrop?.CropTypeID === CropTypeMapper.GRASS;
+      const isScotland = countryId === CountryMapper.SCOTLAND;
 
       return {
         previousGrassId: grassHistoryID ? null : previousGrassId,
         previousCropGroupId: isGrass ? null : (cropType?.cropGroupId ?? null),
         previousCropTypeId: isGrass ? null : (previousCrop?.CropTypeID ?? null),
         previousCropInfo1Id: previousCrop?.CropInfo1 ?? null,
-        grassHistoryId: previousGrassId ? null : grassHistoryID,
+        grassHistoryId:
+          isScotland || previousGrassId != null ? null : grassHistoryID,
         snsId: null,
         smnDepth: null,
         measuredSmn: null,
@@ -403,18 +407,8 @@ const recommendationRequestHelpers = {
       crop.Year,
       transactionalManager,
     );
-    const { grassHistoryID, previousGrassId } =
-      await this.resolveGrassHistoryAndPreviousGrass(
-        crop,
-        field,
-        transactionalManager,
-      );
-    const arableBody = await this.buildArableBody(
-      dataMultipleCrops,
-      field,
-      transactionalManager,
-      cropTypesList,
-    );
+    const { grassHistoryID, previousGrassId } = await this.resolveGrassHistoryAndPreviousGrass(crop,field,transactionalManager);
+    const arableBody = await this.buildArableBody(dataMultipleCrops,field,transactionalManager,cropTypesList);
     const grassObject = await this.buildGrassObject(
       crop,
       grassGrowthClass,
@@ -539,6 +533,7 @@ const recommendationRequestHelpers = {
         cropTypesList,
         grassHistoryID: recommendationContext.grassHistoryID,
         previousGrassId: recommendationContext.previousGrassId,
+        countryId: field.RB209CountryID,
       });
     nutrientRecommendationnReqBody.referenceValue = `${field.ID}-${crop.ID}-${crop.Year}`;
 
