@@ -177,8 +177,7 @@ class CalculatePreviousCropService {
         return null;
       }
     } else if (
-      rb209CountryId === CountryMapper.ENGLAND ||
-      rb209CountryId === CountryMapper.WELSH
+      rb209CountryId === CountryMapper.ENGLAND
     ) {
       if (!lastYearCrop || !secondLastYearCrop || !thirdLastYearCrop) {
         return null;
