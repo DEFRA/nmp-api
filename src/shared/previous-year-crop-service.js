@@ -6,12 +6,39 @@ const {
 const { CropOrderMapper } = require("../constants/crop-order-mapper");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { CropEntity } = require("../db/entity/crop.entity");
+const { CountryEntity } = require("../db/entity/country.entity");
+const { FarmEntity } = require("../db/entity/farm.entity");
+const { FieldEntity } = require("../db/entity/field.entity");
 const {
   PreviousCroppingEntity,
 } = require("../db/entity/previous-cropping.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
+const { CountryMapper } = require("../constants/country-mapper");
 
 class CalculatePreviousCropService {
+  async getRb209CountryId(
+    fieldID,
+    transactionalManager,
+    prefetchContext = null,
+  ) {
+    if (
+      prefetchContext?.rb209CountryID !== undefined &&
+      prefetchContext?.rb209CountryID !== null
+    ) {
+      return prefetchContext.rb209CountryID;
+    }
+
+    const fieldAndCountryData = await transactionalManager
+      .createQueryBuilder(FieldEntity, "f")
+      .leftJoin(FarmEntity, "farm", "farm.ID = f.FarmID")
+      .leftJoin(CountryEntity, "country", "country.ID = farm.CountryID")
+      .select(["country.RB209CountryID AS RB209CountryID"])
+      .where("f.ID = :fieldID", { fieldID })
+      .getRawOne();
+
+    return fieldAndCountryData?.RB209CountryID ?? null;
+  }
+
   getPrefetchedCropForYear(prefetchContext, year) {
     const yearCrops = prefetchContext?.historicalCropsByYear?.get(year) ?? [];
     return this.pickCropFromList(yearCrops);
@@ -111,6 +138,7 @@ class CalculatePreviousCropService {
     currentYear,
     transactionalManager,
     prefetchContext = null,
+    rb209CountryID = null,
   ) {
     const yearOne = 1,
       yearTwo = 2,
@@ -136,7 +164,25 @@ class CalculatePreviousCropService {
     const secondLastYearCrop = collectedCrops[1];
     const thirdLastYearCrop = collectedCrops[2];
 
-    if (!lastYearCrop || !secondLastYearCrop || !thirdLastYearCrop) {
+    const rb209CountryId =
+      rb209CountryID ??
+      (await this.getRb209CountryId(
+        fieldID,
+        transactionalManager,
+        prefetchContext,
+      ));
+
+    if (rb209CountryId === CountryMapper.SCOTLAND) {
+      if (!lastYearCrop) {
+        return null;
+      }
+    } else if (
+      rb209CountryId === CountryMapper.ENGLAND
+    ) {
+      if (!lastYearCrop || !secondLastYearCrop || !thirdLastYearCrop) {
+        return null;
+      }
+    } else {
       return null;
     }
 
