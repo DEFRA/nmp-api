@@ -176,7 +176,14 @@ class CalculatePreviousCropService {
       if (!lastYearCrop) {
         return null;
       }
-    } else if (!lastYearCrop || !secondLastYearCrop || !thirdLastYearCrop) {
+    } else if (
+      rb209CountryId === CountryMapper.ENGLAND ||
+      rb209CountryId === CountryMapper.WELSH
+    ) {
+      if (!lastYearCrop || !secondLastYearCrop || !thirdLastYearCrop) {
+        return null;
+      }
+    } else {
       return null;
     }
 
