@@ -41,7 +41,7 @@ class SiteClassService extends BaseService {
     transactionalManager,
     fieldRelatedData = null,
   ) {
-    try {
+   
       const field = await this.getFieldById(fieldId, transactionalManager);
       if (!field) {
         return { fieldId, error: "Field not found" };
@@ -73,11 +73,7 @@ class SiteClassService extends BaseService {
         ...siteClassData,
         fieldId,
       };
-    } catch (error) {
-      return {
-        fieldId,
-      };
-    }
+    
   }
 
   async getFieldById(fieldId, transactionalManager) {
@@ -110,7 +106,7 @@ class SiteClassService extends BaseService {
     return (
       fieldRelatedData?.rainfall ??
       farm.Rainfall ??
-      (await this.getRainfallByPostcode(farm.ClimateDataPostCode))
+      (this.getRainfallByPostcode(farm.ClimateDataPostCode))
     );
   }
 
