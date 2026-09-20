@@ -42,38 +42,23 @@ class SiteClassService extends BaseService {
     fieldRelatedData = null,
   ) {
     try {
-      const field = await transactionalManager.findOne(FieldEntity, {
-        where: { ID: fieldId },
-      });
-
+      const field = await this.getFieldById(fieldId, transactionalManager);
       if (!field) {
         return { fieldId, error: "Field not found" };
       }
 
-      const farm = await transactionalManager.findOne(FarmEntity, {
-        where: { ID: field.FarmID },
-      });
-
+      const farm = await this.getFarmByField(field, transactionalManager);
       if (!farm) {
         return { fieldId, error: "Farm not found for this field" };
       }
 
-      const soilTypeId = fieldRelatedData?.soilTypeId ?? field.SoilTypeID;
+      const soilTypeId = this.getSoilTypeId(field, fieldRelatedData);
       if (soilTypeId === null) {
         return { fieldId, error: "Soil type not found for this field" };
       }
 
-      const altitude =
-        fieldRelatedData?.altitude ??
-        farm.AverageAltitude ??
-        (field.IsAbove300SeaLevel
-          ? FieldAboveOrBelowSeaLevelMapper.ABOVETHREEHUNDRED
-          : FieldAboveOrBelowSeaLevelMapper.BELOWTHREEHUNDRED);
-
-      const rainfall =
-        fieldRelatedData?.rainfall ??
-        farm.Rainfall ??
-        (await this.getRainfallByPostcode(farm.ClimateDataPostCode));
+      const altitude = this.getAltitude(field, farm, fieldRelatedData);
+      const rainfall = await this.getRainfall(farm, fieldRelatedData);
 
       if (rainfall === null || rainfall === undefined) {
         return { fieldId, error: "Rainfall not found for this field" };
@@ -91,9 +76,42 @@ class SiteClassService extends BaseService {
     } catch (error) {
       return {
         fieldId,
-        error: error.message || "Error fetching data",
       };
     }
+  }
+
+  async getFieldById(fieldId, transactionalManager) {
+    return transactionalManager.findOne(FieldEntity, {
+      where: { ID: fieldId },
+    });
+  }
+
+  async getFarmByField(field, transactionalManager) {
+    return transactionalManager.findOne(FarmEntity, {
+      where: { ID: field.FarmID },
+    });
+  }
+
+  getSoilTypeId(field, fieldRelatedData) {
+    return fieldRelatedData?.soilTypeId ?? field.SoilTypeID;
+  }
+
+  getAltitude(field, farm, fieldRelatedData) {
+    return (
+      fieldRelatedData?.altitude ??
+      farm.AverageAltitude ??
+      (field.IsAbove300SeaLevel
+        ? FieldAboveOrBelowSeaLevelMapper.ABOVETHREEHUNDRED
+        : FieldAboveOrBelowSeaLevelMapper.BELOWTHREEHUNDRED)
+    );
+  }
+
+  async getRainfall(farm, fieldRelatedData) {
+    return (
+      fieldRelatedData?.rainfall ??
+      farm.Rainfall ??
+      (await this.getRainfallByPostcode(farm.ClimateDataPostCode))
+    );
   }
 
   async getRainfallByPostcode(postcode) {
