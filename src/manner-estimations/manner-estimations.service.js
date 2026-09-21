@@ -35,8 +35,11 @@ const {
 const {
   mannerEstimationsReadHelpers,
 } = require("./manner-estimations-read-helpers");
+const {
+  mannerEstimationsUpdateByIdHelpers,
+} = require("./manner-estimations-update-by-id-helpers");
 
-const {  MannerFarmsEntity } = require("../db/entity/manner-farms.entity");
+const { MannerFarmsEntity } = require("../db/entity/manner-farms.entity");
 class MannerEstimationsService extends BaseService {
   constructor() {
     super(MannerEstimationsEntity);
@@ -60,11 +63,10 @@ class MannerEstimationsService extends BaseService {
     this.MannerWindspeedService = new MannerWindspeedService();
     this.MannerRainTypesService = new MannerRainTypesService();
     this.CalculateMannerOutputService = new CalculateMannerOutputService();
-    this.MannerCalculateNutrientsService = new MannerCalculateNutrientsService();
+    this.MannerCalculateNutrientsService =
+      new MannerCalculateNutrientsService();
     this.MannerCropTypesService = new MannerApiCropTypesService();
-          this.mannerFarmsRepository = AppDataSource.getRepository(
-      MannerFarmsEntity,
-    );
+    this.mannerFarmsRepository = AppDataSource.getRepository(MannerFarmsEntity);
   }
 }
 
@@ -73,6 +75,7 @@ Object.assign(
   mannerEstimationsWriteHelpers,
   mannerEstimationsFinancialHelpers,
   mannerEstimationsReadHelpers,
+  mannerEstimationsUpdateByIdHelpers,
 );
 
 module.exports = { MannerEstimationsService };
