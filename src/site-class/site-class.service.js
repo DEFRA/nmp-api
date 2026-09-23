@@ -41,39 +41,39 @@ class SiteClassService extends BaseService {
     transactionalManager,
     fieldRelatedData = null,
   ) {
+   
+      const field = await this.getFieldById(fieldId, transactionalManager);
+      if (!field) {
+        return { fieldId, error: "Field not found" };
+      }
 
-    const field = await this.getFieldById(fieldId, transactionalManager);
-    if (!field) {
-      return { fieldId, error: "Field not found" };
-    }
+      const farm = await this.getFarmByField(field, transactionalManager);
+      if (!farm) {
+        return { fieldId, error: "Farm not found for this field" };
+      }
 
-    const farm = await this.getFarmByField(field, transactionalManager);
-    if (!farm) {
-      return { fieldId, error: "Farm not found for this field" };
-    }
+      const soilTypeId = this.getSoilTypeId(field, fieldRelatedData);
+      if (soilTypeId === null) {
+        return { fieldId, error: "Soil type not found for this field" };
+      }
 
-    const soilTypeId = this.getSoilTypeId(field, fieldRelatedData);
-    if (soilTypeId === null) {
-      return { fieldId, error: "Soil type not found for this field" };
-    }
+      const altitude = this.getAltitude(field, farm, fieldRelatedData);
+      const rainfall = await this.getRainfall(farm, fieldRelatedData);
 
-    const altitude = this.getAltitude(field, farm, fieldRelatedData);
-    const rainfall = await this.getRainfall(farm, fieldRelatedData);
+      if (rainfall === null || rainfall === undefined) {
+        return { fieldId, error: "Rainfall not found for this field" };
+      }
 
-    if (rainfall === null || rainfall === undefined) {
-      return { fieldId, error: "Rainfall not found for this field" };
-    }
+      const siteClassData = await this.grassService.getData(
+        `Grass/SiteClassId/${soilTypeId}/${rainfall}/${altitude}`,
+        request,
+      );
 
-    const siteClassData = await this.grassService.getData(
-      `Grass/SiteClassId/${soilTypeId}/${rainfall}/${altitude}`,
-      request,
-    );
-
-    return {
-      ...siteClassData,
-      fieldId,
-    };
-
+      return {
+        ...siteClassData,
+        fieldId,
+      };
+    
   }
 
   async getFieldById(fieldId, transactionalManager) {
