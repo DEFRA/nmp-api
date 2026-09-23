@@ -52,7 +52,7 @@ class SavingRecommendationService {
       nutrientRecommendationsData,
       cropData.CropOrder,
     );
-    if (!filteredData?.calculations?.length) return [];
+    if (!filteredData?.calculations?.length) { return []}
     const defoliationIds = this.getUniqueDefoliationIds(
       filteredData.calculations,
     );
@@ -67,7 +67,7 @@ class SavingRecommendationService {
         mannerOutputs,
         defoliationIds,
       );
-      if (recommendation) results.push(recommendation);
+      if (recommendation) {results.push(recommendation)}
     }
     return results;
   }
@@ -94,7 +94,7 @@ class SavingRecommendationService {
       filteredData.calculations,
       defoliationId,
     );
-    if (!defoliationData?.length) return null;
+    if (!defoliationData?.length) {return null};
     const cropRecData = this.initializeRecommendationData(latestSoilAnalysis);
     const managementPeriod = await this.getManagementPeriod(
       transactionalManager,
@@ -110,7 +110,7 @@ class SavingRecommendationService {
       transactionalManager,
       { defoliationId, defoliationIds, latestSoilAnalysis },
     );
-    if (!managementPeriod) return null;
+    if (!managementPeriod) {return null};
     return this.saveOrUpdateRecommendation(
       transactionalManager,
       managementPeriod,
@@ -169,26 +169,9 @@ class SavingRecommendationService {
       cropData.ID,
     );
     const soilAnalysisFlags = this.getSoilAnalysisFlags(latestSoilAnalysis);
-    const mannerOutputs = this.getMannerOutputsForDefoliation(
-      allMannerOutputs,
-      defoliationId,
-    );
-    const fallbackManureN = await this.getFallbackManureNValues(
-      mannerOutputs,
-      defoliationIds,
-      defoliationId,
-      transactionalManager,
-      managementPeriod,
-      cropData,
-    );
-    const nutrientHandlers = this.createNutrientHandlers(
-      cropRecData,
-      countryId,
-      latestSoilAnalysis,
-      soilAnalysisFlags,
-      mannerOutputs,
-      fallbackManureN,
-    );
+    const mannerOutputs = this.getMannerOutputsForDefoliation(allMannerOutputs,defoliationId);
+    const fallbackManureN = await this.getFallbackManureNValues(mannerOutputs,defoliationIds,defoliationId,transactionalManager,managementPeriod,cropData);
+    const nutrientHandlers = this.createNutrientHandlers(cropRecData,countryId,latestSoilAnalysis,soilAnalysisFlags,mannerOutputs,fallbackManureN);
     this.applyCalculationsWithHandlers(calculations, nutrientHandlers);
   }
 
@@ -201,47 +184,29 @@ class SavingRecommendationService {
   }
 
   getSoilAnalysisFlags(latestSoilAnalysis) {
-    const hasNitrogenSoilAnalysisInput =
-      latestSoilAnalysis?.SoilNitrogenSupplyIndex != null;
-    const hasPhosphorusSoilAnalysisInput =
-      latestSoilAnalysis?.PhosphorusIndex != null;
-    const hasPotassiumSoilAnalysisInput =
-      latestSoilAnalysis?.PotassiumIndex != null;
-    const hasMagnesiumSoilAnalysisInput =
-      latestSoilAnalysis?.MagnesiumIndex != null;
-    return {
-      hasNitrogenSoilAnalysisInput,
-      hasPhosphorusSoilAnalysisInput,
-      hasPotassiumSoilAnalysisInput,
-      hasMagnesiumSoilAnalysisInput,
+    const hasNitrogenSoilAnalysisInput = latestSoilAnalysis?.SoilNitrogenSupplyIndex != null;
+    const hasPhosphorusSoilAnalysisInput = latestSoilAnalysis?.PhosphorusIndex != null;
+    const hasPotassiumSoilAnalysisInput = latestSoilAnalysis?.PotassiumIndex != null;
+    const hasMagnesiumSoilAnalysisInput =latestSoilAnalysis?.MagnesiumIndex != null;
+    return {hasNitrogenSoilAnalysisInput,hasPhosphorusSoilAnalysisInput,hasPotassiumSoilAnalysisInput,hasMagnesiumSoilAnalysisInput,
       hasAnySoilAnalysisNutrientInput:
         hasNitrogenSoilAnalysisInput ||
         hasPhosphorusSoilAnalysisInput ||
         hasPotassiumSoilAnalysisInput ||
-        hasMagnesiumSoilAnalysisInput,
+        hasMagnesiumSoilAnalysisInput
     };
   }
 
   getMannerOutputsForDefoliation(allMannerOutputs, defoliationId) {
-    return (allMannerOutputs ?? []).filter(
-      (item) => item.defoliationId === defoliationId,
-    );
+    return (allMannerOutputs ?? []).filter((item) => item.defoliationId === defoliationId);
   }
 
-  async getFallbackManureNValues(
-    mannerOutputs,
-    defoliationIds,
-    defoliationId,
-    transactionalManager,
-    managementPeriod,
-    cropData,
-  ) {
+  async getFallbackManureNValues(mannerOutputs,defoliationIds,defoliationId,transactionalManager,managementPeriod,cropData) {
     let availableNForNextDefoliation = null;
     let nextCropAvailableN = null;
     if (!mannerOutputs.length) {
       if (defoliationIds.length > 1) {
-        availableNForNextDefoliation =
-          await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
+        availableNForNextDefoliation =await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
             transactionalManager,
             managementPeriod,
             cropData,
@@ -259,15 +224,49 @@ class SavingRecommendationService {
     return { availableNForNextDefoliation, nextCropAvailableN };
   }
 
-  createNutrientHandlers(cropRecData,countryId,latestSoilAnalysis,soilAnalysisFlags,mannerOutputs,fallbackManureN) {
+  createNutrientHandlers(
+    cropRecData,
+    countryId,
+    latestSoilAnalysis,
+    soilAnalysisFlags,
+    mannerOutputs,
+    fallbackManureN,
+  ) {
     return {
-      0: (c) =>this.applyNitrogenCalculation( c,cropRecData,mannerOutputs,fallbackManureN),
-      1: (c) =>this.applyPhosphorusCalculation( c,cropRecData, soilAnalysisFlags, countryId, latestSoilAnalysis),
-      2: (c) =>this.applyPotassiumCalculation(c,cropRecData,soilAnalysisFlags,countryId,latestSoilAnalysis),
-      3: (c) =>this.applyMagnesiumCalculation(c,cropRecData,soilAnalysisFlags,countryId,latestSoilAnalysis),
+      0: (c) =>
+        this.applyNitrogenCalculation(
+          c,
+          cropRecData,
+          mannerOutputs,
+          fallbackManureN,
+        ),
+      1: (c) =>
+        this.applyPhosphorusCalculation(
+          c,
+          cropRecData,
+          soilAnalysisFlags,
+          countryId,
+          latestSoilAnalysis,
+        ),
+      2: (c) =>
+        this.applyPotassiumCalculation(
+          c,
+          cropRecData,
+          soilAnalysisFlags,
+          countryId,
+          latestSoilAnalysis,
+        ),
+      3: (c) =>
+        this.applyMagnesiumCalculation(
+          c,
+          cropRecData,
+          soilAnalysisFlags,
+          countryId,
+          latestSoilAnalysis,
+        ),
       4: (c) => this.applySodiumCalculation(c, cropRecData, soilAnalysisFlags),
       5: (c) => this.applySulphurCalculation(c, cropRecData, soilAnalysisFlags),
-      6: (c) => this.applyLimeCalculation(c, cropRecData)
+      6: (c) => this.applyLimeCalculation(c, cropRecData),
     };
   }
 
@@ -277,51 +276,26 @@ class SavingRecommendationService {
     cropRecData.CropN = c.recommendation;
     cropRecData.FertilizerN = c.cropNeed;
     cropRecData.ManureN = c.manures;
-    if (!mannerOutputs.length)
-      cropRecData.ManureN =
-        (availableNForNextDefoliation || 0) + (nextCropAvailableN || 0);
+    if (!mannerOutputs.length){cropRecData.ManureN =(availableNForNextDefoliation || 0) + (nextCropAvailableN || 0)};
     cropRecData.NBalance = c.pkBalance;
     cropRecData.NIndex = c.index;
   }
 
-  applyPhosphorusCalculation(
-    c,
-    cropRecData,
-    soilAnalysisFlags,
-    countryId,
-    latestSoilAnalysis,
-  ) {
+  applyPhosphorusCalculation(c,cropRecData,soilAnalysisFlags,countryId,latestSoilAnalysis) {
     cropRecData.CropP2O5 = c.recommendation;
     cropRecData.ManureP2O5 = this.normalizeManure(c.manures);
     cropRecData.PBalance = c.pkBalance;
     cropRecData.FertilizerP2O5 = c.cropNeed;
-    cropRecData.PIndex = this.resolveIndexedNutrientValue(
-      soilAnalysisFlags.hasPhosphorusSoilAnalysisInput,
-      countryId,
-      latestSoilAnalysis?.PhosphorusMethodologyID,
-      c,
-    );
+    cropRecData.PIndex = this.resolveIndexedNutrientValue(soilAnalysisFlags.hasPhosphorusSoilAnalysisInput,countryId,latestSoilAnalysis?.PhosphorusMethodologyID,c);
   }
 
-  applyPotassiumCalculation(
-    c,
-    cropRecData,
-    soilAnalysisFlags,
-    countryId,
-    latestSoilAnalysis,
-  ) {
+  applyPotassiumCalculation(c,cropRecData,soilAnalysisFlags,countryId,latestSoilAnalysis) {
     cropRecData.CropK2O = c.recommendation;
     cropRecData.ManureK2O = this.normalizeManure(c.manures);
     cropRecData.KBalance = c.pkBalance;
     cropRecData.FertilizerK2O = c.cropNeed;
-    cropRecData.KIndex = this.resolveIndexedNutrientValue(
-      soilAnalysisFlags.hasPotassiumSoilAnalysisInput,
-      countryId,
-      latestSoilAnalysis?.PotassiumMethodologyID,
-      c,
-    );
+    cropRecData.KIndex = this.resolveIndexedNutrientValue(soilAnalysisFlags.hasPotassiumSoilAnalysisInput,countryId,latestSoilAnalysis?.PotassiumMethodologyID,c);
   }
-
   applyMagnesiumCalculation(
     c,
     cropRecData,
