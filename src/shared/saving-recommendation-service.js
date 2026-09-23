@@ -202,8 +202,7 @@ class SavingRecommendationService {
   }
 
   async getFallbackManureNValues(mannerOutputs,defoliationIds,defoliationId,transactionalManager,managementPeriod,cropData) {
-    let availableNForNextDefoliation = null;
-    let nextCropAvailableN = null;
+    let availableNForNextDefoliation = null,nextCropAvailableN = null;
     if (!mannerOutputs.length) {
       if (defoliationIds.length > 1) {
         availableNForNextDefoliation =await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
@@ -223,55 +222,20 @@ class SavingRecommendationService {
     return { availableNForNextDefoliation, nextCropAvailableN };
   }
 
-  createNutrientHandlers(
-    cropRecData,
-    countryId,
-    latestSoilAnalysis,
-    soilAnalysisFlags,
-    mannerOutputs,
-    fallbackManureN,
-  ) {
+  createNutrientHandlers(cropRecData,countryId,latestSoilAnalysis,soilAnalysisFlags,mannerOutputs,fallbackManureN) {
     return {
-      0: (c) =>
-        this.applyNitrogenCalculation(
-          c,
-          cropRecData,
-          mannerOutputs,
-          fallbackManureN,
-        ),
-      1: (c) =>
-        this.applyPhosphorusCalculation(
-          c,
-          cropRecData,
-          soilAnalysisFlags,
-          countryId,
-          latestSoilAnalysis,
-        ),
-      2: (c) =>
-        this.applyPotassiumCalculation(
-          c,
-          cropRecData,
-          soilAnalysisFlags,
-          countryId,
-          latestSoilAnalysis,
-        ),
-      3: (c) =>
-        this.applyMagnesiumCalculation(
-          c,
-          cropRecData,
-          soilAnalysisFlags,
-          countryId,
-          latestSoilAnalysis,
-        ),
+      0: (c) =>this.applyNitrogenCalculation( c, cropRecData, mannerOutputs,fallbackManureN),
+      1: (c) =>this.applyPhosphorusCalculation( c, cropRecData, soilAnalysisFlags, countryId, latestSoilAnalysis),
+      2: (c) =>this.applyPotassiumCalculation(c,cropRecData,soilAnalysisFlags,countryId,latestSoilAnalysis),
+      3: (c) =>this.applyMagnesiumCalculation(c,cropRecData,soilAnalysisFlags,countryId,latestSoilAnalysis),
       4: (c) => this.applySodiumCalculation(c, cropRecData, soilAnalysisFlags),
       5: (c) => this.applySulphurCalculation(c, cropRecData, soilAnalysisFlags),
-      6: (c) => this.applyLimeCalculation(c, cropRecData),
+      6: (c) => this.applyLimeCalculation(c, cropRecData)
     };
   }
 
   applyNitrogenCalculation(c, cropRecData, mannerOutputs, fallbackManureN) {
-    const { availableNForNextDefoliation, nextCropAvailableN } =
-      fallbackManureN;
+    const { availableNForNextDefoliation, nextCropAvailableN } = fallbackManureN;
     cropRecData.CropN = c.recommendation;
     cropRecData.FertilizerN = c.cropNeed;
     cropRecData.ManureN = c.manures;
@@ -295,31 +259,18 @@ class SavingRecommendationService {
     cropRecData.FertilizerK2O = c.cropNeed;
     cropRecData.KIndex = this.resolveIndexedNutrientValue(soilAnalysisFlags.hasPotassiumSoilAnalysisInput,countryId,latestSoilAnalysis?.PotassiumMethodologyID,c);
   }
-  applyMagnesiumCalculation(
-    c,
-    cropRecData,
-    soilAnalysisFlags,
-    countryId,
-    latestSoilAnalysis,
-  ) {
+  applyMagnesiumCalculation(c,cropRecData,soilAnalysisFlags,countryId,latestSoilAnalysis) {
     cropRecData.CropMgO = c.recommendation;
     cropRecData.MgBalance = c.pkBalance;
     cropRecData.FertilizerMgO = c.cropNeed;
-    cropRecData.MgIndex = this.resolveIndexedNutrientValue(
-      soilAnalysisFlags.hasMagnesiumSoilAnalysisInput,
-      countryId,
-      latestSoilAnalysis?.MagnesiumMethodologyID,
-      c,
-    );
+    cropRecData.MgIndex = this.resolveIndexedNutrientValue(soilAnalysisFlags.hasMagnesiumSoilAnalysisInput,countryId,latestSoilAnalysis?.MagnesiumMethodologyID,c);
   }
 
   applySodiumCalculation(c, cropRecData, soilAnalysisFlags) {
     cropRecData.CropNa2O = c.recommendation;
     cropRecData.NaBalance = c.pkBalance;
     cropRecData.FertilizerNa2O = c.cropNeed;
-    cropRecData.NaIndex = soilAnalysisFlags.hasAnySoilAnalysisNutrientInput
-      ? c.index
-      : null;
+    cropRecData.NaIndex = soilAnalysisFlags.hasAnySoilAnalysisNutrientInput ? c.index : null;
   }
 
   applySulphurCalculation(c, cropRecData, soilAnalysisFlags) {
@@ -327,9 +278,7 @@ class SavingRecommendationService {
     cropRecData.ManureSO3 = this.normalizeManure(c.manures);
     cropRecData.SBalance = c.pkBalance;
     cropRecData.FertilizerSO3 = c.cropNeed;
-    cropRecData.SIndex = soilAnalysisFlags.hasAnySoilAnalysisNutrientInput
-      ? c.index
-      : null;
+    cropRecData.SIndex = soilAnalysisFlags.hasAnySoilAnalysisNutrientInput ? c.index : null;
   }
 
   applyLimeCalculation(c, cropRecData) {
@@ -338,20 +287,10 @@ class SavingRecommendationService {
     cropRecData.FertilizerLime = c.cropNeed;
     cropRecData.PH = c?.soilpH != null ? c.soilpH.toString() : null;
   }
-
-  normalizeManure(value) {
-    return value === 0 ? null : value;
-  }
-
-  resolveIndexedNutrientValue(
-    hasSoilAnalysisInput,
-    countryId,
-    methodologyId,
-    calc,
-  ) {
+  normalizeManure(value) {return value === 0 ? null : value;}
+  resolveIndexedNutrientValue(hasSoilAnalysisInput,countryId,methodologyId,calc) {
     if (!hasSoilAnalysisInput) {return null};
-    const isScotlandSacMethodology =
-      countryId === CountryMapper.SCOTLAND && methodologyId === 2;
+    const isScotlandSacMethodology = countryId === CountryMapper.SCOTLAND && methodologyId === 2;
     return isScotlandSacMethodology ? calc.indexText : calc.index;
   }
 
