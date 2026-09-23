@@ -113,18 +113,11 @@ class SavingRecommendationService {
       cropData.ID,
       defoliationId,
     );
-    await this.applyNutrientCalculations(
-      cropRecData,
-      defoliationData,
-      mannerOutputs,
-      managementPeriod,
-      cropData,
+    await this.applyNutrientCalculations(cropRecData,defoliationData,mannerOutputs,managementPeriod,cropData,
       transactionalManager,
       { defoliationId, defoliationIds, latestSoilAnalysis },
     );
-    if (!managementPeriod) {
-      return null;
-    }
+    if (!managementPeriod) {return null}
     return this.saveOrUpdateRecommendation(
       transactionalManager,
       managementPeriod,
@@ -168,39 +161,14 @@ class SavingRecommendationService {
     };
   }
 
-  async applyNutrientCalculations(
-    cropRecData,
-    calculations,
-    allMannerOutputs,
-    managementPeriod,
-    cropData,
-    transactionalManager,
-    defoliations,
-  ) {
+  async applyNutrientCalculations(cropRecData,calculations,allMannerOutputs,managementPeriod,cropData,transactionalManager,defoliations) {
     const { defoliationId, defoliationIds, latestSoilAnalysis } = defoliations;
     const soilAnalysisFlags = this.getSoilAnalysisFlags(latestSoilAnalysis);
-    const mannerOutputs = allMannerOutputs.filter(
-      (item) => item.defoliationId === defoliationId,
-    );
-    let availableNForNextDefoliation = null,
-      nextCropAvailableN = null;
+    const mannerOutputs = allMannerOutputs.filter((item) => item.defoliationId === defoliationId);
+    let availableNForNextDefoliation = null,nextCropAvailableN = null;
     if (mannerOutputs.length === 0) {
-      if (defoliationIds.length > 1) {
-        availableNForNextDefoliation =
-          await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
-            transactionalManager,
-            managementPeriod,
-            cropData,
-          );
-      }
-      if (defoliationId === 1) {
-        nextCropAvailableN =
-          await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
-            cropData.FieldID,
-            cropData.Year,
-            transactionalManager,
-          );
-      }
+      if (defoliationIds.length > 1) {availableNForNextDefoliation =await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation( transactionalManager, managementPeriod,cropData)}
+      if (defoliationId === 1) {nextCropAvailableN =await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(cropData.FieldID,cropData.Year,transactionalManager)}
     }
     const normalizeManure = (value) => (value === 0 ? null : value);
     const nutrientHandlers = {
@@ -208,10 +176,7 @@ class SavingRecommendationService {
         cropRecData.CropN = c.recommendation;
         cropRecData.FertilizerN = c.cropNeed;
         cropRecData.ManureN = c.manures;
-        if (mannerOutputs.length === 0) {
-          cropRecData.ManureN =
-            (availableNForNextDefoliation || 0) + (nextCropAvailableN || 0);
-        }
+        if (mannerOutputs.length === 0) {cropRecData.ManureN =(availableNForNextDefoliation || 0) + (nextCropAvailableN || 0)}
         cropRecData.NBalance = c.pkBalance;
         cropRecData.NIndex = c.indexpH
       },
@@ -220,29 +185,20 @@ class SavingRecommendationService {
         cropRecData.ManureP2O5 = normalizeManure(c.manures);
         cropRecData.PBalance = c.pkBalance;
         cropRecData.FertilizerP2O5 = c.cropNeed;
-        cropRecData.PIndex = this.resolveIndexPhValue(
-          c.indexpH,
-          soilAnalysisFlags.hasPhosphorusSoilAnalysisInput,
-        );
+        cropRecData.PIndex = this.resolveIndexPhValue(c.indexpH, soilAnalysisFlags.hasPhosphorusSoilAnalysisInput);
       },
       2: (c) => {
         cropRecData.CropK2O = c.recommendation;
         cropRecData.ManureK2O = normalizeManure(c.manures);
         cropRecData.KBalance = c.pkBalance;
         cropRecData.FertilizerK2O = c.cropNeed;
-        cropRecData.KIndex = this.resolveIndexPhValue(
-          c.indexpH,
-          soilAnalysisFlags.hasPotassiumSoilAnalysisInput,
-        );
+        cropRecData.KIndex = this.resolveIndexPhValue(c.indexpH,soilAnalysisFlags.hasPotassiumSoilAnalysisInput);
       },
       3: (c) => {
         cropRecData.CropMgO = c.recommendation;
         cropRecData.MgBalance = c.pkBalance;
         cropRecData.FertilizerMgO = c.cropNeed;
-        cropRecData.MgIndex = this.resolveIndexPhValue(
-          c.indexpH,
-          soilAnalysisFlags.hasMagnesiumSoilAnalysisInput,
-        );
+        cropRecData.MgIndex = this.resolveIndexPhValue(c.indexpH,soilAnalysisFlags.hasMagnesiumSoilAnalysisInput);
       },
       4: (c) => {
         cropRecData.CropNa2O = c.recommendation;
@@ -261,17 +217,12 @@ class SavingRecommendationService {
         cropRecData.CropLime = c.recommendation;
         cropRecData.LimeBalance = c.pkBalance;
         cropRecData.FertilizerLime = c.cropNeed;
-        cropRecData.PH = this.resolveIndexPhValue(
-          c.indexpH,
-          soilAnalysisFlags.hasPhSoilAnalysisInput,
-        );
+        cropRecData.PH = this.resolveIndexPhValue(c.indexpH,soilAnalysisFlags.hasPhSoilAnalysisInput);
       },
     };
     for (const calc of calculations) {
       const handler = nutrientHandlers[calc.nutrientId];
-      if (handler) {
-        handler(calc);
-      }
+      if (handler) {handler(calc)}
     }
   }
 
