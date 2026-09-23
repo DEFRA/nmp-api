@@ -170,20 +170,58 @@ class SavingRecommendationService {
     };
   }
 
-  async applyNutrientCalculations(cropRecData, calculations,allMannerOutputs,managementPeriod,cropData,transactionalManager,defoliations) {
+  async applyNutrientCalculations(
+    cropRecData,
+    calculations,
+    allMannerOutputs,
+    managementPeriod,
+    cropData,
+    transactionalManager,
+    defoliations,
+  ) {
     const record = await transactionalManager.findOne(CropEntity, {
-    where: { ID: cropData.ID },
-    relations: {
-      Field: { Farm: true},
+      where: { ID: cropData.ID },
+      relations: {
+        Field: { Farm: true },
       },
     });
     const countryId = record?.Field?.Farm?.CountryID;
     const { defoliationId, defoliationIds, latestSoilAnalysis } = defoliations;
-    const mannerOutputs = allMannerOutputs.filter((item) => item.defoliationId === defoliationId);
-    let availableNForNextDefoliation = null,nextCropAvailableN = null;
+    const hasNitrogenSoilAnalysisInput =
+      latestSoilAnalysis?.SoilNitrogenSupplyIndex != null;
+    const hasPhosphorusSoilAnalysisInput =
+      latestSoilAnalysis?.PhosphorusIndex != null;
+    const hasPotassiumSoilAnalysisInput =
+      latestSoilAnalysis?.PotassiumIndex != null;
+    const hasMagnesiumSoilAnalysisInput =
+      latestSoilAnalysis?.MagnesiumIndex != null;
+    const hasAnySoilAnalysisNutrientInput =
+      hasNitrogenSoilAnalysisInput ||
+      hasPhosphorusSoilAnalysisInput ||
+      hasPotassiumSoilAnalysisInput ||
+      hasMagnesiumSoilAnalysisInput;
+    const mannerOutputs = allMannerOutputs.filter(
+      (item) => item.defoliationId === defoliationId,
+    );
+    let availableNForNextDefoliation = null,
+      nextCropAvailableN = null;
     if (!mannerOutputs || mannerOutputs.length === 0) {
-      if (defoliationIds.length > 1) {availableNForNextDefoliation = await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(transactionalManager,managementPeriod, cropData)}
-      if (defoliationId === 1) { nextCropAvailableN =await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(cropData.FieldID,cropData.Year,transactionalManager)}
+      if (defoliationIds.length > 1) {
+        availableNForNextDefoliation =
+          await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
+            transactionalManager,
+            managementPeriod,
+            cropData,
+          );
+      }
+      if (defoliationId === 1) {
+        nextCropAvailableN =
+          await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
+            cropData.FieldID,
+            cropData.Year,
+            transactionalManager,
+          );
+      }
     }
     const normalizeManure = (value) => (value === 0 ? null : value);
     const nutrientHandlers = {
@@ -192,43 +230,59 @@ class SavingRecommendationService {
         cropRecData.FertilizerN = c.cropNeed;
         cropRecData.ManureN = c.manures;
         if (!mannerOutputs || mannerOutputs.length === 0) {
-          cropRecData.ManureN = (availableNForNextDefoliation || 0) + (nextCropAvailableN || 0);
+          cropRecData.ManureN =
+            (availableNForNextDefoliation || 0) + (nextCropAvailableN || 0);
         }
         cropRecData.NBalance = c.pkBalance;
-        cropRecData.NIndex = c.index; // same as of now
+        cropRecData.NIndex =  c.index
       },
       1: (c) => {
         cropRecData.CropP2O5 = c.recommendation;
         cropRecData.ManureP2O5 = normalizeManure(c.manures);
         cropRecData.PBalance = c.pkBalance;
         cropRecData.FertilizerP2O5 = c.cropNeed;
-        cropRecData.PIndex = (countryId === CountryMapper.SCOTLAND && latestSoilAnalysis.PhosphorusMethodologyID === 2) ? c.indexText : c.index;
+        cropRecData.PIndex = hasPhosphorusSoilAnalysisInput
+          ? countryId === CountryMapper.SCOTLAND &&
+            latestSoilAnalysis?.PhosphorusMethodologyID === 2
+            ? c.indexText
+            : c.index
+          : null;
       },
       2: (c) => {
         cropRecData.CropK2O = c.recommendation;
         cropRecData.ManureK2O = normalizeManure(c.manures);
         cropRecData.KBalance = c.pkBalance;
         cropRecData.FertilizerK2O = c.cropNeed;
-        cropRecData.KIndex = (countryId === CountryMapper.SCOTLAND && latestSoilAnalysis.PotassiumMethodologyID === 2) ? c.indexText: c.index;
+        cropRecData.KIndex = hasPotassiumSoilAnalysisInput
+          ? countryId === CountryMapper.SCOTLAND &&
+            latestSoilAnalysis?.PotassiumMethodologyID === 2
+            ? c.indexText
+            : c.index
+          : null;
       },
       3: (c) => {
         cropRecData.CropMgO = c.recommendation;
         cropRecData.MgBalance = c.pkBalance;
         cropRecData.FertilizerMgO = c.cropNeed;
-        cropRecData.MgIndex = (countryId === CountryMapper.SCOTLAND && latestSoilAnalysis.MagnesiumMethodologyID === 2) ? c.indexText: c.index;
+        cropRecData.MgIndex = hasMagnesiumSoilAnalysisInput
+          ? countryId === CountryMapper.SCOTLAND &&
+            latestSoilAnalysis?.MagnesiumMethodologyID === 2
+            ? c.indexText
+            : c.index
+          : null;
       },
       4: (c) => {
         cropRecData.CropNa2O = c.recommendation;
         cropRecData.NaBalance = c.pkBalance;
         cropRecData.FertilizerNa2O = c.cropNeed;
-        cropRecData.NaIndex = c.index; // methodology 2 indexText should save otherwise index should be used
+        cropRecData.NaIndex = hasAnySoilAnalysisNutrientInput ? c.index : null;
       },
       5: (c) => {
         cropRecData.CropSO3 = c.recommendation;
         cropRecData.ManureSO3 = normalizeManure(c.manures);
         cropRecData.SBalance = c.pkBalance;
         cropRecData.FertilizerSO3 = c.cropNeed;
-        cropRecData.SIndex = c.index;
+        cropRecData.SIndex = hasAnySoilAnalysisNutrientInput ? c.index : null;
       },
       6: (c) => {
         cropRecData.CropLime = c.recommendation;
@@ -239,7 +293,9 @@ class SavingRecommendationService {
     };
     for (const calc of calculations) {
       const handler = nutrientHandlers[calc.nutrientId];
-      if (handler) {handler(calc)}
+      if (handler) {
+        handler(calc);
+      }
     }
   }
 
