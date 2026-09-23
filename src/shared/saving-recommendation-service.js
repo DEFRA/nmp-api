@@ -120,7 +120,7 @@ class SavingRecommendationService {
       managementPeriod,
       cropData,
       transactionalManager,
-      { defoliationId, defoliationIds },
+      { defoliationId, defoliationIds, latestSoilAnalysis },
     );
     if (!managementPeriod) {
       return null;
@@ -168,23 +168,37 @@ class SavingRecommendationService {
     };
   }
 
-  async applyNutrientCalculations(cropRecData, calculations,
-    allMannerOutputs,managementPeriod,
-    cropData,transactionalManager,
-    defoliations
+  async applyNutrientCalculations(
+    cropRecData,
+    calculations,
+    allMannerOutputs,
+    managementPeriod,
+    cropData,
+    transactionalManager,
+    defoliations,
   ) {
-    const { defoliationId, defoliationIds } = defoliations;
-    const mannerOutputs = allMannerOutputs.filter((item) => item.defoliationId === defoliationId);
-    let availableNForNextDefoliation = null,nextCropAvailableN = null;
-    if (!mannerOutputs || mannerOutputs.length === 0) {
+    const { defoliationId, defoliationIds, latestSoilAnalysis } = defoliations;
+    const soilAnalysisFlags = this.getSoilAnalysisFlags(latestSoilAnalysis);
+    const mannerOutputs = allMannerOutputs.filter(
+      (item) => item.defoliationId === defoliationId,
+    );
+    let availableNForNextDefoliation = null,
+      nextCropAvailableN = null;
+    if (mannerOutputs.length === 0) {
       if (defoliationIds.length > 1) {
-        availableNForNextDefoliation = await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
-            transactionalManager,managementPeriod, cropData,
+        availableNForNextDefoliation =
+          await this.CalculateNextDefoliationService.calculateAvailableNForNextDefoliation(
+            transactionalManager,
+            managementPeriod,
+            cropData,
           );
       }
       if (defoliationId === 1) {
-        nextCropAvailableN =await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
-            cropData.FieldID,cropData.Year,transactionalManager
+        nextCropAvailableN =
+          await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
+            cropData.FieldID,
+            cropData.Year,
+            transactionalManager,
           );
       }
     }
@@ -194,56 +208,87 @@ class SavingRecommendationService {
         cropRecData.CropN = c.recommendation;
         cropRecData.FertilizerN = c.cropNeed;
         cropRecData.ManureN = c.manures;
-        if (!mannerOutputs || mannerOutputs.length === 0) {cropRecData.ManureN =(availableNForNextDefoliation || 0) + (nextCropAvailableN || 0)}
+        if (mannerOutputs.length === 0) {
+          cropRecData.ManureN =
+            (availableNForNextDefoliation || 0) + (nextCropAvailableN || 0);
+        }
         cropRecData.NBalance = c.pkBalance;
-        cropRecData.NIndex = c.indexpH;
+        cropRecData.NIndex = c.indexpH
       },
       1: (c) => {
         cropRecData.CropP2O5 = c.recommendation;
         cropRecData.ManureP2O5 = normalizeManure(c.manures);
         cropRecData.PBalance = c.pkBalance;
         cropRecData.FertilizerP2O5 = c.cropNeed;
-        cropRecData.PIndex = c.indexpH;
+        cropRecData.PIndex = this.resolveIndexPhValue(
+          c.indexpH,
+          soilAnalysisFlags.hasPhosphorusSoilAnalysisInput,
+        );
       },
       2: (c) => {
         cropRecData.CropK2O = c.recommendation;
         cropRecData.ManureK2O = normalizeManure(c.manures);
         cropRecData.KBalance = c.pkBalance;
         cropRecData.FertilizerK2O = c.cropNeed;
-        cropRecData.KIndex = c.indexpH;
+        cropRecData.KIndex = this.resolveIndexPhValue(
+          c.indexpH,
+          soilAnalysisFlags.hasPotassiumSoilAnalysisInput,
+        );
       },
       3: (c) => {
         cropRecData.CropMgO = c.recommendation;
         cropRecData.MgBalance = c.pkBalance;
         cropRecData.FertilizerMgO = c.cropNeed;
-        cropRecData.MgIndex = c.indexpH;
+        cropRecData.MgIndex = this.resolveIndexPhValue(
+          c.indexpH,
+          soilAnalysisFlags.hasMagnesiumSoilAnalysisInput,
+        );
       },
       4: (c) => {
         cropRecData.CropNa2O = c.recommendation;
         cropRecData.NaBalance = c.pkBalance;
         cropRecData.FertilizerNa2O = c.cropNeed;
-        cropRecData.NaIndex = c.indexpH;
+        cropRecData.NaIndex = null;
       },
       5: (c) => {
         cropRecData.CropSO3 = c.recommendation;
         cropRecData.ManureSO3 = normalizeManure(c.manures);
         cropRecData.SBalance = c.pkBalance;
         cropRecData.FertilizerSO3 = c.cropNeed;
-        cropRecData.SIndex = c.indexpH;
+        cropRecData.SIndex = null
       },
       6: (c) => {
         cropRecData.CropLime = c.recommendation;
         cropRecData.LimeBalance = c.pkBalance;
         cropRecData.FertilizerLime = c.cropNeed;
-        cropRecData.PH = c.indexpH;
+        cropRecData.PH = this.resolveIndexPhValue(
+          c.indexpH,
+          soilAnalysisFlags.hasPhSoilAnalysisInput,
+        );
       },
     };
     for (const calc of calculations) {
       const handler = nutrientHandlers[calc.nutrientId];
-      if (handler) {handler(calc)}
+      if (handler) {
+        handler(calc);
+      }
     }
   }
 
+  getSoilAnalysisFlags(latestSoilAnalysis) {
+    const hasNitrogenSoilAnalysisInput = latestSoilAnalysis?.SoilNitrogenSupplyIndex != null;
+    const hasPhosphorusSoilAnalysisInput =latestSoilAnalysis?.PhosphorusIndex != null;
+    const hasPotassiumSoilAnalysisInput =latestSoilAnalysis?.PotassiumIndex != null;
+    const hasMagnesiumSoilAnalysisInput =latestSoilAnalysis?.MagnesiumIndex != null;
+    const hasPhSoilAnalysisInput = latestSoilAnalysis?.PH != null;
+
+    return {hasNitrogenSoilAnalysisInput, hasPhosphorusSoilAnalysisInput, hasPotassiumSoilAnalysisInput, hasMagnesiumSoilAnalysisInput, hasPhSoilAnalysisInput,hasAnySoilAnalysisNutrientInput:
+        hasNitrogenSoilAnalysisInput || hasPhosphorusSoilAnalysisInput || hasPotassiumSoilAnalysisInput || hasMagnesiumSoilAnalysisInput
+    };
+  }
+  resolveIndexPhValue(indexPhValue, hasSoilAnalysisInput) {
+    return hasSoilAnalysisInput && indexPhValue != null ? indexPhValue : null;
+  }
   async getManagementPeriod(transactionalManager, cropID, defoliationId) {
     const record = await transactionalManager.findOne(ManagementPeriodEntity, {
       where: { CropID: cropID, Defoliation: defoliationId },
@@ -251,18 +296,10 @@ class SavingRecommendationService {
     return record ?? null;
   }
 
-  async saveOrUpdateRecommendation(
-    transactionalManager,
-    managementPeriod,
-    cropRecData,
-    filteredData,
-    userId,
-    latestSoilAnalysis,
-  ) {
+  async saveOrUpdateRecommendation(transactionalManager,managementPeriod,cropRecData,filteredData,userId,latestSoilAnalysis) {
     const existing = await transactionalManager.findOne(RecommendationEntity, {
       where: { ManagementPeriodID: managementPeriod.ID },
     });
-
     const baseData = {
       ...cropRecData,
       Comments: `Reference Value: ${filteredData.referenceValue}\nVersion: ${filteredData.versionNumber}`,
@@ -288,14 +325,7 @@ class SavingRecommendationService {
 
   /* ==================SAVE MULTIPLE RECOMMENDATION COMMENTS ================ */
 
-  async saveMultipleRecommendation(
-    Recommendations,
-    savedCrop,
-    cropSaveData,
-    transactionalManager,
-    nutrientRecommendationsData,
-    userId,
-  ) {
+  async saveMultipleRecommendation(Recommendations,savedCrop,cropSaveData,transactionalManager,nutrientRecommendationsData,userId) {
     const cropNotes = await this.getCropNotes(
       savedCrop,
       transactionalManager,
@@ -333,10 +363,7 @@ class SavingRecommendationService {
       ManagementPeriodEntity,
       { where: { ID: savedCrop.ManagementPeriodID } },
     );
-
-    if (!managementPeriod) {
-      return [];
-    }
+    if (!managementPeriod) { return []}
     return adviceNotes.filter(
       (note) =>
         note.defoliationId === managementPeriod.Defoliation &&
@@ -355,12 +382,7 @@ class SavingRecommendationService {
     }, {});
   }
 
-  async saveOrUpdateComments(
-    notesByNutrientId,
-    savedCrop,
-    transactionalManager,
-    userId,
-  ) {
+  async saveOrUpdateComments(notesByNutrientId,savedCrop,transactionalManager,userId) {
     const existingComments = await transactionalManager.find(
       RecommendationCommentEntity,
       { where: { RecommendationID: savedCrop?.ID } },
