@@ -22,19 +22,17 @@ class SavingRecommendationService {
     this.CalculateTotalAvailableNForPreviousYear =
       new CalculateTotalAvailableNForNextYear();
   }
+
   /* ============================================================
      BUILD CROP RECOMMENDATION DATA
   ============================================================ */
-
   async filterBySingleSequenceId(data, sequenceId) {
     const filteredCalculations = data?.calculations?.filter(
       (item) => item.sequenceId === sequenceId,
     );
-
     const filteredAdviceNotes = data?.adviceNotes?.filter(
       (item) => item.sequenceId === sequenceId,
     );
-
     return {
       ...data,
       calculations: filteredCalculations,
@@ -54,17 +52,11 @@ class SavingRecommendationService {
       nutrientRecommendationsData,
       cropData.CropOrder,
     );
-
-    if (!filteredData?.calculations?.length) {
-      return [];
-    }
-
+    if (!filteredData?.calculations?.length) return [];
     const defoliationIds = this.getUniqueDefoliationIds(
       filteredData.calculations,
     );
-
     const results = [];
-
     for (const defoliationId of defoliationIds) {
       const recommendation = await this.processDefoliationGroup(
         cropData,
@@ -75,12 +67,8 @@ class SavingRecommendationService {
         mannerOutputs,
         defoliationIds,
       );
-
-      if (recommendation) {
-        results.push(recommendation);
-      }
+      if (recommendation) results.push(recommendation);
     }
-
     return results;
   }
 
@@ -106,9 +94,7 @@ class SavingRecommendationService {
       filteredData.calculations,
       defoliationId,
     );
-    if (!defoliationData?.length) {
-      return null;
-    }
+    if (!defoliationData?.length) return null;
     const cropRecData = this.initializeRecommendationData(latestSoilAnalysis);
     const managementPeriod = await this.getManagementPeriod(
       transactionalManager,
@@ -124,9 +110,7 @@ class SavingRecommendationService {
       transactionalManager,
       { defoliationId, defoliationIds, latestSoilAnalysis },
     );
-    if (!managementPeriod) {
-      return null;
-    }
+    if (!managementPeriod) return null;
     return this.saveOrUpdateRecommendation(
       transactionalManager,
       managementPeriod,
@@ -205,16 +189,13 @@ class SavingRecommendationService {
       mannerOutputs,
       fallbackManureN,
     );
-
     this.applyCalculationsWithHandlers(calculations, nutrientHandlers);
   }
 
   async getCountryIdForCrop(transactionalManager, cropId) {
     const record = await transactionalManager.findOne(CropEntity, {
       where: { ID: cropId },
-      relations: {
-        Field: { Farm: true },
-      },
+      relations: { Field: { Farm: true } },
     });
     return record?.Field?.Farm?.CountryID;
   }
@@ -228,7 +209,6 @@ class SavingRecommendationService {
       latestSoilAnalysis?.PotassiumIndex != null;
     const hasMagnesiumSoilAnalysisInput =
       latestSoilAnalysis?.MagnesiumIndex != null;
-
     return {
       hasNitrogenSoilAnalysisInput,
       hasPhosphorusSoilAnalysisInput,
@@ -258,7 +238,6 @@ class SavingRecommendationService {
   ) {
     let availableNForNextDefoliation = null;
     let nextCropAvailableN = null;
-
     if (!mannerOutputs.length) {
       if (defoliationIds.length > 1) {
         availableNForNextDefoliation =
@@ -268,7 +247,6 @@ class SavingRecommendationService {
             cropData,
           );
       }
-
       if (defoliationId === 1) {
         nextCropAvailableN =
           await this.CalculateTotalAvailableNForPreviousYear.calculateAvailableNForPreviousYear(
@@ -278,67 +256,30 @@ class SavingRecommendationService {
           );
       }
     }
-
     return { availableNForNextDefoliation, nextCropAvailableN };
   }
 
-  createNutrientHandlers(
-    cropRecData,
-    countryId,
-    latestSoilAnalysis,
-    soilAnalysisFlags,
-    mannerOutputs,
-    fallbackManureN,
-  ) {
+  createNutrientHandlers(cropRecData,countryId,latestSoilAnalysis,soilAnalysisFlags,mannerOutputs,fallbackManureN) {
     return {
-      0: (c) =>
-        this.applyNitrogenCalculation(
-          c,
-          cropRecData,
-          mannerOutputs,
-          fallbackManureN,
-        ),
-      1: (c) =>
-        this.applyPhosphorusCalculation(
-          c,
-          cropRecData,
-          soilAnalysisFlags,
-          countryId,
-          latestSoilAnalysis,
-        ),
-      2: (c) =>
-        this.applyPotassiumCalculation(
-          c,
-          cropRecData,
-          soilAnalysisFlags,
-          countryId,
-          latestSoilAnalysis,
-        ),
-      3: (c) =>
-        this.applyMagnesiumCalculation(
-          c,
-          cropRecData,
-          soilAnalysisFlags,
-          countryId,
-          latestSoilAnalysis,
-        ),
+      0: (c) =>this.applyNitrogenCalculation( c,cropRecData,mannerOutputs,fallbackManureN),
+      1: (c) =>this.applyPhosphorusCalculation( c,cropRecData, soilAnalysisFlags, countryId, latestSoilAnalysis),
+      2: (c) =>this.applyPotassiumCalculation(c,cropRecData,soilAnalysisFlags,countryId,latestSoilAnalysis),
+      3: (c) =>this.applyMagnesiumCalculation(c,cropRecData,soilAnalysisFlags,countryId,latestSoilAnalysis),
       4: (c) => this.applySodiumCalculation(c, cropRecData, soilAnalysisFlags),
       5: (c) => this.applySulphurCalculation(c, cropRecData, soilAnalysisFlags),
-      6: (c) => this.applyLimeCalculation(c, cropRecData),
+      6: (c) => this.applyLimeCalculation(c, cropRecData)
     };
   }
 
   applyNitrogenCalculation(c, cropRecData, mannerOutputs, fallbackManureN) {
     const { availableNForNextDefoliation, nextCropAvailableN } =
       fallbackManureN;
-
     cropRecData.CropN = c.recommendation;
     cropRecData.FertilizerN = c.cropNeed;
     cropRecData.ManureN = c.manures;
-    if (!mannerOutputs.length) {
+    if (!mannerOutputs.length)
       cropRecData.ManureN =
         (availableNForNextDefoliation || 0) + (nextCropAvailableN || 0);
-    }
     cropRecData.NBalance = c.pkBalance;
     cropRecData.NIndex = c.index;
   }
@@ -435,22 +376,16 @@ class SavingRecommendationService {
     methodologyId,
     calc,
   ) {
-    if (!hasSoilAnalysisInput) {
-      return null;
-    }
-
+    if (!hasSoilAnalysisInput) return null;
     const isScotlandSacMethodology =
       countryId === CountryMapper.SCOTLAND && methodologyId === 2;
-
     return isScotlandSacMethodology ? calc.indexText : calc.index;
   }
 
   applyCalculationsWithHandlers(calculations, nutrientHandlers) {
     for (const calc of calculations) {
       const handler = nutrientHandlers[calc.nutrientId];
-      if (handler) {
-        handler(calc);
-      }
+      if (handler) handler(calc);
     }
   }
 
@@ -472,13 +407,11 @@ class SavingRecommendationService {
     const existing = await transactionalManager.findOne(RecommendationEntity, {
       where: { ManagementPeriodID: managementPeriod.ID },
     });
-
     const baseData = {
       ...cropRecData,
       Comments: `Reference Value: ${filteredData.referenceValue}\nVersion: ${filteredData.versionNumber}`,
       IsSacMethodology: latestSoilAnalysis?.PotassiumMethodologyID === 2,
     };
-
     if (existing) {
       return transactionalManager.save(RecommendationEntity, {
         ...existing,
@@ -487,7 +420,6 @@ class SavingRecommendationService {
         ModifiedOn: new Date(),
       });
     }
-
     return transactionalManager.save(RecommendationEntity, {
       ...baseData,
       ManagementPeriodID: managementPeriod.ID,
@@ -497,7 +429,6 @@ class SavingRecommendationService {
   }
 
   /* ==================SAVE MULTIPLE RECOMMENDATION COMMENTS ================ */
-
   async saveMultipleRecommendation(
     Recommendations,
     savedCrop,
@@ -511,42 +442,32 @@ class SavingRecommendationService {
       transactionalManager,
       nutrientRecommendationsData,
     );
-
     const groupedNotes = this.groupNotesByNutrientId(cropNotes);
-
     const savedComments = await this.saveOrUpdateComments(
       groupedNotes,
       cropSaveData,
       transactionalManager,
       userId,
     );
-
     Recommendations.push({
       Recommendation: cropSaveData,
       RecommendationComments: savedComments,
     });
-
     return Recommendations;
   }
 
   async getCropNotes(savedCrop, transactionalManager, nutrientData) {
     const adviceNotes = nutrientData.adviceNotes ?? [];
-
     const hasDefoliation = adviceNotes.some((note) => "defoliationId" in note);
-
-    if (!hasDefoliation) {
+    if (!hasDefoliation)
       return adviceNotes.filter(
         (note) => note.sequenceId === savedCrop.CropOrder,
       );
-    }
     const managementPeriod = await transactionalManager.findOne(
       ManagementPeriodEntity,
       { where: { ID: savedCrop.ManagementPeriodID } },
     );
-
-    if (!managementPeriod) {
-      return [];
-    }
+    if (!managementPeriod) return [];
     return adviceNotes.filter(
       (note) =>
         note.defoliationId === managementPeriod.Defoliation &&
@@ -557,9 +478,7 @@ class SavingRecommendationService {
   groupNotesByNutrientId(notes) {
     return notes.reduce((acc, note) => {
       const nutrientId = note.nutrientId;
-      if (!acc[nutrientId]) {
-        acc[nutrientId] = [];
-      }
+      if (!acc[nutrientId]) acc[nutrientId] = [];
       acc[nutrientId].push(note.note);
       return acc;
     }, {});
@@ -575,18 +494,13 @@ class SavingRecommendationService {
       RecommendationCommentEntity,
       { where: { RecommendationID: savedCrop?.ID } },
     );
-
     const processedNutrients = [];
     const results = [];
-
     for (const nutrientId of Object.keys(notesByNutrientId)) {
       const nutrient = Number(nutrientId);
       const commentText = notesByNutrientId[nutrientId].join(" <br/>");
-
       processedNutrients.push(nutrient);
-
       const existing = existingComments.find((c) => c.Nutrient === nutrient);
-
       if (existing) {
         existing.Comment = commentText;
         existing.ModifiedOn = new Date();
@@ -609,15 +523,11 @@ class SavingRecommendationService {
         );
       }
     }
-
     const toDelete = existingComments.filter(
       (c) => !processedNutrients.includes(c.Nutrient),
     );
-
-    if (toDelete.length) {
+    if (toDelete.length)
       await transactionalManager.remove(RecommendationCommentEntity, toDelete);
-    }
-
     return results;
   }
 
@@ -635,16 +545,10 @@ class SavingRecommendationService {
       savedRecommendations,
       context.hasDefoliationNotes,
     );
-    if (!recommendationsToSave.length) {
-      return [];
-    }
-
+    if (!recommendationsToSave.length) return [];
     const recomendationsAndComments = [];
     for (const recommendation of recommendationsToSave) {
-      if (!recommendation) {
-        continue;
-      }
-
+      if (!recommendation) continue;
       const recommendationsNotes = await this.saveMultipleRecommendation(
         Recommendations,
         cropData,
@@ -653,7 +557,6 @@ class SavingRecommendationService {
         context.nutrientRecommendationsData,
         context.userId,
       );
-
       recomendationsAndComments.push(recommendationsNotes);
     }
     return recomendationsAndComments;
@@ -679,19 +582,12 @@ class SavingRecommendationService {
   ) {
     const recommendations = [],
       finalRecommendations = [];
-
-    if (!dataMultipleCrops?.length) {
-      return recommendations;
-    }
-
-    if (!Array.isArray(nutrientRecommendationsData?.calculations)) {
+    if (!dataMultipleCrops?.length) return recommendations;
+    if (!Array.isArray(nutrientRecommendationsData?.calculations))
       return finalRecommendations;
-    }
-
     const hasDefoliationNotes = this.hasDefoliationAdviceNotes(
       nutrientRecommendationsData,
     );
-
     for (const cropData of dataMultipleCrops) {
       const recommendationsAndNotes = await this.processSingleCrop(
         cropData,
@@ -707,7 +603,6 @@ class SavingRecommendationService {
       );
       finalRecommendations.push(recommendationsAndNotes);
     }
-
     return finalRecommendations;
   }
 
@@ -716,16 +611,9 @@ class SavingRecommendationService {
     savedRecommendations,
     hasDefoliationNotes,
   ) {
-    if (!savedRecommendations?.length) {
-      return [];
-    }
-
+    if (!savedRecommendations?.length) return [];
     const isGrass = this.isGrassCrop(cropData);
-
-    if (isGrass && hasDefoliationNotes) {
-      return savedRecommendations;
-    }
-
+    if (isGrass && hasDefoliationNotes) return savedRecommendations;
     return [savedRecommendations[0]];
   }
 }
