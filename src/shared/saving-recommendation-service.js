@@ -290,89 +290,159 @@ class SavingRecommendationService {
     mannerOutputs,
     fallbackManureN,
   ) {
-    const normalizeManure = (value) => (value === 0 ? null : value);
-    const {
-      hasPhosphorusSoilAnalysisInput,
-      hasPotassiumSoilAnalysisInput,
-      hasMagnesiumSoilAnalysisInput,
-      hasAnySoilAnalysisNutrientInput,
-    } = soilAnalysisFlags;
+    return {
+      0: (c) =>
+        this.applyNitrogenCalculation(
+          c,
+          cropRecData,
+          mannerOutputs,
+          fallbackManureN,
+        ),
+      1: (c) =>
+        this.applyPhosphorusCalculation(
+          c,
+          cropRecData,
+          soilAnalysisFlags,
+          countryId,
+          latestSoilAnalysis,
+        ),
+      2: (c) =>
+        this.applyPotassiumCalculation(
+          c,
+          cropRecData,
+          soilAnalysisFlags,
+          countryId,
+          latestSoilAnalysis,
+        ),
+      3: (c) =>
+        this.applyMagnesiumCalculation(
+          c,
+          cropRecData,
+          soilAnalysisFlags,
+          countryId,
+          latestSoilAnalysis,
+        ),
+      4: (c) => this.applySodiumCalculation(c, cropRecData, soilAnalysisFlags),
+      5: (c) => this.applySulphurCalculation(c, cropRecData, soilAnalysisFlags),
+      6: (c) => this.applyLimeCalculation(c, cropRecData),
+    };
+  }
+
+  applyNitrogenCalculation(c, cropRecData, mannerOutputs, fallbackManureN) {
     const { availableNForNextDefoliation, nextCropAvailableN } =
       fallbackManureN;
 
-    return {
-      0: (c) => {
-        cropRecData.CropN = c.recommendation;
-        cropRecData.FertilizerN = c.cropNeed;
-        cropRecData.ManureN = c.manures;
-        if (!mannerOutputs.length) {
-          cropRecData.ManureN =
-            (availableNForNextDefoliation || 0) + (nextCropAvailableN || 0);
-        }
-        cropRecData.NBalance = c.pkBalance;
-        cropRecData.NIndex = c.index;
-      },
-      1: (c) => {
-        cropRecData.CropP2O5 = c.recommendation;
-        cropRecData.ManureP2O5 = normalizeManure(c.manures);
-        cropRecData.PBalance = c.pkBalance;
-        cropRecData.FertilizerP2O5 = c.cropNeed;
-        let pIndex = null;
-        if (hasPhosphorusSoilAnalysisInput) {
-          const isScotlandSacMethodology =
-            countryId === CountryMapper.SCOTLAND &&
-            latestSoilAnalysis?.PhosphorusMethodologyID === 2;
-          pIndex = isScotlandSacMethodology ? c.indexText : c.index;
-        }
-        cropRecData.PIndex = pIndex;
-      },
-      2: (c) => {
-        cropRecData.CropK2O = c.recommendation;
-        cropRecData.ManureK2O = normalizeManure(c.manures);
-        cropRecData.KBalance = c.pkBalance;
-        cropRecData.FertilizerK2O = c.cropNeed;
-        let kIndex = null;
-        if (hasPotassiumSoilAnalysisInput) {
-          const isScotlandSacMethodology =
-            countryId === CountryMapper.SCOTLAND &&
-            latestSoilAnalysis?.PotassiumMethodologyID === 2;
-          kIndex = isScotlandSacMethodology ? c.indexText : c.index;
-        }
-        cropRecData.KIndex = kIndex;
-      },
-      3: (c) => {
-        cropRecData.CropMgO = c.recommendation;
-        cropRecData.MgBalance = c.pkBalance;
-        cropRecData.FertilizerMgO = c.cropNeed;
-        let mgIndex = null;
-        if (hasMagnesiumSoilAnalysisInput) {
-          const isScotlandSacMethodology =
-            countryId === CountryMapper.SCOTLAND &&
-            latestSoilAnalysis?.MagnesiumMethodologyID === 2;
-          mgIndex = isScotlandSacMethodology ? c.indexText : c.index;
-        }
-        cropRecData.MgIndex = mgIndex;
-      },
-      4: (c) => {
-        cropRecData.CropNa2O = c.recommendation;
-        cropRecData.NaBalance = c.pkBalance;
-        cropRecData.FertilizerNa2O = c.cropNeed;
-        cropRecData.NaIndex = hasAnySoilAnalysisNutrientInput ? c.index : null;
-      },
-      5: (c) => {
-        cropRecData.CropSO3 = c.recommendation;
-        cropRecData.ManureSO3 = normalizeManure(c.manures);
-        cropRecData.SBalance = c.pkBalance;
-        cropRecData.FertilizerSO3 = c.cropNeed;
-        cropRecData.SIndex = hasAnySoilAnalysisNutrientInput ? c.index : null;
-      },
-      6: (c) => {
-        cropRecData.CropLime = c.recommendation;
-        cropRecData.LimeBalance = c.pkBalance;
-        cropRecData.FertilizerLime = c.cropNeed;
-        cropRecData.PH = c?.soilpH != null ? c.soilpH.toString() : null;
-      },
-    };
+    cropRecData.CropN = c.recommendation;
+    cropRecData.FertilizerN = c.cropNeed;
+    cropRecData.ManureN = c.manures;
+    if (!mannerOutputs.length) {
+      cropRecData.ManureN =
+        (availableNForNextDefoliation || 0) + (nextCropAvailableN || 0);
+    }
+    cropRecData.NBalance = c.pkBalance;
+    cropRecData.NIndex = c.index;
+  }
+
+  applyPhosphorusCalculation(
+    c,
+    cropRecData,
+    soilAnalysisFlags,
+    countryId,
+    latestSoilAnalysis,
+  ) {
+    cropRecData.CropP2O5 = c.recommendation;
+    cropRecData.ManureP2O5 = this.normalizeManure(c.manures);
+    cropRecData.PBalance = c.pkBalance;
+    cropRecData.FertilizerP2O5 = c.cropNeed;
+    cropRecData.PIndex = this.resolveIndexedNutrientValue(
+      soilAnalysisFlags.hasPhosphorusSoilAnalysisInput,
+      countryId,
+      latestSoilAnalysis?.PhosphorusMethodologyID,
+      c,
+    );
+  }
+
+  applyPotassiumCalculation(
+    c,
+    cropRecData,
+    soilAnalysisFlags,
+    countryId,
+    latestSoilAnalysis,
+  ) {
+    cropRecData.CropK2O = c.recommendation;
+    cropRecData.ManureK2O = this.normalizeManure(c.manures);
+    cropRecData.KBalance = c.pkBalance;
+    cropRecData.FertilizerK2O = c.cropNeed;
+    cropRecData.KIndex = this.resolveIndexedNutrientValue(
+      soilAnalysisFlags.hasPotassiumSoilAnalysisInput,
+      countryId,
+      latestSoilAnalysis?.PotassiumMethodologyID,
+      c,
+    );
+  }
+
+  applyMagnesiumCalculation(
+    c,
+    cropRecData,
+    soilAnalysisFlags,
+    countryId,
+    latestSoilAnalysis,
+  ) {
+    cropRecData.CropMgO = c.recommendation;
+    cropRecData.MgBalance = c.pkBalance;
+    cropRecData.FertilizerMgO = c.cropNeed;
+    cropRecData.MgIndex = this.resolveIndexedNutrientValue(
+      soilAnalysisFlags.hasMagnesiumSoilAnalysisInput,
+      countryId,
+      latestSoilAnalysis?.MagnesiumMethodologyID,
+      c,
+    );
+  }
+
+  applySodiumCalculation(c, cropRecData, soilAnalysisFlags) {
+    cropRecData.CropNa2O = c.recommendation;
+    cropRecData.NaBalance = c.pkBalance;
+    cropRecData.FertilizerNa2O = c.cropNeed;
+    cropRecData.NaIndex = soilAnalysisFlags.hasAnySoilAnalysisNutrientInput
+      ? c.index
+      : null;
+  }
+
+  applySulphurCalculation(c, cropRecData, soilAnalysisFlags) {
+    cropRecData.CropSO3 = c.recommendation;
+    cropRecData.ManureSO3 = this.normalizeManure(c.manures);
+    cropRecData.SBalance = c.pkBalance;
+    cropRecData.FertilizerSO3 = c.cropNeed;
+    cropRecData.SIndex = soilAnalysisFlags.hasAnySoilAnalysisNutrientInput
+      ? c.index
+      : null;
+  }
+
+  applyLimeCalculation(c, cropRecData) {
+    cropRecData.CropLime = c.recommendation;
+    cropRecData.LimeBalance = c.pkBalance;
+    cropRecData.FertilizerLime = c.cropNeed;
+    cropRecData.PH = c?.soilpH != null ? c.soilpH.toString() : null;
+  }
+
+  normalizeManure(value) {
+    return value === 0 ? null : value;
+  }
+
+  resolveIndexedNutrientValue(
+    hasSoilAnalysisInput,
+    countryId,
+    methodologyId,
+    calc,
+  ) {
+    if (!hasSoilAnalysisInput) {
+      return null;
+    }
+
+    const isScotlandSacMethodology =
+      countryId === CountryMapper.SCOTLAND && methodologyId === 2;
+
+    return isScotlandSacMethodology ? calc.indexText : calc.index;
   }
 
   applyCalculationsWithHandlers(calculations, nutrientHandlers) {
