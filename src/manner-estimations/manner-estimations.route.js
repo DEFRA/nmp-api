@@ -7,6 +7,9 @@ const {
   CheckMannerEstimationExistsDto,
   CopyMannerEstimationDto,
 } = require("./dto/create-manner-estimation.dto");
+const {
+  UpdateMannerEstimationWithApplicationsByIdDto,
+} = require("./dto/update-manner-estimation-with-applications-by-id.dto");
 const { formatErrorResponse } = require("../interceptor/responseFormatter");
 const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 const { validationFailAction } = require("../shared/validateFailSafeAction");
@@ -57,6 +60,23 @@ module.exports = [
       description: "Update Manner Estimation and related applications",
       validate: {
         payload: UpdateMannerEstimationOnlyDto,
+        failAction: validationFailAction,
+      },
+    },
+  },
+  {
+    method: "PUT",
+    path: "/manner-estimations/by-id-with-applications",
+    handler: async (request, h) => {
+      const controller = new MannerEstimationsController(request, h);
+      return controller.updateMannerEstimationAndApplicationsById();
+    },
+    options: {
+      tags: ["api", mannerEstimations],
+      description:
+        "Update Manner Estimation and multiple applications by their IDs",
+      validate: {
+        payload: UpdateMannerEstimationWithApplicationsByIdDto,
         failAction: validationFailAction,
       },
     },
