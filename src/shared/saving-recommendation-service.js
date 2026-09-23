@@ -317,35 +317,41 @@ class SavingRecommendationService {
         cropRecData.ManureP2O5 = normalizeManure(c.manures);
         cropRecData.PBalance = c.pkBalance;
         cropRecData.FertilizerP2O5 = c.cropNeed;
-        cropRecData.PIndex = hasPhosphorusSoilAnalysisInput
-          ? countryId === CountryMapper.SCOTLAND &&
-            latestSoilAnalysis?.PhosphorusMethodologyID === 2
-            ? c.indexText
-            : c.index
-          : null;
+        let pIndex = null;
+        if (hasPhosphorusSoilAnalysisInput) {
+          const isScotlandSacMethodology =
+            countryId === CountryMapper.SCOTLAND &&
+            latestSoilAnalysis?.PhosphorusMethodologyID === 2;
+          pIndex = isScotlandSacMethodology ? c.indexText : c.index;
+        }
+        cropRecData.PIndex = pIndex;
       },
       2: (c) => {
         cropRecData.CropK2O = c.recommendation;
         cropRecData.ManureK2O = normalizeManure(c.manures);
         cropRecData.KBalance = c.pkBalance;
         cropRecData.FertilizerK2O = c.cropNeed;
-        cropRecData.KIndex = hasPotassiumSoilAnalysisInput
-          ? countryId === CountryMapper.SCOTLAND &&
-            latestSoilAnalysis?.PotassiumMethodologyID === 2
-            ? c.indexText
-            : c.index
-          : null;
+        let kIndex = null;
+        if (hasPotassiumSoilAnalysisInput) {
+          const isScotlandSacMethodology =
+            countryId === CountryMapper.SCOTLAND &&
+            latestSoilAnalysis?.PotassiumMethodologyID === 2;
+          kIndex = isScotlandSacMethodology ? c.indexText : c.index;
+        }
+        cropRecData.KIndex = kIndex;
       },
       3: (c) => {
         cropRecData.CropMgO = c.recommendation;
         cropRecData.MgBalance = c.pkBalance;
         cropRecData.FertilizerMgO = c.cropNeed;
-        cropRecData.MgIndex = hasMagnesiumSoilAnalysisInput
-          ? countryId === CountryMapper.SCOTLAND &&
-            latestSoilAnalysis?.MagnesiumMethodologyID === 2
-            ? c.indexText
-            : c.index
-          : null;
+        let mgIndex = null;
+        if (hasMagnesiumSoilAnalysisInput) {
+          const isScotlandSacMethodology =
+            countryId === CountryMapper.SCOTLAND &&
+            latestSoilAnalysis?.MagnesiumMethodologyID === 2;
+          mgIndex = isScotlandSacMethodology ? c.indexText : c.index;
+        }
+        cropRecData.MgIndex = mgIndex;
       },
       4: (c) => {
         cropRecData.CropNa2O = c.recommendation;
