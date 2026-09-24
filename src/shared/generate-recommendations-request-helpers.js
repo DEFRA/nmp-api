@@ -15,25 +15,15 @@ const {
   ManagementPeriodEntity,
 } = require("../db/entity/management-period.entity");
 const { StaticStrings } = require("./static.string");
+const { SwardTypeMapper } = require("../constants/sward-type-mapper");
 
 const recommendationRequestHelpers = {
   async calculateCropPOfftake(latestSoilAnalysis, cropTypeId, cropYield) {
     const potatoYield = 50;
-    if (!latestSoilAnalysis?.PhosphorusIndex) {
-      return 0;
-    }
-
+    if (!latestSoilAnalysis?.PhosphorusIndex) {return 0}
     const isLowPIndex = latestSoilAnalysis.PhosphorusIndex < 4;
-    const isPotatoCrop =
-      cropTypeId === CropTypeMapper.POTATOVARIETYGROUP1 ||
-      cropTypeId === CropTypeMapper.POTATOVARIETYGROUP2 ||
-      cropTypeId === CropTypeMapper.POTATOVARIETYGROUP3 ||
-      cropTypeId === CropTypeMapper.POTATOVARIETYGROUP4;
-
-    if (!isLowPIndex || !isPotatoCrop) {
-      return 0;
-    }
-
+    const isPotatoCrop = cropTypeId === CropTypeMapper.POTATOVARIETYGROUP1 || cropTypeId === CropTypeMapper.POTATOVARIETYGROUP2 || cropTypeId === CropTypeMapper.POTATOVARIETYGROUP3 || cropTypeId === CropTypeMapper.POTATOVARIETYGROUP4;
+    if (!isLowPIndex || !isPotatoCrop) {return 0}
     return cropYield ?? potatoYield;
   },
 
@@ -41,9 +31,7 @@ const recommendationRequestHelpers = {
     try {
       const pkBalanceData = await transactionalManager.findOne(
         PKBalanceEntity,
-        {
-          where: { Year: year, FieldID: fieldID },
-        },
+        {where: { Year: year, FieldID: fieldID }}
       );
       return pkBalanceData;
     } catch (error) {
@@ -56,7 +44,7 @@ const recommendationRequestHelpers = {
     const excessRainfall = await transactionalManager.findOne(
       ExcessRainfallsEntity,
       {
-        where: { FarmID: farmId, Year: year },
+        where: { FarmID: farmId, Year: year }
       },
     );
     return excessRainfall ?? null;
@@ -66,24 +54,15 @@ const recommendationRequestHelpers = {
     dataMultipleCrops,
     field,
     transactionalManager,
-    cropTypesList,
+    cropTypesList
   ) {
     const arableBody = [];
-    const crops = Array.isArray(dataMultipleCrops)
-      ? dataMultipleCrops
-      : [dataMultipleCrops];
-
+    const crops = Array.isArray(dataMultipleCrops) ? dataMultipleCrops : [dataMultipleCrops];
     for (const crop of crops) {
-      const currentCropType = cropTypesList.find(
-        (cT) => cT.cropTypeId === crop.CropTypeID,
-      );
+      const currentCropType = cropTypesList.find((cT) => cT.cropTypeId === crop.CropTypeID);
       if (currentCropType?.cropGroupId == null) {
-        console.log(
-          `Invalid CropTypeId for crop having field name ${field.FieldName}`,
-          StaticStrings.HTTP_STATUS_BAD_REQUEST,
-        );
+        console.log(`Invalid CropTypeId for crop having field name ${field.FieldName}`,StaticStrings.HTTP_STATUS_BAD_REQUEST);
       }
-
       let expectedYield = crop.Yield;
       if (expectedYield == null) {
         const cropTypeLinkingData = await transactionalManager.findOne(
@@ -107,47 +86,35 @@ const recommendationRequestHelpers = {
         });
       }
     }
-
     return arableBody.sort((a, b) => a.cropOrder - b.cropOrder);
   },
 
   isScotlandHighCloverFreshWeightCase(rb209CountryId, swardTypeId) {
-    const freshWeightSwardTypeIds = [3, 6];
+    const freshWeightSwardTypeIds = [SwardTypeMapper.REDCLOVER, SwardTypeMapper.GRASSWITHHIGHCLOVER];
     return (
       rb209CountryId === CountryMapper.SCOTLAND &&
       freshWeightSwardTypeIds.includes(swardTypeId)
     );
   },
-
   shouldIncludeGrassYield(rb209CountryId, swardTypeId) {
     if (rb209CountryId === CountryMapper.SCOTLAND) {
-      return swardTypeId === 5;
+      return swardTypeId === SwardTypeMapper.GRASSORGRASSWITHLOWCLOVER;
     }
-
     return true;
   },
-
   async getManagementPeriodsForGrassCrop(grassCrop, transactionalManager) {
-    if (Array.isArray(grassCrop?.ManagementPeriods)) {
-      return grassCrop.ManagementPeriods;
-    }
-
+    if (Array.isArray(grassCrop?.ManagementPeriods)) {return grassCrop.ManagementPeriods}
     const managementPeriods = await transactionalManager.find(
       ManagementPeriodEntity,
       {
         where: { CropID: grassCrop.ID },
       },
     );
-
     return managementPeriods ?? [];
   },
 
   async buildFreshWeightYieldsForGrassCrop(grassCrop, transactionalManager) {
-    const managementPeriods = await this.getManagementPeriodsForGrassCrop(
-      grassCrop,
-      transactionalManager,
-    );
-
+    const managementPeriods = await this.getManagementPeriodsForGrassCrop(grassCrop,transactionalManager);
     return managementPeriods
       .map((managementPeriod) => ({
         position: managementPeriod.Defoliation,
@@ -155,51 +122,22 @@ const recommendationRequestHelpers = {
       }))
       .sort((a, b) => a.position - b.position);
   },
-
   shouldCalculateSiteClassId(rb209CountryId, grassCrop) {
-    return (
-      rb209CountryId === CountryMapper.SCOTLAND &&
-      grassCrop?.CropTypeID === CropTypeMapper.GRASS
-    );
+    return (rb209CountryId === CountryMapper.SCOTLAND && grassCrop?.CropTypeID === CropTypeMapper.GRASS);
   },
 
   extractSiteClassId(siteClassResult) {
-    if (typeof siteClassResult === "number") {
-      return siteClassResult;
-    }
-
-    if (!siteClassResult || typeof siteClassResult !== "object") {
-      return null;
-    }
-
-    if (typeof siteClassResult.siteClassId === "number") {
-      return siteClassResult.siteClassId;
-    }
-
-    if (typeof siteClassResult.SiteClassID === "number") {
-      return siteClassResult.SiteClassID;
-    }
-
-    if (typeof siteClassResult.value === "number") {
-      return siteClassResult.value;
-    }
-
+    if (typeof siteClassResult === "number") {return siteClassResult}
+    if (!siteClassResult || typeof siteClassResult !== "object") { return null}
+    if (typeof siteClassResult.siteClassId === "number") {return siteClassResult.siteClassId}
+    if (typeof siteClassResult.SiteClassID === "number") {return siteClassResult.SiteClassID}
+    if (typeof siteClassResult.value === "number") {return siteClassResult.value}
     return null;
   },
 
-  async resolveGrassSiteClassId(
-    field,
-    crop,
-    request,
-    transactionalManager,
-    rb209CountryId,
-  ) {
-    if (!this.shouldCalculateSiteClassId(rb209CountryId, crop)) {
-      return null;
-    }
-
-    const siteClassResult =
-      await this.siteClassService.calculateSiteClassIdByFieldId(
+  async resolveGrassSiteClassId(field,crop,request,transactionalManager,rb209CountryId) {
+    if (!this.shouldCalculateSiteClassId(rb209CountryId, crop)) {return null}
+    const siteClassResult = await this.siteClassService.calculateSiteClassIdByFieldId(
         field.ID,
         request,
         transactionalManager,
@@ -208,18 +146,10 @@ const recommendationRequestHelpers = {
           rainfall: field.Rainfall,
         },
       );
-
     return this.extractSiteClassId(siteClassResult);
   },
 
-  async buildGrassObject(
-    field,
-    crop,
-    grassGrowthClass,
-    request,
-    transactionalManager,
-    rb209CountryId,
-  ) {
+  async buildGrassObject(field,crop,grassGrowthClass,request,transactionalManager,rb209CountryId) {
     let grassCrop = null;
     if (crop.CropTypeID === CropTypeMapper.GRASS) {
       grassCrop = crop;
@@ -233,38 +163,12 @@ const recommendationRequestHelpers = {
         },
       });
     }
-
-    if (!grassCrop) {
-      return {};
-    }
-
-    if (
-      grassCrop.CropOrder === CropOrderMapper.FIRSTCROP ||
-      grassCrop.CropOrder === CropOrderMapper.SECONDCROP
-    ) {
-      const shouldAddFreshWeightYields =
-        this.isScotlandHighCloverFreshWeightCase(
-          rb209CountryId,
-          grassCrop.SwardTypeID,
-        );
-      const shouldIncludeYield = this.shouldIncludeGrassYield(
-        rb209CountryId,
-        grassCrop.SwardTypeID,
-      );
-      const siteClassId = await this.resolveGrassSiteClassId(
-        field,
-        grassCrop,
-        request,
-        transactionalManager,
-        rb209CountryId,
-      );
-      const freshWeightYields = shouldAddFreshWeightYields
-        ? await this.buildFreshWeightYieldsForGrassCrop(
-            grassCrop,
-            transactionalManager,
-          )
-        : null;
-
+    if (!grassCrop) {return {}}
+    if (grassCrop.CropOrder === CropOrderMapper.FIRSTCROP || grassCrop.CropOrder === CropOrderMapper.SECONDCROP) {
+      const shouldAddFreshWeightYields = this.isScotlandHighCloverFreshWeightCase(rb209CountryId,grassCrop.SwardTypeID);
+      const shouldIncludeYield = this.shouldIncludeGrassYield(rb209CountryId, grassCrop.SwardTypeID);
+      const siteClassId = await this.resolveGrassSiteClassId(field,grassCrop,request,transactionalManager,rb209CountryId);
+      const freshWeightYields = shouldAddFreshWeightYields ? await this.buildFreshWeightYieldsForGrassCrop(grassCrop,transactionalManager) : null;
       return {
         cropOrder: grassCrop.CropOrder,
         swardTypeId: grassCrop.SwardTypeID,
@@ -277,60 +181,35 @@ const recommendationRequestHelpers = {
         seasonId: grassCrop.Establishment,
       };
     }
-
     return {};
   },
 
   async resolveCrops(crop, transactionalManager) {
-    if (Array.isArray(crop)) {
-      return crop;
-    }
-
+    if (Array.isArray(crop)) {return crop}
     const crops = await transactionalManager.find(CropEntity, {
       where: { FieldID: crop.FieldID, Year: crop.Year },
     });
-
-    if (!crops.length && crop?.CropTypeID) {
-      return [crop];
-    }
-
+    if (!crops.length && crop?.CropTypeID) {return [crop]}
     return crops;
   },
 
   async determineFieldType(crops) {
     if (crops.length === 1) {
       const cropTypeID = crops[0].CropTypeID;
-      if (cropTypeID === CropTypeMapper.GRASS) {
-        return FieldTypeMapper.GRASS;
-      }
-
+      if (cropTypeID === CropTypeMapper.GRASS) {return FieldTypeMapper.GRASS}
       return FieldTypeMapper.ARABLE;
     }
 
     if (crops.length === 2) {
       const cropTypeIDs = crops.map((c) => c.CropTypeID);
-      const isBothGrass = cropTypeIDs.every(
-        (id) => id === CropTypeMapper.GRASS,
-      );
+      const isBothGrass = cropTypeIDs.every((id) => id === CropTypeMapper.GRASS);
       const isOneGrass = cropTypeIDs.includes(CropTypeMapper.GRASS);
-      const isOtherValid = cropTypeIDs.some(
-        (id) => id !== CropTypeMapper.GRASS,
-      );
-      const isBothArable = cropTypeIDs.every(
-        (id) => id !== CropTypeMapper.GRASS,
-      );
-
-      if (isBothGrass) {
-        return FieldTypeMapper.GRASS;
-      }
-      if (isOneGrass && isOtherValid) {
-        return FieldTypeMapper.BOTH;
-      }
-      if (isBothArable) {
-        return FieldTypeMapper.ARABLE;
-      }
+      const isOtherValid = cropTypeIDs.some((id) => id !== CropTypeMapper.GRASS);
+      const isBothArable = cropTypeIDs.every((id) => id !== CropTypeMapper.GRASS);
+      if (isBothGrass) {return FieldTypeMapper.GRASS}
+      if (isOneGrass && isOtherValid) {return FieldTypeMapper.BOTH}
+      if (isBothArable) {return FieldTypeMapper.ARABLE}
     }
-
     return FieldTypeMapper.ARABLE;
   },
 
@@ -365,19 +244,9 @@ const recommendationRequestHelpers = {
 
   buildSoilAnalysisData(analysis) {
     const soilAnalysisData = {};
-
-    this.addSoilAnalysisFieldIfPresent(
-      soilAnalysisData,
-      "soilAnalysisDate",
-      analysis.Date,
-    );
+    this.addSoilAnalysisFieldIfPresent(soilAnalysisData,"soilAnalysisDate",analysis.Date);
     this.addSoilAnalysisFieldIfPresent(soilAnalysisData, "soilpH", analysis.PH);
-    this.addSoilAnalysisFieldIfPresent(
-      soilAnalysisData,
-      "sulphurDeficient",
-      analysis.SulphurDeficient,
-    );
-
+    this.addSoilAnalysisFieldIfPresent(soilAnalysisData,"sulphurDeficient",analysis.SulphurDeficient);
     const nutrientFieldMappings = [
       {
         value: analysis.PhosphorusIndex ?? analysis.PhosphorusStatus,
@@ -405,34 +274,21 @@ const recommendationRequestHelpers = {
         soilAnalysisData[mapping.methodologyKey] = mapping.methodologyValue;
       }
     });
-
     return soilAnalysisData;
   },
 
   async addSoilAnalysesToRequest(soilAnalysis, nutrientRecommendationReqBody) {
-    if (!soilAnalysis || !Array.isArray(soilAnalysis)) {
-      return;
-    }
-
+    if (!soilAnalysis || !Array.isArray(soilAnalysis)) {return}
     soilAnalysis.forEach((analysis) => {
       const soilAnalysisData = this.buildSoilAnalysisData(analysis);
-
       if (Object.keys(soilAnalysisData).length > 0) {
-        nutrientRecommendationReqBody.field.soil.soilAnalyses.push(
-          soilAnalysisData,
-        );
+        nutrientRecommendationReqBody.field.soil.soilAnalyses.push(soilAnalysisData);
       }
     });
   },
 
-  async addSnsAnalysesToRequest(
-    snsAnalysesData,
-    nutrientRecommendationReqBody,
-  ) {
-    if (!snsAnalysesData) {
-      return;
-    }
-
+  async addSnsAnalysesToRequest(snsAnalysesData,nutrientRecommendationReqBody) {
+    if (!snsAnalysesData) {return}
     const addSingleSnsAnalysis = (analysis) => {
       const snsAnalysisData = {
         ...(analysis.SampleDate != null && {
@@ -440,20 +296,14 @@ const recommendationRequestHelpers = {
         }),
         ...(analysis.SoilNitrogenSupplyIndex != null && {
           snsIndexId: analysis.SoilNitrogenSupplyIndex,
-          snsMethodologyId: 4,
+          snsMethodologyId: 4
         }),
         ...(analysis.SNSCropOrder != null && {
-          SNSCropOrder: analysis.SNSCropOrder,
+          SNSCropOrder: analysis.SNSCropOrder
         }),
       };
-
-      if (Object.keys(snsAnalysisData).length > 0) {
-        nutrientRecommendationReqBody.field.soil.soilAnalyses.push(
-          snsAnalysisData,
-        );
-      }
+      if (Object.keys(snsAnalysisData).length > 0) {nutrientRecommendationReqBody.field.soil.soilAnalyses.push(snsAnalysisData)}
     };
-
     if (Array.isArray(snsAnalysesData)) {
       snsAnalysesData.forEach(addSingleSnsAnalysis);
     } else {
@@ -499,15 +349,7 @@ const recommendationRequestHelpers = {
     };
   },
 
-  async getRecommendationRequestContext(
-    field,
-    crop,
-    dataMultipleCrops,
-    request,
-    transactionalManager,
-    cropTypesList,
-    prefetchContext = null,
-  ) {
+  async getRecommendationRequestContext(field,crop,dataMultipleCrops,request,transactionalManager,cropTypesList,prefetchContext = null) {
     let grassGrowthClass = null;
     if (crop.CropTypeID === CropTypeMapper.GRASS) {
       grassGrowthClass =
