@@ -50,12 +50,7 @@ const recommendationRequestHelpers = {
     return excessRainfall ?? null;
   },
 
-  async buildArableBody(
-    dataMultipleCrops,
-    field,
-    transactionalManager,
-    cropTypesList
-  ) {
+  async buildArableBody(dataMultipleCrops,field,transactionalManager,cropTypesList) {
     const arableBody = [];
     const crops = Array.isArray(dataMultipleCrops) ? dataMultipleCrops : [dataMultipleCrops];
     for (const crop of crops) {
