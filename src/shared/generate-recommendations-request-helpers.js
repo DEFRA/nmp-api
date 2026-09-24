@@ -122,9 +122,7 @@ const recommendationRequestHelpers = {
       }))
       .sort((a, b) => a.position - b.position);
   },
-  shouldCalculateSiteClassId(rb209CountryId, grassCrop) {
-    return (rb209CountryId === CountryMapper.SCOTLAND && grassCrop?.CropTypeID === CropTypeMapper.GRASS);
-  },
+  shouldCalculateSiteClassId(rb209CountryId, grassCrop) {return (rb209CountryId === CountryMapper.SCOTLAND && grassCrop?.CropTypeID === CropTypeMapper.GRASS)},
 
   extractSiteClassId(siteClassResult) {
     if (typeof siteClassResult === "number") {return siteClassResult}
