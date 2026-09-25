@@ -188,7 +188,7 @@ class SoilAnalysesService extends BaseService {
       );
 
       if (!existingSoilAnalysis) {
-        throw new Error(`Soil Analysis with ID ${soilAnalysisId} not found`);
+        console.log(`Soil Analysis with ID ${soilAnalysisId} not found`);
       }
 
       const { CreatedByID, CreatedOn, ...updatedData } =
@@ -210,7 +210,7 @@ class SoilAnalysesService extends BaseService {
       );
 
       if (result.affected === 0) {
-        throw new Error(`Soil Analysis with ID ${soilAnalysisId} not found`);
+        console.log(`Soil Analysis with ID ${soilAnalysisId} not found`);
       }
 
       const SoilAnalysis = await this.findSoilAnalysisByIdHelper(
@@ -369,7 +369,7 @@ class SoilAnalysesService extends BaseService {
       );
 
       if (soilAnalysisToDelete == null) {
-        throw new Error(`Soil Analysis with ID ${soilAnalysisId} not found`);
+       console.log(`Soil Analysis with ID ${soilAnalysisId} not found`);
       }
 
       const storedProcedure =
