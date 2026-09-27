@@ -308,35 +308,10 @@ class GenerateRecommendations {
   }
 
   async processStandardCropRecommendation(cropContext) {
-    const {
-      crop,
-      crops,
-      soilAnalysisRecords,
-      snsAnalysesData,
-      mannerOutputs,
-      latestSoilAnalysis,
-      previousCrop,
-      fieldRelatedData,
-      request,
-      transactionalManager,
-      cropTypesList,
-      fertiliserData,
-      userId,
-      cropPOfftake,
-      recommendationApiResponseCache,
-    } = cropContext;
+    const {crop,crops,soilAnalysisRecords,snsAnalysesData,mannerOutputs,latestSoilAnalysis,previousCrop,fieldRelatedData,request,transactionalManager,cropTypesList,fertiliserData,userId,cropPOfftake,recommendationApiResponseCache} = cropContext;
     const analysis = { soilAnalysisRecords, snsAnalysesData };
     const singleAndMultipleCrops = { crops, crop };
-    const nutrientRecommendationnReqBody =
-      await this.buildNutrientRecommendationReqBody(
-        fieldRelatedData,
-        analysis,
-        singleAndMultipleCrops,
-        mannerOutputs,
-        request,
-        transactionalManager,
-        cropTypesList,
-      );
+    const nutrientRecommendationnReqBody = await this.buildNutrientRecommendationReqBody(fieldRelatedData,analysis,singleAndMultipleCrops,mannerOutputs,request,transactionalManager,cropTypesList);
     let nutrientRecommendationsData;
     const requestFingerprint = buildRecommendationRequestFingerprint(
       nutrientRecommendationnReqBody,
@@ -349,9 +324,7 @@ class GenerateRecommendations {
       );
       recommendationApiResponseCache.set(requestFingerprint, response);
     }
-    const hasValidCalculations =
-      Array.isArray(response?.data?.calculations) &&
-      response.data.calculations.length > 0;
+    const hasValidCalculations = Array.isArray(response?.data?.calculations) && response.data.calculations.length > 0;
     if (response.status === StatusCodeMapper.SUCCESS && hasValidCalculations) {
       nutrientRecommendationsData = response.data;
       console.log(
@@ -372,36 +345,10 @@ class GenerateRecommendations {
         throw buildRb209FailureError(response, crop.ID);
       }
     }
-    const recommendation =
-      await this.savingRecommendationService.processAndSaveRecommendations(
-        crops,
-        latestSoilAnalysis,
-        nutrientRecommendationsData,
-        transactionalManager,
-        userId,
-        mannerOutputs,
-      );
-    const saveAndUpdatePKBalance =
-      await this.CalculatePKBalance.createOrUpdatePKBalance(
-        crop,
-        nutrientRecommendationsData,
-        userId,
-        fertiliserData,
-        transactionalManager,
-        { cropPOfftake, latestSoilAnalysis },
-        previousCrop,
-      );
-    if (saveAndUpdatePKBalance) {
-      await transactionalManager.save(
-        PKBalanceEntity,
-        saveAndUpdatePKBalance.saveAndUpdatePKBalance,
-      );
-    }
-    return {
-      cropId: crop.ID,
-      recommendations: recommendation,
-      pkBalance: saveAndUpdatePKBalance ?? null,
-    };
+    const recommendation = await this.savingRecommendationService.processAndSaveRecommendations(crops,latestSoilAnalysis,nutrientRecommendationsData,transactionalManager,userId, mannerOutputs);
+    const saveAndUpdatePKBalance = await this.CalculatePKBalance.createOrUpdatePKBalance(crop,nutrientRecommendationsData,userId,fertiliserData,transactionalManager,{ cropPOfftake, latestSoilAnalysis },previousCrop);
+    if (saveAndUpdatePKBalance) {await transactionalManager.save(PKBalanceEntity,saveAndUpdatePKBalance.saveAndUpdatePKBalance)}
+    return { cropId: crop.ID, recommendations: recommendation, pkBalance: saveAndUpdatePKBalance ?? null };
   }
   async processCropRecommendation(cropContext) {
     const {
