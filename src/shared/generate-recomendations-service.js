@@ -130,32 +130,12 @@ class GenerateRecommendations {
     this.siteClassService = new SiteClassService();
   }
 
-  async loadPrefetchRawData(
-    fieldID,
-    Year,
-    crops,
-    fieldRelatedData,
-    transactionalManager,
-  ) {
-    const threeYearsHistory = 3,
-      twoYearsHistory = 2,
-      oneYearHistory = 1;
+  async loadPrefetchRawData(fieldID,Year,crops,fieldRelatedData,transactionalManager) {
+    const threeYearsHistory = 3,twoYearsHistory = 2,oneYearHistory = 1;
     const cropIds = crops.map((crop) => crop.ID);
     const cropTypeIds = [...new Set(crops.map((crop) => crop.CropTypeID))];
-    const historyYears = [
-      Year - oneYearHistory,
-      Year - twoYearsHistory,
-      Year - threeYearsHistory,
-    ];
-    const [
-      managementPeriods,
-      snsAnalyses,
-      allOrganicManures,
-      cropTypeLinkings,
-      soilTypeTextureData,
-      historicalCrops,
-      historicalPreviousCroppings,
-    ] = await Promise.all([
+    const historyYears = [Year - oneYearHistory,Year - twoYearsHistory,Year - threeYearsHistory];
+    const [managementPeriods,snsAnalyses,allOrganicManures,cropTypeLinkings,soilTypeTextureData,historicalCrops,historicalPreviousCroppings] = await Promise.all([
       cropIds.length
         ? transactionalManager.find(ManagementPeriodEntity, {
             where: { CropID: In(cropIds) },
@@ -278,33 +258,13 @@ class GenerateRecommendations {
 
   async getGenerateRecommendationsContext(fieldID, Year, transactionalManager) {
     const cropTypesList = await this.rB209ArableService.getCropTypesList();
-    const fieldRelatedData = await this.fieldRelated.getFieldAndCountryData(
-      fieldID,
-      transactionalManager,
-    );
+    const fieldRelatedData = await this.fieldRelated.getFieldAndCountryData(fieldID,transactionalManager);
     const crops = await transactionalManager.find(CropEntity, {
       where: { FieldID: fieldID, Year: Year },
     });
-    const fertiliserData =
-      await this.totalFertiliserByField.getTotalFertiliserByFieldAndYear(
-        transactionalManager,
-        crops,
-      );
-    const prefetchContext = await this.buildPrefetchContext(
-      fieldID,
-      Year,
-      crops,
-      fieldRelatedData,
-      transactionalManager,
-    );
-
-    return {
-      cropTypesList,
-      fieldRelatedData,
-      crops,
-      fertiliserData,
-      prefetchContext,
-    };
+    const fertiliserData = await this.totalFertiliserByField.getTotalFertiliserByFieldAndYear(transactionalManager,crops);
+    const prefetchContext = await this.buildPrefetchContext(fieldID,Year,crops,fieldRelatedData,transactionalManager);
+    return {cropTypesList,fieldRelatedData,crops,fertiliserData,prefetchContext};
   }
 
   async processStandardCropRecommendation(cropContext) {
