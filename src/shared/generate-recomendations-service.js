@@ -367,15 +367,7 @@ class GenerateRecommendations {
     });
   }
 
-  async generateRecommendations(
-    fieldID,
-    Year,
-    newOrganicManure,
-    transactionalManager,
-    request,
-    userId,
-    context = {},
-  ) {
+  async generateRecommendations(fieldID,Year,newOrganicManure,transactionalManager,request,userId,context = {}) {
     const timingRun = recommendationTimingTracker.start({
       fieldID,
       year: Year,
@@ -383,13 +375,7 @@ class GenerateRecommendations {
       isBackground: context?.isBackground,
     });
     try {
-      const {
-        cropTypesList,
-        fieldRelatedData,
-        crops,
-        fertiliserData,
-        prefetchContext,
-      } = await this.getGenerateRecommendationsContext(
+      const {cropTypesList,fieldRelatedData,crops,fertiliserData,prefetchContext} = await this.getGenerateRecommendationsContext(
         fieldID,
         Year,
         transactionalManager,
