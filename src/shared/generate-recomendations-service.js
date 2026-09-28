@@ -58,6 +58,7 @@ const {
 const {
   recommendationTimingTracker,
 } = require("./recommendation-timing-tracker");
+const { SiteClassService } = require("../site-class/site-class.service");
 
 const RECOMMENDATION_LOG_ENDPOINT = "Recommendation/Recommendations";
 const SERVICE_NAME = "generate-recomendations-service.js";
@@ -126,28 +127,15 @@ class GenerateRecommendations {
     this.HanldeMannerAndAnalysis = new HanldeMannerAndAnalysis();
     this.MannerRainfallPostApplicationService =
       new MannerRainfallPostApplicationService();
+    this.siteClassService = new SiteClassService();
   }
 
-  async loadPrefetchRawData(
-    fieldID,
-    Year,
-    crops,
-    fieldRelatedData,
-    transactionalManager,
-  ) {
-    const threeYearsHistory=3,twoYearsHistory=2,oneYearHistory=1;
+  async loadPrefetchRawData(fieldID,Year,crops,fieldRelatedData,transactionalManager) {
+    const threeYearsHistory = 3,twoYearsHistory = 2,oneYearHistory = 1;
     const cropIds = crops.map((crop) => crop.ID);
     const cropTypeIds = [...new Set(crops.map((crop) => crop.CropTypeID))];
-    const historyYears = [Year - oneYearHistory, Year - twoYearsHistory, Year - threeYearsHistory];
-    const [
-      managementPeriods,
-      snsAnalyses,
-      allOrganicManures,
-      cropTypeLinkings,
-      soilTypeTextureData,
-      historicalCrops,
-      historicalPreviousCroppings,
-    ] = await Promise.all([
+    const historyYears = [Year - oneYearHistory,Year - twoYearsHistory,Year - threeYearsHistory];
+    const [managementPeriods,snsAnalyses,allOrganicManures,cropTypeLinkings,soilTypeTextureData,historicalCrops,historicalPreviousCroppings] = await Promise.all([
       cropIds.length
         ? transactionalManager.find(ManagementPeriodEntity, {
             where: { CropID: In(cropIds) },
@@ -270,77 +258,55 @@ class GenerateRecommendations {
 
   async getGenerateRecommendationsContext(fieldID, Year, transactionalManager) {
     const cropTypesList = await this.rB209ArableService.getCropTypesList();
-    const fieldRelatedData = await this.fieldRelated.getFieldAndCountryData(
-      fieldID,
-      transactionalManager,
-    );
+    const fieldRelatedData = await this.fieldRelated.getFieldAndCountryData(fieldID,transactionalManager);
     const crops = await transactionalManager.find(CropEntity, {
       where: { FieldID: fieldID, Year: Year },
     });
-    const fertiliserData =
-      await this.totalFertiliserByField.getTotalFertiliserByFieldAndYear(
-        transactionalManager,
-        crops,
-      );
-    const prefetchContext = await this.buildPrefetchContext(
-      fieldID,
-      Year,
-      crops,
-      fieldRelatedData,
-      transactionalManager,
-    );
-
-    return {
-      cropTypesList,
-      fieldRelatedData,
-      crops,
-      fertiliserData,
-      prefetchContext,
-    };
+    const fertiliserData = await this.totalFertiliserByField.getTotalFertiliserByFieldAndYear(transactionalManager,crops);
+    const prefetchContext = await this.buildPrefetchContext(fieldID,Year,crops,fieldRelatedData,transactionalManager);
+    return {cropTypesList,fieldRelatedData,crops,fertiliserData,prefetchContext};
   }
 
   async processStandardCropRecommendation(cropContext) {
-    const {crop,crops,soilAnalysisRecords,snsAnalysesData,mannerOutputs,latestSoilAnalysis,
-      previousCrop,fieldRelatedData,
-      request,transactionalManager,
-      cropTypesList,fertiliserData,userId,
-      cropPOfftake,recommendationApiResponseCache,
-    } = cropContext;
+    const {crop,crops,soilAnalysisRecords,snsAnalysesData,mannerOutputs,latestSoilAnalysis,previousCrop,fieldRelatedData,request,transactionalManager,cropTypesList,fertiliserData,userId,cropPOfftake,recommendationApiResponseCache} = cropContext;
     const analysis = { soilAnalysisRecords, snsAnalysesData };
     const singleAndMultipleCrops = { crops, crop };
-    const nutrientRecommendationnReqBody = await this.buildNutrientRecommendationReqBody(
-        fieldRelatedData,analysis,
-        singleAndMultipleCrops,mannerOutputs,
-        request,transactionalManager,cropTypesList
-      );
+    const nutrientRecommendationnReqBody = await this.buildNutrientRecommendationReqBody(fieldRelatedData,analysis,singleAndMultipleCrops,mannerOutputs,request,transactionalManager,cropTypesList);
     let nutrientRecommendationsData;
-    const requestFingerprint = buildRecommendationRequestFingerprint(nutrientRecommendationnReqBody);
+    const requestFingerprint = buildRecommendationRequestFingerprint(
+      nutrientRecommendationnReqBody,
+    );
     let response = recommendationApiResponseCache.get(requestFingerprint);
     if (!response) {
-      response = await this.rB209RecommendationService.postData(RECOMMENDATION_LOG_ENDPOINT,nutrientRecommendationnReqBody);
+      response = await this.rB209RecommendationService.postData(
+        RECOMMENDATION_LOG_ENDPOINT,
+        nutrientRecommendationnReqBody,
+      );
       recommendationApiResponseCache.set(requestFingerprint, response);
     }
-    const hasValidCalculations = Array.isArray(response?.data?.calculations) &&
-      response.data.calculations.length > 0;
+    const hasValidCalculations = Array.isArray(response?.data?.calculations) && response.data.calculations.length > 0;
     if (response.status === StatusCodeMapper.SUCCESS && hasValidCalculations) {
       nutrientRecommendationsData = response.data;
-      console.log("RB209 recommendation API call successful. Received data:",nutrientRecommendationsData);
+      console.log(
+        "RB209 recommendation API call successful. Received data:",
+        nutrientRecommendationsData,
+      );
     } else {
-      console.error("RB209 recommendation API call failed or returned invalid payload:",response.status,response.data,response.statusText);
-      const isClientOrPayloadError =response?.status === StatusCodeMapper.BAD_REQUEST ||response?.status === StatusCodeMapper.CONTENT_TOO_LARGE;
-      if (isClientOrPayloadError) {throw buildRb209FailureError(response, crop.ID)}
+      console.error(
+        "RB209 recommendation API call failed or returned invalid payload:",
+        response.status,
+        response.data,
+        response.statusText,
+      );
+      const isClientOrPayloadError =
+        response?.status === StatusCodeMapper.BAD_REQUEST ||
+        response?.status === StatusCodeMapper.CONTENT_TOO_LARGE;
+      if (isClientOrPayloadError) {
+        throw buildRb209FailureError(response, crop.ID);
+      }
     }
-    const recommendation = await this.savingRecommendationService.processAndSaveRecommendations(
-        crops,latestSoilAnalysis,
-        nutrientRecommendationsData,transactionalManager,
-        userId, mannerOutputs
-      );
-    const saveAndUpdatePKBalance = await this.CalculatePKBalance.createOrUpdatePKBalance(
-        crop,nutrientRecommendationsData,
-        userId,fertiliserData,transactionalManager,
-        { cropPOfftake, latestSoilAnalysis },
-        previousCrop,
-      );
+    const recommendation = await this.savingRecommendationService.processAndSaveRecommendations(crops,latestSoilAnalysis,nutrientRecommendationsData,transactionalManager,userId, mannerOutputs);
+    const saveAndUpdatePKBalance = await this.CalculatePKBalance.createOrUpdatePKBalance(crop,nutrientRecommendationsData,userId,fertiliserData,transactionalManager,{ cropPOfftake, latestSoilAnalysis },previousCrop);
     if (saveAndUpdatePKBalance) {await transactionalManager.save(PKBalanceEntity,saveAndUpdatePKBalance.saveAndUpdatePKBalance)}
     return { cropId: crop.ID, recommendations: recommendation, pkBalance: saveAndUpdatePKBalance ?? null };
   }
@@ -402,20 +368,59 @@ class GenerateRecommendations {
   }
 
   async generateRecommendations(fieldID,Year,newOrganicManure,transactionalManager,request,userId,context = {}) {
-    const timingRun = recommendationTimingTracker.start({fieldID,year: Year,source: context?.source,isBackground: context?.isBackground});
+    const timingRun = recommendationTimingTracker.start({
+      fieldID,
+      year: Year,
+      source: context?.source,
+      isBackground: context?.isBackground,
+    });
     try {
-      const {cropTypesList,fieldRelatedData,crops,fertiliserData,prefetchContext} = await this.getGenerateRecommendationsContext(fieldID,Year, transactionalManager);
+      const {cropTypesList,fieldRelatedData,crops,fertiliserData,prefetchContext} = await this.getGenerateRecommendationsContext(
+        fieldID,
+        Year,
+        transactionalManager,
+      );
       const results = [];
       fieldRelatedData._prefetchContext = prefetchContext;
       const recommendationApiResponseCache = new Map();
-      const rainfall = await this.MannerRainfallPostApplicationService.getData(`climates/rainfall-april-to-september/${fieldRelatedData.ClimateDataPostCode}`,request);
+      const rainfall = await this.MannerRainfallPostApplicationService.getData(
+        `climates/rainfall-april-to-september/${fieldRelatedData.ClimateDataPostCode}`,
+        request,
+      );
       fieldRelatedData.summerRainfall = rainfall.data.value;
       for (const crop of crops) {
-        const {snsAnalysesData,latestSoilAnalysis,soilAnalysisRecords,mannerOutputs,previousCrop} = await this.HanldeMannerAndAnalysis.getCropPreCalculationData(crop, fieldID, fieldRelatedData,newOrganicManure, transactionalManager, request, crops);
+        const {
+          snsAnalysesData,
+          latestSoilAnalysis,
+          soilAnalysisRecords,
+          mannerOutputs,
+          previousCrop,
+        } = await this.HanldeMannerAndAnalysis.getCropPreCalculationData(
+          crop,
+          fieldID,
+          fieldRelatedData,
+          newOrganicManure,
+          transactionalManager,
+          request,
+          crops,
+        );
         const result = await this.processCropRecommendation({
-          crop,crops,snsAnalysesData,latestSoilAnalysis,soilAnalysisRecords,
-          mannerOutputs,previousCrop,fieldRelatedData,request,transactionalManager,
-          cropTypesList,newOrganicManure,userId,fertiliserData,recommendationApiResponseCache});
+          crop,
+          crops,
+          snsAnalysesData,
+          latestSoilAnalysis,
+          soilAnalysisRecords,
+          mannerOutputs,
+          previousCrop,
+          fieldRelatedData,
+          request,
+          transactionalManager,
+          cropTypesList,
+          newOrganicManure,
+          userId,
+          fertiliserData,
+          recommendationApiResponseCache,
+        });
         results.push(result);
       }
       recommendationTimingTracker.finish(timingRun, "completed");
@@ -426,6 +431,10 @@ class GenerateRecommendations {
     }
   }
 }
-Object.assign(GenerateRecommendations.prototype,recommendationRequestHelpers,recommendationOtherCropHelpers);
+Object.assign(
+  GenerateRecommendations.prototype,
+  recommendationRequestHelpers,
+  recommendationOtherCropHelpers,
+);
 
 module.exports = { GenerateRecommendations };
