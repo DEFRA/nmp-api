@@ -113,7 +113,7 @@ const recommendationRequestHelpers = {
     return managementPeriods
       .map((managementPeriod) => ({
         position: managementPeriod.Defoliation,
-        freshWeightYield: managementPeriod.Yield,
+        freshWeightYield: managementPeriod.Yield === 0 ? null : managementPeriod.Yield,
       }))
       .sort((a, b) => a.position - b.position);
   },
@@ -169,6 +169,7 @@ const recommendationRequestHelpers = {
         defoliationSequenceId: grassCrop.DefoliationSequenceID,
         grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
         ...(siteClassId != null ? { siteClassId } : {}),
+        rotationalGrass: true,
         ...(shouldIncludeYield ? { yield: grassCrop.Yield } : {}),
         ...(freshWeightYields ? { freshWeightYields } : {}),
         seasonId: grassCrop.Establishment,
