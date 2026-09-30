@@ -66,14 +66,9 @@ const recommendationRequestHelpers = {
     );
     for (const crop of crops) {
       const currentCropType = cropTypesList.find((cT) => cT.cropTypeId === crop.CropTypeID);
-      if (currentCropType?.cropGroupId == null) {
-        console.log(`Invalid CropTypeId for crop having field name ${field.FieldName}`,StaticStrings.HTTP_STATUS_BAD_REQUEST);
-      }
+      if (currentCropType?.cropGroupId == null) {console.log(`Invalid CropTypeId for crop having field name ${field.FieldName}`,StaticStrings.HTTP_STATUS_BAD_REQUEST)}
       let expectedYield = crop.Yield;
-      if (expectedYield == null) {
-        expectedYield = cropTypeLinkingMap.get(crop.CropTypeID)?.DefaultYield;
-      }
-
+      if (expectedYield == null) { expectedYield = cropTypeLinkingMap.get(crop.CropTypeID)?.DefaultYield}
       if (crop.CropTypeID !== CropTypeMapper.GRASS) {
         arableBody.push({
           cropOrder: crop.CropOrder,
