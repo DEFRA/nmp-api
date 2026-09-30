@@ -1,4 +1,4 @@
-const { Not } = require("typeorm");
+const { Not, In } = require("typeorm");
 const { CountryMapper } = require("../constants/country-mapper");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
@@ -53,22 +53,22 @@ const recommendationRequestHelpers = {
   async buildArableBody(dataMultipleCrops,field,transactionalManager,cropTypesList) {
     const arableBody = [];
     const crops = Array.isArray(dataMultipleCrops) ? dataMultipleCrops : [dataMultipleCrops];
+    const cropTypeLinkingData = await transactionalManager.find(
+      CropTypeLinkingEntity,
+      {
+        where: {
+          CropTypeID: In(crops.map((crop) => crop.CropTypeID)),
+        },
+      },
+    );
+    const cropTypeLinkingMap = new Map(
+      cropTypeLinkingData.map((item) => [item.CropTypeID, item]),
+    );
     for (const crop of crops) {
       const currentCropType = cropTypesList.find((cT) => cT.cropTypeId === crop.CropTypeID);
-      if (currentCropType?.cropGroupId == null) {
-        console.log(`Invalid CropTypeId for crop having field name ${field.FieldName}`,StaticStrings.HTTP_STATUS_BAD_REQUEST);
-      }
+      if (currentCropType?.cropGroupId == null) {console.log(`Invalid CropTypeId for crop having field name ${field.FieldName}`,StaticStrings.HTTP_STATUS_BAD_REQUEST)}
       let expectedYield = crop.Yield;
-      if (expectedYield == null) {
-        const cropTypeLinkingData = await transactionalManager.findOne(
-          CropTypeLinkingEntity,
-          {
-            where: { CropTypeID: crop.CropTypeID },
-          },
-        );
-        expectedYield = cropTypeLinkingData.DefaultYield;
-      }
-
+      if (expectedYield == null) { expectedYield = cropTypeLinkingMap.get(crop.CropTypeID)?.DefaultYield}
       if (crop.CropTypeID !== CropTypeMapper.GRASS) {
         arableBody.push({
           cropOrder: crop.CropOrder,
@@ -316,13 +316,13 @@ const recommendationRequestHelpers = {
       const cropType = cropTypesList.find(
         (cropTp) => cropTp?.cropTypeId === previousCrop?.CropTypeID,
       );
-      const isGrass = previousCrop?.CropTypeID === CropTypeMapper.GRASS;
+
       const isScotland = countryId === CountryMapper.SCOTLAND;
 
       return {
         previousGrassId: grassHistoryID ? null : previousGrassId,
-        previousCropGroupId: isGrass ? null : (cropType?.cropGroupId ?? null),
-        previousCropTypeId: isGrass ? null : (previousCrop?.CropTypeID ?? null),
+        previousCropGroupId: cropType?.cropGroupId ?? null,
+        previousCropTypeId: previousCrop?.CropTypeID ?? null,
         previousCropInfo1Id: previousCrop?.CropInfo1 ?? null,
         grassHistoryId:
           isScotland || previousGrassId != null ? null : grassHistoryID,
