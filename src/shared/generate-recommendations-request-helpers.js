@@ -321,8 +321,8 @@ const recommendationRequestHelpers = {
 
       return {
         previousGrassId: grassHistoryID ? null : previousGrassId,
-        previousCropGroupId: isGrass ? null : (cropType?.cropGroupId ?? null),
-        previousCropTypeId: isGrass ? null : (previousCrop?.CropTypeID ?? null),
+        previousCropGroupId: cropType?.cropGroupId ?? null,
+        previousCropTypeId: previousCrop?.CropTypeID ?? null,
         previousCropInfo1Id: previousCrop?.CropInfo1 ?? null,
         grassHistoryId:
           isScotland || previousGrassId != null ? null : grassHistoryID,
