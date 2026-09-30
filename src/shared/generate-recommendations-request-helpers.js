@@ -1,4 +1,4 @@
-const { Not } = require("typeorm");
+const { Not, In } = require("typeorm");
 const { CountryMapper } = require("../constants/country-mapper");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
@@ -53,6 +53,17 @@ const recommendationRequestHelpers = {
   async buildArableBody(dataMultipleCrops,field,transactionalManager,cropTypesList) {
     const arableBody = [];
     const crops = Array.isArray(dataMultipleCrops) ? dataMultipleCrops : [dataMultipleCrops];
+    const cropTypeLinkingData = await transactionalManager.find(
+      CropTypeLinkingEntity,
+      {
+        where: {
+          CropTypeID: In(crops.map((crop) => crop.CropTypeID)),
+        },
+      },
+    );
+    const cropTypeLinkingMap = new Map(
+      cropTypeLinkingData.map((item) => [item.CropTypeID, item]),
+    );
     for (const crop of crops) {
       const currentCropType = cropTypesList.find((cT) => cT.cropTypeId === crop.CropTypeID);
       if (currentCropType?.cropGroupId == null) {
@@ -60,13 +71,7 @@ const recommendationRequestHelpers = {
       }
       let expectedYield = crop.Yield;
       if (expectedYield == null) {
-        const cropTypeLinkingData = await transactionalManager.findOne(
-          CropTypeLinkingEntity,
-          {
-            where: { CropTypeID: crop.CropTypeID },
-          },
-        );
-        expectedYield = cropTypeLinkingData.DefaultYield;
+        expectedYield = cropTypeLinkingMap.get(crop.CropTypeID)?.DefaultYield;
       }
 
       if (crop.CropTypeID !== CropTypeMapper.GRASS) {
