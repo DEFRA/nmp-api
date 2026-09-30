@@ -334,12 +334,10 @@ const recommendationRequestHelpers = {
       const cropType = cropTypesList.find(
         (cropTp) => cropTp?.cropTypeId === previousCrop?.CropTypeID,
       );
-      const isGrass = previousCrop?.CropTypeID === CropTypeMapper.GRASS;
-
       return {
         previousGrassId: grassHistoryID ? null : previousGrassId,
-        previousCropGroupId: isGrass ? null : (cropType?.cropGroupId ?? null),
-        previousCropTypeId: isGrass ? null : (previousCrop?.CropTypeID ?? null),
+        previousCropGroupId: cropType?.cropGroupId ?? null,
+        previousCropTypeId: previousCrop?.CropTypeID ?? null,
         grassHistoryId: previousGrassId ? null : grassHistoryID,
         snsId: null,
         smnDepth: null,
