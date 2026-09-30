@@ -321,7 +321,7 @@ const recommendationRequestHelpers = {
       const cropType = cropTypesList.find(
         (cropTp) => cropTp?.cropTypeId === previousCrop?.CropTypeID,
       );
-      const isGrass = previousCrop?.CropTypeID === CropTypeMapper.GRASS;
+
       const isScotland = countryId === CountryMapper.SCOTLAND;
 
       return {
