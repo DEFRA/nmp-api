@@ -136,6 +136,10 @@ const CropEntity = new EntitySchema({
       type: "bit",
       default: 1,
     },
+    RotationalGrass: {
+      type: "bit",
+      default: 0,
+    },
     CreatedOn: {
       type: "datetime2",
       precision: 7,
