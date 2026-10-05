@@ -251,6 +251,50 @@ module.exports = [
     },
   },
   {
+    method: "GET",
+    path: "/crops/check-arable-by-year/{fieldId}",
+    options: {
+      tags: ["api", "Crop"],
+      description:
+        "Check arable planning status by field id and year",
+      validate: {
+        params: Joi.object({
+          fieldId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          year: Joi.number().integer().required(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new CropController(request, h);
+      return controller.getArableCheckByFieldAndYear();
+    },
+  },
+  {
+    method: "GET",
+    path: "/crops/check-grass-by-year/{fieldId}",
+    options: {
+      tags: ["api", "Crop"],
+      description:
+        "Check grass planning status by field id and year",
+      validate: {
+        params: Joi.object({
+          fieldId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          year: Joi.number().integer().required(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new CropController(request, h);
+      return controller.getGrassCheckByFieldAndYear();
+    },
+  },
+  {
     method: "PUT",
     path: cropListPath,
     options: {

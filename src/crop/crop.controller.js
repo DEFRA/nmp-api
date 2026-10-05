@@ -266,6 +266,38 @@ class CropController {
     }
   }
 
+  async getArableCheckByFieldAndYear() {
+    const { fieldId } = this.#request.params;
+    const { year } = this.#request.query;
+
+    try {
+      const result = await this.#cropService.getArableCheckByFieldAndYear(
+        fieldId,
+        year,
+      );
+      return this.#h.response(result);
+    } catch (error) {
+      console.error("Error in getArableCheckByFieldAndYear controller:", error);
+      return this.#h.response({ error });
+    }
+  }
+
+  async getGrassCheckByFieldAndYear() {
+    const { fieldId } = this.#request.params;
+    const { year } = this.#request.query;
+
+    try {
+      const result = await this.#cropService.getGrassCheckByFieldAndYear(
+        fieldId,
+        year,
+      );
+      return this.#h.response(result);
+    } catch (error) {
+      console.error("Error in getGrassCheckByFieldAndYear controller:", error);
+      return this.#h.response({ error });
+    }
+  }
+
   async updateCropByFieldAndYearAndConfirm() {
     try {
       const { fieldId } = this.#request.params; // Extract fieldId from params
