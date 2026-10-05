@@ -61,6 +61,7 @@ const {
 const {
   CurrentAndFuture,
 } = require("../shared/generate-current-and-future-recommendations-service");
+const { CountryMapper } = require("../constants/country-mapper");
 
 class PlanService extends BaseService {
   constructor() {
@@ -224,6 +225,94 @@ class PlanService extends BaseService {
       });
     }
     return crop;
+  }
+
+  isScotlandCountry(rb209CountryID) {
+    return rb209CountryID === CountryMapper.SCOTLAND;
+  }
+
+  isGrassCropType(cropTypeID) {
+    return cropTypeID === CropTypeMapper.GRASS;
+  }
+
+  isArableCropType(cropTypeID) {
+    return cropTypeID !== null && cropTypeID !== CropTypeMapper.GRASS;
+  }
+
+  async getNextYearCropForField(fieldID, year, transactionalManager) {
+    return transactionalManager.findOne(CropEntity, {
+      where: {
+        FieldID: fieldID,
+        Year: MoreThan(year),
+      },
+      order: { Year: "ASC" },
+    });
+  }
+
+  async setCropPreviousGrass(
+    transactionalManager,
+    cropID,
+    previousGrass,
+    userId,
+  ) {
+    await transactionalManager.update(CropEntity, cropID, {
+      PreviousGrass: previousGrass,
+      ModifiedByID: userId,
+      ModifiedOn: new Date(),
+    });
+  }
+
+  async applyScotlandPreviousGrassRulesOnCreate(
+    crop,
+    transactionalManager,
+    userId,
+  ) {
+    const hasIncomingPreviousGrass = Object.prototype.hasOwnProperty.call(
+      crop,
+      "PreviousGrass",
+    );
+    const rb209CountryID = await this.CalculatePreviousCropService.getRb209CountryId(
+      crop.FieldID,
+      transactionalManager,
+    );
+
+    if (!this.isScotlandCountry(rb209CountryID)) {
+      return;
+    }
+
+    if (this.isArableCropType(crop.CropTypeID)) {
+      const previousYearCrop = await this.getCropForYear(
+        crop.FieldID,
+        crop.Year - 1,
+        transactionalManager,
+      );
+      if (!this.isGrassCropType(previousYearCrop?.CropTypeID)) {
+        crop.PreviousGrass = null;
+      }
+      return;
+    }
+
+    if (!this.isGrassCropType(crop.CropTypeID) || !hasIncomingPreviousGrass) {
+      return;
+    }
+
+    const nextYearCrop = await this.getNextYearCropForField(
+      crop.FieldID,
+      crop.Year,
+      transactionalManager,
+    );
+    if (!nextYearCrop) {
+      return;
+    }
+
+    if (this.isArableCropType(nextYearCrop.CropTypeID)) {
+      await this.setCropPreviousGrass(
+        transactionalManager,
+        nextYearCrop.ID,
+        crop.PreviousGrass ?? null,
+        userId,
+      );
+    }
   }
 
   async createNutrientsRecommendationForField(
@@ -391,6 +480,12 @@ class PlanService extends BaseService {
     for (const cropData of crops) {
       const crop = cropData?.Crop;
       const field = await this.validateCropAndField(crop, Errors);
+
+      await this.applyScotlandPreviousGrassRulesOnCreate(
+        crop,
+        transactionalManager,
+        userId,
+      );
 
       const previousCrop =
         await this.CalculatePreviousCropService.findPreviousCrop(

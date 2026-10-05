@@ -9,9 +9,10 @@ const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
 const {
   FertiliserManuresEntity,
 } = require("../db/entity/fertiliser-manures.entity");
-const { In } = require("typeorm");
+const { In, MoreThan } = require("typeorm");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
 const { ARABLE } = require("../constants/rb209-endpoints-mapper");
+const { CropTypeMapper } = require("../constants/crop-type-mapper");
 const {
   FieldEntity,
   FarmEntity,
@@ -113,9 +114,9 @@ async function buildCropDetail(service, plan) {
     plan.DefoliationSequenceID == null
       ? null
       : await findDefoliationSequenceDescription(
-          service,
-          plan.DefoliationSequenceID,
-        );
+        service,
+        plan.DefoliationSequenceID,
+      );
   const lastModifiedDate = await service.getLatestModifiedDate(plan.CropID);
 
   return {
@@ -289,6 +290,46 @@ const cropQueryMethods = {
     };
   },
 
+  async getPreviousAndNextCropTypeFlags(fieldId, year, cropTypeId) {
+    const parsedYear = Number.parseInt(year, 10);
+    const parsedCropTypeId = Number.parseInt(cropTypeId, 10);
+
+    const result = {
+      isGrassInPreviousYear: false,
+      isArableInNextYear: false,
+    };
+
+    if (!Number.isFinite(parsedYear) || !Number.isFinite(parsedCropTypeId)) {
+      return result;
+    }
+
+    const isPlannedGrass = parsedCropTypeId === CropTypeMapper.GRASS;
+    const isPlannedArable = parsedCropTypeId !== CropTypeMapper.GRASS;
+
+    if (isPlannedArable) {
+      const previousYearCrop = await this.repository.findOne({
+        where: { FieldID: fieldId, Year: parsedYear - 1 },
+        order: { CropOrder: "DESC" },
+      });
+      result.isGrassInPreviousYear =
+        previousYearCrop?.CropTypeID === CropTypeMapper.GRASS;
+    }
+
+    if (isPlannedGrass) {
+      const nextYearCrop = await this.repository.findOne({
+        where: {
+          FieldID: fieldId,
+          Year: MoreThan(parsedYear),
+        },
+        order: { Year: "ASC" },
+      });
+      result.isArableInNextYear =
+        !!nextYearCrop && nextYearCrop.CropTypeID !== CropTypeMapper.GRASS;
+    }
+
+    return result;
+  },
+
   async filterBySingleSequenceId(data, sequenceId) {
     const filteredCalculations = data.calculations.filter(
       (item) => item.sequenceId === sequenceId,
@@ -313,15 +354,15 @@ const cropQueryMethods = {
     });
     const farm = field
       ? await manager.findOne(FarmEntity, {
-          where: { ID: field.FarmID },
-          select: ["CountryID"],
-        })
+        where: { ID: field.FarmID },
+        select: ["CountryID"],
+      })
       : null;
     const country = farm
       ? await manager.findOne(CountryEntity, {
-          where: { ID: farm.CountryID },
-          select: ["RB209CountryID"],
-        })
+        where: { ID: farm.CountryID },
+        select: ["RB209CountryID"],
+      })
       : null;
     rb209CountryID = country?.RB209CountryID ?? this.COUNTRY_BOTH;
     return rb209CountryID;

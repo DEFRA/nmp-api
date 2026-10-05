@@ -229,6 +229,23 @@ class CropController {
     }
   }
 
+  async getPreviousAndNextCropTypeFlags() {
+    const { fieldId } = this.#request.params;
+    const { year, cropTypeId } = this.#request.query;
+
+    try {
+      const flags = await this.#cropService.getPreviousAndNextCropTypeFlags(
+        fieldId,
+        year,
+        cropTypeId,
+      );
+      return this.#h.response(flags);
+    } catch (error) {
+      console.error("Error in getPreviousAndNextCropTypeFlags controller:", error);
+      return this.#h.response({ error });
+    }
+  }
+
   async updateCropByFieldAndYearAndConfirm() {
     try {
       const { fieldId } = this.#request.params; // Extract fieldId from params

@@ -73,6 +73,10 @@ class CropService extends BaseService {
     return cropQueryMethods.getCropTypeDataByFieldAndYear.call(this, ...args);
   }
 
+  async getPreviousAndNextCropTypeFlags(...args) {
+    return cropQueryMethods.getPreviousAndNextCropTypeFlags.call(this, ...args);
+  }
+
   async filterBySingleSequenceId(...args) {
     return cropQueryMethods.filterBySingleSequenceId.call(this, ...args);
   }
