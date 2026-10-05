@@ -237,8 +237,7 @@ const cropQueryMethods = {
     let currentYearCrop = await this.repository.findOne({
       where: {
         FieldID: fieldId,
-        Year: year,
-        CropOrder: 2,
+        Year: year
       },
     });
 
