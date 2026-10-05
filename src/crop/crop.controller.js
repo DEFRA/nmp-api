@@ -246,6 +246,26 @@ class CropController {
     }
   }
 
+  async getPreviousAndNextCropTypeFlagsByFieldAndYear() {
+    const { fieldId } = this.#request.params;
+    const { year } = this.#request.query;
+
+    try {
+      const flags =
+        await this.#cropService.getPreviousAndNextCropTypeFlagsByFieldAndYear(
+          fieldId,
+          year,
+        );
+      return this.#h.response(flags);
+    } catch (error) {
+      console.error(
+        "Error in getPreviousAndNextCropTypeFlagsByFieldAndYear controller:",
+        error,
+      );
+      return this.#h.response({ error });
+    }
+  }
+
   async updateCropByFieldAndYearAndConfirm() {
     try {
       const { fieldId } = this.#request.params; // Extract fieldId from params

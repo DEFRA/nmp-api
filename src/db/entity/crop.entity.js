@@ -136,7 +136,7 @@ const CropEntity = new EntitySchema({
       type: "bit",
       default: 1,
     },
-    RotationalGrass: {
+    IsPermanentSward: {
       type: "bit",
       default: 0,
     },

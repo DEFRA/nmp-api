@@ -26,6 +26,9 @@ const { ProcessFutureManuresForWarnings } = require("../shared/process-future-wa
 const { GenerateRecommendations } = require("../shared/generate-recomendations-service");
 const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
 const { CountryEntity } = require("../db/entity/country.entity");
+const {
+  PreviousCroppingEntity,
+} = require("../db/entity/previous-cropping.entity");
 const { CurrentAndFuture } = require("../shared/generate-current-and-future-recommendations-service");
 const { cropQueryMethods } = require("./crop-query.service");
 const { cropMutationMethods } = require("./crop-mutation.service");
@@ -57,6 +60,7 @@ class CropService extends BaseService {
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
     this.currentAndFuture = new CurrentAndFuture();
     this.countryRepository = AppDataSource.getRepository(CountryEntity);
+    this.previousCroppingRepository = AppDataSource.getRepository(PreviousCroppingEntity);
     this.fieldRepository = AppDataSource.getRepository(FieldEntity);
     this.COUNTRY_BOTH = 3;
   }
@@ -75,6 +79,10 @@ class CropService extends BaseService {
 
   async getPreviousAndNextCropTypeFlags(...args) {
     return cropQueryMethods.getPreviousAndNextCropTypeFlags.call(this, ...args);
+  }
+
+  async getPreviousAndNextCropTypeFlagsByFieldAndYear(...args) {
+    return cropQueryMethods.getPreviousAndNextCropTypeFlagsByFieldAndYear.call(this, ...args);
   }
 
   async filterBySingleSequenceId(...args) {

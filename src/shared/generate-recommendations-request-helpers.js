@@ -169,7 +169,7 @@ const recommendationRequestHelpers = {
         defoliationSequenceId: grassCrop.DefoliationSequenceID,
         grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
         ...(siteClassId != null ? { siteClassId } : {}),
-        rotationalGrass: grassCrop.RotationalGrass,
+        rotationalGrass: grassCrop.IsPermanentSward,
         ...(shouldIncludeYield ? { yield: grassCrop.Yield } : {}),
         ...(freshWeightYields ? { freshWeightYields } : {}),
         seasonId: grassCrop.Establishment,

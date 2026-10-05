@@ -229,6 +229,28 @@ module.exports = [
     },
   },
   {
+    method: "GET",
+    path: "/crops/previous-next-crop-flags-by-year/{fieldId}",
+    options: {
+      tags: ["api", "Crop"],
+      description:
+        "Check previous-year grass and next-year arable status using field id and year",
+      validate: {
+        params: Joi.object({
+          fieldId: Joi.number().integer().required(),
+        }),
+        query: Joi.object({
+          year: Joi.number().integer().required(),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new CropController(request, h);
+      return controller.getPreviousAndNextCropTypeFlagsByFieldAndYear();
+    },
+  },
+  {
     method: "PUT",
     path: cropListPath,
     options: {

@@ -311,8 +311,15 @@ const cropQueryMethods = {
         where: { FieldID: fieldId, Year: parsedYear - 1 },
         order: { CropOrder: "DESC" },
       });
+      const previousYearCropTypeID = previousYearCrop
+        ? previousYearCrop.CropTypeID
+        : (
+          await this.previousCroppingRepository.findOne({
+            where: { FieldID: fieldId, HarvestYear: parsedYear - 1 },
+          })
+        )?.CropTypeID;
       result.isGrassInPreviousYear =
-        previousYearCrop?.CropTypeID === CropTypeMapper.GRASS;
+        previousYearCropTypeID === CropTypeMapper.GRASS;
     }
 
     if (isPlannedGrass) {
@@ -323,11 +330,68 @@ const cropQueryMethods = {
         },
         order: { Year: "ASC" },
       });
+      const nextYearCropTypeID = nextYearCrop
+        ? nextYearCrop.CropTypeID
+        : (
+          await this.previousCroppingRepository.findOne({
+            where: { FieldID: fieldId, HarvestYear: parsedYear + 1 },
+          })
+        )?.CropTypeID;
       result.isArableInNextYear =
-        !!nextYearCrop && nextYearCrop.CropTypeID !== CropTypeMapper.GRASS;
+        nextYearCropTypeID !== null &&
+        nextYearCropTypeID !== undefined &&
+        nextYearCropTypeID !== CropTypeMapper.GRASS;
     }
 
     return result;
+  },
+
+  async getPreviousAndNextCropTypeFlagsByFieldAndYear(fieldId, year) {
+    const parsedYear = Number.parseInt(year, 10);
+    const defaultResult = {
+      isGrassInPreviousYear: false,
+      isArableInNextYear: false,
+    };
+
+    if (!Number.isFinite(parsedYear)) {
+      return defaultResult;
+    }
+
+    let currentYearCrop = await this.repository.findOne({
+      where: {
+        FieldID: fieldId,
+        Year: parsedYear,
+        CropOrder: 2,
+      },
+    });
+
+    if (!currentYearCrop) {
+      currentYearCrop = await this.repository.findOne({
+        where: {
+          FieldID: fieldId,
+          Year: parsedYear,
+          CropOrder: 1,
+        },
+      });
+    }
+
+    const currentYearCropTypeID = currentYearCrop
+      ? currentYearCrop.CropTypeID
+      : (
+        await this.previousCroppingRepository.findOne({
+          where: { FieldID: fieldId, HarvestYear: parsedYear },
+        })
+      )?.CropTypeID;
+
+    if (currentYearCropTypeID === null || currentYearCropTypeID === undefined) {
+      return defaultResult;
+    }
+
+    return this.getPreviousAndNextCropTypeFlags(
+      fieldId,
+      parsedYear,
+      currentYearCropTypeID,
+    );
   },
 
   async filterBySingleSequenceId(data, sequenceId) {
