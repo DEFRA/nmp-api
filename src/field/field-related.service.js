@@ -282,7 +282,7 @@ const fieldRelatedMethods = {
   async getSoilAnalysisForManagementPeriod(
     fieldId,
     year,
-    recommendation,
+    _recommendation,
     soilAnalysis,
     isSoilAnalysisAdded,
   ) {
