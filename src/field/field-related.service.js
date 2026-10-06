@@ -282,7 +282,7 @@ const fieldRelatedMethods = {
   async getSoilAnalysisForManagementPeriod(
     fieldId,
     year,
-    recommendation,
+    _recommendation,
     soilAnalysis,
     isSoilAnalysisAdded,
   ) {
@@ -295,17 +295,7 @@ const fieldRelatedMethods = {
         fieldId,
         year,
       );
-    if (recommendation && soilAnalysisRecords != null) {
-      return {
-        soilAnalysis: fieldRelatedMethods.mapSoilAnalysis.call(
-          this,
-          recommendation,
-          soilAnalysisRecords,
-        ),
-        isSoilAnalysisAdded: true,
-      };
-    }
-    return { soilAnalysis: null, isSoilAnalysisAdded };
+    return { soilAnalysis: soilAnalysisRecords, isSoilAnalysisAdded };
   },
 
   async getRecentSoilAnalysisRecord(fieldId, year) {
@@ -315,10 +305,9 @@ const fieldRelatedMethods = {
         FieldID: fieldId,
         Year: Between(year - fiveYearBack, year),
       },
-      order: { Date: "DESC" },
-      take: 1,
+      order: { Date: "DESC" }
     });
-    return soilAnalysisRecordsList[0] || null;
+    return soilAnalysisRecordsList || null;
   },
   mapSoilAnalysis(recommendation, soilAnalysisRecords) {
     return {
