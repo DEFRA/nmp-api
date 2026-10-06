@@ -72,19 +72,19 @@ const cropMutationMethods = {
     rb209CountryID,
     userId,
   ) {
-    if (!this.isScotlandCountry(rb209CountryID)) {
+    if (!cropMutationMethods.isScotlandCountry(rb209CountryID)) {
       return;
     }
 
-    if (this.isArableCropType(currentCrop.CropTypeID)) {
-      const previousYearCrop = await this.getPreviousYearCropForField(
+    if (cropMutationMethods.isArableCropType(currentCrop.CropTypeID)) {
+      const previousYearCrop = await cropMutationMethods.getPreviousYearCropForField(
         transactionalManager,
         currentCrop.FieldID,
         currentCrop.Year,
       );
 
-      if (!this.isGrassCropType(previousYearCrop?.CropTypeID)) {
-        await this.setCropPreviousGrass(
+      if (!cropMutationMethods.isGrassCropType(previousYearCrop?.CropTypeID)) {
+        await cropMutationMethods.setCropPreviousGrass(
           transactionalManager,
           currentCrop.ID,
           null,
@@ -96,7 +96,7 @@ const cropMutationMethods = {
 
       if (hasIncomingPreviousGrass) {
         const previousGrassValue = incomingPreviousGrass ?? null;
-        await this.setCropPreviousGrass(
+        await cropMutationMethods.setCropPreviousGrass(
           transactionalManager,
           currentCrop.ID,
           previousGrassValue,
@@ -107,20 +107,26 @@ const cropMutationMethods = {
       return;
     }
 
-    if (!this.isGrassCropType(currentCrop.CropTypeID) || !hasIncomingPreviousGrass) {
+    if (
+      !cropMutationMethods.isGrassCropType(currentCrop.CropTypeID) ||
+      !hasIncomingPreviousGrass
+    ) {
       return;
     }
 
-    const nextYearCrop = await this.getNextYearCropForField(
+    const nextYearCrop = await cropMutationMethods.getNextYearCropForField(
       transactionalManager,
       currentCrop.FieldID,
       currentCrop.Year,
     );
-    if (!nextYearCrop || this.isGrassCropType(nextYearCrop.CropTypeID)) {
+    if (
+      !nextYearCrop ||
+      cropMutationMethods.isGrassCropType(nextYearCrop.CropTypeID)
+    ) {
       return;
     }
 
-    await this.setCropPreviousGrass(
+    await cropMutationMethods.setCropPreviousGrass(
       transactionalManager,
       nextYearCrop.ID,
       incomingPreviousGrass ?? null,
@@ -135,22 +141,30 @@ const cropMutationMethods = {
     userId,
   ) {
     if (
-      !this.isScotlandCountry(rb209CountryID) ||
-      !this.isGrassCropType(deletedCrop.CropTypeID)
+      !cropMutationMethods.isScotlandCountry(rb209CountryID) ||
+      !cropMutationMethods.isGrassCropType(deletedCrop.CropTypeID)
     ) {
       return;
     }
 
-    const nextYearCrop = await this.getNextYearCropForField(
+    const nextYearCrop = await cropMutationMethods.getNextYearCropForField(
       transactionalManager,
       deletedCrop.FieldID,
       deletedCrop.Year,
     );
-    if (!nextYearCrop || this.isGrassCropType(nextYearCrop.CropTypeID)) {
+    if (
+      !nextYearCrop ||
+      cropMutationMethods.isGrassCropType(nextYearCrop.CropTypeID)
+    ) {
       return;
     }
 
-    await this.setCropPreviousGrass(transactionalManager, nextYearCrop.ID, null, userId);
+    await cropMutationMethods.setCropPreviousGrass(
+      transactionalManager,
+      nextYearCrop.ID,
+      null,
+      userId,
+    );
   },
 
   async validateAndHandleSecondCrop(
@@ -238,7 +252,7 @@ const cropMutationMethods = {
           fieldId,
           transactionalManager,
         );
-        await this.applyScotlandPreviousGrassRules(
+        await cropMutationMethods.applyScotlandPreviousGrassRules(
           transactionalManager,
           updatedCrop,
           updateData.PreviousGrass,
@@ -281,7 +295,7 @@ const cropMutationMethods = {
       crop.FieldID,
       transactionalManager,
     );
-    await this.clearNextYearArablePreviousGrassOnGrassDelete(
+    await cropMutationMethods.clearNextYearArablePreviousGrassOnGrassDelete(
       transactionalManager,
       crop,
       rb209CountryID,
@@ -609,7 +623,7 @@ const cropMutationMethods = {
     }
     const updatedCrop = await transactionalManager.findOne(CropEntity, { where: { ID: ID } });
     const rb209CountryID = await this.fetchRb209CountryId(crop.FieldID, transactionalManager);
-    await this.applyScotlandPreviousGrassRules(
+    await cropMutationMethods.applyScotlandPreviousGrassRules(
       transactionalManager,
       updatedCrop,
       updatedCropData.PreviousGrass,
