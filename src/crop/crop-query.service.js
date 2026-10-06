@@ -386,18 +386,40 @@ const cropQueryMethods = {
       return defaultResult;
     }
 
-    const currentYearCropTypeID =
-      await this.resolvePlannedCropTypeIdByFieldAndYear(fieldId, parsedYear);
+    const previousYearCrop = await this.repository.findOne({
+      where: { FieldID: fieldId, Year: parsedYear - 1 },
+      order: { CropOrder: "DESC" },
+    });
+    const previousYearCropTypeID = previousYearCrop
+      ? previousYearCrop.CropTypeID
+      : (
+        await this.previousCroppingRepository.findOne({
+          where: { FieldID: fieldId, HarvestYear: parsedYear - 1 },
+        })
+      )?.CropTypeID;
 
-    if (currentYearCropTypeID === null || currentYearCropTypeID === undefined) {
-      return defaultResult;
-    }
+    const nextYearCrop = await this.repository.findOne({
+      where: {
+        FieldID: fieldId,
+        Year: MoreThan(parsedYear),
+      },
+      order: { Year: "ASC" },
+    });
+    const nextYearCropTypeID = nextYearCrop
+      ? nextYearCrop.CropTypeID
+      : (
+        await this.previousCroppingRepository.findOne({
+          where: { FieldID: fieldId, HarvestYear: parsedYear + 1 },
+        })
+      )?.CropTypeID;
 
-    return this.getPreviousAndNextCropTypeFlags(
-      fieldId,
-      parsedYear,
-      currentYearCropTypeID,
-    );
+    return {
+      isGrassInPreviousYear: previousYearCropTypeID === CropTypeMapper.GRASS,
+      isArableInNextYear:
+        nextYearCropTypeID !== null &&
+        nextYearCropTypeID !== undefined &&
+        nextYearCropTypeID !== CropTypeMapper.GRASS,
+    };
   },
 
   async getPreviousAndNextCropTypeFlagsByFieldIdsAndYear(fieldIds, year) {
