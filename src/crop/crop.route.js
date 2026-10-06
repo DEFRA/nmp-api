@@ -229,17 +229,19 @@ module.exports = [
     },
   },
   {
-    method: "GET",
-    path: "/crops/previous-next-crop-flags-by-year/{fieldId}",
+    method: "POST",
+    path: "/crops/previous-next-crop-flags-by-year",
     options: {
       tags: ["api", "Crop"],
       description:
-        "Check previous-year grass and next-year arable status using field id and year",
+        "Check previous-year grass and next-year arable status using field id list and year",
       validate: {
-        params: Joi.object({
-          fieldId: Joi.number().integer().required(),
-        }),
-        query: Joi.object({
+        payload: Joi.object({
+          fieldIds: Joi.array()
+            .items(Joi.number().integer().required())
+            .min(1)
+            .required()
+            .description("Array of field IDs, e.g., [1, 2, 3]"),
           year: Joi.number().integer().required(),
         }),
         failAction: validationFailAction,

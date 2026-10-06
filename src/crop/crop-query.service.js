@@ -400,6 +400,34 @@ const cropQueryMethods = {
     );
   },
 
+  async getPreviousAndNextCropTypeFlagsByFieldIdsAndYear(fieldIds, year) {
+    const parsedYear = Number.parseInt(year, 10);
+    if (!Number.isFinite(parsedYear) || !Array.isArray(fieldIds)) {
+      return [];
+    }
+
+    const results = [];
+    for (const rawFieldId of fieldIds) {
+      const fieldId = Number.parseInt(rawFieldId, 10);
+      if (!Number.isFinite(fieldId)) {
+        continue;
+      }
+
+      const flags = await this.getPreviousAndNextCropTypeFlagsByFieldAndYear(
+        fieldId,
+        parsedYear,
+      );
+
+      results.push({
+        fieldId,
+        isGrassInPrevYear: flags.isGrassInPreviousYear,
+        isArableInNextYear: flags.isArableInNextYear,
+      });
+    }
+
+    return results;
+  },
+
   async getArableCheckByFieldAndYear(fieldId, year) {
     const parsedYear = Number.parseInt(year, 10);
     const defaultResult = { isGrassInPreviousYear: false };

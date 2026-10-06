@@ -247,13 +247,12 @@ class CropController {
   }
 
   async getPreviousAndNextCropTypeFlagsByFieldAndYear() {
-    const { fieldId } = this.#request.params;
-    const { year } = this.#request.query;
+    const { fieldIds, year } = this.#request.payload;
 
     try {
       const flags =
-        await this.#cropService.getPreviousAndNextCropTypeFlagsByFieldAndYear(
-          fieldId,
+        await this.#cropService.getPreviousAndNextCropTypeFlagsByFieldIdsAndYear(
+          fieldIds,
           year,
         );
       return this.#h.response(flags);
