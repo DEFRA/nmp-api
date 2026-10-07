@@ -139,6 +139,9 @@ const CropEntity = new EntitySchema({
     IsPermanentSward: {
       type: "bit"
     },
+    IsDefaultFreshWeightYield: {
+      type: "bit"
+    },
     CreatedOn: {
       type: "datetime2",
       precision: 7,
