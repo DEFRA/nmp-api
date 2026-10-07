@@ -378,27 +378,16 @@ class PlanService extends BaseService {
   async saveCropPlanWithRecommendations(cropData, crop, field, userId, request, transactionalManager) {
     const organicManure = null;
     const ManagementPeriods = await this.saveCropAndManagementPeriods(cropData, crop, userId, transactionalManager);
-    const savedRecommendation = await this.generateRecommendations.generateRecommendations(
-      field.ID,
-      crop.Year,
-      organicManure,
-      transactionalManager,
-      request,
-      userId,
-    );
+    const savedRecommendation = await this.generateRecommendations.generateRecommendations(field.ID,crop.Year,organicManure,transactionalManager,request,userId,);
     await this.updateNextCropRecommendations(
       crop,
       request,
       userId,
       transactionalManager,
     );
-
     return {
-      message: "crop saved",
-      crop: crop.FieldID,
-      Recommendations: savedRecommendation,
-      ManagementPeriods: ManagementPeriods,
-    };
+      message: "crop saved",crop: crop.FieldID,
+      Recommendations: savedRecommendation,ManagementPeriods: ManagementPeriods};
   }
 
   async createNutrientsRecommendationWithinTransaction(crops, userId, request, transactionalManager) {
