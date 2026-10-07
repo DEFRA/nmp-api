@@ -387,19 +387,10 @@ const cropMutationMethods = {
     const localBackgroundTasks = [];
     const localUpdatedCrops = await AppDataSource.transaction(
       async (localManager) => {
-        return this.updateCrop(
-          body,
-          userId,
-          request,
-          localManager,
-          localBackgroundTasks,
-        );
+    return this.updateCrop(body,userId,request,localManager,localBackgroundTasks);
       },
     );
-    cropMutationMethods.dispatchBackgroundTasks.call(
-      this,
-      localBackgroundTasks,
-    );
+    cropMutationMethods.dispatchBackgroundTasks.call(this,localBackgroundTasks);
     return localUpdatedCrops;
   },
 

@@ -397,38 +397,13 @@ class PlanService extends BaseService {
     for (const cropData of crops) {
       const crop = cropData?.Crop;
       const field = await this.validateCropAndField(crop, Errors);
-
-      await this.applyScotlandPreviousGrassRulesOnCreate(
-        crop,
-        transactionalManager,
-        userId,
-      );
-
-      const previousCrop =
-        await this.CalculatePreviousCropService.findPreviousCrop(
-          field.ID,
-          crop.Year,
-          transactionalManager,
-        );
-
+      await this.applyScotlandPreviousGrassRulesOnCreate(crop,transactionalManager,userId);
+      const previousCrop = await this.CalculatePreviousCropService.findPreviousCrop(field.ID,crop.Year,transactionalManager);
       if (crop.CropTypeID === CropTypeMapper.OTHER || !previousCrop) {
-        const savedDefaultCrop = await this.saveDefaultCropPlan(
-          cropData,
-          crop,
-          userId,
-          request,
-          transactionalManager,
-        );
+        const savedDefaultCrop = await this.saveDefaultCropPlan(cropData,crop,userId,request,transactionalManager);
         Recommendations.push(savedDefaultCrop);
       } else {
-        const savedCropPlan = await this.saveCropPlanWithRecommendations(
-          cropData,
-          crop,
-          field,
-          userId,
-          request,
-          transactionalManager,
-        );
+        const savedCropPlan = await this.saveCropPlanWithRecommendations(cropData,crop,field,userId,request,transactionalManager);
         Recommendations.push(savedCropPlan);
       }
     }
