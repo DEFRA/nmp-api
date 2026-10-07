@@ -120,54 +120,37 @@ async function buildCropDetail(service, plan) {
   const lastModifiedDate = await service.getLatestModifiedDate(plan.CropID);
 
   return {
-    CropId: plan.CropID,
-    CropTypeID: plan.CropTypeID,
-    CropTypeName: plan.CropTypeName,
-    CropGroupName: plan.CropGroupName,
-    FieldID: plan.FieldID,
-    FieldName: plan.FieldName,
-    CropVariety: plan.CropVariety,
-    OtherCropName: plan.OtherCropName,
-    CropInfo1: plan.CropInfo1,
-    CropInfo2: plan.CropInfo2,
-    Yield: plan.Yield,
-    CropOrder: plan.CropOrder,
-    LastModifiedOn: lastModifiedDate,
-    PlantingDate,
-    Management,
+    CropId: plan.CropID,CropTypeID: plan.CropTypeID,
+    CropTypeName: plan.CropTypeName,CropGroupName: plan.CropGroupName,
+    FieldID: plan.FieldID,FieldName: plan.FieldName,
+    CropVariety: plan.CropVariety,OtherCropName: plan.OtherCropName,
+    CropInfo1: plan.CropInfo1,CropInfo2: plan.CropInfo2,
+    Yield: plan.Yield,CropOrder: plan.CropOrder,
+    LastModifiedOn: lastModifiedDate,PlantingDate,
+    Management
   };
 }
 
 async function buildCropDetails(service, plans) {
   const plansWithNames = await service.mapCropTypeIdWithTheirNames(plans);
   const cropDetails = [];
-  for (const plan of plansWithNames) {
-    cropDetails.push(await buildCropDetail(service, plan));
-  }
+  for (const plan of plansWithNames) {cropDetails.push(await buildCropDetail(service, plan))}
   return cropDetails;
 }
 
 async function mapOrganicMaterial(service, crop, organicManure, allManureData) {
   let mannerManureTypeData = {};
   try {
-    const manureTypeResponse = await service.getManureTypeById(
-      allManureData,
-      organicManure.ManureTypeID,
-    );
+    const manureTypeResponse = await service.getManureTypeById(allManureData,organicManure.ManureTypeID);
     mannerManureTypeData = manureTypeResponse.data;
   } catch (error) {
     console.error("Error fetching manure type", error);
   }
-
   return {
-    OrganicMaterialId: organicManure.ID,
-    ApplicationDate: organicManure.ApplicationDate,
-    ManureTypeId: organicManure.ManureTypeID,
-    Field: crop.FieldName,
-    FieldId: crop.FieldID,
-    Crop: crop.CropTypeName,
-    TypeOfManure: mannerManureTypeData.name,
-    Rate: organicManure.ApplicationRate,
+    OrganicMaterialId: organicManure.ID,ApplicationDate: organicManure.ApplicationDate,
+    ManureTypeId: organicManure.ManureTypeID,Field: crop.FieldName,
+    FieldId: crop.FieldID,Crop: crop.CropTypeName,
+    TypeOfManure: mannerManureTypeData.name,Rate: organicManure.ApplicationRate
   };
 }
 
@@ -178,14 +161,11 @@ async function buildOrganicMaterials(service, cropDetails, request) {
         service,
         crop.CropId,
       );
-      const organicManureData = managementPeriodIds
-        ? await findOrganicManureData(service, managementPeriodIds)
-        : [];
+      const organicManureData = managementPeriodIds ? await findOrganicManureData(service, managementPeriodIds) : [];
       const allManureData =
         await service.MannerManureTypesService.getAllManureTypesList(request);
 
-      return Promise.all(
-        organicManureData.map((organicManure) =>
+      return Promise.all(organicManureData.map((organicManure) =>
           mapOrganicMaterial(service, crop, organicManure, allManureData),
         ),
       );
@@ -197,19 +177,13 @@ async function buildOrganicMaterials(service, cropDetails, request) {
 
 function mapFertiliserApplication(crop, fertiliser) {
   return {
-    InorganicFertiliserId: fertiliser.ID,
-    ApplicationDate: fertiliser.ApplicationDate,
-    Field: crop.FieldName,
-    Crop: crop.CropTypeName,
-    N: fertiliser.N,
-    P2O5: fertiliser.P2O5,
-    K2O: fertiliser.K2O,
-    MgO: fertiliser.MgO,
-    SO3: fertiliser.SO3,
-    Na2O: fertiliser.Na2O,
-    Lime: fertiliser.Lime,
-    NH4N: fertiliser.NH4N,
-    NO3N: fertiliser.NO3N,
+    InorganicFertiliserId: fertiliser.ID,ApplicationDate: fertiliser.ApplicationDate,
+    Field: crop.FieldName,Crop: crop.CropTypeName,
+    N: fertiliser.N,P2O5: fertiliser.P2O5,
+    K2O: fertiliser.K2O,MgO: fertiliser.MgO,
+    SO3: fertiliser.SO3,Na2O: fertiliser.Na2O,
+    Lime: fertiliser.Lime,NH4N: fertiliser.NH4N,
+    NO3N: fertiliser.NO3N
   };
 }
 
@@ -228,7 +202,6 @@ async function buildInorganicFertiliserApplications(service, cropDetails) {
       );
     }),
   );
-
   return fertiliserApplications.flat();
 }
 
@@ -240,7 +213,6 @@ const cropQueryMethods = {
         Year: year
       },
     });
-
     if (!currentYearCrop) {
       currentYearCrop = await this.repository.findOne({
         where: {
@@ -250,24 +222,14 @@ const cropQueryMethods = {
         },
       });
     }
-
-    if (currentYearCrop) {
-      return currentYearCrop.CropTypeID;
-    }
-
+    if (currentYearCrop) {return currentYearCrop.CropTypeID}
     const previousCropping = await this.previousCroppingRepository.findOne({
       where: { FieldID: fieldId, HarvestYear: year },
     });
-
     return previousCropping?.CropTypeID;
   },
 
-  async createCropWithManagementPeriods(
-    fieldId,
-    cropData,
-    managementPeriodData,
-    userId,
-  ) {
+  async createCropWithManagementPeriods(fieldId,cropData,managementPeriodData,userId) {
     return AppDataSource.transaction(async (transactionalManager) => {
       const crop = this.repository.create({
         ...cropData,
@@ -294,29 +256,17 @@ const cropQueryMethods = {
 
   async getCrops(fieldId, year, confirm) {
     const confirmValue = confirm ? 1 : 0;
-    const cropData = await this.repository.findOne({
-      where: { FieldID: fieldId, Year: year, Confirm: confirmValue },
-    });
+    const cropData = await this.repository.findOne({where: { FieldID: fieldId, Year: year, Confirm: confirmValue }});
     return cropData;
   },
 
   async getCropTypeDataByFieldAndYear(fieldId, year, confirm) {
-    const cropData = await this.repository.findOne({
-      where: { FieldID: fieldId, Year: year, Confirm: confirm },
-    });
+    const cropData = await this.repository.findOne({where: { FieldID: fieldId, Year: year, Confirm: confirm } });
     const cropTypeId = cropData?.CropTypeID;
-    if (cropTypeId === null || cropTypeId === undefined) {
-      throw boom.notFound(StaticStrings.HTTP_STATUS_NOT_FOUND);
-    }
-    const cropTypesList = await this.rB209ArableService.getData(
-      ARABLE.ALL_ARABLE_CROP_TYPES_ENDPOINT,
-    );
+    if (cropTypeId === null || cropTypeId === undefined) {console.log(StaticStrings.HTTP_STATUS_NOT_FOUND)}
+    const cropTypesList = await this.rB209ArableService.getData(ARABLE.ALL_ARABLE_CROP_TYPES_ENDPOINT);
     const cropType = cropTypesList.find((cT) => cT.cropTypeId === cropTypeId);
-    return {
-      cropTypeId: cropType.cropTypeId,
-      cropType: cropType.cropType,
-      cropGroupId: cropType.cropGroupId,
-    };
+    return {cropTypeId: cropType.cropTypeId,cropType: cropType.cropType,cropGroupId: cropType.cropGroupId};
   },
 
   async getPreviousAndNextCropTypeFlags(fieldId, year, cropTypeId) {
@@ -331,8 +281,7 @@ const cropQueryMethods = {
         order: { CropOrder: "DESC" },
       });
       const previousYearCropTypeID = previousYearCrop
-        ? previousYearCrop.CropTypeID
-        : (
+        ? previousYearCrop.CropTypeID : (
           await this.previousCroppingRepository.findOne({
             where: { FieldID: fieldId, HarvestYear: parsedYear - 1 },
           })
@@ -443,13 +392,10 @@ const cropQueryMethods = {
     rb209CountryID = country?.RB209CountryID ?? this.COUNTRY_BOTH;
     return rb209CountryID;
   },
-
   async mapCropTypeIdWithTheirNames(plans) {
     try {
       const unorderedMap = {};
-      const cropTypesList = await this.rB209ArableService.getData(
-        ARABLE.ALL_ARABLE_CROP_TYPES_ENDPOINT,
-      );
+      const cropTypesList = await this.rB209ArableService.getData(ARABLE.ALL_ARABLE_CROP_TYPES_ENDPOINT);
       for (const cropType of cropTypesList) {unorderedMap[cropType.cropTypeId] = cropType.cropType}
       for (const plan of plans) {plan.CropTypeName = unorderedMap[plan.CropTypeID] || null}
       return plans;
@@ -539,12 +485,8 @@ const cropQueryMethods = {
   },
 
   async maxDate(d1, d2) {
-    if (!d1) {
-      return d2 || null;
-    }
-    if (!d2) {
-      return d1 || null;
-    }
+    if (!d1) {return d2 || null}
+    if (!d2) {return d1 || null}
     return new Date(Math.max(d1.getTime(), d2.getTime()));
   },
 
@@ -555,46 +497,24 @@ const cropQueryMethods = {
         Year: year,
       },
     });
-
     return cropData;
   },
 
   async getOrganicInorganicManuresByCropId(cropId) {
     return AppDataSource.transaction(async (manager) => {
-      // 1. Fetch Management Periods for the crop
       const managementPeriods = await manager.find(ManagementPeriodEntity, {
         where: { CropID: cropId },
         select: ["ID"],
       });
-
-      if (!managementPeriods.length) {
-        return {
-          fertiliserManures: [],
-          organicManures: [],
-        };
-      }
-
+      if (!managementPeriods.length) {return {fertiliserManures: [],organicManures: []}}
       const managementPeriodIds = managementPeriods.map((mp) => mp.ID);
-
-      // 2. Fetch Organic Manures
       const organicManures = await manager.find(OrganicManureEntity, {
-        where: {
-          ManagementPeriodID: In(managementPeriodIds),
-        },
+        where: {ManagementPeriodID: In(managementPeriodIds)},
       });
-
-      // 3. Fetch Fertiliser Manures
       const fertiliserManures = await manager.find(FertiliserManuresEntity, {
-        where: {
-          ManagementPeriodID: In(managementPeriodIds),
-        },
+        where: {ManagementPeriodID: In(managementPeriodIds)},
       });
-
-      // 4. Return structured JSON
-      return {
-        fertiliserManures,
-        organicManures,
-      };
+      return {fertiliserManures,organicManures};
     });
   },
 };
