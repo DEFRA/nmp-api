@@ -326,7 +326,6 @@ class PlanService extends BaseService {
     await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(crop, transactionalManager, request, userId);
     return { message: "Default crop saved", crop: crop.FieldID };
   }
-
   async saveCropAndManagementPeriods(cropData, crop, userId, transactionalManager) {
     const savedCrop = await transactionalManager.save(
       CropEntity,
@@ -353,27 +352,12 @@ class PlanService extends BaseService {
     return ManagementPeriods;
   }
 
-  async updateNextCropRecommendations(
-    crop,
-    request,
-    userId,
-    transactionalManager,
-  ) {
+  async updateNextCropRecommendations(crop, request, userId, transactionalManager) {
     const nextAvailableCrop = await transactionalManager.findOne(CropEntity, {
-      where: {
-        FieldID: crop.FieldID,
-        Year: MoreThan(crop.Year),
-      },
+      where: {FieldID: crop.FieldID,Year: MoreThan(crop.Year)},
       order: { Year: "ASC" },
     });
-    if (nextAvailableCrop) {
-      this.updatingFutureRecommendations.updateRecommendationsForField(
-        crop.FieldID,
-        nextAvailableCrop.Year,
-        request,
-        userId,
-      );
-    }
+    if (nextAvailableCrop) {this.updatingFutureRecommendations.updateRecommendationsForField(crop.FieldID,nextAvailableCrop.Year,request,userId)}
   }
   async saveCropPlanWithRecommendations(cropData, crop, field, userId, request, transactionalManager) {
     const organicManure = null;
