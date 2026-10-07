@@ -320,21 +320,11 @@ const cropQueryMethods = {
   },
 
   async getPreviousAndNextCropTypeFlags(fieldId, year, cropTypeId) {
-    const parsedYear = Number.parseInt(year, 10);
-    const parsedCropTypeId = Number.parseInt(cropTypeId, 10);
-
-    const result = {
-      isGrassInPreviousYear: false,
-      isArableInNextYear: false,
-    };
-
-    if (!Number.isFinite(parsedYear) || !Number.isFinite(parsedCropTypeId)) {
-      return result;
-    }
-
+    const parsedYear = Number.parseInt(year, 10),parsedCropTypeId = Number.parseInt(cropTypeId, 10);
+    const result = {isGrassInPreviousYear: false,isArableInNextYear: false};
+    if (!Number.isFinite(parsedYear) || !Number.isFinite(parsedCropTypeId)) {return result}
     const isPlannedGrass = parsedCropTypeId === CropTypeMapper.GRASS;
     const isPlannedArable = parsedCropTypeId !== CropTypeMapper.GRASS;
-
     if (isPlannedArable) {
       const previousYearCrop = await this.repository.findOne({
         where: { FieldID: fieldId, Year: parsedYear - 1 },
@@ -347,8 +337,7 @@ const cropQueryMethods = {
             where: { FieldID: fieldId, HarvestYear: parsedYear - 1 },
           })
         )?.CropTypeID;
-      result.isGrassInPreviousYear =
-        previousYearCropTypeID === CropTypeMapper.GRASS;
+      result.isGrassInPreviousYear = previousYearCropTypeID === CropTypeMapper.GRASS;
     }
 
     if (isPlannedGrass) {
@@ -366,32 +355,20 @@ const cropQueryMethods = {
             where: { FieldID: fieldId, HarvestYear: parsedYear + 1 },
           })
         )?.CropTypeID;
-      result.isArableInNextYear =
-        nextYearCropTypeID !== null &&
-        nextYearCropTypeID !== undefined &&
-        nextYearCropTypeID !== CropTypeMapper.GRASS;
+      result.isArableInNextYear = nextYearCropTypeID !== null && nextYearCropTypeID !== undefined && nextYearCropTypeID !== CropTypeMapper.GRASS;
     }
-
     return result;
   },
 
   async getPreviousAndNextCropTypeFlagsByFieldAndYear(fieldId, year) {
     const parsedYear = Number.parseInt(year, 10);
-    const defaultResult = {
-      isGrassInPreviousYear: false,
-      isArableInNextYear: false,
-    };
-
-    if (!Number.isFinite(parsedYear)) {
-      return defaultResult;
-    }
-
+    const defaultResult = {isGrassInPreviousYear: false,isArableInNextYear: false};
+    if (!Number.isFinite(parsedYear)) {return defaultResult}
     const previousYearCrop = await this.repository.findOne({
       where: { FieldID: fieldId, Year: parsedYear - 1 },
       order: { CropOrder: "DESC" },
     });
-    const previousYearCropTypeID = previousYearCrop
-      ? previousYearCrop.CropTypeID
+    const previousYearCropTypeID = previousYearCrop ? previousYearCrop.CropTypeID
       : (
         await this.previousCroppingRepository.findOne({
           where: { FieldID: fieldId, HarvestYear: parsedYear - 1 },
@@ -415,131 +392,54 @@ const cropQueryMethods = {
 
     return {
       isGrassInPreviousYear: previousYearCropTypeID === CropTypeMapper.GRASS,
-      isArableInNextYear:
-        nextYearCropTypeID !== null &&
-        nextYearCropTypeID !== undefined &&
-        nextYearCropTypeID !== CropTypeMapper.GRASS,
+      isArableInNextYear: nextYearCropTypeID !== null && nextYearCropTypeID !== undefined && nextYearCropTypeID !== CropTypeMapper.GRASS,
     };
   },
 
   async getPreviousAndNextCropTypeFlagsByFieldIdsAndYear(fieldIds, year) {
     const parsedYear = Number.parseInt(year, 10);
-    if (!Number.isFinite(parsedYear) || !Array.isArray(fieldIds)) {
-      return [];
-    }
-
+    if (!Number.isFinite(parsedYear) || !Array.isArray(fieldIds)) {return []}
     const results = [];
     for (const rawFieldId of fieldIds) {
       const fieldId = Number.parseInt(rawFieldId, 10);
-      if (!Number.isFinite(fieldId)) {
-        continue;
-      }
-
-      const flags = await this.getPreviousAndNextCropTypeFlagsByFieldAndYear(
-        fieldId,
-        parsedYear,
-      );
-
-      results.push({
-        fieldId,
-        isGrassInPrevYear: flags.isGrassInPreviousYear,
-        isArableInNextYear: flags.isArableInNextYear,
-      });
+      if (!Number.isFinite(fieldId)) {continue}
+      const flags = await this.getPreviousAndNextCropTypeFlagsByFieldAndYear(fieldId,parsedYear);
+      results.push({fieldId,isGrassInPrevYear: flags.isGrassInPreviousYear,isArableInNextYear: flags.isArableInNextYear});
     }
-
     return results;
   },
 
   async getArableCheckByFieldAndYear(fieldId, year) {
     const parsedYear = Number.parseInt(year, 10);
     const defaultResult = { isGrassInPreviousYear: false };
-
-    if (!Number.isFinite(parsedYear)) {
-      return defaultResult;
-    }
-
-    const plannedCropTypeID = await this.resolvePlannedCropTypeIdByFieldAndYear(
-      fieldId,
-      parsedYear,
-    );
-
-    if (
-      plannedCropTypeID === null ||
-      plannedCropTypeID === undefined ||
-      plannedCropTypeID === CropTypeMapper.GRASS
-    ) {
-      return defaultResult;
-    }
-
-    const flags = await this.getPreviousAndNextCropTypeFlags(
-      fieldId,
-      parsedYear,
-      plannedCropTypeID,
-    );
-
+    if (!Number.isFinite(parsedYear)) {return defaultResult}
+    const plannedCropTypeID = await this.resolvePlannedCropTypeIdByFieldAndYear(fieldId,parsedYear);
+    if (plannedCropTypeID === null || plannedCropTypeID === undefined || plannedCropTypeID === CropTypeMapper.GRASS) {return defaultResult}
+    const flags = await this.getPreviousAndNextCropTypeFlags(fieldId,parsedYear,plannedCropTypeID);
     return { isGrassInPreviousYear: flags.isGrassInPreviousYear };
   },
 
   async getGrassCheckByFieldAndYear(fieldId, year) {
     const parsedYear = Number.parseInt(year, 10);
     const defaultResult = { isArableInNextYear: false };
-
-    if (!Number.isFinite(parsedYear)) {
-      return defaultResult;
-    }
-
-    const plannedCropTypeID = await this.resolvePlannedCropTypeIdByFieldAndYear(
-      fieldId,
-      parsedYear,
-    );
-
-    if (plannedCropTypeID !== CropTypeMapper.GRASS) {
-      return defaultResult;
-    }
-
-    const flags = await this.getPreviousAndNextCropTypeFlags(
-      fieldId,
-      parsedYear,
-      plannedCropTypeID,
-    );
-
+    if (!Number.isFinite(parsedYear)) {return defaultResult}
+    const plannedCropTypeID = await this.resolvePlannedCropTypeIdByFieldAndYear( fieldId,parsedYear);
+    if (plannedCropTypeID !== CropTypeMapper.GRASS) {return defaultResult}
+    const flags = await this.getPreviousAndNextCropTypeFlags(fieldId,parsedYear,plannedCropTypeID);
     return { isArableInNextYear: flags.isArableInNextYear };
   },
 
   async filterBySingleSequenceId(data, sequenceId) {
-    const filteredCalculations = data.calculations.filter(
-      (item) => item.sequenceId === sequenceId,
-    );
-    const filteredAdviceNotes = data.adviceNotes.filter(
-      (item) => item.sequenceId === sequenceId,
-    );
-    return {
-      ...data,
-      calculations: filteredCalculations,
-      adviceNotes: filteredAdviceNotes,
-    };
+    const filteredCalculations = data.calculations.filter((item) => item.sequenceId === sequenceId);
+    const filteredAdviceNotes = data.adviceNotes.filter((item) => item.sequenceId === sequenceId);
+    return {...data,calculations: filteredCalculations, adviceNotes: filteredAdviceNotes};
   },
-
   async fetchRb209CountryId(fieldId, transactionalManager = null) {
     let rb209CountryID = this.COUNTRY_BOTH; // default value
     const manager = transactionalManager ?? this.fieldRepository.manager;
-
-    const field = await manager.findOne(FieldEntity, {
-      where: { ID: fieldId },
-      select: ["FarmID"],
-    });
-    const farm = field
-      ? await manager.findOne(FarmEntity, {
-        where: { ID: field.FarmID },
-        select: ["CountryID"],
-      })
-      : null;
-    const country = farm
-      ? await manager.findOne(CountryEntity, {
-        where: { ID: farm.CountryID },
-        select: ["RB209CountryID"],
-      })
-      : null;
+    const field = await manager.findOne(FieldEntity, {where: { ID: fieldId },select: ["FarmID"]});
+    const farm = field ? await manager.findOne(FarmEntity, {where: { ID: field.FarmID },select: ["CountryID"]}): null;
+    const country = farm ? await manager.findOne(CountryEntity, {where: { ID: farm.CountryID },select: ["RB209CountryID"]}): null;
     rb209CountryID = country?.RB209CountryID ?? this.COUNTRY_BOTH;
     return rb209CountryID;
   },
@@ -550,12 +450,8 @@ const cropQueryMethods = {
       const cropTypesList = await this.rB209ArableService.getData(
         ARABLE.ALL_ARABLE_CROP_TYPES_ENDPOINT,
       );
-      for (const cropType of cropTypesList) {
-        unorderedMap[cropType.cropTypeId] = cropType.cropType;
-      }
-      for (const plan of plans) {
-        plan.CropTypeName = unorderedMap[plan.CropTypeID] || null;
-      }
+      for (const cropType of cropTypesList) {unorderedMap[cropType.cropTypeId] = cropType.cropType}
+      for (const plan of plans) {plan.CropTypeName = unorderedMap[plan.CropTypeID] || null}
       return plans;
     } catch (error) {
       console.error("Error mapping CropTypeId with their names:", error);
@@ -564,32 +460,18 @@ const cropQueryMethods = {
   },
 
   async getManureTypeById(manureTypesResponse, manureTypeID) {
-    const manureType = manureTypesResponse.data.find(
-      (mt) => mt.id === manureTypeID,
-    );
-    if (!manureType) {
-      console.log(`ManureType not found for ID ${manureTypeID}`);
-    }
+    const manureType = manureTypesResponse.data.find((mt) => mt.id === manureTypeID);
+    if (!manureType) {console.log(`ManureType not found for ID ${manureTypeID}`)}
     return { data: manureType };
   },
 
   async getOrganicAndInorganicDetails(farmId, harvestYear, request) {
-    const storedProcedureGetPlansByHarvestYear =
-      "EXEC dbo.spCrops_GetPlansByHarvestYear @farmId = @0, @harvestYear = @1";
-    const plans = await this.executeQuery(
-      storedProcedureGetPlansByHarvestYear,
-      [farmId, harvestYear],
-    );
+    const storedProcedureGetPlansByHarvestYear = "EXEC dbo.spCrops_GetPlansByHarvestYear @farmId = @0, @harvestYear = @1";
+    const plans = await this.executeQuery(storedProcedureGetPlansByHarvestYear,[farmId, harvestYear]);
     const rainfall = await findFarmRainfall(this, farmId);
     const cropDetails = await buildCropDetails(this, plans);
-    const flattenedOrganicMaterials = await buildOrganicMaterials(
-      this,
-      cropDetails,
-      request,
-    );
-    const inorganicFertiliserApplications =
-      await buildInorganicFertiliserApplications(this, cropDetails);
-
+    const flattenedOrganicMaterials = await buildOrganicMaterials(this,cropDetails,request);
+    const inorganicFertiliserApplications = await buildInorganicFertiliserApplications(this, cropDetails);
     return {
       farmDetails: { rainfall: rainfall || "Unknown" },
       CropDetails: cropDetails,
@@ -600,39 +482,28 @@ const cropQueryMethods = {
 
   async getLatestModifiedDate(cropId) {
     return AppDataSource.transaction(async (transactionalManager) => {
-      // 1. Crop latest
       const crop = await transactionalManager.findOne(CropEntity, {
         where: { ID: cropId },
         select: ["CreatedOn", "ModifiedOn"],
       });
-
       let cropLatest = null;
-      if (crop) {
-        cropLatest = await this.maxDate(crop.CreatedOn, crop.ModifiedOn);
-      }
-
-      // 2. Get ManagementPeriod IDs
+      if (crop) {cropLatest = await this.maxDate(crop.CreatedOn, crop.ModifiedOn)}
       const periods = await transactionalManager.find(ManagementPeriodEntity, {
         where: { CropID: cropId },
         select: ["ID"],
       });
       const periodIds = periods.map((p) => p.ID);
-
-      // 3. Organic manure latest
       let organicLatest = null;
       if (periodIds.length) {
         const organics = await transactionalManager.find(OrganicManureEntity, {
           where: { ManagementPeriodID: In(periodIds) },
           select: ["CreatedOn", "ModifiedOn"],
         });
-
         for (const o of organics) {
           const latest = await this.maxDate(o.CreatedOn, o.ModifiedOn);
           organicLatest = await this.maxDate(organicLatest, latest);
         }
       }
-
-      // 4. Fertiliser latest
       let fertiliserLatest = null;
       if (periodIds.length) {
         const fertilisers = await transactionalManager.find(
@@ -642,14 +513,11 @@ const cropQueryMethods = {
             select: ["CreatedOn", "ModifiedOn"],
           },
         );
-
         for (const f of fertilisers) {
           const latest = await this.maxDate(f.CreatedOn, f.ModifiedOn);
           fertiliserLatest = await this.maxDate(fertiliserLatest, latest);
         }
       }
-
-      // 5. Recommendation latest (one per ManagementPeriod)
       let recommendationLatest = null;
       if (periodIds.length) {
         const recommendations = await transactionalManager.find(
@@ -659,25 +527,13 @@ const cropQueryMethods = {
             select: ["CreatedOn", "ModifiedOn"],
           },
         );
-
         for (const r of recommendations) {
           const latest = await this.maxDate(r.CreatedOn, r.ModifiedOn);
-          recommendationLatest = await this.maxDate(
-            recommendationLatest,
-            latest,
-          );
+          recommendationLatest = await this.maxDate(recommendationLatest,latest);
         }
       }
-
-      // 6. Final latest among all four
-      const finalLatest = await this.maxDate(
-        cropLatest,
-        await this.maxDate(
-          organicLatest,
-          await this.maxDate(fertiliserLatest, recommendationLatest),
-        ),
+      const finalLatest = await this.maxDate(cropLatest,await this.maxDate(organicLatest,await this.maxDate(fertiliserLatest, recommendationLatest)),
       );
-
       return finalLatest;
     });
   },
