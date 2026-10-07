@@ -19,6 +19,30 @@ const cropPlanValidation = {
 };
 const cropListPath = "/crops/fields/{fieldId}";
 const createCropDescription = "Create Crop Plan";
+const fieldAndYearValidation = {
+  params: Joi.object({
+    fieldId: Joi.number().integer().required(),
+  }),
+  query: Joi.object({
+    year: Joi.number().integer().required(),
+  }),
+  failAction: validationFailAction,
+};
+
+const buildCheckByYearRoute = ({ path, description, handlerMethod }) => ({
+  method: "GET",
+  path,
+  options: {
+    tags: ["api", "Crop"],
+    description,
+    validate: fieldAndYearValidation,
+  },
+  handler: async (request, h) => {
+    const controller = new CropController(request, h);
+    return controller[handlerMethod]();
+  },
+});
+
 module.exports = [
   {
     method: "GET",
@@ -252,50 +276,16 @@ module.exports = [
       return controller.getPreviousAndNextCropTypeFlagsByFieldAndYear();
     },
   },
-  {
-    method: "GET",
+  buildCheckByYearRoute({
     path: "/crops/check-arable-by-year/{fieldId}",
-    options: {
-      tags: ["api", "Crop"],
-      description:
-        "Check arable planning status by field id and year",
-      validate: {
-        params: Joi.object({
-          fieldId: Joi.number().integer().required(),
-        }),
-        query: Joi.object({
-          year: Joi.number().integer().required(),
-        }),
-        failAction: validationFailAction,
-      },
-    },
-    handler: async (request, h) => {
-      const controller = new CropController(request, h);
-      return controller.getArableCheckByFieldAndYear();
-    },
-  },
-  {
-    method: "GET",
+    description: "Check arable planning status by field id and year",
+    handlerMethod: "getArableCheckByFieldAndYear",
+  }),
+  buildCheckByYearRoute({
     path: "/crops/check-grass-by-year/{fieldId}",
-    options: {
-      tags: ["api", "Crop"],
-      description:
-        "Check grass planning status by field id and year",
-      validate: {
-        params: Joi.object({
-          fieldId: Joi.number().integer().required(),
-        }),
-        query: Joi.object({
-          year: Joi.number().integer().required(),
-        }),
-        failAction: validationFailAction,
-      },
-    },
-    handler: async (request, h) => {
-      const controller = new CropController(request, h);
-      return controller.getGrassCheckByFieldAndYear();
-    },
-  },
+    description: "Check grass planning status by field id and year",
+    handlerMethod: "getGrassCheckByFieldAndYear",
+  }),
   {
     method: "PUT",
     path: cropListPath,
