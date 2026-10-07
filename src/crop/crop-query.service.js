@@ -133,9 +133,9 @@ async function buildCropDetail(service, plan) {
 
 async function buildCropDetails(service, plans) {
   const plansWithNames = await service.mapCropTypeIdWithTheirNames(plans);
-  const cropDetails = [];
-  for (const plan of plansWithNames) {cropDetails.push(await buildCropDetail(service, plan))}
-  return cropDetails;
+  return Promise.all(
+    plansWithNames.map((plan) => buildCropDetail(service, plan)),
+  );
 }
 
 async function mapOrganicMaterial(service, crop, organicManure, allManureData) {
@@ -349,12 +349,16 @@ const cropQueryMethods = {
     const parsedYear = Number.parseInt(year, 10);
     if (!Number.isFinite(parsedYear) || !Array.isArray(fieldIds)) {return []}
     const results = [];
-    for (const rawFieldId of fieldIds) {
-      const fieldId = Number.parseInt(rawFieldId, 10);
-      if (!Number.isFinite(fieldId)) {continue}
-      const flags = await this.getPreviousAndNextCropTypeFlagsByFieldAndYear(fieldId,parsedYear);
-      results.push({fieldId,isGrassInPrevYear: flags.isGrassInPreviousYear,isArableInNextYear: flags.isArableInNextYear});
-    }
+    const collectFlagsByIndex = async (index) => {
+      if (index >= fieldIds.length) {return}
+      const fieldId = Number.parseInt(fieldIds[index], 10);
+      if (Number.isFinite(fieldId)) {
+        const flags = await this.getPreviousAndNextCropTypeFlagsByFieldAndYear(fieldId,parsedYear);
+        results.push({fieldId,isGrassInPrevYear: flags.isGrassInPreviousYear,isArableInNextYear: flags.isArableInNextYear});
+      }
+      await collectFlagsByIndex(index + 1);
+    };
+    await collectFlagsByIndex(0);
     return results;
   },
 
@@ -473,10 +477,16 @@ const cropQueryMethods = {
             select: ["CreatedOn", "ModifiedOn"],
           },
         );
-        for (const r of recommendations) {
-          const latest = await this.maxDate(r.CreatedOn, r.ModifiedOn);
-          recommendationLatest = await this.maxDate(recommendationLatest,latest);
-        }
+        const getRecommendationLatestByIndex = async (index, currentLatest) => {
+          if (index >= recommendations.length) {return currentLatest}
+          const latest = await this.maxDate(
+            recommendations[index].CreatedOn,
+            recommendations[index].ModifiedOn,
+          );
+          const nextLatest = await this.maxDate(currentLatest, latest);
+          return getRecommendationLatestByIndex(index + 1, nextLatest);
+        };
+        recommendationLatest = await getRecommendationLatestByIndex(0, null);
       }
       const finalLatest = await this.maxDate(cropLatest,await this.maxDate(organicLatest,await this.maxDate(fertiliserLatest, recommendationLatest)),
       );
