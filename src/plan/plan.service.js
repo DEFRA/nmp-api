@@ -353,8 +353,13 @@ class PlanService extends BaseService {
     return ManagementPeriods;
   }
 
-  async updateNextCropRecommendations(crop, request, userId) {
-    const nextAvailableCrop = await this.cropRepository.findOne({
+  async updateNextCropRecommendations(
+    crop,
+    request,
+    userId,
+    transactionalManager,
+  ) {
+    const nextAvailableCrop = await transactionalManager.findOne(CropEntity, {
       where: {
         FieldID: crop.FieldID,
         Year: MoreThan(crop.Year),
@@ -381,7 +386,12 @@ class PlanService extends BaseService {
       request,
       userId,
     );
-    await this.updateNextCropRecommendations(crop, request, userId);
+    await this.updateNextCropRecommendations(
+      crop,
+      request,
+      userId,
+      transactionalManager,
+    );
 
     return {
       message: "crop saved",
@@ -400,7 +410,7 @@ class PlanService extends BaseService {
       const cropData = crops[index];
       const crop = cropData?.Crop;
       const field = await this.validateCropAndField(crop, Errors);
-      await this.applyScotlandPreviousGrassRulesOnCreate(crop,transactionalManager,userId);
+      await this.applyScotlandPreviousGrassRulesOnCreate(crop, transactionalManager, userId);
       const previousCrop =
         await this.CalculatePreviousCropService.findPreviousCrop(
           field.ID,
