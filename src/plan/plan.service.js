@@ -407,21 +407,12 @@ class PlanService extends BaseService {
         Recommendations.push(savedCropPlan);
       }
     }
-
-    return {
-      Recommendations,
-    };
+    return {Recommendations};
   }
-
   async getCropsPlanFields(farmId, harvestYear, cropGroupName) {
     try {
-      const storedProcedure =
-        "EXEC dbo.spCrops_GetCropPlansFieldsByHarvestYear @farmId = @0, @harvestYear = @1, @cropGroupName = @2";
-      const plans = await AppDataSource.query(storedProcedure, [
-        farmId,
-        harvestYear,
-        cropGroupName,
-      ]);
+      const storedProcedure = "EXEC dbo.spCrops_GetCropPlansFieldsByHarvestYear @farmId = @0, @harvestYear = @1, @cropGroupName = @2";
+      const plans = await AppDataSource.query(storedProcedure, [ farmId, harvestYear,cropGroupName]);
       return plans;
     } catch (error) {
       console.error(
