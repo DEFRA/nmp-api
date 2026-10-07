@@ -404,9 +404,7 @@ const cropMutationMethods = {
   },
 
   dispatchBackgroundTasks(backgroundTasks) {
-    if (!Array.isArray(backgroundTasks) || backgroundTasks.length === 0) {
-      return;
-    }
+    if (!Array.isArray(backgroundTasks) || backgroundTasks.length === 0) {return}
     const futureRecommendationKeys = new Set(),
       warningByCropKeys = new Set();
     for (const task of backgroundTasks) {
@@ -414,13 +412,7 @@ const cropMutationMethods = {
         const futureRecommendationKey = `${task.fieldID}:${task.year}`;
         if (!futureRecommendationKeys.has(futureRecommendationKey)) {
           futureRecommendationKeys.add(futureRecommendationKey);
-          this.updatingFutureRecommendations
-            .updateRecommendationsForField(
-              task.fieldID,
-              task.year,
-              task.request,
-              task.userId,
-            )
+          this.updatingFutureRecommendations.updateRecommendationsForField(task.fieldID,task.year,task.request,task.userId)
             .catch((error) => {
               console.error(
                 `Error updating next crop's recommendations for FieldID: ${task.fieldID}, Year: ${task.year}:`,
@@ -448,33 +440,13 @@ const cropMutationMethods = {
     }
   },
 
-  scheduleFutureRecommendation(
-    updatedCrop,
-    nextAvailableCrop,
-    backgroundTasks,
-    request,
-    userId,
-  ) {
-    if (!nextAvailableCrop) {
-      return;
-    }
+  scheduleFutureRecommendation(updatedCrop,nextAvailableCrop,backgroundTasks,request,userId) {
+    if (!nextAvailableCrop) {return}
     if (Array.isArray(backgroundTasks)) {
-      backgroundTasks.push({
-        type: "futureRecommendation",
-        fieldID: updatedCrop.FieldID,
-        year: nextAvailableCrop.Year,
-        request,
-        userId,
-      });
+      backgroundTasks.push({type: "futureRecommendation",fieldID: updatedCrop.FieldID,year: nextAvailableCrop.Year,request,userId});
       return;
     }
-    this.updatingFutureRecommendations
-      .updateRecommendationsForField(
-        updatedCrop.FieldID,
-        nextAvailableCrop.Year,
-        request,
-        userId,
-      )
+    this.updatingFutureRecommendations.updateRecommendationsForField(updatedCrop.FieldID,nextAvailableCrop.Year,request,userId)
       .catch((error) => {
         console.error("Error updating next crop's recommendations:", error);
       });
@@ -482,22 +454,11 @@ const cropMutationMethods = {
 
   scheduleWarningRecalculation(updatedCrop, backgroundTasks, userId) {
     if (Array.isArray(backgroundTasks)) {
-      backgroundTasks.push({
-        type: "warningByCrop",
-        cropID: updatedCrop.ID,
-        userId,
-      });
+      backgroundTasks.push({type: "warningByCrop",cropID: updatedCrop.ID,userId});
       return;
     }
-
-    this.ProcessFutureManuresForWarnings.processWarningsByCrop(
-      updatedCrop.ID,
-      userId,
-    ).catch((error) => {
-      console.error(
-        `Error processing warning recalculation for crop ${updatedCrop.ID}:`,
-        error,
-      );
+    this.ProcessFutureManuresForWarnings.processWarningsByCrop(updatedCrop.ID,userId).catch((error) => {
+      console.error(`Error processing warning recalculation for crop ${updatedCrop.ID}:`,error);
     });
   },
 
@@ -515,14 +476,7 @@ const cropMutationMethods = {
     }
     const updatedCrop = await transactionalManager.findOne(CropEntity, { where: { ID: ID } });
     const rb209CountryID = await this.fetchRb209CountryId(crop.FieldID, transactionalManager);
-    await cropMutationMethods.applyScotlandPreviousGrassRules(
-      transactionalManager,
-      updatedCrop,
-      updatedCropData.PreviousGrass,
-      hasIncomingPreviousGrass,
-      rb209CountryID,
-      userId,
-    );
+    await cropMutationMethods.applyScotlandPreviousGrassRules(transactionalManager,updatedCrop,updatedCropData.PreviousGrass,hasIncomingPreviousGrass,rb209CountryID,userId);
     await this.validateAndHandleSecondCrop(transactionalManager, updatedCrop, updatedCrop.FieldID, updatedCrop.Year, rb209CountryID);
     const updatedManagementPeriods = await this.syncManagementPeriodsBySequence(transactionalManager, crop.ID, userId, cropEntry.ManagementPeriods);
     const organicManure = null;
@@ -562,27 +516,13 @@ const cropMutationMethods = {
             await this.deleteCrop(cropId, userId, request, transactionalManager);
           }
         }
-        const { backgroundTasks } = await this.updateCropData(
-          cropsWithID,
-          userId,
-          request,
-          transactionalManager,
-        );
-        const createdPlan = await this.planService.createNutrientsRecommendationForField(
-          cropsWithoutID,
-          userId,
-          request,
-          transactionalManager,
-        );
+        const { backgroundTasks } = await this.updateCropData(cropsWithID,userId,request,transactionalManager);
+        const createdPlan = await this.planService.createNutrientsRecommendationForField(cropsWithoutID,userId,request,transactionalManager);
         return { isSuccess: createdPlan != null, backgroundTasks };
       },
     );
-    cropMutationMethods.dispatchBackgroundTasks.call(
-      this,
-      result.backgroundTasks,
-    );
+    cropMutationMethods.dispatchBackgroundTasks.call(this,result.backgroundTasks);
     return result.isSuccess;
   },
 };
-
 module.exports = { cropMutationMethods };
