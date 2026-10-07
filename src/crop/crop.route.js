@@ -181,9 +181,7 @@ module.exports = [
       tags: ["api", "Crop"],
       description: "Create Crop by Field Id",
       validate: {
-        params: Joi.object({
-          fieldId: Joi.number().integer().required(),
-        }),
+        params: Joi.object({fieldId: Joi.number().integer().required()}),
         payload: CreateCropWithManagementPeriodsDto,
         failAction: validationFailAction,
       },
@@ -200,9 +198,7 @@ module.exports = [
       tags: ["api", "Crop"],
       description: createCropDescription,
       validate: {
-        query: Joi.object({
-          async: Joi.boolean().optional(),
-        }),
+        query: Joi.object({async: Joi.boolean().optional()}),
         payload: CreatePlanDto,
         failAction: validationFailAction,
       },
@@ -214,13 +210,8 @@ module.exports = [
     options: {
       tags: ["api", "Crop"],
       validate: {
-        params: Joi.object({
-          fieldId: Joi.number().integer().required(),
-        }),
-        query: Joi.object({
-          year: Joi.number().integer().required(),
-          confirm: Joi.boolean().required(),
-        }),
+        params: Joi.object({fieldId: Joi.number().integer().required()}),
+        query: Joi.object({year: Joi.number().integer().required(),confirm: Joi.boolean().required()}),
         failAction: validationFailAction,
       },
     },
@@ -234,16 +225,10 @@ module.exports = [
     path: "/crops/previous-next-crop-flags/{fieldId}",
     options: {
       tags: ["api", "Crop"],
-      description:
-        "Check previous-year grass and next-year arable status for the planned crop",
+      description: "Check previous-year grass and next-year arable status for the planned crop",
       validate: {
-        params: Joi.object({
-          fieldId: Joi.number().integer().required(),
-        }),
-        query: Joi.object({
-          year: Joi.number().integer().required(),
-          cropTypeId: Joi.number().integer().required(),
-        }),
+        params: Joi.object({fieldId: Joi.number().integer().required()}),
+        query: Joi.object({year: Joi.number().integer().required(),cropTypeId: Joi.number().integer().required()}),
         failAction: validationFailAction,
       },
     },
@@ -261,14 +246,10 @@ module.exports = [
         "Check previous-year grass and next-year arable status using field id list and year",
       validate: {
         payload: Joi.object({
-          fieldIds: Joi.array()
-            .items(Joi.number().integer().required())
-            .min(1)
-            .required()
-            .description("Array of field IDs, e.g., [1, 2, 3]"),
-          year: Joi.number().integer().required(),
+          fieldIds: Joi.array().items(Joi.number().integer().required()).min(1).required().description("Array of field IDs, e.g., [1, 2, 3]"),
+          year: Joi.number().integer().required()
         }),
-        failAction: validationFailAction,
+        failAction: validationFailAction
       },
     },
     handler: async (request, h) => {
