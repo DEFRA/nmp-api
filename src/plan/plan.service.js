@@ -267,44 +267,17 @@ class PlanService extends BaseService {
     transactionalManager,
     userId,
   ) {
-    const hasIncomingPreviousGrass = Object.prototype.hasOwnProperty.call(
-      crop,
-      "PreviousGrass",
-    );
-    const rb209CountryID = await this.CalculatePreviousCropService.getRb209CountryId(
-      crop.FieldID,
-      transactionalManager,
-    );
-
-    if (!this.isScotlandCountry(rb209CountryID)) {
-      return;
-    }
-
+    const hasIncomingPreviousGrass = Object.hasOwn(crop,"PreviousGrass");
+    const rb209CountryID = await this.CalculatePreviousCropService.getRb209CountryId(crop.FieldID,transactionalManager);
+    if (!this.isScotlandCountry(rb209CountryID)) {return}
     if (this.isArableCropType(crop.CropTypeID)) {
-      const previousYearCrop = await this.getCropForYear(
-        crop.FieldID,
-        crop.Year - 1,
-        transactionalManager,
-      );
-      if (!this.isGrassCropType(previousYearCrop?.CropTypeID)) {
-        crop.PreviousGrass = null;
-      }
+      const previousYearCrop = await this.getCropForYear(crop.FieldID,crop.Year - 1,transactionalManager);
+      if (!this.isGrassCropType(previousYearCrop?.CropTypeID)) {crop.PreviousGrass = null}
       return;
     }
-
-    if (!this.isGrassCropType(crop.CropTypeID) || !hasIncomingPreviousGrass) {
-      return;
-    }
-
-    const nextYearCrop = await this.getNextYearCropForField(
-      crop.FieldID,
-      crop.Year,
-      transactionalManager,
-    );
-    if (!nextYearCrop) {
-      return;
-    }
-
+    if (!this.isGrassCropType(crop.CropTypeID) || !hasIncomingPreviousGrass) {return}
+    const nextYearCrop = await this.getNextYearCropForField(crop.FieldID,crop.Year,transactionalManager);
+    if (!nextYearCrop) {return}
     if (this.isArableCropType(nextYearCrop.CropTypeID)) {
       await this.setCropPreviousGrass(
         transactionalManager,
@@ -315,14 +288,8 @@ class PlanService extends BaseService {
     }
   }
 
-  async createNutrientsRecommendationForField(
-    crops,
-    userId,
-    request,
-    transactionalManager,
-  ) {
+  async createNutrientsRecommendationForField(crops,userId,request,transactionalManager) {
     let savedPlan;
-    // ✅ If a global transaction manager is provided, use it.
     if (transactionalManager) {
       savedPlan = await this.createNutrientsRecommendationWithinTransaction(
         crops,
@@ -332,8 +299,6 @@ class PlanService extends BaseService {
       );
       return savedPlan;
     }
-
-    // ✅ Otherwise, start a new local transaction.
     return AppDataSource.transaction(async (localManager) => {
       savedPlan = await this.createNutrientsRecommendationWithinTransaction(
         crops,
@@ -348,16 +313,11 @@ class PlanService extends BaseService {
   async validateCropAndField(crop, Errors) {
     const errors = this.handleCropValidation(crop);
     Errors.push(...errors);
-
     const fieldId = crop.FieldID;
     const { field, errors: fieldErrors } =
       await this.handleFieldValidation(fieldId);
     Errors.push(...fieldErrors);
-
-    if (Errors.length > 0) {
-      throw new Error(JSON.stringify(Errors));
-    }
-
+    if (Errors.length > 0) {throw new Error(JSON.stringify(Errors)) }
     return field;
   }
 
