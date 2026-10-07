@@ -353,8 +353,13 @@ class PlanService extends BaseService {
     return ManagementPeriods;
   }
 
-  async updateNextCropRecommendations(crop, request, userId) {
-    const nextAvailableCrop = await this.cropRepository.findOne({
+  async updateNextCropRecommendations(
+    crop,
+    request,
+    userId,
+    transactionalManager,
+  ) {
+    const nextAvailableCrop = await transactionalManager.findOne(CropEntity, {
       where: {
         FieldID: crop.FieldID,
         Year: MoreThan(crop.Year),
@@ -373,22 +378,16 @@ class PlanService extends BaseService {
   async saveCropPlanWithRecommendations(cropData, crop, field, userId, request, transactionalManager) {
     const organicManure = null;
     const ManagementPeriods = await this.saveCropAndManagementPeriods(cropData, crop, userId, transactionalManager);
-    const savedRecommendation = await this.generateRecommendations.generateRecommendations(
-      field.ID,
-      crop.Year,
-      organicManure,
-      transactionalManager,
+    const savedRecommendation = await this.generateRecommendations.generateRecommendations(field.ID,crop.Year,organicManure,transactionalManager,request,userId,);
+    await this.updateNextCropRecommendations(
+      crop,
       request,
       userId,
+      transactionalManager,
     );
-    await this.updateNextCropRecommendations(crop, request, userId);
-
     return {
-      message: "crop saved",
-      crop: crop.FieldID,
-      Recommendations: savedRecommendation,
-      ManagementPeriods: ManagementPeriods,
-    };
+      message: "crop saved",crop: crop.FieldID,
+      Recommendations: savedRecommendation,ManagementPeriods: ManagementPeriods};
   }
 
   async createNutrientsRecommendationWithinTransaction(crops, userId, request, transactionalManager) {
@@ -400,7 +399,7 @@ class PlanService extends BaseService {
       const cropData = crops[index];
       const crop = cropData?.Crop;
       const field = await this.validateCropAndField(crop, Errors);
-      await this.applyScotlandPreviousGrassRulesOnCreate(crop,transactionalManager,userId);
+      await this.applyScotlandPreviousGrassRulesOnCreate(crop, transactionalManager, userId);
       const previousCrop =
         await this.CalculatePreviousCropService.findPreviousCrop(
           field.ID,

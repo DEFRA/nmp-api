@@ -137,8 +137,7 @@ const CropEntity = new EntitySchema({
       default: 1,
     },
     IsPermanentSward: {
-      type: "bit",
-      default: 0,
+      type: "bit"
     },
     CreatedOn: {
       type: "datetime2",
