@@ -400,11 +400,7 @@ class PlanService extends BaseService {
       const cropData = crops[index];
       const crop = cropData?.Crop;
       const field = await this.validateCropAndField(crop, Errors);
-      await this.applyScotlandPreviousGrassRulesOnCreate(
-        crop,
-        transactionalManager,
-        userId,
-      );
+      await this.applyScotlandPreviousGrassRulesOnCreate(crop,transactionalManager,userId);
       const previousCrop =
         await this.CalculatePreviousCropService.findPreviousCrop(
           field.ID,
