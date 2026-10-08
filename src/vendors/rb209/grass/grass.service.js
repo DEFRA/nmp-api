@@ -1,7 +1,7 @@
 const { CountryMapper } = require("../../../constants/country-mapper");
 const RB209BaseService = require("../base.service");
 const CacheManager = require("../cacheManager");
-const { randomInt } = require("crypto");
+const { randomInt } = require("node:crypto");
 
 const cacheManager = new CacheManager();
 class RB209GrassService extends RB209BaseService {
