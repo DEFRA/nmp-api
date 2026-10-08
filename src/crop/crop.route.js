@@ -19,6 +19,30 @@ const cropPlanValidation = {
 };
 const cropListPath = "/crops/fields/{fieldId}";
 const createCropDescription = "Create Crop Plan";
+const fieldAndYearValidation = {
+  params: Joi.object({
+    fieldId: Joi.number().integer().required(),
+  }),
+  query: Joi.object({
+    year: Joi.number().integer().required(),
+  }),
+  failAction: validationFailAction,
+};
+
+const buildCheckByYearRoute = ({ path, description, handlerMethod }) => ({
+  method: "GET",
+  path,
+  options: {
+    tags: ["api", "Crop"],
+    description,
+    validate: fieldAndYearValidation,
+  },
+  handler: async (request, h) => {
+    const controller = new CropController(request, h);
+    return controller[handlerMethod]();
+  },
+});
+
 module.exports = [
   {
     method: "GET",
@@ -157,9 +181,7 @@ module.exports = [
       tags: ["api", "Crop"],
       description: "Create Crop by Field Id",
       validate: {
-        params: Joi.object({
-          fieldId: Joi.number().integer().required(),
-        }),
+        params: Joi.object({fieldId: Joi.number().integer().required()}),
         payload: CreateCropWithManagementPeriodsDto,
         failAction: validationFailAction,
       },
@@ -176,9 +198,7 @@ module.exports = [
       tags: ["api", "Crop"],
       description: createCropDescription,
       validate: {
-        query: Joi.object({
-          async: Joi.boolean().optional(),
-        }),
+        query: Joi.object({async: Joi.boolean().optional()}),
         payload: CreatePlanDto,
         failAction: validationFailAction,
       },
@@ -190,13 +210,8 @@ module.exports = [
     options: {
       tags: ["api", "Crop"],
       validate: {
-        params: Joi.object({
-          fieldId: Joi.number().integer().required(),
-        }),
-        query: Joi.object({
-          year: Joi.number().integer().required(),
-          confirm: Joi.boolean().required(),
-        }),
+        params: Joi.object({fieldId: Joi.number().integer().required()}),
+        query: Joi.object({year: Joi.number().integer().required(),confirm: Joi.boolean().required()}),
         failAction: validationFailAction,
       },
     },
@@ -205,6 +220,53 @@ module.exports = [
       return controller.getCropTypeByFieldAndYear();
     },
   },
+  {
+    method: "GET",
+    path: "/crops/previous-next-crop-flags/{fieldId}",
+    options: {
+      tags: ["api", "Crop"],
+      description: "Check previous-year grass and next-year arable status for the planned crop",
+      validate: {
+        params: Joi.object({fieldId: Joi.number().integer().required()}),
+        query: Joi.object({year: Joi.number().integer().required(),cropTypeId: Joi.number().integer().required()}),
+        failAction: validationFailAction,
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new CropController(request, h);
+      return controller.getPreviousAndNextCropTypeFlags();
+    },
+  },
+  {
+    method: "POST",
+    path: "/crops/previous-next-crop-flags-by-year",
+    options: {
+      tags: ["api", "Crop"],
+      description:
+        "Check previous-year grass and next-year arable status using field id list and year",
+      validate: {
+        payload: Joi.object({
+          fieldIds: Joi.array().items(Joi.number().integer().required()).min(1).required().description("Array of field IDs, e.g., [1, 2, 3]"),
+          year: Joi.number().integer().required()
+        }),
+        failAction: validationFailAction
+      },
+    },
+    handler: async (request, h) => {
+      const controller = new CropController(request, h);
+      return controller.getPreviousAndNextCropTypeFlagsByFieldAndYear();
+    },
+  },
+  buildCheckByYearRoute({
+    path: "/crops/check-arable-by-year/{fieldId}",
+    description: "Check arable planning status by field id and year",
+    handlerMethod: "getArableCheckByFieldAndYear",
+  }),
+  buildCheckByYearRoute({
+    path: "/crops/check-grass-by-year/{fieldId}",
+    description: "Check grass planning status by field id and year",
+    handlerMethod: "getGrassCheckByFieldAndYear",
+  }),
   {
     method: "PUT",
     path: cropListPath,

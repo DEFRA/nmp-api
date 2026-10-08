@@ -229,6 +229,74 @@ class CropController {
     }
   }
 
+  async getPreviousAndNextCropTypeFlags() {
+    const { fieldId } = this.#request.params;
+    const { year, cropTypeId } = this.#request.query;
+
+    try {
+      const flags = await this.#cropService.getPreviousAndNextCropTypeFlags(
+        fieldId,
+        year,
+        cropTypeId,
+      );
+      return this.#h.response(flags);
+    } catch (error) {
+      console.error("Error in getPreviousAndNextCropTypeFlags controller:", error);
+      return this.#h.response({ error });
+    }
+  }
+
+  async getPreviousAndNextCropTypeFlagsByFieldAndYear() {
+    const { fieldIds, year } = this.#request.payload;
+
+    try {
+      const flags =
+        await this.#cropService.getPreviousAndNextCropTypeFlagsByFieldIdsAndYear(
+          fieldIds,
+          year,
+        );
+      return this.#h.response(flags);
+    } catch (error) {
+      console.error(
+        "Error in getPreviousAndNextCropTypeFlagsByFieldAndYear controller:",
+        error,
+      );
+      return this.#h.response({ error });
+    }
+  }
+
+  async getArableCheckByFieldAndYear() {
+    const { fieldId } = this.#request.params;
+    const { year } = this.#request.query;
+
+    try {
+      const result = await this.#cropService.getArableCheckByFieldAndYear(
+        fieldId,
+        year,
+      );
+      return this.#h.response(result);
+    } catch (error) {
+      console.error("Error in getArableCheckByFieldAndYear controller:", error);
+      return this.#h.response({ error });
+    }
+  }
+
+  async getGrassCheckByFieldAndYear() {
+    const { fieldId } = this.#request.params;
+    const { year } = this.#request.query;
+
+    try {
+      const result = await this.#cropService.getGrassCheckByFieldAndYear(
+        fieldId,
+        year,
+      );
+      return this.#h.response(result);
+    } catch (error) {
+      console.error("Error in getGrassCheckByFieldAndYear controller:", error);
+      return this.#h.response({ error });
+    }
+  }
+
   async updateCropByFieldAndYearAndConfirm() {
     try {
       const { fieldId } = this.#request.params; // Extract fieldId from params
