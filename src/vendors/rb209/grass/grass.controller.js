@@ -27,6 +27,18 @@ class RB209GrassController {
   async getGrassDefoliationSequenceByDefoliationSequenceId() {
     return this.handleGetData();
   }
+  async getDefaultYieldsByDefoliationSequenceId() {
+    const { defoliationSequenceId } = this.#request.params;
+    try {
+      const record =
+        await this.#service.getDefaultYieldsByDefoliationSequenceId(
+          defoliationSequenceId,
+        );
+      return this.#h.response(record);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
   async getGrassDefoliationSequence() {
     return this.handleGetData();
   }
@@ -76,15 +88,15 @@ class RB209GrassController {
 
   async getSwardTypesFilterByCountryId() {
     const { countryId } = this.#request.params;
-     try {
-       const record = await this.#service.getSwardTypesFilterByCountryId(
-         countryId
-       );
-       return this.#h.response(record);
-     } catch (error) {
-       console.error("Error in getSwardTypesFilterByCountryId:", error);
-       return this.#h.response(error);
-     }
+    try {
+      const record = await this.#service.getSwardTypesFilterByCountryId(
+        countryId
+      );
+      return this.#h.response(record);
+    } catch (error) {
+      console.error("Error in getSwardTypesFilterByCountryId:", error);
+      return this.#h.response(error);
+    }
   }
 
   async getYieldRangesForGrassFields() {
