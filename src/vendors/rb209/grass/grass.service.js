@@ -1,6 +1,7 @@
 const { CountryMapper } = require("../../../constants/country-mapper");
 const RB209BaseService = require("../base.service");
 const CacheManager = require("../cacheManager");
+const { randomInt } = require("crypto");
 
 const cacheManager = new CacheManager();
 class RB209GrassService extends RB209BaseService {
@@ -49,7 +50,7 @@ class RB209GrassService extends RB209BaseService {
     const min = RB209GrassService.#NORMAL_YIELD_MIN;
     const max = RB209GrassService.#NORMAL_YIELD_MAX;
 
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+    return randomInt(min, max + 1);
   }
 
   #getDefaultYieldForType(type) {
