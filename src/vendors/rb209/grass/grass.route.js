@@ -34,6 +34,28 @@ module.exports = [
       },
     },
   },
+  {
+    method: "GET",
+    path: "/vendors/rb209/Grass/DefoliationSequenceDefaultYields/{defoliationSequenceId}",
+    handler: async (request, h) => {
+      const controller = new RB209GrassController(request, h);
+      return controller.getDefaultYieldsByDefoliationSequenceId(request, h);
+    },
+    options: {
+      tags: ["api", grassDescriptionVendor],
+      description:
+        "Get default yields for each defoliation step from the provided defoliation sequence id.",
+      validate: {
+        params: Joi.object({
+          defoliationSequenceId: Joi.number()
+            .integer()
+            .required()
+            .description(defoliationSequenceIdDescription),
+        }),
+        failAction: validationFailAction,
+      },
+    },
+  },
 
   {
     method: "GET",
