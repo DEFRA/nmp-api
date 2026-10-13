@@ -81,4 +81,7 @@ process.on("unhandledRejection", (_err) => {
   process.exit(1);
 });
 
-init();
+init().catch((err) => {
+  console.error("Failed to start server:", err);
+  process.exit(1);
+});
