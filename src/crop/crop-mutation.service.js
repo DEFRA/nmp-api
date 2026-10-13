@@ -403,7 +403,7 @@ const cropMutationMethods = {
         const futureRecommendationKey = `${task.fieldID}:${task.year}`;
         if (!futureRecommendationKeys.has(futureRecommendationKey)) {
           futureRecommendationKeys.add(futureRecommendationKey);
-          this.updatingFutureRecommendations.updateRecommendationsForField(task.fieldID,task.year,task.request,task.userId)
+          void this.updatingFutureRecommendations.updateRecommendationsForField(task.fieldID,task.year,task.request,task.userId)
             .catch((error) => {
               console.error(
                 `Error updating next crop's recommendations for FieldID: ${task.fieldID}, Year: ${task.year}:`,
@@ -437,7 +437,7 @@ const cropMutationMethods = {
       backgroundTasks.push({type: "futureRecommendation",fieldID: updatedCrop.FieldID,year: nextAvailableCrop.Year,request,userId});
       return;
     }
-    this.updatingFutureRecommendations.updateRecommendationsForField(updatedCrop.FieldID,nextAvailableCrop.Year,request,userId)
+    void this.updatingFutureRecommendations.updateRecommendationsForField(updatedCrop.FieldID,nextAvailableCrop.Year,request,userId)
       .catch((error) => {
         console.error("Error updating next crop's recommendations:", error);
       });

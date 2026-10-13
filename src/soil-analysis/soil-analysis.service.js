@@ -155,7 +155,8 @@ class SoilAnalysesService extends BaseService {
     );
 
     if (nextAvailableCrop) {
-      this.updatingFutureRecommendations.updateRecommendationsForField(
+      console.log("checking void for future recommendations");
+      void this.updatingFutureRecommendations.updateRecommendationsForField(
         soilAnalysis.FieldID,
         nextAvailableCrop.Year,
         request,
@@ -338,7 +339,7 @@ class SoilAnalysesService extends BaseService {
     );
 
     if (nextAvailableCrop) {
-      await this.updatingFutureRecommendations.updateRecommendationsForField(
+       void this.updatingFutureRecommendations.updateRecommendationsForField(
         updatedSoilAnalysis.FieldID,
         nextAvailableCrop.Year,
         request,
