@@ -365,7 +365,7 @@ const recommendationRequestHelpers = {
     cropTypesList,
   ) {
     let grassGrowthClass = null;
-    if (dataMultipleCrops.some((crop) => crop.CropTypeID === CropTypeMapper.GRASS)) {
+    if (dataMultipleCrops.some((processingCrop) => processingCrop.CropTypeID === CropTypeMapper.GRASS)) {
      grassGrowthClass =
       await this.grassGrowthClass.calculateGrassGrowthClassByFieldId(
         field.ID,
