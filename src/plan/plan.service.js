@@ -367,7 +367,7 @@ class PlanService extends BaseService {
       order: { Year: "ASC" },
     });
     if (nextAvailableCrop) {
-      this.updatingFutureRecommendations.updateRecommendationsForField(
+      void this.updatingFutureRecommendations.updateRecommendationsForField(
         crop.FieldID,
         nextAvailableCrop.Year,
         request,
