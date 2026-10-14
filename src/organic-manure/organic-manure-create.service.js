@@ -316,7 +316,9 @@ const organicManureCreateMethods = {
         nextAvailableCrop.Year,
         request,
         userId,
-      );
+      ).catch((error) => {
+        console.error(`Failed to update recommendations for field ${cropData.FieldID}:`, error);
+      });
     }
   },
 

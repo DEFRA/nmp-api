@@ -47,12 +47,14 @@ class ProcessFieldsService {
         const fieldId = field.ID;
         const oldestYear = oldestYearByFieldId[fieldId] ?? null;
         if (oldestYear) {
-          void this.updatingFutureRecommendations.updateRecommendationsForField(
+          this.updatingFutureRecommendations.updateRecommendationsForField(
             fieldId,
             oldestYear,
             request,
             userId,
-          );
+          ).catch((error) => {
+            console.error(`Failed to update recommendations for field ${fieldId}:`, error);
+          });
         }
       }
     });
