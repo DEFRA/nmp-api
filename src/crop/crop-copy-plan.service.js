@@ -63,24 +63,13 @@ const cropCopyPlanMethods = {
             OrganicManureEntity,
             { where: { ManagementPeriodID: oldPeriod.ID } }
           ))
-          .then((organicManures) => {
-            let organicManureSaveChain = Promise.resolve();
-            for (const manure of organicManures) {
-              organicManureSaveChain = organicManureSaveChain
-                .then(() => {
-                  const newManure = {
-                    ...manure,
-                    ID: null, ManagementPeriodID: OldToNewManagementPeriodMap[oldPeriod.ID],
-                    CreatedByID: userId, CreatedOn: new Date()
-                  };
-                  return transactionalManager.save(OrganicManureEntity, newManure);
-                })
-                .then((savedManure) => {
-                  OrganicManures.push(savedManure);
-                });
-            }
-            return organicManureSaveChain;
-          });
+          .then((organicManures) => cropCopyPlanMethods.saveCopiedOrganicManures(
+            transactionalManager,
+            organicManures,
+            OldToNewManagementPeriodMap[oldPeriod.ID],
+            userId,
+            OrganicManures,
+          ));
       }
       await organicManureCopyChain;
     }
@@ -116,6 +105,25 @@ const cropCopyPlanMethods = {
     }
     // 5. Return everything copied
     return { Crop: savedCrop, ManagementPeriods, OrganicManures, FertiliserManures };
+  },
+
+  saveCopiedOrganicManures(manager, manures, managementPeriodID, userId, results) {
+    let saveChain = Promise.resolve();
+    for (const manure of manures) {
+      saveChain = saveChain
+        .then(() => {
+          const newManure = {
+            ...manure,
+            ID: null, ManagementPeriodID: managementPeriodID,
+            CreatedByID: userId, CreatedOn: new Date()
+          };
+          return manager.save(OrganicManureEntity, newManure);
+        })
+        .then((savedManure) => {
+          results.push(savedManure);
+        });
+    }
+    return saveChain;
   },
 
   async copyPlanOhercrop(requiredParametres) {
