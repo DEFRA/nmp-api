@@ -397,7 +397,9 @@ async processPreviousCroppings(
       oldestCrop.Year,
       request,
       userId,
-    );
+    ).catch((error) => {
+      console.error(`Failed to update recommendations for field ${fieldId}:`, error);
+    });
   }
 
   return transactionalManager.find(PreviousCroppingEntity, {

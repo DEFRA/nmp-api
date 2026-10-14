@@ -52,7 +52,9 @@ class ProcessFieldsService {
             oldestYear,
             request,
             userId,
-          );
+          ).catch((error) => {
+            console.error(`Failed to update recommendations for field ${fieldId}:`, error);
+          });
         }
       }
     });

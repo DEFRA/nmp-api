@@ -69,7 +69,8 @@ class ExcessRainfallService extends BaseService {
   // Function to update recommendations for each fieldId sequentially
   async updateRecommendationsForFields(fieldIds, year, request, userId) {
     for (const fieldId of fieldIds) {
-        this.updatingFutureRecommendations.updateRecommendationsForField(fieldId, year, request, userId)  
+        this.updatingFutureRecommendations.updateRecommendationsForField(fieldId, year, request, userId)
+          .catch((error) => {console.error(`Failed to update recommendations for field ${fieldId}:`, error)});
     }
   }
 
@@ -109,7 +110,9 @@ class ExcessRainfallService extends BaseService {
           year,
           request,
           userId
-        );
+        ).catch((error) => {
+          console.error(`Failed to update recommendations for fields:`, error);
+        });
     return updatedExcessRainfall;
   }
 }
