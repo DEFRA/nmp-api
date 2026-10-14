@@ -47,7 +47,7 @@ class ProcessFieldsService {
         const fieldId = field.ID;
         const oldestYear = oldestYearByFieldId[fieldId] ?? null;
         if (oldestYear) {
-          this.updatingFutureRecommendations.updateRecommendationsForField(
+          void this.updatingFutureRecommendations.updateRecommendationsForField(
             fieldId,
             oldestYear,
             request,
