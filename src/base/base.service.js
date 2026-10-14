@@ -159,12 +159,17 @@ class BaseService {
     return this.#entityManager.transaction(
       async (transactionalEntityManager) => {
         const savedEntities = [];
+        let saveChain = Promise.resolve();
         for (const entity of entities) {
-          const savedEntity = await transactionalEntityManager.save(
-            this.#entity.create(entity),
-          );
-          savedEntities.push(savedEntity);
+          saveChain = saveChain
+            .then(() =>
+              transactionalEntityManager.save(this.#entity.create(entity)),
+            )
+            .then((savedEntity) => {
+              savedEntities.push(savedEntity);
+            });
         }
+        await saveChain;
         return savedEntities;
       },
     );

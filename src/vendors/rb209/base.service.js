@@ -70,7 +70,7 @@ class RB209BaseService {
             tokens = (await this.login()).data;
           }
           accessToken = tokens.accessToken;
-          this.updateTokens(tokens);
+          this.updateTokens(tokens).catch(console.error);
         }
         config.headers["Authorization"] = `Bearer ${accessToken}`;
         return config;
