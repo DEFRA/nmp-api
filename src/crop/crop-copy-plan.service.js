@@ -82,24 +82,13 @@ const cropCopyPlanMethods = {
             FertiliserManuresEntity,
             { where: { ManagementPeriodID: oldPeriod.ID } }
           ))
-          .then((fertilisers) => {
-            let fertiliserSaveChain = Promise.resolve();
-            for (const fert of fertilisers) {
-              fertiliserSaveChain = fertiliserSaveChain
-                .then(() => {
-                  const newFert = {
-                    ...fert,
-                    ID: null, ManagementPeriodID: OldToNewManagementPeriodMap[oldPeriod.ID],
-                    CreatedByID: userId, CreatedOn: new Date()
-                  };
-                  return transactionalManager.save(FertiliserManuresEntity, newFert);
-                })
-                .then((savedFert) => {
-                  FertiliserManures.push(savedFert);
-                });
-            }
-            return fertiliserSaveChain;
-          });
+          .then((fertilisers) => cropCopyPlanMethods.saveCopiedFertiliserManures(
+            transactionalManager,
+            fertilisers,
+            OldToNewManagementPeriodMap[oldPeriod.ID],
+            userId,
+            FertiliserManures,
+          ));
       }
       await fertiliserCopyChain;
     }
@@ -121,6 +110,25 @@ const cropCopyPlanMethods = {
         })
         .then((savedManure) => {
           results.push(savedManure);
+        });
+    }
+    return saveChain;
+  },
+
+  saveCopiedFertiliserManures(manager, fertilisers, managementPeriodID, userId, results) {
+    let saveChain = Promise.resolve();
+    for (const fert of fertilisers) {
+      saveChain = saveChain
+        .then(() => {
+          const newFert = {
+            ...fert,
+            ID: null, ManagementPeriodID: managementPeriodID,
+            CreatedByID: userId, CreatedOn: new Date()
+          };
+          return manager.save(FertiliserManuresEntity, newFert);
+        })
+        .then((savedFert) => {
+          results.push(savedFert);
         });
     }
     return saveChain;
