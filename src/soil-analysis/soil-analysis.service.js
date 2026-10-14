@@ -156,12 +156,14 @@ class SoilAnalysesService extends BaseService {
 
     if (nextAvailableCrop) {
       console.log("checking void for future recommendations");
-      void this.updatingFutureRecommendations.updateRecommendationsForField(
+      this.updatingFutureRecommendations.updateRecommendationsForField(
         soilAnalysis.FieldID,
         nextAvailableCrop.Year,
         request,
         userId,
-      );
+      ).catch((error) => {
+        console.error(`Failed to update recommendations for field ${soilAnalysis.FieldID}:`, error);
+      });
     }
   }
 
@@ -339,12 +341,14 @@ class SoilAnalysesService extends BaseService {
     );
 
     if (nextAvailableCrop) {
-       void this.updatingFutureRecommendations.updateRecommendationsForField(
+       this.updatingFutureRecommendations.updateRecommendationsForField(
         updatedSoilAnalysis.FieldID,
         nextAvailableCrop.Year,
         request,
         userId,
-      );
+      ).catch((error) => {
+        console.error(`Failed to update recommendations for field ${updatedSoilAnalysis.FieldID}:`, error);
+      });
     }
   }
 

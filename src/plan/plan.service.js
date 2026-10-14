@@ -367,12 +367,14 @@ class PlanService extends BaseService {
       order: { Year: "ASC" },
     });
     if (nextAvailableCrop) {
-      void this.updatingFutureRecommendations.updateRecommendationsForField(
+      this.updatingFutureRecommendations.updateRecommendationsForField(
         crop.FieldID,
         nextAvailableCrop.Year,
         request,
         userId,
-      );
+      ).catch((error) => {
+        console.error(`Failed to update recommendations for field ${crop.FieldID}:`, error);
+      });
     }
   }
   async saveCropPlanWithRecommendations(cropData, crop, field, userId, request, transactionalManager) {
