@@ -203,14 +203,11 @@ const cropRecommendationMethods = {
   },
 
   getSoilAnalysisFlags(latestSoilAnalysis) {
-    const hasNitrogenSoilAnalysisInput =
-      latestSoilAnalysis?.SoilNitrogenSupplyIndex != null;
-    const hasPhosphorusSoilAnalysisInput =
-      latestSoilAnalysis?.PhosphorusIndex != null;
-    const hasPotassiumSoilAnalysisInput =
-      latestSoilAnalysis?.PotassiumIndex != null;
-    const hasMagnesiumSoilAnalysisInput =
-      latestSoilAnalysis?.MagnesiumIndex != null;
+    const hasNitrogenSoilAnalysisInput = 
+      latestSoilAnalysis?.SoilNitrogenSupplyIndex != null ;
+    const hasPhosphorusSoilAnalysisInput =latestSoilAnalysis?.PhosphorusIndex != null || latestSoilAnalysis?.PhosphorusStatus != null;
+    const hasPotassiumSoilAnalysisInput = latestSoilAnalysis?.PotassiumIndex != null || latestSoilAnalysis?.PotassiumStatus != null;
+    const hasMagnesiumSoilAnalysisInput = latestSoilAnalysis?.MagnesiumIndex != null || latestSoilAnalysis?.MagnesiumStatus != null;
     const hasPhSoilAnalysisInput = latestSoilAnalysis?.PH != null;
 
     return {
