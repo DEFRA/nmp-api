@@ -62,6 +62,7 @@ const {
   CurrentAndFuture,
 } = require("../shared/generate-current-and-future-recommendations-service");
 const { CountryMapper } = require("../constants/country-mapper");
+const { CropOrderMapper } = require("../constants/crop-order-mapper");
 
 class PlanService extends BaseService {
   constructor() {
@@ -227,6 +228,47 @@ class PlanService extends BaseService {
     return crop;
   }
 
+  async getCropByFieldYearAndOrder(
+    fieldID,
+    year,
+    cropOrder,
+    transactionalManager,
+  ) {
+    return transactionalManager.findOne(CropEntity, {
+      where: {
+        FieldID: fieldID,
+        Year: year,
+        CropOrder: cropOrder,
+      },
+    });
+  }
+
+  async getReferenceCropForArableRule(crop, transactionalManager) {
+    if (crop.CropOrder === CropOrderMapper.SECONDCROP) {
+      return this.getCropByFieldYearAndOrder(
+        crop.FieldID,
+        crop.Year,
+        CropOrderMapper.FIRSTCROP,
+        transactionalManager,
+      );
+    }
+
+    return this.getCropForYear(crop.FieldID, crop.Year - 1, transactionalManager);
+  }
+
+  async getReferenceArableCropForGrassRule(crop, transactionalManager) {
+    if (crop.CropOrder === CropOrderMapper.SECONDCROP) {
+      return this.getCropByFieldYearAndOrder(
+        crop.FieldID,
+        crop.Year,
+        CropOrderMapper.FIRSTCROP,
+        transactionalManager,
+      );
+    }
+
+    return this.getCropForYear(crop.FieldID, crop.Year + 1, transactionalManager);
+  }
+
   isScotlandCountry(rb209CountryID) {
     return rb209CountryID === CountryMapper.SCOTLAND;
   }
@@ -270,18 +312,33 @@ class PlanService extends BaseService {
     const hasIncomingPreviousGrass = Object.hasOwn(crop, "PreviousGrass");
     const rb209CountryID = await this.CalculatePreviousCropService.getRb209CountryId(crop.FieldID, transactionalManager);
     if (!this.isScotlandCountry(rb209CountryID)) { return }
+
     if (this.isArableCropType(crop.CropTypeID)) {
-      const previousYearCrop = await this.getCropForYear(crop.FieldID, crop.Year - 1, transactionalManager);
-      if (!this.isGrassCropType(previousYearCrop?.CropTypeID)) { crop.PreviousGrass = null }
+      const referenceCrop = await this.getReferenceCropForArableRule(
+        crop,
+        transactionalManager,
+      );
+      if (
+        this.isGrassCropType(referenceCrop?.CropTypeID) &&
+        hasIncomingPreviousGrass
+      ) {
+        crop.PreviousGrass = crop.PreviousGrass ?? null;
+      }
       return;
     }
+
     if (!this.isGrassCropType(crop.CropTypeID) || !hasIncomingPreviousGrass) { return }
-    const nextYearCrop = await this.getNextYearCropForField(crop.FieldID, crop.Year, transactionalManager);
-    if (!nextYearCrop) { return }
-    if (this.isArableCropType(nextYearCrop.CropTypeID)) {
+
+    const referenceArableCrop = await this.getReferenceArableCropForGrassRule(
+      crop,
+      transactionalManager,
+    );
+    if (!referenceArableCrop) { return }
+
+    if (this.isArableCropType(referenceArableCrop.CropTypeID)) {
       await this.setCropPreviousGrass(
         transactionalManager,
-        nextYearCrop.ID,
+        referenceArableCrop.ID,
         crop.PreviousGrass ?? null,
         userId,
       );
@@ -380,7 +437,7 @@ class PlanService extends BaseService {
   async saveCropPlanWithRecommendations(cropData, crop, field, userId, request, transactionalManager) {
     const organicManure = null;
     const ManagementPeriods = await this.saveCropAndManagementPeriods(cropData, crop, userId, transactionalManager);
-    const savedRecommendation = await this.generateRecommendations.generateRecommendations(field.ID,crop.Year,organicManure,transactionalManager,request,userId,);
+    const savedRecommendation = await this.generateRecommendations.generateRecommendations(field.ID, crop.Year, organicManure, transactionalManager, request, userId,);
     await this.updateNextCropRecommendations(
       crop,
       request,
@@ -388,8 +445,9 @@ class PlanService extends BaseService {
       transactionalManager,
     );
     return {
-      message: "crop saved",crop: crop.FieldID,
-      Recommendations: savedRecommendation,ManagementPeriods: ManagementPeriods};
+      message: "crop saved", crop: crop.FieldID,
+      Recommendations: savedRecommendation, ManagementPeriods: ManagementPeriods
+    };
   }
 
   async createNutrientsRecommendationWithinTransaction(crops, userId, request, transactionalManager) {
