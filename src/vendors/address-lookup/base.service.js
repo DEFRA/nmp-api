@@ -23,7 +23,7 @@ class AddressLookupBaseService {
         if (!accessToken) {
           accessToken = await this.fetchAccessToken();
        
-          this.updateAccessToken(accessToken);
+          this.updateAccessToken(accessToken).catch(console.error);
         }
         config.headers["Authorization"] = `Bearer ${accessToken}`;
         return config;
@@ -39,7 +39,7 @@ class AddressLookupBaseService {
           !error.config._retryRequest
         ) {
           const accessToken = await this.fetchAccessToken();
-          this.updateAccessToken(accessToken);
+          this.updateAccessToken(accessToken).catch(console.error);
           const updateAccesTokenRequest = await this.#request({
             ...error.config,
             _retryRequest: true
