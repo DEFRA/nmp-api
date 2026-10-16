@@ -336,12 +336,7 @@ const cropMutationMethods = {
         const existingCrops = await transactionalManager.find(CropEntity, {
           where: { ID: In(cropIds), Year: year },
         });
-
-        if (!existingCrops || existingCrops.length === 0) {
-          throw boom.notFound(
-            `No crops found for cropIds ${cropIds.join(", ")} in Year ${year}`,
-          );
-        }
+        if (!existingCrops || existingCrops.length === 0) {throw boom.notFound(`No crops found for cropIds ${cropIds.join(", ")} in Year ${year}`)}
         console.log("existingCrops", existingCrops);
         const updatedCrops = [];
         for (const crop of existingCrops) {
@@ -355,17 +350,11 @@ const cropMutationMethods = {
               ModifiedOn: new Date(),
             },
           );
-          if (updatedCrop.affected === 0) {
-            throw boom.notFound("Failed to update Crop");
-          }
+          if (updatedCrop.affected === 0) { throw boom.notFound("Failed to update Crop")}
           const cropDetails = await transactionalManager.findOne(CropEntity, {
             where: { ID: crop.ID },
           });
-
-          if (cropDetails) {
-            updatedCrops.push(cropDetails);
-          }
-
+          if (cropDetails) {updatedCrops.push(cropDetails)}
           console.log("Updated Crop:", cropDetails);
         }
 
@@ -376,19 +365,12 @@ const cropMutationMethods = {
     return result;
   },
 
-  async syncManagementPeriodsBySequence(
-    transactionalManager,
-    cropID,
-    userId,
-    incomingPeriods,
-  ) {
+  async syncManagementPeriodsBySequence(transactionalManager,cropID,userId,incomingPeriods) {
     const existingPeriods = await transactionalManager.find(
       ManagementPeriodEntity,
       { where: { CropID: cropID }, order: { CreatedOn: "ASC" } },
     );
-    const updatedManagementPeriods = [],
-      existingCount = existingPeriods.length,
-      incomingCount = incomingPeriods.length;
+    const updatedManagementPeriods = [],existingCount = existingPeriods.length,incomingCount = incomingPeriods.length;
     const minCount = Math.min(existingCount, incomingCount);
     for (let i = 0; i < minCount; i++) {
       const incoming = incomingPeriods[i],
@@ -452,23 +434,14 @@ const cropMutationMethods = {
   },
 
   async updateCropData(body, userId, request, transactionalManager) {
-    // If a global transaction manager is provided, use it.
     if (transactionalManager) {
       const backgroundTasks = [];
-      const updatedCrops = await this.updateCrop(
-        body,
-        userId,
-        request,
-        transactionalManager,
-        backgroundTasks,
-      );
+      const updatedCrops = await this.updateCrop(body,userId,request,transactionalManager,backgroundTasks);
       return { updatedCrops, backgroundTasks };
     }
     const localBackgroundTasks = [];
     const localUpdatedCrops = await AppDataSource.transaction(
-      async (localManager) => {
-        return this.updateCrop(body, userId, request, localManager, localBackgroundTasks);
-      },
+      async (localManager) => {return this.updateCrop(body, userId, request, localManager, localBackgroundTasks)},
     );
     cropMutationMethods.dispatchBackgroundTasks.call(this, localBackgroundTasks);
     return localUpdatedCrops;
@@ -476,8 +449,7 @@ const cropMutationMethods = {
 
   dispatchBackgroundTasks(backgroundTasks) {
     if (!Array.isArray(backgroundTasks) || backgroundTasks.length === 0) { return }
-    const futureRecommendationKeys = new Set(),
-      warningByCropKeys = new Set();
+    const futureRecommendationKeys = new Set(),warningByCropKeys = new Set();
     for (const task of backgroundTasks) {
       if (task?.type === "futureRecommendation") {
         const futureRecommendationKey = `${task.fieldID}:${task.year}`;
@@ -485,29 +457,18 @@ const cropMutationMethods = {
           futureRecommendationKeys.add(futureRecommendationKey);
           this.updatingFutureRecommendations.updateRecommendationsForField(task.fieldID, task.year, task.request, task.userId)
             .catch((error) => {
-              console.error(
-                `Error updating next crop's recommendations for FieldID: ${task.fieldID}, Year: ${task.year}:`,
-                error,
-              );
+              console.error(`Error updating next crop's recommendations for FieldID: ${task.fieldID}, Year: ${task.year}:`,error);
             });
         }
       } else if (task?.type === "warningByCrop") {
         const warningByCropKey = `${task.cropID}`;
         if (!warningByCropKeys.has(warningByCropKey)) {
           warningByCropKeys.add(warningByCropKey);
-          this.ProcessFutureManuresForWarnings.processWarningsByCrop(
-            task.cropID,
-            task.userId,
-          ).catch((error) => {
-            console.error(
-              `Error processing warning recalculation for crop ${task.cropID}:`,
-              error,
-            );
+          this.ProcessFutureManuresForWarnings.processWarningsByCrop(task.cropID,task.userId).catch((error) => {
+            console.error(`Error processing warning recalculation for crop ${task.cropID}:`,error);
           });
         }
-      } else {
-        // Ignore unknown background task types.
-      }
+      } else {}
     }
   },
 

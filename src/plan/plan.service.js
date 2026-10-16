@@ -273,14 +273,8 @@ class PlanService extends BaseService {
     return rb209CountryID === CountryMapper.SCOTLAND;
   }
 
-  isGrassCropType(cropTypeID) {
-    return cropTypeID === CropTypeMapper.GRASS;
-  }
-
-  isArableCropType(cropTypeID) {
-    return cropTypeID !== null && cropTypeID !== CropTypeMapper.GRASS;
-  }
-
+  isGrassCropType(cropTypeID) {return cropTypeID === CropTypeMapper.GRASS}
+  isArableCropType(cropTypeID) {return cropTypeID !== null && cropTypeID !== CropTypeMapper.GRASS}
   async getNextYearCropForField(fieldID, year, transactionalManager) {
     return transactionalManager.findOne(CropEntity, {
       where: {
@@ -291,12 +285,7 @@ class PlanService extends BaseService {
     });
   }
 
-  async setCropPreviousGrass(
-    transactionalManager,
-    cropID,
-    previousGrass,
-    userId,
-  ) {
+  async setCropPreviousGrass(transactionalManager,cropID,previousGrass,userId) {
     await transactionalManager.update(CropEntity, cropID, {
       PreviousGrass: previousGrass,
       ModifiedByID: userId,
@@ -304,20 +293,12 @@ class PlanService extends BaseService {
     });
   }
 
-  async applyScotlandPreviousGrassRulesOnCreate(
-    crop,
-    transactionalManager,
-    userId,
-  ) {
+  async applyScotlandPreviousGrassRulesOnCreate(crop,transactionalManager,userId) {
     const hasIncomingPreviousGrass = Object.hasOwn(crop, "PreviousGrass");
     const rb209CountryID = await this.CalculatePreviousCropService.getRb209CountryId(crop.FieldID, transactionalManager);
     if (!this.isScotlandCountry(rb209CountryID)) { return }
-
     if (this.isArableCropType(crop.CropTypeID)) {
-      const referenceCrop = await this.getReferenceCropForArableRule(
-        crop,
-        transactionalManager,
-      );
+      const referenceCrop = await this.getReferenceCropForArableRule(crop, transactionalManager);
       if (
         this.isGrassCropType(referenceCrop?.CropTypeID) &&
         hasIncomingPreviousGrass
@@ -328,23 +309,12 @@ class PlanService extends BaseService {
     }
 
     if (!this.isGrassCropType(crop.CropTypeID) || !hasIncomingPreviousGrass) { return }
-
-    const referenceArableCrop = await this.getReferenceArableCropForGrassRule(
-      crop,
-      transactionalManager,
-    );
+    const referenceArableCrop = await this.getReferenceArableCropForGrassRule(crop,transactionalManager);
     if (!referenceArableCrop) { return }
-
     if (this.isArableCropType(referenceArableCrop.CropTypeID)) {
       const previousGrassValue = crop.PreviousGrass ?? null;
-      // For grass-to-arable propagation, keep PreviousGrass only on the target arable crop.
       crop.PreviousGrass = null;
-      await this.setCropPreviousGrass(
-        transactionalManager,
-        referenceArableCrop.ID,
-        previousGrassValue,
-        userId,
-      );
+      await this.setCropPreviousGrass(transactionalManager, referenceArableCrop.ID, previousGrassValue, userId);
     }
   }
 
@@ -413,12 +383,7 @@ class PlanService extends BaseService {
     return ManagementPeriods;
   }
 
-  async updateNextCropRecommendations(
-    crop,
-    request,
-    userId,
-    transactionalManager,
-  ) {
+  async updateNextCropRecommendations(crop,request,userId,transactionalManager) {
     const nextAvailableCrop = await transactionalManager.findOne(CropEntity, {
       where: {
         FieldID: crop.FieldID,
@@ -427,12 +392,7 @@ class PlanService extends BaseService {
       order: { Year: "ASC" },
     });
     if (nextAvailableCrop) {
-      this.updatingFutureRecommendations.updateRecommendationsForField(
-        crop.FieldID,
-        nextAvailableCrop.Year,
-        request,
-        userId,
-      ).catch((error) => {
+      this.updatingFutureRecommendations.updateRecommendationsForField(crop.FieldID,nextAvailableCrop.Year,request,userId).catch((error) => {
         console.error(`Failed to update recommendations for field ${crop.FieldID}:`, error);
       });
     }
@@ -441,12 +401,7 @@ class PlanService extends BaseService {
     const organicManure = null;
     const ManagementPeriods = await this.saveCropAndManagementPeriods(cropData, crop, userId, transactionalManager);
     const savedRecommendation = await this.generateRecommendations.generateRecommendations(field.ID, crop.Year, organicManure, transactionalManager, request, userId,);
-    await this.updateNextCropRecommendations(
-      crop,
-      request,
-      userId,
-      transactionalManager,
-    );
+    await this.updateNextCropRecommendations(crop,request,userId,transactionalManager);
     return {
       message: "crop saved", crop: crop.FieldID,
       Recommendations: savedRecommendation, ManagementPeriods: ManagementPeriods
@@ -458,39 +413,18 @@ class PlanService extends BaseService {
     const Errors = [];
     const processCropByIndex = async (index) => {
       if (index >= crops.length) { return }
-
       const cropData = crops[index];
       const crop = cropData?.Crop;
       const field = await this.validateCropAndField(crop, Errors);
       await this.applyScotlandPreviousGrassRulesOnCreate(crop, transactionalManager, userId);
-      const previousCrop =
-        await this.CalculatePreviousCropService.findPreviousCrop(
-          field.ID,
-          crop.Year,
-          transactionalManager,
-        );
-
+      const previousCrop = await this.CalculatePreviousCropService.findPreviousCrop(field.ID,crop.Year,transactionalManager);
       if (crop.CropTypeID === CropTypeMapper.OTHER || !previousCrop) {
-        const savedDefaultCrop = await this.saveDefaultCropPlan(
-          cropData,
-          crop,
-          userId,
-          request,
-          transactionalManager,
-        );
+        const savedDefaultCrop = await this.saveDefaultCropPlan(cropData,crop,userId,request,transactionalManager);
         Recommendations.push(savedDefaultCrop);
       } else {
-        const savedCropPlan = await this.saveCropPlanWithRecommendations(
-          cropData,
-          crop,
-          field,
-          userId,
-          request,
-          transactionalManager,
-        );
+        const savedCropPlan = await this.saveCropPlanWithRecommendations(cropData,crop,field,userId,request,transactionalManager);
         Recommendations.push(savedCropPlan);
       }
-
       await processCropByIndex(index + 1);
     };
 

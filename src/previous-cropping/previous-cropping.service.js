@@ -117,7 +117,7 @@ class PreviousCroppingService extends BaseService {
     );
 
     if (nextYearFirstCrop && this.isArableCropType(nextYearFirstCrop.CropTypeID)) {
-      const hasIncomingPreviousGrassId = Object.prototype.hasOwnProperty.call(
+      const hasIncomingPreviousGrassId = Object.hasOwn.call(
         cropData,
         "PreviousGrassID",
       );
@@ -145,7 +145,9 @@ class PreviousCroppingService extends BaseService {
   ) {
     let previousCroppingData = null;
 
-    for (const crop of previousCroppingBody) {
+    await previousCroppingBody.reduce(async (previousSave, crop) => {
+      await previousSave;
+
       const previousCropExist = existingCrops.find(
         (existingCrop) =>
           existingCrop.FieldID === crop.FieldID &&
@@ -168,7 +170,7 @@ class PreviousCroppingService extends BaseService {
         PreviousCroppingEntity,
         processedCropData
       );
-    }
+    }, Promise.resolve());
 
     return previousCroppingData;
   }
