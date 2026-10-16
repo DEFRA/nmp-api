@@ -260,17 +260,10 @@ const cropMutationMethods = {
   },
 
   async deleteCropById(CropsID, userId, request, transactionalManager) {
-    const crop = await transactionalManager.findOne(this.repository.target, {
-      where: { ID: CropsID },
-    });
+    const crop = await transactionalManager.findOne(this.repository.target, {where: { ID: CropsID }});
     if (!crop) {console.log("Crop not found")}
     const rb209CountryID = await this.fetchRb209CountryId(crop.FieldID,transactionalManager);
-    await cropMutationMethods.clearNextYearArablePreviousGrassOnGrassDelete(
-      transactionalManager,
-      crop,
-      rb209CountryID,
-      userId,
-    );
+    await cropMutationMethods.clearNextYearArablePreviousGrassOnGrassDelete(transactionalManager,crop,rb209CountryID,userId);
     const storedProcedureDeletePrimaryCrop = storedProcedure.DELETE_CROP;
     if (crop.CropOrder === 1) {
       const secondCrop = await transactionalManager.findOne(CropEntity, {
