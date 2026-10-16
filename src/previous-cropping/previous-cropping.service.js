@@ -205,16 +205,19 @@ class PreviousCroppingService extends BaseService {
     );
   }
 
-  async triggerFutureRecommendationUpdate(fieldId, minYear, request, userId) {
-    const nextAvailableCrop = await this.cropRepository.findOne({
-      where: {
-        FieldID: fieldId,
-        Year: MoreThan(minYear),
+  async triggerFutureRecommendationUpdate(fieldId, minYear, request, userId, transactionalManager) {
+    const nextAvailableCrop = await transactionalManager.findOne(
+      CropEntity,
+      {
+        where: {
+          FieldID: fieldId,
+          Year: MoreThan(minYear),
+        },
+        order: {
+          Year: "ASC",
+        },
       },
-      order: {
-        Year: "ASC",
-      },
-    });
+    );
 
     if (!nextAvailableCrop) {
       return;
@@ -271,6 +274,7 @@ class PreviousCroppingService extends BaseService {
         MinYear,
         request,
         userId,
+        transactionalManager
       );
 
       return previousCroppingData != null;
