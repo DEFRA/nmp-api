@@ -6,8 +6,13 @@ const { AppDataSource } = require("../db/data-source");
 const { MoreThan, Between } = require("typeorm");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { FieldEntity } = require("../db/entity/field.entity");
+const { FarmEntity } = require("../db/entity/farm.entity");
+const { CountryEntity } = require("../db/entity/country.entity");
 const { GenerateRecommendations } = require("../shared/generate-recomendations-service");
 const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
+const { CropTypeMapper } = require("../constants/crop-type-mapper");
+const { CountryMapper } = require("../constants/country-mapper");
+const { CropOrderMapper } = require("../constants/crop-order-mapper");
 
 class PreviousCroppingService extends BaseService {
   constructor() {
@@ -15,7 +20,7 @@ class PreviousCroppingService extends BaseService {
     this.repository = AppDataSource.getRepository(PreviousCroppingEntity);
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
     this.cropRepository = AppDataSource.getRepository(CropEntity);
-    this.fieldRepository=AppDataSource.getRepository(FieldEntity);
+    this.fieldRepository = AppDataSource.getRepository(FieldEntity);
     this.generateRecommendations = new GenerateRecommendations();
   }
 
@@ -53,6 +58,85 @@ class PreviousCroppingService extends BaseService {
     };
   }
 
+  isGrassCropType(cropTypeID) {
+    return cropTypeID === CropTypeMapper.GRASS;
+  }
+
+  isArableCropType(cropTypeID) {
+    return cropTypeID !== null && cropTypeID !== CropTypeMapper.GRASS;
+  }
+
+  isScotlandCountry(rb209CountryID) {
+    return rb209CountryID === CountryMapper.SCOTLAND;
+  }
+
+  async getRb209CountryIdByFieldId(fieldId, transactionalManager) {
+    const fieldAndCountryData = await transactionalManager
+      .createQueryBuilder(FieldEntity, "field")
+      .leftJoin(FarmEntity, "farm", "farm.ID = field.FarmID")
+      .leftJoin(CountryEntity, "country", "country.ID = farm.CountryID")
+      .select(["country.RB209CountryID AS RB209CountryID"])
+      .where("field.ID = :fieldId", { fieldId })
+      .getRawOne();
+
+    return fieldAndCountryData?.RB209CountryID ?? null;
+  }
+
+  async getNextYearFirstCrop(fieldId, harvestYear, transactionalManager) {
+    return transactionalManager.findOne(CropEntity, {
+      where: {
+        FieldID: fieldId,
+        Year: harvestYear + 1,
+        CropOrder: CropOrderMapper.FIRSTCROP,
+      },
+    });
+  }
+
+  async applyScotlandGrassPreviousCroppingRule(
+    cropData,
+    userId,
+    transactionalManager,
+  ) {
+    if (!this.isGrassCropType(cropData.CropTypeID)) {
+      return cropData;
+    }
+
+    const rb209CountryID = await this.getRb209CountryIdByFieldId(
+      cropData.FieldID,
+      transactionalManager,
+    );
+
+    if (!this.isScotlandCountry(rb209CountryID)) {
+      return cropData;
+    }
+
+    const nextYearFirstCrop = await this.getNextYearFirstCrop(
+      cropData.FieldID,
+      cropData.HarvestYear,
+      transactionalManager,
+    );
+
+    if (nextYearFirstCrop && this.isArableCropType(nextYearFirstCrop.CropTypeID)) {
+      const hasIncomingPreviousGrassId = Object.prototype.hasOwnProperty.call(
+        cropData,
+        "PreviousGrassID",
+      );
+
+      if (hasIncomingPreviousGrassId) {
+        await transactionalManager.update(CropEntity, nextYearFirstCrop.ID, {
+          PreviousGrass: cropData.PreviousGrassID ?? null,
+          ModifiedByID: userId,
+          ModifiedOn: new Date(),
+        });
+      }
+    }
+
+    return {
+      ...cropData,
+      PreviousGrassID: null,
+    };
+  }
+
   async savePreviousCroppingData(
     previousCroppingBody,
     existingCrops,
@@ -73,9 +157,16 @@ class PreviousCroppingService extends BaseService {
         userId,
       );
 
+      const processedCropData =
+        await this.applyScotlandGrassPreviousCroppingRule(
+          cropData,
+          userId,
+          transactionalManager,
+        );
+
       previousCroppingData = await transactionalManager.save(
         PreviousCroppingEntity,
-        cropData
+        processedCropData
       );
     }
 
@@ -89,12 +180,15 @@ class PreviousCroppingService extends BaseService {
     request,
     transactionalManager,
   ) {
-    const cropExist = await this.cropRepository.findOne({
-      where: {
-        FieldID: fieldId,
-        Year: year,
+    const cropExist = await transactionalManager.findOne(
+      CropEntity,
+      {
+        where: {
+          FieldID: fieldId,
+          Year: year,
+        },
       },
-    });
+    );
 
     if (cropExist == null) {
       return;
@@ -127,11 +221,11 @@ class PreviousCroppingService extends BaseService {
     }
 
     this.updatingFutureRecommendations.updateRecommendationsForField(
-        fieldId,
-        nextAvailableCrop.Year,
-        request,
-        userId
-      )
+      fieldId,
+      nextAvailableCrop.Year,
+      request,
+      userId
+    )
       .then((res) => {
         if (res === undefined) {
           console.log(
@@ -150,11 +244,14 @@ class PreviousCroppingService extends BaseService {
     return AppDataSource.transaction(async (transactionalManager) => {
       const { MaxYear, MinYear, greatestYearField } =
         this.getPreviousCroppingYearContext(previousCroppingBody);
-      const existingCrops = await this.repository.find({
-        where: previousCroppingBody.map((crop) => ({
-          FieldID: crop.FieldID,
-        })),
-      });
+      const existingCrops = await transactionalManager.find(
+        PreviousCroppingEntity,
+        {
+          where: previousCroppingBody.map((crop) => ({
+            FieldID: crop.FieldID,
+          })),
+        },
+      );
 
       const previousCroppingData = await this.savePreviousCroppingData(
         previousCroppingBody,
@@ -201,7 +298,7 @@ class PreviousCroppingService extends BaseService {
 
   async getPreviousCroppingPreviousYearsDataByFieldIdAndYear(fieldId, year) {
     let previousCroppingData = null;
-    const threeYearAgo = 3; 
+    const threeYearAgo = 3;
     if (year !== null && year !== undefined) {
       // Last 3 years BEFORE the given year
       const fromYear = year - threeYearAgo;
@@ -225,30 +322,30 @@ class PreviousCroppingService extends BaseService {
   }
 
   async getPreviousCroppingYearByFarmId(farmId) {
-  if (!farmId) {
-    return { PreviousCropping: null };
-  }
-const yearsLimit = 3;
+    if (!farmId) {
+      return { PreviousCropping: null };
+    }
+    const yearsLimit = 3;
 
-const oldestThree = await this.repository
-  .createQueryBuilder("pc")
-  .leftJoin("pc.Fields", "f")
-  .where("f.FarmID = :farmId", { farmId })
-  .select("DISTINCT pc.HarvestYear", "HarvestYear")
-  .orderBy("pc.HarvestYear", "ASC")
-  .limit(yearsLimit)
-  .getRawMany();
+    const oldestThree = await this.repository
+      .createQueryBuilder("pc")
+      .leftJoin("pc.Fields", "f")
+      .where("f.FarmID = :farmId", { farmId })
+      .select("DISTINCT pc.HarvestYear", "HarvestYear")
+      .orderBy("pc.HarvestYear", "ASC")
+      .limit(yearsLimit)
+      .getRawMany();
 
-   let topOneFromOldestThree = null;
+    let topOneFromOldestThree = null;
 
-   if (oldestThree.length > 0) {
-     topOneFromOldestThree = oldestThree[oldestThree.length - 1];  
+    if (oldestThree.length > 0) {
+      topOneFromOldestThree = oldestThree[oldestThree.length - 1];
     }
 
 
-return { OldestPreviousCropping: topOneFromOldestThree?.HarvestYear || null };
+    return { OldestPreviousCropping: topOneFromOldestThree?.HarvestYear || null };
 
-}
+  }
 
 }
 
