@@ -133,6 +133,15 @@ const cropMutationMethods = {
       incomingPreviousGrass ?? null,
       userId,
     );
+
+    // For grass-to-arable propagation, current grass crop should not retain PreviousGrass.
+    await cropMutationMethods.setCropPreviousGrass(
+      transactionalManager,
+      currentCrop.ID,
+      null,
+      userId,
+    );
+    currentCrop.PreviousGrass = null;
   },
 
   async applyScotlandPreviousGrassRules(transactionalManager, currentCrop, incomingPreviousGrass, hasIncomingPreviousGrass, rb209CountryID, userId) {

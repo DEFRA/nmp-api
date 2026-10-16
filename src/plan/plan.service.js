@@ -336,10 +336,13 @@ class PlanService extends BaseService {
     if (!referenceArableCrop) { return }
 
     if (this.isArableCropType(referenceArableCrop.CropTypeID)) {
+      const previousGrassValue = crop.PreviousGrass ?? null;
+      // For grass-to-arable propagation, keep PreviousGrass only on the target arable crop.
+      crop.PreviousGrass = null;
       await this.setCropPreviousGrass(
         transactionalManager,
         referenceArableCrop.ID,
-        crop.PreviousGrass ?? null,
+        previousGrassValue,
         userId,
       );
     }
