@@ -299,12 +299,7 @@ class PlanService extends BaseService {
     if (!this.isScotlandCountry(rb209CountryID)) { return }
     if (this.isArableCropType(crop.CropTypeID)) {
       const referenceCrop = await this.getReferenceCropForArableRule(crop, transactionalManager);
-      if (
-        this.isGrassCropType(referenceCrop?.CropTypeID) &&
-        hasIncomingPreviousGrass
-      ) {
-        crop.PreviousGrass = crop.PreviousGrass ?? null;
-      }
+      if (this.isGrassCropType(referenceCrop?.CropTypeID)) { crop.PreviousGrass = crop.PreviousGrass ?? null}
       return;
     }
 
