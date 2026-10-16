@@ -263,13 +263,8 @@ const cropMutationMethods = {
     const crop = await transactionalManager.findOne(this.repository.target, {
       where: { ID: CropsID },
     });
-    if (!crop) {
-      throw new Error("Crop not found");
-    }
-    const rb209CountryID = await this.fetchRb209CountryId(
-      crop.FieldID,
-      transactionalManager,
-    );
+    if (!crop) {console.log("Crop not found")}
+    const rb209CountryID = await this.fetchRb209CountryId(crop.FieldID,transactionalManager);
     await cropMutationMethods.clearNextYearArablePreviousGrassOnGrassDelete(
       transactionalManager,
       crop,
@@ -304,17 +299,11 @@ const cropMutationMethods = {
   },
 
   async cropGroupNameExists(cropIds, newGroupName, year, farmId) {
-    return (
-      (await this.existingGroupNameCount(cropIds, newGroupName, year, farmId)) >
-      0
-    );
+    return ((await this.existingGroupNameCount(cropIds, newGroupName, year, farmId)) > 0);
   },
 
   async existingGroupNameCount(cropIds, newGroupName, year, farmId) {
-    if (!newGroupName) {
-      throw boom.badRequest("Group Name is required");
-    }
-
+    if (!newGroupName) {throw boom.badRequest("Group Name is required")}
     const existingGroupNameCount = this.repository
       .createQueryBuilder("Crops")
       .leftJoin("Fields", "Field", "Field.ID = Crops.fieldId") // Join Fields table manually
@@ -361,7 +350,6 @@ const cropMutationMethods = {
         return { Crops: updatedCrops };
       },
     );
-
     return result;
   },
 
@@ -373,8 +361,7 @@ const cropMutationMethods = {
     const updatedManagementPeriods = [],existingCount = existingPeriods.length,incomingCount = incomingPeriods.length;
     const minCount = Math.min(existingCount, incomingCount);
     for (let i = 0; i < minCount; i++) {
-      const incoming = incomingPeriods[i],
-        existing = existingPeriods[i];
+      const incoming = incomingPeriods[i],existing = existingPeriods[i];
       const { ID, CreatedByID, CreatedOn, CropID, ...dataToUpdate } = incoming;
       await transactionalManager.update(ManagementPeriodEntity, existing.ID, {
         ...dataToUpdate,
@@ -386,9 +373,7 @@ const cropMutationMethods = {
         ManagementPeriodEntity,
         { where: { ID: existing.ID } },
       );
-      if (updated) {
-        updatedManagementPeriods.push(updated);
-      }
+      if (updated) {updatedManagementPeriods.push(updated)}
     }
     for (let i = existingCount; i < incomingCount; i++) {
       const newPeriod = await transactionalManager.save(
@@ -400,9 +385,7 @@ const cropMutationMethods = {
           ModifiedOn: new Date(),
         },
       );
-      if (newPeriod) {
-        updatedManagementPeriods.push(newPeriod);
-      }
+      if (newPeriod) { updatedManagementPeriods.push(newPeriod)}
     }
     for (let i = incomingCount; i < existingCount; i++) {
       const periodToDelete = existingPeriods[i];
@@ -455,10 +438,7 @@ const cropMutationMethods = {
         const futureRecommendationKey = `${task.fieldID}:${task.year}`;
         if (!futureRecommendationKeys.has(futureRecommendationKey)) {
           futureRecommendationKeys.add(futureRecommendationKey);
-          this.updatingFutureRecommendations.updateRecommendationsForField(task.fieldID, task.year, task.request, task.userId)
-            .catch((error) => {
-              console.error(`Error updating next crop's recommendations for FieldID: ${task.fieldID}, Year: ${task.year}:`,error);
-            });
+          this.updatingFutureRecommendations.updateRecommendationsForField(task.fieldID, task.year, task.request, task.userId).catch((error) => {console.error(`Error updating next crop's recommendations for FieldID: ${task.fieldID}, Year: ${task.year}:`,error)});
         }
       } else if (task?.type === "warningByCrop") {
         const warningByCropKey = `${task.cropID}`;
