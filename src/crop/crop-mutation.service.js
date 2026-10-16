@@ -468,7 +468,7 @@ const cropMutationMethods = {
             console.error(`Error processing warning recalculation for crop ${task.cropID}:`,error);
           });
         }
-      } else {}
+      } else {console.log(`no task running`)}
     }
   },
 
