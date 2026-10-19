@@ -156,22 +156,9 @@ const cropMutationMethods = {
         deletedCrop.FieldID,
         deletedCrop.Year,
       );
-
-    if (!currentYearGrassPreviousCropping) {
-      return;
-    }
-
-    const previousYearPreviousCropping =
-      await cropMutationMethods.getPreviousCroppingByFieldAndYear(
-        transactionalManager,
-        deletedCrop.FieldID,
-        deletedCrop.Year - 1,
-      );
-
-    if (!previousYearPreviousCropping || previousYearPreviousCropping.PreviousGrassID == null) {
-      return;
-    }
-
+    if (!currentYearGrassPreviousCropping) {return}
+    const previousYearPreviousCropping =await cropMutationMethods.getPreviousCroppingByFieldAndYear(transactionalManager,deletedCrop.FieldID,deletedCrop.Year - 1);
+    if (previousYearPreviousCropping?.PreviousGrassID == null) {return}
     await transactionalManager.update(
       PreviousCroppingEntity,
       previousYearPreviousCropping.ID,
@@ -183,36 +170,12 @@ const cropMutationMethods = {
     );
   },
 
-  async clearPreviousYearPreviousGrassOnArableToGrassUpdate(
-    transactionalManager,
-    previousCrop,
-    updatedCrop,
-    rb209CountryID,
-    userId,
-  ) {
-    if (!cropMutationMethods.isScotlandCountry(rb209CountryID)) {
-      return;
-    }
-
-    if (!cropMutationMethods.isArableCropType(previousCrop?.CropTypeID)) {
-      return;
-    }
-
-    if (!cropMutationMethods.isGrassCropType(updatedCrop?.CropTypeID)) {
-      return;
-    }
-
-    const previousYearGrassPreviousCropping =
-      await cropMutationMethods.getCurrentYearGrassPreviousCropping(
-        transactionalManager,
-        updatedCrop.FieldID,
-        updatedCrop.Year - 1,
-      );
-
-    if (!previousYearGrassPreviousCropping || previousYearGrassPreviousCropping.PreviousGrassID == null) {
-      return;
-    }
-
+  async clearPreviousYearPreviousGrassOnArableToGrassUpdate(transactionalManager,previousCrop,updatedCrop,rb209CountryID,userId) {
+    if (!cropMutationMethods.isScotlandCountry(rb209CountryID)) {return }
+    if (!cropMutationMethods.isArableCropType(previousCrop?.CropTypeID)) {return}
+    if (!cropMutationMethods.isGrassCropType(updatedCrop?.CropTypeID)) {return}
+    const previousYearGrassPreviousCropping =await cropMutationMethods.getCurrentYearGrassPreviousCropping(transactionalManager,updatedCrop.FieldID,updatedCrop.Year - 1);
+    if (previousYearGrassPreviousCropping?.PreviousGrassID == null) {return}
     await transactionalManager.update(
       PreviousCroppingEntity,
       previousYearGrassPreviousCropping.ID,
@@ -233,33 +196,12 @@ const cropMutationMethods = {
     rb209CountryID,
     userId,
   ) {
-    if (!cropMutationMethods.isScotlandCountry(rb209CountryID)) {
-      return;
-    }
-
-    if (!cropMutationMethods.isGrassCropType(previousCrop?.CropTypeID)) {
-      return;
-    }
-
-    if (!cropMutationMethods.isArableCropType(updatedCrop?.CropTypeID)) {
-      return;
-    }
-
-    if (!hasIncomingPreviousGrass) {
-      return;
-    }
-
-    const previousYearGrassPreviousCropping =
-      await cropMutationMethods.getCurrentYearGrassPreviousCropping(
-        transactionalManager,
-        updatedCrop.FieldID,
-        updatedCrop.Year - 1,
-      );
-
-    if (!previousYearGrassPreviousCropping) {
-      return;
-    }
-
+    if (!cropMutationMethods.isScotlandCountry(rb209CountryID)) {return}
+    if (!cropMutationMethods.isGrassCropType(previousCrop?.CropTypeID)) {return}
+    if (!cropMutationMethods.isArableCropType(updatedCrop?.CropTypeID)) {return}
+    if (!hasIncomingPreviousGrass) {return}
+    const previousYearGrassPreviousCropping =await cropMutationMethods.getCurrentYearGrassPreviousCropping(transactionalManager,updatedCrop.FieldID,updatedCrop.Year - 1);
+    if (!previousYearGrassPreviousCropping) {return}
     await transactionalManager.update(
       PreviousCroppingEntity,
       previousYearGrassPreviousCropping.ID,
@@ -333,47 +275,14 @@ const cropMutationMethods = {
     await cropMutationMethods.applyScotlandPreviousGrassRulesForGrassCrop(transactionalManager, currentCrop, incomingPreviousGrass, hasIncomingPreviousGrass, userId);
   },
 
-  async clearNextYearArablePreviousGrassOnGrassDelete(
-    transactionalManager,
-    deletedCrop,
-    rb209CountryID,
-    userId,
-  ) {
+  async clearNextYearArablePreviousGrassOnGrassDelete(transactionalManager,deletedCrop,rb209CountryID,userId) {
     if (!cropMutationMethods.isScotlandCountry(rb209CountryID) || !cropMutationMethods.isGrassCropType(deletedCrop.CropTypeID)) { return }
-
-    const nextYearArableCrop = await cropMutationMethods.getNextYearArableCropForDelete(
-      transactionalManager,
-      deletedCrop,
-    );
-    if (!nextYearArableCrop) {
-      return;
-    }
-
-    // Keep existing behavior: clear next-year arable PreviousGrass first.
-    await cropMutationMethods.setCropPreviousGrass(
-      transactionalManager,
-      nextYearArableCrop.ID,
-      null,
-      userId,
-    );
-
-    const currentYearPreviousCropping =
-      await cropMutationMethods.getCurrentYearGrassPreviousCropping(
-        transactionalManager,
-        deletedCrop.FieldID,
-        deletedCrop.Year,
-      );
-
-    if (currentYearPreviousCropping?.PreviousGrassID == null) {
-      return;
-    }
-
-    await cropMutationMethods.setCropPreviousGrass(
-      transactionalManager,
-      nextYearArableCrop.ID,
-      currentYearPreviousCropping.PreviousGrassID,
-      userId,
-    );
+    const nextYearArableCrop = await cropMutationMethods.getNextYearArableCropForDelete(transactionalManager,deletedCrop);
+    if (!nextYearArableCrop) {return}
+    await cropMutationMethods.setCropPreviousGrass(transactionalManager,nextYearArableCrop.ID,null,userId);
+    const currentYearPreviousCropping = await cropMutationMethods.getCurrentYearGrassPreviousCropping(transactionalManager,deletedCrop.FieldID,deletedCrop.Year);
+    if (currentYearPreviousCropping?.PreviousGrassID == null) {return}
+    await cropMutationMethods.setCropPreviousGrass(transactionalManager,nextYearArableCrop.ID,currentYearPreviousCropping.PreviousGrassID,userId);
   },
 
   async validateAndHandleSecondCrop(transactionalManager, updatedCrop, fieldId, year, rB209CountryID) {
@@ -423,21 +332,9 @@ const cropMutationMethods = {
         const updatedCrop = await transactionalManager.findOne(CropEntity, {
           where: { FieldID: fieldId, Year: year, Confirm: confirmValue },
         });
-        // Get the rb209CountryID of the farm
         const rb209CountryID = await this.fetchRb209CountryId(fieldId, transactionalManager);
-        await cropMutationMethods.applyScotlandPreviousGrassRules(
-          transactionalManager,
-          updatedCrop,
-          updateData.PreviousGrass,
-          Object.hasOwn(updateData, "PreviousGrass"),
-          rb209CountryID,
-          userId
-        );
-        await this.validateAndHandleSecondCrop(transactionalManager, updatedCrop,
-          fieldId,
-          year,
-          rb209CountryID,
-        );
+        await cropMutationMethods.applyScotlandPreviousGrassRules(transactionalManager,updatedCrop,updateData.PreviousGrass,Object.hasOwn(updateData, "PreviousGrass"),rb209CountryID,userId);
+        await this.validateAndHandleSecondCrop(transactionalManager, updatedCrop,fieldId,year,rb209CountryID);
         return updatedCrop;
       },
     );
@@ -446,13 +343,8 @@ const cropMutationMethods = {
   },
 
   async deleteCrop(cropId, userId, request, transactionalManager) {
-    // If a global transaction manager is provided, use it.
-    if (transactionalManager) {
-      return this.deleteCropById(cropId, userId, request, transactionalManager);
-    }
-    return AppDataSource.transaction(async (localManager) => {
-      return this.deleteCropById(cropId, userId, request, localManager);
-    });
+    if (transactionalManager) {return this.deleteCropById(cropId, userId, request, transactionalManager)}
+    return AppDataSource.transaction(async (localManager) => {return this.deleteCropById(cropId, userId, request, localManager)});
   },
 
   async deleteCropById(CropsID, userId, request, transactionalManager) {
@@ -477,20 +369,11 @@ const cropMutationMethods = {
         ]);
       }
     }
-    await transactionalManager.query(storedProcedureDeletePrimaryCrop, [
-      CropsID,
-    ]);
-    await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(
-      crop,
-      transactionalManager,
-      request,
-      userId,
-    );
+    await transactionalManager.query(storedProcedureDeletePrimaryCrop, [CropsID]);
+    await this.currentAndFuture.regenerateCurrentAndFutureRecommendations(crop,transactionalManager,request,userId);
   },
 
-  async cropGroupNameExists(cropIds, newGroupName, year, farmId) {
-    return ((await this.existingGroupNameCount(cropIds, newGroupName, year, farmId)) > 0);
-  },
+  async cropGroupNameExists(cropIds, newGroupName, year, farmId) {return ((await this.existingGroupNameCount(cropIds, newGroupName, year, farmId)) > 0);},
 
   async existingGroupNameCount(cropIds, newGroupName, year, farmId) {
     if (!newGroupName) { throw boom.badRequest("Group Name is required") }
@@ -648,10 +531,7 @@ const cropMutationMethods = {
       backgroundTasks.push({ type: "futureRecommendation", fieldID: updatedCrop.FieldID, year: nextAvailableCrop.Year, request, userId });
       return;
     }
-    this.updatingFutureRecommendations.updateRecommendationsForField(updatedCrop.FieldID, nextAvailableCrop.Year, request, userId)
-      .catch((error) => {
-        console.error("Error updating next crop's recommendations:", error);
-      });
+    this.updatingFutureRecommendations.updateRecommendationsForField(updatedCrop.FieldID, nextAvailableCrop.Year, request, userId).catch((error) => {console.error("Error updating next crop's recommendations:", error)});
   },
 
   scheduleWarningRecalculation(updatedCrop, backgroundTasks, userId) {
@@ -659,11 +539,8 @@ const cropMutationMethods = {
       backgroundTasks.push({ type: "warningByCrop", cropID: updatedCrop.ID, userId });
       return;
     }
-    this.ProcessFutureManuresForWarnings.processWarningsByCrop(updatedCrop.ID, userId).catch((error) => {
-      console.error(`Error processing warning recalculation for crop ${updatedCrop.ID}:`, error);
-    });
+    this.ProcessFutureManuresForWarnings.processWarningsByCrop(updatedCrop.ID, userId).catch((error) => { console.error(`Error processing warning recalculation for crop ${updatedCrop.ID}:`, error)});
   },
-
   async updateSingleCrop(cropEntry, userId, request, transactionalManager, backgroundTasks) {
     const crop = cropEntry?.Crop;
     const { ID, CreatedByID, CreatedOn, ModifiedOn, ModifiedByID, EncryptedCounter, FieldName, IsDeleted, ...updatedCropData } = crop;
@@ -685,22 +562,8 @@ const cropMutationMethods = {
     }
     const updatedCrop = await transactionalManager.findOne(CropEntity, { where: { ID: ID } });
     const rb209CountryID = await this.fetchRb209CountryId(crop.FieldID, transactionalManager);
-    await cropMutationMethods.clearPreviousYearPreviousGrassOnArableToGrassUpdate(
-      transactionalManager,
-      existingCrop,
-      updatedCrop,
-      rb209CountryID,
-      userId,
-    );
-    await cropMutationMethods.setPreviousYearPreviousGrassOnGrassToArableUpdate(
-      transactionalManager,
-      existingCrop,
-      updatedCrop,
-      updatedCropData.PreviousGrass,
-      hasIncomingPreviousGrass,
-      rb209CountryID,
-      userId,
-    );
+    await cropMutationMethods.clearPreviousYearPreviousGrassOnArableToGrassUpdate(transactionalManager,existingCrop,updatedCrop,rb209CountryID,userId);
+    await cropMutationMethods.setPreviousYearPreviousGrassOnGrassToArableUpdate(transactionalManager,existingCrop,updatedCrop,updatedCropData.PreviousGrass,hasIncomingPreviousGrass,rb209CountryID,userId);
     await cropMutationMethods.applyScotlandPreviousGrassRules(transactionalManager, updatedCrop, updatedCropData.PreviousGrass, hasIncomingPreviousGrass, rb209CountryID, userId);
     await this.validateAndHandleSecondCrop(transactionalManager, updatedCrop, updatedCrop.FieldID, updatedCrop.Year, rb209CountryID);
     const updatedManagementPeriods = await this.syncManagementPeriodsBySequence(transactionalManager, crop.ID, userId, cropEntry.ManagementPeriods);
