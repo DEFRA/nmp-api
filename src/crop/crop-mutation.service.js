@@ -254,11 +254,7 @@ const cropMutationMethods = {
         const updateResult = await transactionalManager.update(
           CropEntity,
           { FieldID: fieldId, Year: year, Confirm: confirmValue },
-          {
-            ...updateData,
-            ModifiedByID: userId,
-            ModifiedOn: new Date(),
-          },
+          {...updateData,ModifiedByID: userId,ModifiedOn: new Date()},
         );
         if (updateResult.affected === 0) { console.log(`Crop for FieldID ${fieldId}, Year ${year}, and Confirm ${confirmValue} not found`) }
         const updatedCrop = await transactionalManager.findOne(CropEntity, {
@@ -286,11 +282,7 @@ const cropMutationMethods = {
     const storedProcedureDeletePrimaryCrop = storedProcedure.DELETE_CROP;
     if (crop.CropOrder === 1) {
       const secondCrop = await transactionalManager.findOne(CropEntity, {
-        where: {
-          Year: crop.Year,
-          CropOrder: CropOrderMapper.SECONDCROP,
-          FieldID: crop.FieldID,
-        },
+        where: {Year: crop.Year,CropOrder: CropOrderMapper.SECONDCROP,FieldID: crop.FieldID},
       });
       if (secondCrop) {
         const storedProcedureSecondCrop = storedProcedure.DELETE_CROP;
