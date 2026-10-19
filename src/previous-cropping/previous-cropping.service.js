@@ -131,10 +131,7 @@ class PreviousCroppingService extends BaseService {
       }
     }
 
-    return {
-      ...cropData,
-      PreviousGrassID: null,
-    };
+    return cropData;
   }
 
   async savePreviousCroppingData(
