@@ -117,9 +117,9 @@ class PreviousCroppingService extends BaseService {
     );
 
     if (nextYearFirstCrop && this.isArableCropType(nextYearFirstCrop.CropTypeID)) {
-      const hasIncomingPreviousGrassId = Object.hasOwn.call(
+      const hasIncomingPreviousGrassId = Object.hasOwn(
         cropData,
-        "PreviousGrassID",
+        "PreviousGrassID"
       );
 
       if (hasIncomingPreviousGrassId) {
