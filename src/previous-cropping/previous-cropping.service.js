@@ -98,7 +98,7 @@ class PreviousCroppingService extends BaseService {
     transactionalManager,
   ) {
     if (!this.isGrassCropType(cropData.CropTypeID)) {
-      return cropData;
+      return;
     }
 
     const rb209CountryID = await this.getRb209CountryIdByFieldId(
@@ -106,9 +106,7 @@ class PreviousCroppingService extends BaseService {
       transactionalManager,
     );
 
-    if (!this.isScotlandCountry(rb209CountryID)) {
-      return cropData;
-    }
+    if (!this.isScotlandCountry(rb209CountryID)) { return }
 
     const nextYearFirstCrop = await this.getNextYearFirstCrop(
       cropData.FieldID,
@@ -131,10 +129,6 @@ class PreviousCroppingService extends BaseService {
       }
     }
 
-    return {
-      ...cropData,
-      PreviousGrassID: null,
-    };
   }
 
   async savePreviousCroppingData(
@@ -159,16 +153,15 @@ class PreviousCroppingService extends BaseService {
         userId,
       );
 
-      const processedCropData =
-        await this.applyScotlandGrassPreviousCroppingRule(
-          cropData,
-          userId,
-          transactionalManager,
-        );
+      await this.applyScotlandGrassPreviousCroppingRule(
+        cropData,
+        userId,
+        transactionalManager,
+      );
 
       previousCroppingData = await transactionalManager.save(
         PreviousCroppingEntity,
-        processedCropData
+        cropData
       );
     }, Promise.resolve());
 
