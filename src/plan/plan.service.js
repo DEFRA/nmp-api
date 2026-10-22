@@ -260,22 +260,10 @@ class PlanService extends BaseService {
   }
 
   async getReferenceArableCropForGrassRule(crop, transactionalManager) {
-    if (crop.CropOrder === CropOrderMapper.SECONDCROP) {
-      return this.getCropByFieldYearAndOrder(
-        crop.FieldID,
-        crop.Year,
-        CropOrderMapper.FIRSTCROP,
-        transactionalManager,
-      );
-    }
-
+    if (crop.CropOrder === CropOrderMapper.SECONDCROP) {return this.getCropByFieldYearAndOrder(crop.FieldID,crop.Year,CropOrderMapper.FIRSTCROP,transactionalManager)}
     return this.getCropForYear(crop.FieldID, crop.Year + 1, transactionalManager);
   }
-
-  isScotlandCountry(rb209CountryID) {
-    return rb209CountryID === CountryMapper.SCOTLAND;
-  }
-
+  isScotlandCountry(rb209CountryID) {return rb209CountryID === CountryMapper.SCOTLAND}
   isGrassCropType(cropTypeID) { return cropTypeID === CropTypeMapper.GRASS }
   isArableCropType(cropTypeID) { return cropTypeID !== null && cropTypeID !== CropTypeMapper.GRASS }
   async getNextYearCropForField(fieldID, year, transactionalManager) {
@@ -314,42 +302,20 @@ class PlanService extends BaseService {
     });
   }
 
-  async applyScotlandPreviousGrassRulesForArableCropOnCreate(
-    crop,
-    transactionalManager,
-    userId,
-    hasIncomingPreviousGrass,
-  ) {
+  async applyScotlandPreviousGrassRulesForArableCropOnCreate(crop,transactionalManager,userId,hasIncomingPreviousGrass) {
     const referenceCrop = await this.getReferenceCropForArableRule(crop, transactionalManager);
     if (this.isGrassCropType(referenceCrop?.CropTypeID)) { crop.PreviousGrass = crop.PreviousGrass ?? null }
-
     if (!hasIncomingPreviousGrass) { return }
-    const previousYearGrassPreviousCropping = await this.getPreviousYearGrassPreviousCropping(
-      crop.FieldID,
-      crop.Year,
-      transactionalManager,
-    );
-
+    const previousYearGrassPreviousCropping = await this.getPreviousYearGrassPreviousCropping(crop.FieldID,crop.Year,transactionalManager);
     if (previousYearGrassPreviousCropping) {
-      await this.setPreviousCroppingPreviousGrass(
-        transactionalManager,
-        previousYearGrassPreviousCropping.ID,
-        crop.PreviousGrass ?? null,
-        userId,
-      );
+      await this.setPreviousCroppingPreviousGrass(transactionalManager,previousYearGrassPreviousCropping.ID,crop.PreviousGrass ?? null,userId);
     }
   }
 
-  async applyScotlandPreviousGrassRulesForGrassCropOnCreate(
-    crop,
-    transactionalManager,
-    userId,
-    hasIncomingPreviousGrass,
-  ) {
+  async applyScotlandPreviousGrassRulesForGrassCropOnCreate(crop,transactionalManager,userId,hasIncomingPreviousGrass) {
     if (!hasIncomingPreviousGrass) { return }
     const referenceArableCrop = await this.getReferenceArableCropForGrassRule(crop, transactionalManager);
     if (!referenceArableCrop || !this.isArableCropType(referenceArableCrop.CropTypeID)) { return }
-
     const previousGrassValue = crop.PreviousGrass ?? null;
     crop.PreviousGrass = null;
     await this.setCropPreviousGrass(transactionalManager, referenceArableCrop.ID, previousGrassValue, userId);
@@ -359,45 +325,23 @@ class PlanService extends BaseService {
     const hasIncomingPreviousGrass = Object.hasOwn(crop, "PreviousGrass");
     const rb209CountryID = await this.CalculatePreviousCropService.getRb209CountryId(crop.FieldID, transactionalManager);
     if (!this.isScotlandCountry(rb209CountryID)) { return }
-
     if (this.isArableCropType(crop.CropTypeID)) {
-      await this.applyScotlandPreviousGrassRulesForArableCropOnCreate(
-        crop,
-        transactionalManager,
-        userId,
-        hasIncomingPreviousGrass,
-      );
+      await this.applyScotlandPreviousGrassRulesForArableCropOnCreate(crop,transactionalManager,userId,hasIncomingPreviousGrass);
       return;
     }
-
     if (this.isGrassCropType(crop.CropTypeID)) {
-      await this.applyScotlandPreviousGrassRulesForGrassCropOnCreate(
-        crop,
-        transactionalManager,
-        userId,
-        hasIncomingPreviousGrass,
-      );
+      await this.applyScotlandPreviousGrassRulesForGrassCropOnCreate( crop, transactionalManager, userId, hasIncomingPreviousGrass);
     }
   }
 
   async createNutrientsRecommendationForField(crops, userId, request, transactionalManager) {
     let savedPlan;
     if (transactionalManager) {
-      savedPlan = await this.createNutrientsRecommendationWithinTransaction(
-        crops,
-        userId,
-        request,
-        transactionalManager,
-      );
+      savedPlan = await this.createNutrientsRecommendationWithinTransaction(crops,userId,request,transactionalManager);
       return savedPlan;
     }
     return AppDataSource.transaction(async (localManager) => {
-      savedPlan = await this.createNutrientsRecommendationWithinTransaction(
-        crops,
-        userId,
-        request,
-        localManager,
-      );
+      savedPlan = await this.createNutrientsRecommendationWithinTransaction(crops,userId,request,localManager);
       return savedPlan;
     });
   }
