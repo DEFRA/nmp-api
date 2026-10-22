@@ -422,11 +422,7 @@ class PlanService extends BaseService {
   async saveCropAndManagementPeriods(cropData, crop, userId, transactionalManager) {
     const savedCrop = await transactionalManager.save(
       CropEntity,
-      this.cropRepository.create({
-        ...crop,
-        CreatedByID: userId,
-        CreatedOn: new Date(),
-      }),
+      this.cropRepository.create({...crop, CreatedByID: userId, CreatedOn: new Date()}),
     );
 
     const ManagementPeriods = [];
@@ -447,11 +443,8 @@ class PlanService extends BaseService {
 
   async updateNextCropRecommendations(crop, request, userId, transactionalManager) {
     const nextAvailableCrop = await transactionalManager.findOne(CropEntity, {
-      where: {
-        FieldID: crop.FieldID,
-        Year: MoreThan(crop.Year),
-      },
-      order: { Year: "ASC" },
+      where: { FieldID: crop.FieldID,Year: MoreThan(crop.Year)},
+      order: { Year: "ASC" }
     });
     if (nextAvailableCrop) {this.updatingFutureRecommendations.updateRecommendationsForField(crop.FieldID, nextAvailableCrop.Year, request, userId).catch((error) => {console.error(`Failed to update recommendations for field ${crop.FieldID}:`, error)})}
   }
@@ -492,22 +485,15 @@ class PlanService extends BaseService {
       const plans = await AppDataSource.query(storedProcedure, [farmId, harvestYear, cropGroupName]);
       return plans;
     } catch (error) {
-      console.error(
-        "Error while fetching crop plans fields join data using farmId, harvest year and cropGroupName:",
-        error,
-      );
+      console.error("Error while fetching crop plans fields join data using farmId, harvest year and cropGroupName:",error);
       throw error;
     }
   }
 
   async getPlans(farmId, confirm) {
     try {
-      const storedProcedure =
-        "EXEC dbo.spCrops_GetPlans @farmId = @0, @confirm = @1";
-      const farms = await AppDataSource.query(storedProcedure, [
-        farmId,
-        confirm,
-      ]);
+      const storedProcedure = "EXEC dbo.spCrops_GetPlans @farmId = @0, @confirm = @1";
+      const farms = await AppDataSource.query(storedProcedure, [ farmId, confirm]);
       return farms;
     } catch (error) {
       console.error("Error while fetching join data:", error);
