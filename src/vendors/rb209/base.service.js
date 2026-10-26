@@ -94,7 +94,7 @@ class RB209BaseService {
           !error.config._retryRequest
         ) {
           const tokens = await this.refreshAccessToken();
-          this.updateTokens(tokens);
+          this.updateTokens(tokens).catch(console.error);
           const retryRequest = this.#request({
             ...error.config,
             _retryRequest: true,
