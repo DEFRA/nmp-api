@@ -21,7 +21,8 @@ class GrassGrowthService extends BaseService {
     return AppDataSource.transaction(async (transactionalManager) => {
       const results = [];
 
-      for (const fieldId of fieldIds) {
+      await fieldIds.reduce(async (previousField, fieldId) => {
+        await previousField;
         const fieldResult = await this.calculateGrassGrowthClassByFieldId(
           fieldId,
           request,
@@ -29,7 +30,7 @@ class GrassGrowthService extends BaseService {
         );
 
         results.push(fieldResult);
-      }
+      }, Promise.resolve());
 
       return results;
     });
@@ -68,7 +69,7 @@ class GrassGrowthService extends BaseService {
       // Ensure SoilOverChalk is false if it's null
       const soilOverChalk = field.SoilOverChalk ?? false;
       const postcode = farm.ClimateDataPostCode;
-      let summerRainfall=null;
+      let summerRainfall = null;
       if (
         fieldRelatedData?.summerRainfall === undefined ||
         fieldRelatedData?.summerRainfall === null

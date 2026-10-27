@@ -25,14 +25,15 @@ class FarmAverageYieldsService extends BaseService {
     return AppDataSource.transaction(async (transactionalManager) => {
       const results = [];
 
-      for (const item of payload) {
+      await payload.reduce(async (previousRecord, item) => {
+        await previousRecord;
         await this.processSingleRecord(
           transactionalManager,
           item,
           userId,
           results,
         );
-      }
+      }, Promise.resolve());
       return results;
     });
   }
@@ -58,13 +59,14 @@ class FarmAverageYieldsService extends BaseService {
     const cropRecords = await AppDataSource.query(query, [farmID, harvestYear]);
 
     // Loop through crops
-    for (const record of cropRecords) {
+    await cropRecords.reduce(async (previousRecord, record) => {
+      await previousRecord;
       await this.processWarningForCrop(
         record.CropID,
         userId,
         transactionalManager
       );
-    }
+    }, Promise.resolve());
 
     return {
       message: "Warnings processed successfully",
