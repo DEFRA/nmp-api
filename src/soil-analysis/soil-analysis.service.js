@@ -182,8 +182,22 @@ class SoilAnalysesService extends BaseService {
     request,
   ) {
     return AppDataSource.transaction(async (transactionalManager) => {
+      const existingSoilAnalysis = await this.findSoilAnalysisByIdHelper(
+        transactionalManager,
+        soilAnalysisId,
+      );
+
+      if (!existingSoilAnalysis) {
+        console.log(`Soil Analysis with ID ${soilAnalysisId} not found`);
+      }
+
       const { CreatedByID, CreatedOn, ...updatedData } =
         updatedSoilAnalysisData;
+
+      const recommendationStartYear = this.getMinimumYearHelper(
+        existingSoilAnalysis.Year,
+        updatedData.Year,
+      );
 
       const result = await transactionalManager.update(
         SoilAnalysisEntity,
@@ -196,7 +210,7 @@ class SoilAnalysesService extends BaseService {
       );
 
       if (result.affected === 0) {
-        throw new Error(`Soil Analysis with ID ${soilAnalysisId} not found`);
+        console.log(`Soil Analysis with ID ${soilAnalysisId} not found`);
       }
 
       const SoilAnalysis = await this.findSoilAnalysisByIdHelper(
@@ -213,13 +227,26 @@ class SoilAnalysesService extends BaseService {
 
       await this.generateRecommendationsForUpdatedSoilAnalysisHelper(
         transactionalManager,
-        updatedSoilAnalysisData,
+        SoilAnalysis,
+        recommendationStartYear,
         request,
         userId,
       );
 
       return { SoilAnalysis, PKBalance };
     });
+  }
+
+  getMinimumYearHelper(previousYear, updatedYear) {
+    if (previousYear == null) {
+      return updatedYear;
+    }
+
+    if (updatedYear == null) {
+      return previousYear;
+    }
+
+    return Math.min(previousYear, updatedYear);
   }
 
   async findSoilAnalysisByIdHelper(transactionalManager, soilAnalysisId) {
@@ -255,7 +282,7 @@ class SoilAnalysesService extends BaseService {
 
     return transactionalManager.findOne(PKBalanceEntity, {
       where: {
-        Year: soilAnalysis.Date.Year,
+        Year: soilAnalysis.Year,
         FieldID: soilAnalysis.FieldID,
       },
     });
@@ -269,7 +296,7 @@ class SoilAnalysesService extends BaseService {
   ) {
     const pkBalanceEntry = await transactionalManager.find(PKBalanceEntity, {
       where: {
-        Year: soilAnalysis.Date.Year,
+        Year: soilAnalysis.Year,
         FieldID: soilAnalysis.FieldID,
       },
     });
@@ -286,14 +313,18 @@ class SoilAnalysesService extends BaseService {
 
   async generateRecommendationsForUpdatedSoilAnalysisHelper(
     transactionalManager,
-    updatedSoilAnalysisData,
+    updatedSoilAnalysis,
+    recommendationStartYear,
     request,
     userId,
   ) {
     const newOrganicManure = null;
+    const yearForRecommendations =
+      recommendationStartYear ?? updatedSoilAnalysis.Year;
+
     await this.generateRecommendations.generateRecommendations(
-      updatedSoilAnalysisData.FieldID,
-      updatedSoilAnalysisData.Year,
+      updatedSoilAnalysis.FieldID,
+      yearForRecommendations,
       newOrganicManure,
       transactionalManager,
       request,
@@ -302,39 +333,34 @@ class SoilAnalysesService extends BaseService {
 
     const nextAvailableCrop = await this.findNextAvailableCropHelper(
       transactionalManager,
-      updatedSoilAnalysisData.FieldID,
-      updatedSoilAnalysisData.Year,
+      updatedSoilAnalysis.FieldID,
+      yearForRecommendations,
     );
 
     if (nextAvailableCrop) {
-      this.updatingFutureRecommendations
-        .updateRecommendationsForField(
-          updatedSoilAnalysisData.FieldID,
-          nextAvailableCrop.Year,
-          request,
-          userId,
-        )
-        .then((res) => {
-          if (res === undefined) {
-            console.log(
-              "updateRecommendationAndOrganicManure returned undefined",
-            );
-          } else {
-            console.log("updateRecommendationAndOrganicManure result:", res);
-          }
-        })
-        .catch((error) => {
-          console.error(
-            "Error updating recommendation and organic manure:",
-            error,
-          );
-        });
+      await this.updatingFutureRecommendations.updateRecommendationsForField(
+        updatedSoilAnalysis.FieldID,
+        nextAvailableCrop.Year,
+        request,
+        userId,
+      );
     }
+  }
+
+  async findEarliestSoilAnalysisForFieldHelper(
+    transactionalManager,
+    fieldId,
+  ) {
+    return transactionalManager.findOne(SoilAnalysisEntity, {
+      where: {
+        FieldID: fieldId,
+      },
+      order: { Year: "ASC" },
+    });
   }
 
   async deleteSoilAnalysis(soilAnalysisId, userId, request) {
     return AppDataSource.transaction(async (transactionalManager) => {
-      // Check if the soilAnalysis exists
       const soilAnalysisToDelete = await transactionalManager.findOne(
         SoilAnalysisEntity,
         {
@@ -342,43 +368,31 @@ class SoilAnalysesService extends BaseService {
         },
       );
 
-      // If the soilAnalysis does not exist, throw a not found error
       if (soilAnalysisToDelete == null) {
-        console.log(`soilAnalysis with ID ${soilAnalysisId} not found`);
+        console.log(`Soil Analysis with ID ${soilAnalysisId} not found`);
       }
 
-      try {
-        // Call the stored procedure to delete the soilAnalysisId and related entities
-        const storedProcedure =
-          "EXEC spSoilAnalyses_DeleteSoilAnalyses @SoilAnalysesID = @0";
-        await AppDataSource.query(storedProcedure, [soilAnalysisId]);
+      const storedProcedure =
+        "EXEC spSoilAnalyses_DeleteSoilAnalyses @SoilAnalysesID = @0";
+      await transactionalManager.query(storedProcedure, [soilAnalysisId]);
 
-        this.updatingFutureRecommendations
-          .updateRecommendationsForField(
-            soilAnalysisToDelete.FieldID,
-            soilAnalysisToDelete.Year,
-            request,
-            userId,
-          )
-          .then((res) => {
-            if (res === undefined) {
-              console.log(
-                "updateRecommendationAndOrganicManure returned undefined",
-              );
-            } else {
-              console.log("updateRecommendationAndOrganicManure result:", res);
-            }
-          })
-          .catch((error) => {
-            console.error(
-              "Error updating recommendation and organic manure:",
-              error,
-            );
-          });
-      } catch (error) {
-        // Log the error and throw an internal server error
-        console.error("Error deleting SoilAnalyses:", error);
-      }
+      const earliestRemainingSoilAnalysis =
+        await this.findEarliestSoilAnalysisForFieldHelper(
+          transactionalManager,
+          soilAnalysisToDelete.FieldID,
+        );
+
+      const recommendationStartYear = this.getMinimumYearHelper(
+        soilAnalysisToDelete.Year,
+        earliestRemainingSoilAnalysis?.Year,
+      );
+
+      await this.updatingFutureRecommendations.updateRecommendationsForField(
+        soilAnalysisToDelete.FieldID,
+        recommendationStartYear,
+        request,
+        userId,
+      );
     });
   }
 }

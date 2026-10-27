@@ -66,8 +66,7 @@ const CreateMannerEstimationDto = Joi.object({
   ModifiedByID: Joi.number().integer().allow(null).default(null),
 });
 
-
-const CreateMannerEstimationWithApplicationDto = Joi.object({  
+const CreateMannerEstimationWithApplicationDto = Joi.object({
   MannerEstimation: CreateMannerEstimationDto.required(),
   MannerEstimationApplication: CreateMannerEstimationApplicationDto.required(),
 });

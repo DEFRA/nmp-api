@@ -334,12 +334,10 @@ const recommendationRequestHelpers = {
       const cropType = cropTypesList.find(
         (cropTp) => cropTp?.cropTypeId === previousCrop?.CropTypeID,
       );
-      const isGrass = previousCrop?.CropTypeID === CropTypeMapper.GRASS;
-
       return {
         previousGrassId: grassHistoryID ? null : previousGrassId,
-        previousCropGroupId: isGrass ? null : (cropType?.cropGroupId ?? null),
-        previousCropTypeId: isGrass ? null : (previousCrop?.CropTypeID ?? null),
+        previousCropGroupId: cropType?.cropGroupId ?? null,
+        previousCropTypeId: previousCrop?.CropTypeID ?? null,
         grassHistoryId: previousGrassId ? null : grassHistoryID,
         snsId: null,
         smnDepth: null,
@@ -367,7 +365,7 @@ const recommendationRequestHelpers = {
     cropTypesList,
   ) {
     let grassGrowthClass = null;
-    if(crop.CropTypeID === CropTypeMapper.GRASS) {
+    if (dataMultipleCrops.some((processingCrop) => processingCrop.CropTypeID === CropTypeMapper.GRASS)) {
      grassGrowthClass =
       await this.grassGrowthClass.calculateGrassGrowthClassByFieldId(
         field.ID,
