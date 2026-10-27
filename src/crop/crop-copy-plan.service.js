@@ -446,9 +446,10 @@ const cropCopyPlanMethods = {
         results: this.initResults(),
       };
 
-      for (const crop of crops) {
+      await crops.reduce(async (previousCrop, crop) => {
+        await previousCrop;
         await this.processCrop(crop, fields, context);
-      }
+      }, Promise.resolve());
 
       return context.results;
     });
