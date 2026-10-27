@@ -85,9 +85,9 @@ class FertiliserManuresController {
       const data = await this.#fertiliserManuresService.updateFertiliser(
         updatedFertiliserManureData, // Pass the current manure object
         userId,
-        this.#request 
+        this.#request
       );
-    
+
 
       return this.#h.response({ data }); // Respond with the aggregated results
     } catch (error) {
@@ -133,12 +133,12 @@ class FertiliserManuresController {
 
     try {
       // Loop through each fertliserManureIds and call the service method to delete it
-      for (const fertliserManureId of fertliserManureIds) {
-        const result =
-          await this.#fertiliserManuresService.deleteFertiliserManure(
+      await fertliserManureIds.reduce(async (previousManure, fertliserManureId) => {
+        await previousManure;
+        const result = await this.#fertiliserManuresService.deleteFertiliserManure(
             fertliserManureId,
             userId,
-            this.#request,
+            this.#request
           );
 
         if (result?.affectedRows === 0) {
@@ -146,7 +146,7 @@ class FertiliserManuresController {
             `Fertiliser manure with ID ${fertliserManureId} not found.`,
           );
         }
-      }
+      }, Promise.resolve());
 
       return this.#h.response({
         message: "Fertiliser manures deleted successfully.",
@@ -167,7 +167,7 @@ class FertiliserManuresController {
       return this.#h.response({ error });
     }
   }
-   async getTotalNitrogenByManagementPeriodIDAndIsAutumn() {
+  async getTotalNitrogenByManagementPeriodIDAndIsAutumn() {
     const { managementPeriodID } = this.#request.params;
     const { isAutumn } = this.#request.query;
     try {
@@ -190,7 +190,7 @@ class FertiliserManuresController {
         CropTypeId,
         NvzId
       );
-      return this.#h.response(closedPeriod );
+      return this.#h.response(closedPeriod);
     } catch (error) {
       return this.#h.response({ error });
     }
