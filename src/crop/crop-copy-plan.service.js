@@ -319,7 +319,9 @@ const cropCopyPlanMethods = {
   async copyManagementPeriods(manager, periods, crop, userId, results) {
     const map = {};
 
-    for (const p of periods) {
+    await periods.reduce(async (previousSave, p) => {
+      await previousSave;
+
       const saved = await manager.save(ManagementPeriodEntity, {
         ...p,
         ID: null,
@@ -330,18 +332,22 @@ const cropCopyPlanMethods = {
 
       map[p.ID] = saved.ID;
       results.ManagementPeriods.push(saved);
-    }
+    }, Promise.resolve());
 
     return map;
   },
 
   async copyFertiliser(manager, periods, map, year, userId, results) {
-    for (const p of periods) {
+    await periods.reduce(async (previousPeriod, p) => {
+      await previousPeriod;
+
       const ferts = await manager.find(FertiliserManuresEntity, {
         where: { ManagementPeriodID: p.ID },
       });
 
-      for (const f of ferts) {
+      await ferts.reduce(async (previousSave, f) => {
+        await previousSave;
+
         const date = f.ApplicationDate
           ? new Date(new Date(f.ApplicationDate).setFullYear(year))
           : null;
@@ -356,17 +362,21 @@ const cropCopyPlanMethods = {
         });
 
         results.Fertilisers.push(saved);
-      }
-    }
+      }, Promise.resolve());
+    }, Promise.resolve());
   },
 
   async copyOrganic(manager, periods, map, year, userId, results) {
-    for (const p of periods) {
+    await periods.reduce(async (previousPeriod, p) => {
+      await previousPeriod;
+
       const manures = await manager.find(OrganicManureEntity, {
         where: { ManagementPeriodID: p.ID },
       });
 
-      for (const m of manures) {
+      await manures.reduce(async (previousSave, m) => {
+        await previousSave;
+
         const date = this.adjustOrganicDate(m.ApplicationDate, year);
 
         const saved = await manager.save(OrganicManureEntity, {
@@ -379,8 +389,8 @@ const cropCopyPlanMethods = {
         });
 
         results.OrganicManures.push(saved);
-      }
-    }
+      }, Promise.resolve());
+    }, Promise.resolve());
   },
 
   async generateAndStoreRecommendations(field, ctx) {
@@ -436,9 +446,10 @@ const cropCopyPlanMethods = {
         results: this.initResults(),
       };
 
-      for (const crop of crops) {
+      await crops.reduce(async (previousCrop, crop) => {
+        await previousCrop;
         await this.processCrop(crop, fields, context);
-      }
+      }, Promise.resolve());
 
       return context.results;
     });

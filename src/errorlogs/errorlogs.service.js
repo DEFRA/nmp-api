@@ -146,7 +146,8 @@ class LogsService {
   async collectLogsByDate(date, logFiles) {
     const collectedLogs = [];
 
-    for (const fileName of logFiles) {
+    await logFiles.reduce(async (previousFile, fileName) => {
+      await previousFile;
       const filePath = path.join(this.logDir, fileName);
       const fileContent = await fs.promises.readFile(filePath, "utf8");
       const jsonBlocks = extractJsonObjects(fileContent);
@@ -157,7 +158,7 @@ class LogsService {
       );
 
       collectedLogs.push(...matchingLogs);
-    }
+    }, Promise.resolve());
 
     return collectedLogs;
   }

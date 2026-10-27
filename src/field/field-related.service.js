@@ -299,7 +299,7 @@ const fieldRelatedMethods = {
   },
 
   async getRecentSoilAnalysisRecord(fieldId, year) {
-    const fiveYearBack = 5;
+    const fiveYearBack = 4;
     const soilAnalysisRecordsList = await this.soilAnalysisRepository.find({
       where: {
         FieldID: fieldId,
