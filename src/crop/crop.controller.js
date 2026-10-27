@@ -383,7 +383,8 @@ class CropController {
 
     try {
       // Loop through each cropId and call the service method to delete it
-      for (const cropId of cropIds) {
+      await cropIds.reduce(async (previousCrop, cropId) => {
+        await previousCrop;
         const result = await this.#cropService.deleteCrop(
           cropId,
           userId,
@@ -394,7 +395,7 @@ class CropController {
         if (result?.affectedRows === 0) {
           throw boom.notFound(`Crop with ID ${cropId} not found.`);
         }
-      }
+      }, Promise.resolve());
 
       return this.#h.response({ message: "Crops deleted successfully." });
     } catch (error) {
