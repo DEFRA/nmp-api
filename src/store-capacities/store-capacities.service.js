@@ -31,17 +31,18 @@ class StoreCapacitiesService extends BaseService {
 
     const enrichedRecords = [];
 
-    for (const record of records) {
+    await records.reduce(async (previousRecord, record) => {
+      await previousRecord;
       const storageType = record.StorageTypeID
         ? await this.storageTypesRepository.findOne({
-            where: { ID: record.StorageTypeID },
-          })
+          where: { ID: record.StorageTypeID },
+        })
         : null;
 
       const solidManureType = record.SolidManureTypeID
         ? await this.solidManureTypesRepository.findOne({
-            where: { ID: record.SolidManureTypeID },
-          })
+          where: { ID: record.SolidManureTypeID },
+        })
         : null;
 
       enrichedRecords.push({
@@ -49,7 +50,7 @@ class StoreCapacitiesService extends BaseService {
         StorageTypeName: storageType ? storageType.Name : null,
         SolidManureTypeName: solidManureType ? solidManureType.Name : null,
       });
-    }
+    }, Promise.resolve());
 
     return enrichedRecords;
   }

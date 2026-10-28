@@ -21,7 +21,8 @@ class SiteClassService extends BaseService {
     return AppDataSource.transaction(async (transactionalManager) => {
       const results = [];
 
-      for (const fieldId of fieldIds) {
+      await fieldIds.reduce(async (previousField, fieldId) => {
+        await previousField;
         const fieldResult = await this.calculateSiteClassIdByFieldId(
           fieldId,
           request,
@@ -29,7 +30,7 @@ class SiteClassService extends BaseService {
         );
 
         results.push(fieldResult);
-      }
+      }, Promise.resolve());
 
       return results;
     });
@@ -41,39 +42,39 @@ class SiteClassService extends BaseService {
     transactionalManager,
     fieldRelatedData = null,
   ) {
-   
-      const field = await this.getFieldById(fieldId, transactionalManager);
-      if (!field) {
-        return { fieldId, error: "Field not found" };
-      }
 
-      const farm = await this.getFarmByField(field, transactionalManager);
-      if (!farm) {
-        return { fieldId, error: "Farm not found for this field" };
-      }
+    const field = await this.getFieldById(fieldId, transactionalManager);
+    if (!field) {
+      return { fieldId, error: "Field not found" };
+    }
 
-      const soilTypeId = this.getSoilTypeId(field, fieldRelatedData);
-      if (soilTypeId === null) {
-        return { fieldId, error: "Soil type not found for this field" };
-      }
+    const farm = await this.getFarmByField(field, transactionalManager);
+    if (!farm) {
+      return { fieldId, error: "Farm not found for this field" };
+    }
 
-      const altitude = this.getAltitude(field, farm, fieldRelatedData);
-      const rainfall = await this.getRainfall(farm, fieldRelatedData);
+    const soilTypeId = this.getSoilTypeId(field, fieldRelatedData);
+    if (soilTypeId === null) {
+      return { fieldId, error: "Soil type not found for this field" };
+    }
 
-      if (rainfall === null || rainfall === undefined) {
-        return { fieldId, error: "Rainfall not found for this field" };
-      }
+    const altitude = this.getAltitude(field, farm, fieldRelatedData);
+    const rainfall = await this.getRainfall(farm, fieldRelatedData);
 
-      const siteClassData = await this.grassService.getData(
-        `Grass/SiteClassId/${soilTypeId}/${rainfall}/${altitude}`,
-        request,
-      );
+    if (rainfall === null || rainfall === undefined) {
+      return { fieldId, error: "Rainfall not found for this field" };
+    }
 
-      return {
-        ...siteClassData,
-        fieldId,
-      };
-    
+    const siteClassData = await this.grassService.getData(
+      `Grass/SiteClassId/${soilTypeId}/${rainfall}/${altitude}`,
+      request,
+    );
+
+    return {
+      ...siteClassData,
+      fieldId,
+    };
+
   }
 
   async getFieldById(fieldId, transactionalManager) {
