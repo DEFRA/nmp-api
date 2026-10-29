@@ -21,7 +21,6 @@ const MannerIncorporationMethodService = require("../vendors/manner/incorporatio
 const MannerIncorporationDelayService = require("../vendors/manner/incorporation-delay/incorporation-delay.service");
 const { GrassManagementOptionsEntity } = require("../db/entity/grassManagementOptionsEntity");
 const RB209GrassService = require("../vendors/rb209/grass/grass.service");
-const RB209GrasslandService = require("../vendors/rb209/grassland/grassland.service");
 const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
 const { FarmService } = require("../farm/farm.service");
 const { ProcessFutureManuresForWarnings } = require("../shared/process-future-warning-calculations-service");
@@ -79,7 +78,6 @@ constructor() {
     GrassManagementOptionsEntity,
   );
   this.rB209GrassService = new RB209GrassService();
-  this.rB209GrasslandService = new RB209GrasslandService();
   this.generateRecommendations = new GenerateRecommendations();
   this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
   this.FarmService = new FarmService();

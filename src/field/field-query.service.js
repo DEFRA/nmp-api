@@ -351,8 +351,8 @@ const fieldQueryMethods = {
 
   async findGrassSeason(seasonID) {
     try {
-      const season = await this.rB209GrasslandService.getData(
-        `Grassland/GrasslandSeason/${seasonID}`,
+      const season = await this.rB209GrassService.getData(
+        `Grass/GrassSeason/${seasonID}`,
       );
       return season.seasonName;
     } catch (error) {

@@ -17,7 +17,6 @@ const {
   ManagementPeriodEntity,
 } = require("../db/entity/management-period.entity");
 const RB209GrassService = require("../vendors/rb209/grass/grass.service");
-const RB209GrasslandService = require("../vendors/rb209/grassland/grassland.service");
 const { recommendationSoilMethods } = require("./recommendation-soil.service");
 const { recommendationDetailMethods } = require("./recommendation-detail.service");
 
@@ -46,7 +45,7 @@ constructor() {
     FertiliserManuresEntity
   );    
   this.rB209GrassService = new RB209GrassService();
-  this.rB209GrasslandService = new RB209GrasslandService();
+  
 }
 
   async findManagementPeriodByID(...args) {
