@@ -4,7 +4,6 @@ module.exports = [
   ...require("./recommendation/recommendation.route"),
   ...require("./organic-material/organic-material.route"),
   ...require("./field/field.route"),
-  ...require("./grassland/grassland.route"),
   ...require("./measurement/measurement.route"),
   ...require("./adviceNote/adviceNote.route"),
   ...require("./previousCropping/previousCropping.route"),

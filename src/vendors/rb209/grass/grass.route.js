@@ -1,7 +1,4 @@
 const Joi = require("joi");
-const {
-  formatErrorResponse,
-} = require("../../../interceptor/responseFormatter");
 const { RB209GrassController } = require("./grass.controller");
 const { validationFailAction } = require("../../../shared/validateFailSafeAction");
 const grassDescriptionVendor = "RB209 Grass";
@@ -155,7 +152,7 @@ module.exports = [
   },
   {
     method: "GET",
-    path: "/vendors/rb209/Grass/GrassSeasons/{seasonId}",
+    path: "/vendors/rb209/Grass/GrassSeason/{seasonId}",
     handler: async (request, h) => {
       const controller = new RB209GrassController(request, h);
       return controller.getGrassSeasonBySeasonId(request, h);
@@ -173,7 +170,7 @@ module.exports = [
   },
   {
     method: "GET",
-    path: "/vendors/rb209/Grass/GrassSeason/{countryId}",
+    path: "/vendors/rb209/Grass/GrassSeasons/{countryId}",
     handler: async (request, h) => {
       const controller = new RB209GrassController(request, h);
       return controller.getGrassSeasonByCountryId(request, h);
