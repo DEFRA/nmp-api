@@ -52,10 +52,6 @@ class RB209SoilController {
     return this.getSoilDataHander();
   }
 
-  async getNutrientIndexByNutrientIdAndNutrientValueAndMethodologyId() {
-    return this.getSoilDataHander();
-  }
-
   async getNutrientIndexByNutrientIdAndNutrientValueMethodologyIdAndCountryId() {
     return this.getSoilDataHander();
   }
