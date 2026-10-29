@@ -100,34 +100,11 @@ module.exports = [
     },
   },
 
-  {
-    method: "GET",
-    path: "/vendors/rb209/Soil/NutrientIndex/{nutrientId}/{nutrientValue}/{methodologyId}",
-    handler: async (request, h) => {
-      const controller = new RB209SoilController(request, h);
-      return controller.getNutrientIndexByNutrientIdAndNutrientValueAndMethodologyId(
-        request,
-        h,
-      );
-    },
-    options: {
-      tags: ["api", rb209SoilTag],
-      description:
-        "Individual Nutrient Index Item - filtered by Nutrient Id, Nutrient Value and Methodology Id",
-      validate: {
-        params: Joi.object({
-          nutrientId: Joi.string().required(),
-          nutrientValue: Joi.string().required(),
-          methodologyId: Joi.string().required(),
-        }),
-        failAction: validationFailAction,
-      },
-    },
-  },
+ 
 
   {
     method: "GET",
-    path: "/vendors/rb209/Soil/NutrientIndex/{nutrientId}/{nutrientValue}/{methodologyId}/{countryId}",
+    path: "/vendors/rb209/Soil/NutrientIndex/{nutrientId}/{methodologyId}/{nutrientValue}/{countryId}",
     handler: async (request, h) => {
       const controller = new RB209SoilController(request, h);
       return controller.getNutrientIndexByNutrientIdAndNutrientValueMethodologyIdAndCountryId(
@@ -141,10 +118,10 @@ module.exports = [
         "Individual Nutrient Index Item - filtered by Nutrient Id, Nutrient Value , Methodology Id,country Id",
       validate: {
         params: Joi.object({
-          countryId: Joi.number().integer().required(),
           nutrientId: Joi.number().integer().required(),
-          nutrientValue: Joi.number().required(),
           methodologyId: Joi.number().integer().required(),
+          nutrientValue: Joi.number().required(),
+          countryId: Joi.number().integer().required()
         }),
         failAction: validationFailAction,
       },
