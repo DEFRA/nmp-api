@@ -104,7 +104,7 @@ module.exports = [
 
   {
     method: "GET",
-    path: "/vendors/rb209/Soil/NutrientIndex/{nutrientId}/{methodologyId}/{nutrientValue}/{countryId}",
+    path: "/vendors/rb209/Soil/NutrientIndex/{nutrientId}/{nutrientValue}/{methodologyId}/{countryId}",
     handler: async (request, h) => {
       const controller = new RB209SoilController(request, h);
       return controller.getNutrientIndexByNutrientIdAndNutrientValueMethodologyIdAndCountryId(
@@ -119,8 +119,8 @@ module.exports = [
       validate: {
         params: Joi.object({
           nutrientId: Joi.number().integer().required(),
-          methodologyId: Joi.number().integer().required(),
           nutrientValue: Joi.number().required(),
+          methodologyId: Joi.number().integer().required(),
           countryId: Joi.number().integer().required()
         }),
         failAction: validationFailAction,
