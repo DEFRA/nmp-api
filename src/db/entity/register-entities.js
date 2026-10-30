@@ -117,6 +117,9 @@ const { UserExtensionsEntity } = require("./user-extension.entity");
 const { PscIndexEntity } = require("./psc-index.entity");
 const { SoilAnalysesMethodsEntity } = require("./soil-analyses-methods.entity");
 const { ScotlandNMaxValuesEntity } = require("./scotland-nmax-values.entity");
+const {
+  ScotlandGrassNMaxValuesEntity,
+} = require("./scotland-grass-nmax-values.entity");
 const { FarmAverageYieldsEntity } = require("./farm-average-yield-entity");
 const { MannerEstimationsEntity } = require("./manner-estimations.entity");
 const {
@@ -189,6 +192,7 @@ const entities = [
   PscIndexEntity,
   SoilAnalysesMethodsEntity,
   ScotlandNMaxValuesEntity,
+  ScotlandGrassNMaxValuesEntity,
   FarmAverageYieldsEntity,
   MannerEstimationsEntity,
   MannerEstimationApplicationsEntity,
