@@ -19,9 +19,6 @@ const { SoilAnalysisEntity } = require("../entity/soil-analysis.entity");
 const { MannerCropTypeEntity } = require("../entity/manner-crop-type.entity");
 const { CropTypeLinkingEntity } = require("../entity/crop-type-linking.entity");
 const {
-  ApplicationMethodEntity,
-} = require("../entity/application-method.entity");
-const {
   SoilTypeSoilTextureEntity,
 } = require("../entity/soil-type-soil-texture.entity");
 const { RecommendationEntity } = require("../entity/recommendation.entity");
@@ -140,7 +137,6 @@ const entities = [
   SoilAnalysisEntity,
   MannerCropTypeEntity,
   CropTypeLinkingEntity,
-  ApplicationMethodEntity,
   ApplicationMethodsIncorpMethodEntity,
   IncorpMethodsIncorpDelayEntity,
   SoilTypeSoilTextureEntity,

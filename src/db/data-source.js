@@ -21,9 +21,7 @@ const { MannerCropTypeEntity } = require("./entity/manner-crop-type.entity.js");
 const {
   CropTypeLinkingEntity,
 } = require("./entity/crop-type-linking.entity.js");
-const {
-  ApplicationMethodEntity,
-} = require("./entity/application-method.entity.js");
+
 const {
   ApplicationMethodsIncorpMethodEntity,
 } = require("./entity/application-method-incorp-method.entity.js");

@@ -18,7 +18,6 @@ module.exports = [
   ...require("./wind-speed/wind-speed.route"),
   ...require("./soil-analysis/soil-analysis.route"),
   ...require("./manner-crop-type/manner-crop-type.route"),
-  ...require("./application-method/application-method.route"),
   ...require("./recommendation/recommendation.route"),
   ...require("./organic-manure/organic-manure.route"),
   ...require("./fertiliser-manures/fertiliser-manures.route"),
