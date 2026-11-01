@@ -9,7 +9,6 @@ const { CropEntity } = require("./entity/crop.entity.js");
 const {
   ManagementPeriodEntity,
 } = require("./entity/management-period.entity.js");
-const { RainTypeEntity } = require("./entity/rain-type.entity.js");
 const {
   IncorporationMethodEntity,
 } = require("./entity/incorporation-method.entity.js");

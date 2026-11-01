@@ -10,7 +10,6 @@ const { CropEntity } = require("../entity/crop.entity");
 const {
   ManagementPeriodEntity,
 } = require("../entity/management-period.entity");
-const { RainTypeEntity } = require("../entity/rain-type.entity");
 const {
   IncorporationMethodEntity,
 } = require("../entity/incorporation-method.entity");
@@ -130,7 +129,6 @@ const entities = [
   ManureTypeEntity,
   CropEntity,
   ManagementPeriodEntity,
-  RainTypeEntity,
   IncorporationMethodEntity,
   ManureGroupEntity,
   WindspeedEntity,

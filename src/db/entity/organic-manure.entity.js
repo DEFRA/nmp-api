@@ -238,12 +238,6 @@ const OrganicManureEntity = new EntitySchema({
       joinColumn: { name: "WindspeedID" },
       inverseSide: "OrganicManures",
     },
-    RainType: {
-      type: RELATION_TYPES.MANY_TO_ONE,
-      target: "RainType",
-      joinColumn: { name: "RainfallWithinSixHoursID" },
-      inverseSide: "OrganicManures",
-    },
     MoistureType: {
       type: RELATION_TYPES.MANY_TO_ONE,
       target: "MoistureType",
