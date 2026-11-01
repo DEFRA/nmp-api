@@ -14,9 +14,6 @@ const {
   IncorporationMethodEntity,
 } = require("./entity/incorporation-method.entity.js");
 const { ManureGroupEntity } = require("./entity/manure-group.entity.js");
-const {
-  IncorporationDelayEntity,
-} = require("./entity/incorporation-delay.entity.js");
 const { WindspeedEntity } = require("./entity/wind-speed.entity.js");
 const { SoilAnalysisEntity } = require("./entity/soil-analysis.entity.js");
 const { MannerCropTypeEntity } = require("./entity/manner-crop-type.entity.js");
