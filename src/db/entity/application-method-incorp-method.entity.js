@@ -11,16 +11,8 @@ const ApplicationMethodsIncorpMethodEntity = new EntitySchema({
     IncorporationMethodID: {
       type: "int",
       primary: true,
-    },
-  },
-  relations: {
-    IncorporationMethod: {
-      type: "many-to-one",
-      target: "IncorporationMethod",
-      joinColumn: { name: "IncorporationMethodID" },
-      inverseSide: "ApplicationMethodsIncorpMethods",
-    },
-  },
+    }
+  }
 });
 
 module.exports = { ApplicationMethodsIncorpMethodEntity };

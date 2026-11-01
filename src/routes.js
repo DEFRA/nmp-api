@@ -11,7 +11,6 @@ module.exports = [
   ...require("./moisture-type/moisture-type.route"),
   ...require("./manure-type/manure-type.route"),
   ...require("./management-period/management-period.route"),
-  ...require("./incorporation-method/incorporation-method.route"),
   ...require("./crop/crop.route"),
   ...require("./manure-group/manure-group.route"),
   ...require("./wind-speed/wind-speed.route"),
