@@ -31,4 +31,16 @@ module.exports = [
       },
     },
   },
+  {
+    method: "GET",
+    path: "/vendors/manner/rain-types/default",
+    options: {
+      tags: ["api", "Manner rain-types"],
+      description: "Get default RainType",
+    },
+    handler: async (request, h) => {
+      const controller = new MannerRainTypesController(request, h);
+      return controller.findFirstRow();
+    },
+  },
 ];
