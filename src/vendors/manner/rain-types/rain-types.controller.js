@@ -24,6 +24,15 @@ class MannerRainTypesController {
   async getRainTypeById() {
    return this.handlerGetData();
   }
+
+  async findFirstRow() {
+    try {
+      const data = await this.#service.findFirstRow(this.#request);
+      return this.#h.response(data);
+    } catch (error) {
+      return this.#h.response({ error });
+    }
+  }
 }
 
 module.exports = MannerRainTypesController;
