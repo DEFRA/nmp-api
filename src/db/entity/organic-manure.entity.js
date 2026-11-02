@@ -226,12 +226,6 @@ const OrganicManureEntity = new EntitySchema({
       joinColumn: { name: "ManureTypeID" },
       inverseSide: "OrganicManures",
     },
-    IncorporationMethod: {
-      type: RELATION_TYPES.MANY_TO_ONE,
-      target: "IncorporationMethod",
-      joinColumn: { name: "IncorporationMethodID" },
-      inverseSide: "OrganicManures",
-    },
     Windspeed: {
       type: RELATION_TYPES.MANY_TO_ONE,
       target: "Windspeed",

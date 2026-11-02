@@ -9,9 +9,6 @@ const { CropEntity } = require("./entity/crop.entity.js");
 const {
   ManagementPeriodEntity,
 } = require("./entity/management-period.entity.js");
-const {
-  IncorporationMethodEntity,
-} = require("./entity/incorporation-method.entity.js");
 const { ManureGroupEntity } = require("./entity/manure-group.entity.js");
 const { WindspeedEntity } = require("./entity/wind-speed.entity.js");
 const { SoilAnalysisEntity } = require("./entity/soil-analysis.entity.js");
