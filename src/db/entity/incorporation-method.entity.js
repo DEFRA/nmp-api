@@ -28,12 +28,6 @@ const IncorporationMethodEntity = new EntitySchema({
     },
   },
   relations: {
-    ApplicationMethodsIncorpMethods: {
-      type: RELATION_TYPES.ONE_TO_MANY,
-      target: "ApplicationMethodsIncorpMethod",
-      joinColumn: { name: "ID" },
-      inverseSide: "IncorporationMethod",
-    },
     IncorpMethodsIncorpDelays: {
       type: RELATION_TYPES.ONE_TO_MANY,
       target: "IncorpMethodsIncorpDelay",

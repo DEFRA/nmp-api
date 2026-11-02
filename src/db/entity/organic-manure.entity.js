@@ -226,34 +226,16 @@ const OrganicManureEntity = new EntitySchema({
       joinColumn: { name: "ManureTypeID" },
       inverseSide: "OrganicManures",
     },
-    ApplicationMethod: {
-      type: RELATION_TYPES.MANY_TO_ONE,
-      target: "ApplicationMethod",
-      joinColumn: { name: "ApplicationMethodID" },
-      inverseSide: "OrganicManures",
-    },
     IncorporationMethod: {
       type: RELATION_TYPES.MANY_TO_ONE,
       target: "IncorporationMethod",
       joinColumn: { name: "IncorporationMethodID" },
       inverseSide: "OrganicManures",
     },
-    IncorporationDelay: {
-      type: RELATION_TYPES.MANY_TO_ONE,
-      target: "IncorporationDelay",
-      joinColumn: { name: "IncorporationDelayID" },
-      inverseSide: "OrganicManures",
-    },
     Windspeed: {
       type: RELATION_TYPES.MANY_TO_ONE,
       target: "Windspeed",
       joinColumn: { name: "WindspeedID" },
-      inverseSide: "OrganicManures",
-    },
-    RainType: {
-      type: RELATION_TYPES.MANY_TO_ONE,
-      target: "RainType",
-      joinColumn: { name: "RainfallWithinSixHoursID" },
       inverseSide: "OrganicManures",
     },
     MoistureType: {

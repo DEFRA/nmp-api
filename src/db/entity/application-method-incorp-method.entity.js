@@ -14,12 +14,6 @@ const ApplicationMethodsIncorpMethodEntity = new EntitySchema({
     },
   },
   relations: {
-    ApplicationMethod: {
-      type: "many-to-one",
-      target: "ApplicationMethod",
-      joinColumn: { name: "ApplicationMethodID" },
-      inverseSide: "ApplicationMethodsIncorpMethods",
-    },
     IncorporationMethod: {
       type: "many-to-one",
       target: "IncorporationMethod",
