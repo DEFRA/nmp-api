@@ -10,21 +10,10 @@ const { CropEntity } = require("../entity/crop.entity");
 const {
   ManagementPeriodEntity,
 } = require("../entity/management-period.entity");
-const { RainTypeEntity } = require("../entity/rain-type.entity");
-const {
-  IncorporationMethodEntity,
-} = require("../entity/incorporation-method.entity");
 const { ManureGroupEntity } = require("../entity/manure-group.entity");
-const {
-  IncorporationDelayEntity,
-} = require("../entity/incorporation-delay.entity");
-
 const { SoilAnalysisEntity } = require("../entity/soil-analysis.entity");
 const { MannerCropTypeEntity } = require("../entity/manner-crop-type.entity");
 const { CropTypeLinkingEntity } = require("../entity/crop-type-linking.entity");
-const {
-  ApplicationMethodEntity,
-} = require("../entity/application-method.entity");
 const {
   SoilTypeSoilTextureEntity,
 } = require("../entity/soil-type-soil-texture.entity");
@@ -137,15 +126,11 @@ const entities = [
   ManureTypeEntity,
   CropEntity,
   ManagementPeriodEntity,
-  RainTypeEntity,
-  IncorporationMethodEntity,
   ManureGroupEntity,
-  IncorporationDelayEntity,
   WindspeedEntity,
   SoilAnalysisEntity,
   MannerCropTypeEntity,
   CropTypeLinkingEntity,
-  ApplicationMethodEntity,
   ApplicationMethodsIncorpMethodEntity,
   IncorpMethodsIncorpDelayEntity,
   SoilTypeSoilTextureEntity,

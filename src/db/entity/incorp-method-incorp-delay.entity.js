@@ -11,22 +11,8 @@ const IncorpMethodsIncorpDelayEntity = new EntitySchema({
     IncorporationDelayID: {
       type: "int",
       primary: true,
-    },
-  },
-  relations: {
-    IncorporationMethod: {
-      type: "many-to-one",
-      target: "IncorporationMethod",
-      joinColumn: { name: "IncorporationMethodID" },
-      inverseSide: "IncorpMethodsIncorpDelays",
-    },
-    IncorporationDelay: {
-      type: "many-to-one",
-      target: "IncorporationDelay",
-      joinColumn: { name: "IncorporationDelayID" },
-      inverseSide: "IncorpMethodsIncorpDelays",
-    },
-  },
+    }
+  }
 });
 
 module.exports = { IncorpMethodsIncorpDelayEntity };
