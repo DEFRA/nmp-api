@@ -7,6 +7,7 @@ const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
 const { CalculatePKBalanceOther } = require("./calculate-pk-balance-other");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
+const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const {
   GrassGrowthService,
 } = require("../grass-growth-plan/grass-growth-plan.service");
@@ -59,6 +60,7 @@ const {
   recommendationTimingTracker,
 } = require("./recommendation-timing-tracker");
 const { SiteClassService } = require("../site-class/site-class.service");
+const { PKBalanceService } = require("../pk-balance/pk-balance.service");
 
 const RECOMMENDATION_LOG_ENDPOINT = "Recommendation/Recommendations";
 const SERVICE_NAME = "generate-recomendations-service.js";
@@ -128,6 +130,7 @@ class GenerateRecommendations {
     this.MannerRainfallPostApplicationService =
       new MannerRainfallPostApplicationService();
     this.siteClassService = new SiteClassService();
+    this.pkBalanceService = new PKBalanceService();
   }
 
   async loadPrefetchRawData(fieldID,Year,crops,fieldRelatedData,transactionalManager) {
@@ -284,7 +287,7 @@ class GenerateRecommendations {
       );
       recommendationApiResponseCache.set(requestFingerprint, response);
     }
-    const hasValidCalculations = Array.isArray(response?.data?.calculations) && response.data.calculations.length > 0;
+    const hasValidCalculations = Array.isArray(response?.data?.calculations);
     if (response.status === StatusCodeMapper.SUCCESS && hasValidCalculations) {
       nutrientRecommendationsData = response.data;
       console.log(
@@ -308,7 +311,27 @@ class GenerateRecommendations {
     const recommendation = await this.savingRecommendationService.processAndSaveRecommendations(crops,latestSoilAnalysis,nutrientRecommendationsData,transactionalManager,userId, mannerOutputs);
     const saveAndUpdatePKBalance = await this.CalculatePKBalance.createOrUpdatePKBalance(crop,nutrientRecommendationsData,userId,fertiliserData,transactionalManager,{ cropPOfftake, latestSoilAnalysis },previousCrop);
     if (saveAndUpdatePKBalance) {await transactionalManager.save(PKBalanceEntity,saveAndUpdatePKBalance.saveAndUpdatePKBalance)}
-    return { cropId: crop.ID, recommendations: recommendation, pkBalance: saveAndUpdatePKBalance ?? null };
+    
+    // Reset PK Balance to zero if soil analysis exists for same FieldID and Year in database
+    let finalPKBalance = saveAndUpdatePKBalance ?? null;
+    const soilAnalysisExists = await this.checkSoilAnalysisExists(
+      crop.FieldID,
+      crop.Year,
+      transactionalManager,
+    );
+    if (soilAnalysisExists) {
+      const resetPKBalance = await this.pkBalanceService.resetPKBalanceToZero(
+        crop.FieldID,
+        crop.Year,
+        userId,
+        transactionalManager,
+      );
+      if (resetPKBalance) {
+        finalPKBalance = resetPKBalance;
+      }
+    }
+    
+    return { cropId: crop.ID, recommendations: recommendation, pkBalance: finalPKBalance };
   }
   async processCropRecommendation(cropContext) {
     const {
@@ -427,6 +450,25 @@ class GenerateRecommendations {
       return results;
     } catch (error) {
       recommendationTimingTracker.finish(timingRun, "failed");
+      throw error;
+    }
+  }
+
+  async checkSoilAnalysisExists(fieldID, year, transactionalManager) {
+    try {
+      const soilAnalysis = await transactionalManager.findOne(
+        SoilAnalysisEntity,
+        {
+          where: {
+            FieldID: fieldID,
+            Year: year,
+          },
+        },
+      );
+
+      return !!soilAnalysis;
+    } catch (error) {
+      console.error("Error checking soil analysis existence:", error);
       throw error;
     }
   }
