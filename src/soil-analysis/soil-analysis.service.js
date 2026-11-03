@@ -121,7 +121,7 @@ class SoilAnalysesService extends BaseService {
   async updateExistingPkBalanceIfNeededHelper(
     transactionalManager,
     soilAnalysis,
-    userId,
+    _userId,
   ) {
     const PKBalance = await transactionalManager.findOne(PKBalanceEntity, {
       where: {

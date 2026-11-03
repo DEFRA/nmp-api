@@ -287,7 +287,7 @@ class GenerateRecommendations {
       );
       recommendationApiResponseCache.set(requestFingerprint, response);
     }
-    const hasValidCalculations = Array.isArray(response?.data?.calculations) && response.data.calculations.length > 0;
+    const hasValidCalculations = Array.isArray(response?.data?.calculations);
     if (response.status === StatusCodeMapper.SUCCESS && hasValidCalculations) {
       nutrientRecommendationsData = response.data;
       console.log(
