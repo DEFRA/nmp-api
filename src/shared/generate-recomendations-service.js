@@ -42,6 +42,7 @@ const {
 const { logRecordLogs } = require("./yearly-log-service");
 const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 const MannerRainfallPostApplicationService = require("../vendors/manner/rainfall-post-application/rainfall-post-application.service");
+const { SoilAnalysisHelper } = require("./soil-analysis-helper");
 
 const RECOMMENDATION_LOG_ENDPOINT = "Recommendation/Recommendations";
 const SERVICE_NAME = "generate-recomendations-service.js";
@@ -87,6 +88,7 @@ class GenerateRecommendations {
     this.HanldeMannerAndAnalysis = new HanldeMannerAndAnalysis();
     this.MannerRainfallPostApplicationService =
       new MannerRainfallPostApplicationService();
+    this.soilAnalysisHelper = new SoilAnalysisHelper();
   }
 
   async getGenerateRecommendationsContext(fieldID, Year, transactionalManager) {
@@ -144,7 +146,7 @@ class GenerateRecommendations {
     
     // Reset PK Balance to zero if soil analysis exists for same FieldID and Year in database
     let finalPKBalance = saveAndUpdatePKBalance ?? null;
-    const soilAnalysisExists = await this.checkSoilAnalysisExists(
+    const soilAnalysisExists = await this.soilAnalysisHelper.checkSoilAnalysisExists(
       crop.FieldID,
       crop.Year,
       transactionalManager,
@@ -278,24 +280,6 @@ class GenerateRecommendations {
     }
 
     return results;
-  }
-  async checkSoilAnalysisExists(fieldID, year, transactionalManager) {
-    try {
-      const soilAnalysis = await transactionalManager.findOne(
-        SoilAnalysisEntity,
-        {
-          where: {
-            FieldID: fieldID,
-            Year: year,
-          },
-        },
-      );
-
-      return !!soilAnalysis;
-    } catch (error) {
-      console.error("Error checking soil analysis existence:", error);
-      throw error;
-    }
   }
 
   async resetPKBalanceToZero(fieldID, year, userId, transactionalManager) {

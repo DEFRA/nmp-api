@@ -10,6 +10,7 @@ const {
 const {
   UpdatingFutureRecommendations,
 } = require("../shared/updating-future-recommendations-service");
+const { SoilAnalysisHelper } = require("../shared/soil-analysis-helper");
 
 class SoilAnalysesService extends BaseService {
   constructor() {
@@ -18,6 +19,7 @@ class SoilAnalysesService extends BaseService {
     this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
     this.generateRecommendations = new GenerateRecommendations();
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
+    this.soilAnalysisHelper = new SoilAnalysisHelper();
   }
 
   async createSoilAnalysis(soilAnalysisBody, userId, pKBalanceData, request) {
@@ -407,7 +409,7 @@ class SoilAnalysesService extends BaseService {
     transactionalManager,
   ) {
     try {
-      const soilAnalysisExists = await this.checkSoilAnalysisExists(
+      const soilAnalysisExists = await this.soilAnalysisHelper.checkSoilAnalysisExists(
         fieldID,
         year,
         transactionalManager,
@@ -425,25 +427,6 @@ class SoilAnalysesService extends BaseService {
       return null;
     } catch (error) {
       console.error("Error resetting PK Balance:", error);
-      throw error;
-    }
-  }
-
-  async checkSoilAnalysisExists(fieldID, year, transactionalManager) {
-    try {
-      const soilAnalysis = await transactionalManager.findOne(
-        SoilAnalysisEntity,
-        {
-          where: {
-            FieldID: fieldID,
-            Year: year,
-          },
-        },
-      );
-
-      return !!soilAnalysis;
-    } catch (error) {
-      console.error("Error checking soil analysis existence:", error);
       throw error;
     }
   }
