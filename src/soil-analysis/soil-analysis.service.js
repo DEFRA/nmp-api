@@ -10,12 +10,14 @@ const {
 const {
   UpdatingFutureRecommendations,
 } = require("../shared/updating-future-recommendations-service");
+const { PKBalanceService } = require("../pk-balance/pk-balance.service");
 
 class SoilAnalysesService extends BaseService {
   constructor() {
     super(SoilAnalysisEntity);
     this.repository = AppDataSource.getRepository(SoilAnalysisEntity);
     this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
+    this.pkBalanceService = new PKBalanceService();
     this.generateRecommendations = new GenerateRecommendations();
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
   }
@@ -42,7 +44,16 @@ class SoilAnalysesService extends BaseService {
         userId,
       );
 
-      return { soilAnalysis, PKBalance };
+      // Reset PK Balance to zero if soil analysis exists for same FieldID and Year
+      // This happens AFTER recommendations are generated to avoid being overwritten
+      const resetPKBalance = await this.resetPKBalanceIfSoilAnalysisExistsForYear(
+        soilAnalysis.FieldID,
+        soilAnalysis.Year,
+        userId,
+        transactionalManager,
+      );
+
+      return { soilAnalysis, PKBalance: resetPKBalance || PKBalance };
     });
   }
 
@@ -110,7 +121,7 @@ class SoilAnalysesService extends BaseService {
   async updateExistingPkBalanceIfNeededHelper(
     transactionalManager,
     soilAnalysis,
-    userId,
+    _userId,
   ) {
     const PKBalance = await transactionalManager.findOne(PKBalanceEntity, {
       where: {
@@ -123,13 +134,8 @@ class SoilAnalysesService extends BaseService {
       return;
     }
 
-    await transactionalManager.save(PKBalanceEntity, {
-      ...PKBalance,
-      PBalance: 0,
-      KBalance: 0,
-      ModifiedOn: new Date(),
-      ModifiedByID: userId,
-    });
+    // Reset will happen AFTER recommendations are generated
+    // to avoid being overwritten by recommendation calculations
   }
 
   async generateRecommendationsForSoilAnalysisHelper(
@@ -399,6 +405,54 @@ class SoilAnalysesService extends BaseService {
         userId,
       );
     });
+  }
+
+  async resetPKBalanceIfSoilAnalysisExistsForYear(
+    fieldID,
+    year,
+    userId,
+    transactionalManager,
+  ) {
+    try {
+      const soilAnalysisExists = await this.checkSoilAnalysisExists(
+        fieldID,
+        year,
+        transactionalManager,
+      );
+
+      if (soilAnalysisExists) {
+        return await this.pkBalanceService.resetPKBalanceToZero(
+          fieldID,
+          year,
+          userId,
+          transactionalManager,
+        );
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error resetting PK Balance:", error);
+      throw error;
+    }
+  }
+
+  async checkSoilAnalysisExists(fieldID, year, transactionalManager) {
+    try {
+      const soilAnalysis = await transactionalManager.findOne(
+        SoilAnalysisEntity,
+        {
+          where: {
+            FieldID: fieldID,
+            Year: year,
+          },
+        },
+      );
+
+      return !!soilAnalysis;
+    } catch (error) {
+      console.error("Error checking soil analysis existence:", error);
+      throw error;
+    }
   }
 }
 
