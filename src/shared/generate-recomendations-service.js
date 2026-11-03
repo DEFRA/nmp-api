@@ -124,7 +124,7 @@ class GenerateRecommendations {
       response = await this.rB209RecommendationService.postData( RECOMMENDATION_LOG_ENDPOINT, nutrientRecommendationnReqBody);
       recommendationApiResponseCache.set(requestFingerprint, response);
     }
-    const hasValidCalculations = Array.isArray(response?.data?.calculations) && response.data.calculations.length > 0;
+    const hasValidCalculations = Array.isArray(response?.data?.calculations)
     if (response.status === StatusCodeMapper.SUCCESS && hasValidCalculations) {
       nutrientRecommendationsData = response.data;
       console.log("RB209 recommendation API call successful. Received data:",nutrientRecommendationsData);
