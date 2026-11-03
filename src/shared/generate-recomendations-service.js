@@ -7,6 +7,7 @@ const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
 const { CalculatePKBalanceOther } = require("./calculate-pk-balance-other");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
+const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const {
   GrassGrowthService,
 } = require("../grass-growth-plan/grass-growth-plan.service");
@@ -308,7 +309,27 @@ class GenerateRecommendations {
     const recommendation = await this.savingRecommendationService.processAndSaveRecommendations(crops,latestSoilAnalysis,nutrientRecommendationsData,transactionalManager,userId, mannerOutputs);
     const saveAndUpdatePKBalance = await this.CalculatePKBalance.createOrUpdatePKBalance(crop,nutrientRecommendationsData,userId,fertiliserData,transactionalManager,{ cropPOfftake, latestSoilAnalysis },previousCrop);
     if (saveAndUpdatePKBalance) {await transactionalManager.save(PKBalanceEntity,saveAndUpdatePKBalance.saveAndUpdatePKBalance)}
-    return { cropId: crop.ID, recommendations: recommendation, pkBalance: saveAndUpdatePKBalance ?? null };
+    
+    // Reset PK Balance to zero if soil analysis exists for same FieldID and Year in database
+    let finalPKBalance = saveAndUpdatePKBalance ?? null;
+    const soilAnalysisExists = await this.checkSoilAnalysisExists(
+      crop.FieldID,
+      crop.Year,
+      transactionalManager,
+    );
+    if (soilAnalysisExists) {
+      const resetPKBalance = await this.resetPKBalanceToZero(
+        crop.FieldID,
+        crop.Year,
+        userId,
+        transactionalManager,
+      );
+      if (resetPKBalance) {
+        finalPKBalance = resetPKBalance;
+      }
+    }
+    
+    return { cropId: crop.ID, recommendations: recommendation, pkBalance: finalPKBalance };
   }
   async processCropRecommendation(cropContext) {
     const {
@@ -427,6 +448,55 @@ class GenerateRecommendations {
       return results;
     } catch (error) {
       recommendationTimingTracker.finish(timingRun, "failed");
+      throw error;
+    }
+  }
+
+  async resetPKBalanceToZero(fieldID, year, userId, transactionalManager) {
+    try {
+      const pkBalance = await transactionalManager.findOne(PKBalanceEntity, {
+        where: {
+          FieldID: fieldID,
+          Year: year,
+        },
+      });
+
+      if (!pkBalance) {
+        return null;
+      }
+
+      const resetBalance = {
+        ...pkBalance,
+        PBalance: 0,
+        KBalance: 0,
+        ModifiedOn: new Date(),
+        ModifiedByID: userId,
+      };
+
+      await transactionalManager.save(PKBalanceEntity, resetBalance);
+
+      return resetBalance;
+    } catch (error) {
+      console.error("Error resetting PK Balance to zero:", error);
+      throw error;
+    }
+  }
+
+  async checkSoilAnalysisExists(fieldID, year, transactionalManager) {
+    try {
+      const soilAnalysis = await transactionalManager.findOne(
+        SoilAnalysisEntity,
+        {
+          where: {
+            FieldID: fieldID,
+            Year: year,
+          },
+        },
+      );
+
+      return !!soilAnalysis;
+    } catch (error) {
+      console.error("Error checking soil analysis existence:", error);
       throw error;
     }
   }
