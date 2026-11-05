@@ -243,7 +243,7 @@ getPreviousAppliedLimeRecommendation(cropNeedValue, totalLime) {
 
 async processSoilRecommendations(harvestYear, fieldId, Recommendation) {
   try {
-    const fiveYears = 5;
+    const fiveYears = 4;
     const currentYear = harvestYear;
     const fiveYearsAgo = currentYear - fiveYears;
     // Step 1: Fetch soil recommendations (before fertiliser apply)

@@ -42,7 +42,7 @@ async processSoilRecommendations(harvestYear, fieldId, Recommendation) {
 },
 
 async getSoilAnalysisYearWithPH(harvestYear, fieldId) {
-  const fiveYearBack = 5;
+  const fiveYearBack = 4;
   const soilAnalyses = await this.soilAnalysisRepository.find({
     where: {
       FieldID: fieldId,
