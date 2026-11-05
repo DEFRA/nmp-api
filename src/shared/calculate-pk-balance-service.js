@@ -253,12 +253,10 @@ class CalculatePKBalance {
         pBalance = adjustedBalances.pBalance;
         kBalance = adjustedBalances.kBalance;
       } else {
-        // If no soil analysis exists, set balances to 0
+        // If no soil analysis exists, balances remain at 0
         console.warn(
           `No soil analysis found for field ID ${crop.FieldID} in year range ${soilAnalysisCheck.yearRange.from}-${soilAnalysisCheck.yearRange.to}. Setting PK balance to 0.`
         );
-        pBalance = 0;
-        kBalance = 0;
       }
 
       const pkBalance = await this.getPKBalanceData(
