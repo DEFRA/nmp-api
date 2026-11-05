@@ -117,7 +117,7 @@ class SiteClassService extends BaseService {
     }
 
     const rainfallResponse = await this.rainfallService.getData(
-      `RainFall/RainfallAverage/${postcode}`,
+      `climates/rainfall-april-to-september/${postcode}`,
     );
 
     if (typeof rainfallResponse === "number") {
