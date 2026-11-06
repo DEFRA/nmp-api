@@ -106,8 +106,7 @@ class SiteClassService extends BaseService {
   async getRainfall(farm, fieldRelatedData) {
     return (
       fieldRelatedData?.rainfall ??
-      farm.Rainfall ??
-      (this.getRainfallByPostcode(farm.ClimateDataPostCode))
+      this.getRainfallByPostcode(farm.ClimateDataPostCode)
     );
   }
 
