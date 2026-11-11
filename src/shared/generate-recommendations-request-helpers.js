@@ -371,8 +371,8 @@ const recommendationRequestHelpers = {
       );
     const pkBalanceData = await this.getPKBalanceData(
       field.ID,
-      crop.Year - 1,
-      transactionalManager,
+      crop.Year,
+      transactionalManager
     );
     const excessRainfall = await this.getWinterExcessRainfall(
       field.FarmID,

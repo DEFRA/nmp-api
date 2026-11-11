@@ -108,7 +108,7 @@ class CalculatePKBalance {
 
   async buildPKBalancePayload(pkBalance, crop, pBalance, kBalance, userId) {
     const baseData = {
-      Year: crop.Year,
+      Year: crop.Year + 1,
       FieldID: crop.FieldID,
       PBalance: pBalance,
       KBalance: kBalance,
