@@ -58,7 +58,7 @@ class SiteClassService extends BaseService {
       return { fieldId, error: "Soil type not found for this field" };
     }
 
-    const altitude = this.getAltitude(field, farm, fieldRelatedData);
+    const altitude = this.getAltitude(field, fieldRelatedData);
     const rainfall = await this.getRainfall(farm, fieldRelatedData, request);
 
     if (rainfall === null || rainfall === undefined) {
@@ -93,7 +93,7 @@ class SiteClassService extends BaseService {
     return fieldRelatedData?.soilTypeId ?? field.SoilTypeID;
   }
 
-  getAltitude(field, farm, fieldRelatedData) {
+  getAltitude(field,fieldRelatedData) {
     return (
       fieldRelatedData?.altitude ??
       (field.IsAbove300SeaLevel
