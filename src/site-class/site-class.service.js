@@ -106,8 +106,7 @@ class SiteClassService extends BaseService {
   async getRainfall(farm, fieldRelatedData) {
     return (
       fieldRelatedData?.rainfall ??
-      farm.Rainfall ??
-      (this.getRainfallByPostcode(farm.ClimateDataPostCode))
+      this.getRainfallByPostcode(farm.ClimateDataPostCode)
     );
   }
 
@@ -117,7 +116,7 @@ class SiteClassService extends BaseService {
     }
 
     const rainfallResponse = await this.rainfallService.getData(
-      `RainFall/RainfallAverage/${postcode}`,
+      `climates/rainfall-april-to-september/${postcode}`,
     );
 
     if (typeof rainfallResponse === "number") {
