@@ -2,6 +2,7 @@ const Joi = require("joi");
 const { PKBalanceController } = require("./pk-balance.controller");
 const { CreatePKBalanceDto } = require("./dto/pk-balance.dto");
 const { validationFailAction } = require("../shared/validateFailSafeAction");
+const { StatusCodes } = require('http-status-codes');
 const pkBalanceTag = "Pk Balance";
 module.exports = [
   {

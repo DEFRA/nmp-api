@@ -7,6 +7,7 @@ const { OrganicManureEntity } = require("../db/entity/organic-manure.entity");
 const { CalculatePKBalanceOther } = require("./calculate-pk-balance-other");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
+const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const {
   GrassGrowthService,
 } = require("../grass-growth-plan/grass-growth-plan.service");
@@ -41,6 +42,7 @@ const {
 const { logRecordLogs } = require("./yearly-log-service");
 const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
 const MannerRainfallPostApplicationService = require("../vendors/manner/rainfall-post-application/rainfall-post-application.service");
+const { SoilAnalysisHelper } = require("./soil-analysis-helper");
 
 const RECOMMENDATION_LOG_ENDPOINT = "Recommendation/Recommendations";
 const SERVICE_NAME = "generate-recomendations-service.js";
@@ -86,6 +88,7 @@ class GenerateRecommendations {
     this.HanldeMannerAndAnalysis = new HanldeMannerAndAnalysis();
     this.MannerRainfallPostApplicationService =
       new MannerRainfallPostApplicationService();
+    this.soilAnalysisHelper = new SoilAnalysisHelper();
   }
 
   async getGenerateRecommendationsContext(fieldID, Year, transactionalManager) {
@@ -123,7 +126,7 @@ class GenerateRecommendations {
       response = await this.rB209RecommendationService.postData( RECOMMENDATION_LOG_ENDPOINT, nutrientRecommendationnReqBody);
       recommendationApiResponseCache.set(requestFingerprint, response);
     }
-    const hasValidCalculations = Array.isArray(response?.data?.calculations) && response.data.calculations.length > 0;
+    const hasValidCalculations = Array.isArray(response?.data?.calculations)
     if (response.status === StatusCodeMapper.SUCCESS && hasValidCalculations) {
       nutrientRecommendationsData = response.data;
       console.log("RB209 recommendation API call successful. Received data:",nutrientRecommendationsData);
@@ -137,25 +140,30 @@ class GenerateRecommendations {
       const isClientOrPayloadError = response?.status === StatusCodeMapper.BAD_REQUEST || response?.status === StatusCodeMapper.CONTENT_TOO_LARGE;
       if (isClientOrPayloadError) {throw buildRb209FailureError(response, crop.ID)}
     }
-    const recommendation =await this.savingRecommendationService.processAndSaveRecommendations(
-        crops,latestSoilAnalysis,
-        nutrientRecommendationsData,transactionalManager,
-        userId,mannerOutputs
+    const recommendation = await this.savingRecommendationService.processAndSaveRecommendations(crops,latestSoilAnalysis,nutrientRecommendationsData,transactionalManager,userId, mannerOutputs);
+    const saveAndUpdatePKBalance = await this.CalculatePKBalance.createOrUpdatePKBalance(crop,nutrientRecommendationsData,userId,fertiliserData,transactionalManager,{ cropPOfftake, latestSoilAnalysis },previousCrop);
+    if (saveAndUpdatePKBalance) {await transactionalManager.save(PKBalanceEntity,saveAndUpdatePKBalance.saveAndUpdatePKBalance)}
+    
+    // Reset PK Balance to zero if soil analysis exists for same FieldID and Year in database
+    let finalPKBalance = saveAndUpdatePKBalance ?? null;
+    const soilAnalysisExists = await this.soilAnalysisHelper.checkSoilAnalysisExists(
+      crop.FieldID,
+      crop.Year + 1,
+      transactionalManager,
+    );
+    if (soilAnalysisExists) {
+      const resetPKBalance = await this.soilAnalysisHelper.resetPKBalanceToZero(
+        crop.FieldID,
+        crop.Year + 1,
+        userId,
+        transactionalManager,
       );
-    const saveAndUpdatePKBalance = await this.CalculatePKBalance.createOrUpdatePKBalance(
-        crop,nutrientRecommendationsData,
-        userId,fertiliserData,transactionalManager,
-        { cropPOfftake, latestSoilAnalysis },
-        previousCrop,
-      );
-    if (saveAndUpdatePKBalance) {
-      await transactionalManager.save( PKBalanceEntity, saveAndUpdatePKBalance.saveAndUpdatePKBalance );
+      if (resetPKBalance) {
+        finalPKBalance = resetPKBalance;
+      }
     }
-    return {
-      cropId: crop.ID,
-      recommendations: recommendation,
-      pkBalance: saveAndUpdatePKBalance ?? null,
-    };
+    
+    return { cropId: crop.ID, recommendations: recommendation, pkBalance: finalPKBalance };
   }
   async processCropRecommendation(cropContext) {
     const {

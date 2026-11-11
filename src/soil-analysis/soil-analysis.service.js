@@ -10,6 +10,7 @@ const {
 const {
   UpdatingFutureRecommendations,
 } = require("../shared/updating-future-recommendations-service");
+const { SoilAnalysisHelper } = require("../shared/soil-analysis-helper");
 
 class SoilAnalysesService extends BaseService {
   constructor() {
@@ -18,6 +19,7 @@ class SoilAnalysesService extends BaseService {
     this.pkBalanceRepository = AppDataSource.getRepository(PKBalanceEntity);
     this.generateRecommendations = new GenerateRecommendations();
     this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
+    this.soilAnalysisHelper = new SoilAnalysisHelper();
   }
 
   async createSoilAnalysis(soilAnalysisBody, userId, pKBalanceData, request) {
@@ -42,7 +44,16 @@ class SoilAnalysesService extends BaseService {
         userId,
       );
 
-      return { soilAnalysis, PKBalance };
+      // Reset PK Balance to zero if soil analysis exists for same FieldID and Year
+      // This happens AFTER recommendations are generated to avoid being overwritten
+      const resetPKBalance = await this.resetPKBalanceIfSoilAnalysisExistsForYear(
+        soilAnalysis.FieldID,
+        soilAnalysis.Year,
+        userId,
+        transactionalManager,
+      );
+
+      return { soilAnalysis, PKBalance: resetPKBalance || PKBalance };
     });
   }
 
@@ -123,13 +134,8 @@ class SoilAnalysesService extends BaseService {
       return;
     }
 
-    await transactionalManager.save(PKBalanceEntity, {
-      ...PKBalance,
-      PBalance: 0,
-      KBalance: 0,
-      ModifiedOn: new Date(),
-      ModifiedByID: userId,
-    });
+    // Reset will happen AFTER recommendations are generated
+    // to avoid being overwritten by recommendation calculations
   }
 
   async generateRecommendationsForSoilAnalysisHelper(
@@ -394,6 +400,35 @@ class SoilAnalysesService extends BaseService {
         userId,
       );
     });
+  }
+
+  async resetPKBalanceIfSoilAnalysisExistsForYear(
+    fieldID,
+    year,
+    userId,
+    transactionalManager,
+  ) {
+    try {
+      const soilAnalysisExists = await this.soilAnalysisHelper.checkSoilAnalysisExists(
+        fieldID,
+        year,
+        transactionalManager,
+      );
+
+      if (soilAnalysisExists) {
+        return await this.soilAnalysisHelper.resetPKBalanceToZero(
+          fieldID,
+          year,
+          userId,
+          transactionalManager,
+        );
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error resetting PK Balance:", error);
+      throw error;
+    }
   }
 }
 
