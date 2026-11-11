@@ -167,7 +167,7 @@ const recommendationRequestHelpers = {
         swardTypeId: grassCrop.SwardTypeID,
         swardManagementId: grassCrop.SwardManagementID,
         defoliationSequenceId: grassCrop.DefoliationSequenceID,
-        grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
+        grassGrowthClassId: grassGrowthClass?.grassGrowthClassId ?? null,
         ...(siteClassId != null ? { siteClassId } : {}),
         rotationalGrass: grassCrop.IsPermanentSward,
         ...(shouldIncludeYield ? { yield: grassCrop.Yield } : {}),
@@ -345,7 +345,7 @@ const recommendationRequestHelpers = {
 
   async getRecommendationRequestContext(field,crop,dataMultipleCrops,request,transactionalManager,cropTypesList,prefetchContext = null) {
     let grassGrowthClass = null;
-    if (dataMultipleCrops.some((processingCrop) => processingCrop.CropTypeID === CropTypeMapper.GRASS)) {
+    if (dataMultipleCrops.some((processingCrop) => processingCrop.CropTypeID === CropTypeMapper.GRASS) && field.RB209CountryID !== CountryMapper.SCOTLAND) {
       grassGrowthClass =
         await this.grassGrowthClass.calculateGrassGrowthClassByFieldId(
           field.ID,
