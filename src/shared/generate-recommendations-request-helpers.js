@@ -16,6 +16,7 @@ const {
 } = require("../db/entity/management-period.entity");
 const { StaticStrings } = require("./static.string");
 const { SwardTypeMapper } = require("../constants/sward-type-mapper");
+const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 
 const recommendationRequestHelpers = {
   async calculateCropPOfftake(latestSoilAnalysis, cropTypeId, cropYield) {
@@ -33,6 +34,16 @@ const recommendationRequestHelpers = {
         PKBalanceEntity,
         {where: { Year: year, FieldID: fieldID }}
       );
+      if (!pkBalanceData) {
+        return pkBalanceData;
+      }
+      const soilAnalysis = await transactionalManager.findOne(
+        SoilAnalysisEntity,
+        { where: { Year: year, FieldID: fieldID } },
+      );
+      if (soilAnalysis) {
+        return { ...pkBalanceData, PBalance: 0, KBalance: 0 };
+      }
       return pkBalanceData;
     } catch (error) {
       console.error("Error fetching PK Balance data:", error);
