@@ -41,6 +41,16 @@ const recommendationRequestHelpers = {
           where: { Year: year, FieldID: fieldID },
         },
       );
+      if (
+        pkBalanceData &&
+        await this.soilAnalysisHelper.checkSoilAnalysisExists(
+          fieldID,
+          year,
+          transactionalManager,
+        )
+      ) {
+        return { ...pkBalanceData, PBalance: 0, KBalance: 0 };
+      }
       return pkBalanceData;
     } catch (error) {
       console.error("Error fetching PK Balance data:", error);
