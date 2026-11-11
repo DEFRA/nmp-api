@@ -20,6 +20,9 @@ module.exports = [
         params: Joi.object({
           farmID: Joi.number().integer().required(),
         }),
+        query: Joi.object({
+                  year: Joi.number().integer().required(),
+                }),
         failAction: validationFailAction,
       },
     },
