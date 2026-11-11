@@ -17,9 +17,10 @@ class NutrientsLoadingManuresController {
 
   async getByFarmIdAndYear() {
     const { farmID } = this.#request.params;
+    const { year } = this.#request.query;
     try {
       const data = await this.#nutrientsFarmManureservice.getByFarmIdAndYear(
-        farmID
+        farmID,year
       );
       return this.#h.response(data);
     } catch (error) {

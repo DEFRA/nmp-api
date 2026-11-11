@@ -25,9 +25,9 @@ class NutrientsLoadingManuresService extends BaseService {
     );
   }
 
-  async getByFarmIdAndYear(farmId) {
+  async getByFarmIdAndYear(farmId,year) {
     const record = await this.repository.findBy({
-      FarmID: farmId,
+      FarmID: farmId,Year:year
     });
 
     return { NutrientsLoadingFarmDetails: record };

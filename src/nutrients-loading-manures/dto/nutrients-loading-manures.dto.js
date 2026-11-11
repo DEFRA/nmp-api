@@ -6,6 +6,7 @@ const maxHundred= 100;
 const NutrientsLoadingManuresDto = Joi.object({
   ID: Joi.number().integer().optional().allow(null).default(null),
   FarmID: Joi.number().integer().required(),
+  Year: Joi.number().integer().required(),
   ManureLookupType: Joi.string().max(maxTwoFifty).required(),
   ManureTypeID: Joi.number().integer().required(),
   ManureType: Joi.string().max(maxTwoFifty).required(),
@@ -21,7 +22,7 @@ const NutrientsLoadingManuresDto = Joi.object({
   K2O: Joi.number().precision(precisionThree).allow(null),
   SO3: Joi.number().precision(precisionThree).allow(null),
   MgO: Joi.number().precision(precisionThree).allow(null),
-  ManureDate: Joi.date().required(),
+  ManureDate: Joi.date().allow(null),
   FarmName: Joi.string().max(maxFifty).required(),
   Address1: Joi.string().max(maxFifty).allow(null, ""),
   Address2: Joi.string().max(maxFifty).allow(null, ""),
