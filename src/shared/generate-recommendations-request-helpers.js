@@ -2,22 +2,15 @@ const { Not, In } = require("typeorm");
 const { CountryMapper } = require("../constants/country-mapper");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
-const {
-  ExcessRainfallsEntity,
-} = require("../db/entity/excess-rainfalls.entity");
-const {
-  CropTypeLinkingEntity,
-} = require("../db/entity/crop-type-linking.entity");
+const {ExcessRainfallsEntity} = require("../db/entity/excess-rainfalls.entity");
+const {CropTypeLinkingEntity} = require("../db/entity/crop-type-linking.entity");
 const { FieldTypeMapper } = require("../constants/field-type-mapper");
 const { CropOrderMapper } = require("../constants/crop-order-mapper");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
-const {
-  ManagementPeriodEntity,
-} = require("../db/entity/management-period.entity");
+const {ManagementPeriodEntity} = require("../db/entity/management-period.entity");
 const { StaticStrings } = require("./static.string");
 const { SwardTypeMapper } = require("../constants/sward-type-mapper");
 const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
-
 const recommendationRequestHelpers = {
   async calculateCropPOfftake(latestSoilAnalysis, cropTypeId, cropYield) {
     const potatoYield = 50;
@@ -27,7 +20,6 @@ const recommendationRequestHelpers = {
     if (!isLowPIndex || !isPotatoCrop) {return 0}
     return cropYield ?? potatoYield;
   },
-
   async getPKBalanceData(fieldID, year, transactionalManager) {
     try {
       const pkBalanceData = await transactionalManager.findOne(
@@ -50,13 +42,10 @@ const recommendationRequestHelpers = {
       return null;
     }
   },
-
   async getWinterExcessRainfall(farmId, year, transactionalManager) {
     const excessRainfall = await transactionalManager.findOne(
       ExcessRainfallsEntity,
-      {
-        where: { FarmID: farmId, Year: year }
-      },
+      {where: { FarmID: farmId, Year: year }}
     );
     return excessRainfall ?? null;
   },
