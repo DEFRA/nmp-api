@@ -3,10 +3,10 @@ const { BaseService } = require("../base/base.service");
 const { FieldEntity } = require("../db/entity/field.entity");
 const { FarmEntity } = require("../db/entity/farm.entity");
 const RB209GrassService = require("../vendors/rb209/grass/grass.service");
-const RB209RainfallService = require("../vendors/rb209/rainfall/rainfall.service");
 const {
   FieldAboveOrBelowSeaLevelMapper,
 } = require("../constants/field-is-above-sea-level");
+const MannerRainfallPostApplicationService = require("../vendors/manner/rainfall-post-application/rainfall-post-application.service");
 
 class SiteClassService extends BaseService {
   constructor() {
@@ -14,7 +14,7 @@ class SiteClassService extends BaseService {
     this.fieldRepository = AppDataSource.getRepository(FieldEntity);
     this.farmRepository = AppDataSource.getRepository(FarmEntity);
     this.grassService = new RB209GrassService();
-    this.rainfallService = new RB209RainfallService();
+    this.rainfallService = new MannerRainfallPostApplicationService();
   }
 
   async getSiteClassIdByFieldId(fieldIds, request) {
@@ -59,7 +59,7 @@ class SiteClassService extends BaseService {
     }
 
     const altitude = this.getAltitude(field, farm, fieldRelatedData);
-    const rainfall = await this.getRainfall(farm, fieldRelatedData);
+    const rainfall = await this.getRainfall(farm, fieldRelatedData, request);
 
     if (rainfall === null || rainfall === undefined) {
       return { fieldId, error: "Rainfall not found for this field" };
@@ -96,35 +96,34 @@ class SiteClassService extends BaseService {
   getAltitude(field, farm, fieldRelatedData) {
     return (
       fieldRelatedData?.altitude ??
-      farm.AverageAltitude ??
       (field.IsAbove300SeaLevel
         ? FieldAboveOrBelowSeaLevelMapper.ABOVETHREEHUNDRED
         : FieldAboveOrBelowSeaLevelMapper.BELOWTHREEHUNDRED)
     );
   }
 
-  async getRainfall(farm, fieldRelatedData) {
+  async getRainfall(farm, fieldRelatedData, request) {
     return (
       fieldRelatedData?.rainfall ??
-      this.getRainfallByPostcode(farm.ClimateDataPostCode)
+      this.getRainfallByPostcode(farm.ClimateDataPostCode, request)
     );
   }
 
-  async getRainfallByPostcode(postcode) {
+  async getRainfallByPostcode(postcode, request) {
     if (!postcode) {
       return null;
     }
 
     const rainfallResponse = await this.rainfallService.getData(
-      `climates/rainfall-april-to-september/${postcode}`,
+      `climates/rainfall-april-to-september/${postcode}`, request
     );
 
-    if (typeof rainfallResponse === "number") {
-      return rainfallResponse;
+    if (typeof rainfallResponse.data.value === "number") {
+      return rainfallResponse.data.value;
     }
 
-    if (rainfallResponse && typeof rainfallResponse.value === "number") {
-      return rainfallResponse.value;
+    if (rainfallResponse && typeof rainfallResponse.data.value === "number") {
+      return rainfallResponse.data.value;
     }
 
     if (
