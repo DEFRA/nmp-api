@@ -2,21 +2,15 @@ const { Not, In } = require("typeorm");
 const { CountryMapper } = require("../constants/country-mapper");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
-const {
-  ExcessRainfallsEntity,
-} = require("../db/entity/excess-rainfalls.entity");
-const {
-  CropTypeLinkingEntity,
-} = require("../db/entity/crop-type-linking.entity");
+const {ExcessRainfallsEntity} = require("../db/entity/excess-rainfalls.entity");
+const {CropTypeLinkingEntity} = require("../db/entity/crop-type-linking.entity");
 const { FieldTypeMapper } = require("../constants/field-type-mapper");
 const { CropOrderMapper } = require("../constants/crop-order-mapper");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
-const {
-  ManagementPeriodEntity,
-} = require("../db/entity/management-period.entity");
+const {ManagementPeriodEntity} = require("../db/entity/management-period.entity");
 const { StaticStrings } = require("./static.string");
 const { SwardTypeMapper } = require("../constants/sward-type-mapper");
-
+const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const recommendationRequestHelpers = {
   async calculateCropPOfftake(latestSoilAnalysis, cropTypeId, cropYield) {
     const potatoYield = 50;
@@ -26,26 +20,32 @@ const recommendationRequestHelpers = {
     if (!isLowPIndex || !isPotatoCrop) {return 0}
     return cropYield ?? potatoYield;
   },
-
   async getPKBalanceData(fieldID, year, transactionalManager) {
     try {
       const pkBalanceData = await transactionalManager.findOne(
         PKBalanceEntity,
         {where: { Year: year, FieldID: fieldID }}
       );
+      if (!pkBalanceData) {
+        return pkBalanceData;
+      }
+      const soilAnalysis = await transactionalManager.findOne(
+        SoilAnalysisEntity,
+        { where: { Year: year, FieldID: fieldID } },
+      );
+      if (soilAnalysis) {
+        return { ...pkBalanceData, PBalance: 0, KBalance: 0 };
+      }
       return pkBalanceData;
     } catch (error) {
       console.error("Error fetching PK Balance data:", error);
       return null;
     }
   },
-
   async getWinterExcessRainfall(farmId, year, transactionalManager) {
     const excessRainfall = await transactionalManager.findOne(
       ExcessRainfallsEntity,
-      {
-        where: { FarmID: farmId, Year: year }
-      },
+      {where: { FarmID: farmId, Year: year }}
     );
     return excessRainfall ?? null;
   },
@@ -167,7 +167,7 @@ const recommendationRequestHelpers = {
         swardTypeId: grassCrop.SwardTypeID,
         swardManagementId: grassCrop.SwardManagementID,
         defoliationSequenceId: grassCrop.DefoliationSequenceID,
-        grassGrowthClassId: grassGrowthClass.grassGrowthClassId,
+        grassGrowthClassId: grassGrowthClass?.grassGrowthClassId ?? null,
         ...(siteClassId != null ? { siteClassId } : {}),
         rotationalGrass: grassCrop.IsPermanentSward,
         ...(shouldIncludeYield ? { yield: grassCrop.Yield } : {}),
@@ -345,7 +345,7 @@ const recommendationRequestHelpers = {
 
   async getRecommendationRequestContext(field,crop,dataMultipleCrops,request,transactionalManager,cropTypesList,prefetchContext = null) {
     let grassGrowthClass = null;
-    if (dataMultipleCrops.some((processingCrop) => processingCrop.CropTypeID === CropTypeMapper.GRASS)) {
+    if (dataMultipleCrops.some((processingCrop) => processingCrop.CropTypeID === CropTypeMapper.GRASS) && field.RB209CountryID !== CountryMapper.SCOTLAND) {
       grassGrowthClass =
         await this.grassGrowthClass.calculateGrassGrowthClassByFieldId(
           field.ID,
@@ -371,8 +371,8 @@ const recommendationRequestHelpers = {
       );
     const pkBalanceData = await this.getPKBalanceData(
       field.ID,
-      crop.Year - 1,
-      transactionalManager,
+      crop.Year,
+      transactionalManager
     );
     const excessRainfall = await this.getWinterExcessRainfall(
       field.FarmID,

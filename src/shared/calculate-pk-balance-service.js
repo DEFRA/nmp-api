@@ -1,5 +1,7 @@
+const { Between } = require("typeorm");
 const { CropTypeMapper } = require("../constants/crop-type-mapper");
 const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
+const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const { CalculatePKBalanceOther } = require("./calculate-pk-balance-other");
 
 class CalculatePKBalance {
@@ -108,7 +110,7 @@ class CalculatePKBalance {
 
   async buildPKBalancePayload(pkBalance, crop, pBalance, kBalance, userId) {
     const baseData = {
-      Year: crop.Year,
+      Year: crop.Year + 1,
       FieldID: crop.FieldID,
       PBalance: pBalance,
       KBalance: kBalance,
@@ -207,35 +209,52 @@ class CalculatePKBalance {
     previousCrop,
   ) {
     try {
-      const previousYearPKBalance = await this.getPKBalanceData(
-        crop.FieldID,
-        crop.Year - 1,
-        transactionalManager,
+      const pkBalanceYear = crop.Year + 1;
+      const firstSoilAnalysisYear = pkBalanceYear - 4;
+      const soilAnalysis = await transactionalManager.findOne(
+        SoilAnalysisEntity,
+        {
+          where: {
+            FieldID: crop.FieldID,
+            Year: Between(firstSoilAnalysisYear, pkBalanceYear),
+          },
+        },
       );
+      let pBalance = 0;
+      let kBalance = 0;
 
-      // Calculate initial balances
-      let { pBalance, kBalance } = await this.calculatePKBalance(
-        crop,
-        previousCrop,
-        previousYearPKBalance,
-        fertiliserData,
-        nutrientRecommendationsData,
-        soilAndCropOffTakeContext,
-        transactionalManager,
-      );
-      //geting current pKBalance
+      if (soilAnalysis) {
+        const previousYearPKBalance = await this.getPKBalanceData(
+          crop.FieldID,
+          crop.Year - 1,
+          transactionalManager,
+        );
+        const balances = await this.calculatePKBalance(
+          crop,
+          previousCrop,
+          previousYearPKBalance,
+          fertiliserData,
+          nutrientRecommendationsData,
+          soilAndCropOffTakeContext,
+          transactionalManager,
+        );
+        const adjustedBalances = await this.adjustBalanceBasedOnSoilAnalysis(
+          soilAndCropOffTakeContext,
+          balances.pBalance,
+          balances.kBalance,
+        );
+        pBalance = adjustedBalances.pBalance;
+        kBalance = adjustedBalances.kBalance;
+      } else {
+        console.warn(
+          `No soil analysis found for field ID ${crop.FieldID} in year range ${firstSoilAnalysisYear}-${pkBalanceYear}. Setting PK balance to 0.`,
+        );
+      }
       const pkBalance = await this.getPKBalanceData(
         crop.FieldID,
-        crop.Year,
+        pkBalanceYear,
         transactionalManager,
       );
-      const adjustedBalances = await this.adjustBalanceBasedOnSoilAnalysis(
-        soilAndCropOffTakeContext,
-        pBalance,
-        kBalance,
-      );
-      pBalance = adjustedBalances.pBalance;
-      kBalance = adjustedBalances.kBalance;
       const saveAndUpdatePKBalance = await this.buildPKBalancePayload(
         pkBalance,
         crop,

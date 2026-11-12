@@ -316,13 +316,13 @@ class GenerateRecommendations {
     let finalPKBalance = saveAndUpdatePKBalance ?? null;
     const soilAnalysisExists = await this.checkSoilAnalysisExists(
       crop.FieldID,
-      crop.Year,
+      crop.Year + 1,
       transactionalManager,
     );
     if (soilAnalysisExists) {
       const resetPKBalance = await this.pkBalanceService.resetPKBalanceToZero(
         crop.FieldID,
-        crop.Year,
+        crop.Year + 1,
         userId,
         transactionalManager,
       );
