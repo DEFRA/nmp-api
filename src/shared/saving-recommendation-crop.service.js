@@ -4,6 +4,7 @@ const {
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { CountryMapper } = require("../constants/country-mapper");
+const { MethodologyMapper } = require("../constants/methodology-mapper");
 
 const cropRecommendationMethods = {
   async filterBySingleSequenceId(data, sequenceId) {
@@ -423,7 +424,7 @@ const cropRecommendationMethods = {
     }
 
     const isScotlandSacMethodology =
-      countryId === CountryMapper.SCOTLAND && methodologyId === 2;
+      countryId === CountryMapper.SCOTLAND && (methodologyId === MethodologyMapper.SACMETHODOLOGY || methodologyId === MethodologyMapper.RB209MTHODOLOGY);
 
     return isScotlandSacMethodology ? calc.indexText : calc.index;
   },
