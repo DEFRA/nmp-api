@@ -190,7 +190,7 @@ class FarmService extends BaseService {
   }
 
   hasFieldRecommendationTriggerChanges(existingFarm, updatedFarmData) {
-    const triggerFields = ["Rainfall", "NVZFields", "FieldsAbove300SeaLevel"];
+    const triggerFields = ["Rainfall", "NVZFields", "FieldsAbove300SeaLevel", "ClimateDataPostCode"];
 
     return triggerFields.some(
       (field) =>
@@ -244,26 +244,88 @@ class FarmService extends BaseService {
     });
   }
 
+  isPropertyValueChanged(updatedValue, existingValue) {
+    return updatedValue !== undefined && updatedValue !== existingValue;
+  }
+
+  isValidFarmPropertyValue(value) {
+    return value === 0 || value === 2;
+  }
+
+  convertFarmPropertyToFieldValue(value) {
+    return value === 0 ? 0 : 1;
+  }
+
+  updateFieldAbove300SeaLevel(updateFields, fieldsAbove300Changed, updatedFarmData) {
+    if (!fieldsAbove300Changed || !this.isValidFarmPropertyValue(updatedFarmData.FieldsAbove300SeaLevel)) {
+      return;
+    }
+    updateFields.IsAbove300SeaLevel = this.convertFarmPropertyToFieldValue(updatedFarmData.FieldsAbove300SeaLevel);
+  }
+
+  updateFieldNVZ(updateFields, nvzFieldsChanged, updatedFarmData) {
+    if (!nvzFieldsChanged || !this.isValidFarmPropertyValue(updatedFarmData.NVZFields)) {
+      return;
+    }
+    updateFields.IsWithinNVZ = this.convertFarmPropertyToFieldValue(updatedFarmData.NVZFields);
+  }
+
+  buildFieldUpdateData(fieldsAbove300Changed, nvzFieldsChanged, updatedFarmData, userId) {
+    const updateFields = {};
+    this.updateFieldAbove300SeaLevel(updateFields, fieldsAbove300Changed, updatedFarmData);
+    this.updateFieldNVZ(updateFields, nvzFieldsChanged, updatedFarmData);
+
+    if (Object.keys(updateFields).length > 0) {
+      updateFields.ModifiedByID = userId;
+      updateFields.ModifiedOn = new Date();
+    }
+
+    return updateFields;
+  }
+
+  async updateFieldPropertiesByFarmChanges(transactionalManager, farmId, existingFarm, updatedFarmData, userId) {
+    const fieldsAbove300Changed = this.isPropertyValueChanged(updatedFarmData.FieldsAbove300SeaLevel, existingFarm.FieldsAbove300SeaLevel);
+    const nvzFieldsChanged = this.isPropertyValueChanged(updatedFarmData.NVZFields, existingFarm.NVZFields);
+
+    if (!fieldsAbove300Changed && !nvzFieldsChanged) {
+      return;
+    }
+
+    const fieldRepository = transactionalManager.getRepository(FieldEntity);
+    const fields = await fieldRepository.find({
+      where: { FarmID: farmId },
+    });
+
+    await fields.reduce(async (previousField, field) => {
+      await previousField;
+      const updateFields = this.buildFieldUpdateData(fieldsAbove300Changed, nvzFieldsChanged, updatedFarmData, userId);
+
+      if (Object.keys(updateFields).length > 0) {
+        await fieldRepository.update(field.ID, updateFields);
+      }
+    }, Promise.resolve());
+  }
+
   async updateFarm(updatedFarmAndNvzData, userId, farmId, request) {
-    let shouldProcessFieldRecommendations = false,shouldProcessFarmWarnings = false;
+    let shouldProcessFieldRecommendations = false, shouldProcessFarmWarnings = false;
     const result = await runWithDeadlockRetry(() =>
       AppDataSource.transaction(async (transactionalManager) => {
         const existingFarm = await transactionalManager.findOne(FarmEntity, {
           where: { ID: farmId },
         });
-        if (!existingFarm) {throw boom.notFound(`Farm with ID ${farmId} not found`)}
-        const updatedFarmData = updatedFarmAndNvzData.Farm,farmNvzList = updatedFarmAndNvzData.FarmsNvz;
-        const {ID,FullAddress,
-          EncryptedFarmId,CreatedByID,
-          CreatedOn,...updateData
+        if (!existingFarm) { throw boom.notFound(`Farm with ID ${farmId} not found`) }
+        const updatedFarmData = updatedFarmAndNvzData.Farm, farmNvzList = updatedFarmAndNvzData.FarmsNvz;
+        const { ID, FullAddress,
+          EncryptedFarmId, CreatedByID,
+          CreatedOn, ...updateData
         } = updatedFarmData;
-        const farmCount = await this.farmCountByNameAndPostcode(updateData.Name,updateData.Postcode,
-          existingFarm.OrganisationID,farmId);
+        const farmCount = await this.farmCountByNameAndPostcode(updateData.Name, updateData.Postcode,
+          existingFarm.OrganisationID, farmId);
         if (farmCount > 0) {
           throw boom.badRequest("Farm already exists with this Name and Postcode");
         }
-        const updatedNvz = await this.syncFarmNvz(transactionalManager,farmId,
-          farmNvzList,userId
+        const updatedNvz = await this.syncFarmNvz(transactionalManager, farmId,
+          farmNvzList, userId
         );
         const updateResult = await transactionalManager.update(FarmEntity,
           farmId,
@@ -276,10 +338,11 @@ class FarmService extends BaseService {
         if (updateResult.affected === 0) {
           console.log(`Farm with ID ${farmId} not found`);
         }
-        if (this.hasFieldRecommendationTriggerChanges(existingFarm,updatedFarmData)) {
+        await this.updateFieldPropertiesByFarmChanges(transactionalManager, farmId, existingFarm, updatedFarmData, userId);
+        if (this.hasFieldRecommendationTriggerChanges(existingFarm, updatedFarmData)) {
           shouldProcessFieldRecommendations = true;
         }
-        if (this.hasFarmWarningTriggerChanges(existingFarm, updatedFarmData)) {shouldProcessFarmWarnings = true}
+        if (this.hasFarmWarningTriggerChanges(existingFarm, updatedFarmData)) { shouldProcessFarmWarnings = true }
         const updatedFarm = await transactionalManager.findOne(FarmEntity, {
           where: { ID: farmId },
         });
@@ -288,7 +351,7 @@ class FarmService extends BaseService {
     );
     if (shouldProcessFieldRecommendations) {
       this.ProcessFieldsService.processFieldsForRecommendation(
-        farmId,request,userId
+        farmId, request, userId
       ).catch((error) => {
         console.error(
           `Error processing field recommendations for farm ${farmId}:`,
@@ -297,7 +360,7 @@ class FarmService extends BaseService {
       });
     }
     if (shouldProcessFarmWarnings) {
-      this.ProcessFutureManuresForWarnings.processWarningsByFarm(farmId,userId).catch((error) => {
+      this.ProcessFutureManuresForWarnings.processWarningsByFarm(farmId, userId).catch((error) => {
         console.error(
           `Error processing warning recalculation for farm ${farmId}:`,
           error,
