@@ -190,7 +190,7 @@ class FarmService extends BaseService {
   }
 
   hasFieldRecommendationTriggerChanges(existingFarm, updatedFarmData) {
-    const triggerFields = ["Rainfall", "NVZFields", "FieldsAbove300SeaLevel"];
+    const triggerFields = ["Rainfall", "NVZFields", "FieldsAbove300SeaLevel","ClimateDataPostCode"];
 
     return triggerFields.some(
       (field) =>
@@ -244,6 +244,40 @@ class FarmService extends BaseService {
     });
   }
 
+  async updateFieldPropertiesByFarmChanges(transactionalManager, farmId, existingFarm, updatedFarmData, userId) {
+    const fieldsAbove300Changed = updatedFarmData.FieldsAbove300SeaLevel !== undefined && 
+                                   updatedFarmData.FieldsAbove300SeaLevel !== existingFarm.FieldsAbove300SeaLevel;
+    const nvzFieldsChanged = updatedFarmData.NVZFields !== undefined && 
+                             updatedFarmData.NVZFields !== existingFarm.NVZFields;
+
+    if (!fieldsAbove300Changed && !nvzFieldsChanged) {
+      return;
+    }
+
+    const fieldRepository = transactionalManager.getRepository(FieldEntity);
+    const fields = await fieldRepository.find({
+      where: { FarmID: farmId },
+    });
+
+    for (const field of fields) {
+      const updateFields = {};
+
+      if (fieldsAbove300Changed && (updatedFarmData.FieldsAbove300SeaLevel === 0 || updatedFarmData.FieldsAbove300SeaLevel === 2)) {
+        updateFields.IsAbove300SeaLevel = updatedFarmData.FieldsAbove300SeaLevel === 0 ? 0 : 1;
+      }
+
+      if (nvzFieldsChanged && (updatedFarmData.NVZFields === 0 || updatedFarmData.NVZFields === 2)) {
+        updateFields.IsWithinNVZ = updatedFarmData.NVZFields === 0 ? 0 : 1;
+      }
+
+      if (Object.keys(updateFields).length > 0) {
+        updateFields.ModifiedByID = userId;
+        updateFields.ModifiedOn = new Date();
+        await fieldRepository.update(field.ID, updateFields);
+      }
+    }
+  }
+
   async updateFarm(updatedFarmAndNvzData, userId, farmId, request) {
     let shouldProcessFieldRecommendations = false,shouldProcessFarmWarnings = false;
     const result = await runWithDeadlockRetry(() =>
@@ -276,6 +310,7 @@ class FarmService extends BaseService {
         if (updateResult.affected === 0) {
           console.log(`Farm with ID ${farmId} not found`);
         }
+        await this.updateFieldPropertiesByFarmChanges(transactionalManager, farmId, existingFarm, updatedFarmData, userId);
         if (this.hasFieldRecommendationTriggerChanges(existingFarm,updatedFarmData)) {
           shouldProcessFieldRecommendations = true;
         }
