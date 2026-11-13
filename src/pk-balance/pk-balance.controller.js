@@ -1,7 +1,5 @@
 const { PKBalanceService } = require("./pk-balance.service");
 const { AppDataSource } = require("../db/data-source");
-const { StatusCodes } = require("http-status-codes");
-
 class PKBalanceController {
   #request;
   #h;
@@ -25,12 +23,7 @@ class PKBalanceController {
       );
       return this.#h.response({ PKBalance: data });
     } catch (error) {
-      const statusCode = error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
-      const response = {
-        error: error.message,
-        code: error.code || "INTERNAL_SERVER_ERROR",
-      };
-      return this.#h.response(response).code(statusCode);
+      return this.#h.response({error});
     }
   }
 
@@ -46,15 +39,9 @@ class PKBalanceController {
         Number.parseInt(pKBalanceId, 10),
         AppDataSource.manager
       );
-
       return this.#h.response({ PKBalance: updatedPKBalanceData });
     } catch (error) {
-      const statusCode = error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
-      const response = {
-        error: error.message,
-        code: error.code || "INTERNAL_SERVER_ERROR",
-      };
-      return this.#h.response(response).code(statusCode);
+      return this.#h.response({error});
     }
   }
 
@@ -70,12 +57,7 @@ class PKBalanceController {
         );
       return this.#h.response({ PkBalances });
     } catch (error) {
-      const statusCode = error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
-      const response = {
-        error: error.message,
-        code: error.code || "INTERNAL_SERVER_ERROR",
-      };
-      return this.#h.response(response).code(statusCode);
+      return this.#h.response({error});
     }
   }
 }
