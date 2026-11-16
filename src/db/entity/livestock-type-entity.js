@@ -16,6 +16,12 @@ const LivestockTypeEntity = new EntitySchema({
       nullable: false,
       name: "Name",
     },
+    ScotlandName: {
+      type: "varchar",
+      length: 255,
+      nullable: true,
+      name: "ScotlandName",
+    },
     NByUnit: {
       type: "decimal",
       precision: 8,
