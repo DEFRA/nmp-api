@@ -10,6 +10,9 @@ const NUTRIENT_IDS = {
   MAGNESIUM: 3,
 };
 
+const MAX_SOIL_ANALYSIS_RECORDS = 8;
+const REQUIRED_NUTRIENTS = ["PhosphorusIndex", "PotassiumIndex", "MagnesiumIndex"];
+
 class HandleSoilAnalysisService {
   constructor() {
     this.RB209SoilService = new RB209SoilService();
@@ -136,6 +139,73 @@ class HandleSoilAnalysisService {
       methodologyId === 2 ? `${nutrientName}Status` : `${nutrientName}Index`;
     return methodologyName;
   }
+
+  /* --------------------------------
+     FILTER AND LIMIT SOIL ANALYSIS RECORDS
+  --------------------------------*/
+  getLatestNutrientRecords(soilAnalysisRecords) {
+    const latestRecords = new Map();
+
+    for (const nutrient of REQUIRED_NUTRIENTS) {
+      const latestRecord = soilAnalysisRecords.find((record) => {
+        const nutrientValue = record[nutrient];
+        return nutrientValue !== null && nutrientValue !== undefined;
+      });
+
+      if (latestRecord) {
+        latestRecords.set(nutrient, latestRecord);
+      }
+    }
+
+    return latestRecords;
+  }
+
+  getUniqueLatestRecords(latestNutrientRecords) {
+    const uniqueRecords = new Map();
+
+    for (const record of latestNutrientRecords.values()) {
+      if (record.id && !uniqueRecords.has(record.id)) {
+        uniqueRecords.set(record.id, record);
+      }
+    }
+
+    return uniqueRecords;
+  }
+
+  addRemainingRecords(resultRecords, soilAnalysisRecords, uniqueRecordIds) {
+    for (const record of soilAnalysisRecords) {
+      if (resultRecords.length >= MAX_SOIL_ANALYSIS_RECORDS) {
+        break;
+      }
+
+      if (!uniqueRecordIds.has(record.id)) {
+        resultRecords.push(record);
+      }
+    }
+  }
+
+  filterAndLimitSoilAnalysisRecords(soilAnalysisRecords) {
+    if (!soilAnalysisRecords || soilAnalysisRecords.length === 0) {
+      return soilAnalysisRecords;
+    }
+
+    const latestNutrientRecords = this.getLatestNutrientRecords(
+      soilAnalysisRecords,
+    );
+    const uniqueLatestRecords = this.getUniqueLatestRecords(
+      latestNutrientRecords,
+    );
+
+    const resultRecords = Array.from(uniqueLatestRecords.values());
+    this.addRemainingRecords(
+      resultRecords,
+      soilAnalysisRecords,
+      uniqueLatestRecords,
+    );
+
+    return resultRecords;
+  }
+
   async handleSoilAnalysisValidation(
     fieldId,
     year,
@@ -190,11 +260,15 @@ class HandleSoilAnalysisService {
         }
       });
     }
-    // Iterate over the fields and find the latest value for each field
 
-    const soilAnalysisRecords = await this.assignIndexIdToSoilRecords(
+    let soilAnalysisRecords = await this.assignIndexIdToSoilRecords(
       soilAnalysisRecordsFiveYears,
       rb209CountryId,
+    );
+
+    // Filter and limit records to get latest nutrients data
+    soilAnalysisRecords = this.filterAndLimitSoilAnalysisRecords(
+      soilAnalysisRecords,
     );
 
     return { latestSoilAnalysis, errors, soilAnalysisRecords };
