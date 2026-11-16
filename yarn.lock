@@ -3915,7 +3915,7 @@ typed-array-buffer@^1.0.3:
     es-errors "^1.3.0"
     is-typed-array "^1.1.14"
 
-typeorm@^0.3.20:
+typeorm@^0.3.25:
   version "0.3.31"
   resolved "https://registry.npmjs.org/typeorm/-/typeorm-0.3.31.tgz"
   integrity sha512-6u9EFtdLBgHjnPm78NStVeM+I/1MolTzKykDDcydzKUkh6E++YS6XViU/fePJbvDvEGU4Xq34KOM/CLeer9I2A==
