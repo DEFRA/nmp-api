@@ -128,8 +128,8 @@ class NutrientsLoadingManuresService extends BaseService {
       if (
         nutrientsLoadingFarmDetails !== null
       ) {
-        let isImport=nutrientsLoadingFarmDetails.IsAnyLivestockImport !== 1&&NutrientsLoadingManure.ManureLookupType=="Import";
-        let isExport=nutrientsLoadingFarmDetails.IsAnyLivestockExport !== 1&&NutrientsLoadingManure.ManureLookupType=="Export";
+        const isImport=nutrientsLoadingFarmDetails.IsAnyLivestockImport !== 1&&NutrientsLoadingManure.ManureLookupType==="Import";
+        const isExport=nutrientsLoadingFarmDetails.IsAnyLivestockExport !== 1&&NutrientsLoadingManure.ManureLookupType==="Export";
         if(isImport)
         {
         await transactionalManager.update(
@@ -140,7 +140,7 @@ class NutrientsLoadingManuresService extends BaseService {
           },
         );
       }
-      else if(isExport)
+      if(isExport)
         {
         await transactionalManager.update(
           NutrientsLoadingFarmDetailsEntity,
