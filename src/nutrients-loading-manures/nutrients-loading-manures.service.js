@@ -126,16 +126,30 @@ class NutrientsLoadingManuresService extends BaseService {
           ).getFullYear(),
         });
       if (
-        nutrientsLoadingFarmDetails !== null &&
-        nutrientsLoadingFarmDetails.IsAnyLivestockImportExport !== 1
+        nutrientsLoadingFarmDetails !== null
       ) {
+        let isImport=nutrientsLoadingFarmDetails.IsAnyLivestockImport !== 1&&NutrientsLoadingManure.ManureLookupType=="Import";
+        let isExport=nutrientsLoadingFarmDetails.IsAnyLivestockExport !== 1&&NutrientsLoadingManure.ManureLookupType=="Export";
+        if(isImport)
+        {
         await transactionalManager.update(
           NutrientsLoadingFarmDetailsEntity,
           nutrientsLoadingFarmDetails.ID,
           {
-            IsAnyLivestockImportExport: 1,
+            IsAnyLivestockImport:1
           },
         );
+      }
+      else if(isExport)
+        {
+        await transactionalManager.update(
+          NutrientsLoadingFarmDetailsEntity,
+          nutrientsLoadingFarmDetails.ID,
+          {
+            IsAnyLivestockExport:1
+          },
+        );
+      }
       }
       return saved;
     });
@@ -241,7 +255,8 @@ class NutrientsLoadingManuresService extends BaseService {
           await this.nutrientsLoadingFarmDetailsRepository.update(
             nutrientsLoadingFarmDetails.ID,
             {
-              IsAnyLivestockImportExport: null
+              IsAnyLivestockImport: null,
+              IsAnyLivestockExport: null
             }
           );
         }
