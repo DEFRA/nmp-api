@@ -9,17 +9,17 @@ class LivestockTypeService extends BaseService {
   }
 
 
-    async getLivestockTypesByLivestockGroupId(livestockGroupId) {
-        const livestockTypes = await this.repository.find({
-            where: {
-                LivestockGroupID: livestockGroupId,
-            },
-        });
-        return { LivestockTypes: livestockTypes };
-    }
+  async getLivestockTypesByLivestockGroupId(livestockGroupId) {
+    const livestockTypes = await this.repository.find({
+      where: {
+        LivestockGroupID: livestockGroupId,
+      },
+    });
+    return { LivestockTypes: livestockTypes };
+  }
 
 
-
+  
 }
 
 module.exports = { LivestockTypeService };
