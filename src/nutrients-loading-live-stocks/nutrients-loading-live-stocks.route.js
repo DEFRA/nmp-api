@@ -23,6 +23,7 @@ module.exports = [
         }),
         query: Joi.object({
           year: Joi.number().integer().optional(),
+          isScotland: Joi.boolean().optional().default(false),
         }),
       },
       handler: (request, h) =>

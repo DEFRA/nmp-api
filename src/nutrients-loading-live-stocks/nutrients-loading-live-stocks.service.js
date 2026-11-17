@@ -24,7 +24,7 @@ class NutrientsLoadingLiveStocksService extends BaseService {
     );
   }
 
-  async getByFarmIdAndYear(farmId, year) {
+  async getByFarmIdAndYear(farmId, year, isScotland = false) {
     const records = await this.repository.findBy({
       FarmID: farmId,
       CalendarYear: year,
@@ -34,7 +34,13 @@ class NutrientsLoadingLiveStocksService extends BaseService {
       const livestock = await this.LivestockTypeRepository.findOne({
         where: { ID: record.LiveStockTypeID },
       });
-      record.LiveStockType = livestock ? livestock.Name : null;
+      if (!livestock) {
+        record.LiveStockType = null;
+      } else if (isScotland) {
+        record.LiveStockType = livestock.ScotlandName ?? livestock.Name;
+      } else {
+        record.LiveStockType = livestock.Name;
+      }
     }
 
     return records;
