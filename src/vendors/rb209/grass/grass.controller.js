@@ -28,16 +28,7 @@ class RB209GrassController {
     return this.handleGetData();
   }
   async getDefaultYieldsByDefoliationSequenceId() {
-    const { defoliationSequenceId } = this.#request.params;
-    try {
-      const record =
-        await this.#service.getDefaultYieldsByDefoliationSequenceId(
-          defoliationSequenceId,
-        );
-      return this.#h.response(record);
-    } catch (error) {
-      return this.#h.response({ error });
-    }
+    return this.handleGetData();
   }
   async getGrassDefoliationSequence() {
     return this.handleGetData();
