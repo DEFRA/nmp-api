@@ -1,6 +1,6 @@
 const Joi = require("joi");
 const { RB209MeasurementController } = require("./measurement.controller");
-const { CalculateSnsIndexRequest } = require("./dto/measurement.dto");
+const { CalculateSnsIndexRequest, smnCalculationRequest } = require("./dto/measurement.dto");
 const {
   formatErrorResponse,
 } = require("../../../interceptor/responseFormatter");
@@ -80,17 +80,32 @@ module.exports = [
 
   {
     method: "POST",
-    path: "/vendors/rb209/Measurement/MeasurementMethod",
+    path: "/vendors/rb209/Measurement/MeasurementMethodEngWal",
     handler: async (request, h) => {
       return getController(request, h).calculateSnsIndex();
     },
     options: {
       tags: ["api", measurementDescriptionVendorTag],
       description:
-        "The connection to calculate SNS Index using the Measurement Method",
+        "The endpoint to calculate SNS Index using the Measurement Method in England & Wales",
       validate: {
         payload: CalculateSnsIndexRequest,
         failAction: validationFailAction,
+      },
+    },
+  },
+  {
+    method: "POST",
+    path: "/vendors/rb209/Measurement/MeasurementMethodScotland",
+    handler: async (request, h) => {
+      return getController(request, h).calculateResidueGroup();
+    },
+    options: {
+      tags: ["api", measurementDescriptionVendorTag],
+      description: "The endpoint to calculate residue group using SMN measurement values in Scotland.",
+      validate: {
+        payload: smnCalculationRequest,
+        failAction: validationFailAction
       },
     },
   },

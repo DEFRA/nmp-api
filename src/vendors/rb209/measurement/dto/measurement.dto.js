@@ -31,6 +31,12 @@ const CalculateSnsIndexRequest = Joi.object({
   Step3: Step3Dto,
 });
 
+const smnCalculationRequest = Joi.object({
+  smnDepth: Joi.number().required(),
+  measuredSmn: Joi.number().required(),
+})
+
 module.exports = {
   CalculateSnsIndexRequest,
+  smnCalculationRequest,
 };

@@ -3,6 +3,7 @@ const { RB209GrassController } = require("./grass.controller");
 const { validationFailAction } = require("../../../shared/validateFailSafeAction");
 const grassDescriptionVendor = "RB209 Grass";
 const defoliationSequenceIdDescription = "The Defoliation Sequence Id of the field.";
+const defoliationSequenceIdDescriptionOfDefaultYields = "The defoliation sequence Id.";
 const swardTypeIdDescription = "The Sward Type Id of the field.";
 const swardManagementIdDescription = "The Sward Management Id of the field.";
 module.exports = [
@@ -33,7 +34,7 @@ module.exports = [
   },
   {
     method: "GET",
-    path: "/vendors/rb209/Grass/DefoliationSequenceDefaultYields/{defoliationSequenceId}",
+    path: "/vendors/rb209/Grass/DefaultYields/{defoliationSequenceId}",
     handler: async (request, h) => {
       const controller = new RB209GrassController(request, h);
       return controller.getDefaultYieldsByDefoliationSequenceId(request, h);
@@ -41,13 +42,13 @@ module.exports = [
     options: {
       tags: ["api", grassDescriptionVendor],
       description:
-        "Get default yields for each defoliation step from the provided defoliation sequence id.",
+        "Returns default yields across sequence positions for a defoliation sequence.",
       validate: {
         params: Joi.object({
           defoliationSequenceId: Joi.number()
             .integer()
             .required()
-            .description(defoliationSequenceIdDescription),
+            .description(defoliationSequenceIdDescriptionOfDefaultYields),
         }),
         failAction: validationFailAction,
       },
