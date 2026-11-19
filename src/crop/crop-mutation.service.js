@@ -17,9 +17,7 @@ const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entit
 const cropMutationMethods = {
   isScotlandCountry(rb209CountryID) { return rb209CountryID === CountryMapper.SCOTLAND },
   isGrassCropType(cropTypeID) { return cropTypeID === CropTypeMapper.GRASS },
-  isArableCropType(cropTypeID) {
-    return cropTypeID !== null && cropTypeID !== CropTypeMapper.GRASS;
-  },
+  isArableCropType(cropTypeID) {return cropTypeID !== null && cropTypeID !== CropTypeMapper.GRASS },
   async getCropByFieldYearAndOrder(transactionalManager, fieldID, year, cropOrder) {
     return transactionalManager.findOne(CropEntity, {
       where: { FieldID: fieldID, Year: year, CropOrder: cropOrder },
@@ -34,11 +32,7 @@ const cropMutationMethods = {
   async getReferenceCropForArableRule(transactionalManager, currentCrop) {
     if (currentCrop.CropOrder === CropOrderMapper.SECONDCROP) {
       return cropMutationMethods.getCropByFieldYearAndOrder(
-        transactionalManager,
-        currentCrop.FieldID,
-        currentCrop.Year,
-        CropOrderMapper.FIRSTCROP,
-      );
+        transactionalManager,currentCrop.FieldID,currentCrop.Year,CropOrderMapper.FIRSTCROP);
     }
 
     return cropMutationMethods.getPriorityCropForYear(
