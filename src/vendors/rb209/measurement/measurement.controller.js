@@ -39,7 +39,7 @@ class RB209MeasurementController {
   
   }
   async calculateResidueGroup() {
-    return this.getMeasurementDataHelper();
+    return this.calculateSnsIndex();
   }
 
   async getSmnConversionMethodBySmnValueAndSoilLayer() {
