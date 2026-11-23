@@ -343,6 +343,7 @@ class GenerateRecommendations {
       transactionalManager,
       userId,
       fertiliserData,
+      fieldRelatedData,
     } = cropContext;
     let cropPOfftake = 0;
     const isPotatoCrop =
@@ -371,6 +372,7 @@ class GenerateRecommendations {
         latestSoilAnalysis,
         nutrientRecommendationsData: null,
         cropPOfftake,
+        rb209CountryID: fieldRelatedData?.RB209CountryID,
       };
       const sharedContext = {
         transactionalManager,

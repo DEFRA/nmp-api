@@ -423,10 +423,7 @@ const cropRecommendationMethods = {
       return null;
     }
 
-    const isScotlandSacMethodology =
-      countryId === CountryMapper.SCOTLAND && (methodologyId === MethodologyMapper.SACMETHODOLOGY || methodologyId === MethodologyMapper.RB209MTHODOLOGY);
-
-    return isScotlandSacMethodology ? calc.indexText : calc.index;
+    return  calc.index;
   },
 
   applyCalculationsWithHandlers(calculations, nutrientHandlers) {

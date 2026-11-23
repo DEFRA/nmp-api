@@ -136,7 +136,7 @@ class HandleSoilAnalysisService {
 
   getNutrientIndexKey(nutrientName, methodologyId) {
     const methodologyName =
-      methodologyId === 2 ? `${nutrientName}Status` : `${nutrientName}Index`;
+      methodologyId === 2 || methodologyId === 3 ? `${nutrientName}Status` : `${nutrientName}Index`;
     return methodologyName;
   }
 
