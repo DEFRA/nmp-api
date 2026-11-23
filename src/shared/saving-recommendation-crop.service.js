@@ -184,8 +184,6 @@ const cropRecommendationMethods = {
 
     const nutrientHandlers = this.createNutrientHandlers(
       cropRecData,
-      countryId,
-      latestSoilAnalysis,
       soilAnalysisFlags,
       mannerOutputs,
       fallbackManureN,
@@ -267,11 +265,9 @@ const cropRecommendationMethods = {
 
   createNutrientHandlers(
     cropRecData,
-    countryId,
-    latestSoilAnalysis,
     soilAnalysisFlags,
     mannerOutputs,
-    fallbackManureN,
+    fallbackManureN
   ) {
     return {
       0: (c) =>
