@@ -164,10 +164,6 @@ const cropRecommendationMethods = {
     defoliations,
   ) {
     const { defoliationId, defoliationIds, latestSoilAnalysis } = defoliations;
-    const countryId = await this.getCountryIdForCrop(
-      transactionalManager,
-      cropData.ID,
-    );
     const soilAnalysisFlags = this.getSoilAnalysisFlags(latestSoilAnalysis);
     const mannerOutputs = this.getMannerOutputsForDefoliation(
       allMannerOutputs,
@@ -190,15 +186,6 @@ const cropRecommendationMethods = {
     );
 
     this.applyCalculationsWithHandlers(calculations, nutrientHandlers);
-  },
-
-  async getCountryIdForCrop(transactionalManager, cropId) {
-    const record = await transactionalManager.findOne(CropEntity, {
-      where: { ID: cropId },
-      relations: { Field: { Farm: true } },
-    });
-
-    return record?.Field?.Farm?.CountryID;
   },
 
   getSoilAnalysisFlags(latestSoilAnalysis) {
