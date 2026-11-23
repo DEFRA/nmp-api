@@ -17,9 +17,7 @@ const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entit
 const cropMutationMethods = {
   isScotlandCountry(rb209CountryID) { return rb209CountryID === CountryMapper.SCOTLAND },
   isGrassCropType(cropTypeID) { return cropTypeID === CropTypeMapper.GRASS },
-  isArableCropType(cropTypeID) {
-    return cropTypeID !== null && cropTypeID !== CropTypeMapper.GRASS;
-  },
+  isArableCropType(cropTypeID) {return cropTypeID !== null && cropTypeID !== CropTypeMapper.GRASS },
   async getCropByFieldYearAndOrder(transactionalManager, fieldID, year, cropOrder) {
     return transactionalManager.findOne(CropEntity, {
       where: { FieldID: fieldID, Year: year, CropOrder: cropOrder },
@@ -34,11 +32,7 @@ const cropMutationMethods = {
   async getReferenceCropForArableRule(transactionalManager, currentCrop) {
     if (currentCrop.CropOrder === CropOrderMapper.SECONDCROP) {
       return cropMutationMethods.getCropByFieldYearAndOrder(
-        transactionalManager,
-        currentCrop.FieldID,
-        currentCrop.Year,
-        CropOrderMapper.FIRSTCROP,
-      );
+        transactionalManager,currentCrop.FieldID,currentCrop.Year,CropOrderMapper.FIRSTCROP);
     }
 
     return cropMutationMethods.getPriorityCropForYear(
@@ -254,7 +248,7 @@ const cropMutationMethods = {
         const updateResult = await transactionalManager.update(
           CropEntity,
           { FieldID: fieldId, Year: year, Confirm: confirmValue },
-          {...updateData,ModifiedByID: userId,ModifiedOn: new Date()},
+          { ...updateData, ModifiedByID: userId, ModifiedOn: new Date() },
         );
         if (updateResult.affected === 0) { console.log(`Crop for FieldID ${fieldId}, Year ${year}, and Confirm ${confirmValue} not found`) }
         const updatedCrop = await transactionalManager.findOne(CropEntity, {
@@ -282,7 +276,7 @@ const cropMutationMethods = {
     const storedProcedureDeletePrimaryCrop = storedProcedure.DELETE_CROP;
     if (crop.CropOrder === 1) {
       const secondCrop = await transactionalManager.findOne(CropEntity, {
-        where: {Year: crop.Year,CropOrder: CropOrderMapper.SECONDCROP,FieldID: crop.FieldID},
+        where: { Year: crop.Year, CropOrder: CropOrderMapper.SECONDCROP, FieldID: crop.FieldID },
       });
       if (secondCrop) {
         const storedProcedureSecondCrop = storedProcedure.DELETE_CROP;
@@ -319,7 +313,8 @@ const cropMutationMethods = {
         if (!existingCrops || existingCrops.length === 0) { throw boom.notFound(`No crops found for cropIds ${cropIds.join(", ")} in Year ${year}`) }
         console.log("existingCrops", existingCrops);
         const updatedCrops = [];
-        for (const crop of existingCrops) {
+        await existingCrops.reduce(async (previousCrop, crop) => {
+          await previousCrop;
           const updatedCrop = await transactionalManager.update(
             CropEntity,
             { ID: crop.ID },
@@ -336,7 +331,7 @@ const cropMutationMethods = {
           });
           if (cropDetails) { updatedCrops.push(cropDetails) }
           console.log("Updated Crop:", cropDetails);
-        }
+        }, Promise.resolve());
         return { Crops: updatedCrops };
       },
     );
@@ -353,24 +348,25 @@ const cropMutationMethods = {
       await previousUpdate;
       const incoming = incomingPeriods[index];
       const { ID, CreatedByID, CreatedOn, CropID, ...dataToUpdate } = incoming;
-      await transactionalManager.update(ManagementPeriodEntity, existing.ID, {...dataToUpdate,ModifiedByID: userId,ModifiedOn: new Date()});
+      await transactionalManager.update(ManagementPeriodEntity, existing.ID, { ...dataToUpdate, ModifiedByID: userId, ModifiedOn: new Date() });
       const updated = await transactionalManager.findOne(ManagementPeriodEntity, { where: { ID: existing.ID } });
       if (updated) { updatedManagementPeriods.push(updated) }
     }, Promise.resolve());
-    for (let i = existingCount; i < incomingCount; i++) {
+    await incomingPeriods.slice(existingCount, incomingCount).reduce(async (previousSave, incomingPeriod) => {
+      await previousSave;
       const newPeriod = await transactionalManager.save(
         ManagementPeriodEntity,
         {
-          ...incomingPeriods[i], CropID: cropID, CreatedByID: userId,
+          ...incomingPeriod, CropID: cropID, CreatedByID: userId,
           CreatedOn: new Date(),
           ModifiedByID: userId,
           ModifiedOn: new Date(),
         },
       );
       if (newPeriod) { updatedManagementPeriods.push(newPeriod) }
-    }
-    for (let i = incomingCount; i < existingCount; i++) {
-      const periodToDelete = existingPeriods[i];
+    }, Promise.resolve());
+    await existingPeriods.slice(incomingCount).reduce(async (previousDelete, periodToDelete) => {
+      await previousDelete;
       await transactionalManager.delete(OrganicManureEntity, {
         ManagementPeriodID: periodToDelete.ID,
       });
@@ -383,18 +379,19 @@ const cropMutationMethods = {
           where: { ManagementPeriodID: periodToDelete.ID },
         },
       );
-      for (const recommendation of recommendations) {
+      await recommendations.reduce(async (previousRecommendation, recommendation) => {
+        await previousRecommendation;
         await transactionalManager.delete(RecommendationCommentEntity, {
           RecommendationID: recommendation.ID,
         });
         await transactionalManager.delete(RecommendationEntity, {
           ID: recommendation.ID,
         });
-      }
+      }, Promise.resolve());
       await transactionalManager.delete(ManagementPeriodEntity, {
         ID: periodToDelete.ID,
       });
-    }
+    }, Promise.resolve());
     return updatedManagementPeriods;
   },
 
@@ -492,10 +489,11 @@ const cropMutationMethods = {
   },
   async updateCrop(body, userId, request, transactionalManager, backgroundTasks = null) {
     const updatedResults = [], cropData = body.Crops;
-    for (const cropEntry of cropData) {
+    await cropData.reduce(async (previousCrop, cropEntry) => {
+      await previousCrop;
       const updatedResult = await cropMutationMethods.updateSingleCrop.call(this, cropEntry, userId, request, transactionalManager, backgroundTasks);
       if (updatedResult) { updatedResults.push(updatedResult) }
-    }
+    }, Promise.resolve());
     return updatedResults;
   },
 
@@ -509,9 +507,10 @@ const cropMutationMethods = {
     const result = await AppDataSource.transaction(
       async (transactionalManager) => {
         if (cropIds.length > 0) {
-          for (const cropId of cropIds) {
+          await cropIds.reduce(async (previousCrop, cropId) => {
+            await previousCrop;
             await this.deleteCrop(cropId, userId, request, transactionalManager);
-          }
+          }, Promise.resolve());
         }
         const { backgroundTasks } = await this.updateCropData(cropsWithID, userId, request, transactionalManager);
         const createdPlan = await this.planService.createNutrientsRecommendationForField(cropsWithoutID, userId, request, transactionalManager);
