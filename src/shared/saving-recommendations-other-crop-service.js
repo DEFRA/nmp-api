@@ -24,10 +24,7 @@ class SavingOtherCropRecommendations {
     };
 
     const resolveNutrientIndex = (index, status, methodologyID) => {
-      const useStatus =
-        rb209CountryID === CountryMapper.SCOTLAND &&
-        (methodologyID === MethodologyMapper.SACMETHODOLOGY ||
-          methodologyID === MethodologyMapper.RB209MTHODOLOGY);
+      const useStatus = rb209CountryID === CountryMapper.SCOTLAND && (methodologyID === MethodologyMapper.SACMETHODOLOGY || methodologyID === MethodologyMapper.RB209MTHODOLOGY);
       return (useStatus ? status : index)?.toString() || null;
     };
 
@@ -74,21 +71,9 @@ class SavingOtherCropRecommendations {
       FertilizerLime: null,
       PH: latestSoilAnalysis?.PH?.toString(),
       SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
-      PIndex: resolveNutrientIndex(
-        latestSoilAnalysis?.PhosphorusIndex,
-        latestSoilAnalysis?.PhosphorusStatus,
-        latestSoilAnalysis?.PhosphorusMethodologyID,
-      ),
-      KIndex: resolveNutrientIndex(
-        latestSoilAnalysis?.PotassiumIndex,
-        latestSoilAnalysis?.PotassiumStatus,
-        latestSoilAnalysis?.PotassiumMethodologyID,
-      ),
-      MgIndex: resolveNutrientIndex(
-        latestSoilAnalysis?.MagnesiumIndex,
-        latestSoilAnalysis?.MagnesiumStatus,
-        latestSoilAnalysis?.MagnesiumMethodologyID,
-      ),
+      PIndex: resolveNutrientIndex(latestSoilAnalysis?.PhosphorusIndex,latestSoilAnalysis?.PhosphorusStatus,latestSoilAnalysis?.PhosphorusMethodologyID),
+      KIndex: resolveNutrientIndex(latestSoilAnalysis?.PotassiumIndex,latestSoilAnalysis?.PotassiumStatus,latestSoilAnalysis?.PotassiumMethodologyID),
+      MgIndex: resolveNutrientIndex(latestSoilAnalysis?.MagnesiumIndex,latestSoilAnalysis?.MagnesiumStatus,latestSoilAnalysis?.MagnesiumMethodologyID),
       SIndex: null,
       NIndex: null,
     };

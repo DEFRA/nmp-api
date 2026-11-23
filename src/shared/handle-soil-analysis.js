@@ -4,6 +4,7 @@ const { AppDataSource } = require("../db/data-source");
 const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const { NutrientMapperNames } = require("../constants/nutrient-mapper-names");
 const { CountryMapper } = require("../constants/country-mapper");
+const { MethodologyMapper } = require("../constants/methodology-mapper");
 const NUTRIENT_IDS = {
   PHOSPHORUS: 1,
   POTASSIUM: 2,
@@ -135,8 +136,7 @@ class HandleSoilAnalysisService {
   }
 
   getNutrientIndexKey(nutrientName, methodologyId) {
-    const methodologyName =
-      methodologyId === 2 || methodologyId === 3 ? `${nutrientName}Status` : `${nutrientName}Index`;
+    const methodologyName = methodologyId === MethodologyMapper.SACMETHODOLOGY || methodologyId === MethodologyMapper.RB209MTHODOLOGY ? `${nutrientName}Status` : `${nutrientName}Index`;
     return methodologyName;
   }
 

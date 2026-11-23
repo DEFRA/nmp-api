@@ -341,9 +341,7 @@ const cropRecommendationMethods = {
     cropRecData.FertilizerP2O5 = c.cropNeed;
     cropRecData.PIndex = this.resolveIndexedNutrientValue(
       soilAnalysisFlags.hasPhosphorusSoilAnalysisInput,
-      countryId,
-      latestSoilAnalysis?.PhosphorusMethodologyID,
-      c,
+      c
     );
   },
 
@@ -360,9 +358,7 @@ const cropRecommendationMethods = {
     cropRecData.FertilizerK2O = c.cropNeed;
     cropRecData.KIndex = this.resolveIndexedNutrientValue(
       soilAnalysisFlags.hasPotassiumSoilAnalysisInput,
-      countryId,
-      latestSoilAnalysis?.PotassiumMethodologyID,
-      c,
+      c
     );
   },
 
@@ -378,9 +374,7 @@ const cropRecommendationMethods = {
     cropRecData.FertilizerMgO = c.cropNeed;
     cropRecData.MgIndex = this.resolveIndexedNutrientValue(
       soilAnalysisFlags.hasMagnesiumSoilAnalysisInput,
-      countryId,
-      latestSoilAnalysis?.MagnesiumMethodologyID,
-      c,
+      c
     );
   },
 
@@ -415,23 +409,16 @@ const cropRecommendationMethods = {
 
   resolveIndexedNutrientValue(
     hasSoilAnalysisInput,
-    countryId,
-    methodologyId,
-    calc,
+    calc
   ) {
-    if (!hasSoilAnalysisInput) {
-      return null;
-    }
-
+    if (!hasSoilAnalysisInput) {return null}
     return  calc.index;
   },
 
   applyCalculationsWithHandlers(calculations, nutrientHandlers) {
     for (const calc of calculations) {
       const handler = nutrientHandlers[calc.nutrientId];
-      if (handler) {
-        handler(calc);
-      }
+      if (handler) {handler(calc)}
     }
   },
 
@@ -439,7 +426,6 @@ const cropRecommendationMethods = {
     const record = await transactionalManager.findOne(ManagementPeriodEntity, {
       where: { CropID: cropID, Defoliation: defoliationId },
     });
-
     return record ?? null;
   },
 
