@@ -285,25 +285,19 @@ const cropRecommendationMethods = {
         this.applyPhosphorusCalculation(
           c,
           cropRecData,
-          soilAnalysisFlags,
-          countryId,
-          latestSoilAnalysis,
+          soilAnalysisFlags
         ),
       2: (c) =>
         this.applyPotassiumCalculation(
           c,
           cropRecData,
-          soilAnalysisFlags,
-          countryId,
-          latestSoilAnalysis,
+          soilAnalysisFlags
         ),
       3: (c) =>
         this.applyMagnesiumCalculation(
           c,
           cropRecData,
-          soilAnalysisFlags,
-          countryId,
-          latestSoilAnalysis,
+          soilAnalysisFlags
         ),
       4: (c) => this.applySodiumCalculation(c, cropRecData, soilAnalysisFlags),
       5: (c) => this.applySulphurCalculation(c, cropRecData, soilAnalysisFlags),
@@ -331,9 +325,7 @@ const cropRecommendationMethods = {
   applyPhosphorusCalculation(
     c,
     cropRecData,
-    soilAnalysisFlags,
-    countryId,
-    latestSoilAnalysis,
+    soilAnalysisFlags
   ) {
     cropRecData.CropP2O5 = c.recommendation;
     cropRecData.ManureP2O5 = this.normalizeManure(c.manures);
@@ -348,9 +340,7 @@ const cropRecommendationMethods = {
   applyPotassiumCalculation(
     c,
     cropRecData,
-    soilAnalysisFlags,
-    countryId,
-    latestSoilAnalysis,
+    soilAnalysisFlags
   ) {
     cropRecData.CropK2O = c.recommendation;
     cropRecData.ManureK2O = this.normalizeManure(c.manures);
@@ -365,9 +355,7 @@ const cropRecommendationMethods = {
   applyMagnesiumCalculation(
     c,
     cropRecData,
-    soilAnalysisFlags,
-    countryId,
-    latestSoilAnalysis,
+    soilAnalysisFlags
   ) {
     cropRecData.CropMgO = c.recommendation;
     cropRecData.MgBalance = c.pkBalance;
