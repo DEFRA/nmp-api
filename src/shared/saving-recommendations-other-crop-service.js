@@ -5,15 +5,27 @@ const {
   RecommendationCommentEntity,
 } = require("../db/entity/recommendation-comment.entity");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
+const { CountryMapper } = require("../constants/country-mapper");
+const { MethodologyMapper } = require("../constants/methodology-mapper");
 
 class SavingOtherCropRecommendations {
-  async buildCropOrderData(OrganicManure, mannerOutputs, latestSoilAnalysis) {
+  async buildCropOrderData(
+    OrganicManure,
+    mannerOutputs,
+    latestSoilAnalysis,
+    rb209CountryID,
+  ) {
     const resolveMannerValue = (mannerValue, organicValue) => {
       if (!mannerOutputs) {
         return organicValue;
       }
 
       return mannerValue === 0 ? null : mannerValue;
+    };
+
+    const resolveNutrientIndex = (index, status, methodologyID) => {
+      const useStatus = rb209CountryID === CountryMapper.SCOTLAND && (methodologyID === MethodologyMapper.SACMETHODOLOGY || methodologyID === MethodologyMapper.RB209MTHODOLOGY);
+      return (useStatus ? status : index)?.toString() || null;
     };
 
     return {
@@ -59,9 +71,9 @@ class SavingOtherCropRecommendations {
       FertilizerLime: null,
       PH: latestSoilAnalysis?.PH?.toString(),
       SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
-      PIndex: latestSoilAnalysis?.PhosphorusIndex?.toString() || null,
-      KIndex: latestSoilAnalysis?.PotassiumIndex?.toString() || null,
-      MgIndex: latestSoilAnalysis?.MagnesiumIndex?.toString() || null,
+      PIndex: resolveNutrientIndex(latestSoilAnalysis?.PhosphorusIndex,latestSoilAnalysis?.PhosphorusStatus,latestSoilAnalysis?.PhosphorusMethodologyID),
+      KIndex: resolveNutrientIndex(latestSoilAnalysis?.PotassiumIndex,latestSoilAnalysis?.PotassiumStatus,latestSoilAnalysis?.PotassiumMethodologyID),
+      MgIndex: resolveNutrientIndex(latestSoilAnalysis?.MagnesiumIndex,latestSoilAnalysis?.MagnesiumStatus,latestSoilAnalysis?.MagnesiumMethodologyID),
       SIndex: null,
       NIndex: null,
     };
@@ -74,11 +86,13 @@ class SavingOtherCropRecommendations {
     userId,
     latestSoilAnalysis,
     crop,
+    rb209CountryID,
   ) {
     const cropOrderData = await this.buildCropOrderData(
       OrganicManure,
       mannerOutputs,
       latestSoilAnalysis,
+      rb209CountryID,
     );
     let managementPeriods = [];
     if (OrganicManure) {

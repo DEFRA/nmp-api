@@ -1,5 +1,5 @@
 const MethodologyMapper = {
-    SACMETHODOLOGY: 1,
+    SACMETHODOLOGY: 2,
     RB209MTHODOLOGY: 3
 };
 
