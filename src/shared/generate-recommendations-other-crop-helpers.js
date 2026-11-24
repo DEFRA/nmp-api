@@ -8,8 +8,7 @@ const recommendationOtherCropHelpers = {
       mannerOutputs,
       latestSoilAnalysis,
       nutrientRecommendationsData,
-      cropPOfftake,
-      rb209CountryID,
+      cropPOfftake
     } = otherCropContext;
 
     const { transactionalManager, newOrganicManure, userId, fertiliserData } =

@@ -382,7 +382,7 @@ class GenerateRecommendations {
       };
       return this.handleOtherCropRecommendation(
         otherCropContext,
-        sharedContext,
+        sharedContext
       );
     }
 
