@@ -11,9 +11,7 @@ const { MethodologyMapper } = require("../constants/methodology-mapper");
 class SavingOtherCropRecommendations {
   async buildCropOrderData(
     OrganicManure,
-    mannerOutputs,
-    latestSoilAnalysis,
-    rb209CountryID,
+    mannerOutputs
   ) {
     const resolveMannerValue = (mannerValue, organicValue) => {
       if (!mannerOutputs) {
@@ -22,12 +20,6 @@ class SavingOtherCropRecommendations {
 
       return mannerValue === 0 ? null : mannerValue;
     };
-
-    const resolveNutrientIndex = (index, status, methodologyID) => {
-      const useStatus = rb209CountryID === CountryMapper.SCOTLAND && (methodologyID === MethodologyMapper.SACMETHODOLOGY || methodologyID === MethodologyMapper.RB209MTHODOLOGY);
-      return (useStatus ? status : index)?.toString() || null;
-    };
-
     return {
       CropN: null,
       NBalance: null,
@@ -69,11 +61,10 @@ class SavingOtherCropRecommendations {
       LimeBalance: null,
       ManureLime: null,
       FertilizerLime: null,
-      PH: latestSoilAnalysis?.PH?.toString(),
-      SNSIndex: latestSoilAnalysis?.SoilNitrogenSupplyIndex?.toString() || null,
-      PIndex: resolveNutrientIndex(latestSoilAnalysis?.PhosphorusIndex,latestSoilAnalysis?.PhosphorusStatus,latestSoilAnalysis?.PhosphorusMethodologyID),
-      KIndex: resolveNutrientIndex(latestSoilAnalysis?.PotassiumIndex,latestSoilAnalysis?.PotassiumStatus,latestSoilAnalysis?.PotassiumMethodologyID),
-      MgIndex: resolveNutrientIndex(latestSoilAnalysis?.MagnesiumIndex,latestSoilAnalysis?.MagnesiumStatus,latestSoilAnalysis?.MagnesiumMethodologyID),
+      PH: null,
+      PIndex:null,
+      KIndex: null,
+      MgIndex: null,
       SIndex: null,
       NIndex: null,
     };
@@ -84,15 +75,11 @@ class SavingOtherCropRecommendations {
     OrganicManure,
     mannerOutputs,
     userId,
-    latestSoilAnalysis,
-    crop,
-    rb209CountryID,
+    crop
   ) {
     const cropOrderData = await this.buildCropOrderData(
       OrganicManure,
-      mannerOutputs,
-      latestSoilAnalysis,
-      rb209CountryID,
+      mannerOutputs
     );
     let managementPeriods = [];
     if (OrganicManure) {
