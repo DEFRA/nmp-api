@@ -21,9 +21,7 @@ const recommendationOtherCropHelpers = {
         newOrganicManure,
         mannerOutputs,
         userId,
-        latestSoilAnalysis,
-        crop,
-        rb209CountryID,
+        crop
       );
 
     const saveAndUpdateOtherPKBalance =
