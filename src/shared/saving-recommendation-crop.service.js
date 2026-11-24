@@ -164,10 +164,6 @@ const cropRecommendationMethods = {
     defoliations,
   ) {
     const { defoliationId, defoliationIds, latestSoilAnalysis } = defoliations;
-    const countryId = await this.getCountryIdForCrop(
-      transactionalManager,
-      cropData.ID,
-    );
     const soilAnalysisFlags = this.getSoilAnalysisFlags(latestSoilAnalysis);
     const mannerOutputs = this.getMannerOutputsForDefoliation(
       allMannerOutputs,
@@ -184,23 +180,12 @@ const cropRecommendationMethods = {
 
     const nutrientHandlers = this.createNutrientHandlers(
       cropRecData,
-      countryId,
-      latestSoilAnalysis,
       soilAnalysisFlags,
       mannerOutputs,
       fallbackManureN,
     );
 
     this.applyCalculationsWithHandlers(calculations, nutrientHandlers);
-  },
-
-  async getCountryIdForCrop(transactionalManager, cropId) {
-    const record = await transactionalManager.findOne(CropEntity, {
-      where: { ID: cropId },
-      relations: { Field: { Farm: true } },
-    });
-
-    return record?.Field?.Farm?.CountryID;
   },
 
   getSoilAnalysisFlags(latestSoilAnalysis) {
@@ -267,11 +252,9 @@ const cropRecommendationMethods = {
 
   createNutrientHandlers(
     cropRecData,
-    countryId,
-    latestSoilAnalysis,
     soilAnalysisFlags,
     mannerOutputs,
-    fallbackManureN,
+    fallbackManureN
   ) {
     return {
       0: (c) =>
@@ -285,25 +268,19 @@ const cropRecommendationMethods = {
         this.applyPhosphorusCalculation(
           c,
           cropRecData,
-          soilAnalysisFlags,
-          countryId,
-          latestSoilAnalysis,
+          soilAnalysisFlags
         ),
       2: (c) =>
         this.applyPotassiumCalculation(
           c,
           cropRecData,
-          soilAnalysisFlags,
-          countryId,
-          latestSoilAnalysis,
+          soilAnalysisFlags
         ),
       3: (c) =>
         this.applyMagnesiumCalculation(
           c,
           cropRecData,
-          soilAnalysisFlags,
-          countryId,
-          latestSoilAnalysis,
+          soilAnalysisFlags
         ),
       4: (c) => this.applySodiumCalculation(c, cropRecData, soilAnalysisFlags),
       5: (c) => this.applySulphurCalculation(c, cropRecData, soilAnalysisFlags),
@@ -331,9 +308,7 @@ const cropRecommendationMethods = {
   applyPhosphorusCalculation(
     c,
     cropRecData,
-    soilAnalysisFlags,
-    countryId,
-    latestSoilAnalysis,
+    soilAnalysisFlags
   ) {
     cropRecData.CropP2O5 = c.recommendation;
     cropRecData.ManureP2O5 = this.normalizeManure(c.manures);
@@ -341,18 +316,14 @@ const cropRecommendationMethods = {
     cropRecData.FertilizerP2O5 = c.cropNeed;
     cropRecData.PIndex = this.resolveIndexedNutrientValue(
       soilAnalysisFlags.hasPhosphorusSoilAnalysisInput,
-      countryId,
-      latestSoilAnalysis?.PhosphorusMethodologyID,
-      c,
+      c
     );
   },
 
   applyPotassiumCalculation(
     c,
     cropRecData,
-    soilAnalysisFlags,
-    countryId,
-    latestSoilAnalysis,
+    soilAnalysisFlags
   ) {
     cropRecData.CropK2O = c.recommendation;
     cropRecData.ManureK2O = this.normalizeManure(c.manures);
@@ -360,27 +331,21 @@ const cropRecommendationMethods = {
     cropRecData.FertilizerK2O = c.cropNeed;
     cropRecData.KIndex = this.resolveIndexedNutrientValue(
       soilAnalysisFlags.hasPotassiumSoilAnalysisInput,
-      countryId,
-      latestSoilAnalysis?.PotassiumMethodologyID,
-      c,
+      c
     );
   },
 
   applyMagnesiumCalculation(
     c,
     cropRecData,
-    soilAnalysisFlags,
-    countryId,
-    latestSoilAnalysis,
+    soilAnalysisFlags
   ) {
     cropRecData.CropMgO = c.recommendation;
     cropRecData.MgBalance = c.pkBalance;
     cropRecData.FertilizerMgO = c.cropNeed;
     cropRecData.MgIndex = this.resolveIndexedNutrientValue(
       soilAnalysisFlags.hasMagnesiumSoilAnalysisInput,
-      countryId,
-      latestSoilAnalysis?.MagnesiumMethodologyID,
-      c,
+      c
     );
   },
 
@@ -415,26 +380,16 @@ const cropRecommendationMethods = {
 
   resolveIndexedNutrientValue(
     hasSoilAnalysisInput,
-    countryId,
-    methodologyId,
-    calc,
+    calc
   ) {
-    if (!hasSoilAnalysisInput) {
-      return null;
-    }
-
-    const isScotlandSacMethodology =
-      countryId === CountryMapper.SCOTLAND && (methodologyId === MethodologyMapper.SACMETHODOLOGY || methodologyId === MethodologyMapper.RB209MTHODOLOGY);
-
-    return isScotlandSacMethodology ? calc.indexText : calc.index;
+    if (!hasSoilAnalysisInput) {return null}
+    return  calc.index;
   },
 
   applyCalculationsWithHandlers(calculations, nutrientHandlers) {
     for (const calc of calculations) {
       const handler = nutrientHandlers[calc.nutrientId];
-      if (handler) {
-        handler(calc);
-      }
+      if (handler) {handler(calc)}
     }
   },
 
@@ -442,7 +397,6 @@ const cropRecommendationMethods = {
     const record = await transactionalManager.findOne(ManagementPeriodEntity, {
       where: { CropID: cropID, Defoliation: defoliationId },
     });
-
     return record ?? null;
   },
 

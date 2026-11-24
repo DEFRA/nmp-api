@@ -9,6 +9,7 @@ const recommendationOtherCropHelpers = {
       latestSoilAnalysis,
       nutrientRecommendationsData,
       cropPOfftake,
+      rb209CountryID,
     } = otherCropContext;
 
     const { transactionalManager, newOrganicManure, userId, fertiliserData } =
@@ -22,6 +23,7 @@ const recommendationOtherCropHelpers = {
         userId,
         latestSoilAnalysis,
         crop,
+        rb209CountryID,
       );
 
     const saveAndUpdateOtherPKBalance =
