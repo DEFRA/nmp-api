@@ -14,7 +14,7 @@ class SiteClassService extends BaseService {
     this.fieldRepository = AppDataSource.getRepository(FieldEntity);
     this.farmRepository = AppDataSource.getRepository(FarmEntity);
     this.grassService = new RB209GrassService();
-    this.rainfallService = new MannerRainfallPostApplicationService();
+    this.mannerRainfallService = new MannerRainfallPostApplicationService();
   }
 
   async getSiteClassIdByFieldId(fieldIds, request) {
@@ -104,7 +104,7 @@ class SiteClassService extends BaseService {
 
   async getRainfall(farm, fieldRelatedData, request) {
     return (
-      fieldRelatedData?.rainfall ??
+      fieldRelatedData?.summerRainfall ??
       this.getRainfallByPostcode(farm.ClimateDataPostCode, request)
     );
   }
@@ -114,7 +114,7 @@ class SiteClassService extends BaseService {
       return null;
     }
 
-    const rainfallResponse = await this.rainfallService.getData(
+    const rainfallResponse = await this.mannerRainfallService.getData(
       `climates/rainfall-april-to-september/${postcode}`, request
     );
 
