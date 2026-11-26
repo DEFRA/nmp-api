@@ -71,7 +71,9 @@ class SiteClassService extends BaseService {
     );
 
     return {
-      ...siteClassData,
+      ...(typeof siteClassData === "number"
+        ? { siteClassId: siteClassData }
+        : siteClassData),
       fieldId,
     };
 

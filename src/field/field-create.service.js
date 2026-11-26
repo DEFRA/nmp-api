@@ -1,6 +1,8 @@
 const { AppDataSource } = require("../db/data-source");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { FieldEntity } = require("../db/entity/field.entity");
+const { FieldExtensionEntity } = require("../db/entity/field-extension.entity");
+const { FarmEntity } = require("../db/entity/farm.entity");
 const { ManagementPeriodEntity } = require("../db/entity/management-period.entity");
 const { SoilAnalysisEntity } = require("../db/entity/soil-analysis.entity");
 const { RecommendationEntity } = require("../db/entity/recommendation.entity");
@@ -8,6 +10,7 @@ const { PKBalanceEntity } = require("../db/entity/pk-balance.entity");
 const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entity");
 const boom = require("@hapi/boom");
 const { PreviousCroppingMapper } = require("../constants/action-mapper");
+const { CountryMapper } = require("../constants/country-mapper");
 
 const fieldCreateMethods = {
 async saveRecommendationCrops(
@@ -65,7 +68,7 @@ async saveRecommendationCrops(
   );
 },
 
-async createFieldWithSoilAnalysisAndCrops(farmId, body, userId) {
+async createFieldWithSoilAnalysisAndCrops(farmId, body, userId, request) {
   const exists = await this.checkFieldExists(farmId, body.Field.Name);
   if (exists) {
     throw boom.conflict("Field already exists with this Farm Id and Name");
@@ -79,6 +82,7 @@ async createFieldWithSoilAnalysisAndCrops(farmId, body, userId) {
       body.Field,
       userId,
     );
+    await this.saveFieldExtension(transactionalManager, Field, request);
     const SoilAnalysis = await fieldCreateMethods.createSoilAnalysis.call(
       this,
       transactionalManager,
@@ -129,6 +133,65 @@ async createField(transactionalManager, farmId, fieldData, userId) {
   });
 
   return transactionalManager.save(FieldEntity, field);
+},
+
+async calculateFieldClass(transactionalManager, field, countryId, request) {
+  const isScotland = countryId === CountryMapper.SCOTLAND;
+  if (!isScotland && countryId !== CountryMapper.ENGLAND && countryId !== CountryMapper.WELSH) {
+    throw boom.badRequest(`Unsupported farm country ID: ${countryId}`);
+  }
+
+  const className = isScotland ? "SiteClassID" : "GrassGrowthClassID";
+  let result;
+  try {
+    result = isScotland
+      ? await this.siteClassService.calculateSiteClassIdByFieldId(
+        field.ID, request, transactionalManager,
+      )
+      : await this.grassGrowthService.calculateGrassGrowthClassByFieldId(
+        field.ID, request, transactionalManager,
+      );
+  } catch (error) {
+    console.error(`Unable to calculate ${className} for field ${field.ID}:`, error);
+    return { className, classId: null };
+  }
+
+  const classId = isScotland
+    ? result?.siteClassId ?? result?.SiteClassID ?? result?.value
+    : result?.grassGrowthClassId;
+  const serviceFailed = result?.status >= 400 && result.status !== 404;
+  if (result?.error || serviceFailed || (classId != null && !Number.isInteger(classId))) {
+    console.error(
+      `Unable to calculate ${className} for field ${field.ID}:`,
+      result?.error || result?.statusText || "invalid class ID",
+    );
+    return { className, classId: null };
+  }
+
+  return { className, classId: result?.status === 404 ? null : classId ?? null };
+},
+
+async saveFieldExtension(transactionalManager, field, request) {
+  const farm = await transactionalManager.findOne(FarmEntity, {
+    where: { ID: field.FarmID },
+  });
+  if (!farm) {
+    throw boom.notFound(`Farm with ID ${field.FarmID} not found`);
+  }
+
+  const { className, classId } = await fieldCreateMethods.calculateFieldClass.call(
+    this, transactionalManager, field, farm.CountryID, request,
+  );
+  const existingExtension = await transactionalManager.findOne(FieldExtensionEntity, {
+    where: { FieldID: field.ID },
+  });
+  return transactionalManager.save(FieldExtensionEntity, {
+    FieldID: field.ID,
+    SiteClassID: null,
+    GrassGrowthClassID: null,
+    [className]: classId,
+    ...(existingExtension ? { ModifiedOn: new Date() } : { CreatedOn: new Date() }),
+  });
 },
 
 async createSoilAnalysis(

@@ -33,6 +33,8 @@ const { fieldCreateMethods } = require("./field-create.service");
 const { fieldUpdateMethods } = require("./field-update.service");
 const { fieldRelatedMethods } = require("./field-related.service");
 const { fieldSoilRecommendationMethods } = require("./field-soil-recommendation.service");
+const { SiteClassService } = require("../site-class/site-class.service");
+const { GrassGrowthService } = require("../grass-growth-plan/grass-growth-plan.service");
 
 class FieldService extends BaseService {
 constructor() {
@@ -79,6 +81,8 @@ constructor() {
   );
   this.rB209GrassService = new RB209GrassService();
   this.generateRecommendations = new GenerateRecommendations();
+  this.siteClassService = new SiteClassService();
+  this.grassGrowthService = new GrassGrowthService();
   this.updatingFutureRecommendations = new UpdatingFutureRecommendations();
   this.FarmService = new FarmService();
   this.ProcessFutureManuresForWarnings =
@@ -169,6 +173,10 @@ constructor() {
 
   async createFieldWithSoilAnalysisAndCrops(...args) {
     return fieldCreateMethods.createFieldWithSoilAnalysisAndCrops.call(this, ...args);
+  }
+
+  async saveFieldExtension(...args) {
+    return fieldCreateMethods.saveFieldExtension.call(this, ...args);
   }
 
   async handlePreviousCroppingAction(...args) {

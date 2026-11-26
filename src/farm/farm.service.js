@@ -27,6 +27,9 @@ const {
   NutrientsLoadingManuresEntity,
 } = require("../db/entity/nutrients-loading-manures-entity");
 const { runWithDeadlockRetry } = require("../db/transactionRetry");
+const { fieldCreateMethods } = require("../field/field-create.service");
+const { SiteClassService } = require("../site-class/site-class.service");
+const { GrassGrowthService } = require("../grass-growth-plan/grass-growth-plan.service");
 
 class FarmService extends BaseService {
   constructor() {
@@ -199,6 +202,19 @@ class FarmService extends BaseService {
     );
   }
 
+                              hasFieldClassTriggerChanges(existingFarm, updatedFarmData) {
+    const altitudeChanged =
+      this.isPropertyValueChanged(
+        updatedFarmData.FieldsAbove300SeaLevel,
+        existingFarm.FieldsAbove300SeaLevel,
+      ) && this.isValidFarmPropertyValue(updatedFarmData.FieldsAbove300SeaLevel);
+
+    return altitudeChanged || this.isPropertyValueChanged(
+      updatedFarmData.ClimateDataPostCode,
+      existingFarm.ClimateDataPostCode,
+    );
+  }
+
   async syncFarmNvz(transactionalManager, farmId, farmNvzList, userId) {
     const nvzList = farmNvzList || [];
     // Get existing NVZ records for farm
@@ -306,6 +322,28 @@ class FarmService extends BaseService {
     }, Promise.resolve());
   }
 
+  async updateFieldExtensionsForFarmChanges(transactionalManager, farmId, request) {
+    const fields = await transactionalManager.find(FieldEntity, {
+      where: { FarmID: farmId },
+    });
+    if (!fields.length) {
+      return;
+    }
+
+    const classServices = {
+      siteClassService: new SiteClassService(),
+      grassGrowthService: new GrassGrowthService(),
+    };
+    await fields.reduce(
+      (previous, field) => previous.then(() =>
+        fieldCreateMethods.saveFieldExtension.call(
+          classServices, transactionalManager, field, request,
+        ),
+      ),
+      Promise.resolve(),
+    );
+  }
+
   async updateFarm(updatedFarmAndNvzData, userId, farmId, request) {
     let shouldProcessFieldRecommendations = false, shouldProcessFarmWarnings = false;
     const result = await runWithDeadlockRetry(() =>
@@ -339,6 +377,9 @@ class FarmService extends BaseService {
           console.log(`Farm with ID ${farmId} not found`);
         }
         await this.updateFieldPropertiesByFarmChanges(transactionalManager, farmId, existingFarm, updatedFarmData, userId);
+        if (this.hasFieldClassTriggerChanges(existingFarm, updatedFarmData)) {
+          await this.updateFieldExtensionsForFarmChanges(transactionalManager, farmId, request);
+        }
         if (this.hasFieldRecommendationTriggerChanges(existingFarm, updatedFarmData)) {
           shouldProcessFieldRecommendations = true;
         }
