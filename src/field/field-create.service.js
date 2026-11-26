@@ -11,6 +11,32 @@ const { PreviousCroppingEntity } = require("../db/entity/previous-cropping.entit
 const boom = require("@hapi/boom");
 const { PreviousCroppingMapper } = require("../constants/action-mapper");
 const { CountryMapper } = require("../constants/country-mapper");
+const { StatusCodeMapper } = require("../constants/http-status-codes-mapper");
+
+function getFieldClassId(result, isScotland) {
+  return isScotland
+    ? result?.siteClassId ?? result?.SiteClassID ?? result?.value
+    : result?.grassGrowthClassId;
+}
+
+function isFieldClassFailure(result, classId) {
+  const serviceFailed = result?.status >= StatusCodeMapper.BAD_REQUEST &&
+    result.status !== StatusCodeMapper.NOT_FOUND;
+  return result?.error || serviceFailed || (classId != null && !Number.isInteger(classId));
+}
+
+function getFieldClassResult(result, isScotland, className, fieldId) {
+  const classId = getFieldClassId(result, isScotland);
+  if (isFieldClassFailure(result, classId)) {
+    console.error(
+      `Unable to calculate ${className} for field ${fieldId}:`,
+      result?.error || result?.statusText || "invalid class ID",
+    );
+    return { className, classId: null };
+  }
+
+  return { className, classId: result?.status === StatusCodeMapper.NOT_FOUND ? null : classId ?? null };
+}
 
 const fieldCreateMethods = {
 async saveRecommendationCrops(
@@ -156,19 +182,7 @@ async calculateFieldClass(transactionalManager, field, countryId, request) {
     return { className, classId: null };
   }
 
-  const classId = isScotland
-    ? result?.siteClassId ?? result?.SiteClassID ?? result?.value
-    : result?.grassGrowthClassId;
-  const serviceFailed = result?.status >= 400 && result.status !== 404;
-  if (result?.error || serviceFailed || (classId != null && !Number.isInteger(classId))) {
-    console.error(
-      `Unable to calculate ${className} for field ${field.ID}:`,
-      result?.error || result?.statusText || "invalid class ID",
-    );
-    return { className, classId: null };
-  }
-
-  return { className, classId: result?.status === 404 ? null : classId ?? null };
+  return getFieldClassResult(result, isScotland, className, field.ID);
 },
 
 async saveFieldExtension(transactionalManager, field, request) {
