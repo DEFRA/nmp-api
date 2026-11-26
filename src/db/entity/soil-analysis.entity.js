@@ -125,9 +125,7 @@ const SoilAnalysisEntity = new EntitySchema({
       nullable: true,
     },
     OrganicMatterPercentage: {
-      type: "decimal",
-      precision: 4,
-      scale: 1,
+      type: "int",
       nullable: true,
     },
     ...auditColumns,
