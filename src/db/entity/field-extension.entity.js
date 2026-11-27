@@ -2,7 +2,7 @@ const { EntitySchema } = require("typeorm");
 
 const FieldExtensionEntity = new EntitySchema({
   name: "FieldExtension",
-  tableName: "FieldExtension",
+  tableName: "FieldExtensions",
   columns: {
     FieldID: { type: "int", primary: true },
     SiteClassID: { type: "int", nullable: true },
