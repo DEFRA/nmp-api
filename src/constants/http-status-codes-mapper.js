@@ -8,7 +8,8 @@ const StatusCodeMapper = {
   CONTENT_TOO_LARGE: 413,
   TOO_MANY_REQUEST:429,
   REQUEST_TIMEOUT: 408,
-  TOO_EARLY: 425
+  TOO_EARLY: 425,
+  UNPROCESSABLE_ENTITY: 422
 };
 
 module.exports = { StatusCodeMapper };

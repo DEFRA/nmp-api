@@ -2,6 +2,7 @@
 
 const { FarmEntity } = require("../entity/farm.entity");
 const { FieldEntity } = require("../entity/field.entity");
+const { FieldExtensionEntity } = require("../entity/field-extension.entity");
 const { UserEntity } = require("../entity/user.entity");
 const { OrganisationEntity } = require("../entity/organisation.entity");
 const { MoistureTypeEntity } = require("../entity/moisture-type.entity");
@@ -120,6 +121,7 @@ const { MannerFarmsEntity } = require("./manner-farms.entity");
 const entities = [
   FarmEntity,
   FieldEntity,
+  FieldExtensionEntity,
   UserEntity,
   OrganisationEntity,
   MoistureTypeEntity,
