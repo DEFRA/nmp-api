@@ -3,6 +3,7 @@ const { BaseService } = require("../base/base.service");
 const { SnsAnalysesEntity } = require("../db/entity/sns-analysis.entity");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { MoreThan } = require("typeorm");
+const boom = require("@hapi/boom");
 const { GenerateRecommendations } = require("../shared/generate-recomendations-service");
 const { UpdatingFutureRecommendations } = require("../shared/updating-future-recommendations-service");
 const { CurrentAndFuture } = require("../shared/generate-current-and-future-recommendations-service");
@@ -20,6 +21,16 @@ class SnsAnalysisService extends BaseService {
   async createSnsAnalysis(snsAnalysisBody, userId, request) {
     return AppDataSource.transaction(async (transactionalManager) => {
       const snsAnalysisRequest = snsAnalysisBody.SnsAnalysis;
+      const existingAnalysis = await transactionalManager.findOne(
+        SnsAnalysesEntity,
+        { where: { CropID: snsAnalysisRequest.CropID }, select: { ID: true } }
+      );
+      if (existingAnalysis) {
+        throw boom.conflict(
+          `SNS analysis already exists for CropID ${snsAnalysisRequest.CropID}`
+        );
+      }
+
       const snsAnalysis = await transactionalManager.save(SnsAnalysesEntity, {
         ...snsAnalysisRequest,
         CreatedByID: userId,

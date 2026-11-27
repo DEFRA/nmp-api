@@ -1,6 +1,7 @@
 const { AppDataSource } = require("../db/data-source");
 const { CropEntity } = require("../db/entity/crop.entity");
 const { FieldEntity } = require("../db/entity/field.entity");
+const { FieldExtensionEntity } = require("../db/entity/field-extension.entity");
 const {
   PreviousCroppingEntity,
 } = require("../db/entity/previous-cropping.entity");
@@ -16,6 +17,9 @@ const fieldUpdateMethods = {
         transactionalManager,
         fieldId,
       );
+      if (!originalField) {
+        throw boom.notFound(`Field with ID ${fieldId} not found`);
+      }
       const isSensitiveChange = await this.hasSensitiveFieldChanged(
         payload.Field,
         originalField,
@@ -56,6 +60,7 @@ const fieldUpdateMethods = {
       const updatedField = await transactionalManager.findOne(FieldEntity, {
         where: { ID: fieldId },
       });
+      await this.saveFieldExtension(transactionalManager, updatedField, request);
       return {
         Field: updatedField,
         PreviousCroppings: updatedOrInsertedPrevCroppings,
@@ -162,6 +167,9 @@ const fieldUpdateMethods = {
         transactionalManager,
         ID,
       );
+      if (!originalField) {
+        throw boom.notFound(`Field with ID ${ID} not found`);
+      }
 
       const isSensitiveChange = await this.hasSensitiveFieldChanged(
         payload,
@@ -184,9 +192,9 @@ const fieldUpdateMethods = {
         userId,
       );
 
-      return {
-        Field: await this.getUpdatedField(transactionalManager, ID),
-      };
+      const updatedField = await this.getUpdatedField(transactionalManager, ID);
+      await this.saveFieldExtension(transactionalManager, updatedField, request);
+      return { Field: updatedField };
     });
   },
 
@@ -201,14 +209,11 @@ const fieldUpdateMethods = {
       throw boom.notFound(`Field with ID ${fieldId} not found`);
     }
 
-    try {
-      // Call the stored procedure to delete the field and related entities
+    await AppDataSource.transaction(async (manager) => {
+      await manager.delete(FieldExtensionEntity, { FieldID: fieldId });
       const storedProcedure = "EXEC dbo.spFields_DeleteFields @fieldId = @0";
-      await AppDataSource.query(storedProcedure, [fieldId]);
-    } catch (error) {
-      // Log the error and throw an internal server error
-      console.error("Error deleting field:", error);
-    }
+      await manager.query(storedProcedure, [fieldId]);
+    });
   },
 };
 

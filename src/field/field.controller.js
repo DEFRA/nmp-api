@@ -97,7 +97,8 @@ class FieldController {
       );
       return this.#h.response({ Field: updatedField });
     } catch (error) {
-      return this.#h.response({ error });
+      console.error("Error updating field:", error);
+      return boom.boomify(error);
     }
   }
 
@@ -112,7 +113,8 @@ class FieldController {
       );
       return this.#h.response({ Field: updatedField });
     } catch (error) {
-      return this.#h.response({ error });
+      console.error("Error updating field:", error);
+      return boom.boomify(error);
     }
   }
   async createFieldWithSoilAnalysisAndCrops() {
@@ -124,10 +126,12 @@ class FieldController {
         farmId,
         body,
         userId,
+        this.#request,
       );
       return this.#h.response(data);
     } catch (error) {
-      return this.#h.response({ error });
+      console.error("Error creating field:", error);
+      return boom.boomify(error);
     }
   }
   async deleteFieldById() {
@@ -140,7 +144,8 @@ class FieldController {
       }
       return this.#h.response({ message: "Field deleted successfully." });
     } catch (error) {
-      return this.#h.response({ error: error.message });
+      console.error("Error deleting field:", error);
+      return boom.boomify(error);
     }
   }
   async getFieldSoilAnalysisAndSnsAnalysis() {
